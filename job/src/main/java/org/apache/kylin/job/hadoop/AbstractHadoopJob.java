@@ -85,6 +85,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_KEY_COLUMN_PERCENTAGE = OptionBuilder.withArgName("rowkey column percentage").hasArg().isRequired(true).withDescription("Percentage of row key columns").create("columnpercentage");
     protected static final Option OPTION_KEY_SPLIT_NUMBER = OptionBuilder.withArgName("key split number").hasArg().isRequired(true).withDescription("Number of key split range").create("splitnumber");
 
+    protected static final Option OPTION_STATISTICS_ENABLED = OptionBuilder.withArgName("statisticsenabled").hasArg().isRequired(false).withDescription("Statistics enabled").create("statisticsenabled");
+    protected static final Option OPTION_STATISTICS_OUTPUT = OptionBuilder.withArgName("statisticsoutput").hasArg().isRequired(false).withDescription("Statistics output").create("statisticsoutput");
+
     protected String name;
     protected String description;
     protected boolean isAsync = false;
@@ -327,7 +330,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return input.getSplits(job).size();
     }
 
-    public static KylinConfig loadKylinPropsAndMetadata(Configuration conf) throws IOException {
+    public static KylinConfig loadKylinPropsAndMetadata() throws IOException {
         File metaDir = new File("meta");
         System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
         logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());

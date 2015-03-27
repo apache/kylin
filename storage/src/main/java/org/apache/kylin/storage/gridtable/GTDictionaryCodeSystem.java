@@ -1,6 +1,5 @@
 package org.apache.kylin.storage.gridtable;
 
-import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
@@ -9,18 +8,17 @@ import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 
 import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.Map;
 
 /**
  * Created by shaoshi on 3/23/15.
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GTDictionaryCodeSystem implements IGTCodeSystem {
     private GTInfo info;
-    private BitSet encodedColumns = null;
     private Map<Integer, Dictionary> dictionaryMaps = null; // key: column index; value: dictionary for this column;
-    private Map<Integer, DataTypeSerializer> serializerMap = null; // column index; value: serializer for this column;
     private IFilterCodeSystem<ByteArray> filterCS;
+    private DataTypeSerializer[] serializers;
 
     public GTDictionaryCodeSystem(Map<Integer, Dictionary> dictionaryMaps) {
         this.dictionaryMaps = dictionaryMaps;
@@ -29,15 +27,13 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
     @Override
     public void init(GTInfo info) {
         this.info = info;
-        encodedColumns = new BitSet();
-        for (Integer index : dictionaryMaps.keySet()) {
-            encodedColumns.set(index);
-        }
 
-        serializerMap = Maps.newHashMap();
+        serializers = new DataTypeSerializer[info.nColumns];
         for (int i = 0; i < info.nColumns; i++) {
-            if (!encodedColumns.get(i)) {
-                serializerMap.put(i, DataTypeSerializer.create(info.colTypes[i]));
+            if (dictionaryMaps.get(i) != null) {
+                serializers[i] = new DictionarySerializer(dictionaryMaps.get(i));
+            } else {
+                serializers[i] = DataTypeSerializer.create(info.colTypes[i]);
             }
         }
 
@@ -77,30 +73,22 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
 
     @Override
     public int codeLength(int col, ByteBuffer buf) {
-        if (useDictionary(col))
-            return dictionaryMaps.get(col).getSizeOfId();
-        else
-            return serializerMap.get(col).peekLength(buf);
+        return serializers[col].peekLength(buf);
     }
 
     @Override
     public void encodeColumnValue(int col, Object value, ByteBuffer buf) {
-        if (useDictionary(col)) {
-            int id = dictionaryMaps.get(col).getIdFromValue(value);
-            BytesUtil.writeUnsigned(id, dictionaryMaps.get(col).getSizeOfId(), buf);
-        } else {
-            serializerMap.get(col).serialize(value, buf);
-        }
+        serializers[col].serialize(value, buf);
+    }
+
+    @Override
+    public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Object decodeColumnValue(int col, ByteBuffer buf) {
-        if (useDictionary(col)) {
-            int id = BytesUtil.readUnsigned(buf, dictionaryMaps.get(col).getSizeOfId());
-            return dictionaryMaps.get(col).getValueFromId(id);
-        } else {
-            return serializerMap.get(col).deserialize(buf);
-        }
+        return serializers[col].deserialize(buf);
     }
 
     @Override
@@ -108,7 +96,33 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
         return MeasureAggregator.create(aggrFunction, info.colTypes[col].toString());
     }
 
-    private boolean useDictionary(int col) {
-        return encodedColumns.get(col);
+    class DictionarySerializer extends DataTypeSerializer {
+        private Dictionary dictionary;
+
+        DictionarySerializer(Dictionary dictionary) {
+            this.dictionary = dictionary;
+        }
+
+        @Override
+        public void serialize(Object value, ByteBuffer out) {
+            int id = dictionary.getIdFromValue(value);
+            BytesUtil.writeUnsigned(id, dictionary.getSizeOfId(), out);
+        }
+
+        @Override
+        public Object deserialize(ByteBuffer in) {
+            int id = BytesUtil.readUnsigned(in, dictionary.getSizeOfId());
+            return dictionary.getValueFromId(id);
+        }
+
+        @Override
+        public int peekLength(ByteBuffer in) {
+            return dictionary.getSizeOfId();
+        }
+
+        @Override
+        public Object valueOf(byte[] value) {
+            throw new UnsupportedOperationException();
+        }
     }
 }

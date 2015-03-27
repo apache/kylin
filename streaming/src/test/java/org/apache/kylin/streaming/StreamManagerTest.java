@@ -35,43 +35,35 @@
 package org.apache.kylin.streaming;
 
 import org.apache.kylin.common.KylinConfig;
-import org.junit.AfterClass;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static junit.framework.TestCase.assertNotNull;
 
 /**
- * Created by qianzhou on 2/16/15.
+ * Created by qianzhou on 3/25/15.
  */
-public class KafkaRequesterTest extends KafkaBaseTest {
+public class StreamManagerTest extends LocalFileMetadataTestCase {
 
-    private static final String NON_EXISTED_TOPIC = "non_existent_topic";
-    private KafkaConfig kafkaConfig;
-
+    private KylinConfig kylinConfig;
+    private StreamManager streamManager;
 
     @Before
     public void before() {
-        kafkaConfig = StreamManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+        this.createTestMetadata();
+        kylinConfig = KylinConfig.getInstanceFromEnv();
+        streamManager = StreamManager.getInstance(kylinConfig);
     }
 
-    @AfterClass
-    public static void afterClass() {
+    @After
+    public void after() {
+        this.cleanupTestMetadata();
     }
 
     @Test
-    @Ignore("since ci does not enable kafka")
-    public void testTopicMeta() throws Exception {
-        TopicMeta kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(kafkaConfig);
-        assertNotNull(kafkaTopicMeta);
-        assertEquals(2, kafkaTopicMeta.getPartitionIds().size());
-        assertEquals(kafkaConfig.getTopic(), kafkaTopicMeta.getName());
-
-        KafkaConfig anotherTopicConfig = kafkaConfig.clone();
-        anotherTopicConfig.setTopic(NON_EXISTED_TOPIC);
-
-        kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(anotherTopicConfig);
-        assertTrue(kafkaTopicMeta == null);
+    public void test() {
+        assertNotNull(streamManager.getKafkaConfig("kafka_test"));
     }
 }

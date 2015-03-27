@@ -34,22 +34,14 @@
 
 package org.apache.kylin.streaming;
 
-import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.metadata.model.TblColRef;
 
-import java.io.IOException;
+import java.util.List;
 
 /**
- * Created by qianzhou on 2/16/15.
+ * Created by qianzhou on 3/25/15.
  */
-public abstract class KafkaBaseTest {
+public interface StreamParser {
 
-    protected static final Logger logger = LoggerFactory.getLogger("kafka test");
-
-    @BeforeClass
-    public static void beforeClass() throws IOException {
-    }
-
-
+    List<String> parse(Stream stream, List<TblColRef> allColumns);
 }

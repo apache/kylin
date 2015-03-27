@@ -1,0 +1,15 @@
+{
+  "uuid" : "8b2b9dfe-900c-4d39-bf89-8472ec6c3c0d",
+  "name" : "kafka_test",
+  "zookeeper" : "sandbox.hortonworks.com:2181",
+  "topic" : "kafka_stream_test",
+  "timeout" : 60000,
+  "maxReadCount" : 1000,
+  "bufferSize" : 65536,
+  "last_modified" : 0,
+  "brokers" : [ {
+    "id" : 0,
+    "host" : "sandbox.hortonworks.com",
+    "port" : 6667
+  } ]
+}

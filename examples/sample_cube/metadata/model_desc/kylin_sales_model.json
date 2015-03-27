@@ -16,6 +16,23 @@
       "foreign_key" : [ "LEAF_CATEG_ID", "LSTG_SITE_ID" ]
     }
   }],
+  "dimensions" : [ {
+    "table" : "DEFAULT.KYLIN_CAL_DT",
+    "columns" : ["CAL_DT", "WEEK_BEG_DT"]
+  }, {
+    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+    "columns" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER" ]
+  }, {
+    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+    "columns" : [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ]
+  }, {
+    "table" : "DEFAULT.KYLIN_SALES",
+    "columns" : [ "LSTG_FORMAT_NAME" ]
+  } ],
+  "metrics": [
+    "PRICE",
+    "ITEM_COUNT"
+  ],
   "capacity" : "SMALL",
   "last_modified" : 1422435345362,
   "fact_table" : "DEFAULT.KYLIN_SALES",

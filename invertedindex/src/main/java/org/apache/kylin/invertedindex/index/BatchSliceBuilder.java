@@ -86,12 +86,8 @@ public class BatchSliceBuilder {
     }
 
     private long increaseSliceTimestamp(long timestamp) {
-        if (timestamp < sliceTimestamp) {
-            throw new IllegalStateException();
-        }
-
-        if (timestamp == sliceTimestamp) {
-            return ++timestamp; // ensure slice timestamp increases
+        if (timestamp <= sliceTimestamp) {
+            return sliceTimestamp+1; // ensure slice timestamp increases
         } else {
             return timestamp;
         }
