@@ -107,7 +107,6 @@ public class BuildCubeWithEngineTest {
                 jobService.deleteJob(jobId);
             }
         }
-
     }
 
     @After
