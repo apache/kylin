@@ -22,14 +22,13 @@
         <h4 class="box-title text-info">Model Designer</h4>
     </div>
     <div class="box-body">
-        <ng-form name="design_form" ng-submit="">
             <!-- Add a mock button to avoid auto submit-->
             <button ng-click="" ng-show="false"></button>
             <div>
                 <ul class="wizard-steps">
                     <li ng-repeat="step in wizardSteps"
                         class="{{step==curStep?'active':''}} {{step.isComplete?'complete':''}}">
-                        <span style="cursor:pointer;" ng-click="goToStep($index)" class="step">{{step.step = ($index + 1)}}</span>
+                        <span style="cursor:pointer;" ng-click="goToStep($index,curStep.form)" class="step">{{step.step = ($index + 1)}}</span>
                         <span class="title">{{step.title}}</span>
                      </li>
                 </ul>
@@ -64,7 +63,6 @@
                     </div>
                 </div>
             </div>
-        </ng-form>
     </div>
 </div>
 
