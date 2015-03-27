@@ -67,7 +67,7 @@ public class EternalStreamProducer {
         scheduledExecutorService.scheduleAtFixedRate(new Thread(new Runnable() {
             @Override
             public void run() {
-                final KeyedMessage<String, String> message = new KeyedMessage<>(kafkaConfig.getTopic(), getOneMessage());
+                final KeyedMessage<String, String> message = new KeyedMessage<String, String>(kafkaConfig.getTopic(), getOneMessage());
                 producer.send(message);
                 try {
                     Thread.sleep(100);

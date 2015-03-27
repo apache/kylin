@@ -36,16 +36,19 @@ package org.apache.kylin.streaming;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
+
 import kafka.cluster.Broker;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+
 import java.io.IOException;
 import java.util.Properties;
 
@@ -87,7 +90,7 @@ public class OneOffStreamProducer {
             public void run() {
                 int count = 0;
                 while (!stopped && count < sendCount) {
-                    final KeyedMessage<String, String> message = new KeyedMessage<>(kafkaConfig.getTopic(), "current time is:" + System.currentTimeMillis());
+                    final KeyedMessage<String, String> message = new KeyedMessage<String, String>(kafkaConfig.getTopic(), "current time is:" + System.currentTimeMillis());
                     producer.send(message);
                     count++;
                     try {
