@@ -215,14 +215,14 @@ public class BuildIIWithStreamTest {
 
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, segment.getStorageLocationIdentifier(), desc, 0);
+        final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, segment.getStorageLocationIdentifier(), segment.getIIInstance(), 0);
         int count = 0;
         while (reader.next()) {
             queue.put(parse(reader.getRow()));
             count++;
         }
         logger.info("total record count:" + count + " htable:" + segment.getStorageLocationIdentifier());
-        queue.put(new Stream(-1, null));
+        queue.put(Stream.EOF);
         final Future<?> future = executorService.submit(streamBuilder);
         try {
             future.get();

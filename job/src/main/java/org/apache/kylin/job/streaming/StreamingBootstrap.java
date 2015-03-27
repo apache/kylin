@@ -123,11 +123,10 @@ public class StreamingBootstrap {
                 getStreamQueue().put(new Stream(offset, bytes));
             }
         };
-        final IIDesc desc = ii.getDescriptor();
         kafkaConsumers.put(getKey(streaming, partitionId), consumer);
 
-        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), iiSegment.getStorageLocationIdentifier(), desc, partitionId);
-        task.setStreamParser(JsonStreamParser.instance);
+        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), iiSegment.getStorageLocationIdentifier(), iiSegment.getIIInstance(), partitionId);
+        task.setStreamParser(new JsonStreamParser(ii.getDescriptor().listAllColumns()));
 
         Executors.newSingleThreadExecutor().submit(consumer);
         Executors.newSingleThreadExecutor().submit(task).get();
