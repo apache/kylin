@@ -20,13 +20,16 @@ package org.apache.kylin.job.hadoop.cube;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.FIFOIterable;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
@@ -48,13 +51,8 @@ import com.google.common.collect.Lists;
  */
 public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<ImmutableBytesWritable, Result> {
 
-    private IIJoinedFlatTableDesc intermediateTableDesc;
-    private ArrayList<IIRow> buffer = Lists.newArrayList();
-    private Iterable<Slice> slices;
-
-    private String iiName;
-    private IIInstance ii;
-    private IIDesc iiDesc;
+    private Queue<IIRow> buffer = Lists.newLinkedList();
+    private Iterator<Slice> slices;
 
     private int[] baseCuboidCol2FlattenTableCol;
 
@@ -65,14 +63,14 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
         Configuration conf = context.getConfiguration();
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
-        iiName = conf.get(BatchConstants.CFG_II_NAME);
-        ii = IIManager.getInstance(config).getII(iiName);
-        iiDesc = ii.getDescriptor();
+        String iiName = conf.get(BatchConstants.CFG_II_NAME);
+        IIInstance ii = IIManager.getInstance(config).getII(iiName);
+        IIDesc iiDesc = ii.getDescriptor();
 
-        intermediateTableDesc = new IIJoinedFlatTableDesc(iiDesc);
+        IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(iiDesc);
         TableRecordInfo info = new TableRecordInfo(iiDesc);
         KeyValueCodec codec = new IIKeyValueCodecWithState(info.getDigest());
-        slices = codec.decodeKeyValue(buffer);
+        slices = codec.decodeKeyValue(new FIFOIterable<IIRow>(buffer)).iterator();
 
         baseCuboidCol2FlattenTableCol = new int[factDictCols.size()];
         for (int i = 0; i < factDictCols.size(); ++i) {
@@ -98,9 +96,9 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
         }
         buffer.add(iiRow);
 
-        if (slices.iterator().hasNext()) {
+        if (slices.hasNext()) {
             byte[] vBytesBuffer = null;
-            Slice slice = slices.iterator().next();
+            Slice slice = slices.next();
 
             for (RawTableRecord record : slice) {
                 for (int i = 0; i < factDictCols.size(); ++i) {
@@ -113,7 +111,7 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
                         vBytesBuffer = new byte[dictionary.getSizeOfValue() * 2];
                     }
 
-                    int vid = record.getValueID(baseCuboidIndex);
+                    int vid = record.getValueID(indexInRecord);
                     if (vid == dictionary.nullId()) {
                         continue;
                     }

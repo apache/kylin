@@ -319,6 +319,7 @@ public class IIDesc extends RootPersistentEntity {
         return sliceSize;
     }
 
+
     public String getSignature() {
         return signature;
     }

@@ -210,18 +210,22 @@ public class BaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, Text
 
         try {
             bytesSplitter.split(value.getBytes(), value.getLength(), byteRowDelimiter);
-            intermediateTableDesc.sanityCheck(bytesSplitter);
+            outputKV(context);
 
-            byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
-            outputKey.set(rowKey, 0, rowKey.length);
-
-            buildValue(bytesSplitter.getSplitBuffers());
-            outputValue.set(valueBuf.array(), 0, valueBuf.position());
-
-            context.write(outputKey, outputValue);
         } catch (Exception ex) {
             handleErrorRecord(bytesSplitter, ex);
         }
+    }
+
+    private void outputKV(Context context) throws IOException, InterruptedException {
+        intermediateTableDesc.sanityCheck(bytesSplitter);
+
+        byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
+        outputKey.set(rowKey, 0, rowKey.length);
+
+        buildValue(bytesSplitter.getSplitBuffers());
+        outputValue.set(valueBuf.array(), 0, valueBuf.position());
+        context.write(outputKey, outputValue);
     }
 
     private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {

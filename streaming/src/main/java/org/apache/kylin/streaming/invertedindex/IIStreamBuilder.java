@@ -82,7 +82,11 @@ public class IIStreamBuilder extends StreamBuilder {
         super(queue, desc.getSliceSize());
         this.desc = desc;
         try {
-            this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
+            if (hTableName != null) {
+                this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
+            } else {
+                this.hTable = null;
+            }
         } catch (IOException e) {
             logger.error("cannot open htable name:" + hTableName, e);
             throw new RuntimeException("cannot open htable name:" + hTableName, e);
@@ -105,10 +109,16 @@ public class IIStreamBuilder extends StreamBuilder {
         TableRecordInfo tableRecordInfo = new TableRecordInfo(desc, dictionaryMap);
         final Slice slice = buildSlice(table, sliceBuilder, tableRecordInfo, dictionaryMap);
         logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
-        loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
+
+        outputSlice(slice, tableRecordInfo);
         submitOffset();
+
         stopwatch.stop();
         logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + TimeUnit.MILLISECONDS);
+    }
+
+    protected void outputSlice(Slice slice, TableRecordInfo tableRecordInfo) throws IOException {
+        loadToHBase(hTable, slice, new IIKeyValueCodec(tableRecordInfo.getDigest()));
     }
 
     private Map<Integer, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
@@ -122,15 +132,19 @@ public class IIStreamBuilder extends StreamBuilder {
                 }
             }
         }
+
         Map<Integer, Dictionary<?>> result = Maps.newHashMap();
         for (TblColRef tblColRef : valueMap.keySet()) {
-            result.put(desc.findColumn(tblColRef), DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
-                @Nullable
-                @Override
-                public byte[] apply(String input) {
-                    return input.getBytes();
-                }
-            })));
+            result.put(desc.findColumn(tblColRef), //
+                    DictionaryGenerator.buildDictionaryFromValueList(//
+                            tblColRef.getType(), //
+                            Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
+                                @Nullable
+                                @Override
+                                public byte[] apply(String input) {
+                                    return input.getBytes();
+                                }
+                            })));
         }
         return result;
     }
@@ -177,7 +191,6 @@ public class IIStreamBuilder extends StreamBuilder {
             hTable.close();
         }
     }
-
 
     private void submitOffset() {
 

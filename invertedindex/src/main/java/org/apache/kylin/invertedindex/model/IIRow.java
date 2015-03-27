@@ -34,9 +34,13 @@
 
 package org.apache.kylin.invertedindex.model;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.BytesUtil;
+
+import java.util.List;
 
 /**
  * Created by qianzhou on 3/10/15.
@@ -76,5 +80,11 @@ public final class IIRow {
         } else if (BytesUtil.compareBytes(IIDesc.HBASE_DICTIONARY_BYTES, 0, c.getQualifierArray(), c.getQualifierOffset(), IIDesc.HBASE_DICTIONARY_BYTES.length) == 0) {
             this.getDictionary().set(c.getValueArray(), c.getValueOffset(), c.getValueLength());
         }
+    }
+
+    public List<Cell> makeCells() {
+        Cell a = new KeyValue(this.getKey().copyBytes(), IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, this.getValue().copyBytes());
+        Cell b = new KeyValue(this.getKey().copyBytes(), IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES, this.getDictionary().copyBytes());
+        return Lists.newArrayList(a, b);
     }
 }
