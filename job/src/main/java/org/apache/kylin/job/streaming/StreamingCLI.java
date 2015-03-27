@@ -55,8 +55,6 @@ public class StreamingCLI {
             if (args[0].equals("start")) {
                 String kafkaConfName = args[1];
                 StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).start(kafkaConfName, 0);
-            } else if (args.equals("stop")) {
-
             } else {
                 printArgsError(args);
             }

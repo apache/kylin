@@ -66,7 +66,14 @@ public class StreamingBootstrap {
     private Map<String, KafkaConsumer> kafkaConsumers = Maps.newConcurrentMap();
 
     public static StreamingBootstrap getInstance(KylinConfig kylinConfig) {
-        return new StreamingBootstrap(kylinConfig);
+        final StreamingBootstrap bootstrap = new StreamingBootstrap(kylinConfig);
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                bootstrap.stop();
+            }
+        }));
+        return bootstrap;
     }
 
     private StreamingBootstrap(KylinConfig kylinConfig) {
@@ -84,11 +91,9 @@ public class StreamingBootstrap {
         }
     }
 
-    public void stop(String streaming, int partitionId) throws Exception {
-        final KafkaConsumer consumer = kafkaConsumers.remove(getKey(streaming, partitionId));
-        if (consumer != null) {
+    public void stop() {
+        for (KafkaConsumer consumer : kafkaConsumers.values()) {
             consumer.stop();
-            consumer.getStreamQueue().put(Stream.EOF);
         }
     }
 
@@ -125,7 +130,7 @@ public class StreamingBootstrap {
         task.setStreamParser(JsonStreamParser.instance);
 
         Executors.newSingleThreadExecutor().submit(consumer);
-        Executors.newSingleThreadExecutor().submit(task);
+        Executors.newSingleThreadExecutor().submit(task).get();
     }
 
     private String getKey(String streaming, int partitionId) {

@@ -34,7 +34,6 @@
 
 package org.apache.kylin.streaming;
 
-import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.PartitionMetadata;
@@ -44,10 +43,8 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by qianzhou on 2/15/15.
@@ -64,7 +61,7 @@ public abstract class KafkaConsumer implements Runnable {
 
     private Logger logger;
 
-    private volatile boolean stop = false;
+    private volatile boolean isRunning = true;
 
     public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
         this.topic = topic;
@@ -94,7 +91,7 @@ public abstract class KafkaConsumer implements Runnable {
     public void run() {
         try {
             Broker leadBroker = getLeadBroker();
-            while (!stop) {
+            while (isRunning) {
                 if (leadBroker == null) {
                     leadBroker = getLeadBroker();
                 }
@@ -118,6 +115,7 @@ public abstract class KafkaConsumer implements Runnable {
                     offset++;
                 }
             }
+            getStreamQueue().put(Stream.EOF);
         } catch (Exception e) {
             logger.error("consumer has encountered an error", e);
         }
@@ -126,7 +124,7 @@ public abstract class KafkaConsumer implements Runnable {
     protected abstract void consume(long offset, ByteBuffer payload) throws Exception;
 
     public void stop() {
-        this.stop = true;
+        this.isRunning = false;
     }
 
 }
