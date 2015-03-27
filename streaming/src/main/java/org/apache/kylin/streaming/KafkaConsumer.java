@@ -64,6 +64,8 @@ public abstract class KafkaConsumer implements Runnable {
 
     private Logger logger;
 
+    private volatile boolean stop = false;
+
     public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
         this.topic = topic;
         this.partitionId = partitionId;
@@ -92,7 +94,7 @@ public abstract class KafkaConsumer implements Runnable {
     public void run() {
         try {
             Broker leadBroker = getLeadBroker();
-            while (true) {
+            while (!stop) {
                 if (leadBroker == null) {
                     leadBroker = getLeadBroker();
                 }
@@ -122,5 +124,9 @@ public abstract class KafkaConsumer implements Runnable {
     }
 
     protected abstract void consume(long offset, ByteBuffer payload) throws Exception;
+
+    public void stop() {
+        this.stop = true;
+    }
 
 }
