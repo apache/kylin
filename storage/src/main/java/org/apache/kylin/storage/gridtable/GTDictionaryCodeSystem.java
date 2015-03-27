@@ -83,7 +83,12 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
 
     @Override
     public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
-        throw new UnsupportedOperationException();
+        DataTypeSerializer serializer = serializers[col];
+        if (serializer instanceof DictionarySerializer) {
+            ((DictionarySerializer) serializer).serializeWithRounding(value,  roundingFlag, buf);
+        } else {
+            serializer.serialize(value,  buf);
+        }
     }
 
     @Override
@@ -103,10 +108,15 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
             this.dictionary = dictionary;
         }
 
+        public void serializeWithRounding(Object value, int roundingFlag, ByteBuffer buf) {
+            int id = dictionary.getIdFromValue(value, roundingFlag);
+            BytesUtil.writeUnsigned(id, dictionary.getSizeOfId(), buf);
+        }
+
         @Override
-        public void serialize(Object value, ByteBuffer out) {
+        public void serialize(Object value, ByteBuffer buf) {
             int id = dictionary.getIdFromValue(value);
-            BytesUtil.writeUnsigned(id, dictionary.getSizeOfId(), out);
+            BytesUtil.writeUnsigned(id, dictionary.getSizeOfId(), buf);
         }
 
         @Override

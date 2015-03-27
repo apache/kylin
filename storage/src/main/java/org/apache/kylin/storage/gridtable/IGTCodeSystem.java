@@ -12,19 +12,30 @@ public interface IGTCodeSystem {
 
     IFilterCodeSystem<ByteArray> getFilterCodeSystem();
     
-    /** return the length of code starting at the specified buffer, buffer position must not change after return */
+    /** Return the length of code starting at the specified buffer, buffer position must not change after return */
     int codeLength(int col, ByteBuffer buf);
     
-    /** encode a value into code */
-    void encodeColumnValue(int col, Object value, ByteBuffer buf);
+    /**
+     * Encode a value into code.
+     * 
+     * @throws IllegalArgumentException if the value is not in dictionary
+     */
+    void encodeColumnValue(int col, Object value, ByteBuffer buf) throws IllegalArgumentException;
     
-    /** encode a value into code, with option to floor rounding -1, no rounding 0,  or ceiling rounding 1 */
-    void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf);
+    /**
+     * Encode a value into code, with option to floor rounding -1, no rounding 0,  or ceiling rounding 1
+     * 
+     * @throws IllegalArgumentException
+     * - if rounding=0 and the value is not in dictionary
+     * - if rounding=-1 and there's no equal or smaller value in dictionary
+     * - if rounding=1 and there's no equal or bigger value in dictionary
+     */
+    void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) throws IllegalArgumentException;
     
-    /** decode a code into value */
+    /** Decode a code into value */
     Object decodeColumnValue(int col, ByteBuffer buf);
     
-    /** return an aggregator for metrics */
+    /** Return an aggregator for metrics */
     MeasureAggregator<?> newMetricsAggregator(String aggrFunction, int col);
     
 }
