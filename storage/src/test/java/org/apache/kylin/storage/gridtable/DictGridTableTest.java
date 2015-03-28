@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Map;
 
@@ -42,6 +43,7 @@ public class DictGridTableTest {
         verifyConvertFilterConstants1(table);
         verifyConvertFilterConstants2(table);
         verifyConvertFilterConstants3(table);
+        verifyConvertFilterConstants4(table);
     }
 
     private void verifyFirstRow(GridTable table) throws IOException {
@@ -51,14 +53,15 @@ public class DictGridTableTest {
     private void verifyScanWithUnevaluatableFilter(GridTable table) throws IOException {
         GTInfo info = table.getInfo();
 
-        CompareTupleFilter fcomp = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
-        ExtractTupleFilter funevaluatable = unevaluatable(info.colRef(1));
-        LogicalTupleFilter filter = and(fcomp, funevaluatable);
+        CompareTupleFilter fComp = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
+        ExtractTupleFilter fUnevaluatable = unevaluatable(info.colRef(1));
+        LogicalTupleFilter fNotPlusUnevaluatable = not(unevaluatable(info.colRef(1)));
+        LogicalTupleFilter filter = and(fComp, fUnevaluatable, fNotPlusUnevaluatable);
 
         GTScanRequest req = new GTScanRequest(info, null, setOf(0), setOf(3), new String[] { "sum" }, filter);
 
         // note the unEvaluatable column 1 in filter is added to group by
-        assertEquals("GTScanRequest [range=null-null, columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
+        assertEquals("GTScanRequest [range=null-null, columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
         
         doScanAndVerify(table, req, "[1421280000000, 20, null, 20, null]");
     }
@@ -66,9 +69,9 @@ public class DictGridTableTest {
     private void verifyScanWithEvaluatableFilter(GridTable table) throws IOException {
         GTInfo info = table.getInfo();
 
-        CompareTupleFilter fcomp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
-        CompareTupleFilter fcomp2 = compare(info.colRef(1), FilterOperatorEnum.GT, enc(info, 1, "10"));
-        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        CompareTupleFilter fComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
+        CompareTupleFilter fComp2 = compare(info.colRef(1), FilterOperatorEnum.GT, enc(info, 1, "10"));
+        LogicalTupleFilter filter = and(fComp1, fComp2);
 
         GTScanRequest req = new GTScanRequest(info, null, setOf(0), setOf(3), new String[] { "sum" }, filter);
         
@@ -85,9 +88,9 @@ public class DictGridTableTest {
         TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
         TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
 
-        CompareTupleFilter fcomp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
-        CompareTupleFilter fcomp2 = compare(extColB, FilterOperatorEnum.EQ, "10");
-        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.EQ, "10");
+        LogicalTupleFilter filter = and(fComp1, fComp2);
         
         Map<TblColRef, Integer> colMapping = Maps.newHashMap();
         colMapping.put(extColA, 0);
@@ -104,9 +107,9 @@ public class DictGridTableTest {
         TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
         TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
         
-        CompareTupleFilter fcomp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
-        CompareTupleFilter fcomp2 = compare(extColB, FilterOperatorEnum.LT, "9");
-        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LT, "9");
+        LogicalTupleFilter filter = and(fComp1, fComp2);
         
         Map<TblColRef, Integer> colMapping = Maps.newHashMap();
         colMapping.put(extColA, 0);
@@ -137,6 +140,26 @@ public class DictGridTableTest {
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], []]", newFilter.toString());
     }
     
+    private void verifyConvertFilterConstants4(GridTable table) {
+        GTInfo info = table.getInfo();
+        
+        TableDesc extTable = TableDesc.mockup("ext");
+        TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
+        TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
+        
+        CompareTupleFilter fcomp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        CompareTupleFilter fcomp2 = compare(extColB, FilterOperatorEnum.IN, "9", "10", "15");
+        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        
+        Map<TblColRef, Integer> colMapping = Maps.newHashMap();
+        colMapping.put(extColA, 0);
+        colMapping.put(extColB, 1);
+        
+        // $1 in ("9", "10", "15") has only "10" left
+        TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+        assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 IN [\\x00]]", newFilter.toString());
+    }
+    
     private void doScanAndVerify(GridTable table, GTScanRequest req, String... verifyRows) throws IOException {
         System.out.println(req);
         IGTScanner scanner = table.scan(req);
@@ -163,10 +186,10 @@ public class DictGridTableTest {
         return r;
     }
 
-    private CompareTupleFilter compare(TblColRef col, FilterOperatorEnum op, Object value) {
+    private CompareTupleFilter compare(TblColRef col, FilterOperatorEnum op, Object... value) {
         CompareTupleFilter result = new CompareTupleFilter(op);
         result.addChild(new ColumnTupleFilter(col));
-        result.addChild(new ConstantTupleFilter(value));
+        result.addChild(new ConstantTupleFilter(Arrays.asList(value)));
         return result;
     }
 
@@ -175,11 +198,11 @@ public class DictGridTableTest {
     }
 
     private LogicalTupleFilter or(TupleFilter... children) {
-        return logic(FilterOperatorEnum.AND, children);
+        return logic(FilterOperatorEnum.OR, children);
     }
 
     private LogicalTupleFilter not(TupleFilter child) {
-        return logic(FilterOperatorEnum.AND, child);
+        return logic(FilterOperatorEnum.NOT, child);
     }
 
     private LogicalTupleFilter logic(FilterOperatorEnum op, TupleFilter... children) {
