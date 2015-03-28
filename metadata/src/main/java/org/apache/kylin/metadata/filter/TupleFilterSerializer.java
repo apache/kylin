@@ -59,8 +59,7 @@ public class TupleFilterSerializer {
     }
 
     private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer, IFilterCodeSystem<?> cs) {
-        if (decorator != null) { // give decorator a chance to manipulate the
-                                 // output filter
+        if (decorator != null) { // give decorator a chance to manipulate the output filter
             filter = decorator.onSerialize(filter);
         }
 
