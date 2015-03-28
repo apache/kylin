@@ -32,6 +32,6 @@ Some work items for new joiners.
   * [KYLIN-602](https://issues.apache.org/jira/browse/KYLIN-602) ODBC driver support excel
   * Implement ODBC async mode, streaming from Kylin and feeding to client
 * Benchmark
-  * [Issue #18](https://github.com/KylinOLAP/Kylin/issues/18) Benchmark on standard dataset
+  * [KYLIN-487](https://issues.apache.org/jira/browse/KYLIN-487) Benchmark on standard dataset
 
 
