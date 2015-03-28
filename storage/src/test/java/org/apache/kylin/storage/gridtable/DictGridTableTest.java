@@ -39,7 +39,9 @@ public class DictGridTableTest {
         verifyFirstRow(table);
         verifyScanWithUnevaluatableFilter(table);
         verifyScanWithEvaluatableFilter(table);
-        verifyConvertFilterConstants(table);
+        verifyConvertFilterConstants1(table);
+        verifyConvertFilterConstants2(table);
+        verifyConvertFilterConstants3(table);
     }
 
     private void verifyFirstRow(GridTable table) throws IOException {
@@ -76,7 +78,7 @@ public class DictGridTableTest {
         doScanAndVerify(table, req, "[1421280000000, 30, null, 30, null]", "[1421366400000, 20, null, 40, null]");
     }
 
-    private void verifyConvertFilterConstants(GridTable table) {
+    private void verifyConvertFilterConstants1(GridTable table) {
         GTInfo info = table.getInfo();
         
         TableDesc extTable = TableDesc.mockup("ext");
@@ -95,6 +97,46 @@ public class DictGridTableTest {
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 EQ [\\x00]]", newFilter.toString());
     }
 
+    private void verifyConvertFilterConstants2(GridTable table) {
+        GTInfo info = table.getInfo();
+        
+        TableDesc extTable = TableDesc.mockup("ext");
+        TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
+        TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
+        
+        CompareTupleFilter fcomp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        CompareTupleFilter fcomp2 = compare(extColB, FilterOperatorEnum.LT, "9");
+        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        
+        Map<TblColRef, Integer> colMapping = Maps.newHashMap();
+        colMapping.put(extColA, 0);
+        colMapping.put(extColB, 1);
+        
+        // $1<"9" round up to $1<"10"
+        TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+        assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 LT [\\x00]]", newFilter.toString());
+    }
+    
+    private void verifyConvertFilterConstants3(GridTable table) {
+        GTInfo info = table.getInfo();
+        
+        TableDesc extTable = TableDesc.mockup("ext");
+        TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
+        TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
+        
+        CompareTupleFilter fcomp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        CompareTupleFilter fcomp2 = compare(extColB, FilterOperatorEnum.LTE, "9");
+        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        
+        Map<TblColRef, Integer> colMapping = Maps.newHashMap();
+        colMapping.put(extColA, 0);
+        colMapping.put(extColB, 1);
+        
+        // $1<="9" round down to FALSE
+        TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
+        assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], []]", newFilter.toString());
+    }
+    
     private void doScanAndVerify(GridTable table, GTScanRequest req, String... verifyRows) throws IOException {
         System.out.println(req);
         IGTScanner scanner = table.scan(req);
