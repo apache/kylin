@@ -124,7 +124,7 @@ public class GTScanRangePlanner {
             result.add(andRanges);
         }
 
-        return preprocessConstantConditions(result);
+        return preEvaluateConstantConditions(result);
     }
 
     private Collection<ColumnRange> translateToAndDimRanges(List<? extends TupleFilter> andFilters) {
@@ -151,7 +151,7 @@ public class GTScanRangePlanner {
         return rangeMap.values();
     }
 
-    private List<Collection<ColumnRange>> preprocessConstantConditions(List<Collection<ColumnRange>> orAndRanges) {
+    private List<Collection<ColumnRange>> preEvaluateConstantConditions(List<Collection<ColumnRange>> orAndRanges) {
         boolean globalAlwaysTrue = false;
         Iterator<Collection<ColumnRange>> iterator = orAndRanges.iterator();
         while (iterator.hasNext()) {
