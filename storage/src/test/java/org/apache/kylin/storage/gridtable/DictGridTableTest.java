@@ -37,6 +37,7 @@ public class DictGridTableTest {
     @Test
     public void test() throws IOException {
         GridTable table = newTestTable();
+//        verifyScanRangePlanner(table);
         verifyFirstRow(table);
         verifyScanWithUnevaluatableFilter(table);
         verifyScanWithEvaluatableFilter(table);
@@ -44,6 +45,26 @@ public class DictGridTableTest {
         verifyConvertFilterConstants2(table);
         verifyConvertFilterConstants3(table);
         verifyConvertFilterConstants4(table);
+    }
+
+    private void verifyScanRangePlanner(GridTable table) {
+        GTInfo info = table.getInfo();
+        
+        // flatten or-and
+        {
+            CompareTupleFilter fComp = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
+            ExtractTupleFilter fUnevaluatable = unevaluatable(info.colRef(1));
+            LogicalTupleFilter fNotPlusUnevaluatable = not(unevaluatable(info.colRef(1)));
+            LogicalTupleFilter filter = and(fComp, fUnevaluatable, fNotPlusUnevaluatable);
+        }
+        
+        // pre-evaluate ever true and ever false
+        
+        // unclosed range swallow closed
+        
+        // merge overlap range
+        
+        // merge too many ranges
     }
 
     private void verifyFirstRow(GridTable table) throws IOException {
@@ -127,9 +148,9 @@ public class DictGridTableTest {
         TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
         TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
         
-        CompareTupleFilter fcomp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
-        CompareTupleFilter fcomp2 = compare(extColB, FilterOperatorEnum.LTE, "9");
-        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LTE, "9");
+        LogicalTupleFilter filter = and(fComp1, fComp2);
         
         Map<TblColRef, Integer> colMapping = Maps.newHashMap();
         colMapping.put(extColA, 0);
@@ -147,9 +168,9 @@ public class DictGridTableTest {
         TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
         TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
         
-        CompareTupleFilter fcomp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
-        CompareTupleFilter fcomp2 = compare(extColB, FilterOperatorEnum.IN, "9", "10", "15");
-        LogicalTupleFilter filter = and(fcomp1, fcomp2);
+        CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
+        CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.IN, "9", "10", "15");
+        LogicalTupleFilter filter = and(fComp1, fComp2);
         
         Map<TblColRef, Integer> colMapping = Maps.newHashMap();
         colMapping.put(extColA, 0);
