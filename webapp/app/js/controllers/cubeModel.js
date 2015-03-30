@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log,TableModel) {
 
 
     $scope.buildGraph = function (model) {
@@ -95,7 +95,8 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaMod
 
     // Controller for cube model lookup modal.
     var cubeModelLookupModalCtrl = function ($scope, $modalInstance) {
-        $scope.ok = function () {
+        $scope.ok = function (lookup_form) {
+            console.log(lookup_form);
             $modalInstance.close();
         };
 
@@ -175,5 +176,51 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaMod
         $scope.lookupState.editing = false;
         $scope.lookupState.editingIndex = -1;
         $scope.newLookup = Lookup();
+    };
+
+    $scope.checkLookupForm = function(){
+            var errors = [];
+            // null validate
+            for(var i = 0;i<$scope.newLookup.join.primary_key.length;i++){
+                if($scope.newLookup.join.primary_key[i]==='null'){
+                    errors.push("Primary Key can't be null.");
+                    break;
+                }
+            }
+            for(var i = 0;i<$scope.newLookup.join.foreign_key.length;i++){
+                if($scope.newLookup.join.foreign_key[i]==='null'){
+                    errors.push("Foreign Key can't be null.");
+                    break;
+                }
+            }
+
+            //column type validate
+            var fact_table = $scope.model.fact_table;
+            var lookup_table = $scope.newLookup.table;
+
+            for(var i = 0;i<$scope.newLookup.join.primary_key.length;i++){
+                var pk_column = $scope.newLookup.join.primary_key[i];
+                var fk_column = $scope.newLookup.join.foreign_key[i];
+                if(pk_column!=='null'&&fk_column!=='null'){
+                    var pk_type = TableModel.getColumnType(pk_column,lookup_table);
+                    var fk_type = TableModel.getColumnType(fk_column,fact_table);
+                    if(pk_type!==fk_type){
+                        errors.push(" Column Type incompatible "+pk_column+"["+pk_type+"]"+","+fk_column+"["+fk_type+"].");
+                    }
+                }
+            }
+
+            var errorInfo = "";
+            angular.forEach(errors,function(item){
+                errorInfo+="\n"+item;
+            });
+            if(errors.length){
+//                SweetAlert.swal('Warning!', errorInfo, '');
+                SweetAlert.swal('', errorInfo, 'warning');
+                return false;
+            }else{
+                return true;
+            }
+
     };
 });
