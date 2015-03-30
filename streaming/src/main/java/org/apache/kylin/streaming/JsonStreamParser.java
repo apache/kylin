@@ -34,14 +34,17 @@
 
 package org.apache.kylin.streaming;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.SimpleType;
 import com.google.common.collect.Lists;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,9 +53,9 @@ import java.util.Map;
  */
 public final class JsonStreamParser implements StreamParser {
 
-    private final List<TblColRef> allColumns;
+    private static final Logger logger = LoggerFactory.getLogger(JsonStreamParser.class);
 
-    private static final JsonParser JSON_PARSER = new JsonParser();
+    private final List<TblColRef> allColumns;
 
     public JsonStreamParser(List<TblColRef> allColumns){
         this.allColumns = allColumns;
@@ -60,16 +63,22 @@ public final class JsonStreamParser implements StreamParser {
 
     @Override
     public List<String> parse(Stream stream) {
-        final JsonObject root = JSON_PARSER.parse(new String(stream.getRawData())).getAsJsonObject();
-        ArrayList<String> result = Lists.newArrayList();
-
-        for (TblColRef column : allColumns) {
-            for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
-                if (entry.getKey().equalsIgnoreCase(column.getName())) {
-                    result.add(entry.getValue().getAsString());
+        try {
+            Map<String, String> json = new ObjectMapper().readValue(
+                    stream.getRawData(), MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class)));
+            ArrayList<String> result = Lists.newArrayList();
+            for (TblColRef column : allColumns) {
+                for (Map.Entry<String, String> entry : json.entrySet()) {
+                    if (entry.getKey().equalsIgnoreCase(column.getName())) {
+                        result.add(entry.getValue());
+                    }
                 }
             }
+            return result;
+        } catch (IOException e) {
+            logger.error("error parsing stream", e);
+            throw new RuntimeException(e);
         }
-        return result;
     }
+
 }
