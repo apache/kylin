@@ -2,7 +2,6 @@ package org.apache.kylin.job.hadoop.cubev2;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
@@ -31,7 +30,6 @@ import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.GridTable;
 import org.apache.kylin.storage.gridtable.IGTScanner;
-import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.cube.CubeStreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +40,6 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Created by shaoshi on 3/24/15.
@@ -62,11 +56,9 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
 
     private Text outputKey = new Text();
     private Text outputValue = new Text();
-    private final LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
     private CubeStreamBuilder streamBuilder = null;
     private Map<TblColRef, Dictionary> dictionaryMap = null;
     private Map<Long, GridTable> cuboidsMap = null; // key: cuboid id; value: grid table;
-    private Future<?> future;
     private Cuboid baseCuboid;
     private int mapperTaskId;
     private int counter;
@@ -74,6 +66,8 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
     private Object[] measures;
     private MeasureCodec measureCodec;
+
+    private List<List<String>> table;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -87,6 +81,33 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
         cubeDesc = cube.getDescriptor();
         String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
         cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+
+        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
+        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+        baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+        mapperTaskId = context.getTaskAttemptID().getTaskID().getId();
+
+        measures = new Object[cubeDesc.getMeasures().size()];
+        measureCodec = new MeasureCodec(cubeDesc.getMeasures());
+
+        table = Lists.newArrayList();
+    }
+
+    @Override
+    public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
+        // put each row to the queue
+        List<String> row = HiveTableReader.getRowAsList(record);
+        table.add(row);
+        counter++;
+        if (counter % BatchConstants.COUNTER_MAX == 0) {
+            logger.info("Handled " + counter + " records!");
+        }
+    }
+
+    protected void cleanup(Mapper.Context context) throws IOException, InterruptedException {
+
+        // end to trigger cubing calculation
+        logger.info("Totally read " + counter + " rows in memory, trigger cube build now.");
         dictionaryMap = Maps.newHashMap();
         cuboidsMap = Maps.newHashMap();
 
@@ -104,42 +125,8 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
             }
         }
 
-        streamBuilder = new CubeStreamBuilder(queue, Integer.MAX_VALUE, cube, false, dictionaryMap, cuboidsMap);
-
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        future = executorService.submit(streamBuilder);
-
-        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-        mapperTaskId = context.getTaskAttemptID().getTaskID().getId();
-
-        measures = new Object[cubeDesc.getMeasures().size()];
-        measureCodec = new MeasureCodec(cubeDesc.getMeasures());
-    }
-
-    @Override
-    public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
-        // put each row to the queue
-        queue.put(parse(record));
-
-        counter++;
-        if (counter % BatchConstants.COUNTER_MAX == 0) {
-            logger.info("Handled " + counter + " records!");
-        }
-    }
-
-    protected void cleanup(Mapper.Context context) throws IOException, InterruptedException {
-
-        // end to trigger cubing calculation
-        logger.info("Totally read " + counter + " rows in memory, trigger cube build now.");
-        queue.put(new Stream(-1, null));
-        try {
-            future.get();
-        } catch (Exception e) {
-            logger.error("cube build failed", e);
-            throw new IOException(e);
-        }
+        streamBuilder = new CubeStreamBuilder(table, cube, false, dictionaryMap, cuboidsMap);
+        streamBuilder.build();
         logger.info("Cube build success");
         logger.info("Cube segment calculation in mapper " + mapperTaskId + " finished; cuboid number: " + cuboidsMap.size());
         List<Long> allCuboids = Lists.newArrayList();
@@ -197,11 +184,9 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
             logger.info("Cuboid " + cuboid + " has " + cuboidRowCount + " rows on mapper " + this.mapperTaskId);
         }
 
+        table.clear();
 
     }
 
-    private Stream parse(HCatRecord record) {
-        return new Stream(System.currentTimeMillis(), StringUtils.join(HiveTableReader.getRowAsStringArray(record), ",").getBytes());
-    }
 
 }
