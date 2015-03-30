@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,$log) {
+KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,$log,SweetAlert) {
 
     $log.info($scope.model);
 
@@ -26,16 +26,16 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     $scope.newDimension = null;
     $scope.newMeasure = null;
 
+    $scope.forms = {};
+
 
     $scope.wizardSteps = [
         {title: 'Model Info', src: 'partials/modelDesigner/model_info.html', isComplete: false,form:'model_info_form'},
-        {title: 'Data Model', src: 'partials/modelDesigner/data_model.html', isComplete: false,form:null},
-        {title: 'Dimensions', src: 'partials/modelDesigner/model_dimensions.html', isComplete: false,form:null},
+        {title: 'Data Model', src: 'partials/modelDesigner/data_model.html', isComplete: false,form:'data_model_form'},
+        {title: 'Dimensions', src: 'partials/modelDesigner/model_dimensions.html', isComplete: false,form:'model_dimensions'},
         {title: 'Measures', src: 'partials/modelDesigner/model_measures.html', isComplete: false,form:null},
         {title: 'Settings', src: 'partials/modelDesigner/conditions_settings.html', isComplete: false,form:null}
     ];
-
-    $scope.formStepMap =[{}]
 
     $scope.curStep = $scope.wizardSteps[0];
 
@@ -95,11 +95,55 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
         }
     };
 
-    $scope.goToStep = function(stepIndex,form){
-        if(form){
-            console.log($scope[form]);
-            console.log(document.querySelector("form"));
+    $scope.checkForm = function(){
+        if(!$scope.curStep.form){
+            return true;
         }
+        if($scope.state.mode==='view'){
+            return true;
+        }
+        else{
+            //form validation
+            if($scope.forms[$scope.curStep.form].$invalid){
+                return false;
+            }else{
+                //business rule check
+                switch($scope.curStep.form){
+                    case 'data_model_form':
+                        return $scope.check_data_model();
+                     break;
+                    default:
+                        return true;
+                        break;
+                }
+            }
+        }
+    };
+
+    /*
+     * lookups can't be null
+     */
+    $scope.check_data_model = function(){
+        var errors = [];
+        if(!$scope.model.lookups.length){
+            errors.push("No lookup table defined");
+        }
+        var errorInfo = "";
+        angular.forEach(errors,function(item){
+            errorInfo+="\n"+item;
+        });
+        if(errors.length){
+            SweetAlert.swal('', errorInfo, 'warning');
+            return false;
+        }else{
+            return true;
+        }
+
+    }
+
+
+
+    $scope.goToStep = function(stepIndex){
         for(var i=0;i<$scope.wizardSteps.length;i++){
             if(i<=stepIndex){
                 $scope.wizardSteps[i].isComplete = true;

@@ -32,33 +32,34 @@
         </div>
     </div>
 
+    <ng-form name="model_dimensions" novalidate>
      <!-- VIEW MODE -->
-    <table class="table table-striped table-hover" ng-if="state.mode=='view'&&model.dimensions.length > 0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Table Name</th>
-                <th>Columns</th>
-            </tr>
-        </thead>
-        <tbody class="cube-dimension">
-            <tr ng-repeat="dimension in model.dimensions | filter:dimState.filter track by $index">
-                <!--ID -->
-                <td>
-                    <b>{{dimension.id = ($index + 1)}}</b>
-                </td>
-                <!--Name -->
-                <td>
-                    <span>{{dimension.table}}</span>
-                </td>
-                <!--Table Name -->
-                <td>
-                    <span>{{dimension.columns}}</span>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
+        <table class="table table-striped table-hover" ng-if="state.mode=='view'&&model.dimensions.length > 0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Table Name</th>
+                    <th>Columns</th>
+                </tr>
+            </thead>
+            <tbody class="cube-dimension">
+                <tr ng-repeat="dimension in model.dimensions | filter:dimState.filter track by $index">
+                    <!--ID -->
+                    <td>
+                        <b>{{dimension.id = ($index + 1)}}</b>
+                    </td>
+                    <!--Name -->
+                    <td>
+                        <span>{{dimension.table}}</span>
+                    </td>
+                    <!--Table Name -->
+                    <td>
+                        <span>{{dimension.columns}}</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </ng-form>
     <div  ng-if="state.mode=='edit'" class="form-group model-dimension-edit" style="width: 100%">
         <h4 style="margin-left:42px">Dimensions</h4>
         <table style="margin-left:42px; width:92%"

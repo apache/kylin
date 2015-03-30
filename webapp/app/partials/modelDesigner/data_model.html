@@ -17,7 +17,7 @@
 -->
 
 <div ng-controller="CubeModelCtrl">
-    <ng-form name="model_form">
+    <ng-form name="forms.data_model_form">
 
     <!-- Fact Table Name -->
     <div class="form-group">
@@ -25,9 +25,11 @@
             <label class="col-xs-12 col-sm-2 concube.detailtrol-label no-padding-right font-color-default">
                 <b>Fact Table</b>
             </label>
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-xs-12 col-sm-6" ng-class="forms.data_model_form.innerform.typeahead.$invalid?'has-error':''">
                 <typeahead ng-if="state.mode=='edit'" items="tableModel.selectProjectTables" prompt="Fact Table Name"
                            title="name" model="model.fact_table" required="true"></typeahead>
+                <small class="help-block" ng-show="forms.data_model_form.innerform.typeahead.$error.required">The fact table is required</small>
+
                 <span ng-if="state.mode=='view'">{{model.fact_table}}</span>
             </div>
         </div>
@@ -109,12 +111,13 @@
                 <div class="col-xs-8">
                     <ng-form name="lookup_form">
                     <!--Table Name-->
-                    <div class="form-group">
+                    <div class="form-group" ng-class="lookup_form.innerform.typeahead.$invalid?'has-error':''">
                         <div class="row">
                             <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Lookup Table Name</b></label>
                             <div class="col-xs-12 col-sm-6">
-                                <typeahead items="tableModel.selectProjectTables" prompt="Lookup Table Name" title="name" model="newLookup.table"></typeahead>
+                                <typeahead items="tableModel.selectProjectTables" prompt="Lookup Table Name" required="true" title="name" model="newLookup.table"></typeahead>
                             </div>
+                            <small class="help-block" ng-show="lookup_form.innerform.typeahead.$error.required">Table name required</small>
                         </div>
                     </div>
 
@@ -123,7 +126,7 @@
                         <div class="row">
                             <label class="col-sm-3 control-label font-color-default"><b>Join Type</b></label>
                             <div class="col-sm-6">
-                                <select class="form-control" chosen ng-model="newLookup.join.type"
+                                <select class="form-control"  chosen ng-model="newLookup.join.type"
                                         ng-options="joinType.value as joinType.name for joinType in cubeConfig.joinTypes">
                                     <option value=""></option>
                                 </select>
@@ -192,7 +195,7 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary" ng-disabled="lookup_form.$invalid || !newLookup.join.primary_key.length" ng-click="ok()">OK</button>
+            <button class="btn btn-primary" ng-disabled="lookup_form.$invalid || !newLookup.join.primary_key.length" ng-click="checkLookupForm()?ok():''">OK</button>
             <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </script>

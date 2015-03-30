@@ -138,6 +138,29 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
 
         return defer.promise;
     };
+
+    this.getColumnType = function(_column,_table){
+        var columns = _this.getColumnsByTable(_table);
+        var type;
+        angular.forEach(columns,function(column){
+            if(_column === column.name){
+                type = column.datatype;
+                return;
+            }
+        });
+        return type;
+    };
+
+    this.getColumnsByTable = function (tableName) {
+        var temp = [];
+        angular.forEach(_this.selectProjectTables, function (table) {
+            if (table.name == tableName) {
+                temp = table.columns;
+            }
+        });
+        return temp;
+    };
+
     this.innerSort =function(a, b) {
         var nameA = a.name.toLowerCase(), nameB = b.name.toLowerCase();
         if (nameA < nameB) //sort string ascending
