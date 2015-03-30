@@ -39,25 +39,29 @@ import com.google.common.collect.Maps;
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.streaming.*;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
 
 /**
  * Created by qianzhou on 3/26/15.
  */
 public class StreamingBootstrap {
+
+    private static Logger logger = LoggerFactory.getLogger(StreamingBootstrap.class);
 
     private KylinConfig kylinConfig;
     private StreamManager streamManager;
@@ -105,6 +109,9 @@ public class StreamingBootstrap {
         Preconditions.checkArgument(ii.getSegments().size() > 0);
         final IISegment iiSegment = ii.getSegments().get(0);
 
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        KafkaConfig.SERIALIZER.serialize(kafkaConfig, new DataOutputStream(out));
+        logger.info("kafka config:" + new String(out.toByteArray()));
         final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
         Preconditions.checkState(leadBroker != null, "cannot find lead broker");
         final long earliestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
