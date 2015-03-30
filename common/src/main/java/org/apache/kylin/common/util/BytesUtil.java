@@ -196,7 +196,7 @@ public class BytesUtil {
         int integer = 0;
         for (int i = 0; i < size; i++) {
             integer = integer << 8;
-            integer += in.get();
+            integer |= (in.get() & 0xff);
         }
 
         return integer;
