@@ -84,7 +84,11 @@ public class HBaseConnection {
 
     public static boolean tableExists(HConnection conn, String tableName) throws IOException {
         HBaseAdmin hbase = new HBaseAdmin(conn);
-        return hbase.tableExists(TableName.valueOf(tableName));
+        try {
+            return hbase.tableExists(TableName.valueOf(tableName));
+        } finally {
+            hbase.close();
+        }
     }
 
     public static boolean tableExists(String hbaseUrl, String tableName) throws IOException {
