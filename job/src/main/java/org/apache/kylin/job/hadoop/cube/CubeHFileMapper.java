@@ -59,7 +59,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME);
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();

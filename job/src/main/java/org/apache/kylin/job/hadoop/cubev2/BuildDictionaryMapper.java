@@ -67,7 +67,7 @@ public class BuildDictionaryMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord,
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
 
         Configuration conf = context.getConfiguration();
 

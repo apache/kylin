@@ -37,7 +37,7 @@ public class FactDistinctColumnsCombiner extends KylinReducer<LongWritable, Text
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
     }
 
     @Override

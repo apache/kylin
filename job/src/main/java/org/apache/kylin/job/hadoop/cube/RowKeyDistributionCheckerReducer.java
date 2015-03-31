@@ -35,7 +35,7 @@ public class RowKeyDistributionCheckerReducer extends KylinReducer<Text, LongWri
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
     }
 
     @Override
