@@ -18,22 +18,20 @@
 
 package org.apache.kylin.common.persistence;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.common.util.HadoopUtil;
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author yangli9
@@ -84,6 +82,15 @@ public class HBaseConnection {
         return connection;
     }
 
+    public static boolean tableExists(HConnection conn, String tableName) throws IOException {
+        HBaseAdmin hbase = new HBaseAdmin(conn);
+        return hbase.tableExists(TableName.valueOf(tableName));
+    }
+
+    public static boolean tableExists(String hbaseUrl, String tableName) throws IOException {
+        return tableExists(HBaseConnection.get(hbaseUrl), tableName);
+    }
+
     public static void createHTableIfNeeded(String hbaseUrl, String tableName, String... families) throws IOException {
         createHTableIfNeeded(HBaseConnection.get(hbaseUrl), tableName, families);
     }
@@ -92,14 +99,7 @@ public class HBaseConnection {
         HBaseAdmin hbase = new HBaseAdmin(conn);
 
         try {
-            boolean tableExist = false;
-            try {
-                hbase.getTableDescriptor(TableName.valueOf(tableName));
-                tableExist = true;
-            } catch (TableNotFoundException e) {
-            }
-
-            if (tableExist) {
+            if (tableExists(conn, tableName)) {
                 logger.debug("HTable '" + tableName + "' already exists");
                 return;
             }

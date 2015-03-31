@@ -89,11 +89,12 @@ public class IIStreamBuilder extends StreamBuilder {
     protected void build(List<Stream> streamsToBuild) throws IOException {
         logger.info("stream build start, size:" + streamsToBuild.size());
         Stopwatch stopwatch = new Stopwatch().start();
+        long offset = streamsToBuild.get(streamsToBuild.size() - 1).getOffset();
         final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
         logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
 
         loadToHBase(hTable, slice, new IIKeyValueCodec(slice.getInfo()));
-        submitOffset(0);
+        submitOffset(offset);
         stopwatch.stop();
         logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
     }
@@ -127,7 +128,7 @@ public class IIStreamBuilder extends StreamBuilder {
         instance.getStreamOffsets().set(partitionId, offset);
         try {
             iiManager.updateII(instance);
-            logger.info("submit offset");
+            logger.info("submit offset:" + offset);
         } catch (IOException e) {
             logger.error("error submit offset: + " + offset, e);
             throw new RuntimeException(e);
