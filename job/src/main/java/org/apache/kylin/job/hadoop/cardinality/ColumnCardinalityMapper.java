@@ -52,7 +52,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, HCatRecord, IntWr
     
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
         columnSize = schema.getFields().size();
     }
