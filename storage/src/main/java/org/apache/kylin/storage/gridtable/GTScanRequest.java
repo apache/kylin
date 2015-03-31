@@ -30,7 +30,7 @@ public class GTScanRequest {
 
     public GTScanRequest(GTInfo info, GTScanRange range, BitSet columns, TupleFilter filterPushDown) {
         this.info = info;
-        this.range = range;
+        this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
         this.columns = columns;
         this.filterPushDown = filterPushDown;
         validate();
@@ -39,7 +39,7 @@ public class GTScanRequest {
     public GTScanRequest(GTInfo info, GTScanRange range, BitSet aggrGroupBy, BitSet aggrMetrics, //
             String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
         this.info = info;
-        this.range = range;
+        this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
         this.columns = new BitSet();
         this.filterPushDown = filterPushDown;
         
