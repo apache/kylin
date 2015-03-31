@@ -39,12 +39,10 @@ import com.google.common.collect.Maps;
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.streaming.*;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.slf4j.Logger;
@@ -119,8 +117,6 @@ public class StreamingBootstrap {
         if (streamOffset < earliestOffset) {
             streamOffset = earliestOffset;
         }
-        String[] args = new String[]{"-iiname", kafkaConfig.getIiName(), "-htablename", iiSegment.getStorageLocationIdentifier()};
-        ToolRunner.run(new IICreateHTableJob(), args);
 
         KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), 0, streamOffset, kafkaConfig.getBrokers(), kafkaConfig) {
             @Override
