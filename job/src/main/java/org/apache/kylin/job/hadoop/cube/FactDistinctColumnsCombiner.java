@@ -55,7 +55,7 @@ public class FactDistinctColumnsCombiner extends KylinReducer<LongWritable, Text
                 context.write(key, outputValue);
             }
         } else {
-            // for hll, one reducer will only emit one record;
+            // for hll, each key only has one output, no need to do local combine;
             outputValue.set(values.iterator().next().getBytes());
             context.write(key, outputValue);
         }

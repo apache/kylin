@@ -58,11 +58,11 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
     public CubingJobBuilder(JobEngineConfig engineConfig) {
         super(engineConfig);
+        useImMemCubing = engineConfig.getConfig().isCubingInMem();
     }
 
     public CubingJob buildJob(CubeSegment seg) {
         checkPreconditions(seg);
-
         final CubingJob result = initialJob(seg, "BUILD");
         final String jobId = result.getId();
         final String cuboidRootPath = getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/cuboid/";
