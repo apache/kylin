@@ -59,7 +59,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
 
         Configuration conf = context.getConfiguration();
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();

@@ -35,7 +35,7 @@ public class IICreateHFileMapper extends KylinMapper<ImmutableBytesWritable, Imm
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
 
         timestamp = System.currentTimeMillis();
     }
