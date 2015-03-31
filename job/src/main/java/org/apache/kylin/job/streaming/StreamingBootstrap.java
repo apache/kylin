@@ -40,6 +40,7 @@ import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
@@ -116,6 +117,10 @@ public class StreamingBootstrap {
         long streamOffset = ii.getStreamOffsets().get(partitionId);
         if (streamOffset < earliestOffset) {
             streamOffset = earliestOffset;
+        }
+        if (!HBaseConnection.tableExists(kylinConfig.getStorageUrl(), iiSegment.getStorageLocationIdentifier())) {
+            logger.error("no htable:" + iiSegment.getStorageLocationIdentifier() + " found");
+            throw new IllegalStateException("please create htable:" + iiSegment.getStorageLocationIdentifier() + " first");
         }
 
         KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), 0, streamOffset, kafkaConfig.getBrokers(), kafkaConfig) {
