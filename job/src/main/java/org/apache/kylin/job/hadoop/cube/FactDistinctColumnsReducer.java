@@ -120,9 +120,10 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
                 }
 
                 if (cuboidHLLMap.get(cuboidId) != null) {
-                    hll.merge(cuboidHLLMap.get(cuboidId));
+                    cuboidHLLMap.get(cuboidId).merge(hll);
+                } else {
+                    cuboidHLLMap.put(cuboidId, hll);
                 }
-                cuboidHLLMap.put(cuboidId, hll);
             }
         }
 
@@ -130,12 +131,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
     protected void cleanup(Reducer.Context context) throws IOException, InterruptedException {
 
-        for (Long cuboidId : cuboidHLLMap.keySet()) {
-            rowKeyCountInCuboids.put(cuboidId, cuboidHLLMap.get(cuboidId).getCountEstimate());
-        }
-
         //output the hll info;
         if (collectStatistics) {
+            for (Long cuboidId : cuboidHLLMap.keySet()) {
+                rowKeyCountInCuboids.put(cuboidId, cuboidHLLMap.get(cuboidId).getCountEstimate());
+            }
+
             Configuration conf = context.getConfiguration();
             FileSystem fs = FileSystem.get(conf);
             FSDataOutputStream out = fs.create(new Path(statisticsOutput, BatchConstants.CFG_STATISTICS_CUBE_ESTIMATION));
@@ -179,7 +180,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             } finally {
                 out.close();
             }
+
         }
+
     }
 
 }

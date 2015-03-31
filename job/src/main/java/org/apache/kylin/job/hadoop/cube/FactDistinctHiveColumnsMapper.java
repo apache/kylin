@@ -18,12 +18,8 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hive.hcatalog.data.HCatRecord;
@@ -32,12 +28,16 @@ import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.lookup.HiveTableReader;
 import org.apache.kylin.job.constant.BatchConstants;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author yangli9
@@ -65,7 +65,6 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         if (collectStatistics) {
             cuboidScheduler = new CuboidScheduler(cubeDesc);
             cuboidHLLMap = Maps.newHashMap();
-            totalHll = new HyperLogLogPlusCounter(16);
             rowKeyValues = Lists.newArrayList();
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
         }
@@ -100,7 +99,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         rowKeyValues.clear();
         long mask = Long.highestOneBit(baseCuboidId);
         for (int i = 0; i < nRowKey; i++) {
-            if ((mask & cuboidId) == 1) {
+            if ((mask & cuboidId) > 0) {
                 rowKeyValues.add(row[intermediateTableDesc.getRowKeyColumnIndexes()[i]]);
             }
             mask = mask >> 1;
@@ -124,23 +123,24 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         if (collectStatistics) {
-
+            ByteBuffer hllBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+            totalHll = new HyperLogLogPlusCounter(16);
             // output each cuboid's hll to reducer, key is 0 - cuboidId
             for (Long cuboidId : cuboidHLLMap.keySet()) {
                 HyperLogLogPlusCounter hll = cuboidHLLMap.get(cuboidId);
                 totalHll.merge(hll); // merge each cuboid's counter to the total hll
                 outputKey.set(0 - cuboidId);
-                ByteBuffer hllBuf = ByteBuffer.allocate(64 * 1024);
+                hllBuf.clear();
                 hll.writeRegisters(hllBuf);
-                outputValue.set(hllBuf.array());
+                outputValue.set(hllBuf.array(), 0, hllBuf.position());
                 context.write(outputKey, outputValue);
             }
 
             //output the total hll for this mapper;
             outputKey.set(0 - baseCuboidId - 1);
-            ByteBuffer hllBuf = ByteBuffer.allocate(64 * 1024);
+            hllBuf.clear();
             totalHll.writeRegisters(hllBuf);
-            outputValue.set(hllBuf.array());
+            outputValue.set(hllBuf.array(), 0, hllBuf.position());
             context.write(outputKey, outputValue);
         }
     }
