@@ -69,7 +69,7 @@ public class GTSimpleMemStore implements IGTStore {
     };
 
     @Override
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEndExclusive, BitSet selectedColBlocks, TupleFilter filterPushDown) {
+    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, TupleFilter filterPushDown) {
 
         return new IGTStoreScanner() {
             Iterator<GTRowBlock> it = rowBlockList.iterator();

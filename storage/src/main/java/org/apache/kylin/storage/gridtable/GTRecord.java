@@ -22,6 +22,10 @@ public class GTRecord implements Comparable<GTRecord> {
         this.maskForEqualHashComp = info.colAll;
     }
 
+    public GTInfo getInfo() {
+        return info;
+    }
+
     public ByteArray get(int i) {
         return cols[i];
     }
