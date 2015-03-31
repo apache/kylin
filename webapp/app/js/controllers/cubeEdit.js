@@ -106,7 +106,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     // ~ Define data
     $scope.state = {
-        "cubeSchema": ""
+        "cubeSchema": "",
+        "mode":'edit'
     };
 
     //fetch cube info and model info in edit model
@@ -115,9 +116,16 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
             if (detail.length > 0) {
                 $scope.cubeMetaFrame = detail[0];
-                $scope.metaModel ={
-                    model : ModelList.getModel($scope.cubeMetaFrame.model_name)
+                $scope.metaModel = {};
+
+                //get model from API when page refresh
+                if(!ModelList.getModels().length){
+                    ModelDescService.get({model_name: $scope.cubeMetaFrame.model_name}, function (_model) {
+                        $scope.metaModel.model = _model;
+                    });
                 }
+                $scope.metaModel.model=ModelList.getModel($scope.cubeMetaFrame.model_name);
+
                 $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
             }
         });

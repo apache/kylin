@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/license$s/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -217,7 +217,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
     };
 
     // Controller for cube dimension add/edit modal.
-    var cubeDimModalCtrl = function ($scope, $modalInstance, dimType) {
+    var cubeDimModalCtrl = function ($scope, $modalInstance, dimType,SweetAlert) {
         $scope.dimType = dimType;
 
         $scope.ok = function () {
@@ -227,6 +227,65 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
         $scope.cancel = function () {
             $modalInstance.dismiss('cancel');
         };
+
+        $scope.checkDimension = function(){
+            var errors = [];
+            // null validate
+
+            if($scope.dimType[0]=="hierarchy"){
+                if($scope.newDimension.column.length<2){
+                    errors.push("Please define at least 2 hierarchy columns.");
+                }else{
+                    for(var i = 0;i<$scope.newDimension.column.length;i++){
+                        if($scope.newDimension.column[i]===""){
+                            errors.push("Hierarchy value can't be null.");
+                            break;
+                        }
+                    }
+                    var _columns = angular.copy($scope.newDimension.column).sort();
+                    for(var i = 0;i<_columns.length-1;i++){
+                        if(_columns[i]==_columns[i+1]&&_columns[i]!==""){
+                            errors.push("Duplicate column "+_columns[i]+".");
+                        }
+                    }
+                }
+            }
+
+            if($scope.dimType[0]=="derived"){
+                if(!$scope.newDimension.derived.length){
+                    errors.push("Please define your derived columns.");
+                }
+                for(var i = 0;i<$scope.newDimension.derived.length;i++){
+                    if($scope.newDimension.derived[i]===""){
+                        errors.push("Derived value can't be null.");
+                        break;
+                    }
+                }
+                if($scope.newDimension.derived.length>1){
+                    var _columns = angular.copy($scope.newDimension.derived).sort();
+                    for(var i = 0;i<_columns.length-1;i++){
+                        if(_columns[i]==_columns[i+1]&&_columns[i]!==""){
+                            errors.push("Duplicate column "+_columns[i]+".");
+                        }
+                    }
+                }
+
+            }
+
+            var errorInfo = "";
+            angular.forEach(errors,function(item){
+                errorInfo+="\n"+item;
+            });
+            if(errors.length){
+//                SweetAlert.swal('Warning!', errorInfo, '');
+                SweetAlert.swal('', errorInfo, 'warning');
+                return false;
+            }else{
+                return true;
+            }
+        }
+
+
     };
 
     $scope.addDim = function (dimType) {
@@ -390,8 +449,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
         $scope.dimConflicts = conflicts;
     }, true);
-
-
 
     if ($scope.state.mode == 'edit') {
         $scope.$on('$destroy', function () {

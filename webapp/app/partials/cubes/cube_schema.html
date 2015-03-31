@@ -28,7 +28,7 @@
                 <ul class="wizard-steps">
                     <li ng-repeat="step in wizardSteps"
                         class="{{step==curStep?'active':''}} {{step.isComplete?'complete':''}}">
-                        <span style="cursor:pointer;" ng-click="goToStep($index)" class="step">{{step.step = ($index + 1)}}</span>
+                        <span style="cursor:pointer;" ng-click="checkCubeForm()?goToStep($index):''" class="step">{{step.step = ($index + 1)}}</span>
                         <span class="title">{{step.title}}</span>
                      </li>
                 </ul>
@@ -41,7 +41,6 @@
             <div class="wizard-actions">
                 <div class="row">
                     <div class="col-xs-8">
-                        <p style="color: #808080;text-align: left;"><b>Note:</b> inputs with <span style="color: lightblue">light blue</span> border are mandatory.</p>
                         <div>
                             <a href="cubes" class="pull-left"><i class="fa fa-arrow-left"></i> Back to My Cubes</a>
                         </div>

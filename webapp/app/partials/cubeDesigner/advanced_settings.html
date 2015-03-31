@@ -18,32 +18,6 @@
 
 <div ng-controller="CubeAdvanceSettingCtrl">
 <div>
-
-    <div class="form-group">
-
-        <table style="margin-left:42px; width:92%"
-               class="table table-hover list">
-            <tr>
-                <td>
-                    <!--Cube Size-->
-                    <div class="form-group" ng-show="userService.hasRole('ROLE_ADMIN')">
-                        <div class="row">
-                            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Cube Size</b></label>
-                            <div class="col-xs-12 col-sm-6">
-                                <select class="form-control" ng-if="state.mode=='edit'" style="width: 360px;"
-                                        chosen ng-model="metaModel.model.capacity" required
-                                        ng-options="cc as cc for cc in cubeConfig.cubeCapacities">
-                                    <option value=""></option>
-                                </select>
-                                <span ng-if="state.mode=='view'">{{metaModel.model.capacity}}</span>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-    </div>
     <div class="form-group">
         <h4 style="margin-left:42px">Aggregation Groups</h4>
         <table style="margin-left:42px; width:92%"
