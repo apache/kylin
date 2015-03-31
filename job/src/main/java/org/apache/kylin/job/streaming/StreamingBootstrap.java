@@ -34,11 +34,18 @@
 
 package org.apache.kylin.job.streaming;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.lang.reflect.Constructor;
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.invertedindex.IIInstance;
@@ -49,11 +56,8 @@ import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.concurrent.Executors;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 /**
  * Created by qianzhou on 3/26/15.
@@ -134,7 +138,16 @@ public class StreamingBootstrap {
         kafkaConsumers.put(getKey(streaming, partitionId), consumer);
 
         final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), iiSegment.getStorageLocationIdentifier(), iiSegment.getIIInstance(), partitionId);
-        task.setStreamParser(new JsonStreamParser(ii.getDescriptor().listAllColumns()));
+
+        StreamParser parser = null;
+        if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
+            Class clazz = Class.forName(kafkaConfig.getParserName());
+            Constructor constructor = clazz.getConstructor(List.class);
+            parser = (StreamParser) constructor.newInstance(ii.getDescriptor().listAllColumns());
+        } else {
+            parser = new JsonStreamParser(ii.getDescriptor().listAllColumns());
+        }
+        task.setStreamParser(parser);
 
         Executors.newSingleThreadExecutor().submit(consumer);
         Executors.newSingleThreadExecutor().submit(task).get();

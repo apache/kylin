@@ -42,7 +42,7 @@ public class IIDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecor
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
         columnSize = schema.getFields().size();
     }

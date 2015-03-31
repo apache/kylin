@@ -43,7 +43,7 @@ public class RandomKeyDistributionMapper<KEY extends Writable, VALUE> extends Ky
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
 
         conf = context.getConfiguration();
         allKeys = new ArrayList<KEY>();

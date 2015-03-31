@@ -43,7 +43,7 @@ public class RandomKeyDistributionReducer<KEY extends Writable> extends KylinRed
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
 
         conf = context.getConfiguration();
         allSplits = new ArrayList<KEY>();
