@@ -76,7 +76,8 @@ public final class KafkaRequester {
         if (consumerCache.containsKey(key)) {
             return consumerCache.get(key);
         } else {
-            return consumerCache.putIfAbsent(key, new SimpleConsumer(broker.host(), broker.port(), timeout, bufferSize, clientId));
+            consumerCache.putIfAbsent(key, new SimpleConsumer(broker.host(), broker.port(), timeout, bufferSize, clientId));
+            return consumerCache.get(key);
         }
     }
 
