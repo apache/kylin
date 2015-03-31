@@ -96,6 +96,8 @@ public class KylinConfig {
 
     public static final String KYLIN_JOB_LOG_DIR = "kylin.job.log.dir";
 
+    public static final String KYLIN_JOB_CUBING_IN_MEM = "kylin.job.cubing.inMem";
+
     public static final String KYLIN_HDFS_WORKING_DIR = "kylin.hdfs.working.dir";
 
     public static final String HIVE_PASSWORD = "hive.password";
@@ -464,6 +466,10 @@ public class KylinConfig {
 
     public int getHBaseKeyValueSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
+    }
+
+    public boolean isCubingInMem() {
+        return Boolean.parseBoolean(this.getOptional(KYLIN_JOB_CUBING_IN_MEM, "false"));
     }
 
     private String getOptional(String prop) {

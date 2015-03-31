@@ -56,21 +56,26 @@ public class BytesUtilTest extends TestCase {
 
     @Test
     public void testWriteReadUnsignedInt() {
+        testWriteReadUnsignedInt(735033, 3);
+        testWriteReadUnsignedInt(73503300, 4);
+    }
 
-        int testInt = 735033;
-        ByteArray ba = new ByteArray(new byte[3]);
-        BytesUtil.writeUnsigned(testInt, 3, ba.asBuffer());
 
-        byte[] newBytes = new byte[3];
-        System.arraycopy(ba.array(), 0, newBytes, 0, 3);
-        int value = BytesUtil.readUnsigned(new ByteArray(newBytes).asBuffer(), 3);
+    public void testWriteReadUnsignedInt(int testInt, int length) {
+        ByteArray ba = new ByteArray(new byte[length]);
+        BytesUtil.writeUnsigned(testInt, length, ba.asBuffer());
+
+        byte[] newBytes = new byte[length];
+        System.arraycopy(ba.array(), 0, newBytes, 0, length);
+        int value = BytesUtil.readUnsigned(new ByteArray(newBytes).asBuffer(), length);
 
         assertEquals(value, testInt);
 
-        byte[] anOtherNewBytes = new byte[3];
-        BytesUtil.writeUnsigned(testInt, anOtherNewBytes, 0, 3);
+        byte[] anOtherNewBytes = new byte[length];
+        BytesUtil.writeUnsigned(testInt, anOtherNewBytes, 0, length);
 
         assertTrue(Arrays.equals(anOtherNewBytes, ba.array()));
     }
+
 
 }

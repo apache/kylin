@@ -70,7 +70,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 /**
  * Created by shaoshi on 3/12/2015.
  */
-public class CubeStreamBuilder extends StreamBuilder {
+public class CubeStreamBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(CubeStreamBuilder.class);
 
@@ -90,8 +90,8 @@ public class CubeStreamBuilder extends StreamBuilder {
 
     private Map<Long, GridTable> generatedCuboids; // key: cuboid id; value: grid table of the cuboid
 
-    public CubeStreamBuilder(LinkedBlockingDeque<Stream> queue, int sliceSize, CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
-        super(queue, sliceSize);
+    public CubeStreamBuilder(List<List<String>> table, CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
+        this.table = table;
         this.cube = cube;
         this.desc = cube.getDescriptor();
         this.cuboidScheduler = new CuboidScheduler(desc);
@@ -126,19 +126,10 @@ public class CubeStreamBuilder extends StreamBuilder {
             throw new IllegalArgumentException();
     }
 
-    @Override
-    protected void build(List<Stream> streamsToBuild) {
+    public void build() {
         long startTime = System.currentTimeMillis();
         generatedCuboids.clear();
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
-
-        table = Lists.transform(streamsToBuild, new Function<Stream, List<String>>() {
-            @Nullable
-            @Override
-            public List<String> apply(@Nullable Stream input) {
-                return parseStream(input, desc);
-            }
-        });
 
         if (needBuildDictionary) {
             buildDictionary(table, desc, dictionaryMap);
@@ -173,7 +164,7 @@ public class CubeStreamBuilder extends StreamBuilder {
 
         result.put(cuboidId, thisCuboid);
         logger.info("Cuboid " + cuboidId + " is built.");
-        // outputGT(thisCuboid);
+        outputGT(thisCuboid);
     }
 
     private void outputGT(GridTable gridTable) throws IOException {
@@ -387,14 +378,13 @@ public class CubeStreamBuilder extends StreamBuilder {
                         @Nullable
                         @Override
                         public byte[] apply(String input) {
+                            if(input == null)
+                                return null;
                             return input.getBytes();
                         }
                     }));
 
                     logger.info("Building dictionary for " + col);
-                    //                    DictionaryInfo dictInfo = new DictionaryInfo(col.getTable(), col.getName(), 0, col.getDatatype(), null, "");
-                    //                    dictInfo.setDictionaryObject(dict);
-                    //                    dictInfo.setDictionaryClass(dict.getClass().getName());
                     dictionaryMap.put(col, dict);
                 }
             }
@@ -402,8 +392,5 @@ public class CubeStreamBuilder extends StreamBuilder {
 
     }
 
-    private List<String> parseStream(Stream stream, CubeDesc desc) {
-        return getStreamParser().parse(stream);
-    }
 
 }

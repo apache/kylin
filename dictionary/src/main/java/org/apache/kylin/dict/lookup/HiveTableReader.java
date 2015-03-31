@@ -26,13 +26,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
 import org.apache.hive.hcatalog.data.transfer.HCatReader;
 import org.apache.hive.hcatalog.data.transfer.ReadEntity;
 import org.apache.hive.hcatalog.data.transfer.ReaderContext;
+import org.apache.hive.hcatalog.mapreduce.HCatBaseInputFormat;
+import org.apache.hive.hcatalog.mapreduce.HCatTableInfo;
 
 /**
  * An implementation of TableReader with HCatalog for Hive table.
@@ -83,6 +88,9 @@ public class HiveTableReader implements TableReader {
         }
 
         this.numberOfSplits = readCntxt.numSplits();
+
+//        HCatTableInfo tableInfo = HCatTableInfo.
+//        HCatSchema schema = HCatBaseInputFormat.getTableSchema(context.getConfiguration);
     }
 
     @Override
@@ -107,14 +115,24 @@ public class HiveTableReader implements TableReader {
         return getRowAsStringArray(currentHCatRecord);
     }
 
-    public static String[] getRowAsStringArray(HCatRecord record) {
+    public List<String> getRowAsList() {
+        return getRowAsList(currentHCatRecord);
+    }
+
+    public static List<String> getRowAsList(HCatRecord record) {
         List<Object> allFields = record.getAll();
         List<String> rowValues = new ArrayList<String>(allFields.size());
         for (Object o : allFields) {
-            rowValues.add(o != null ? o.toString() : "");
+            rowValues.add(o != null ? o.toString() : null);
         }
 
-        return rowValues.toArray(new String[allFields.size()]);
+        return rowValues;
+    }
+
+    public static String[] getRowAsStringArray(HCatRecord record) {
+        List<String> row = getRowAsList(record);
+
+        return row.toArray(new String[row.size()]);
     }
 
     @Override
@@ -158,6 +176,7 @@ public class HiveTableReader implements TableReader {
 
     private static Iterator<HCatRecord> loadHCatRecordItr(ReaderContext readCntxt, int dataSplit) throws HCatException {
         HCatReader currentHCatReader = DataTransferFactory.getHCatReader(readCntxt, dataSplit);
+
         return currentHCatReader.read();
     }
 }
