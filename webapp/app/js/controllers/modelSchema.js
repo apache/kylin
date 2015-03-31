@@ -32,9 +32,9 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     $scope.wizardSteps = [
         {title: 'Model Info', src: 'partials/modelDesigner/model_info.html', isComplete: false,form:'model_info_form'},
         {title: 'Data Model', src: 'partials/modelDesigner/data_model.html', isComplete: false,form:'data_model_form'},
-        {title: 'Dimensions', src: 'partials/modelDesigner/model_dimensions.html', isComplete: false,form:'model_dimensions'},
-        {title: 'Measures', src: 'partials/modelDesigner/model_measures.html', isComplete: false,form:null},
-        {title: 'Settings', src: 'partials/modelDesigner/conditions_settings.html', isComplete: false,form:null}
+        {title: 'Dimensions', src: 'partials/modelDesigner/model_dimensions.html', isComplete: false,form:'model_dimensions_form'},
+        {title: 'Measures', src: 'partials/modelDesigner/model_measures.html', isComplete: false,form:'model_measure_form'},
+        {title: 'Settings', src: 'partials/modelDesigner/conditions_settings.html', isComplete: false,form:'model_setting_form'}
     ];
 
     $scope.curStep = $scope.wizardSteps[0];
@@ -111,7 +111,16 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
                 switch($scope.curStep.form){
                     case 'data_model_form':
                         return $scope.check_data_model();
-                     break;
+                         break;
+                    case 'model_dimensions_form':
+                        return $scope.check_model_dimensions();
+                         break;
+                    case 'model_measure_form':
+                        return $scope.check_model_measure();
+                         break;
+                    case 'model_setting_form':
+                        return $scope.check_model_setting();
+                         break;
                     default:
                         return true;
                         break;
@@ -141,6 +150,75 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
 
     }
 
+    /*
+    * dimensions validation
+    * 1.dimension can't be null
+    */
+    $scope.check_model_dimensions = function(){
+
+        var errors = [];
+        if(!$scope.model.dimensions.length){
+            errors.push("No dimensions defined.");
+        }
+        angular.forEach($scope.model.dimensions,function(_dimension){
+            if(!_dimension.columns||!_dimension.columns.length){
+            errors.push("No dimension columns defined for Table["+_dimension.table+"]");
+            }
+        });
+        var errorInfo = "";
+        angular.forEach(errors,function(item){
+            errorInfo+="\n"+item;
+        });
+        if(errors.length){
+            SweetAlert.swal('', errorInfo, 'warning');
+            return false;
+        }else{
+            return true;
+        }
+
+    };
+
+    /*
+     * dimensions validation
+     * 1.metric can't be null
+     */
+    $scope.check_model_measure = function(){
+
+        var errors = [];
+        if(!$scope.model.metrics||!$scope.model.metrics.length){
+            errors.push("Please define your metrics.");
+        }
+        var errorInfo = "";
+        angular.forEach(errors,function(item){
+            errorInfo+="\n"+item;
+        });
+        if(errors.length){
+            SweetAlert.swal('', errorInfo, 'warning');
+            return false;
+        }else{
+            return true;
+        }
+
+    };
+    $scope.check_model_setting = function(){
+        var errors = [];
+        if($scope.model.partition_desc.partition_date_column!=null&& $scope.model.partition_desc.partition_date_start==null){
+            errors.push("Please indicate start date when partition date column selected.");
+        }
+        if($scope.model.partition_desc.partition_date_column==null&& $scope.model.partition_desc.partition_date_start!=null){
+            errors.push("Please select your partitoin date column.");
+        }
+        var errorInfo = "";
+        angular.forEach(errors,function(item){
+            errorInfo+="\n"+item;
+        });
+        if(errors.length){
+            SweetAlert.swal('', errorInfo, 'warning');
+            return false;
+        }else{
+            return true;
+        }
+    }
 
 
     $scope.goToStep = function(stepIndex){

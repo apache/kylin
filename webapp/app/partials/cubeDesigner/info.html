@@ -18,73 +18,71 @@
 
 <div class="row">
     <div class="col-xs-8">
-        <!--Project-->
-        <div class="form-group">
-            <div class="row">
-                <label class="col-xs-12 col-sm-3 control-label no-padding-right">
-                    <b>Model Name</b>
-                </label>
-                <div class="col-xs-12 col-sm-6">
-                    <input ng-if="state.mode=='edit'" name="project_name" type="text" class="form-control"
-                           ng-model="cubeMetaFrame.model_name"/>
-                    <span ng-if="state.mode=='view'">
-                        {{cubeMetaFrame.model_name}}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!--Cube Name-->
-        <div class="form-group">
-            <div class="row">
-                <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                    <b>Cube Name</b>
-                </label>
-                <div class="col-xs-12 col-sm-6">
-                    <input ng-if="state.mode=='edit'" name="cube_name" type="text" class="form-control"
-                           ng-model="cubeMetaFrame.name" required
-                           placeholder="You can use letters, numbers, and '_'"
-                           ng-maxlength=100 ng-pattern="/^\w+$/" />
-                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.name}}</span>
-                </div>
-                <div class="col-xs-12 col-sm-3">
-                    <div class="text-warning" ng-if="design_form.cube_name.$error.required  && design_form.cube_name.$dirty">
-                        Cube name is required.
-                    </div>
-                    <div class="text-warning" ng-if="design_form.cube_name.$invalid && design_form.cube_name.$dirty && !design_form.cube_name.$error.required">
-                        Cube name is invalid.
+        <ng-form name="forms.cube_info_form" novalidate>
+            <!--Project-->
+            <div class="form-group">
+                <div class="row">
+                    <label class="col-xs-12 col-sm-3 control-label no-padding-right">
+                        <b>Model Name</b>
+                    </label>
+                    <div class="col-xs-12 col-sm-6"  ng-class="forms.cube_info_form.model_name.$invalid?'has-error':''">
+                        <input ng-if="state.mode=='edit'" name="model_name" type="text" required class="form-control"
+                               ng-model="cubeMetaFrame.model_name"/>
+                        <small class="help-block" ng-show="forms.cube_info_form.model_name.$error.required">The model is required</small>
+                        <span ng-if="state.mode=='view'">
+                            {{cubeMetaFrame.model_name}}
+                        </span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!--Notification-->
-        <div class="form-group">
-            <div class="row">
-                <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                    <b>Notification List</b>
-                </label>
-                <div class="col-xs-12 col-sm-6">
-                    <input type="text" class="form-control" placeholder="Comma Separated"
-                           ng-model="cubeMetaFrame.notify_list" ng-if="state.mode=='edit'" ng-list>
-                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.notify_list}}</span>
+            <!--Cube Name-->
+            <div class="form-group">
+                <div class="row">
+                    <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                        <b>Cube Name</b>
+                    </label>
+                    <div class="col-xs-12 col-sm-6" ng-class="forms.cube_info_form.cube_name.$invalid?'has-error':''">
+                        <input ng-if="state.mode=='edit'" name="cube_name" type="text" class="form-control"
+                               ng-model="cubeMetaFrame.name" required
+                               placeholder="You can use letters, numbers, and '_'"
+                               ng-maxlength=100 ng-pattern="/^\w+$/" />
+                        <small class="help-block" ng-show="forms.cube_info_form.cube_name.$error.required  && forms.cube_info_form.cube_name.$dirty">Cube name is required.</small>
+                        <small class="help-block" ng-show="forms.cube_info_form.cube_name.$invalid && forms.cube_info_form.cube_name.$dirty && !forms.cube_info_form.cube_name.$error.required">Cube name is invalid.</small>
+
+                        <span ng-if="state.mode=='view'">{{cubeMetaFrame.name}}</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!--Description-->
-        <div class="form-group">
-            <div class="row">
-                <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                    <b>Description</b>
-                </label>
-                <div class="col-xs-12 col-sm-6">
-                    <textarea ng-if="state.mode=='edit'" class="form-control box-default"
-                        name="comment" id="comment" ng-model="cubeMetaFrame.description"></textarea>
-                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.description}}</span>
+            <!--Notification-->
+            <div class="form-group">
+                <div class="row">
+                    <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                        <b>Notification List</b>
+                    </label>
+                    <div class="col-xs-12 col-sm-6">
+                        <input type="text" class="form-control" placeholder="Comma Separated"
+                               ng-model="cubeMetaFrame.notify_list" ng-if="state.mode=='edit'" ng-list>
+                        <span ng-if="state.mode=='view'">{{cubeMetaFrame.notify_list}}</span>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!--Description-->
+            <div class="form-group">
+                <div class="row">
+                    <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                        <b>Description</b>
+                    </label>
+                    <div class="col-xs-12 col-sm-6">
+                        <textarea ng-if="state.mode=='edit'" class="form-control box-default"
+                            name="comment" id="comment" ng-model="cubeMetaFrame.description"></textarea>
+                        <span ng-if="state.mode=='view'">{{cubeMetaFrame.description}}</span>
+                    </div>
+                </div>
+            </div>
+        </ng-form>
     </div>
 
     <!--Tips-->

@@ -17,8 +17,8 @@
 */
 
 KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,ProjectModel,$log){
-    var models=[];
     var _this = this;
+    this.models=[];
 
     this.list = function(queryParam){
 
@@ -70,6 +70,10 @@ KylinApp.service('ModelList',function(ModelService,CubeService,$q,AccessService,
       return  _.find(_this.models,function(unit){
             return unit.name == modelName;
         })
+    }
+
+    this.getModels = function(){
+        return _this.models;
     }
 
     this.getModelByCube = function(cubeName){

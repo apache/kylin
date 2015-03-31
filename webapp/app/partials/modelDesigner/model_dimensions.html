@@ -18,87 +18,79 @@
 
 <div ng-controller="ModelDimensionsCtrl">
 
-<!-- Dimensions Summary -->
-<div class="dataTables_wrapper form-inline no-footer">
-    <div class="row"  ng-if="state.mode=='view'&&model.dimensions.length > 0">
-        <div class="col-xs-6">
-            <b>Dimensions</b>
+    <!-- Dimensions Summary -->
+    <div class="dataTables_wrapper form-inline no-footer">
+        <div class="row"  ng-if="state.mode=='view'&&model.dimensions.length > 0">
+            <div class="col-xs-6">
+                <b>Dimensions</b>
+            </div>
+            <div class="col-xs-6">
+                <span class="pull-right input-icon input-icon-right nav-search" style="margin-left: 22px;">
+                    <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="dimState.filter"/>
+                    <i class="ace-icon fa fa-search nav-search-icon"></i>
+                </span>
+            </div>
         </div>
-        <div class="col-xs-6">
-            <span class="pull-right input-icon input-icon-right nav-search" style="margin-left: 22px;">
-                <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="dimState.filter"/>
-                <i class="ace-icon fa fa-search nav-search-icon"></i>
-            </span>
-        </div>
+
+        <ng-form name="forms.model_dimensions_form" novalidate>
+         <!-- VIEW MODE -->
+            <table class="table table-striped table-hover" ng-if="state.mode=='view'&&model.dimensions.length > 0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Table Name</th>
+                        <th>Columns</th>
+                    </tr>
+                </thead>
+                <tbody class="cube-dimension">
+                    <tr ng-repeat="dimension in model.dimensions | filter:dimState.filter track by $index">
+                        <!--ID -->
+                        <td>
+                            <b>{{dimension.id = ($index + 1)}}</b>
+                        </td>
+                        <!--Name -->
+                        <td>
+                            <span>{{dimension.table}}</span>
+                        </td>
+                        <!--Table Name -->
+                        <td>
+                            <span>{{dimension.columns}}</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </ng-form>
+        <div  ng-if="state.mode=='edit'" class="form-group model-dimension-edit" style="width: 100%">
+            <h4 style="margin-left:42px">Dimensions</h4>
+            <table style="margin-left:42px; width:92%"
+                   ng-if="model.dimensions.length > 0"
+                   class="table table-hover list">
+                <tr class="row">
+                    <th class="col-xs-1">ID</th>
+                    <th class="col-xs-2">Table Name</th>
+                    <th class="col-xs-9">Columns</th>
+                </tr>
+
+                <tr ng-repeat="dimension in model.dimensions" class="row">
+                    <td class="col-xs-1">
+                        <!-- ID -->
+                        <b>{{($index + 1)}}</b>
+                    </td>
+                    <td class="col-xs-2">
+                            {{dimension.table}}
+                    </td>
+                    <td class="col-xs-9">
+                        <!-- Dimensions -->
+                        <select ng-if="state.mode=='edit'" style="width: 100%"
+                                ng-model="model.dimensions[$index].columns" required chosen multiple
+                                ng-change=""
+                                ng-options="column.name as column.name for column in getColumnsByTable(dimension.table)">
+                            <option value=""></option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+         </div>
+
     </div>
-
-    <ng-form name="model_dimensions" novalidate>
-     <!-- VIEW MODE -->
-        <table class="table table-striped table-hover" ng-if="state.mode=='view'&&model.dimensions.length > 0">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Table Name</th>
-                    <th>Columns</th>
-                </tr>
-            </thead>
-            <tbody class="cube-dimension">
-                <tr ng-repeat="dimension in model.dimensions | filter:dimState.filter track by $index">
-                    <!--ID -->
-                    <td>
-                        <b>{{dimension.id = ($index + 1)}}</b>
-                    </td>
-                    <!--Name -->
-                    <td>
-                        <span>{{dimension.table}}</span>
-                    </td>
-                    <!--Table Name -->
-                    <td>
-                        <span>{{dimension.columns}}</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </ng-form>
-    <div  ng-if="state.mode=='edit'" class="form-group model-dimension-edit" style="width: 100%">
-        <h4 style="margin-left:42px">Dimensions</h4>
-        <table style="margin-left:42px; width:92%"
-               ng-if="model.dimensions.length > 0"
-               class="table table-hover list">
-            <tr class="row">
-                <th class="col-xs-1">ID</th>
-                <th class="col-xs-1">Table Name</th>
-                <th class="col-xs-9">Columns</th>
-                <th class="col-xs-1"></th>
-            </tr>
-
-            <tr ng-repeat="dimension in model.dimensions" class="row">
-                <td class="col-xs-1">
-                    <!-- ID -->
-                    <b>{{($index + 1)}}</b>
-                </td>
-                <td class="col-xs-1">
-                        {{dimension.table}}
-                </td>
-                <td class="col-xs-9">
-                    <!-- Dimensions -->
-                    <select ng-if="state.mode=='edit'" style="width: 100%"
-                            ng-model="model.dimensions[$index].columns" required chosen multiple
-                            ng-change=""
-                            ng-options="column.name as column.name for column in getColumnsByTable(dimension.table)">
-                        <option value=""></option>
-                    </select>
-                </td>
-                <td class="col-xs-1">
-                    <button class="btn btn-xs btn-info"
-                            ng-click="removeTableDimensions($index)"><i
-                            class="fa fa-minus"></i>
-                    </button>
-                </td>
-            </tr>
-        </table>
-
-
-</div>
-
 </div>

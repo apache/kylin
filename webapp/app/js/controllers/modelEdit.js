@@ -23,6 +23,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.modelMode = absUrl.indexOf("/models/add")!=-1?'addNewModel':absUrl.indexOf("/models/edit")!=-1?'editExistModel':'default';
+    $scope.cubeConfig = cubeConfig;
 
 
     $scope.getPartitonColumns = function(tableName){
@@ -123,7 +124,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         return $interpolate($templateCache.get(tmpl))(notification);
     };
 
-    $scope.saveModel = function (design_form) {
+    $scope.saveModel = function () {
 
         try {
             angular.fromJson($scope.state.modelSchema);
@@ -149,10 +150,6 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                         if (request.successful) {
                             $scope.state.modelSchema = request.modelSchema;
                             MessageService.sendMsg($scope.modelResultTmpl({'text':'Updated the model successfully.',type:'success'}), 'success', {}, true, 'top_center');
-
-                            if (design_form) {
-                                design_form.$invalid = true;
-                            }
                         } else {
                             $scope.saveModelRollBack();
                                 var message =request.message;

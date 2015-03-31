@@ -55,10 +55,6 @@ KylinApp
               return  defer.promise;
             }
             offset = (!!offset) ? offset : 0;
-            var selectedJob = null;
-            if (angular.isDefined($scope.state.selectedJob)) {
-                selectedJob = $scope.state.selectedJob;
-            }
 
             var statusIds = [];
             angular.forEach($scope.status, function (statusObj, index) {
@@ -77,6 +73,9 @@ KylinApp
             var defer = $q.defer();
             return JobList.list(jobRequest).then(function(resp){
                 $scope.state.loading = false;
+                if (angular.isDefined($scope.state.selectedJob)) {
+                    $scope.state.selectedJob = JobList.jobs[ $scope.state.selectedJob.uuid];
+                }
                 defer.resolve(resp);
                 return defer.promise;
             });

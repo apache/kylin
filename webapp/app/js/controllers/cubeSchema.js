@@ -18,22 +18,21 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert) {
 
     $scope.projects = [];
     $scope.newDimension = null;
     $scope.newMeasure = null;
-
-
+    $scope.forms={};
     $scope.wizardSteps = [
-        {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false},
-        {title: 'Dimensions', src: 'partials/cubeDesigner/dimensions.html', isComplete: false},
-        {title: 'Measures', src: 'partials/cubeDesigner/measures.html', isComplete: false},
+        {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false,form:'cube_info_form'},
+        {title: 'Dimensions', src: 'partials/cubeDesigner/dimensions.html', isComplete: false,form:'cube_dimension_form'},
+        {title: 'Measures', src: 'partials/cubeDesigner/measures.html', isComplete: false,form:'cube_measure_form'},
     ];
     if (UserService.hasRole("ROLE_ADMIN")) {
-            $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false});
+            $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false,form:'cube_setting_form'});
     }
-    $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false});
+    $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false,form:'cube_overview_form'});
 
     $scope.curStep = $scope.wizardSteps[0];
 
@@ -173,6 +172,70 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             });
         }
     }
+
+    $scope.checkCubeForm = function(){
+        if(!$scope.curStep.form){
+            return true;
+        }
+        if($scope.state.mode==='view'){
+            return true;
+        }
+        else{
+            //form validation
+            if($scope.forms[$scope.curStep.form].$invalid){
+                return false;
+            }else{
+                //business rule check
+                switch($scope.curStep.form){
+                    case 'cube_dimension_form':
+                        return $scope.check_cube_dimension();
+                        break;
+                    case 'cube_measure_form':
+                        return $scope.check_cube_measure();
+                        break;
+                    default:
+                        return true;
+                        break;
+                }
+            }
+        }
+    };
+
+
+    $scope.check_cube_dimension = function(){
+        var errors = [];
+        if(!$scope.cubeMetaFrame.dimensions.length){
+            errors.push("Dimension can't be null");
+        }
+        var errorInfo = "";
+        angular.forEach(errors,function(item){
+            errorInfo+="\n"+item;
+        });
+        if(errors.length){
+            SweetAlert.swal('', errorInfo, 'warning');
+            return false;
+        }else{
+            return true;
+        }
+    };
+
+    $scope.check_cube_measure = function(){
+        var errors = [];
+        if(!$scope.cubeMetaFrame.measures||!$scope.cubeMetaFrame.measures.length){
+            errors.push("Please define your metrics.");
+        }
+        var errorInfo = "";
+        angular.forEach(errors,function(item){
+            errorInfo+="\n"+item;
+        });
+        if(errors.length){
+            SweetAlert.swal('', errorInfo, 'warning');
+            return false;
+        }else{
+            return true;
+        }
+    }
+
 
     // ~ private methods
     function initProject() {
