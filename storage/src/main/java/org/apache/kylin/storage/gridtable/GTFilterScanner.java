@@ -23,7 +23,7 @@ class GTFilterScanner implements IGTScanner {
     private GTRecord next;
     final private GTRecord oneRecord; // avoid instance creation
     final private TupleAdapter oneTuple; // avoid instance creation
-    
+
     private int scannedRowCount = 0;
     private int scannedRowBlockCount = 0;
 
@@ -34,20 +34,40 @@ class GTFilterScanner implements IGTScanner {
         if (TupleFilter.isEvaluableRecursively(filter) == false)
             throw new IllegalArgumentException();
 
-        ByteArray start = req.getPkStart() == null ? null : req.getPkStart().exportColumns(info.primaryKey);
-        ByteArray endEx = req.getPkEnd() == null ? null : req.getPkEnd().exportColumns(info.primaryKey);
+        ByteArray start = makeScanKey(req.getPkStart());
+        ByteArray end = makeScanKey(req.getPkEnd());
         this.selectedColBlocks = info.selectColumnBlocks(req.getColumns());
 
-        this.storeScanner = store.scan(start, endEx, selectedColBlocks, filter);
+        this.storeScanner = store.scan(start, end, selectedColBlocks, filter);
         this.oneRecord = new GTRecord(info);
         this.oneTuple = new TupleAdapter(oneRecord);
+    }
+
+    private ByteArray makeScanKey(GTRecord rec) {
+        int firstPKCol = info.primaryKey.nextSetBit(0);
+        if (rec == null || rec.cols[firstPKCol].array() == null)
+            return null;
+
+        BitSet selectedColumns = new BitSet();
+        int len = 0;
+        for (int i = info.primaryKey.nextSetBit(0); i >= 0; i = info.primaryKey.nextSetBit(i + 1)) {
+            if (rec.cols[i].array() == null) {
+                break;
+            }
+            selectedColumns.set(i);
+            len += rec.cols[i].length();
+        }
+
+        ByteArray buf = ByteArray.allocate(len);
+        rec.exportColumns(selectedColumns, buf);
+        return buf;
     }
 
     @Override
     public GTInfo getInfo() {
         return info;
     }
-    
+
     @Override
     public int getScannedRowCount() {
         return scannedRowCount;

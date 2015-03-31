@@ -26,7 +26,7 @@ import com.google.common.collect.Sets;
 public class GTScanRangePlanner {
 
     private static final int MAX_HBASE_FUZZY_KEYS = 100;
-    
+
     final private GTInfo info;
     final private ComparatorEx<ByteArray> byteUnknownIsSmaller;
     final private ComparatorEx<ByteArray> byteUnknownIsBigger;
@@ -35,7 +35,7 @@ public class GTScanRangePlanner {
 
     public GTScanRangePlanner(GTInfo info) {
         this.info = info;
-        
+
         IFilterCodeSystem<ByteArray> cs = info.codeSystem.getFilterCodeSystem();
         this.byteUnknownIsSmaller = byteComparatorTreatsUnknownSmaller(cs);
         this.byteUnknownIsBigger = byteComparatorTreatsUnknownBigger(cs);
@@ -43,6 +43,12 @@ public class GTScanRangePlanner {
         this.recordUnknownIsBigger = recordComparatorTreatsUnknownBigger(cs);
     }
 
+    // return empty list meaning filter is always false
+    public List<GTScanRange> planScanRanges(TupleFilter filter) {
+        return planScanRanges(filter, Integer.MAX_VALUE);
+    }
+
+    // return empty list meaning filter is always false
     public List<GTScanRange> planScanRanges(TupleFilter filter, int maxRanges) {
 
         TupleFilter flatFilter = flattenToOrAndFilter(filter);
@@ -74,18 +80,18 @@ public class GTScanRangePlanner {
             pkStart.set(col, range.begin);
             pkEnd.set(col, range.end);
 
-            BitSet fuzzyMask = new BitSet();
-            fuzzyMask.set(col);
-            for (ByteArray v : range.equals) {
-                GTRecord fuzzy = new GTRecord(info);
-                fuzzy.set(col, v);
-                fuzzy.maskForEqualHashComp(fuzzyMask);
-                hbaseFuzzyKeys.add(fuzzy);
+            if (range.equals != null) {
+                BitSet fuzzyMask = new BitSet();
+                fuzzyMask.set(col);
+                for (ByteArray v : range.equals) {
+                    GTRecord fuzzy = new GTRecord(info);
+                    fuzzy.set(col, v);
+                    fuzzy.maskForEqualHashComp(fuzzyMask);
+                    hbaseFuzzyKeys.add(fuzzy);
+                }
             }
         }
 
-        pkStart.maskForEqualHashComp(info.primaryKey);
-        pkEnd.maskForEqualHashComp(info.primaryKey);
         return new GTScanRange(pkStart, pkEnd, hbaseFuzzyKeys);
     }
 
@@ -172,6 +178,8 @@ public class GTScanRangePlanner {
                 break;
             }
         }
+        // return empty OR list means global false
+        // return an empty AND collection inside OR list means global true
         if (globalAlwaysTrue) {
             orAndRanges.clear();
             orAndRanges.add(Collections.<ColumnRange> emptyList());
@@ -198,27 +206,27 @@ public class GTScanRangePlanner {
         GTRecord mergeEnd = ranges.get(0).pkEnd;
         for (int index = 0; index < ranges.size(); index++) {
             GTScanRange range = ranges.get(index);
-            
+
             // if overlap, swallow it
             if (recordUnknownIsSmaller.min(range.pkStart, mergeEnd) == range.pkStart //
                     || recordUnknownIsBigger.max(mergeEnd, range.pkStart) == mergeEnd) {
                 mergeEnd = recordUnknownIsBigger.max(mergeEnd, range.pkEnd);
                 continue;
             }
-            
+
             // not overlap, split here
             GTScanRange mergedRange = mergeKeyRange(ranges.subList(mergeBeginIndex, index));
             mergedRanges.add(mergedRange);
-            
+
             // start new split
             mergeBeginIndex = index;
             mergeEnd = recordUnknownIsBigger.max(mergeEnd, range.pkEnd);
         }
-        
+
         // don't miss the last range
         GTScanRange mergedRange = mergeKeyRange(ranges.subList(mergeBeginIndex, ranges.size()));
         mergedRanges.add(mergedRange);
-        
+
         return mergedRanges;
     }
 
@@ -248,10 +256,10 @@ public class GTScanRangePlanner {
     }
 
     private List<GTScanRange> mergeTooManyRanges(List<GTScanRange> ranges, int maxRanges) {
-        if (ranges.size() < maxRanges) {
+        if (ranges.size() <= maxRanges) {
             return ranges;
         }
-        
+
         // TODO: check the distance between range and merge the large distance range
         List<GTScanRange> result = new ArrayList<GTScanRange>(1);
         GTScanRange mergedRange = mergeKeyRange(ranges);
@@ -349,8 +357,8 @@ public class GTScanRangePlanner {
                 return;
             }
 
-            this.begin = byteUnknownIsSmaller.min(this.begin, another.begin);
-            this.end = byteUnknownIsBigger.max(this.end, another.end);
+            this.begin = byteUnknownIsSmaller.max(this.begin, another.begin);
+            this.end = byteUnknownIsBigger.min(this.end, another.end);
         }
 
         private Set<ByteArray> filter(Set<ByteArray> equalValues, ByteArray beginValue, ByteArray endValue) {
