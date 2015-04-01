@@ -34,14 +34,8 @@
 
 package org.apache.kylin.job.streaming;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.lang.reflect.Constructor;
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
@@ -56,8 +50,13 @@ import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.lang.reflect.Constructor;
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
 
 /**
  * Created by qianzhou on 3/26/15.
@@ -108,7 +107,8 @@ public class StreamingBootstrap {
         final KafkaConfig kafkaConfig = streamManager.getKafkaConfig(streaming);
         Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streaming);
         final IIInstance ii = iiManager.getII(kafkaConfig.getIiName());
-        Preconditions.checkNotNull(ii);
+        Preconditions.checkNotNull(ii, "cannot find ii name:" + kafkaConfig.getIiName());
+        Preconditions.checkArgument(partitionId < 0 || partitionId >= ii.getDescriptor().getSharding(), "invalid partition id:" + partitionId);
         Preconditions.checkArgument(ii.getSegments().size() > 0);
         final IISegment iiSegment = ii.getSegments().get(0);
 
