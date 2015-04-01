@@ -257,8 +257,8 @@ class ProjectL2Cache {
     private static class TableCache {
         private boolean exposed = false;
         private TableDesc tableDesc;
-        private Set<ColumnDesc> exposedColumns = Sets.newHashSet();
-        private Set<IRealization> realizations = Sets.newHashSet();
+        private Set<ColumnDesc> exposedColumns = Sets.newLinkedHashSet();
+        private Set<IRealization> realizations = Sets.newLinkedHashSet();
 
         TableCache(TableDesc tableDesc) {
             this.tableDesc = tableDesc;

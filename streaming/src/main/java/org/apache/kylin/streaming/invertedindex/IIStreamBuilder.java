@@ -42,6 +42,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.Slice;
@@ -77,7 +78,8 @@ public class IIStreamBuilder extends StreamBuilder {
         this.desc = iiInstance.getDescriptor();
         this.partitionId = partitionId;
         try {
-            this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
+            //this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
+            this.hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
         } catch (IOException e) {
             logger.error("cannot open htable name:" + hTableName, e);
             throw new RuntimeException("cannot open htable name:" + hTableName, e);
