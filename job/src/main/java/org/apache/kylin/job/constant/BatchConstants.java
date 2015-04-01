@@ -50,7 +50,8 @@ public interface BatchConstants {
 
     public static final String CFG_STATISTICS_ENABLED = "statistics.enabled";
     public static final String CFG_STATISTICS_OUTPUT = "statistics.ouput";
-    public static final String CFG_STATISTICS_CUBE_ESTIMATION = "cube.estimation";
+    public static final String CFG_STATISTICS_CUBE_ESTIMATION = "cube_statistics.txt";
+    public static final String CFG_STATISTICS_CUBOID_ESTIMATION = "cuboid_statistics.seq";
 
     public static final int COUNTER_MAX = 100000;
     public static final int ERROR_RECORD_THRESHOLD = 100;
