@@ -57,15 +57,12 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 import org.apache.kylin.storage.gridtable.*;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
-import org.apache.kylin.streaming.Stream;
-import org.apache.kylin.streaming.StreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Created by shaoshi on 3/12/2015.
@@ -90,8 +87,8 @@ public class CubeStreamBuilder {
 
     private Map<Long, GridTable> generatedCuboids; // key: cuboid id; value: grid table of the cuboid
 
-    public CubeStreamBuilder(List<List<String>> table, CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
-        this.table = table;
+    public CubeStreamBuilder(CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
+
         this.cube = cube;
         this.desc = cube.getDescriptor();
         this.cuboidScheduler = new CuboidScheduler(desc);
@@ -126,7 +123,8 @@ public class CubeStreamBuilder {
             throw new IllegalArgumentException();
     }
 
-    public void build() {
+    public void build(List<List<String>> table) {
+        this.table = table;
         long startTime = System.currentTimeMillis();
         generatedCuboids.clear();
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
@@ -270,7 +268,7 @@ public class CubeStreamBuilder {
     }
 
     private Pair<BitSet, BitSet> getDimensionAndMetricColumBitSet(long cuboidId) {
-        BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
+        BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
         BitSet dimension = new BitSet();
         dimension.set(0, bitSet.cardinality());
         BitSet metrics = new BitSet();
@@ -329,7 +327,7 @@ public class CubeStreamBuilder {
     private GTInfo newGTInfo(long cuboidID) {
         Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumBitSet(cuboidID);
         GTInfo.Builder builder = infoBuilder(cuboidID);
-        builder.enableColumnBlock(new BitSet[] { dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond() });
+        builder.enableColumnBlock(new BitSet[]{dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond()});
         builder.setPrimaryKey(dimensionMetricsBitSet.getFirst());
         GTInfo info = builder.build();
         return info;
@@ -378,7 +376,7 @@ public class CubeStreamBuilder {
                         @Nullable
                         @Override
                         public byte[] apply(String input) {
-                            if(input == null)
+                            if (input == null)
                                 return null;
                             return input.getBytes();
                         }
