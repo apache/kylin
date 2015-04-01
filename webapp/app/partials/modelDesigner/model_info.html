@@ -20,27 +20,6 @@
     <div class="col-xs-8">
         <!--Project-->
         <ng-form name="forms.model_info_form" novalidate>
-            <div class="form-group">
-                <div class="row">
-                    <label class="col-xs-3 control-label no-padding-right">
-                        <a ng-if="state.mode=='edit'" href="projects">
-                            <b>Project</b>
-                        </a>
-                        <b ng-if="state.mode=='view'" class="font-color-default">Project</b>
-                    </label>
-                    <div class="col-xs-6" ng-class="forms.model_info_form.project_name.$invalid?'has-error':''">
-                         <!--edit-->
-                        <input ng-if="state.mode=='edit'" required name="project_name" type="text" class="form-control"
-                               ng-model="model.project"/>
-                        <small class="help-block" ng-show="forms.model_info_form.project_name.$error.required">The project is required</small>
-
-                        <!--view-->
-                        <span ng-if="state.mode=='view'">
-                            {{model.project}}
-                        </span>
-                    </div>
-                </div>
-            </div>
 
             <!--Model Name-->
             <div class="form-group">
@@ -49,15 +28,15 @@
                         <b>Model Name</b>
                     </label>
 
-                    <div class="col-xs-12 col-sm-6" ng-class="forms.model_info_form.model_name.$invalid?'has-error':''">
+                    <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$sbumitted)}">
 
                         <!-- edit -->
                         <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"
                                ng-model="model.name" required
                                placeholder="You can use letters, numbers, and '_'"
                                ng-maxlength=100 ng-pattern="/^\w+$/" />
-                        <small class="help-block" ng-show="forms.model_info_form.model_name.$error.required  && forms.model_info_form.model_name.$dirty">Model name is required.</small>
-                        <small class="help-block" ng-show="forms.model_info_form.model_name.$invalid && forms.model_info_form.model_name.$dirty && !forms.model_info_form.model_name.$error.required"> Model name is invalid.</small>
+                        <small class="help-block" ng-show="forms.model_info_form.model_name.$error.required && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$sbumitted)">Model name is required.</small>
+                        <small class="help-block" ng-show="!forms.model_info_form.model_name.$error.required&&forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$sbumitted)">Model name is invalid.</small>
 
 
                         <span ng-if="state.mode=='view'">{{model.name}}</span>

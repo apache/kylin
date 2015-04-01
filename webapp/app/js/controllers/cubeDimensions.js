@@ -106,7 +106,9 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
             $scope.availableColumns[lookups[j].table] = lookupAvailable;
             $scope.selectedColumns[lookups[j].table] = lookupSelectAvailable;
-            $scope.availableTables.push(lookups[j].table);
+            if($scope.availableTables.indexOf(lookups[j].table)==-1){
+                $scope.availableTables.push(lookups[j].table);
+            }
         }
     };
 

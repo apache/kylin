@@ -14,7 +14,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
--->
+-->A
 
 <!--hide when view model and no model selected-->
 <div class="box box-primary model-design box-2px" ng-hide="state.mode=='view'&&!model.name">
@@ -46,16 +46,16 @@
                         </div>
                     </div>
                     <div class="col-xs-4 pull-right">
-                        <button class="btn btn-prev" ng-click="checkForm()?preView():''" ng-show="curStep.title!='Model Info'">
+                        <button class="btn btn-prev" ng-click="preView()" ng-show="curStep.title!='Model Info'">
                             <i class="ace-icon fa fa-arrow-left"></i>
                             Prev
                         </button>
-                        <button id="nextButton" class="btn btn-success btn-next"  ng-click="checkForm()?nextView():''"
+                        <button id="nextButton" class="btn btn-success btn-next" ng-disabled="forms[curStep.form].$invalid" ng-click="checkForm()?nextView():''"
                                 ng-show="curStep.title!='Settings'">
                             Next
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
                         </button>
-                        <button class="btn btn-primary" ng-click="prepareModel();saveModel()"
+                        <button class="btn btn-primary" ng-click="saveModel()"
                                 ng-if="curStep.title=='Settings' && state.mode=='edit'">
                             Save
                         </button>
