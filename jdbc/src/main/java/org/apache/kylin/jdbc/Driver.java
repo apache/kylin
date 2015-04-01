@@ -18,6 +18,7 @@
 
 package org.apache.kylin.jdbc;
 
+import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import net.hydromatic.avatica.AvaticaConnection;
@@ -81,6 +82,13 @@ public class Driver extends UnregisteredDriver {
     private static final Logger logger = LoggerFactory.getLogger(Driver.class);
 
     public static final String CONNECT_STRING_PREFIX = "jdbc:kylin:";
+    static {
+        try {
+            DriverManager.registerDriver(new Driver());
+        } catch (SQLException e) {
+            throw new RuntimeException("Error occurred while registering JDBC driver " + Driver.class.getName() + ": " + e.toString());
+        }
+    }
 
     @Override
     protected DriverVersion createDriverVersion() {
