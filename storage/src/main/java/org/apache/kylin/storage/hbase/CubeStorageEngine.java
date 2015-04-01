@@ -112,7 +112,6 @@ public class CubeStorageEngine implements IStorageEngine {
         // - columns on non-evaluatable filter have to return
         // - columns on loosened filter (due to derived translation) have to return
         Set<TblColRef> groupsCopD = Sets.newHashSet(groupsD);
-        groupsCopD.addAll(context.getOtherMandatoryColumns()); // TODO: this is tricky, to generalize
         collectNonEvaluable(filter, groupsCopD);
         TupleFilter filterD = translateDerived(filter, groupsCopD);
 
@@ -323,7 +322,7 @@ public class CubeStorageEngine implements IStorageEngine {
         TupleFilter translatedFilter = translated.getFirst();
         boolean loosened = translated.getSecond();
         if (loosened) {
-            collectColumnsRecursively(compf, collector);
+            collectColumnsRecursively(translatedFilter, collector);
         }
         return translatedFilter;
     }
