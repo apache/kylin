@@ -37,7 +37,7 @@ public class IIDistinctColumnsCombiner extends KylinReducer<ShortWritable, Text,
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
 
     }
 

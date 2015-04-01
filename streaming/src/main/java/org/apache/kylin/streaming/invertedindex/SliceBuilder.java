@@ -49,6 +49,8 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -59,6 +61,8 @@ import java.util.Map;
  * Created by qianzhou on 3/27/15.
  */
 public final class SliceBuilder {
+
+    private static Logger logger = LoggerFactory.getLogger(SliceBuilder.class);
 
     public SliceBuilder(IIDesc desc, short shard){
         this.iiDesc = desc;
@@ -102,6 +106,7 @@ public final class SliceBuilder {
                     return input.getBytes();
                 }
             });
+            logger.info("build dictionary for column " + tblColRef);
             final Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), bytes);
             result.put(desc.findColumn(tblColRef), dict);
         }

@@ -186,7 +186,7 @@ public class DeployCoprocessorCLI {
         }
         Path coprocessorDir = getCoprocessorHDFSDir(fileSystem, KylinConfig.getInstanceFromEnv());
         for (FileStatus fileStatus : fileSystem.listStatus(coprocessorDir)) {
-            if (fileStatus.getLen() == localCoprocessorJar.length() && fileStatus.getModificationTime() == localCoprocessorFile.lastModified()) {
+            if (isSame(localCoprocessorFile, fileStatus)) {
                 uploadPath = fileStatus.getPath();
                 break;
             }
@@ -231,6 +231,11 @@ public class DeployCoprocessorCLI {
 
         uploadPath = uploadPath.makeQualified(fileSystem.getUri(), null);
         return uploadPath;
+    }
+
+    private static boolean isSame(File localCoprocessorFile, FileStatus fileStatus) {
+        return fileStatus.getLen() == localCoprocessorFile.length() //
+                && fileStatus.getModificationTime() == localCoprocessorFile.lastModified();
     }
 
     private static String getBaseFileName(String localCoprocessorJar) {

@@ -45,7 +45,7 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
         String cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();

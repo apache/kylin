@@ -79,6 +79,18 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("iiName")
     private String iiName;
 
+    @JsonProperty("parserName")
+    private String parserName;
+
+    public String getParserName() {
+        return parserName;
+    }
+
+    public void setParserName(String parserName) {
+        this.parserName = parserName;
+    }
+
+
     public int getTimeout() {
         return timeout;
     }

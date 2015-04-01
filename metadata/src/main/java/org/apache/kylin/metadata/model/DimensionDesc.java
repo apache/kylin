@@ -50,12 +50,13 @@ public class DimensionDesc {
         this.columns = columns;
     }
 
-
     public static void capicalizeStrings(List<DimensionDesc> dimensions) {
-        for (DimensionDesc dimensionDesc : dimensions) {
-            dimensionDesc.setTable(dimensionDesc.getTable().toUpperCase());
-            if (dimensionDesc.getColumns() != null) {
-                StringUtil.toUpperCaseArray(dimensionDesc.getColumns(), dimensionDesc.getColumns());
+        if (dimensions != null) {
+            for (DimensionDesc dimensionDesc : dimensions) {
+                dimensionDesc.setTable(dimensionDesc.getTable().toUpperCase());
+                if (dimensionDesc.getColumns() != null) {
+                    StringUtil.toUpperCaseArray(dimensionDesc.getColumns(), dimensionDesc.getColumns());
+                }
             }
         }
     }

@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.io.LongWritable;
@@ -37,7 +38,7 @@ public class DictGridTableTest {
     @Test
     public void test() throws IOException {
         GridTable table = newTestTable();
-//        verifyScanRangePlanner(table);
+        verifyScanRangePlanner(table);
         verifyFirstRow(table);
         verifyScanWithUnevaluatableFilter(table);
         verifyScanWithEvaluatableFilter(table);
@@ -49,22 +50,58 @@ public class DictGridTableTest {
 
     private void verifyScanRangePlanner(GridTable table) {
         GTInfo info = table.getInfo();
+        GTScanRangePlanner planner = new GTScanRangePlanner(info);
         
-        // flatten or-and
+        CompareTupleFilter timeComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
+        CompareTupleFilter timeComp2 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-13"));
+        CompareTupleFilter timeComp3 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-15"));
+        CompareTupleFilter timeComp4 = compare(info.colRef(0), FilterOperatorEnum.EQ, enc(info, 0, "2015-01-15"));
+        CompareTupleFilter ageComp1 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "10"));
+        CompareTupleFilter ageComp2 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "20"));
+        CompareTupleFilter ageComp3 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "30"));
+        CompareTupleFilter ageComp4 = compare(info.colRef(1), FilterOperatorEnum.NEQ, enc(info, 1, "30"));
+        
+        // flatten or-and & hbase fuzzy value
         {
-            CompareTupleFilter fComp = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
-            ExtractTupleFilter fUnevaluatable = unevaluatable(info.colRef(1));
-            LogicalTupleFilter fNotPlusUnevaluatable = not(unevaluatable(info.colRef(1)));
-            LogicalTupleFilter filter = and(fComp, fUnevaluatable, fNotPlusUnevaluatable);
+            LogicalTupleFilter filter = and(timeComp1, or(ageComp1, ageComp2));
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(1, r.size());
+            assertEquals("[1421193600000, 10]-[null, null]", r.get(0).toString());
+            assertEquals("[[null, 10, null, null, null], [null, 20, null, null, null]]", r.get(0).hbaseFuzzyKeys.toString());
         }
         
-        // pre-evaluate ever true and ever false
+        // pre-evaluate ever false
+        {
+            LogicalTupleFilter filter = and(timeComp1, timeComp2);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(0, r.size());
+        }
         
-        // unclosed range swallow closed
+        // pre-evaluate ever true
+        {
+            LogicalTupleFilter filter = or(timeComp1, ageComp4);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals("[[null, null]-[null, null]]", r.toString());
+        }
         
         // merge overlap range
+        {
+            LogicalTupleFilter filter = or(timeComp1, timeComp3);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals("[[null, null]-[null, null]]", r.toString());
+        }
         
         // merge too many ranges
+        {
+            LogicalTupleFilter filter = or(and(timeComp4, ageComp1), and(timeComp4, ageComp2), and(timeComp4, ageComp3));
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(3, r.size());
+            assertEquals("[1421280000000, 10]-[1421280000000, 10]", r.get(0).toString());
+            assertEquals("[1421280000000, 20]-[1421280000000, 20]", r.get(1).toString());
+            assertEquals("[1421280000000, 30]-[1421280000000, 30]", r.get(2).toString());
+            List<GTScanRange> r2 = planner.planScanRanges(filter, 2);
+            assertEquals("[[1421280000000, 10]-[1421280000000, 30]]", r2.toString());
+        }
     }
 
     private void verifyFirstRow(GridTable table) throws IOException {
@@ -82,7 +119,7 @@ public class DictGridTableTest {
         GTScanRequest req = new GTScanRequest(info, null, setOf(0), setOf(3), new String[] { "sum" }, filter);
 
         // note the unEvaluatable column 1 in filter is added to group by
-        assertEquals("GTScanRequest [range=null-null, columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
+        assertEquals("GTScanRequest [range=[null, null]-[null, null], columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
         
         doScanAndVerify(table, req, "[1421280000000, 20, null, 20, null]");
     }
@@ -97,9 +134,9 @@ public class DictGridTableTest {
         GTScanRequest req = new GTScanRequest(info, null, setOf(0), setOf(3), new String[] { "sum" }, filter);
         
         // note the evaluatable column 1 in filter is added to returned columns but not in group by
-        assertEquals("GTScanRequest [range=null-null, columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 GT [\\x00]], aggrGroupBy={0}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
+        assertEquals("GTScanRequest [range=[null, null]-[null, null], columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 GT [\\x00]], aggrGroupBy={0}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
         
-        doScanAndVerify(table, req, "[1421280000000, 30, null, 30, null]", "[1421366400000, 20, null, 40, null]");
+        doScanAndVerify(table, req, "[1421280000000, 20, null, 30, null]", "[1421366400000, 20, null, 40, null]");
     }
 
     private void verifyConvertFilterConstants1(GridTable table) {
@@ -244,13 +281,13 @@ public class DictGridTableTest {
 
         builder.write(r.setValues("2015-01-14", "30", "Yang", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-14", "30", "Luke", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-15", "30", "Xu", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-15", "20", "Dong", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-15", "20", "Jason", new LongWritable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-15", "30", "Xu", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-16", "20", "Mahone", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-16", "30", "Shaofeng", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-16", "20", "Qianhao", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-16", "30", "George", new LongWritable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-16", "30", "Shaofeng", new LongWritable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-17", "10", "Kejia", new LongWritable(10), new BigDecimal("10.5")));
         builder.close();
 
@@ -267,7 +304,7 @@ public class DictGridTableTest {
                 DataType.getInstance("bigint"), //
                 DataType.getInstance("decimal") //
         );
-        builder.setPrimaryKey(setOf(0));
+        builder.setPrimaryKey(setOf(0, 1));
         builder.setColumnPreferIndex(setOf(0));
         builder.enableColumnBlock(new BitSet[] { setOf(0, 1, 2), setOf(3, 4) });
         builder.enableRowBlock(4);

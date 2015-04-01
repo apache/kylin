@@ -43,6 +43,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringSplitter;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -94,6 +95,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected OptionsHelper optionsHelper = new OptionsHelper();
 
     protected Job job;
+
+    public AbstractHadoopJob() {
+        super(HadoopUtil.newHadoopJobConfiguration());
+    }
 
     protected void parseOptions(Options options, String[] args) throws ParseException {
         optionsHelper.parseOptions(options, args);
