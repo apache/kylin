@@ -16,7 +16,7 @@ title: Community
               <p class="big_text">Binary Package (v0.7.x)</p>
               <p><a href="http://kylin.incubator.apache.org/download/kylin-0.7.1-SNAPSHOT.tgz" target="_blank">v0.7.1-SNAPSHOT (Dev Build)</a> 
               <br/>Updated Date - March 24, 2015 <br/>	
-              <br/>Git Commit: <a href="https://github.com/KylinOLAP/Kylin/tree/6f1d30fcab48fd02e18f91386b41c12bfd188178" target="_blank">6f1d30f</a>						
+              <br/>Git Commit: <a href="https://github.com/KylinOLAP/Kylin/tree/d936208823d4f94b735b39568382162789d29f4c" target="_blank">d936208</a>						
 							</p>
             </div>
 
@@ -32,7 +32,7 @@ title: Community
 
             <div class="col-sm-4 col-md-4">
               <p class="big_text">Installation Guide</p> 
-							<p>v0.7.x: <a href="https://github.com/KylinOLAP/Kylin/blob/master/docs/Installation/install_and_run.md" target="_blank">https://github.com/KylinOLAP/Kylin/blob/master/docs/Installation/install_and_run.md</a></p>
+							<p>v0.7.x: <a href="https://github.com/apache/incubator-kylin/blob/master/docs/Installation/Installation.md" target="_blank">Installation Tutorial</a></p>
              
               <p>v0.6.x: <a href="https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-CLI-installation" target="_blank">https://github.com/KylinOLAP/Kylin/wiki/On-Hadoop-CLI-installation</a></p>
               
