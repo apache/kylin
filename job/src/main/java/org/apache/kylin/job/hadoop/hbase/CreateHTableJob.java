@@ -68,15 +68,13 @@ import java.util.Map;
 public class CreateHTableJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(CreateHTableJob.class);
-    public static final int SMALL_CUT = 5;  //  5 GB per region
-    public static final int MEDIUM_CUT = 10; //  10 GB per region
-    public static final int LARGE_CUT = 50; // 50 GB per region
 
     public static final int MAX_REGION = 1000;
 
     CubeInstance cube = null;
     CubeDesc cubeDesc = null;
     String segmentName = null;
+    KylinConfig kylinConfig;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -95,8 +93,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         Path statisticsFilePath = new Path(getOptionValue(OPTION_STATISTICS_OUTPUT), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
 
         String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeMgr = CubeManager.getInstance(config);
+        kylinConfig = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
         cube = cubeMgr.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
         segmentName = getOptionValue(OPTION_SEGMENT_NAME);
@@ -105,7 +103,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
         // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
-        tableDesc.setValue(IRealizationConstants.HTableTag, config.getMetadataUrlPrefix());
+        tableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
 
         Configuration conf = HBaseConfiguration.create(getConf());
         HBaseAdmin admin = new HBaseAdmin(conf);
@@ -212,20 +210,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
 
         DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
-        int cut;
-        switch (cubeCapacity) {
-            case SMALL:
-                cut = SMALL_CUT;
-                break;
-            case MEDIUM:
-                cut = MEDIUM_CUT;
-                break;
-            case LARGE:
-                cut = LARGE_CUT;
-                break;
-            default:
-                cut = SMALL_CUT;
-        }
+        int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.name());
 
         System.out.println("Chosen cut for htable is " + cut);
 
