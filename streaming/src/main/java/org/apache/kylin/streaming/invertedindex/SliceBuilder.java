@@ -64,7 +64,7 @@ public final class SliceBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(SliceBuilder.class);
 
-    public SliceBuilder(IIDesc desc, short shard){
+    public SliceBuilder(IIDesc desc, short shard) {
         this.iiDesc = desc;
         this.sliceBuilder = new BatchSliceBuilder(desc, shard);
     }
@@ -103,7 +103,7 @@ public final class SliceBuilder {
                 @Nullable
                 @Override
                 public byte[] apply(String input) {
-                    return input.getBytes();
+                    return input == null ? null : input.getBytes();
                 }
             });
             logger.info("build dictionary for column " + tblColRef);
