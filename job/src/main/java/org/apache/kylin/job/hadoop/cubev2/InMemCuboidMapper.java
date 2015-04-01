@@ -3,12 +3,11 @@ package org.apache.kylin.job.hadoop.cubev2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
-import org.apache.hive.hcatalog.data.schema.HCatSchema;
-import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.cube.CubeInstance;
@@ -44,7 +43,7 @@ import java.util.Map;
 /**
  * Created by shaoshi on 3/24/15.
  */
-public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Text, Text> {
+public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ImmutableBytesWritable, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCuboidMapper.class);
     private String cubeName;
@@ -52,14 +51,6 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
     private CubeDesc cubeDesc;
     private CubeSegment cubeSegment;
 
-    private HCatSchema schema = null;
-
-    private Text outputKey = new Text();
-    private Text outputValue = new Text();
-    private CubeStreamBuilder streamBuilder = null;
-    private Map<TblColRef, Dictionary> dictionaryMap = null;
-    private Map<Long, GridTable> cuboidsMap = null; // key: cuboid id; value: grid table;
-    private Cuboid baseCuboid;
     private int mapperTaskId;
     private int counter;
 
@@ -82,9 +73,6 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
         String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
         cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
-        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
         mapperTaskId = context.getTaskAttemptID().getTaskID().getId();
 
         measures = new Object[cubeDesc.getMeasures().size()];
@@ -108,8 +96,8 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
 
         // end to trigger cubing calculation
         logger.info("Totally read " + counter + " rows in memory, trigger cube build now.");
-        dictionaryMap = Maps.newHashMap();
-        cuboidsMap = Maps.newHashMap();
+        Map<TblColRef, Dictionary> dictionaryMap = Maps.newHashMap();
+        Map<Long, GridTable> cuboidsMap = Maps.newHashMap();
 
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
             // dictionary
@@ -125,8 +113,8 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
             }
         }
 
-        streamBuilder = new CubeStreamBuilder(table, cube, false, dictionaryMap, cuboidsMap);
-        streamBuilder.build();
+        CubeStreamBuilder streamBuilder = new CubeStreamBuilder(cube, false, dictionaryMap, cuboidsMap);
+        streamBuilder.build(table);
         logger.info("Cube build success");
         logger.info("Cube segment calculation in mapper " + mapperTaskId + " finished; cuboid number: " + cuboidsMap.size());
         List<Long> allCuboids = Lists.newArrayList();
@@ -134,34 +122,35 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
         Collections.sort(allCuboids);
 
 
+        ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
+        Text outputValue = new Text();
+        int offSet;
+        RowKeyColumnIO colIO = new RowKeyColumnIO(this.cubeSegment);
         for (Long cuboidId : allCuboids) {
             int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
             Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
-            RowKeyColumnIO colIO = new RowKeyColumnIO(this.cubeSegment);
             for (TblColRef column : cuboid.getColumns()) {
                 bytesLength += colIO.getColumnLength(column);
             }
 
-            logger.info("The keyBuf length is " + bytesLength);
-            byte[] keyBuf = new byte[bytesLength];
             // output cuboids;
             int dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
-            logger.info("Output cuboid " + cuboidId + " to reducer, dimension number is " + dimensions);
             long cuboidRowCount = 0;
-            System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, Bytes.toBytes(cuboidId).length);
+            byte[] keyBuf = new byte[bytesLength];
+            System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
 
             GridTable gt = cuboidsMap.get(cuboidId);
-            GTScanRequest req = new GTScanRequest(gt.getInfo(), null, null, null);
+            GTScanRequest req = new GTScanRequest(gt.getInfo());
             IGTScanner scanner = gt.scan(req);
-            int offSet = 0;
             for (GTRecord record : scanner) {
                 cuboidRowCount++;
                 offSet = RowConstants.ROWKEY_CUBOIDID_LEN;
                 for (int x = 0; x < dimensions; x++) {
-                    logger.info("Copy key with offSet: " + offSet + ", length " + record.get(x).length());
                     System.arraycopy(record.get(x).array(), record.get(x).offset(), keyBuf, offSet, record.get(x).length());
                     offSet += record.get(x).length();
                 }
+
+                //TODO use GTRecord.exportColumnBlock to gain better performance
 
                 /*
                 for (int i = 0; i < measures.length; i++) {
@@ -170,9 +159,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
 
                 */
                 Object[] values = record.getValues();
-                for (int i = 0; i < measures.length; i++) {
-                    measures[i] = values[dimensions + i];
-                }
+                System.arraycopy(values, dimensions, measures, 0, measures.length);
 
                 valueBuf.clear();
                 measureCodec.encode(measures, valueBuf);
