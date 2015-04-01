@@ -72,11 +72,18 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         String intermediateHiveTableStepId = twoSteps.getFirst().getId();
         String baseCuboidStepId = twoSteps.getSecond().getId();
 
-        // convert htable
-        AbstractExecutable convertCuboidToHfileStep = addHTableSteps(seg, cuboidRootPath, result);
 
-        // update cube info
-        result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, convertCuboidToHfileStep.getId(), jobId));
+        if(this.useImMemCubing) {
+            // bulk load step
+            result.addTask(createBulkLoadStep(seg, result.getId()));
+            result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, baseCuboidStepId, jobId));
+        } else {
+            // convert htable
+            AbstractExecutable convertCuboidToHfileStep = addHTableSteps(seg, cuboidRootPath, result);
+
+            // update cube info
+            result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, convertCuboidToHfileStep.getId(), jobId));
+        }
 
         return result;
     }
@@ -184,7 +191,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
                 result.addTask(createNDimensionCuboidStep(seg, cuboidOutputTempPath, dimNum, totalRowkeyColumnsCount));
             }
         } else {
-            baseCuboidStep = createInMemCubingStep(seg, intermediateHiveTableLocation, intermediateHiveTableName, cuboidOutputTempPath);
+            // create htable step
+            result.addTask(createCreateHTableStep(seg));
+            baseCuboidStep = createInMemCubingStep(seg, intermediateHiveTableLocation, intermediateHiveTableName, cuboidOutputTempPath, result.getId());
             result.addTask(baseCuboidStep);
         }
 
@@ -280,8 +289,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         appendMapReduceParameters(cmd, seg);
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "output", getFactDistinctColumnsPath(seg, jobId));
+        appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "statisticsenabled",  String.valueOf(useImMemCubing));
-        appendExecCmdParameters(cmd, "statisticsoutput", getStatisticsPath(seg, jobId));
+        appendExecCmdParameters(cmd, "statisticsoutput",   getRowkeyDistributionOutputPath(seg));
         appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + seg.getCubeInstance().getName() + "_Step");
         appendExecCmdParameters(cmd, "tablename", intermediateHiveTableName);
 
@@ -303,7 +313,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return buildDictionaryStep;
     }
 
-    private MapReduceExecutable createInMemCubingStep(CubeSegment seg, String intermediateHiveTableLocation, String intermediateHiveTableName, String[] cuboidOutputTempPath) {
+    private MapReduceExecutable createInMemCubingStep(CubeSegment seg, String intermediateHiveTableLocation, String intermediateHiveTableName, String[] cuboidOutputTempPath, String jobId) {
         // base cuboid job
         MapReduceExecutable baseCuboidStep = new MapReduceExecutable();
 
@@ -315,10 +325,13 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "input", intermediateHiveTableLocation);
-        appendExecCmdParameters(cmd, "output", cuboidOutputTempPath[0]);
-        appendExecCmdParameters(cmd, "jobname", "Kylin_Base_Cuboid_Builder_" + seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "statisticsoutput",   getRowkeyDistributionOutputPath(seg));
+       // appendExecCmdParameters(cmd, "output", cuboidOutputTempPath[0]);
+        appendExecCmdParameters(cmd, "output", getHFilePath(seg, jobId));
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Cube_Builder_" + seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "level", "0");
         appendExecCmdParameters(cmd, "tablename", intermediateHiveTableName);
+        appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
 
         baseCuboidStep.setMapReduceParams(cmd.toString());
         baseCuboidStep.setMapReduceJobClass(InMemCuboidJob.class);

@@ -47,7 +47,7 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_CREATE_FLAT_HIVE_TABLE = "Create Intermediate Flat Hive Table";
     public static final String STEP_NAME_FACT_DISTINCT_COLUMNS = "Extract Fact Table Distinct Columns";
     public static final String STEP_NAME_BUILD_BASE_CUBOID = "Build Base Cuboid Data";
-    public static final String STEP_NAME_BUILD_IN_MEM_CUBE = "Build In-mem Cuboid";
+    public static final String STEP_NAME_BUILD_IN_MEM_CUBE = "Build Cube";
     public static final String STEP_NAME_BUILD_N_D_CUBOID = "Build N-Dimension Cuboid Data";
     public static final String STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION = "Calculate HTable Region Splits";
     public static final String STEP_NAME_CREATE_HBASE_TABLE = "Create HTable";

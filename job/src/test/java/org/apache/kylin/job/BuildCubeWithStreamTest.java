@@ -150,9 +150,9 @@ public class BuildCubeWithStreamTest {
         }
 
         Map<Long, GridTable> cuboidsMap = Maps.newHashMap();
-        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(queue, cube, true, dictionaryMap, cuboidsMap);
+        final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(cube, true, dictionaryMap, cuboidsMap);
 
-        streamBuilder.build();
+        streamBuilder.build(queue);
         logger.info("stream build finished");
     }
 
