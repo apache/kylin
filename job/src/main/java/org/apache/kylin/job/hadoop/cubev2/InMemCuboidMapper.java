@@ -151,7 +151,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Tex
             System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, Bytes.toBytes(cuboidId).length);
 
             GridTable gt = cuboidsMap.get(cuboidId);
-            GTScanRequest req = new GTScanRequest(gt.getInfo(), null, null, null);
+            GTScanRequest req = new GTScanRequest(gt.getInfo());
             IGTScanner scanner = gt.scan(req);
             int offSet = 0;
             for (GTRecord record : scanner) {
