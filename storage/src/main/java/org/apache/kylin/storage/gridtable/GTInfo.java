@@ -72,7 +72,7 @@ public class GTInfo {
         }
         return colRefs[i];
     }
-    
+
     public void validateColRef(TblColRef ref) {
         TblColRef expected = colRef(ref.getColumn().getZeroBasedIndex());
         if (expected != ref)
@@ -163,7 +163,7 @@ public class GTInfo {
 
         /** required */
         public Builder setPrimaryKey(BitSet primaryKey) {
-            info.primaryKey = (BitSet)primaryKey.clone();
+            info.primaryKey = (BitSet) primaryKey.clone();
             return this;
         }
 
@@ -175,7 +175,10 @@ public class GTInfo {
 
         /** optional */
         public Builder enableColumnBlock(BitSet[] columnBlocks) {
-            info.colBlocks = columnBlocks;
+            info.colBlocks = new BitSet[columnBlocks.length];
+            for (int i = 0; i < columnBlocks.length; i++) {
+                info.colBlocks[i] = (BitSet) columnBlocks[i].clone();
+            }
             return this;
         }
 

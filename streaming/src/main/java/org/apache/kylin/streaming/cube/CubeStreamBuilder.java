@@ -33,8 +33,17 @@
  */
 package org.apache.kylin.streaming.cube;
 
-import com.google.common.base.Function;
-import com.google.common.collect.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.LongWritable;
@@ -50,26 +59,32 @@ import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
-import org.apache.kylin.storage.gridtable.*;
+import org.apache.kylin.storage.cube.CubeGridTable;
+import org.apache.kylin.storage.gridtable.GTBuilder;
+import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.storage.gridtable.GTScanRequest;
+import org.apache.kylin.storage.gridtable.GridTable;
+import org.apache.kylin.storage.gridtable.IGTScanner;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
-import org.apache.kylin.streaming.Stream;
-import org.apache.kylin.streaming.StreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.LinkedBlockingDeque;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
 
 /**
  * Created by shaoshi on 3/12/2015.
  */
+@SuppressWarnings("rawtypes")
 public class CubeStreamBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(CubeStreamBuilder.class);
@@ -77,8 +92,7 @@ public class CubeStreamBuilder {
     private CubeDesc desc = null;
     private CuboidScheduler cuboidScheduler = null;
     private List<List<String>> table = null;
-    private Map<TblColRef, Dictionary> dictionaryMap = null;
-    private Cuboid baseCuboid = null;
+	private Map<TblColRef, Dictionary> dictionaryMap = null;
     private CubeInstance cube;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
     private MeasureCodec measureCodec;
@@ -204,7 +218,7 @@ public class CubeStreamBuilder {
     }
 
     private GridTable newGridTableByCuboidID(long cuboidID) {
-        GTInfo info = newGTInfo(cuboidID);
+        GTInfo info = CubeGridTable.newGTInfo(desc, cuboidID, dictionaryMap);
         GTSimpleMemStore store = new GTSimpleMemStore(info);
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
@@ -324,39 +338,6 @@ public class CubeStreamBuilder {
             values[i] = value;
         }
         return values;
-    }
-
-    private GTInfo newGTInfo(long cuboidID) {
-        Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumBitSet(cuboidID);
-        GTInfo.Builder builder = infoBuilder(cuboidID);
-        builder.enableColumnBlock(new BitSet[] { dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond() });
-        builder.setPrimaryKey(dimensionMetricsBitSet.getFirst());
-        GTInfo info = builder.build();
-        return info;
-    }
-
-    private GTInfo.Builder infoBuilder(long cuboidID) {
-        Cuboid cuboid = Cuboid.findById(desc, cuboidID);
-        Map<Integer, Dictionary> dictionaryOfThisCuboid = Maps.newHashMap();
-        List<DataType> dataTypes = new ArrayList<DataType>(cuboid.getColumns().size() + this.measureNumber);
-
-        int colIndex = 0;
-        for (TblColRef col : cuboid.getColumns()) {
-            dataTypes.add(col.getType());
-            if (this.desc.getRowkey().isUseDictionary(col)) {
-                dictionaryOfThisCuboid.put(colIndex, dictionaryMap.get(col));
-            }
-            colIndex++;
-        }
-
-        for (MeasureDesc measure : this.desc.getMeasures()) {
-            dataTypes.add(measure.getFunction().getReturnDataType());
-        }
-
-        GTInfo.Builder builder = GTInfo.builder();
-        builder.setCodeSystem(new GTDictionaryCodeSystem(dictionaryOfThisCuboid));
-        builder.setColumns(dataTypes.toArray(new DataType[dataTypes.size()]));
-        return builder;
     }
 
     private void buildDictionary(List<List<String>> table, CubeDesc desc, Map<TblColRef, Dictionary> dictionaryMap) {
