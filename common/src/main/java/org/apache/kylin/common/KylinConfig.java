@@ -131,6 +131,10 @@ public class KylinConfig {
     public static final String KYLIN_HOME = "KYLIN_HOME";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
+    public static final String HBASE_REGION_CUT_SMALL = "kylin.job.hbase.region.cut.small";
+    public static final String HBASE_REGION_CUT_MEDIUM = "kylin.job.hbase.region.cut.medium";
+    public static final String HBASE_REGION_CUT_LARGE = "kylin.job.hbase.region.cut.large";
+
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
     public static final String VERSION = "${project.version}";
@@ -660,6 +664,22 @@ public class KylinConfig {
         } catch (ConfigurationException ex) {
             throw new IOException("Error writing KylinConfig to String", ex);
         }
+    }
+
+    public int getHBaseRegionCut(String capacity) {
+        String cut;
+        switch (capacity) {
+            case "SMALL":
+                cut = getProperty(HBASE_REGION_CUT_SMALL, "5");
+            case "MEDIUM":
+                cut = getProperty(HBASE_REGION_CUT_MEDIUM, "10");
+            case "LARGE":
+                cut = getProperty(HBASE_REGION_CUT_LARGE, "50");
+            default:
+                cut = "5";
+        }
+
+        return Integer.valueOf(cut);
     }
 
     public String toString() {
