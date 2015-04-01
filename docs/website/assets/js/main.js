@@ -20,18 +20,14 @@ jQuery(document).ready(function ($) {
 
    // page elements animation 
     var image_animation = function () {
-        var diagramTop = $('#diagram').offset().top;
+        //var diagramTop = $('#diagram').offset().top;
 		var coremTop = $('#core').offset().top;
 
         
         var scroll_top = $(window).scrollTop();
         var currentPosition = scroll_top + 320;
 
-        if (diagramTop < currentPosition) {
-            $('#diagram').addClass("animated fadeIn");
-        } else {
-            $('#diagram').removeClass("animated fadeIn");
-        }
+        
 
         if (coremTop< currentPosition) {
 
