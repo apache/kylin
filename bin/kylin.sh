@@ -49,14 +49,14 @@ then
     -Djava.io.tmpdir=${tomcat_root}/temp  \
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dspring.profiles.active=${spring_profile} \
-    org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+    org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${KYLIN_HOME}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
     if [ "$useSandbox" = "true" ]
         then echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
     else
         echo "Please visit http://<ip>:7070/kylin"
     fi
-    echo "You can check the log at ${tomcat_root}/logs/kylin.log"
+    echo "You can check the log at ${KYLIN_HOME}/logs/kylin.log"
     exit 0
 elif [ $1 == "stop" ]
 then
@@ -106,7 +106,7 @@ then
         -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
         -Dkylin.hive.dependency=${hive_dependency} \
         -Dspring.profiles.active=${spring_profile} \
-        org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-*.jar org.apache.kylin.job.streaming.StreamingCLI start $3 $4 > ${KYLIN_HOME}/logs/streaming.log 2>&1 & echo $! > ${KYLIN_HOME}/$3_$4 &
+        org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-*.jar org.apache.kylin.job.streaming.StreamingCLI start $3 $4 > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/$3_$4 &
         echo "streaming started $3 partition $4"
         exit 0
     elif [ $2 == "stop" ]
