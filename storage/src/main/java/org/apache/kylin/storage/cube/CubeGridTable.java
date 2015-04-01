@@ -28,13 +28,16 @@ public class CubeGridTable {
         BitSet metrics = new BitSet();
         metrics.set(dimCols.size(), nColumns);
         DataType[] dataTypes = new DataType[nColumns];
-        Map<Integer, Dictionary> dictionaryOfThisCuboid = Maps.newHashMap();
+        Map<Integer, Dictionary> dictionaryByColIndex = Maps.newHashMap();
 
         int colIndex = 0;
         for (TblColRef col : dimCols) {
             dataTypes[colIndex] = col.getType();
             if (cubeDesc.getRowkey().isUseDictionary(col)) {
-                dictionaryOfThisCuboid.put(colIndex, dictionaryMap.get(col));
+                Dictionary dict = dictionaryMap.get(col);
+                if (dict == null)
+                    throw new IllegalStateException();
+                dictionaryByColIndex.put(colIndex, dict);
             }
             colIndex++;
         }
@@ -45,10 +48,10 @@ public class CubeGridTable {
         }
 
         GTInfo.Builder builder = GTInfo.builder();
-        builder.setCodeSystem(new GTDictionaryCodeSystem(dictionaryOfThisCuboid));
+        builder.setCodeSystem(new GTDictionaryCodeSystem(dictionaryByColIndex));
         builder.setColumns(dataTypes);
-        builder.enableColumnBlock(new BitSet[] { dimensions, metrics });
         builder.setPrimaryKey(dimensions);
+        builder.enableColumnBlock(new BitSet[] { dimensions, metrics });
         return builder.build();
     }
 
