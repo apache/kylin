@@ -41,7 +41,7 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
     }
 
     @Override

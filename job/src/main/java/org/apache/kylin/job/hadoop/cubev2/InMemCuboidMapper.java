@@ -62,7 +62,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
 
         Configuration conf = context.getConfiguration();
 
@@ -140,7 +140,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
             System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
 
             GridTable gt = cuboidsMap.get(cuboidId);
-            GTScanRequest req = new GTScanRequest(gt.getInfo(), null, null, null);
+            GTScanRequest req = new GTScanRequest(gt.getInfo());
             IGTScanner scanner = gt.scan(req);
             for (GTRecord record : scanner) {
                 cuboidRowCount++;

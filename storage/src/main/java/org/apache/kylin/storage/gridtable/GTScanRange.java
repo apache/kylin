@@ -5,8 +5,8 @@ import java.util.List;
 
 public class GTScanRange {
 
-    final public GTRecord pkStart; // inclusive
-    final public GTRecord pkEnd; // inclusive
+    final public GTRecord pkStart; // inclusive, record must not be null, col[pk].array() can be null to mean unbounded
+    final public GTRecord pkEnd; // inclusive, record must not be null, col[pk].array() can be null to mean unbounded
     final public List<GTRecord> hbaseFuzzyKeys; // partial matching primary keys
 
     public GTScanRange(GTRecord pkStart, GTRecord pkEnd) {
@@ -14,9 +14,27 @@ public class GTScanRange {
     }
 
     public GTScanRange(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> hbaseFuzzyKeys) {
+        GTInfo info = pkStart.info;
+        assert info == pkEnd.info;
+
+        validateRangeKey(pkStart);
+        validateRangeKey(pkEnd);
+
         this.pkStart = pkStart;
         this.pkEnd = pkEnd;
         this.hbaseFuzzyKeys = hbaseFuzzyKeys == null ? Collections.<GTRecord> emptyList() : hbaseFuzzyKeys;
+    }
+
+    private void validateRangeKey(GTRecord pk) {
+        pk.maskForEqualHashComp(pk.info.primaryKey);
+        boolean afterNull = false;
+        for (int i = pk.info.primaryKey.nextSetBit(0); i >= 0; i = pk.info.primaryKey.nextSetBit(i + 1)) {
+            if (afterNull) {
+                pk.cols[i].set(null, 0, 0);
+            } else {
+                afterNull = pk.cols[i].array() == null;
+            }
+        }
     }
 
     @Override

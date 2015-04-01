@@ -98,6 +98,21 @@ public class SnapshotManager {
 
         return trySaveNewSnapshot(snapshot);
     }
+    
+    public SnapshotTable rebuildSnapshot(ReadableTable table, TableDesc tableDesc, String overwriteUUID) throws IOException {
+        SnapshotTable snapshot = new SnapshotTable(table);
+        snapshot.setUuid(overwriteUUID);
+        
+        snapshot.takeSnapshot(table, tableDesc);
+        
+        SnapshotTable existing = getSnapshotTable(snapshot.getResourcePath());
+        snapshot.setLastModified(existing.getLastModified());
+        
+        save(snapshot);
+        snapshotCache.put(snapshot.getResourcePath(), snapshot);
+        
+        return snapshot;
+    }
 
     public SnapshotTable trySaveNewSnapshot(SnapshotTable snapshotTable) throws IOException {
 
@@ -123,9 +138,7 @@ public class SnapshotManager {
         TableSignature sig = snapshot.getSignature();
         for (String existing : existings) {
             SnapshotTable existingTable = load(existing, false); // skip cache,
-            // direct
-            // load from
-            // store
+            // direct load from store
             if (existingTable != null && sig.equals(existingTable.getSignature()))
                 return existing;
         }

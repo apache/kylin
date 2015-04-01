@@ -22,6 +22,10 @@ public class GTRecord implements Comparable<GTRecord> {
         this.maskForEqualHashComp = info.colAll;
     }
 
+    public GTInfo getInfo() {
+        return info;
+    }
+
     public ByteArray get(int i) {
         return cols[i];
     }
@@ -156,7 +160,7 @@ public class GTRecord implements Comparable<GTRecord> {
 
     // ============================================================================
 
-    ByteArray exportColumns(BitSet selectedCols) {
+    public ByteArray exportColumns(BitSet selectedCols) {
         int len = 0;
         for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
             len += cols[i].length();
@@ -168,7 +172,7 @@ public class GTRecord implements Comparable<GTRecord> {
     }
 
     /** write data to given buffer, like serialize */
-    void exportColumns(BitSet selectedCols, ByteArray buf) {
+    public void exportColumns(BitSet selectedCols, ByteArray buf) {
         int pos = 0;
         for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
             System.arraycopy(cols[i].array(), cols[i].offset(), buf.array(), buf.offset() + pos, cols[i].length());
@@ -178,25 +182,29 @@ public class GTRecord implements Comparable<GTRecord> {
     }
 
     /** write data to given buffer, like serialize */
-    void exportColumnBlock(int c, ByteBuffer buf) {
-        BitSet setselectedCols = info.colBlocks[c];
-        for (int i = setselectedCols.nextSetBit(0); i >= 0; i = setselectedCols.nextSetBit(i + 1)) {
+    public void exportColumns(BitSet selectedCols, ByteBuffer buf) {
+        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
             buf.put(cols[i].array(), cols[i].offset(), cols[i].length());
         }
     }
+    
+    /** write data to given buffer, like serialize */
+    public void exportColumnBlock(int c, ByteBuffer buf) {
+        exportColumns(info.colBlocks[c], buf);
+    }
 
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
-    void loadPrimaryKey(ByteBuffer buf) {
+    public void loadPrimaryKey(ByteBuffer buf) {
         loadColumns(info.primaryKey, buf);
     }
 
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
-    void loadCellBlock(int c, ByteBuffer buf) {
+    public void loadCellBlock(int c, ByteBuffer buf) {
         loadColumns(info.colBlocks[c], buf);
     }
 
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
-    void loadColumns(BitSet selectedCols, ByteBuffer buf) {
+    public void loadColumns(BitSet selectedCols, ByteBuffer buf) {
         int pos = buf.position();
         for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
             int len = info.codeSystem.codeLength(i, buf);

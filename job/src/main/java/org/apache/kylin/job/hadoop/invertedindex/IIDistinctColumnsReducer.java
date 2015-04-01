@@ -43,7 +43,7 @@ public class IIDistinctColumnsReducer extends KylinReducer<ShortWritable, Text, 
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
 
         Configuration conf = context.getConfiguration();
         this.columns = conf.get(BatchConstants.TABLE_COLUMNS).split(",");

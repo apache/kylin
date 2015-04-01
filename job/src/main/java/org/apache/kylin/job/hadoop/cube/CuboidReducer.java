@@ -61,7 +61,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
-        super.publishConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();

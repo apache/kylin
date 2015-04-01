@@ -22,18 +22,15 @@ import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
-import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Created by honma on 11/10/14.
@@ -56,31 +53,39 @@ public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
 
         private final RegionScanner regionScanner;
         private final IIRow row = new IIRow();
-        private boolean hasMore = true;
         List<Cell> results = Lists.newArrayList();
+
+        private boolean hasMore;
 
         IIRowIterator(RegionScanner innerScanner) {
             this.regionScanner = innerScanner;
+            try {
+                hasMore = regionScanner.nextRaw(results);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
         public boolean hasNext() {
-            return hasMore;
+            return !results.isEmpty();
         }
 
         @Override
         public IIRow next() {
-            results.clear();
-            try {
-                hasMore = regionScanner.next(results);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
             if (results.size() < 1) {
-                throw new IllegalStateException("Hbase row contains less than 1 cell");
+                throw new NoSuchElementException();
             }
             for (Cell c : results) {
                 row.updateWith(c);
+            }
+            results.clear();
+            try {
+                if (hasMore) {
+                    hasMore = regionScanner.next(results);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
             return row;
         }
