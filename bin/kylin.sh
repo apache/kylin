@@ -78,6 +78,11 @@ then
     exit 0
 elif [ $1 == "streaming" ]
 then
+    if [ $# != 4 ]
+    then
+        echo 'invalid input args'
+        exit -1
+    fi
     if [ $2 == "start" ]
     then
         useSandbox=`cat ${KYLIN_HOME}/conf/kylin.properties | grep 'kylin.sandbox' | awk -F '=' '{print $2}'`
