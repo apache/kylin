@@ -75,7 +75,6 @@ public class BatchSliceBuilder {
             containers[i] = new CompressedValueContainer(digest, i, nRecordsCap);
         }
         for (TableRecord record : records) {
-            Preconditions.checkArgument(record.getShard() == shard, "record shard:" + record.getShard() + " but should be " + shard);
             for (int i = 0; i < nColumns; i++) {
                 record.getValueBytes(i, temp);
                 containers[i].append(temp);
