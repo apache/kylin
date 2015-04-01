@@ -21,9 +21,6 @@
         <h4 class="box-title text-info">Cube Designer</h4>
     </div>
     <div class="box-body">
-        <ng-form name="design_form" ng-submit="">
-            <!-- Add a mock button to avoid auto submit-->
-            <button ng-click="" ng-show="false"></button>
             <div>
                 <ul class="wizard-steps">
                     <li ng-repeat="step in wizardSteps"
@@ -50,18 +47,17 @@
                             <i class="ace-icon fa fa-arrow-left"></i>
                             Prev
                         </button>
-                        <button id="nextButton" class="btn btn-success btn-next"  ng-click="nextView()" ng-disabled="design_form.$invalid"
+                        <button id="nextButton" class="btn btn-success btn-next"  ng-click="checkCubeForm()?nextView():''" ng-disabled="forms[curStep.form].$invalid"
                                 ng-show="curStep.title!='Overview'">
                             Next
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
                         </button>
-                        <button class="btn btn-primary" ng-click="prepareCube();saveCube(design_form)" ng-disabled="design_form.$invalid"
+                        <button class="btn btn-primary" ng-click="prepareCube();saveCube()" ng-disabled="design_form.$invalid"
                                 ng-if="curStep.title=='Overview' && state.mode=='edit'">
                             Save
                         </button>
                     </div>
                 </div>
             </div>
-        </ng-form>
     </div>
 </div>

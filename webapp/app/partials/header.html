@@ -26,7 +26,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="home" style="padding: 2px 10px 0px 0px"><img src="image/logo.png" height="40px" width="40px"/><small> Kylin </small></a>
+                <a class="navbar-brand" href="query" style="padding: 2px 10px 0px 0px"><img src="image/logo.png" height="40px" width="40px"/><small> Kylin </small></a>
             </div>
 
             <div class="navbar-collapse collapse" collapse="isCollapsed">
@@ -34,7 +34,7 @@
                     <li class="project-cntnr"  style="padding:7px 15px;background-color:#2e8965;" ng-if="userService.isAuthorized()">
                         <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
                                 ng-options="project.name as project.name for project in projectModel.projects"
-                                style="width: 150px"
+                                style="width: 180px"
                                 data-placeholder="select a project"
                                 class="chosen-select">
                             <option ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="projectModel.selectedProject==null"  value=""> -- Choose Project -- </option>

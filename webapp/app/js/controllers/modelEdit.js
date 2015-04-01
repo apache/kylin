@@ -23,8 +23,13 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.modelMode = absUrl.indexOf("/models/add")!=-1?'addNewModel':absUrl.indexOf("/models/edit")!=-1?'editExistModel':'default';
-    $scope.cubeConfig = cubeConfig;
 
+    if($scope.modelMode=="addNewModel"&&!ProjectModel.getSelectedProject()){
+        SweetAlert.swal('Oops...', 'Please select your project first.', 'warning');
+        $location.path("/models");
+    }
+
+    $scope.cubeConfig = cubeConfig;
 
     $scope.getPartitonColumns = function(tableName){
         var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
@@ -96,10 +101,11 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         $scope.model.project = ProjectModel.getSelectedProject();
     }
 
+
     $scope.prepareModel = function () {
         // generate column family
 
-        if ($scope.model.partition_desc.partition_date_column&&($scope.model.partition_desc.partition_date_start|$scope.model.partition_desc.partition_date_start==0)) {
+        if ($scope.model.partition_desc.partition_date_column!=null&&($scope.model.partition_desc.partition_date_start|$scope.model.partition_desc.partition_date_start==0)) {
             var dateStart = new Date($scope.model.partition_desc.partition_date_start);
             dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
             //switch selected time to utc timestamp
@@ -125,6 +131,8 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     };
 
     $scope.saveModel = function () {
+
+        $scope.prepareModel();
 
         try {
             angular.fromJson($scope.state.modelSchema);

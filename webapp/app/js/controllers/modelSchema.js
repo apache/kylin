@@ -105,6 +105,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
         else{
             //form validation
             if($scope.forms[$scope.curStep.form].$invalid){
+                $scope.forms[$scope.curStep.form].$sbumitted=true;
                 return false;
             }else{
                 //business rule check
@@ -222,6 +223,11 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
 
 
     $scope.goToStep = function(stepIndex){
+        if($scope.state.mode=="edit"){
+            if(stepIndex+1>=$scope.curStep.step){
+                return;
+            }
+        }
         for(var i=0;i<$scope.wizardSteps.length;i++){
             if(i<=stepIndex){
                 $scope.wizardSteps[i].isComplete = true;

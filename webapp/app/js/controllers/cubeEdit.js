@@ -181,7 +181,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         return $interpolate($templateCache.get(tmpl))(notification);
     };
 
-    $scope.saveCube = function (design_form) {
+    $scope.saveCube = function () {
 
         try {
             angular.fromJson($scope.state.cubeSchema);
@@ -208,9 +208,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             $scope.state.cubeSchema = request.cubeDescData;
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':'Updated the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
 
-                            if (design_form) {
-                                design_form.$invalid = true;
-                            }
                         } else {
                             $scope.saveCubeRollBack();
                             $scope.cubeMetaFrame.project = $scope.state.project;

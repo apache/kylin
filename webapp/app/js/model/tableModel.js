@@ -99,8 +99,8 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
                     }
                 }
 
+                var _table_node_list = [];
                 angular.forEach(tables,function(_table){
-                        var _table_node_list = [];
 
                         var _table_node = {
                             label:_table.name,
@@ -120,6 +120,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
                                     onSelect:function(branch){
                                         // set selected model
 //                                        _this.selectedSrcTable = branch.data;
+                                        _this.selectedSrcTable.selectedSrcColumn = branch.data;
                                         $log.info("selected column info:"+_column.name);
                                     }
                                 });

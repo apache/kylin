@@ -32,7 +32,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     if (UserService.hasRole("ROLE_ADMIN")) {
             $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false,form:'cube_setting_form'});
     }
-    $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false,form:'cube_overview_form'});
+    $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false,form:null});
 
     $scope.curStep = $scope.wizardSteps[0];
 
@@ -157,6 +157,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     $scope.goToStep = function(stepIndex){
+        if($scope.state.mode=="edit"){
+            if(stepIndex+1>=$scope.curStep.step){
+                return;
+            }
+        }
         for(var i=0;i<$scope.wizardSteps.length;i++){
             if(i<=stepIndex){
                 $scope.wizardSteps[i].isComplete = true;
@@ -183,6 +188,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         else{
             //form validation
             if($scope.forms[$scope.curStep.form].$invalid){
+                $scope.forms[$scope.curStep.form].$submitted = true;
                 return false;
             }else{
                 //business rule check
@@ -193,6 +199,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                     case 'cube_measure_form':
                         return $scope.check_cube_measure();
                         break;
+                    case 'cube_setting_form':
+                        return $scope.check_cube_setting();
                     default:
                         return true;
                         break;
@@ -220,10 +228,44 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     $scope.check_cube_measure = function(){
+        var _measures = $scope.cubeMetaFrame.measures;
         var errors = [];
-        if(!$scope.cubeMetaFrame.measures||!$scope.cubeMetaFrame.measures.length){
+        if(!_measures||!_measures.length){
             errors.push("Please define your metrics.");
         }
+
+        var existCountExpression = false;
+        for(var i=0;i<_measures.length;i++){
+            if(_measures[i].function.expression=="COUNT"){
+                existCountExpression=true;
+                break;
+            }
+        }
+        if(!existCountExpression){
+            errors.push("[COUNT] metric is required.");
+        }
+
+        var errorInfo = "";
+        angular.forEach(errors,function(item){
+            errorInfo+="\n"+item;
+        });
+        if(errors.length){
+            SweetAlert.swal('', errorInfo, 'warning');
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    $scope.check_cube_setting = function(){
+        var errors = [];
+
+        angular.forEach($scope.cubeMetaFrame.rowkey.aggregation_groups,function(group){
+            if(!group.length){
+                errors.push("Each aggregation group can't be empty.");
+            }
+        })
+
         var errorInfo = "";
         angular.forEach(errors,function(item){
             errorInfo+="\n"+item;

@@ -31,8 +31,8 @@ KylinApp.service('MetaModel',function(){
         dimensions:[],
         metrics:[],
         "partition_desc" : {
-            "partition_date_column" : '',
-            "partition_date_start" : 0,
+            "partition_date_column" : null,
+            "partition_date_start" : null,
             "partition_type" : 'APPEND'
         },
         last_modified:0
@@ -82,8 +82,8 @@ KylinApp.service('MetaModel',function(){
             dimensions:[],
             metrics:[],
             "partition_desc" : {
-                "partition_date_column" : '',
-                "partition_date_start" : 0,
+                "partition_date_column" : null,
+                "partition_date_start" : null,
                 "partition_type" : 'APPEND'
             },
             last_modified:0

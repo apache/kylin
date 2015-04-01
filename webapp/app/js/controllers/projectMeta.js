@@ -60,9 +60,8 @@ KylinApp
                         }
                     }
 
+                    var _table_node_list = [];
                     angular.forEach(tables,function(_table){
-                            var _table_node_list = [];
-
                             var _table_node = {
                                 label:_table.name,
                                 data:_table,

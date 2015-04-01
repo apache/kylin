@@ -17,132 +17,134 @@
 -->
 
 <div ng-controller="CubeAdvanceSettingCtrl">
-<div>
-    <div class="form-group">
-        <h4 style="margin-left:42px">Aggregation Groups</h4>
-        <table style="margin-left:42px; width:92%"
-               ng-if="cubeMetaFrame.rowkey.aggregation_groups.length > 0"
-               class="table table-hover list">
-            <tr class="row">
-                <th class="col-xs-1">ID</th>
-                <th class="col-xs-10">Aggregation Groups</th>
-                <th ng-if="state.mode=='edit'" class="col-xs-1"></th>
-            </tr>
-
-            <tr ng-repeat="aggregation_groups in cubeMetaFrame.rowkey.aggregation_groups" class="row">
-                <td class="col-xs-1">
-                    <!-- ID -->
-                    <b>{{($index + 1)}}</b>
-                </td>
-                <td class="col-xs-11">
-                    <!-- Dimensions -->
-                    <select ng-if="state.mode=='edit'" style="width: 100%"
-                            ng-model="aggregation_groups" required chosen multiple
-                            ng-change="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
-                            ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubeMetaFrame.rowkey.rowkey_columns">
-                        <option value=""></option>
-                    </select>
-                    <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">{{aggregation_groups}}</p>
-                </td>
-                <td ng-if="state.mode=='edit'" class="col-xs-1">
-                    <button class="btn btn-xs btn-info"
-                            ng-click="removeElement(cubeMetaFrame.rowkey.aggregation_groups, aggregation_groups)"><i
-                            class="fa fa-minus"></i>
-                    </button>
-                </td>
-            </tr>
-        </table>
-
-        <button class="btn btn-sm btn-info" style="margin-left:42px" ng-click="addNewAggregationGroup()"
-                ng-show="state.mode=='edit'">New Aggregation Group<i class="fa fa-plus"></i>
-        </button>
-
-
-    </div>
-
-
-    <div class="form-group">
-        <h4 style="margin-left:42px">Rowkeys</h4>
-        <table style="margin-left:42px; width:92%"
-               ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
-               class="table table-hover list"
-                >
-           <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Column</th>
-                    <th>Mandatory</th>
-                    <th>Dictionary</th>
-                    <th>Length</th>
-                    <th ng-if="state.mode=='edit'"></th>
+  <ng-form name="forms.cube_setting_form">
+    <div>
+        <div class="form-group">
+            <h4 style="margin-left:42px">Aggregation Groups</h4>
+            <table style="margin-left:42px; width:92%"
+                   ng-if="cubeMetaFrame.rowkey.aggregation_groups.length > 0"
+                   class="table table-hover list">
+                <tr class="row">
+                    <th class="col-xs-1">ID</th>
+                    <th class="col-xs-10">Aggregation Groups</th>
+                    <th ng-if="state.mode=='edit'" class="col-xs-1"></th>
                 </tr>
-           </thead>
 
-            <tbody ui-sortable="state.mode=='edit'" ng-model="cubeMetaFrame.rowkey.rowkey_columns">
-
-                <tr  ng-repeat="rowkey_column in cubeMetaFrame.rowkey.rowkey_columns" ng-class="state.mode=='edit'?'sort-item':''">
-
-                    <td>
+                <tr ng-repeat="aggregation_groups in cubeMetaFrame.rowkey.aggregation_groups" class="row">
+                    <td class="col-xs-1">
                         <!-- ID -->
-                        <span class="ng-binding" ng-class="state.mode=='edit'?'badge':''">{{($index + 1)}}</span>
+                        <b>{{($index + 1)}}</b>
                     </td>
-                    <td>
-                        <!--Column Name -->
-                        <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
-                               tooltip="rowkey column name.." tooltip-trigger="focus"
-                               ng-model="rowkey_column.column" class="form-control">
-
-                        <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
+                    <td class="col-xs-11">
+                        <!-- Dimensions -->
+                        <select ng-if="state.mode=='edit'" style="width: 100%"
+                                ng-model="aggregation_groups"  chosen multiple
+                                ng-change="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
+                                ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubeMetaFrame.rowkey.rowkey_columns">
+                            <option value=""></option>
+                        </select>
+                        <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">{{aggregation_groups}}</p>
                     </td>
-                    <td>
-                        <!-- Mandatory -->
-                        <button type="button " ng-if="state.mode=='edit'"
-                                class="btn btn-xs btn-default {{rowkey_column.mandatory? 'active':''}}"
-                                ng-model="rowkey_column.mandatory"
-                                ng-click="updateMandatory(rowkey_column);"
-                                btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false">
-                            {{rowkey_column.mandatory? 'Y':'N'}}
-                        </button>
-
-                        <span ng-if="state.mode=='view'">{{rowkey_column.mandatory? 'Y':'N'}}</span>
-                    </td>
-
-                    <td>
-                        <!--Use Dictionary-->
-                        <div>
-                            <select ng-if="state.mode=='edit'" style="width:80px;"
-                                    chosen ng-model="rowkey_column.dictionary"
-                                    ng-change="dictionaryUpdated(rowkey_column);"
-                                    ng-options="dt as dt for dt in cubeConfig.dictionaries">
-                                <option value=""></option>
-                            </select>
-                            <span ng-if="state.mode=='view'">{{rowkey_column.dictionary}}</span>
-                        </div>
-                    </td>
-
-                    <td>
-                        <!--Column Length -->
-                        <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
-                               tooltip="rowkey column length.." tooltip-trigger="focus"
-                               ng-disabled="rowkey_column.dictionary=='true'"
-                               ng-model="rowkey_column.length"  class="form-control">
-
-                        <span ng-if="state.mode=='view'">{{rowkey_column.length}}</span>
-                    </td>
-
-
-                    <td ng-if="state.mode=='edit'">
+                    <td ng-if="state.mode=='edit'" class="col-xs-1">
                         <button class="btn btn-xs btn-info"
-                                ng-click="removeElement(cubeMetaFrame.rowkey.rowkey_columns, rowkey_column)"><i
+                                ng-click="removeElement(cubeMetaFrame.rowkey.aggregation_groups, aggregation_groups)"><i
                                 class="fa fa-minus"></i>
                         </button>
                     </td>
                 </tr>
-            </tbody>
-        </table>
+            </table>
 
-        <button class="btn btn-sm btn-info" style="margin-left:42px"
-                ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i></button>
+            <button class="btn btn-sm btn-info" style="margin-left:42px" ng-click="addNewAggregationGroup()"
+                    ng-show="state.mode=='edit'">New Aggregation Group<i class="fa fa-plus"></i>
+            </button>
+
+
+        </div>
+
+
+        <div class="form-group">
+            <h4 style="margin-left:42px">Rowkeys</h4>
+            <table style="margin-left:42px; width:92%"
+                   ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
+                   class="table table-hover list"
+                    >
+               <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Column</th>
+                        <th>Mandatory</th>
+                        <th>Dictionary</th>
+                        <th>Length</th>
+                        <th ng-if="state.mode=='edit'"></th>
+                    </tr>
+               </thead>
+
+                <tbody ui-sortable="state.mode=='edit'" ng-model="cubeMetaFrame.rowkey.rowkey_columns">
+
+                    <tr  ng-repeat="rowkey_column in cubeMetaFrame.rowkey.rowkey_columns" ng-class="state.mode=='edit'?'sort-item':''">
+
+                        <td>
+                            <!-- ID -->
+                            <span class="ng-binding" ng-class="state.mode=='edit'?'badge':''">{{($index + 1)}}</span>
+                        </td>
+                        <td>
+                            <!--Column Name -->
+                            <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
+                                   tooltip="rowkey column name.." tooltip-trigger="focus"
+                                   ng-model="rowkey_column.column" class="form-control">
+
+                            <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
+                        </td>
+                        <td>
+                            <!-- Mandatory -->
+                            <button type="button " ng-if="state.mode=='edit'"
+                                    class="btn btn-xs btn-default {{rowkey_column.mandatory? 'active':''}}"
+                                    ng-model="rowkey_column.mandatory"
+                                    ng-click="updateMandatory(rowkey_column);"
+                                    btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false">
+                                {{rowkey_column.mandatory? 'Y':'N'}}
+                            </button>
+
+                            <span ng-if="state.mode=='view'">{{rowkey_column.mandatory? 'Y':'N'}}</span>
+                        </td>
+
+                        <td>
+                            <!--Use Dictionary-->
+                            <div>
+                                <select ng-if="state.mode=='edit'" style="width:80px;"
+                                        chosen ng-model="rowkey_column.dictionary"
+                                        ng-change="dictionaryUpdated(rowkey_column);"
+                                        ng-options="dt as dt for dt in cubeConfig.dictionaries">
+                                    <option value=""></option>
+                                </select>
+                                <span ng-if="state.mode=='view'">{{rowkey_column.dictionary}}</span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <!--Column Length -->
+                            <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
+                                   tooltip="rowkey column length.." tooltip-trigger="focus"
+                                   ng-disabled="rowkey_column.dictionary=='true'"
+                                   ng-model="rowkey_column.length"  class="form-control">
+
+                            <span ng-if="state.mode=='view'">{{rowkey_column.length}}</span>
+                        </td>
+
+
+                        <td ng-if="state.mode=='edit'">
+                            <button class="btn btn-xs btn-info"
+                                    ng-click="removeElement(cubeMetaFrame.rowkey.rowkey_columns, rowkey_column)"><i
+                                    class="fa fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn btn-sm btn-info" style="margin-left:42px"
+                    ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i></button>
+        </div>
     </div>
-</div>
+  </ng-form>
 </div>

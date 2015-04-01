@@ -31,7 +31,6 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 
         $scope.toggleTab = function(showModel){
             $scope.showModels = showModel;
-            console.log($scope.showModels);
         }
 
         $scope.modelList = ModelList;
