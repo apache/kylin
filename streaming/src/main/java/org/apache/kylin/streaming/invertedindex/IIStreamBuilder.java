@@ -126,14 +126,18 @@ public class IIStreamBuilder extends StreamBuilder {
 
     private void submitOffset(long offset) {
         final IIManager iiManager = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
-        final IIInstance instance = iiManager.getII(ii.getName());
-        instance.getStreamOffsets().set(partitionId, offset);
         try {
-            iiManager.updateII(instance);
+            iiManager.updateIIStreamingOffset(ii.getName(), partitionId, offset);
             logger.info("submit offset:" + offset);
         } catch (IOException e) {
-            logger.error("error submit offset: + " + offset, e);
-            throw new RuntimeException(e);
+            logger.warn("error submit offset: " + offset + " retrying", e);
+            try {
+                iiManager.updateIIStreamingOffset(ii.getName(), partitionId, offset);
+                logger.info("submit offset:" + offset);
+            } catch (IOException ex) {
+                logger.error("error submit offset: " + offset, ex);
+                throw new RuntimeException(e);
+            }
         }
     }
 
