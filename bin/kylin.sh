@@ -38,7 +38,7 @@ then
     export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
     export JAVA_OPTS="-Xms2048M -Xmx2048M"
 
-    hbase ${KYLIN_EXTRA_START_OPTS} \
+    hbase ${JAVA_OPTS} ${KYLIN_EXTRA_START_OPTS} \
     -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
     -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
@@ -101,7 +101,7 @@ then
         export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
         export JAVA_OPTS="-Xms2048M -Xmx2048M"
 
-        hbase ${KYLIN_EXTRA_START_OPTS} \
+        hbase ${JAVA_OPTS} ${KYLIN_EXTRA_START_OPTS} \
         -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
         -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
         -Dkylin.hive.dependency=${hive_dependency} \
