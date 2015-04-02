@@ -249,7 +249,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             totalSizeInM += cuboidSize;
         }
 
-        int nRegion = Math.round((float) totalSizeInM / ((float) cut* 1024l));
+        int nRegion = Math.round((float) totalSizeInM / ((float) cut * 1024l));
         nRegion = Math.max(1, nRegion);
         nRegion = Math.min(MAX_REGION, nRegion);
 
@@ -264,9 +264,11 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         long size = 0;
         int regionIndex = 0;
-        for (long cuboidId : allCuboids) {
+        for (int i = 0; i < allCuboids.size(); i++) {
+            long cuboidId = allCuboids.get(i);
             size += cuboidSizeMap.get(cuboidId);
-            if (size >= mbPerRegion) {
+            if (size >= mbPerRegion && i != (allCuboids.size() - 1)) {
+                // if the size is bigger than threshold and this is not the last cuboid
                 regionSplit.add(cuboidId);
                 logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboid to " + cuboidId);
                 size = 0;
