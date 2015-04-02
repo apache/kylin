@@ -41,7 +41,7 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
     List<KeyValueCreator> keyValueCreators;
-    private Text keyText = new Text();
+//    private Text keyText = new Text();
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -71,7 +71,7 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
     @Override
     public void reduce(ImmutableBytesWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
-        keyText.set(key.get());
+//        keyText.set(key.get());
         aggs.reset();
 
         for (Text value : values) {
@@ -88,14 +88,14 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
 
             valueBuf.clear();
             codec.encode(result, valueBuf);
-            outputValue = keyValueCreators.get(0).create(keyText, valueBuf.array(), 0, valueBuf.position());
+            outputValue = keyValueCreators.get(0).create(key.get(), 0, key.getLength(), valueBuf.array(), 0, valueBuf.position());
             context.write(key, outputValue);
 
         } else { // normal (complex) case that distributes measures to multiple
             // HBase columns
 
             for (int i = 0; i < n; i++) {
-                outputValue = keyValueCreators.get(i).create(keyText, result);
+                outputValue = keyValueCreators.get(i).create(key.get(), 0, key.getLength(), result);
                 context.write(key, outputValue);
             }
         }
