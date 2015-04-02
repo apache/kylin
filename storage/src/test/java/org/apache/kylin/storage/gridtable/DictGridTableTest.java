@@ -31,6 +31,7 @@ import org.apache.kylin.storage.gridtable.GTInfo.Builder;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class DictGridTableTest {
@@ -150,9 +151,9 @@ public class DictGridTableTest {
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.EQ, "10");
         LogicalTupleFilter filter = and(fComp1, fComp2);
         
-        Map<TblColRef, Integer> colMapping = Maps.newHashMap();
-        colMapping.put(extColA, 0);
-        colMapping.put(extColB, 1);
+        List<TblColRef> colMapping = Lists.newArrayList();
+        colMapping.add(extColA);
+        colMapping.add(extColB);
         
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 EQ [\\x00]]", newFilter.toString());
@@ -169,9 +170,9 @@ public class DictGridTableTest {
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LT, "9");
         LogicalTupleFilter filter = and(fComp1, fComp2);
         
-        Map<TblColRef, Integer> colMapping = Maps.newHashMap();
-        colMapping.put(extColA, 0);
-        colMapping.put(extColB, 1);
+        List<TblColRef> colMapping = Lists.newArrayList();
+        colMapping.add(extColA);
+        colMapping.add(extColB);
         
         // $1<"9" round up to $1<"10"
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
@@ -189,9 +190,9 @@ public class DictGridTableTest {
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LTE, "9");
         LogicalTupleFilter filter = and(fComp1, fComp2);
         
-        Map<TblColRef, Integer> colMapping = Maps.newHashMap();
-        colMapping.put(extColA, 0);
-        colMapping.put(extColB, 1);
+        List<TblColRef> colMapping = Lists.newArrayList();
+        colMapping.add(extColA);
+        colMapping.add(extColB);
         
         // $1<="9" round down to FALSE
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
@@ -209,9 +210,9 @@ public class DictGridTableTest {
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.IN, "9", "10", "15");
         LogicalTupleFilter filter = and(fComp1, fComp2);
         
-        Map<TblColRef, Integer> colMapping = Maps.newHashMap();
-        colMapping.put(extColA, 0);
-        colMapping.put(extColB, 1);
+        List<TblColRef> colMapping = Lists.newArrayList();
+        colMapping.add(extColA);
+        colMapping.add(extColB);
         
         // $1 in ("9", "10", "15") has only "10" left
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);

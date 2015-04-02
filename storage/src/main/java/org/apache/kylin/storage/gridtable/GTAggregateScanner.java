@@ -18,16 +18,16 @@ public class GTAggregateScanner implements IGTScanner {
     final BitSet groupBy;
     final BitSet metrics;
     final String[] metricsAggrFuncs;
-    final IGTScanner rawScanner;
+    final IGTScanner inputScanner;
 
-    GTAggregateScanner(IGTScanner rawScanner, GTScanRequest req) {
-        this.info = rawScanner.getInfo();
+    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
+        this.info = inputScanner.getInfo();
         this.dimensions = (BitSet) req.getColumns().clone();
         this.dimensions.andNot(req.getAggrMetrics());
         this.groupBy = req.getAggrGroupBy();
         this.metrics = req.getAggrMetrics();
         this.metricsAggrFuncs = req.getAggrMetricsFuncs();
-        this.rawScanner = rawScanner;
+        this.inputScanner = inputScanner;
     }
 
     @Override
@@ -37,23 +37,23 @@ public class GTAggregateScanner implements IGTScanner {
     
     @Override
     public int getScannedRowCount() {
-        return rawScanner.getScannedRowCount();
+        return inputScanner.getScannedRowCount();
     }
 
     @Override
     public int getScannedRowBlockCount() {
-        return rawScanner.getScannedRowBlockCount();
+        return inputScanner.getScannedRowBlockCount();
     }
 
     @Override
     public void close() throws IOException {
-        rawScanner.close();
+        inputScanner.close();
     }
 
     @Override
     public Iterator<GTRecord> iterator() {
         AggregationCache aggrCache = new AggregationCache();
-        for (GTRecord r : rawScanner) {
+        for (GTRecord r : inputScanner) {
             aggrCache.aggregate(r);
         }
         return aggrCache.iterator();
