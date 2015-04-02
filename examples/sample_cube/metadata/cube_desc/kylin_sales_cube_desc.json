@@ -118,7 +118,7 @@
   } ],
   "rowkey" : {
     "rowkey_columns" : [ {
-      "column" : "cal_dt",
+      "column" : "part_dt",
       "length" : 0,
       "dictionary" : "true",
       "mandatory" : false
@@ -153,7 +153,7 @@
       "dictionary" : "true",
       "mandatory" : false
     } ],
-    "aggregation_groups" : [ [ "cal_dt", "lstg_site_id", "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name", "lstg_format_name" ] ]
+    "aggregation_groups" : [ [ "part_dt", "lstg_site_id", "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name", "lstg_format_name" ] ]
   },
   "signature" : "ZJWTQ2jIPXjBfuwYeizpxg==",
   "last_modified" : 1426255280419,
