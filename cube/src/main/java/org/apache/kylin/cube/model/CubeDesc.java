@@ -575,16 +575,6 @@ public class CubeDesc extends RootPersistentEntity {
             throw new IllegalArgumentException("No column '" + colName + "' found in table " + table);
         
         TblColRef ref = new TblColRef(col);
-        
-        // always use FK instead PK, FK could be shared by more than one lookup tables
-        JoinDesc join = dim.getJoin();
-        if (join != null) {
-            int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), ref);
-            if (idx >= 0) {
-                ref = join.getForeignKeyColumns()[idx];
-            }
-        }
-
         return initDimensionColRef(ref);
     }
 
