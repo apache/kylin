@@ -20,12 +20,10 @@ package org.apache.kylin.dict;
 
 import java.io.IOException;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.dict.lookup.HiveTableReader;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
 
 /**
  * This test case need the hive runtime; Please run it with sandbox; It is in the exclude list of default profile in pom.xml

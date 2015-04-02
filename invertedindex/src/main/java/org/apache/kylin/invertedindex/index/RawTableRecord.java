@@ -18,7 +18,6 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import com.google.common.base.Preconditions;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;

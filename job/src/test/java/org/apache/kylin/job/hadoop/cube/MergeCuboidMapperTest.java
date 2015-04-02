@@ -155,10 +155,10 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
     @Test
     public void test() throws IOException, ParseException {
 
-        String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
+//        String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
         CubeSegment newSeg = cubeManager.mergeSegments(cube, 0L, 1386835200000L);
-        String segmentName = newSeg.getName();
+//        String segmentName = newSeg.getName();
 
         final Dictionary<?> dictionary = cubeManager.getDictionary(newSeg, lfn);
         assertTrue(dictionary == null);

@@ -36,8 +36,6 @@ package org.apache.kylin.streaming.invertedindex;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;

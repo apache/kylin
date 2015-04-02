@@ -2,11 +2,11 @@ package org.apache.kylin.job.hadoop.cubev2;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
@@ -92,18 +92,19 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
         }
     }
 
-    protected void cleanup(Mapper.Context context) throws IOException, InterruptedException {
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
 
         // end to trigger cubing calculation
         logger.info("Totally read " + counter + " rows in memory, trigger cube build now.");
-        Map<TblColRef, Dictionary> dictionaryMap = Maps.newHashMap();
+        Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
         Map<Long, GridTable> cuboidsMap = Maps.newHashMap();
 
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
             // dictionary
             for (TblColRef col : dim.getColumnRefs()) {
                 if (cubeDesc.getRowkey().isUseDictionary(col)) {
-                    Dictionary dict = cubeSegment.getDictionary(col);
+                    Dictionary<?> dict = cubeSegment.getDictionary(col);
                     if (dict == null) {
                         throw new IllegalArgumentException("Dictionary for " + col + " was not found.");
                     }

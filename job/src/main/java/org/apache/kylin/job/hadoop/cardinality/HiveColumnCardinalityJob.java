@@ -18,8 +18,6 @@
 
 package org.apache.kylin.job.hadoop.cardinality;
 
-import java.io.File;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
