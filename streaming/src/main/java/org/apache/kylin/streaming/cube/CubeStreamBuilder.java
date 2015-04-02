@@ -75,7 +75,7 @@ public class CubeStreamBuilder {
     private CubeDesc desc = null;
     private CuboidScheduler cuboidScheduler = null;
     private List<List<String>> table = null;
-    private Map<TblColRef, Dictionary> dictionaryMap = null;
+    private Map<TblColRef, Dictionary<?>> dictionaryMap = null;
     private CubeInstance cube;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
     private MeasureCodec measureCodec;
@@ -87,7 +87,7 @@ public class CubeStreamBuilder {
 
     private Map<Long, GridTable> generatedCuboids; // key: cuboid id; value: grid table of the cuboid
 
-    public CubeStreamBuilder(CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
+    public CubeStreamBuilder(CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary<?>> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
 
         this.cube = cube;
         this.desc = cube.getDescriptor();
@@ -324,7 +324,7 @@ public class CubeStreamBuilder {
         return values;
     }
 
-    private void buildDictionary(List<List<String>> table, CubeDesc desc, Map<TblColRef, Dictionary> dictionaryMap) {
+    private void buildDictionary(List<List<String>> table, CubeDesc desc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
 
         List<TblColRef> dimColumns = desc.listDimensionColumnsExcludingDerived();

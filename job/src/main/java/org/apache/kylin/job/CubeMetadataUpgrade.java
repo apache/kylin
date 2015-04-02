@@ -109,7 +109,7 @@ public class CubeMetadataUpgrade {
         upgradeCubeDesc();
         upgradeProjectInstance();
         upgradeCubeInstance();
-      //  upgradeJobInstance();
+        upgradeJobInstance();
 
         verify();
 

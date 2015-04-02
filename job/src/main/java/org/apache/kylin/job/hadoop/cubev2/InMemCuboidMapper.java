@@ -97,14 +97,14 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
 
         // end to trigger cubing calculation
         logger.info("Totally read " + counter + " rows in memory, trigger cube build now.");
-        Map<TblColRef, Dictionary> dictionaryMap = Maps.newHashMap();
+        Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
         Map<Long, GridTable> cuboidsMap = Maps.newHashMap();
 
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
             // dictionary
             for (TblColRef col : dim.getColumnRefs()) {
                 if (cubeDesc.getRowkey().isUseDictionary(col)) {
-                    Dictionary dict = cubeSegment.getDictionary(col);
+                    Dictionary<?> dict = cubeSegment.getDictionary(col);
                     if (dict == null) {
                         throw new IllegalArgumentException("Dictionary for " + col + " was not found.");
                     }

@@ -105,7 +105,7 @@ public class BuildCubeWithStreamTest {
         //   cubeManager.updateCube(cube);
 
 //        CubeSegment cubeSegment = cube.getSegment("19700101000000_20150301000000", SegmentStatusEnum.NEW);
-        Map<TblColRef, Dictionary> dictionaryMap = Maps.newHashMap();
+        Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
 
 //
 //        for (DimensionDesc dim : desc.getDimensions()) {
