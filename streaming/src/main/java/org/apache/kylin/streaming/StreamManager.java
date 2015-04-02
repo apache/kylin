@@ -111,4 +111,13 @@ public class StreamManager {
         }
     }
 
+    public long getOffset(String streaming, int partition) {
+        return 0;
+    }
+
+    public void updateOffset(String streaming, int partition, long offset) {
+
+    }
+
+
 }

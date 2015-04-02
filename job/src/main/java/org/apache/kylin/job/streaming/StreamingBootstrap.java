@@ -114,11 +114,11 @@ public class StreamingBootstrap {
 
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         KafkaConfig.SERIALIZER.serialize(kafkaConfig, new DataOutputStream(out));
-        logger.info("kafka config:" + new String(out.toByteArray()));
+        logger.debug("kafka config:" + new String(out.toByteArray()));
         final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
         Preconditions.checkState(leadBroker != null, "cannot find lead broker");
         final long earliestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
-        long streamOffset = ii.getStreamOffsets().get(partitionId);
+        long streamOffset = streamManager.getOffset(streaming, partitionId);
         if (streamOffset < earliestOffset) {
             streamOffset = earliestOffset;
         }
@@ -137,9 +137,9 @@ public class StreamingBootstrap {
         };
         kafkaConsumers.put(getKey(streaming, partitionId), consumer);
 
-        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), iiSegment.getStorageLocationIdentifier(), iiSegment.getIIInstance(), partitionId);
+        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), streaming, iiSegment.getStorageLocationIdentifier(), iiSegment.getIIDesc(), partitionId);
 
-        StreamParser parser = null;
+        StreamParser parser;
         if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
             Class clazz = Class.forName(kafkaConfig.getParserName());
             Constructor constructor = clazz.getConstructor(List.class);
