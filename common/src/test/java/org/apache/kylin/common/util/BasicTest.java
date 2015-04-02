@@ -84,13 +84,7 @@ public class BasicTest {
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
-        Queue<String> a = new LinkedList<>();
-        Iterator<String> i = new FIFOIterator<String>(a);
-        System.out.println(i.hasNext());
-        a.add("1");
-        System.out.println(i.hasNext());
-        System.out.println(i.next());
-
+        logger.info("{}{}{}{}",new String[]{"2","33","333","444"});
     }
 
     private static String time(long t) {
