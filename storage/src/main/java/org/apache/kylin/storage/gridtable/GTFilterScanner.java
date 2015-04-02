@@ -12,7 +12,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.apache.kylin.storage.gridtable.IGTStore.IGTStoreScanner;
 
-class GTFilterScanner implements IGTScanner {
+public class GTFilterScanner implements IGTScanner {
 
     final GTInfo info;
     final IGTStoreScanner storeScanner;
@@ -27,7 +27,7 @@ class GTFilterScanner implements IGTScanner {
     private int scannedRowCount = 0;
     private int scannedRowBlockCount = 0;
 
-    GTFilterScanner(GTInfo info, IGTStore store, GTScanRequest req) {
+    public GTFilterScanner(GTInfo info, IGTStore store, GTScanRequest req) throws IOException {
         this.info = info;
         this.filter = req.getFilterPushDown();
 
@@ -38,7 +38,7 @@ class GTFilterScanner implements IGTScanner {
         ByteArray end = makeScanKey(req.getPkEnd());
         this.selectedColBlocks = info.selectColumnBlocks(req.getColumns());
 
-        this.storeScanner = store.scan(start, end, selectedColBlocks, filter);
+        this.storeScanner = store.scan(start, end, selectedColBlocks, req);
         this.oneRecord = new GTRecord(info);
         this.oneTuple = new TupleAdapter(oneRecord);
     }

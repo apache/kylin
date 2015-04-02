@@ -73,6 +73,12 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     }
 
     @Override
+    public int maxCodeLength(int col) {
+        // TODO go with serializer framework
+        return 128;
+    }
+
+    @Override
     public IFilterCodeSystem<ByteArray> getFilterCodeSystem() {
         return filterCS;
     }

@@ -18,7 +18,7 @@ import java.util.Map;
  * This implementation uses Dictionary to encode and decode the table; If a column doesn't have dictionary, will check
  * its data type to serialize/deserialize it;
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GTDictionaryCodeSystem implements IGTCodeSystem {
     private static final Logger logger = LoggerFactory.getLogger(CubeManager.class);
 
@@ -84,6 +84,12 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
     @Override
     public int codeLength(int col, ByteBuffer buf) {
         return serializers[col].peekLength(buf);
+    }
+
+    @Override
+    public int maxCodeLength(int col) {
+        // TODO go with serializer framework
+        return 128;
     }
 
     @Override
@@ -162,4 +168,5 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
             throw new UnsupportedOperationException();
         }
     }
+
 }
