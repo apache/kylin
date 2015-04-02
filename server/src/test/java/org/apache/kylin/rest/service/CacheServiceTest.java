@@ -189,8 +189,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         //create cube
 
         final String cubeName = "a_whole_new_cube";
-        final MetadataManager metaMgr = getMetadataManager(configA);
-        final MetadataManager metaMgrB = getMetadataManager(configB);
         final CubeManager cubeManager = getCubeManager(configA);
         final CubeManager cubeManagerB = getCubeManager(configB);
         final ProjectManager projectManager = getProjectManager(configA);

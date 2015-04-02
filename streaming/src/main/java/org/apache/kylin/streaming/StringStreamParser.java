@@ -34,11 +34,9 @@
 
 package org.apache.kylin.streaming;
 
-import com.google.common.collect.Lists;
-import org.apache.kylin.metadata.model.TblColRef;
-
-import java.util.Collection;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 /**
  * Created by qianzhou on 3/25/15.

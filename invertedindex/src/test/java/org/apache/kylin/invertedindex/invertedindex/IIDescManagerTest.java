@@ -18,20 +18,16 @@
 
 package org.apache.kylin.invertedindex.invertedindex;
 
+import java.io.IOException;
+import java.util.UUID;
+
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IIDescManager;
-import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Created by shaoshi on 1/30/15.

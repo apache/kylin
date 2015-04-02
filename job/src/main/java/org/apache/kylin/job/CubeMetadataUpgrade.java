@@ -18,9 +18,15 @@
 
 package org.apache.kylin.job;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -38,10 +44,6 @@ import org.apache.kylin.cube.model.v1.CubeInstance;
 import org.apache.kylin.cube.model.v1.CubeSegment;
 import org.apache.kylin.cube.model.v1.CubeSegmentStatusEnum;
 import org.apache.kylin.cube.model.v1.CubeStatusEnum;
-import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.lookup.SnapshotManager;
-import org.apache.kylin.dict.lookup.SnapshotTable;
-import org.apache.kylin.dict.lookup.TableReader;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.common.ShellExecutable;
@@ -51,7 +53,12 @@ import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.hadoop.cube.*;
+import org.apache.kylin.job.hadoop.cube.BaseCuboidJob;
+import org.apache.kylin.job.hadoop.cube.CubeHFileJob;
+import org.apache.kylin.job.hadoop.cube.FactDistinctColumnsJob;
+import org.apache.kylin.job.hadoop.cube.MergeCuboidJob;
+import org.apache.kylin.job.hadoop.cube.NDCuboidJob;
+import org.apache.kylin.job.hadoop.cube.RangeKeyDistributionJob;
 import org.apache.kylin.job.hadoop.dict.CreateDictionaryJob;
 import org.apache.kylin.job.hadoop.hbase.BulkLoadJob;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
@@ -66,11 +73,9 @@ import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * This is the utility class to migrate the Kylin metadata format from v1 to v2;
@@ -114,7 +119,7 @@ public class CubeMetadataUpgrade {
         MetadataManager.getInstance(config).reload();
         CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
-        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeManager.getInstance(config);
         ProjectManager.getInstance(config);
 
         /*

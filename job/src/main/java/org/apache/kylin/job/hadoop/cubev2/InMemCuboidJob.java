@@ -18,18 +18,14 @@
 
 package org.apache.kylin.job.hadoop.cubev2;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -46,19 +42,13 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.List;
-
 /**
- * @author honma
+ * @author shaoshi
  */
 
 public class InMemCuboidJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(InMemCuboidJob.class);
-    private static final String MAPRED_REDUCE_TASKS = "mapred.reduce.tasks";
-    public static final String REGION_SPLITS = "kylin.region.splits";
-    private String statisticsOutput;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -82,10 +72,8 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
             String intermediateTable = getOptionValue(OPTION_TABLE_NAME);
-            statisticsOutput = getOptionValue(OPTION_STATISTICS_OUTPUT);
             String htableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
 
-            System.out.println("statisticsOutput is " + statisticsOutput);
 
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
@@ -150,32 +138,6 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             printUsage(options);
             throw e;
         }
-    }
-
-    @SuppressWarnings("deprecation")
-    private List<Long> parseCuboidStatistics() throws IOException {
-
-        List<Long> regionSplit = Lists.newArrayList();
-
-        Configuration conf = job.getConfiguration();
-        FileSystem fs = FileSystem.get(conf);
-        Path seqFilePath = new Path(statisticsOutput, "part-r-00000");
-
-        SequenceFile.Reader reader = new SequenceFile.Reader(fs, seqFilePath, conf);
-
-        try {
-            LongWritable key = (LongWritable) reader.getKeyClass().newInstance();
-            LongWritable value = (LongWritable) reader.getValueClass().newInstance();
-            while (reader.next(key, value)) {
-                regionSplit.add(key.get());
-            }
-        } catch (Exception e) {
-            throw new IOException(e);
-        } finally {
-            reader.close();
-        }
-
-        return regionSplit;
     }
 
     public static void main(String[] args) throws Exception {

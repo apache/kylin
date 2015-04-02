@@ -62,7 +62,6 @@ public class IIDescTest extends LocalFileMetadataTestCase {
         IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_left_join_desc");
         String str = JsonUtil.writeValueAsIndentString(iiDesc);
         System.out.println(str);
-        @SuppressWarnings("unused")
         IIDesc desc2 = JsonUtil.readValue(str, IIDesc.class);
 
         Assert.assertEquals(iiDesc, desc2);
