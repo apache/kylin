@@ -53,7 +53,6 @@ public class JDBCDriverTest extends HBaseMetadataTestCase {
     }
 
     protected static void startJetty() throws Exception {
-        String jetty_home = System.getProperty("jetty.home", "..");
 
         server = new Server(7070);
 

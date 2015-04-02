@@ -36,12 +36,11 @@ package org.apache.kylin.streaming.invertedindex;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.Slice;
@@ -77,7 +76,8 @@ public class IIStreamBuilder extends StreamBuilder {
         this.desc = iiInstance.getDescriptor();
         this.partitionId = partitionId;
         try {
-            this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
+            //this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
+            this.hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
         } catch (IOException e) {
             logger.error("cannot open htable name:" + hTableName, e);
             throw new RuntimeException("cannot open htable name:" + hTableName, e);
@@ -87,16 +87,20 @@ public class IIStreamBuilder extends StreamBuilder {
 
     @Override
     protected void build(List<Stream> streamsToBuild) throws IOException {
-        logger.info("stream build start, size:" + streamsToBuild.size());
-        Stopwatch stopwatch = new Stopwatch().start();
-        long offset = streamsToBuild.get(streamsToBuild.size() - 1).getOffset();
-        final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
-        logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
+        if (streamsToBuild.size() > 0) {
+            logger.info("stream build start, size:" + streamsToBuild.size());
+            Stopwatch stopwatch = new Stopwatch().start();
+            long offset = streamsToBuild.get(streamsToBuild.size() - 1).getOffset();
+            final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
+            logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
 
-        loadToHBase(hTable, slice, new IIKeyValueCodec(slice.getInfo()));
-        submitOffset(offset);
-        stopwatch.stop();
-        logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
+            loadToHBase(hTable, slice, new IIKeyValueCodec(slice.getInfo()));
+            submitOffset(offset);
+            stopwatch.stop();
+            logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
+        } else {
+            logger.info("nothing to build, skip building");
+        }
     }
 
     private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
@@ -124,14 +128,18 @@ public class IIStreamBuilder extends StreamBuilder {
 
     private void submitOffset(long offset) {
         final IIManager iiManager = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
-        final IIInstance instance = iiManager.getII(ii.getName());
-        instance.getStreamOffsets().set(partitionId, offset);
         try {
-            iiManager.updateII(instance);
+            iiManager.updateIIStreamingOffset(ii.getName(), partitionId, offset);
             logger.info("submit offset:" + offset);
         } catch (IOException e) {
-            logger.error("error submit offset: + " + offset, e);
-            throw new RuntimeException(e);
+            logger.warn("error submit offset: " + offset + " retrying", e);
+            try {
+                iiManager.updateIIStreamingOffset(ii.getName(), partitionId, offset);
+                logger.info("submit offset:" + offset);
+            } catch (IOException ex) {
+                logger.error("error submit offset: " + offset, ex);
+                throw new RuntimeException(e);
+            }
         }
     }
 

@@ -91,20 +91,30 @@ public abstract class KafkaConsumer implements Runnable {
     public void run() {
         try {
             Broker leadBroker = getLeadBroker();
+            int consumeMsgCount = 0;
+            int fetchRound = 0;
             while (isRunning) {
+                int consumeMsgCountAtBeginning = consumeMsgCount;
+                fetchRound++;
+                logger.info("start " + fetchRound + "th round of fetching");
+
                 if (leadBroker == null) {
                     leadBroker = getLeadBroker();
                 }
+
                 if (leadBroker == null) {
                     logger.warn("cannot find lead broker");
                     continue;
                 }
+
+                logger.info("fetching topic {} partition id {} offset {} leader {}", new String[] { topic, String.valueOf(partitionId), String.valueOf(offset), leadBroker.toString() });
 
                 final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, kafkaConfig);
                 if (fetchResponse.errorCode(topic, partitionId) != 0) {
                     logger.warn("fetch response offset:" + offset + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
                     continue;
                 }
+
                 for (MessageAndOffset messageAndOffset : fetchResponse.messageSet(topic, partitionId)) {
                     try {
                         consume(messageAndOffset.offset(), messageAndOffset.message().payload());
@@ -113,6 +123,13 @@ public abstract class KafkaConsumer implements Runnable {
                         break;
                     }
                     offset++;
+                    consumeMsgCount++;
+                }
+                logger.info("Number of messages consumed: " + consumeMsgCount + " offset is " + offset);
+
+                if (consumeMsgCount == consumeMsgCountAtBeginning)//nothing this round
+                {
+                    Thread.sleep(30000);
                 }
             }
             getStreamQueue().put(Stream.EOF);

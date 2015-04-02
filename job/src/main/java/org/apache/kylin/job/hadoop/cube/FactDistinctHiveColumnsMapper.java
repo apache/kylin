@@ -99,7 +99,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         rowKeyValues.clear();
         long mask = Long.highestOneBit(baseCuboidId);
         for (int i = 0; i < nRowKey; i++) {
-            if ((mask & cuboidId) > 0) {
+            if ((mask & cuboidId) != 0) {
                 rowKeyValues.add(row[intermediateTableDesc.getRowKeyColumnIndexes()[i]]);
             }
             mask = mask >> 1;

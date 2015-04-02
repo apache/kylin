@@ -172,6 +172,11 @@ public class IIManager implements IRealizationProvider {
         return updateII(ii);
     }
 
+    public void updateIIStreamingOffset(String iiName, int partition, long offset) throws IOException {
+
+    }
+
+
     public IIInstance updateII(IIInstance ii) throws IOException {
         logger.info("Updating II instance '" + ii.getName());
 

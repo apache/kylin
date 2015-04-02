@@ -33,7 +33,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.AbstractJobBuilder;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
-import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -72,11 +71,18 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         String intermediateHiveTableStepId = twoSteps.getFirst().getId();
         String baseCuboidStepId = twoSteps.getSecond().getId();
 
-        // convert htable
-        AbstractExecutable convertCuboidToHfileStep = addHTableSteps(seg, cuboidRootPath, result);
 
-        // update cube info
-        result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, convertCuboidToHfileStep.getId(), jobId));
+        if(this.useImMemCubing) {
+            // bulk load step
+            result.addTask(createBulkLoadStep(seg, result.getId()));
+            result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, baseCuboidStepId, jobId));
+        } else {
+            // convert htable
+            AbstractExecutable convertCuboidToHfileStep = addHTableSteps(seg, cuboidRootPath, result);
+
+            // update cube info
+            result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, convertCuboidToHfileStep.getId(), jobId));
+        }
 
         return result;
     }
@@ -184,7 +190,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
                 result.addTask(createNDimensionCuboidStep(seg, cuboidOutputTempPath, dimNum, totalRowkeyColumnsCount));
             }
         } else {
-            baseCuboidStep = createInMemCubingStep(seg, intermediateHiveTableLocation, intermediateHiveTableName, cuboidOutputTempPath);
+            // create htable step
+            result.addTask(createCreateHTableStep(seg, jobId));
+            baseCuboidStep = createInMemCubingStep(seg, intermediateHiveTableLocation, intermediateHiveTableName, cuboidOutputTempPath, result.getId());
             result.addTask(baseCuboidStep);
         }
 
@@ -197,7 +205,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         result.addTask(createRangeRowkeyDistributionStep(seg, cuboidPath));
         // create htable step
-        result.addTask(createCreateHTableStep(seg));
+        result.addTask(createCreateHTableStep(seg, jobId));
         // generate hfiles step
         final MapReduceExecutable convertCuboidToHfileStep = createConvertCuboidToHfileStep(seg, cuboidPath, jobId);
         result.addTask(convertCuboidToHfileStep);
@@ -280,6 +288,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         appendMapReduceParameters(cmd, seg);
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "output", getFactDistinctColumnsPath(seg, jobId));
+        appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "statisticsenabled",  String.valueOf(useImMemCubing));
         appendExecCmdParameters(cmd, "statisticsoutput", getStatisticsPath(seg, jobId));
         appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + seg.getCubeInstance().getName() + "_Step");
@@ -303,7 +312,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return buildDictionaryStep;
     }
 
-    private MapReduceExecutable createInMemCubingStep(CubeSegment seg, String intermediateHiveTableLocation, String intermediateHiveTableName, String[] cuboidOutputTempPath) {
+    private MapReduceExecutable createInMemCubingStep(CubeSegment seg, String intermediateHiveTableLocation, String intermediateHiveTableName, String[] cuboidOutputTempPath, String jobId) {
         // base cuboid job
         MapReduceExecutable baseCuboidStep = new MapReduceExecutable();
 
@@ -315,10 +324,13 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "input", intermediateHiveTableLocation);
-        appendExecCmdParameters(cmd, "output", cuboidOutputTempPath[0]);
-        appendExecCmdParameters(cmd, "jobname", "Kylin_Base_Cuboid_Builder_" + seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "statisticsoutput", getStatisticsPath(seg, jobId));
+       // appendExecCmdParameters(cmd, "output", cuboidOutputTempPath[0]);
+        appendExecCmdParameters(cmd, "output", getHFilePath(seg, jobId));
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Cube_Builder_" + seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "level", "0");
         appendExecCmdParameters(cmd, "tablename", intermediateHiveTableName);
+        appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
 
         baseCuboidStep.setMapReduceParams(cmd.toString());
         baseCuboidStep.setMapReduceJobClass(InMemCuboidJob.class);
@@ -382,13 +394,16 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return rowkeyDistributionStep;
     }
 
-    private HadoopShellExecutable createCreateHTableStep(CubeSegment seg) {
+    private HadoopShellExecutable createCreateHTableStep(CubeSegment seg, String jobId) {
         HadoopShellExecutable createHtableStep = new HadoopShellExecutable();
         createHtableStep.setName(ExecutableConstants.STEP_NAME_CREATE_HBASE_TABLE);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "input", getRowkeyDistributionOutputPath(seg) + "/part-r-00000");
         appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
+        appendExecCmdParameters(cmd, "statisticsenabled",  String.valueOf(useImMemCubing));
+        appendExecCmdParameters(cmd, "statisticsoutput",   getStatisticsPath(seg, jobId));
 
         createHtableStep.setJobParams(cmd.toString());
         createHtableStep.setJobClass(CreateHTableJob.class);

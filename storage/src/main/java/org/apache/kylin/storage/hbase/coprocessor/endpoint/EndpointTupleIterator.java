@@ -27,11 +27,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
-import org.apache.kylin.metadata.measure.fixedlen.FixedPointLongCodec;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
@@ -349,7 +347,7 @@ public class EndpointTupleIterator implements ITupleIterator {
                         Object value = measureValues.get(i);
                         String dataType = tuple.getDataType(fieldName);
                         //TODO: currently in II all metrics except HLLC is returned as String
-                        if (dataType.toLowerCase().equalsIgnoreCase("hllc")) {
+                        if (value instanceof String) {
                             value = Tuple.convertOptiqCellValue((String) value, dataType);
                         }
                         tuple.setMeasureValue(fieldName, value);

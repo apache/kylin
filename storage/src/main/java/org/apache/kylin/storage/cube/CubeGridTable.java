@@ -20,12 +20,12 @@ import com.google.common.collect.Maps;
 public class CubeGridTable {
 
     @SuppressWarnings("rawtypes")
-    public static Map<TblColRef, Dictionary> getDimensionToDictionaryMap(CubeSegment cubeSeg, long cuboidId) {
+    public static Map<TblColRef, Dictionary<?>> getDimensionToDictionaryMap(CubeSegment cubeSeg, long cuboidId) {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         CubeManager cubeMgr = CubeManager.getInstance(cubeSeg.getCubeInstance().getConfig());
 
         // build a dictionary map
-        Map<TblColRef, Dictionary> dictionaryMap = Maps.newHashMap();
+        Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
         List<TblColRef> dimCols = Cuboid.findById(cubeDesc, cuboidId).getColumns();
         for (TblColRef col : dimCols) {
             Dictionary<?> dictionary = cubeMgr.getDictionary(cubeSeg, col);
@@ -38,12 +38,12 @@ public class CubeGridTable {
 
     @SuppressWarnings("rawtypes")
     public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) {
-        Map<TblColRef, Dictionary> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
+        Map<TblColRef, Dictionary<?>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
         return newGTInfo(cubeSeg.getCubeDesc(), cuboidId, dictionaryMap);
     }
     
     @SuppressWarnings("rawtypes")
-    public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary> dictionaryMap) {
+    public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
         List<TblColRef> dimCols = cuboid.getColumns();
 

@@ -145,7 +145,7 @@ public final class KafkaRequester {
         SimpleConsumer consumer = getSimpleConsumer(broker, kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), clientName);
         kafka.api.FetchRequest req = new FetchRequestBuilder()
                 .clientId(clientName)
-                .addFetch(topic, partitionId, offset, kafkaConfig.getMaxReadCount()) // Note: this fetchSize of 100000 might need to be increased if large batches are written to Kafka
+                .addFetch(topic, partitionId, offset, 1048576) // Note: this fetchSize of 100000 might need to be increased if large batches are written to Kafka, 1048576 is the default value on shell
                 .build();
         return consumer.fetch(req);
     }

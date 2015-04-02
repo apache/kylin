@@ -40,7 +40,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
     private KylinConfig config = null;
 
-    private LookupTable lookupTable;
+    private LookupTable<String> lookupTable;
 
     @Before
     public void setup() throws Exception {
@@ -100,7 +100,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
         }
     }
 
-    public LookupTable initLookupTable() throws Exception {
+    public LookupTable<String> initLookupTable() throws Exception {
 
 
         MetadataManager metaMgr = MetadataManager.getInstance(config);
@@ -111,7 +111,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
         String snapshotResPath = "/table_snapshot/TEST_CAL_DT.csv/4af48c94-86de-4e22-a4fd-c49b06cbaa4f.snapshot";
         SnapshotTable snapshot = getSnapshotManager().getSnapshotTable(snapshotResPath);
         TableDesc tableDesc = metaMgr.getTableDesc(tableName);
-        LookupTable lt = new LookupStringTable(tableDesc, pkCols, snapshot);
+        LookupTable<String> lt = new LookupStringTable(tableDesc, pkCols, snapshot);
 
         System.out.println(lt);
 
