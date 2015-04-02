@@ -143,7 +143,7 @@ public class JoinedFlatTable {
         return sql.toString();
     }
 
-    private static Map buildTableAliasMap(DataModelDesc dataModelDesc) {
+    private static Map<String, String> buildTableAliasMap(DataModelDesc dataModelDesc) {
         Map<String, String> tableAliasMap = new HashMap<String, String>();
 
         tableAliasMap.put(dataModelDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);

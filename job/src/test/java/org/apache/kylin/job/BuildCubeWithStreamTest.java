@@ -34,8 +34,10 @@
 
 package org.apache.kylin.job;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
@@ -46,32 +48,21 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.HiveTableReader;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GridTable;
-import org.apache.kylin.streaming.Stream;
-import org.apache.kylin.streaming.StreamParser;
-import org.apache.kylin.streaming.StringStreamParser;
 import org.apache.kylin.streaming.cube.CubeStreamBuilder;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-
-import static org.junit.Assert.fail;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Created by qianzhou on 3/9/15.
@@ -109,12 +100,12 @@ public class BuildCubeWithStreamTest {
     @Test
     public void test() throws Exception {
         CubeInstance cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
-        final CubeDesc desc = cube.getDescriptor();
+//        final CubeDesc desc = cube.getDescriptor();
         //   cube.getSegments().clear();
         //   cubeManager.updateCube(cube);
 
-        CubeSegment cubeSegment = cube.getSegment("19700101000000_20150301000000", SegmentStatusEnum.NEW);
-        Map<TblColRef, Dictionary> dictionaryMap = Maps.newHashMap();
+//        CubeSegment cubeSegment = cube.getSegment("19700101000000_20150301000000", SegmentStatusEnum.NEW);
+        Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
 
 //
 //        for (DimensionDesc dim : desc.getDimensions()) {
@@ -148,6 +139,8 @@ public class BuildCubeWithStreamTest {
         while(reader.next()) {
             queue.add(reader.getRowAsList());
         }
+        
+        reader.close();
 
         Map<Long, GridTable> cuboidsMap = Maps.newHashMap();
         final CubeStreamBuilder streamBuilder = new CubeStreamBuilder(cube, true, dictionaryMap, cuboidsMap);
