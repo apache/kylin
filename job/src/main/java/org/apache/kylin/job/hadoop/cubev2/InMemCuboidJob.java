@@ -101,18 +101,6 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             job.setMapOutputValueClass(Text.class);
             FileOutputFormat.setOutputPath(job, output);
 
-            /*
-            List<Long> regionSplits = parseCuboidStatistics();
-            String regionSplitStr = StringUtils.join(regionSplits.toArray(new Long[regionSplits.size()]), ",");
-            System.out.println("The region splits is : " + regionSplitStr);
-
-            job.getConfiguration().setInt(MAPRED_REDUCE_TASKS, regionSplits.size() + 1);
-            job.getConfiguration().set(REGION_SPLITS, regionSplitStr);
-
-            //job.setPartitionerClass(SimpleTotalOrderPartitioner.class);
-
-            */
-
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
