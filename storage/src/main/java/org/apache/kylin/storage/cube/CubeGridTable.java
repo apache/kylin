@@ -18,7 +18,7 @@ import com.google.common.collect.Maps;
 public class CubeGridTable {
 
     @SuppressWarnings("rawtypes")
-    public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary> dictionaryMap) {
+    public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
         List<TblColRef> dimCols = cuboid.getColumns();
         

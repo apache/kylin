@@ -187,7 +187,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         logger.info((rowkeyList.size() + 1) + " regions");
         logger.info(rowkeyList.size() + " splits");
         for (byte[] split : rowkeyList) {
-            System.out.println(StringUtils.byteToHexString(split));
+            logger.info(StringUtils.byteToHexString(split));
         }
 
         byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
@@ -205,14 +205,14 @@ public class CreateHTableJob extends AbstractHadoopJob {
         List<TblColRef> columnList = baseCuboid.getColumns();
 
         for (int i = 0; i < columnList.size(); i++) {
-            System.out.println("Rowkey column " + i + " length " + cubeSegment.getColumnLength(columnList.get(i)));
+            logger.info("Rowkey column " + i + " length " + cubeSegment.getColumnLength(columnList.get(i)));
             rowkeyColumnSize.add(cubeSegment.getColumnLength(columnList.get(i)));
         }
 
         DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
         int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.name());
 
-        System.out.println("Chosen cut for htable is " + cut);
+        logger.info("Chosen cut for htable is " + cut + "GB");
 
         Map<Long, Long> cuboidSizeMap = Maps.newHashMap();
         long totalSizeInM = 0;
@@ -249,16 +249,16 @@ public class CreateHTableJob extends AbstractHadoopJob {
             totalSizeInM += cuboidSize;
         }
 
-        int nRegion = Math.round((float) totalSizeInM / ((float) cut) * 1024l);
+        int nRegion = Math.round((float) totalSizeInM / ((float) cut* 1024l));
         nRegion = Math.max(1, nRegion);
         nRegion = Math.min(MAX_REGION, nRegion);
 
-        int gbPerRegion = (int) (totalSizeInM / (nRegion * 1024l));
-        gbPerRegion = Math.max(1, gbPerRegion);
+        int mbPerRegion = (int) (totalSizeInM / (nRegion));
+        mbPerRegion = Math.max(1, mbPerRegion);
 
-        System.out.println("Total size " + totalSizeInM + "M");
-        System.out.println(nRegion + " regions");
-        System.out.println(gbPerRegion + " GB per region");
+        logger.info("Total size " + totalSizeInM + "M");
+        logger.info(nRegion + " regions");
+        logger.info(mbPerRegion + " MB per region");
 
         List<Long> regionSplit = Lists.newArrayList();
 
@@ -266,9 +266,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
         int regionIndex = 0;
         for (long cuboidId : allCuboids) {
             size += cuboidSizeMap.get(cuboidId);
-            if (size >= gbPerRegion * 1024l) {
+            if (size >= mbPerRegion) {
                 regionSplit.add(cuboidId);
-                System.out.println("Region " + regionIndex + " will be " + size + " MB, contains cuboid to " + cuboidId);
+                logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboid to " + cuboidId);
                 size = 0;
                 regionIndex++;
             }
@@ -316,8 +316,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
         bytesLength += space;
 
-        System.out.println("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength);
-        System.out.println("Cuboid " + cuboidId + " total size is " + (bytesLength * rowCount / (1024L * 1024L)) + "M");
+        logger.info("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength + " bytes.");
+        logger.info("Cuboid " + cuboidId + " total size is " + (bytesLength * rowCount / (1024L * 1024L)) + "M.");
         return bytesLength * rowCount / (1024L * 1024L);
     }
 
