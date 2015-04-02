@@ -88,16 +88,20 @@ public class IIStreamBuilder extends StreamBuilder {
 
     @Override
     protected void build(List<Stream> streamsToBuild) throws IOException {
-        logger.info("stream build start, size:" + streamsToBuild.size());
-        Stopwatch stopwatch = new Stopwatch().start();
-        long offset = streamsToBuild.get(streamsToBuild.size() - 1).getOffset();
-        final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
-        logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
+        if (streamsToBuild.size() > 0) {
+            logger.info("stream build start, size:" + streamsToBuild.size());
+            Stopwatch stopwatch = new Stopwatch().start();
+            long offset = streamsToBuild.get(streamsToBuild.size() - 1).getOffset();
+            final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
+            logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
 
-        loadToHBase(hTable, slice, new IIKeyValueCodec(slice.getInfo()));
-        submitOffset(offset);
-        stopwatch.stop();
-        logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
+            loadToHBase(hTable, slice, new IIKeyValueCodec(slice.getInfo()));
+            submitOffset(offset);
+            stopwatch.stop();
+            logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
+        } else {
+            logger.info("nothing to build, skip building");
+        }
     }
 
     private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
