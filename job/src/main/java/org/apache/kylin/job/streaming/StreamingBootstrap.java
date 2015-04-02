@@ -57,6 +57,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by qianzhou on 3/26/15.
@@ -119,9 +120,13 @@ public class StreamingBootstrap {
         Preconditions.checkState(leadBroker != null, "cannot find lead broker");
         final long earliestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
         long streamOffset = ii.getStreamOffsets().get(partitionId);
+        logger.info("offset from ii desc is " + streamOffset);
+        logger.info("offset from KafkaRequester is " + earliestOffset);
         if (streamOffset < earliestOffset) {
             streamOffset = earliestOffset;
         }
+        logger.info("offset is " + streamOffset);
+
         if (!HBaseConnection.tableExists(kylinConfig.getStorageUrl(), iiSegment.getStorageLocationIdentifier())) {
             logger.error("no htable:" + iiSegment.getStorageLocationIdentifier() + " found");
             throw new IllegalStateException("please create htable:" + iiSegment.getStorageLocationIdentifier() + " first");
@@ -129,10 +134,22 @@ public class StreamingBootstrap {
 
         KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId, streamOffset, kafkaConfig.getBrokers(), kafkaConfig) {
             @Override
-            protected void consume(long offset, ByteBuffer payload) throws Exception {
+            protected void consume(long offset, ByteBuffer payload) {
                 byte[] bytes = new byte[payload.limit()];
                 payload.get(bytes);
-                getStreamQueue().put(new Stream(offset, bytes));
+                Stream newStream = new Stream(offset, bytes);
+                while (true) {
+                    try {
+                        if (getStreamQueue().offer(newStream, 60, TimeUnit.SECONDS)) {
+                            break;
+                        } else {
+                            logger.info("the queue is full, wait for builder to catch up");
+                        }
+                    } catch (InterruptedException e) {
+                        logger.info("InterruptedException", e);
+                        continue;
+                    }
+                }
             }
         };
         kafkaConsumers.put(getKey(streaming, partitionId), consumer);
