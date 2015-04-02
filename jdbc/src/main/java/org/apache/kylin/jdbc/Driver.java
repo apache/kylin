@@ -89,7 +89,7 @@ public class Driver extends UnregisteredDriver {
             throw new RuntimeException("Error occurred while registering JDBC driver " + Driver.class.getName() + ": " + e.toString());
         }
     }
-
+    
     @Override
     protected DriverVersion createDriverVersion() {
         return DriverVersion.load(Driver.class, "org-apache-kylin-jdbc.properties", "Kylin JDBC Driver", "unknown version", "Kylin", "unknown version");
