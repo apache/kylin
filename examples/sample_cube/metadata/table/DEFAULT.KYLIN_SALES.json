@@ -7,7 +7,7 @@
     "datatype" : "bigint"
   }, {
     "id" : "2",
-    "name" : "CAL_DT",
+    "name" : "PART_DT",
     "datatype" : "date"
   }, {
     "id" : "3",
