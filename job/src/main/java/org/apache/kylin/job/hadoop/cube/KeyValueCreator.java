@@ -58,6 +58,10 @@ public class KeyValueCreator {
     }
 
     public KeyValue create(Text key, Object[] measureValues) {
+        return create(key.getBytes(), 0, key.getLength(), valueBuf.array(), 0, valueBuf.position());
+    }
+
+    public KeyValue create(byte[] keyBytes, int keyOffset, int keyLength, Object[] measureValues) {
         for (int i = 0; i < colValues.length; i++) {
             colValues[i] = measureValues[refIndex[i]];
         }
@@ -65,15 +69,20 @@ public class KeyValueCreator {
         valueBuf.clear();
         codec.encode(colValues, valueBuf);
 
-        return create(key, valueBuf.array(), 0, valueBuf.position());
+        return create(keyBytes, keyOffset, keyLength, valueBuf.array(), 0, valueBuf.position());
     }
 
-    public KeyValue create(Text key, byte[] value, int voffset, int vlen) {
-        return new KeyValue(key.getBytes(), 0, key.getLength(), //
+
+    public KeyValue create(byte[] keyBytes, int keyOffset, int keyLength, byte[] value, int voffset, int vlen) {
+        return new KeyValue(keyBytes, keyOffset, keyLength, //
                 cfBytes, 0, cfBytes.length, //
                 qBytes, 0, qBytes.length, //
                 timestamp, KeyValue.Type.Put, //
                 value, voffset, vlen);
+    }
+
+    public KeyValue create(Text key, byte[] value, int voffset, int vlen) {
+        return create(key.getBytes(), 0, key.getLength(), value, voffset, vlen);
     }
 
     private int indexOf(String[] measureNames, String ref) {
