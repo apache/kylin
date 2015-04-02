@@ -33,7 +33,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.AbstractJobBuilder;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
-import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;

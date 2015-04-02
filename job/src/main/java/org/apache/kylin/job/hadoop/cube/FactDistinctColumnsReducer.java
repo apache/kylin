@@ -18,8 +18,13 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -29,24 +34,20 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.mr.KylinReducer;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.io.IOException;
-import java.util.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * @author yangli9
@@ -82,8 +83,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             rowKeyCountInMappers = Lists.newArrayList();
             rowKeyCountInCuboids = Maps.newHashMap();
             cuboidHLLMap = Maps.newHashMap();
-            String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
-            CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         }
     }
 
@@ -136,7 +135,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
     }
 
-    protected void cleanup(Reducer.Context context) throws IOException, InterruptedException {
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
 
         //output the hll info;
         if (collectStatistics) {
@@ -149,7 +149,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         }
     }
 
-    private void writeMapperAndCuboidStatistics(Reducer.Context context) throws IOException {
+    private void writeMapperAndCuboidStatistics(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         FileSystem fs = FileSystem.get(conf);
         FSDataOutputStream out = fs.create(new Path(statisticsOutput, BatchConstants.CFG_STATISTICS_CUBE_ESTIMATION));
@@ -198,7 +198,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     }
 
 
-    private void writeCuboidStatistics(Reducer.Context context) throws IOException {
+    private void writeCuboidStatistics(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         Path seqFilePath = new Path(statisticsOutput, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
         SequenceFile.Writer writer = SequenceFile.createWriter(conf,

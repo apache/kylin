@@ -18,18 +18,13 @@
 
 package org.apache.kylin.rest.controller;
 
-import org.apache.kylin.metadata.model.TableDesc;
+import java.io.IOException;
+
 import org.apache.kylin.rest.service.CacheService;
-import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ServiceTestBase;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author shaoshi
