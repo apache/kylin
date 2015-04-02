@@ -75,12 +75,19 @@ public abstract class StreamBuilder implements Runnable {
             while (true) {
                 Stream stream;
                 try {
-                    stream = streamQueue.poll(50, TimeUnit.MILLISECONDS);
+                    stream = streamQueue.poll(10, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     logger.warn("stream queue interrupted", e);
                     continue;
                 }
                 if (stream == null) {
+
+                    logger.info("The stream queue is drained, current available stream count: " + streamToBuild.size());
+                    if ((System.currentTimeMillis() - lastBuildTime) > BATCH_BUILD_INTERVAL_THRESHOLD) {
+                        build(streamToBuild);
+                        clearCounter();
+                        streamToBuild.clear();
+                    }
                     continue;
                 } else {
                     if (stream.getOffset() < 0) {
@@ -96,12 +103,6 @@ public abstract class StreamBuilder implements Runnable {
                     build(streamToBuild);
                     clearCounter();
                     streamToBuild.clear();
-                } else if ((System.currentTimeMillis() - lastBuildTime) > BATCH_BUILD_INTERVAL_THRESHOLD) {
-                    build(streamToBuild);
-                    clearCounter();
-                    streamToBuild.clear();
-                } else {
-                    continue;
                 }
             }
         } catch (Exception e) {

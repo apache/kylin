@@ -18,8 +18,6 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.File;
-
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;

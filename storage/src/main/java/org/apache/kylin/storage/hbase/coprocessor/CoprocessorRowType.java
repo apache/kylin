@@ -19,7 +19,6 @@
 package org.apache.kylin.storage.hbase.coprocessor;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 

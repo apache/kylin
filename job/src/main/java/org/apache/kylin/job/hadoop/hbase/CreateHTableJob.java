@@ -18,14 +18,8 @@
 
 package org.apache.kylin.job.hadoop.hbase;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
-import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.job.tools.DeployCoprocessorCLI;
-import org.apache.kylin.job.tools.LZOSupportnessChecker;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,19 +33,33 @@ import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
-import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.*;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
+import org.apache.kylin.job.constant.BatchConstants;
+import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.job.tools.DeployCoprocessorCLI;
+import org.apache.kylin.job.tools.LZOSupportnessChecker;
+import org.apache.kylin.metadata.model.*;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author George Song (ysong1)
@@ -61,28 +69,41 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(CreateHTableJob.class);
 
+    public static final int MAX_REGION = 1000;
+
+    CubeInstance cube = null;
+    CubeDesc cubeDesc = null;
+    String segmentName = null;
+    KylinConfig kylinConfig;
+
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
         options.addOption(OPTION_CUBE_NAME);
+        options.addOption(OPTION_SEGMENT_NAME);
         options.addOption(OPTION_PARTITION_FILE_PATH);
         options.addOption(OPTION_HTABLE_NAME);
+        options.addOption(OPTION_STATISTICS_ENABLED);
+        options.addOption(OPTION_STATISTICS_OUTPUT);
         parseOptions(options, args);
 
         Path partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
+        boolean statistics_enabled = Boolean.parseBoolean(getOptionValue(OPTION_STATISTICS_ENABLED));
+        Path statisticsFilePath = new Path(getOptionValue(OPTION_STATISTICS_OUTPUT), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
 
         String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeMgr = CubeManager.getInstance(config);
-        CubeInstance cube = cubeMgr.getCube(cubeName);
-        CubeDesc cubeDesc = cube.getDescriptor();
+        kylinConfig = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
+        cube = cubeMgr.getCube(cubeName);
+        cubeDesc = cube.getDescriptor();
+        segmentName = getOptionValue(OPTION_SEGMENT_NAME);
 
         String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
         HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
         // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
-        tableDesc.setValue(IRealizationConstants.HTableTag, config.getMetadataUrlPrefix());
+        tableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
 
         Configuration conf = HBaseConfiguration.create(getConf());
         HBaseAdmin admin = new HBaseAdmin(conf);
@@ -110,7 +131,12 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 tableDesc.addFamily(cf);
             }
 
-            byte[][] splitKeys = getSplits(conf, partitionFilePath);
+            byte[][] splitKeys;
+            if (statistics_enabled) {
+                splitKeys = getSplitsFromCuboidStatistics(conf, statisticsFilePath);
+            } else {
+                splitKeys = getSplits(conf, partitionFilePath);
+            }
 
             if (admin.tableExists(tableName)) {
                 // admin.disableTable(tableName);
@@ -161,11 +187,140 @@ public class CreateHTableJob extends AbstractHadoopJob {
         logger.info((rowkeyList.size() + 1) + " regions");
         logger.info(rowkeyList.size() + " splits");
         for (byte[] split : rowkeyList) {
-            System.out.println(StringUtils.byteToHexString(split));
+            logger.info(StringUtils.byteToHexString(split));
         }
 
         byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
         return retValue.length == 0 ? null : retValue;
+    }
+
+
+    @SuppressWarnings("deprecation")
+    protected byte[][] getSplitsFromCuboidStatistics(Configuration conf, Path statisticsFilePath) throws IOException {
+
+        List<Integer> rowkeyColumnSize = Lists.newArrayList();
+        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+        List<TblColRef> columnList = baseCuboid.getColumns();
+
+        for (int i = 0; i < columnList.size(); i++) {
+            logger.info("Rowkey column " + i + " length " + cubeSegment.getColumnLength(columnList.get(i)));
+            rowkeyColumnSize.add(cubeSegment.getColumnLength(columnList.get(i)));
+        }
+
+        DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
+        int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.name());
+
+        logger.info("Chosen cut for htable is " + cut + "GB");
+
+        Map<Long, Long> cuboidSizeMap = Maps.newHashMap();
+        long totalSizeInM = 0;
+
+        SequenceFile.Reader reader = null;
+
+        FileSystem fs = statisticsFilePath.getFileSystem(conf);
+        if (fs.exists(statisticsFilePath) == false) {
+            System.err.println("Path " + statisticsFilePath + " not found, no region split, HTable will be one region");
+            return null;
+        }
+
+        try {
+            reader = new SequenceFile.Reader(fs, statisticsFilePath, conf);
+            LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+            LongWritable value = (LongWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+            while (reader.next(key, value)) {
+                cuboidSizeMap.put(key.get(), value.get());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            IOUtils.closeStream(reader);
+        }
+
+        List<Long> allCuboids = Lists.newArrayList();
+        allCuboids.addAll(cuboidSizeMap.keySet());
+        Collections.sort(allCuboids);
+
+        for (long i : allCuboids) {
+            long cuboidSize = estimateCuboidStorageSize(i, cuboidSizeMap.get(i), baseCuboidId, rowkeyColumnSize);
+            cuboidSizeMap.put(i, cuboidSize);
+            totalSizeInM += cuboidSize;
+        }
+
+        int nRegion = Math.round((float) totalSizeInM / ((float) cut * 1024l));
+        nRegion = Math.max(1, nRegion);
+        nRegion = Math.min(MAX_REGION, nRegion);
+
+        int mbPerRegion = (int) (totalSizeInM / (nRegion));
+        mbPerRegion = Math.max(1, mbPerRegion);
+
+        logger.info("Total size " + totalSizeInM + "M");
+        logger.info(nRegion + " regions");
+        logger.info(mbPerRegion + " MB per region");
+
+        List<Long> regionSplit = Lists.newArrayList();
+
+        long size = 0;
+        int regionIndex = 0;
+        for (int i = 0; i < allCuboids.size(); i++) {
+            long cuboidId = allCuboids.get(i);
+            size += cuboidSizeMap.get(cuboidId);
+            if (size >= mbPerRegion && i != (allCuboids.size() - 1)) {
+                // if the size is bigger than threshold and this is not the last cuboid
+                regionSplit.add(cuboidId);
+                logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboid to " + cuboidId);
+                size = 0;
+                regionIndex++;
+            }
+        }
+
+
+        byte[][] result = new byte[regionSplit.size()][];
+        for (int i = 0; i < regionSplit.size(); i++) {
+            result[i] = Bytes.toBytes(regionSplit.get(i));
+        }
+
+        return result;
+    }
+
+    /**
+     * Estimate the cuboid's size
+     *
+     * @param cuboidId
+     * @param rowCount
+     * @return the cuboid size in M bytes
+     */
+    private long estimateCuboidStorageSize(long cuboidId, long rowCount, long baseCuboidId, List<Integer> rowKeyColumnLength) {
+
+        int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
+
+        long mask = Long.highestOneBit(baseCuboidId);
+        long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
+        for (int i = 0; i < parentCuboidIdActualLength; i++) {
+            if ((mask & cuboidId) > 0) {
+                bytesLength += rowKeyColumnLength.get(i); //colIO.getColumnLength(columnList.get(i));
+            }
+            mask = mask >> 1;
+        }
+
+        // add the measure length
+        int space = 0;
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            DataType returnType = measureDesc.getFunction().getReturnDataType();
+            if (returnType.isHLLC()) {
+                // for HLL, it will be compressed when export to bytes
+                space += returnType.getSpaceEstimate() * 0.75;
+            } else {
+                space += returnType.getSpaceEstimate();
+            }
+        }
+        bytesLength += space;
+
+        logger.info("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength + " bytes.");
+        logger.info("Cuboid " + cuboidId + " total size is " + (bytesLength * rowCount / (1024L * 1024L)) + "M.");
+        return bytesLength * rowCount / (1024L * 1024L);
     }
 
     public static void main(String[] args) throws Exception {

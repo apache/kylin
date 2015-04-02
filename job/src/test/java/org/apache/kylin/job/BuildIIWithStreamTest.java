@@ -221,6 +221,7 @@ public class BuildIIWithStreamTest {
             queue.put(parse(reader.getRow()));
             count++;
         }
+        reader.close();
         logger.info("total record count:" + count + " htable:" + segment.getStorageLocationIdentifier());
         queue.put(Stream.EOF);
         final Future<?> future = executorService.submit(streamBuilder);

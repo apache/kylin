@@ -136,7 +136,7 @@ public class CubeSizeEstimationCLI {
                                  // cardinality numbers
     }
 
-    private static int getMeasureSpace(CubeDesc cubeDesc) {
+    public static int getMeasureSpace(CubeDesc cubeDesc) {
         int space = 0;
         for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
             DataType returnType = measureDesc.getFunction().getReturnDataType();

@@ -33,17 +33,8 @@
  */
 package org.apache.kylin.streaming.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.collect.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.io.LongWritable;
@@ -64,22 +55,14 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 import org.apache.kylin.storage.cube.CubeGridTable;
-import org.apache.kylin.storage.gridtable.GTBuilder;
-import org.apache.kylin.storage.gridtable.GTInfo;
-import org.apache.kylin.storage.gridtable.GTRecord;
-import org.apache.kylin.storage.gridtable.GTScanRequest;
-import org.apache.kylin.storage.gridtable.GridTable;
-import org.apache.kylin.storage.gridtable.IGTScanner;
+import org.apache.kylin.storage.gridtable.*;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Created by shaoshi on 3/12/2015.
@@ -92,7 +75,7 @@ public class CubeStreamBuilder {
     private CubeDesc desc = null;
     private CuboidScheduler cuboidScheduler = null;
     private List<List<String>> table = null;
-	private Map<TblColRef, Dictionary> dictionaryMap = null;
+    private Map<TblColRef, Dictionary<?>> dictionaryMap = null;
     private CubeInstance cube;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
     private MeasureCodec measureCodec;
@@ -104,8 +87,8 @@ public class CubeStreamBuilder {
 
     private Map<Long, GridTable> generatedCuboids; // key: cuboid id; value: grid table of the cuboid
 
-    public CubeStreamBuilder(List<List<String>> table, CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
-        this.table = table;
+    public CubeStreamBuilder(CubeInstance cube, boolean needBuildDictionary, Map<TblColRef, Dictionary<?>> dictionaryMap, Map<Long, GridTable> generatedCuboids) {
+
         this.cube = cube;
         this.desc = cube.getDescriptor();
         this.cuboidScheduler = new CuboidScheduler(desc);
@@ -140,7 +123,8 @@ public class CubeStreamBuilder {
             throw new IllegalArgumentException();
     }
 
-    public void build() {
+    public void build(List<List<String>> table) {
+        this.table = table;
         long startTime = System.currentTimeMillis();
         generatedCuboids.clear();
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
@@ -284,7 +268,7 @@ public class CubeStreamBuilder {
     }
 
     private Pair<BitSet, BitSet> getDimensionAndMetricColumBitSet(long cuboidId) {
-        BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
+        BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
         BitSet dimension = new BitSet();
         dimension.set(0, bitSet.cardinality());
         BitSet metrics = new BitSet();
@@ -340,7 +324,7 @@ public class CubeStreamBuilder {
         return values;
     }
 
-    private void buildDictionary(List<List<String>> table, CubeDesc desc, Map<TblColRef, Dictionary> dictionaryMap) {
+    private void buildDictionary(List<List<String>> table, CubeDesc desc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
 
         List<TblColRef> dimColumns = desc.listDimensionColumnsExcludingDerived();
@@ -359,7 +343,7 @@ public class CubeStreamBuilder {
                         @Nullable
                         @Override
                         public byte[] apply(String input) {
-                            if(input == null)
+                            if (input == null)
                                 return null;
                             return input.getBytes();
                         }

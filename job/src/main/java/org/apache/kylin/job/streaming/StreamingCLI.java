@@ -48,17 +48,19 @@ public class StreamingCLI {
 
     public static void main(String[] args) {
         try {
-            if (args.length < 2) {
+            if (args.length != 3) {
                 printArgsError(args);
                 return;
             }
             if (args[0].equals("start")) {
                 String kafkaConfName = args[1];
-                StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).start(kafkaConfName, 0);
+                int partition = Integer.parseInt(args[2]);
+                StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).start(kafkaConfName, partition);
             } else {
                 printArgsError(args);
             }
         } catch (Exception e) {
+            printArgsError(args);
             logger.error("error start streaming", e);
             System.exit(-1);
         }
