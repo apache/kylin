@@ -10,6 +10,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -46,7 +47,6 @@ import java.util.Map;
 public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ImmutableBytesWritable, Text> {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCuboidMapper.class);
-    private String cubeName;
     private CubeInstance cube;
     private CubeDesc cubeDesc;
     private CubeSegment cubeSegment;
@@ -55,8 +55,6 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
     private int counter;
 
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-    private Object[] measures;
-    private MeasureCodec measureCodec;
 
     private List<List<String>> table;
 
@@ -67,16 +65,13 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
         Configuration conf = context.getConfiguration();
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
-        cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
+        String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
         String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
         cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         mapperTaskId = context.getTaskAttemptID().getTaskID().getId();
-
-        measures = new Object[cubeDesc.getMeasures().size()];
-        measureCodec = new MeasureCodec(cubeDesc.getMeasures());
 
         table = Lists.newArrayList();
     }
@@ -126,16 +121,19 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
         ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
         Text outputValue = new Text();
         int offSet;
-        RowKeyColumnIO colIO = new RowKeyColumnIO(this.cubeSegment);
         for (Long cuboidId : allCuboids) {
             int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
             Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
             for (TblColRef column : cuboid.getColumns()) {
-                bytesLength += colIO.getColumnLength(column);
+                bytesLength += cubeSegment.getColumnLength(column);
             }
 
             // output cuboids;
             int dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
+
+            BitSet measureColumns = new BitSet();
+            measureColumns.set(dimensions, dimensions + cubeDesc.getMeasures().size());
+
             long cuboidRowCount = 0;
             byte[] keyBuf = new byte[bytesLength];
             System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
@@ -151,21 +149,11 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
                     offSet += record.get(x).length();
                 }
 
-                //TODO use GTRecord.exportColumnBlock to gain better performance
-
-                /*
-                for (int i = 0; i < measures.length; i++) {
-                    valueBuf.put(record.get(dimensions + i).array());
-                }
-
-                */
-                Object[] values = record.getValues();
-                System.arraycopy(values, dimensions, measures, 0, measures.length);
-
+                //output measures
                 valueBuf.clear();
-                measureCodec.encode(measures, valueBuf);
+                record.exportColumns(measureColumns, valueBuf);
 
-                outputKey.set(keyBuf, 0, offSet); // key is cuboid-id + rowkey bytes
+                outputKey.set(keyBuf, 0, offSet);
                 outputValue.set(valueBuf.array(), 0, valueBuf.position());
                 context.write(outputKey, outputValue);
             }
