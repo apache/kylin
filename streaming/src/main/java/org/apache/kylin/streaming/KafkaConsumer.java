@@ -129,7 +129,7 @@ public abstract class KafkaConsumer implements Runnable {
 
                 if (consumeMsgCount == consumeMsgCountAtBeginning)//nothing this round
                 {
-                    Thread.sleep(5000);
+                    Thread.sleep(30000);
                 }
             }
             getStreamQueue().put(Stream.EOF);
