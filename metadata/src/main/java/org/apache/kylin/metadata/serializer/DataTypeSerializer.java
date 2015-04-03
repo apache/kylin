@@ -53,7 +53,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
     
     public static DataTypeSerializer<?> create(DataType type) {
         if (type.isHLLC()) {
-            return new HLLCSerializer(type.getPrecision());
+            return new HLLCSerializer(type);
         }
 
         Class<?> clz = implementations.get(type.getName());
@@ -61,7 +61,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
             throw new RuntimeException("No MeasureSerializer for type " + type);
 
         try {
-            return (DataTypeSerializer<?>) clz.newInstance();
+            return (DataTypeSerializer<?>) clz.getConstructor(DataType.class).newInstance(type);
         } catch (Exception e) {
             throw new RuntimeException(e); // never happen
         }
@@ -69,6 +69,9 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
     
     /** peek into buffer and return the length of serialization */
     abstract public int peekLength(ByteBuffer in);
+    
+    /** return the max number of bytes to the longest serialization */
+    abstract public int maxLength();
     
     /** convert from String to obj (string often come as byte[] in mapred) */
     abstract public T valueOf(byte[] value);

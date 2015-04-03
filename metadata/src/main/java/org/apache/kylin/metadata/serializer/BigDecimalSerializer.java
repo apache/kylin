@@ -24,16 +24,28 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.model.DataType;
 
 /**
  * @author yangli9
  * 
  */
 public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
+    
+    final DataType type;
+    final int maxLength;
+    
+    public BigDecimalSerializer(DataType type) {
+        this.type = type;
+        // see serialize(): 1 byte scale, 1 byte length, assume every 2 digits takes 1 byte
+        this.maxLength = 1 + 1 + (type.getPrecision() + 1) / 2;
+    }
 
     @Override
     public void serialize(BigDecimal value, ByteBuffer out) {
         byte[] bytes = value.unscaledValue().toByteArray();
+        if (bytes.length + 2 > maxLength)
+            throw new IllegalArgumentException("'" + value + "' exceeds the expected length for type " + type);
 
         BytesUtil.writeVInt(value.scale(), out);
         BytesUtil.writeVInt(bytes.length, out);
@@ -63,6 +75,11 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
         
         in.position(mark);
         return len;
+    }
+    
+    @Override
+    public int maxLength() {
+        return maxLength;
     }
 
     @Override

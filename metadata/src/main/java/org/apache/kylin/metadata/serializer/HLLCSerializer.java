@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.metadata.model.DataType;
 
 /**
  * @author yangli9
@@ -31,8 +32,8 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
 
     HyperLogLogPlusCounter current;
 
-    public HLLCSerializer(int p) {
-        current = new HyperLogLogPlusCounter(p);
+    public HLLCSerializer(DataType type) {
+        current = new HyperLogLogPlusCounter(type.getPrecision());
     }
 
     @Override
@@ -57,6 +58,11 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
     @Override
     public int peekLength(ByteBuffer in) {
         return current.peekLength(in);
+    }
+    
+    @Override
+    public int maxLength() {
+        return current.maxLength();
     }
 
     @Override

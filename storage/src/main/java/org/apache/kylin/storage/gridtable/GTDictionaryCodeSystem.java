@@ -162,6 +162,11 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
         public int peekLength(ByteBuffer in) {
             return dictionary.getSizeOfId();
         }
+        
+        @Override
+        public int maxLength() {
+            return dictionary.getSizeOfId();
+        }
 
         @Override
         public Object valueOf(byte[] value) {
