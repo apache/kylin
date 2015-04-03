@@ -154,8 +154,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     private static String NULL_STR;
     {
         try {
-            // a special placeholder to indicate a NULL; 0, 1, 9, 127 are a few invisible ASCII characters
-            NULL_STR = new String(new byte[] { 0, 1, 9, 127 }, "ISO-8859-1");
+            // a special placeholder to indicate a NULL; 0, 9, 127, 255 are a few invisible ASCII characters
+            NULL_STR = new String(new byte[] { 0, 9, 127, (byte) 255 }, "ISO-8859-1");
         } catch (UnsupportedEncodingException e) {
             // does not happen
         }
