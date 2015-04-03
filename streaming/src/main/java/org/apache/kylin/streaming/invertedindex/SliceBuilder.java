@@ -53,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -80,12 +81,12 @@ public final class SliceBuilder {
                 return streamParser.parse(input);
             }
         });
-        final Map<Integer, Dictionary<?>> dictionaryMap = buildDictionary(table, iiDesc);
+        final Dictionary<?>[] dictionaryMap = buildDictionary(table, iiDesc);
         TableRecordInfo tableRecordInfo = new TableRecordInfo(iiDesc, dictionaryMap);
         return build(table, sliceBuilder, tableRecordInfo, dictionaryMap);
     }
 
-    private Map<Integer, Dictionary<?>> buildDictionary(List<List<String>> table, IIDesc desc) {
+    private Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) {
         HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
         final List<TblColRef> allColumns = desc.listAllColumns();
         for (List<String> row : table) {
@@ -97,7 +98,7 @@ public final class SliceBuilder {
             }
         }
 
-        Map<Integer, Dictionary<?>> result = Maps.newHashMap();
+        Dictionary<?>[] result = new Dictionary<?>[allColumns.size()];
         for (TblColRef tblColRef : valueMap.keySet()) {
             final Collection<byte[]> bytes = Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
                 @Nullable
@@ -108,12 +109,12 @@ public final class SliceBuilder {
             });
             logger.info("build dictionary for column " + tblColRef);
             final Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), bytes);
-            result.put(desc.findColumn(tblColRef), dict);
+            result[desc.findColumn(tblColRef)] = dict;
         }
         return result;
     }
 
-    private Slice build(List<List<String>> table, BatchSliceBuilder sliceBuilder, final TableRecordInfo tableRecordInfo, Map<Integer, Dictionary<?>> localDictionary) {
+    private Slice build(List<List<String>> table, BatchSliceBuilder sliceBuilder, final TableRecordInfo tableRecordInfo, Dictionary<?>[] localDictionary) {
         final Slice slice = sliceBuilder.build(tableRecordInfo.getDigest(), Lists.transform(table, new Function<List<String>, TableRecord>() {
             @Nullable
             @Override

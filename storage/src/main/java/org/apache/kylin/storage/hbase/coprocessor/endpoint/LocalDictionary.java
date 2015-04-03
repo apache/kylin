@@ -14,10 +14,10 @@ import java.util.Map;
 public class LocalDictionary implements IDictionaryAware {
 
     private CoprocessorRowType type;
-    private Map<Integer, Dictionary<?>> colDictMap;
+    private Dictionary<?>[] colDictMap;
     private TableRecordInfoDigest recordInfo;
 
-    public LocalDictionary(Map<Integer, Dictionary<?>> colDictMap, CoprocessorRowType type, TableRecordInfoDigest recordInfo) {
+    public LocalDictionary(Dictionary<?>[] colDictMap, CoprocessorRowType type, TableRecordInfoDigest recordInfo) {
         this.colDictMap = colDictMap;
         this.type = type;
         this.recordInfo = recordInfo;
@@ -30,6 +30,6 @@ public class LocalDictionary implements IDictionaryAware {
 
     @Override
     public Dictionary<?> getDictionary(TblColRef col) {
-        return this.colDictMap.get(type.getColIndexByTblColRef(col));
+        return this.colDictMap[type.getColIndexByTblColRef(col)];
     }
 }
