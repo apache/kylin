@@ -41,8 +41,10 @@ KylinApp
             dimensionFilter: '', measureFilter: ''};
 
         $scope.list = function (offset, limit) {
+            var defer = $q.defer();
             if(!$scope.projectModel.projects.length){
-                return [];
+                defer.resolve([]);
+                return defer.promise;
             }
             offset = (!!offset) ? offset : 0;
             limit = (!!limit) ? limit : 20;
@@ -55,11 +57,10 @@ KylinApp
 
             $scope.loading = true;
 
-            var defer = $q.defer();
             return CubeList.list(queryParam).then(function(resp){
                 $scope.loading = false;
                 defer.resolve(resp);
-                defer.promise;
+                return defer.promise;
             });
         };
 
