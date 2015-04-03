@@ -136,6 +136,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
+        byte[] recordBuffer = new byte[recordInfo.getByteFormLen()];
         for (Slice slice : slices) {
 
             //TODO localdict
@@ -152,10 +153,10 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
                 final RawTableRecord rawTableRecord = iterator.next();
-                byte[] data = decodeWithDictionary(rawTableRecord, localDictionaries, recordInfo, buffer, rowKeyColumnIO, type);
-                CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
+                decodeWithDictionary(recordBuffer, rawTableRecord, localDictionaries, recordInfo, buffer, rowKeyColumnIO, type);
+                CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(recordBuffer);
                 MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-                aggregators.aggregate(bufs, data);
+                aggregators.aggregate(bufs, recordBuffer);
                 aggCache.checkMemoryUsage();
             }
         }
@@ -171,21 +172,20 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         return responseBuilder.build();
     }
 
-    private byte[] decodeWithDictionary(RawTableRecord encodedRecord, Map<Integer, Dictionary<?>> localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
-        byte[] result = new byte[digest.getByteFormLen()];
-        for (int i = 0; i < coprocessorRowType.getColumnCount(); i++) {
-            final TblColRef column = coprocessorRowType.columns[i];
-            if (digest.isMetrics(i)) {
-                final ImmutableBytesWritable bytes = new ImmutableBytesWritable();
-                encodedRecord.getValueBytes(i, bytes);
-                System.arraycopy(bytes.get(), bytes.getOffset(), buffer, 0, bytes.getLength());
-                rowKeyColumnIO.writeColumn(column, buffer, bytes.getLength(), Dictionary.NULL, result, digest.offset(i));
+    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Map<Integer, Dictionary<?>> localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
+        final TblColRef[] columns = coprocessorRowType.columns;
+        final int columnSize = columns.length;
+        final boolean[] isMetric = digest.isMetrics();
+        for (int i = 0; i < columnSize; i++) {
+            final TblColRef column = columns[i];
+            if (isMetric[i]) {
+                System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
+                rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
             } else {
                 final int length = localDictionaries.get(i).getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
-                rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, result, digest.offset(i));
+                rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, recordBuffer, digest.offset(i));
             }
         }
-        return result;
     }
 
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
@@ -193,6 +193,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
+        byte[] recordBuffer = new byte[recordInfo.getByteFormLen()];
         for (Slice slice : slices) {
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
             ConciseSet result = null;
@@ -203,8 +204,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
                 final RawTableRecord rawTableRecord = iterator.next();
-                byte[] data = decodeWithDictionary(rawTableRecord, slice.getLocalDictionaries(), recordInfo, buffer, rowKeyColumnIO, type);
-                IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(data));
+                decodeWithDictionary(recordBuffer, rawTableRecord, slice.getLocalDictionaries(), recordInfo, buffer, rowKeyColumnIO, type);
+                IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(recordBuffer));
                 responseBuilder.addRows(rowBuilder.build());
             }
         }
