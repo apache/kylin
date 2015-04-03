@@ -54,7 +54,7 @@ KylinApp.constant('cubeConfig', {
         measureExpression: 'SUM',
         measureParamType: 'column',
         measureDataType: {name: 'BIGINT', value: 'bigint'},
-        distinctDataType: {name: 'Error Rate < 2.44%', value: 'hllc14'},
+        distinctDataType: {name: 'Error Rate < 4.88%', value: 'hllc12'},
         cubeCapacity: 'MEDIUM',
         queryPriority: {name: 'NORMAL', value: 50},
         cubePartitionType: 'APPEND'
