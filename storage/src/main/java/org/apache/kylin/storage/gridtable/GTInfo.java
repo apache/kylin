@@ -15,7 +15,7 @@ public class GTInfo {
     }
 
     IGTCodeSystem codeSystem;
-    int maxRecordLength = 1024; // column length can vary
+    int maxRecordLength = 2048; // column length can vary
 
     // column schema
     int nColumns;
