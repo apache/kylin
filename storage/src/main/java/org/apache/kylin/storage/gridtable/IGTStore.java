@@ -6,7 +6,6 @@ import java.util.BitSet;
 import java.util.Iterator;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.metadata.filter.TupleFilter;
 
 public interface IGTStore {
     
@@ -14,11 +13,11 @@ public interface IGTStore {
     
     public String getStorageDescription();
     
-    public IGTStoreWriter rebuild(int shard);
+    public IGTStoreWriter rebuild(int shard) throws IOException;
     
-    public IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast);
+    public IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast) throws IOException;
     
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, TupleFilter filterPushDown);
+    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException;
     
     public interface IGTStoreWriter extends Closeable {
         void write(GTRowBlock block) throws IOException;

@@ -44,6 +44,7 @@
         <hive.version>0.14.0</hive.version>
         <hive-hcatalog.version>0.14.0</hive-hcatalog.version>
         <hbase-hadoop2.version>0.98.8-hadoop2</hbase-hadoop2.version>
+        <kafka.version>0.8.1</kafka.version>
 
         <!-- Dependency versions -->
         <antlr.version>3.4</antlr.version>

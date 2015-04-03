@@ -2,7 +2,7 @@ package org.apache.kylin.storage.gridtable;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -36,14 +36,13 @@ public class GTUtil {
     }
 
     public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, GTInfo info, //
-            Map<TblColRef, Integer> colMapping, //
-            Set<TblColRef> unevaluatableColumnCollector) {
+            List<TblColRef> colMapping, Set<TblColRef> unevaluatableColumnCollector) {
         return convertFilter(rootFilter, info, colMapping, true, unevaluatableColumnCollector);
     }
 
     // converts TblColRef to GridTable column, encode constants, drop unEvaluatable parts
     private static TupleFilter convertFilter(TupleFilter rootFilter, final GTInfo info, //
-            final Map<TblColRef, Integer> colMapping, final boolean encodeConstants, //
+            final List<TblColRef> colMapping, final boolean encodeConstants, //
             final Set<TblColRef> unevaluatableColumnCollector) {
 
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new TupleFilterSerializer.Decorator() {
@@ -69,7 +68,7 @@ public class GTUtil {
                 // map to column onto grid table
                 if (colMapping != null && filter instanceof ColumnTupleFilter) {
                     ColumnTupleFilter colFilter = (ColumnTupleFilter) filter;
-                    int gtColIdx = colMapping.get(colFilter.getColumn());
+                    int gtColIdx = colMapping.indexOf(colFilter.getColumn());
                     return new ColumnTupleFilter(info.colRef(gtColIdx));
                 }
 
@@ -99,7 +98,7 @@ public class GTUtil {
                 newCompareFilter.addChild(new ColumnTupleFilter(externalCol));
 
                 Object firstValue = constValues.iterator().next();
-                int col = colMapping == null ? externalCol.getColumn().getZeroBasedIndex() : colMapping.get(externalCol);
+                int col = colMapping == null ? externalCol.getColumn().getZeroBasedIndex() : colMapping.indexOf(externalCol);
 
                 TupleFilter result;
                 ByteArray code;

@@ -12,22 +12,22 @@ public class GridTable {
         this.store = store;
     }
 
-    public GTBuilder rebuild() {
+    public GTBuilder rebuild() throws IOException {
         assert info.isShardingEnabled() == false;
         return rebuild(-1);
     }
 
-    public GTBuilder rebuild(int shard) {
+    public GTBuilder rebuild(int shard) throws IOException {
         assert shard < info.nShards;
         return new GTBuilder(info, shard, store);
     }
 
-    public GTBuilder append() {
+    public GTBuilder append() throws IOException {
         assert info.isShardingEnabled() == false;
         return append(-1);
     }
 
-    public GTBuilder append(int shard) {
+    public GTBuilder append(int shard) throws IOException {
         return new GTBuilder(info, shard, store, true);
     }
 

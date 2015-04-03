@@ -82,7 +82,7 @@ public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
             results.clear();
             try {
                 if (hasMore) {
-                    hasMore = regionScanner.next(results);
+                    hasMore = regionScanner.nextRaw(results);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

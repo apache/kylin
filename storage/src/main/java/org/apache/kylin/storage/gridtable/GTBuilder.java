@@ -18,11 +18,11 @@ public class GTBuilder implements Closeable, Flushable {
     private int writtenRowCount;
     private int writtenRowBlockCount;
 
-    GTBuilder(GTInfo info, int shard, IGTStore store) {
+    GTBuilder(GTInfo info, int shard, IGTStore store) throws IOException {
         this(info, shard, store, false);
     }
 
-    GTBuilder(GTInfo info, int shard, IGTStore store, boolean append) {
+    GTBuilder(GTInfo info, int shard, IGTStore store, boolean append) throws IOException {
         this.info = info;
 
         block = GTRowBlock.allocate(info);

@@ -43,7 +43,7 @@
     
     <property>
       <name>mapreduce.application.classpath</name>
-      <value>$HADOOP_CONF_DIR,/usr/hdp/current/hive-client/conf/,/usr/hdp/${hdp.version}/hive/lib/hive-metastore.jar,/usr/hdp/${hdp.version}/hive/lib/hive-exec.jar,/usr/hdp/${hdp.version}/hive-hcatalog/share/hcatalog/*,$PWD/mr-framework/hadoop/share/hadoop/mapreduce/*,$PWD/mr-framework/hadoop/share/hadoop/mapreduce/lib/*,$PWD/mr-framework/hadoop/share/hadoop/common/*,$PWD/mr-framework/hadoop/share/hadoop/common/lib/*,$PWD/mr-framework/hadoop/share/hadoop/yarn/*,$PWD/mr-framework/hadoop/share/hadoop/yarn/lib/*,$PWD/mr-framework/hadoop/share/hadoop/hdfs/*,$PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*,/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar,/etc/hadoop/conf/secure</value>
+      <value>/tmp/kylin/*,$HADOOP_CONF_DIR,/usr/hdp/current/hive-client/conf/,/usr/hdp/${hdp.version}/hive/lib/hive-metastore.jar,/usr/hdp/${hdp.version}/hive/lib/hive-exec.jar,/usr/hdp/${hdp.version}/hive-hcatalog/share/hcatalog/*,$PWD/mr-framework/hadoop/share/hadoop/mapreduce/*,$PWD/mr-framework/hadoop/share/hadoop/mapreduce/lib/*,$PWD/mr-framework/hadoop/share/hadoop/common/*,$PWD/mr-framework/hadoop/share/hadoop/common/lib/*,$PWD/mr-framework/hadoop/share/hadoop/yarn/*,$PWD/mr-framework/hadoop/share/hadoop/yarn/lib/*,$PWD/mr-framework/hadoop/share/hadoop/hdfs/*,$PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*,/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar,/etc/hadoop/conf/secure</value>
     </property>
     
     <property>

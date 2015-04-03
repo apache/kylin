@@ -15,6 +15,9 @@ public interface IGTCodeSystem {
     /** Return the length of code starting at the specified buffer, buffer position must not change after return */
     int codeLength(int col, ByteBuffer buf);
     
+    /** Return the max possible length of a column */
+    int maxCodeLength(int col);
+    
     /**
      * Encode a value into code.
      * 
