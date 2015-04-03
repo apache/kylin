@@ -12,7 +12,7 @@ In such cases, assuming you're on the hadoop CLI(or sandbox) where you deployed 
 
 	mkdir ~/meta_dump
 
-	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar com.kylinolap.common.persistence.ResourceTool  copy ${KYLIN_HOME}/conf/kylin.properties ~/meta_dump 
+	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar org.apache.kylin.common.persistence.ResourceTool  copy ${KYLIN_HOME}/conf/kylin.properties ~/meta_dump 
 
 to dump your metadata to your local folder ~/meta_dump.
 
@@ -22,10 +22,10 @@ In case you find your metadata store messed up, and you want to restore to a pre
 
 first clean up the metadata store:
 
-	hbase  org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar com.kylinolap.common.persistence.ResourceTool  reset  
+	hbase  org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar org.apache.kylin.common.persistence.ResourceTool  reset  
 
 then upload the backup metadata in ~/meta_dump to Kylin's metadata store:
 
-	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar com.kylinolap.common.persistence.ResourceTool  copy ~/meta_dump ${KYLIN_HOME}/conf/kylin.properties  
+	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar org.apache.kylin.common.persistence.ResourceTool  copy ~/meta_dump ${KYLIN_HOME}/conf/kylin.properties  
 
 
