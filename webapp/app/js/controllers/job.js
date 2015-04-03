@@ -49,8 +49,10 @@ KylinApp
         });
 
         $scope.list = function (offset, limit) {
+            var defer = $q.defer();
             if(!$scope.projectModel.projects.length){
-                return [];
+                defer.resolve([]);
+              return  defer.promise;
             }
             offset = (!!offset) ? offset : 0;
             var selectedJob = null;
@@ -58,7 +60,6 @@ KylinApp
                 selectedJob = $scope.state.selectedJob;
             }
 
-            var defer = $q.defer();
             var statusIds = [];
             angular.forEach($scope.status, function (statusObj, index) {
                 statusIds.push(statusObj.value);
