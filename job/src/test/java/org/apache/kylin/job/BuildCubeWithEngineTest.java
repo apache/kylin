@@ -157,7 +157,7 @@ public class BuildCubeWithEngineTest {
     }
 
     private void assertJobSucceed(String jobId) {
-        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(jobId).getState());
+        assertEquals("The job '" + jobId + "' is failed.", ExecutableState.SUCCEED, jobService.getOutput(jobId).getState());
     }
 
     private class TestCallable implements Callable<List<String>> {

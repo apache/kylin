@@ -2,7 +2,7 @@
 
 Kylin provides a script for you to create a sample Cube; the script will also create three sample hive tables:
 
-1. Run ${KYLIN_HOME}/bin/sample.sh
+1. Run ${KYLIN_HOME}/bin/sample.sh ; Restart kylin server to flush the caches;
 2. Logon Kylin web, select project "learn_kylin";
 3. Select the sample cube "kylin_sales_cube", click "Actions" -> "Build", pick up a date later than 2014-01-01 (to cover all 10000 sample records);
 4. Check the build progress in "Jobs" tab, until 100%;

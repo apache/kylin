@@ -6,7 +6,7 @@
     "join" : {
       "type" : "inner",
       "primary_key" : [ "CAL_DT" ],
-      "foreign_key" : [ "CAL_DT" ]
+      "foreign_key" : [ "PART_DT" ]
     }
   }, {
     "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
@@ -38,7 +38,7 @@
   "fact_table" : "DEFAULT.KYLIN_SALES",
   "filter_condition" : null,
   "partition_desc" : {
-    "partition_date_column" : "DEFAULT.KYLIN_SALES.CAL_DT",
+    "partition_date_column" : "DEFAULT.KYLIN_SALES.PART_DT",
     "partition_date_start" : 0,
     "partition_type" : "APPEND"
   }
