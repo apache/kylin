@@ -294,7 +294,12 @@ public class MetadataManager {
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
-            reloadDataModelDescAt(path);
+            try {
+                reloadDataModelDescAt(path);
+            } catch (IllegalStateException e) {
+                logger.error("Error to load DataModel at " + path, e);
+                continue;
+            }
         }
 
         logger.debug("Loaded " + dataModelDescMap.size() + " DataModel(s)");
