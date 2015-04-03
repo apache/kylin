@@ -21,6 +21,7 @@ package org.apache.kylin.dict.lookup;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -30,6 +31,7 @@ import org.apache.hadoop.fs.Path;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -149,6 +151,16 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         return true;
     }
 
+    private static String NULL_STR;
+    {
+        try {
+            // a special placeholder to indicate a NULL; 0, 1, 9, 127 are a few invisible ASCII characters
+            NULL_STR = new String(new byte[] { 0, 1, 9, 127 }, "ISO-8859-1");
+        } catch (UnsupportedEncodingException e) {
+            // does not happen
+        }
+    }
+
     void writeData(DataOutput out) throws IOException {
         out.writeInt(rows.size());
         if (rows.size() > 0) {
@@ -157,7 +169,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
             for (int i = 0; i < rows.size(); i++) {
                 String[] row = rows.get(i);
                 for (int j = 0; j < n; j++) {
-                    out.writeUTF(row[j]);
+                    // NULL_STR is tricky, but we don't want to break the current snapshots
+                    out.writeUTF(row[j] == null ? NULL_STR : row[j]);
                 }
             }
         }
@@ -173,6 +186,9 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
                 rows.add(row);
                 for (int j = 0; j < n; j++) {
                     row[j] = in.readUTF();
+                    // NULL_STR is tricky, but we don't want to break the current snapshots
+                    if (row[j].equals(NULL_STR))
+                        row[j] = null;
                 }
             }
         }
