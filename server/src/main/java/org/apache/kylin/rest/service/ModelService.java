@@ -49,7 +49,7 @@ public class ModelService extends BasicService {
     private AccessService accessService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<DataModelDesc> listAllModels(final String modelName, final String projectName) {
+    public List<DataModelDesc> listAllModels(final String modelName, final String projectName) throws IOException{
         List<DataModelDesc> models = null;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -72,7 +72,7 @@ public class ModelService extends BasicService {
         return filterModels;
     }
 
-    public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit, final Integer offset) {
+    public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit, final Integer offset) throws IOException{
 
         List<DataModelDesc> modelDescs;
         modelDescs = listAllModels(modelName, projectName);
@@ -110,13 +110,8 @@ public class ModelService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public DataModelDesc updateModelAndDesc(DataModelDesc desc, String newProjectName) throws IOException {
-        DataModelDesc existingModel = getMetadataManager().getDataModelDesc(desc.getName());
-        if (existingModel == null) {
-            String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-            getMetadataManager().createDataModelDesc(desc,newProjectName,owner);
-        } else {
-            getMetadataManager().updateDataModelDesc(desc);
-        }
+
+        getMetadataManager().updateDataModelDesc(desc);
         return desc;
     }
 

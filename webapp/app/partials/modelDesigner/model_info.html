@@ -43,6 +43,21 @@
                     </div>
                 </div>
             </div>
+
+            <!--Description-->
+            <div class="form-group">
+                <div class="row">
+                    <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                        <b>Description</b>
+                    </label>
+                    <div class="col-xs-12 col-sm-6">
+                        <textarea ng-if="state.mode=='edit'" class="form-control box-default"
+                                  name="comment" id="comment" ng-model="model.description"></textarea>
+                        <span ng-if="state.mode=='view'">{{model.description}}</span>
+                    </div>
+                </div>
+            </div>
+
         </ng-form>
     </div>
 

@@ -171,7 +171,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
             errorInfo+="\n"+item;
         });
         if(errors.length){
-            SweetAlert.swal('', errorInfo, 'warning');
+            SweetAlert.swal('Oops...', errorInfo, 'warning');
             return false;
         }else{
             return true;
@@ -205,9 +205,6 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
         var errors = [];
         if($scope.model.partition_desc.partition_date_column!=null&& $scope.model.partition_desc.partition_date_start==null){
             errors.push("Please indicate start date when partition date column selected.");
-        }
-        if($scope.model.partition_desc.partition_date_column==null&& $scope.model.partition_desc.partition_date_start!=null){
-            errors.push("Please select your partitoin date column.");
         }
         var errorInfo = "";
         angular.forEach(errors,function(item){

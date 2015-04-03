@@ -41,6 +41,9 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("description")
+    private String description;
+
     @JsonProperty("fact_table")
     private String factTable;
 
@@ -74,6 +77,14 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Collection<String> getAllTables() {
@@ -246,6 +257,31 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public List<String> getError() {
         return this.errors;
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        DataModelDesc modelDesc = (DataModelDesc) o;
+
+        if (!name.equals(modelDesc.name))
+            return false;
+        if (!getFactTable().equals(modelDesc.getFactTable()))
+            return false;
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = 0;
+        result = 31 * result + name.hashCode();
+        result = 31 * result + getFactTable().hashCode();
+        return result;
     }
 
     @Override

@@ -28,10 +28,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.*;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -111,6 +108,10 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
 
     public IIDesc getDescriptor() {
         return IIDescManager.getInstance(config).getIIDesc(descName);
+    }
+
+    public DataModelDesc getDataModelDesc(){
+        return this.getDescriptor().getModel();
     }
 
     public boolean isReady() {
