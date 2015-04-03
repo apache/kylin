@@ -72,6 +72,10 @@ public class TableRecordInfoDigest {
 		return isMetric[col];
 	}
 
+    public boolean[] isMetrics() {
+        return isMetric;
+    }
+
 	public int getColumnCount() {
 		return nColumns;
 	}
