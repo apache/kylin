@@ -19,7 +19,6 @@ import com.google.common.collect.Maps;
 
 public class CubeGridTable {
 
-    @SuppressWarnings("rawtypes")
     public static Map<TblColRef, Dictionary<?>> getDimensionToDictionaryMap(CubeSegment cubeSeg, long cuboidId) {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         CubeManager cubeMgr = CubeManager.getInstance(cubeSeg.getCubeInstance().getConfig());
@@ -36,7 +35,6 @@ public class CubeGridTable {
         return dictionaryMap;
     }
 
-    @SuppressWarnings("rawtypes")
     public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) {
         Map<TblColRef, Dictionary<?>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
         return newGTInfo(cubeSeg.getCubeDesc(), cuboidId, dictionaryMap);
