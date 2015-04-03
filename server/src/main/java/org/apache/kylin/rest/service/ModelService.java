@@ -109,11 +109,21 @@ public class ModelService extends BasicService {
 
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
-    public DataModelDesc updateModelAndDesc(DataModelDesc desc, String newProjectName) throws IOException {
+    public DataModelDesc updateModelAndDesc(DataModelDesc desc) throws IOException {
 
         getMetadataManager().updateDataModelDesc(desc);
         return desc;
     }
 
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    public void deleteCube(DataModelDesc desc) throws IOException {
+//        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+
+
+
+
+//        getCubeManager().dropCube(cube.getName(), true);
+//        accessService.clean(cube, true);
+    }
 }

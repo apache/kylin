@@ -24,11 +24,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.service.ModelService;
 import org.slf4j.Logger;
@@ -119,7 +121,7 @@ public class ModelController extends BasicController {
             return modelRequest;
         }
         try {
-            modelDesc =  modelService.updateModelAndDesc(modelDesc,modelRequest.getProject());
+            modelDesc =  modelService.updateModelAndDesc(modelDesc);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         }  catch (Exception e) {
@@ -138,7 +140,22 @@ public class ModelController extends BasicController {
         return modelRequest;
     }
 
-
+//    @RequestMapping(value = "/{cubeName}", method = {RequestMethod.DELETE})
+//    @ResponseBody
+//    @Metered(name = "deleteCube")
+//    public void deleteCube(@PathVariable String cubeName) {
+//        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+//        if (null == cube) {
+//            throw new NotFoundException("Cube with name " + cubeName + " not found..");
+//        }
+//
+//        try {
+//            cubeService.deleteCube(cube);
+//        } catch (Exception e) {
+//            logger.error(e.getLocalizedMessage(), e);
+//            throw new InternalErrorException("Failed to delete cube. " + " Caused by: " + e.getMessage(), e);
+//        }
+//    }
 
     private DataModelDesc deserializeDataModelDesc(ModelRequest modelRequest) {
         DataModelDesc desc = null;

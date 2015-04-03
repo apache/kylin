@@ -238,10 +238,6 @@ KylinApp
                     CubeService.drop({cubeId: cube.name}, {}, function (result) {
 
                     loadingRequest.hide();
-//                    var cubeIndex = CubeList.cubes.indexOf(cube);
-//                    if (cubeIndex > -1) {
-//                        $scope.cubes.splice(cubeIndex, 1);
-//                    }
                      CubeList.removeCube(cube);
                     SweetAlert.swal('Success!', 'Cube drop is done successfully', 'success');
 
