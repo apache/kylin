@@ -24,6 +24,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -84,7 +85,12 @@ public class BasicTest {
     @Test
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
-        logger.info("{}{}{}{}",new String[]{"2","33","333","444"});
+        ArrayList<String> x = Lists.newArrayListWithCapacity(10);
+        x.set(2,"dd");
+        for(String y : x)
+        {
+            System.out.println(y);
+        }
     }
 
     private static String time(long t) {

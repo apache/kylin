@@ -65,7 +65,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         Scan scan = new Scan();
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES);
-
         return scan;
     }
 
@@ -142,7 +141,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             //TODO localdict
             //dictionaries for fact table columns can not be determined while streaming.
             //a piece of dict coincide with each Slice, we call it "local dict"
-            final Map<Integer, Dictionary<?>> localDictionaries = slice.getLocalDictionaries();
+            final  Dictionary<?>[] localDictionaries = slice.getLocalDictionaries();
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(localDictionaries, type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
 
             ConciseSet result = null;
@@ -172,7 +171,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         return responseBuilder.build();
     }
 
-    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Map<Integer, Dictionary<?>> localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
+    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord,  Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
         final TblColRef[] columns = coprocessorRowType.columns;
         final int columnSize = columns.length;
         final boolean[] isMetric = digest.isMetrics();
@@ -182,7 +181,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
                 rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
             } else {
-                final int length = localDictionaries.get(i).getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
+                final int length = localDictionaries[i].getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
                 rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, recordBuffer, digest.offset(i));
             }
         }
