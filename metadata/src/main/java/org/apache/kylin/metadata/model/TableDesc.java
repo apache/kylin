@@ -74,6 +74,9 @@ public class TableDesc extends RootPersistentEntity {
     }
 
     public String getIdentity() {
+        if (identity == null) {
+            identity = String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
+        }
         return identity;
     }
 
@@ -157,8 +160,6 @@ public class TableDesc extends RootPersistentEntity {
                 col.init(this);
             }
         }
-
-        this.identity = String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
     }
 
     @Override
