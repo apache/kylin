@@ -73,37 +73,26 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
 
-        CoprocessorRowType type;
-        CoprocessorProjector projector;
-        EndpointAggregators aggregators;
-        CoprocessorFilter filter;
-
-        type = CoprocessorRowType.deserialize(request.getType().toByteArray());
-        projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
-        aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
-        filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
-
-        TableRecordInfoDigest tableRecordInfoDigest = aggregators.getTableRecordInfoDigest();
-
-        IIProtos.IIResponse response = null;
         RegionScanner innerScanner = null;
         HRegion region = null;
+
         try {
             region = env.getRegion();
-            innerScanner = region.getScanner(buildScan());
             region.startRegionOperation();
+            innerScanner = region.getScanner(buildScan());
 
-            synchronized (innerScanner) {
-                IIKeyValueCodec codec = new IIKeyValueCodec(tableRecordInfoDigest);
-                //TODO pass projector to codec to skip loading columns
-                Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
+            CoprocessorRowType type;
+            CoprocessorProjector projector;
+            EndpointAggregators aggregators;
+            CoprocessorFilter filter;
 
-                if (aggregators.isEmpty()) {
-                    response = getNonAggregatedResponse(slices, tableRecordInfoDigest, filter, type);
-                } else {
-                    response = getAggregatedResponse(slices, tableRecordInfoDigest, filter, type, projector, aggregators);
-                }
-            }
+            type = CoprocessorRowType.deserialize(request.getType().toByteArray());
+            projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
+            aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
+            filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
+
+            IIProtos.IIResponse response = getResponse(innerScanner, type, projector, aggregators, filter);
+            done.run(response);
         } catch (IOException ioe) {
             System.out.println(ioe.toString());
             ResponseConverter.setControllerException(controller, ioe);
@@ -118,8 +107,26 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 }
             }
         }
+    }
 
-        done.run(response);
+    public IIProtos.IIResponse getResponse(RegionScanner innerScanner, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators, CoprocessorFilter filter) {
+
+        TableRecordInfoDigest tableRecordInfoDigest = aggregators.getTableRecordInfoDigest();
+
+        IIProtos.IIResponse response;
+
+        synchronized (innerScanner) {
+            IIKeyValueCodec codec = new IIKeyValueCodec(tableRecordInfoDigest);
+            //TODO pass projector to codec to skip loading columns
+            Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
+
+            if (aggregators.isEmpty()) {
+                response = getNonAggregatedResponse(slices, tableRecordInfoDigest, filter, type);
+            } else {
+                response = getAggregatedResponse(slices, tableRecordInfoDigest, filter, type, projector, aggregators);
+            }
+        }
+        return response;
     }
 
     //TODO check current memory checking is good enough
@@ -153,7 +160,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             }
         }
 
-
         for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             CoprocessorProjector.AggrKey aggrKey = entry.getKey();
             IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
@@ -181,7 +187,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         }
         return result;
     }
-
 
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();

@@ -43,6 +43,8 @@ public class TableDesc extends RootPersistentEntity {
 
     private DatabaseDesc database = new DatabaseDesc();
 
+    private String identity = null;
+
     public ColumnDesc findColumnByName(String name) {
         //ignore the db name and table name if exists
         int lastIndexOfDot = name.lastIndexOf(".");
@@ -62,7 +64,6 @@ public class TableDesc extends RootPersistentEntity {
     public String getResourcePath() {
         return concatResourcePath(getIdentity());
     }
-    
 
     /**
      * @deprecated this is for compatible with data model v1;
@@ -71,11 +72,11 @@ public class TableDesc extends RootPersistentEntity {
     public String getResourcePathV1() {
         return concatResourcePath(name);
     }
-    
+
     public String getIdentity() {
-        return String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
+        return identity;
     }
-    
+
     public static String concatResourcePath(String tableIdentity) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + ".json";
     }
@@ -83,7 +84,7 @@ public class TableDesc extends RootPersistentEntity {
     public static String concatExdResourcePath(String tableIdentity) {
         return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableIdentity + ".json";
     }
-    
+
     // ============================================================================
 
     public String getName() {
@@ -156,13 +157,15 @@ public class TableDesc extends RootPersistentEntity {
                 col.init(this);
             }
         }
+
+        this.identity = String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
     }
 
     @Override
     public String toString() {
         return "TableDesc [database=" + getDatabase() + " name=" + name + "]";
     }
-    
+
     /** create a mockup table for unit test */
     public static TableDesc mockup(String tableName) {
         TableDesc mockup = new TableDesc();
