@@ -36,7 +36,7 @@ then
 
     export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
     export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
-    export JAVA_OPTS="-Xms2048M -Xmx2048M"
+    export JAVA_OPTS="-Xms2048M -Xmx2048M -XX:MaxPermSize=512m"
 
     hbase ${JAVA_OPTS} ${KYLIN_EXTRA_START_OPTS} \
     -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
@@ -99,7 +99,7 @@ then
         fi
 
         export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
-        export JAVA_OPTS="-Xms2048M -Xmx2048M"
+        export JAVA_OPTS="-Xms2048M -Xmx2048M -XX:MaxPermSize=512m"
 
         hbase ${JAVA_OPTS} ${KYLIN_EXTRA_START_OPTS} \
         -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \

@@ -57,8 +57,12 @@ public class RawTableRecord implements Cloneable {
         return digest.codec(col);
     }
 
-    public int length(int col) {
+    public final int length(int col) {
         return digest.length(col);
+    }
+
+    public final int offset(int col) {
+        return digest.offset(col);
     }
 
     public int getColumnCount() {
@@ -97,7 +101,7 @@ public class RawTableRecord implements Cloneable {
     }
 
     public void getValueBytes(int col, ImmutableBytesWritable bytes) {
-        bytes.set(buf, digest.offset(col), digest.length(col));
+        bytes.set(buf, offset(col), length(col));
     }
 
 

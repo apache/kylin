@@ -24,7 +24,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
+import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -70,7 +70,7 @@ public class IICreateHFileJob extends AbstractHadoopJob {
 
             String tableName = getOptionValue(OPTION_HTABLE_NAME);
             HTable htable = new HTable(HBaseConfiguration.create(getConf()), tableName);
-            HFileOutputFormat2.configureIncrementalLoad(job, htable);
+            HFileOutputFormat.configureIncrementalLoad(job, htable);
 
             this.deletePath(job.getConfiguration(), output);
 

@@ -90,6 +90,10 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
 
+        if(table.size() == 0) {
+            logger.info("No data on mapper " + this.mapperTaskId);
+            return;
+        }
         // end to trigger cubing calculation
         logger.info("Totally read " + counter + " rows in memory, trigger cube build now.");
         Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
