@@ -158,10 +158,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             long totalSum = 0;
             String msg;
             for (int i = 0; i < rowKeyCountInMappers.size(); i++) {
-                msg = "Cube segment in Mapper " + i + " has " + rowKeyCountInMappers.get(i) + " rows.";
-                totalSum += rowKeyCountInMappers.get(i);
-                out.write(msg.getBytes());
-                out.write('\n');
+                if(rowKeyCountInMappers.get(i) > 0) {
+                    msg = "Cube segment in Mapper " + i + " has " + rowKeyCountInMappers.get(i) + " rows.";
+                    totalSum += rowKeyCountInMappers.get(i);
+                    out.write(msg.getBytes());
+                    out.write('\n');
+                }
             }
 
             msg = "Sum of the cube segments is " + totalSum;
