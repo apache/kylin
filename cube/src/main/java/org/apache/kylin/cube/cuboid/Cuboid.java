@@ -199,6 +199,8 @@ public class Cuboid implements Comparable<Cuboid> {
         leftover = cuboidWithoutMandatory & rowkey.getTailMask();
         return leftover == 0 || leftover == rowkey.getTailMask();
     }
+    
+    // ============================================================================
 
     private CubeDesc cube;
     private final long inputID;

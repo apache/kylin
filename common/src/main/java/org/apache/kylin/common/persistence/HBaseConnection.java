@@ -59,6 +59,7 @@ public class HBaseConnection {
         });
     }
 
+    // returned HConnection can be shared by multiple threads and does not require close()
     public static HConnection get(String url) {
         // find configuration
         Configuration conf = ConfigCache.get(url);

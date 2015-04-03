@@ -4,6 +4,8 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.Dictionary;
@@ -17,11 +19,32 @@ import com.google.common.collect.Maps;
 
 public class CubeGridTable {
 
+    public static Map<TblColRef, Dictionary<?>> getDimensionToDictionaryMap(CubeSegment cubeSeg, long cuboidId) {
+        CubeDesc cubeDesc = cubeSeg.getCubeDesc();
+        CubeManager cubeMgr = CubeManager.getInstance(cubeSeg.getCubeInstance().getConfig());
+
+        // build a dictionary map
+        Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
+        List<TblColRef> dimCols = Cuboid.findById(cubeDesc, cuboidId).getColumns();
+        for (TblColRef col : dimCols) {
+            Dictionary<?> dictionary = cubeMgr.getDictionary(cubeSeg, col);
+            if (dictionary != null) {
+                dictionaryMap.put(col, dictionary);
+            }
+        }
+        return dictionaryMap;
+    }
+
+    public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) {
+        Map<TblColRef, Dictionary<?>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
+        return newGTInfo(cubeSeg.getCubeDesc(), cuboidId, dictionaryMap);
+    }
+    
     @SuppressWarnings("rawtypes")
     public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
         List<TblColRef> dimCols = cuboid.getColumns();
-        
+
         int nColumns = dimCols.size() + cubeDesc.getMeasures().size();
         BitSet dimensions = new BitSet();
         dimensions.set(0, dimCols.size());
@@ -54,6 +77,5 @@ public class CubeGridTable {
         builder.enableColumnBlock(new BitSet[] { dimensions, metrics });
         return builder.build();
     }
-
 
 }

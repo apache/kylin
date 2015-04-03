@@ -93,7 +93,6 @@ public class AdjustForWeaklyMatchedRealization extends RoutingRule {
                 if (col != null) {
                     olapContext.metricsColumns.remove(col);
                     olapContext.groupByColumns.add(col);
-                    olapContext.storageContext.addOtherMandatoryColumns(col);
                 }
                 logger.info("Adjust OLAPContext for " + functionDesc);
             }

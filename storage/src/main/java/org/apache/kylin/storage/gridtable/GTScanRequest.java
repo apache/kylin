@@ -23,7 +23,7 @@ public class GTScanRequest {
     private BitSet aggrGroupBy;
     private BitSet aggrMetrics;
     private String[] aggrMetricsFuncs;
-    
+
     public GTScanRequest(GTInfo info) {
         this(info, null, null, null);
     }
@@ -35,37 +35,46 @@ public class GTScanRequest {
         this.filterPushDown = filterPushDown;
         validate();
     }
-    
+
     public GTScanRequest(GTInfo info, GTScanRange range, BitSet aggrGroupBy, BitSet aggrMetrics, //
+            String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
+        this(info, range, null, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown);
+    }
+
+    public GTScanRequest(GTInfo info, GTScanRange range, BitSet dimensions, BitSet aggrGroupBy, BitSet aggrMetrics, //
             String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
         this.info = info;
         this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
-        this.columns = new BitSet();
+        this.columns = dimensions;
         this.filterPushDown = filterPushDown;
-        
+
         this.aggrGroupBy = aggrGroupBy;
         this.aggrMetrics = aggrMetrics;
         this.aggrMetricsFuncs = aggrMetricsFuncs;
-        
+
         validate();
     }
-    
+
     private void validate() {
         if (range == null)
             range = new GTScanRange(null, null);
-        
-        if (columns == null)
-            columns = (BitSet) info.colAll.clone();
-        
+
         if (hasAggregation()) {
             if (aggrGroupBy.intersects(aggrMetrics))
                 throw new IllegalStateException();
             if (aggrMetrics.cardinality() != aggrMetricsFuncs.length)
                 throw new IllegalStateException();
+
+            if (columns == null) {
+                columns = new BitSet();
+            }
             columns.or(aggrGroupBy);
             columns.or(aggrMetrics);
         }
-        
+
+        if (columns == null)
+            columns = (BitSet) info.colAll.clone();
+
         if (hasFilterPushDown()) {
             validateFilterPushDown();
         }
