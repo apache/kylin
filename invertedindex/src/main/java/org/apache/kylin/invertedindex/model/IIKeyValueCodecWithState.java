@@ -33,6 +33,7 @@ public class IIKeyValueCodecWithState extends IIKeyValueCodec {
         return new IIRowDecoderWithState(digest, kvs.iterator());
     }
 
+    //TODO refactor this class, does not have to extend IIKeyValueCodec, composite might be enough, mhb
     protected static class IIRowDecoderWithState extends IIRowDecoder {
 
         final LinkedList<IIRow> buffer = Lists.newLinkedList();
