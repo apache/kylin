@@ -64,7 +64,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
     private IIRow collectKeyValues(Slice slice, int col, CompressedValueContainer container) {
         ImmutableBytesWritable key = encodeKey(slice.getShard(), slice.getTimestamp(), col);
         ImmutableBytesWritable value = container.toBytes();
-        final Dictionary<?> dictionary = slice.getLocalDictionaries().get(col);
+        final Dictionary<?> dictionary = slice.getLocalDictionaries()[col];
         if (dictionary == null) {
             return new IIRow(key, value, new ImmutableBytesWritable(BytesUtil.EMPTY_BYTE_ARRAY));
         } else {
@@ -122,7 +122,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
         //		return new Decoder(kvs, incompleteDigest);
     }
 
-    private static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Map<Integer, Dictionary<?>> dictionaryMap) {
+    private static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Dictionary<?>[] dictionaryMap) {
         int[] dictMaxIds = new int[nColumns];
         int[] lengths = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
@@ -130,7 +130,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                 final FixedLenMeasureCodec<?> fixedLenMeasureCodec = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
                 lengths[i] = fixedLenMeasureCodec.getLength();
             } else {
-                final Dictionary<?> dictionary = dictionaryMap.get(i);
+                final Dictionary<?> dictionary = dictionaryMap[i];
                 if (dictionary != null) {
                     lengths[i] = dictionary.getSizeOfId();
                     dictMaxIds[i] = dictionary.getMaxId();
@@ -174,7 +174,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                 public Slice next() {
                     int columns = 0;
                     ColumnValueContainer[] valueContainers = new ColumnValueContainer[incompleteDigest.getColumnCount()];
-                    Map<Integer, Dictionary<?>> localDictionaries = Maps.newHashMap();
+                    Dictionary<?>[] localDictionaries = new Dictionary<?>[incompleteDigest.getColumnCount()];
                     boolean firstTime = true;
                     short curShard = 0;
                     long curTimestamp = 0;
@@ -205,7 +205,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                             CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), dictionary.getMaxId() - dictionary.getMinId() + 1, 0);
                             c.fromBytes(row.getValue());
                             valueContainers[curCol] = c;
-                            localDictionaries.put(curCol, dictionary);
+                            localDictionaries[curCol]= dictionary;
                         }
                         columns++;
                         lastShard = curShard;

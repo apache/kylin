@@ -18,6 +18,10 @@
 
 package org.apache.kylin.common.util;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import org.apache.commons.collections.PredicateUtils;
+
 import java.util.Arrays;
 
 /*
@@ -50,6 +54,17 @@ public class Array<T> implements Comparable<Array<T>> {
     @Override
     public int compareTo(Array<T> other) {
         return compare(this.data, other.data, null);
+    }
+
+    public static boolean isEmpty(Object[] array) {
+        if (array == null || array.length == 0)
+            return true;
+
+        for (Object o : array) {
+            if (o != null)
+                return false;
+        }
+        return true;
     }
 
     @SuppressWarnings("unchecked")

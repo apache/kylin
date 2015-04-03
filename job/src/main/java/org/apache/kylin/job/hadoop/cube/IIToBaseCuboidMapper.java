@@ -92,7 +92,7 @@ public class IIToBaseCuboidMapper extends BaseCuboidMapperBase<ImmutableBytesWri
                             System.arraycopy(metricBytes, 0, columnBuffer.value, 0, metricBytes.length);
                             columnBuffer.length = metricBytes.length;
                         } else {
-                            Dictionary<?> dictionary = slice.getLocalDictionaries().get(indexInRecord);
+                            Dictionary<?> dictionary = slice.getLocalDictionaries()[indexInRecord];
                             Preconditions.checkArgument(columnBuffer.value.length > dictionary.getSizeOfValue(), "Column length too big");
                             int vid = record.getValueID(indexInRecord);
                             columnBuffer.length = dictionary.getValueBytesFromId(vid, columnBuffer.value, 0);

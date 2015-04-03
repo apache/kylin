@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.util.Array;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
@@ -40,17 +41,17 @@ public class TableRecordInfo {
     final IIDesc desc;
 
     final TableRecordInfoDigest digest;
-    final Map<Integer, Dictionary<?>> dictionaryMap;
+    final Dictionary<?>[] dictionaryMap;
 
     public TableRecordInfo(IISegment iiSegment) {
         this(iiSegment.getIIDesc());
     }
 
     public TableRecordInfo(IIDesc desc) {
-        this(desc, Collections.<Integer, Dictionary<?>>emptyMap());
+        this(desc, new Dictionary<?>[desc.listAllColumns().size()]);
     }
 
-    public TableRecordInfo(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap) {
+    public TableRecordInfo(IIDesc desc, Dictionary<?>[] dictionaryMap) {
         this.desc = desc;
         this.dictionaryMap = dictionaryMap;
         this.digest = createDigest(desc, dictionaryMap);
@@ -60,7 +61,7 @@ public class TableRecordInfo {
         return digest;
     }
 
-    private TableRecordInfoDigest createDigest(IIDesc desc, Map<Integer, Dictionary<?>> dictionaryMap) {
+    private TableRecordInfoDigest createDigest(IIDesc desc, Dictionary<?>[] dictionaryMap) {
         final List<TblColRef> tblColRefs = desc.listAllColumns();
         final int nColumns = tblColRefs.size();
         boolean[] isMetric = new boolean[nColumns];
@@ -74,11 +75,11 @@ public class TableRecordInfo {
             if (isMetric[i]) {
                 lengths[i] = FixedLenMeasureCodec.get(DataType.getInstance(tblColRef.getColumn().getDatatype())).getLength();
             } else {
-                if (dictionaryMap.isEmpty()) {
+                if (Array.isEmpty(dictionaryMap)) {
                     final DataType dataType = DataType.getInstance(tblColRef.getColumn().getDatatype());
                     if (dataType.isNumberFamily()) {
                         lengths[i] = 16;
-                    } else if (dataType.isStringFamily()){
+                    } else if (dataType.isStringFamily()) {
                         lengths[i] = 256;
                     } else if (dataType.isDateTimeFamily()) {
                         lengths[i] = 10;
@@ -87,7 +88,7 @@ public class TableRecordInfo {
                     }
                     dictMaxIds[i] = Integer.MAX_VALUE;
                 } else {
-                    final Dictionary<?> dictionary = dictionaryMap.get(i);
+                    final Dictionary<?> dictionary = dictionaryMap[i];
                     lengths[i] = dictionary.getSizeOfId();
                     dictMaxIds[i] = dictionary.getMaxId();
                 }
@@ -105,8 +106,6 @@ public class TableRecordInfo {
 
         return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
     }
-
-
 
     public TableRecord createTableRecord() {
         return new TableRecord(digest.createTableRecordBytes(), this);
@@ -140,7 +139,7 @@ public class TableRecordInfo {
     @SuppressWarnings("unchecked")
     public Dictionary<String> dict(int col) {
         // yes, all dictionaries are string based
-        return (Dictionary<String>) dictionaryMap.get(col);
+        return (Dictionary<String>) dictionaryMap[col];
     }
 
     public int getTimestampColumn() {

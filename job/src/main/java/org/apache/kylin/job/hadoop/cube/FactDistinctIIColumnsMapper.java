@@ -105,7 +105,7 @@ public class FactDistinctIIColumnsMapper extends FactDistinctColumnsMapperBase<I
                     outputKey.set((short) baseCuboidIndex);
                     int indexInRecord = baseCuboidCol2FlattenTableCol[i];
 
-                    Dictionary<?> dictionary = slice.getLocalDictionaries().get(indexInRecord);
+                    Dictionary<?> dictionary = slice.getLocalDictionaries()[indexInRecord];
                     if (vBytesBuffer == null || dictionary.getSizeOfValue() > vBytesBuffer.length) {
                         vBytesBuffer = new byte[dictionary.getSizeOfValue() * 2];
                     }

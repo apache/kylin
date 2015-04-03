@@ -118,7 +118,7 @@ public class IITest extends LocalFileMetadataTestCase {
         }
 
         Slice newSlice = slices.next();
-        Assert.assertEquals(newSlice.getLocalDictionaries().get(0).getSize(), 2);
+        Assert.assertEquals(newSlice.getLocalDictionaries()[0].getSize(), 2);
     }
 
     @Test
