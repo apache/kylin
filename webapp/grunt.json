@@ -38,8 +38,8 @@
                 "app/components/angular-sweetalert/SweetAlert.js",
                 "app/components/underscore/underscore.js",
                 "app/components/angular-underscore/angular-underscore.js",
-                "app/components/angular-ui-sortable/jquery-ui.min.js",
-                "app/components/angular-ui-sortable/sortable.min.js",
+                "app/components/jquery-ui/jquery-ui.min.js",
+                "app/components/angular-ui-sortable/sortable.js",
                 "tmp/js/scripts.js"
             ],
             "dest": "tmp/js/scripts.min.js"
