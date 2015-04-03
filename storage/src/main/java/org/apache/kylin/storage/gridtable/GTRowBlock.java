@@ -11,12 +11,12 @@ public class GTRowBlock {
     public static GTRowBlock allocate(GTInfo info) {
         GTRowBlock b = new GTRowBlock(info);
 
-        byte[] array = new byte[info.maxRecordLength];
+        byte[] array = new byte[info.getMaxColumnLength(info.primaryKey)];
         b.primaryKey.set(array);
 
         int maxRows = info.isRowBlockEnabled() ? info.rowBlockSize : 1;
         for (int i = 0; i < b.cellBlocks.length; i++) {
-            array = new byte[info.maxRecordLength * maxRows];
+            array = new byte[info.getMaxColumnLength(info.colBlocks[i]) * maxRows];
             b.cellBlocks[i].set(array);
         }
         return b;
@@ -26,7 +26,7 @@ public class GTRowBlock {
 
     int seqId; // 0, 1, 2...
     int nRows;
-    ByteArray primaryKey; // the primary key of the first row
+    ByteArray primaryKey; // the primary key of the first (smallest) row
     ByteArray[] cellBlocks; // cells for each column block
 
     /** create a row block that has no underlying space */
@@ -126,11 +126,6 @@ public class GTRowBlock {
             if (hasNext() == false)
                 throw new IllegalArgumentException();
             
-            // when row block disabled, PK is persisted in block primary key (not in cell block)
-            if (info.isRowBlockEnabled() == false) {
-                result.loadPrimaryKey(primaryKeyBuffer);
-            }
-            
             for (int c = selectedColBlocks.nextSetBit(0); c >= 0; c = selectedColBlocks.nextSetBit(c + 1)) {
                 result.loadCellBlock(c, cellBlockBuffers[c]);
             }
@@ -160,6 +155,8 @@ public class GTRowBlock {
             return nRows > 0;
     }
 
+    // TODO export / load should optimize for disabled row block
+    
     public int exportLength() {
         int len = 4 + 4 + (4 + primaryKey.length());
         for (ByteArray array : cellBlocks) {

@@ -178,7 +178,7 @@ public class SimpleGridTableTest {
 
     static GTInfo advancedInfo() {
         Builder builder = infoBuilder();
-        builder.enableColumnBlock(new BitSet[] { setOf(0, 1, 2), setOf(3, 4) });
+        builder.enableColumnBlock(new BitSet[] { setOf(0), setOf(1, 2), setOf(3, 4) });
         builder.enableRowBlock(4);
         GTInfo info = builder.build();
         return info;

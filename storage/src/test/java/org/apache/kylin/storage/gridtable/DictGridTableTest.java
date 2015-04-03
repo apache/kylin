@@ -234,7 +234,7 @@ public class DictGridTableTest {
     }
 
     private Object enc(GTInfo info, int col, String value) {
-        ByteBuffer buf = ByteBuffer.allocate(info.maxRecordLength);
+        ByteBuffer buf = ByteBuffer.allocate(info.getMaxColumnLength());
         info.codeSystem.encodeColumnValue(col, value, buf);
         return ByteArray.copyOf(buf.array(), buf.arrayOffset(), buf.position());
     }
@@ -307,7 +307,7 @@ public class DictGridTableTest {
         );
         builder.setPrimaryKey(setOf(0, 1));
         builder.setColumnPreferIndex(setOf(0));
-        builder.enableColumnBlock(new BitSet[] { setOf(0, 1, 2), setOf(3, 4) });
+        builder.enableColumnBlock(new BitSet[] { setOf(0, 1), setOf(2), setOf(3, 4) });
         builder.enableRowBlock(4);
         GTInfo info = builder.build();
         return info;

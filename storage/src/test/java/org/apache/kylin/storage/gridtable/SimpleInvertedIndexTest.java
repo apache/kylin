@@ -15,6 +15,7 @@ import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.serializer.StringSerializer;
 import org.junit.Test;
@@ -148,7 +149,7 @@ public class SimpleInvertedIndexTest {
     public static ConstantTupleFilter constFilter(int id) {
         byte[] space = new byte[10];
         ByteBuffer buf = ByteBuffer.wrap(space);
-        StringSerializer stringSerializer = new StringSerializer();
+        StringSerializer stringSerializer = new StringSerializer(DataType.getInstance("string"));
         stringSerializer.serialize("" + id, buf);
         ByteArray data = new ByteArray(buf.array(), buf.arrayOffset(), buf.position());
         return new ConstantTupleFilter(data);
