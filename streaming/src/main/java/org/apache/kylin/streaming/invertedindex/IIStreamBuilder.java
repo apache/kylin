@@ -49,6 +49,7 @@ import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamBuilder;
+import org.apache.kylin.streaming.StreamManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,15 +66,15 @@ public class IIStreamBuilder extends StreamBuilder {
     private static Logger logger = LoggerFactory.getLogger(IIStreamBuilder.class);
 
     private final IIDesc desc;
-    private final IIInstance ii;
     private final HTableInterface hTable;
     private final SliceBuilder sliceBuilder;
     private final int partitionId;
+    private final String streaming;
 
-    public IIStreamBuilder(BlockingQueue<Stream> queue, String hTableName, IIInstance iiInstance, int partitionId) {
-        super(queue, iiInstance.getDescriptor().getSliceSize());
-        this.ii = iiInstance;
-        this.desc = iiInstance.getDescriptor();
+    public IIStreamBuilder(BlockingQueue<Stream> queue, String streaming, String hTableName, IIDesc iiDesc, int partitionId) {
+        super(queue, iiDesc.getSliceSize());
+        this.streaming = streaming;
+        this.desc = iiDesc;
         this.partitionId = partitionId;
         try {
             //this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
@@ -127,19 +128,13 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     private void submitOffset(long offset) {
-        final IIManager iiManager = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
+        StreamManager streamManager = StreamManager.getInstance(KylinConfig.getInstanceFromEnv());
         try {
-            iiManager.updateIIStreamingOffset(ii.getName(), partitionId, offset);
+            streamManager.updateOffset(streaming, partitionId, offset);
             logger.info("submit offset:" + offset);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.warn("error submit offset: " + offset + " retrying", e);
-            try {
-                iiManager.updateIIStreamingOffset(ii.getName(), partitionId, offset);
-                logger.info("submit offset:" + offset);
-            } catch (IOException ex) {
-                logger.error("error submit offset: " + offset, ex);
-                throw new RuntimeException(e);
-            }
+            throw new RuntimeException(e);
         }
     }
 

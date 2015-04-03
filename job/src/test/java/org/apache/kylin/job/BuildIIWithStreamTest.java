@@ -215,7 +215,7 @@ public class BuildIIWithStreamTest {
 
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, segment.getStorageLocationIdentifier(), segment.getIIInstance(), 0);
+        final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, iiName, segment.getStorageLocationIdentifier(), segment.getIIDesc(), 0);
         int count = 0;
         while (reader.next()) {
             queue.put(parse(reader.getRow()));

@@ -80,9 +80,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("segments")
     private List<IISegment> segments = new ArrayList<IISegment>();
 
-    @JsonProperty("stream_offset")
-    private List<Long> streamOffsets = Lists.newArrayList();
-
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
@@ -362,11 +359,4 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         this.cost = cost;
     }
 
-    public List<Long> getStreamOffsets() {
-        return streamOffsets;
-    }
-
-    public void setStreamOffsets(List<Long> streamOffsets) {
-        this.streamOffsets = streamOffsets;
-    }
 }
