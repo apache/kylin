@@ -81,10 +81,6 @@ public class ModelService extends BasicService {
             return modelDescs;
         }
 
-//        if (modelDescs.size() <= limit) {
-//            return Collections.emptyList();
-//        }
-
         if ((modelDescs.size() - offset) < limit) {
             return modelDescs.subList(offset, modelDescs.size());
         }
@@ -116,8 +112,8 @@ public class ModelService extends BasicService {
     }
 
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
-    public void deleteCube(DataModelDesc desc) throws IOException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    public void deleteModel(DataModelDesc desc) throws IOException {
 //        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
 
 

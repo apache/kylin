@@ -70,13 +70,6 @@ public class ModelController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{modelName}", method = {RequestMethod.DELETE})
-    @ResponseBody
-    @Metered(name = "deleteModel")
-    public void deleteModel(@PathVariable String modelName) {
-
-    }
-
     /**
      *
      * create model
@@ -140,22 +133,21 @@ public class ModelController extends BasicController {
         return modelRequest;
     }
 
-//    @RequestMapping(value = "/{cubeName}", method = {RequestMethod.DELETE})
-//    @ResponseBody
-//    @Metered(name = "deleteCube")
-//    public void deleteCube(@PathVariable String cubeName) {
-//        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-//        if (null == cube) {
-//            throw new NotFoundException("Cube with name " + cubeName + " not found..");
-//        }
-//
-//        try {
-//            cubeService.deleteCube(cube);
-//        } catch (Exception e) {
-//            logger.error(e.getLocalizedMessage(), e);
-//            throw new InternalErrorException("Failed to delete cube. " + " Caused by: " + e.getMessage(), e);
-//        }
-//    }
+    @RequestMapping(value = "/{modelName}", method = {RequestMethod.DELETE})
+    @ResponseBody
+    @Metered(name = "deleteModel")
+    public void deleteModel(@PathVariable String modelName) {
+        DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);
+        if (null == desc) {
+            throw new NotFoundException("Data Model with name " + modelName + " not found..");
+        }
+        try {
+            modelService.deleteModel(desc);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to delete model. " + " Caused by: " + e.getMessage(), e);
+        }
+    }
 
     private DataModelDesc deserializeDataModelDesc(ModelRequest modelRequest) {
         DataModelDesc desc = null;
