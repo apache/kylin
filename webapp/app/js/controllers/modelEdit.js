@@ -117,6 +117,9 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
             }
 
         }
+        if($scope.model.partition_desc.partition_date_column==null){
+            $scope.model.partition_desc.partition_date_start=null;
+        }
         $scope.state.project = $scope.model.project;
         var _model = angular.copy($scope.model);
         delete _model.project;
@@ -159,7 +162,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                             $scope.state.modelSchema = request.modelSchema;
                             MessageService.sendMsg($scope.modelResultTmpl({'text':'Updated the model successfully.',type:'success'}), 'success', {}, true, 'top_center');
                         } else {
-                            $scope.saveModelRollBack();
+                               $scope.saveModelRollBack();
                                 var message =request.message;
                                 var msg = !!(message) ? message : 'Failed to take action.';
                                 MessageService.sendMsg($scope.modelResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
@@ -172,6 +175,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                         if(e.data&& e.data.exception){
                             var message =e.data.exception;
                             var msg = !!(message) ? message : 'Failed to take action.';
+                            $log.log($scope.modelResultTmpl({'text':msg,'schema':$scope.state.modelSchema}));
                             MessageService.sendMsg($scope.modelResultTmpl({'text':msg,'schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
                         } else {
                             MessageService.sendMsg($scope.modelResultTmpl({'text':'Failed to take action.','schema':$scope.state.modelSchema}), 'error', {}, true, 'top_center');
@@ -217,6 +221,9 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
 //    reverse the date
     $scope.saveModelRollBack = function (){
+        if($scope.model.partition_desc.partition_date_start==0){
+            $scope.model.partition_desc.partition_date_start = null;
+        }
         if($scope.model&&($scope.model.partition_desc.partition_date_start||$scope.model.partition_desc.partition_date_start==0))
         {
             $scope.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;

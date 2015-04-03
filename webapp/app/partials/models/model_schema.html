@@ -14,7 +14,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
--->A
+-->
 
 <!--hide when view model and no model selected-->
 <div class="box box-primary model-design box-2px" ng-hide="state.mode=='view'&&!model.name">
@@ -55,7 +55,7 @@
                             Next
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
                         </button>
-                        <button class="btn btn-primary" ng-click="saveModel()"
+                        <button class="btn btn-primary"  ng-click="checkForm()?saveModel():''"
                                 ng-if="curStep.title=='Settings' && state.mode=='edit'">
                             Save
                         </button>

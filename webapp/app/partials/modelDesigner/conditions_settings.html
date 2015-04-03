@@ -40,7 +40,7 @@
         <div class="form-group">
             <div class="row">
                 <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Date Column</b></label>
-                <div class="col-xs-12 col-sm-6" ng-class="model.partition_desc.partition_date_column==null&& model.partition_desc.partition_date_start!=null?'has-error':''">
+                <div class="col-xs-12 col-sm-6">
 
                     <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
                             ng-model="model.partition_desc.partition_date_column"
@@ -49,8 +49,7 @@
                             ng-options="model.fact_table+'.'+columns.name as model.fact_table+'.'+columns.name for columns in getPartitonColumns(model.fact_table)" >
                         <option value="">--Select Partition Column--</option>
                     </select>
-                    <small class="help-block" ng-show="model.partition_desc.partition_date_column==null&& model.partition_desc.partition_date_start!=null">Please select your partitoin date column.</small>
-                    <p class="text-red"  ng-if="state.mode=='edit'">(data format in column should be 'YYYY-MM-DD')</p>
+                    <small class="help-block text-red" ng-show="state.mode=='edit'">(data format in column should be 'YYYY-MM-DD')</small>
 
                     <span ng-if="state.mode=='view'">
                         {{!!(model.partition_desc.partition_date_column)?model.partition_desc.partition_date_column: ''}}</span>

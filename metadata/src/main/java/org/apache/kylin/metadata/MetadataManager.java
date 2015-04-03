@@ -29,6 +29,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -287,9 +291,11 @@ public class MetadataManager {
         return new ArrayList<DataModelDesc>(dataModelDescMap.values());
     }
 
-    public List<DataModelDesc> getModels(String projectName){
+    public List<DataModelDesc> getModels(String projectName) throws IOException{
         ProjectInstance projectInstance =  ProjectManager.getInstance(config).getProject(projectName);
         HashSet<DataModelDesc> ret = new HashSet<>();
+
+
         if (projectInstance != null&&projectInstance.getModels()!=null) {
             for (String modelName : projectInstance.getModels()) {
                 DataModelDesc model = getDataModelDesc(modelName);
@@ -300,6 +306,22 @@ public class MetadataManager {
                 }
             }
         }
+
+        //TODO, list model from realization,compatible with old meta data,will remove
+        RealizationRegistry registry = RealizationRegistry.getInstance(config);
+        for (RealizationEntry realization : projectInstance.getRealizationEntries()) {
+            IRealization rel = registry.getRealization(realization.getType(), realization.getRealization());
+            if (rel != null) {
+                DataModelDesc modelDesc = rel.getDataModelDesc();
+                if(!ret.contains(modelDesc)){
+                    ProjectManager.getInstance(config).updateModelToProject(modelDesc.getName(),projectName);
+                    ret.add(modelDesc);
+                }
+            } else {
+                logger.warn("Realization '" + realization + "' defined under project '" + projectInstance + "' is not found");
+            }
+        }
+
 
         return new ArrayList<>(ret);
     }
@@ -344,7 +366,7 @@ public class MetadataManager {
         String name = desc.getName();
         if (dataModelDescMap.containsKey(name))
             throw new IllegalArgumentException("DataModelDesc '" + name + "' already exists");
-        ProjectManager.getInstance(config).updateModelToProject(name,projectName,owner);
+        ProjectManager.getInstance(config).updateModelToProject(name,projectName);
         return saveDataModelDesc(desc);
     }
 

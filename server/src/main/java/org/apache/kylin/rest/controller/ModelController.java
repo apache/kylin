@@ -59,7 +59,13 @@ public class ModelController extends BasicController {
     @ResponseBody
     @Metered(name = "listModels")
     public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value="limit",required=false) Integer limit, @RequestParam(value="offset",required=false) Integer offset) {
-        return modelService.getModels(modelName, projectName, limit, offset);
+        try{
+            return modelService.getModels(modelName, projectName, limit, offset);
+        }
+        catch (IOException e){
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+        }
     }
 
     @RequestMapping(value = "/{modelName}", method = {RequestMethod.DELETE})

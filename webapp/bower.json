@@ -21,7 +21,6 @@
     "nvd3": "1.1.15-beta",
     "angularjs-nvd3-directives": "0.0.5-beta",
     "angular-sweetalert": "~1.0.3",
-    "bootstrap-sweetalert": "~0.4.3",
     "angular-underscore": "~0.5.0",
     "angular-ui-sortable": "0.13.1",
     "underscore": "~1.7.0",
@@ -29,7 +28,8 @@
     "angular-animate": "1.2",
     "angular-cookies": "1.2",
     "angular-bootstrap-nav-tree": "*",
-    "components-font-awesome": "~4.3.0"
+    "components-font-awesome": "~4.3.0",
+    "bootstrap-sweetalert": "~0.4.3"
   },
   "devDependencies": {
     "less.js": "~1.4.0",

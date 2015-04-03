@@ -224,10 +224,9 @@ public class ProjectManager {
         return this.getProject(projectName).containsModel(modelName);
     }
 
-    public ProjectInstance updateModelToProject(String modelName, String newProjectName, String owner) throws IOException {
+    public ProjectInstance updateModelToProject(String modelName, String newProjectName) throws IOException {
         removeModelFromProjects(modelName);
-
-        return addModelToProject(modelName, newProjectName, owner);
+        return addModelToProject(modelName, newProjectName);
     }
 
     public void removeModelFromProjects(String modelName) throws IOException {
@@ -238,11 +237,11 @@ public class ProjectManager {
         }
     }
 
-    private ProjectInstance addModelToProject(String modelName, String project, String user) throws IOException {
+    private ProjectInstance addModelToProject(String modelName, String project) throws IOException {
         String newProjectName = ProjectInstance.getNormalizedProjectName(project);
         ProjectInstance newProject = getProject(newProjectName);
         if (newProject == null) {
-            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding model " + modelName);
+            throw new IllegalArgumentException("Project "+newProjectName+" does not exist.");
         }
         newProject.addModel(modelName);
         saveResource(newProject);
@@ -259,7 +258,7 @@ public class ProjectManager {
         String newProjectName = norm(project);
         ProjectInstance newProject = getProject(newProjectName);
         if (newProject == null) {
-            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding realization " + realizationName + "(" + type + ")");
+            throw new IllegalArgumentException("Project "+newProjectName+" does not exist.");
         }
         newProject.addRealizationEntry(type, realizationName);
         saveResource(newProject);

@@ -24,6 +24,7 @@ KylinApp.service('MetaModel',function(){
     //data model when edit model
     this.model={
         name: null,
+        description:null,
         fact_table: null,
         lookups: [],
         filter_condition:null,
@@ -42,6 +43,7 @@ KylinApp.service('MetaModel',function(){
     this.setMetaModel =function(model){
         var _model = {};
         _model.name = model.name;
+        _model.description = model.description;
         _model.fact_table = model.fact_table;
         _model.lookups =model.lookups;
         _model.filter_condition = model.filter_condition;
@@ -75,6 +77,7 @@ KylinApp.service('MetaModel',function(){
     this.createNew = function () {
         var metaModel = {
             name: '',
+            description:'',
             fact_table: '',
             lookups: [],
             filter_condition:'',
