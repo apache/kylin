@@ -295,7 +295,6 @@ public class MetadataManager {
         ProjectInstance projectInstance =  ProjectManager.getInstance(config).getProject(projectName);
         HashSet<DataModelDesc> ret = new HashSet<>();
 
-
         if (projectInstance != null&&projectInstance.getModels()!=null) {
             for (String modelName : projectInstance.getModels()) {
                 DataModelDesc model = getDataModelDesc(modelName);

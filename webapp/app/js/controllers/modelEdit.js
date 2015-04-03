@@ -71,8 +71,6 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     // ~ init
     if ($scope.isEdit = !!$routeParams.modelName) {
 
-
-
         var modelName = $routeParams.modelName;
         ModelDescService.get({model_name: modelName}, function (model) {
                     if (model) {
@@ -112,10 +110,6 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
             $scope.model.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
 
 
-            if($scope.model.partition_desc.partition_date_column.indexOf(".")==-1){
-            $scope.model.partition_desc.partition_date_column=$scope.model.fact_table+"."+$scope.model.partition_desc.partition_date_column;
-            }
-
         }
         if($scope.model.partition_desc.partition_date_column==null){
             $scope.model.partition_desc.partition_date_start=null;
@@ -145,9 +139,9 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         }
 
         SweetAlert.swal({
-            title: '',
-            text: 'Are you sure to save the Model ?',
-            type: '',
+            title: 'Are you sure to update the model?',
+            text: $scope.isEdit?' Please note: if model schema is changed, all cubes of the model will be affected.':'Are you sure to save the Model ?',
+            type: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',
             confirmButtonText: "Yes",

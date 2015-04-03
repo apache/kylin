@@ -222,11 +222,9 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
 
                 loadingRequest.show();
                 CubeService.drop({cubeId: cube.name}, {}, function (result) {
-
                     loadingRequest.hide();
-//                    CubeList.removeCube(cube);
                     SweetAlert.swal('Success!', 'Cube drop is done successfully', 'success');
-
+                    location.reload();
                 },function(e){
 
                     loadingRequest.hide();
@@ -437,11 +435,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
     $scope.updateDate = function() {
 
-
-//        if ($scope.cube.detail.partition_desc.cube_partition_type=='UPDATE_INSERT')
-//        {
-//            $scope.jobBuildRequest.startTime=$scope.formatDate($scope.jobBuildRequest.startTime);
-//        }
         $scope.jobBuildRequest.endTime=$scope.formatDate($scope.jobBuildRequest.endTime);
     };
 
