@@ -15,7 +15,6 @@ public class GTInfo {
     }
 
     IGTCodeSystem codeSystem;
-    int maxRecordLength = 2048; // column length can vary
 
     // column schema
     int nColumns;
@@ -26,7 +25,7 @@ public class GTInfo {
 
     // grid info
     BitSet primaryKey; // order by, uniqueness is not required
-    BitSet[] colBlocks; // at least one column block
+    BitSet[] colBlocks; // primary key must be the first column block
     BitSet colBlocksAll;
     int rowBlockSize; // 0: disable row block
 
@@ -47,6 +46,25 @@ public class GTInfo {
 
     public int getRowBlockSize() {
         return rowBlockSize;
+    }
+    
+    public int getMaxRecordLength() {
+        return getMaxColumnLength(colAll);
+    }
+    
+    public int getMaxColumnLength(BitSet selectedCols) {
+        int result = 0;
+        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
+            result += codeSystem.maxCodeLength(i);
+        }
+        return result;
+    }
+    
+    public int getMaxColumnLength() {
+        int max = 0;
+        for (int i = 0; i < nColumns; i++)
+            max = Math.max(max, codeSystem.maxCodeLength(i));
+        return max;
     }
 
     public BitSet selectColumnBlocks(BitSet columns) {
@@ -95,6 +113,14 @@ public class GTInfo {
     private void validateColumnBlocks() {
         colAll = new BitSet();
         colAll.flip(0, nColumns);
+        
+        if (colBlocks == null) {
+            colBlocks = new BitSet[2];
+            colBlocks[0] = primaryKey;
+            colBlocks[1] = (BitSet) colAll.clone();
+            colBlocks[1].andNot(primaryKey);
+        }
+        
         colBlocksAll = new BitSet();
         colBlocksAll.flip(0, colBlocks.length);
 
@@ -117,13 +143,9 @@ public class GTInfo {
         if (merge.equals(colAll) == false)
             throw new IllegalStateException();
 
-        // When row block is disabled, every row is treated as a row block, row PK is same as 
-        // row block PK. Thus PK can be removed from column blocks. See <code>GTRowBlock</code>.
-        if (isRowBlockEnabled() == false) {
-            for (int i = 0; i < colBlocks.length; i++) {
-                colBlocks[i].andNot(primaryKey);
-            }
-        }
+        // primary key must be the first column block
+        if (primaryKey.equals(colBlocks[0]) == false)
+            throw new IllegalStateException();
 
         // drop empty column block
         LinkedList<BitSet> tmp = new LinkedList<BitSet>(Arrays.asList(colBlocks));
@@ -153,23 +175,12 @@ public class GTInfo {
         public Builder setColumns(DataType... colTypes) {
             info.nColumns = colTypes.length;
             info.colTypes = colTypes;
-            if (info.colBlocks == null) {
-                BitSet all = new BitSet();
-                all.flip(0, info.nColumns);
-                info.colBlocks = new BitSet[] { all };
-            }
             return this;
         }
 
         /** required */
         public Builder setPrimaryKey(BitSet primaryKey) {
             info.primaryKey = (BitSet) primaryKey.clone();
-            return this;
-        }
-
-        /** optional */
-        public Builder setMaxRecordLength(int len) {
-            info.maxRecordLength = len;
             return this;
         }
 

@@ -171,7 +171,7 @@ public class GTUtil {
                 return result;
             }
 
-            transient ByteBuffer buf = ByteBuffer.allocate(info.maxRecordLength);
+            transient ByteBuffer buf = ByteBuffer.allocate(info.getMaxColumnLength());
 
             private ByteArray translate(int col, Object value, int roundingFlag) {
                 try {

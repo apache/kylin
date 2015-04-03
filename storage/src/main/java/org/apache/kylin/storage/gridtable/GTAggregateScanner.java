@@ -90,7 +90,7 @@ public class GTAggregateScanner implements IGTScanner {
             return new Iterator<GTRecord>() {
                 
                 Iterator<Entry<GTRecord, MeasureAggregator[]>> it = aggBufMap.entrySet().iterator();
-                ByteBuffer metricsBuf = ByteBuffer.allocate(info.maxRecordLength);
+                ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
                 GTRecord oneRecord = new GTRecord(info); // avoid instance creation
 
                 @Override

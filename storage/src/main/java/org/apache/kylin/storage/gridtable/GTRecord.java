@@ -36,7 +36,7 @@ public class GTRecord implements Comparable<GTRecord> {
 
     /** set record to the codes of specified values, new space allocated to hold the codes */
     public GTRecord setValues(Object... values) {
-        setValues(new ByteArray(info.maxRecordLength), values);
+        setValues(new ByteArray(info.getMaxRecordLength()), values);
         return this;
     }
 
