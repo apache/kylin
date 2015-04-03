@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase.coprocessor;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 
@@ -101,25 +102,30 @@ public class CoprocessorProjector {
 
     // ============================================================================
 
-    final byte[] groupByMask; // mask out columns that are not needed (by group by)
     final AggrKey aggrKey = new AggrKey();
+    final byte[] groupByMask; // mask out columns that are not needed (by group by)
+    final BitSet groupByMaskSet;
 
     public CoprocessorProjector(byte[] groupByMask) {
         this.groupByMask = groupByMask;
+        this.groupByMaskSet = new BitSet();
+        for (int i = 0; i < groupByMask.length; i++) {
+            if (groupByMask[i] != 0) {
+                groupByMaskSet.set(i);
+            }
+        }
     }
 
     public AggrKey getAggrKey(List<Cell> rowCells) {
-        int length = groupByMask.length;
         Cell cell = rowCells.get(0);
-        assert length == cell.getRowLength();
+        assert groupByMask.length == cell.getRowLength();
 
         aggrKey.set(cell.getRowArray(), cell.getRowOffset());
         return aggrKey;
     }
 
     public AggrKey getAggrKey(byte[] row) {
-        int length = groupByMask.length;
-        assert length == row.length;
+        assert groupByMask.length == row.length;
         aggrKey.set(row, 0);
         return aggrKey;
     }
@@ -155,9 +161,8 @@ public class CoprocessorProjector {
         @Override
         public int hashCode() {
             int hash = 1;
-            for (int i = 0, j = offset, n = length(); i < n; i++, j++) {
-                if (groupByMask[i] != 0)
-                    hash = (31 * hash) + (int) data[j];
+            for (int i = groupByMaskSet.nextSetBit(0); i >= 0; i = groupByMaskSet.nextSetBit(i + 1)) {
+                hash = (31 * hash) + data[offset + i];
             }
             return hash;
         }
@@ -183,16 +188,13 @@ public class CoprocessorProjector {
             if (comp != 0)
                 return comp;
 
-            int n = this.length();
-            for (int i = 0, j = offset, k = o.offset; i < n; i++, j++, k++) {
-                if (groupByMask[i] != 0) {
-                    comp = BytesUtil.compareByteUnsigned(this.data[j], o.data[k]);
-                    if (comp != 0)
-                        return comp;
-                }
+            for (int i = groupByMaskSet.nextSetBit(0); i >= 0; i = groupByMaskSet.nextSetBit(i + 1)) {
+                comp = BytesUtil.compareByteUnsigned(this.data[this.offset + i], o.data[o.offset + i]);
+                if (comp != 0)
+                    return comp;
             }
             return 0;
         }
     }
-
+    
 }
