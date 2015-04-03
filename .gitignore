@@ -82,3 +82,5 @@ lib
 *.tgz
 *.tar.gz
 webapp/app/components/*
+
+ebay*
