@@ -191,9 +191,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                 }
             }
         } else { // array scheme
-            for (int i = 0; i < m; i++) {
-                out.put(registers[i]);
-            }
+            out.put(registers);
         }
     }
 
@@ -230,7 +228,10 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         
         in.position(mark);
         return len;
-
+    }
+    
+    public int maxLength() {
+        return 1 + m;
     }
 
     public void writeRegistersArray(final ByteBuffer out) {

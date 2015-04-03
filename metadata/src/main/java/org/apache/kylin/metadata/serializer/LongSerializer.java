@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.model.DataType;
 
 /**
  * @author yangli9
@@ -32,6 +33,9 @@ public class LongSerializer extends DataTypeSerializer<LongWritable> {
 
     // avoid mass object creation
     LongWritable current = new LongWritable();
+
+    public LongSerializer(DataType type) {
+    }
 
     @Override
     public void serialize(LongWritable value, ByteBuffer out) {
@@ -53,6 +57,11 @@ public class LongSerializer extends DataTypeSerializer<LongWritable> {
         
         in.position(mark);
         return len;
+    }
+    
+    @Override
+    public int maxLength() {
+        return 9; // vlong: 1 + 8
     }
 
     @Override

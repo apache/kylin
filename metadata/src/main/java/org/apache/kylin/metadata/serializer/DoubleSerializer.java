@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.kylin.metadata.model.DataType;
 
 /**
  * @author yangli9
@@ -31,6 +32,9 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
 
     // avoid mass object creation
     DoubleWritable current = new DoubleWritable();
+
+    public DoubleSerializer(DataType type) {
+    }
 
     @Override
     public void serialize(DoubleWritable value, ByteBuffer out) {
@@ -48,6 +52,11 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
         return 8;
     }
 
+    @Override
+    public int maxLength() {
+        return 8;
+    }
+    
     @Override
     public DoubleWritable valueOf(byte[] value) {
         if (value == null)

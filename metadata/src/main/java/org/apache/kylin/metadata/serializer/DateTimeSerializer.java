@@ -4,12 +4,16 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.util.DateFormat;
 
 public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
-
+    
     // avoid mass object creation
     LongWritable current = new LongWritable();
+
+    public DateTimeSerializer(DataType type) {
+    }
 
     @Override
     public void serialize(LongWritable value, ByteBuffer out) {
@@ -24,6 +28,11 @@ public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
 
     @Override
     public int peekLength(ByteBuffer in) {
+        return 8;
+    }
+    
+    @Override
+    public int maxLength() {
         return 8;
     }
 
