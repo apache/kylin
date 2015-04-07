@@ -37,7 +37,7 @@
                 <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
                     <a href="models/edit/{{model.name}}" data-widget="collapse">Edit</a>
                 </li>
-                <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+                <li ng-if="userService.hasRole('ROLE_ADMIN')">
                     <a ng-click="dropModel(model)">Drop</a>
                 </li>
                 <li role="presentation" class="divider"></li>

@@ -135,9 +135,9 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
      */
     $scope.check_data_model = function(){
         var errors = [];
-        if(!$scope.model.lookups.length){
-            errors.push("No lookup table defined");
-        }
+//        if(!$scope.model.lookups.length){
+//            errors.push("No lookup table defined");
+//        }
         var errorInfo = "";
         angular.forEach(errors,function(item){
             errorInfo+="\n"+item;
