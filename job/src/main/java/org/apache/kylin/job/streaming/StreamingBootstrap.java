@@ -50,14 +50,11 @@ import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.lang.reflect.Constructor;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by qianzhou on 3/26/15.
@@ -104,57 +101,50 @@ public class StreamingBootstrap {
         }
     }
 
+    private long getEarliestStreamingOffset(String streaming, int startShard, int endShard) {
+        long result = Long.MAX_VALUE;
+        for (int i = startShard; i < endShard; ++i) {
+            final long offset = streamingManager.getOffset(streaming, i);
+            if (offset < result) {
+                result = offset;
+            }
+        }
+        return result;
+    }
+
     public void start(String streaming, int partitionId) throws Exception {
         final KafkaConfig kafkaConfig = streamingManager.getKafkaConfig(streaming);
         Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streaming);
         final IIInstance ii = iiManager.getII(kafkaConfig.getIiName());
         Preconditions.checkNotNull(ii, "cannot find ii name:" + kafkaConfig.getIiName());
-        Preconditions.checkArgument(partitionId >= 0 && partitionId < ii.getDescriptor().getSharding(), "invalid partition id:" + partitionId);
+        Preconditions.checkArgument(partitionId >= 0 && partitionId < kafkaConfig.getPartition(), "invalid partition id:" + partitionId);
         Preconditions.checkArgument(ii.getSegments().size() > 0);
         final IISegment iiSegment = ii.getSegments().get(0);
 
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        KafkaConfig.SERIALIZER.serialize(kafkaConfig, new DataOutputStream(out));
-        logger.debug("kafka config:" + new String(out.toByteArray()));
         final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
         Preconditions.checkState(leadBroker != null, "cannot find lead broker");
+        final int partition = kafkaConfig.getPartition();
+        final int shard = ii.getDescriptor().getSharding();
+        Preconditions.checkArgument(shard % partition == 0);
+        final int parallelism = shard / partition;
+        final int startShard = partitionId * parallelism;
+        final int endShard = startShard + parallelism;
+        long streamingOffset = getEarliestStreamingOffset(streaming, startShard, endShard);
+        streamingOffset = streamingOffset - (streamingOffset % parallelism);
+        logger.info("offset from ii desc is " + streamingOffset);
         final long earliestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
-        long streamOffset = streamingManager.getOffset(streaming, partitionId);
-        logger.info("offset from ii desc is " + streamOffset);
         logger.info("offset from KafkaRequester is " + earliestOffset);
-        if (streamOffset < earliestOffset) {
-            streamOffset = earliestOffset;
-        }
-        logger.info("offset is " + streamOffset);
+        streamingOffset = Math.max(streamingOffset, earliestOffset);
+        logger.info("starting offset is " + streamingOffset);
 
         if (!HBaseConnection.tableExists(kylinConfig.getStorageUrl(), iiSegment.getStorageLocationIdentifier())) {
             logger.error("no htable:" + iiSegment.getStorageLocationIdentifier() + " found");
             throw new IllegalStateException("please create htable:" + iiSegment.getStorageLocationIdentifier() + " first");
         }
 
-        KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId, streamOffset, kafkaConfig.getBrokers(), kafkaConfig) {
-            @Override
-            protected void consume(long offset, ByteBuffer payload) {
-                byte[] bytes = new byte[payload.limit()];
-                payload.get(bytes);
-                Stream newStream = new Stream(offset, bytes);
-                while (true) {
-                    try {
-                        if (getStreamQueue().offer(newStream, 60, TimeUnit.SECONDS)) {
-                            break;
-                        } else {
-                            logger.info("the queue is full, wait for builder to catch up");
-                        }
-                    } catch (InterruptedException e) {
-                        logger.info("InterruptedException", e);
-                        continue;
-                    }
-                }
-            }
-        };
-        kafkaConsumers.put(getKey(streaming, partitionId), consumer);
 
-        final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(), streaming, iiSegment.getStorageLocationIdentifier(), iiSegment.getIIDesc(), partitionId);
+        KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId, streamingOffset, kafkaConfig.getBrokers(), kafkaConfig, parallelism);
+        kafkaConsumers.put(getKey(streaming, partitionId), consumer);
 
         StreamParser parser;
         if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
@@ -164,10 +154,19 @@ public class StreamingBootstrap {
         } else {
             parser = new JsonStreamParser(ii.getDescriptor().listAllColumns());
         }
-        task.setStreamParser(parser);
-
         Executors.newSingleThreadExecutor().submit(consumer);
-        Executors.newSingleThreadExecutor().submit(task).get();
+        final ExecutorService streamingBuilderPool = Executors.newFixedThreadPool(parallelism);
+        for (int i = startShard; i < endShard; ++i) {
+            final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(i % parallelism), streaming, iiSegment.getStorageLocationIdentifier(), iiSegment.getIIDesc(), i);
+            task.setStreamParser(parser);
+            if (i == endShard - 1) {
+                streamingBuilderPool.submit(task).get();
+            } else {
+                streamingBuilderPool.submit(task);
+            }
+        }
+
+
     }
 
     private String getKey(String streaming, int partitionId) {
