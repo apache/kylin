@@ -58,7 +58,7 @@ public class KeyValueCreator {
     }
 
     public KeyValue create(Text key, Object[] measureValues) {
-        return create(key.getBytes(), 0, key.getLength(), valueBuf.array(), 0, valueBuf.position());
+        return create(key.getBytes(), 0, key.getLength(), measureValues);
     }
 
     public KeyValue create(byte[] keyBytes, int keyOffset, int keyLength, Object[] measureValues) {
