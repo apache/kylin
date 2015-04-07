@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -142,7 +141,7 @@ public class ModelController extends BasicController {
             throw new NotFoundException("Data Model with name " + modelName + " not found..");
         }
         try {
-            modelService.deleteModel(desc);
+            modelService.dropModel(desc);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to delete model. " + " Caused by: " + e.getMessage(), e);
@@ -172,6 +171,7 @@ public class ModelController extends BasicController {
         request.setSuccessful(success);
         request.setMessage(message);
     }
+
     public void setModelService(ModelService modelService) {
         this.modelService = modelService;
     }

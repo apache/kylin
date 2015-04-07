@@ -232,7 +232,6 @@ public class ProjectManager {
     public void removeModelFromProjects(String modelName) throws IOException {
         for (ProjectInstance projectInstance : findProjects(modelName)) {
             projectInstance.removeModel(modelName);
-
             saveResource(projectInstance);
         }
     }

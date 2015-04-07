@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log,TableModel) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log,TableModel,ModelService,loadingRequest) {
 
 
     $scope.buildGraph = function (model) {
@@ -223,4 +223,42 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaMod
             }
 
     };
+
+
+    $scope.dropModel = function (model) {
+
+        SweetAlert.swal({
+            title: '',
+            text: "Are you sure to drop this model?",
+            type: '',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: true
+        }, function(isConfirm) {
+            if(isConfirm){
+
+                loadingRequest.show();
+                ModelService.drop({modelId: model.name}, {}, function (result) {
+                    loadingRequest.hide();
+//                    CubeList.removeCube(cube);
+                    SweetAlert.swal('Success!', 'Model drop is done successfully', 'success');
+                    location.reload();
+                },function(e){
+                    loadingRequest.hide();
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
+                });
+            }
+
+        });
+    };
+
+
+
 });

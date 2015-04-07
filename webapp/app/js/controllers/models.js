@@ -109,7 +109,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                                             $scope.cube.detail = detail[0];
                                             //add model info
                                             $scope.metaModel ={
-                                                model : $scope.model
+                                                model : ModelList.getModelByCube(cube.name)
                                             }
                                         }else{
                                             SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
@@ -123,6 +123,8 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                                             SweetAlert.swal('Oops...', "Failed to take action.", 'error');
                                         }
                                     });
+
+
 
                                     // set selecte model
                                 }

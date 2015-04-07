@@ -86,7 +86,9 @@ KylinApp
                         cube.detail = detail[0];
                         ModelDescService.get({model_name: cube.detail.model_name}, function (model) {
                           cube.model = model;
-                          $scope.metaModel.model= model;
+                          $scope.metaModel ={
+                                model: model
+                            }
                           defer.resolve(cube.detail);
                        });
 
@@ -363,7 +365,7 @@ KylinApp
         }
     });
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube,MetaModel, buildType,SweetAlert,loadingRequest) {
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, buildType,SweetAlert,loadingRequest) {
     $scope.cube = cube;
     $scope.metaModel={
       model:cube.model
