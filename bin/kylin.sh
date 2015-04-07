@@ -2,6 +2,7 @@
 
 dir=$(dirname ${0})
 source ${dir}/check-env.sh
+mkdir -p ${KYLIN_HOME}/logs
 
 if [ $1 == "start" ]
 then
