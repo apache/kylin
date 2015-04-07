@@ -18,11 +18,10 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.RpcCallback;
-import com.google.protobuf.RpcController;
-import com.google.protobuf.Service;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -30,7 +29,6 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
@@ -47,9 +45,11 @@ import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
 import org.apache.kylin.storage.hbase.coprocessor.*;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.RpcCallback;
+import com.google.protobuf.RpcController;
+import com.google.protobuf.Service;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  * Created by honma on 11/7/14.
