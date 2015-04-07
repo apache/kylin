@@ -66,14 +66,15 @@ public class IIStreamBuilder extends StreamBuilder {
     private final IIDesc desc;
     private final HTableInterface hTable;
     private final SliceBuilder sliceBuilder;
-    private final int partitionId;
+    private final int shardId;
     private final String streaming;
+    private StreamingManager streamingManager;
 
-    public IIStreamBuilder(BlockingQueue<Stream> queue, String streaming, String hTableName, IIDesc iiDesc, int partitionId) {
+    public IIStreamBuilder(BlockingQueue<Stream> queue, String streaming, String hTableName, IIDesc iiDesc, int shard) {
         super(queue, iiDesc.getSliceSize());
         this.streaming = streaming;
         this.desc = iiDesc;
-        this.partitionId = partitionId;
+        this.shardId = shard;
         try {
             //this.hTable = HConnectionManager.createConnection(HBaseConfiguration.create()).getTable(hTableName);
             this.hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
@@ -81,15 +82,20 @@ public class IIStreamBuilder extends StreamBuilder {
             logger.error("cannot open htable name:" + hTableName, e);
             throw new RuntimeException("cannot open htable name:" + hTableName, e);
         }
-        sliceBuilder = new SliceBuilder(desc, (short) partitionId);
+        sliceBuilder = new SliceBuilder(desc, (short) shard);
+        streamingManager = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv());
     }
 
     @Override
     protected void build(List<Stream> streamsToBuild) throws IOException {
         if (streamsToBuild.size() > 0) {
+            long offset = streamsToBuild.get(0).getOffset();
+            if (offset < streamingManager.getOffset(streaming, shardId)) {
+                logger.info("this batch has already been built, skip building");
+                return;
+            }
             logger.info("stream build start, size:" + streamsToBuild.size());
             Stopwatch stopwatch = new Stopwatch().start();
-            long offset = streamsToBuild.get(streamsToBuild.size() - 1).getOffset();
             final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
             logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
 
@@ -126,9 +132,8 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     private void submitOffset(long offset) {
-        StreamingManager streamingManager = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv());
         try {
-            streamingManager.updateOffset(streaming, partitionId, offset);
+            streamingManager.updateOffset(streaming, shardId, offset);
             logger.info("submit offset:" + offset);
         } catch (Exception e) {
             logger.warn("error submit offset: " + offset + " retrying", e);

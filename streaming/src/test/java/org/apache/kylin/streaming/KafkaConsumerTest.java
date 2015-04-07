@@ -90,17 +90,8 @@ public class KafkaConsumerTest extends KafkaBaseTest {
         final ExecutorService executorService = Executors.newFixedThreadPool(kafkaTopicMeta.getPartitionIds().size());
         List<BlockingQueue<Stream>> queues = Lists.newArrayList();
         for (Integer partitionId : kafkaTopicMeta.getPartitionIds()) {
-            KafkaConsumer consumer = new KafkaConsumer(kafkaTopicMeta.getName(), partitionId, 0, kafkaConfig.getBrokers(), kafkaConfig) {
-                @Override
-                protected void consume(long offset, ByteBuffer payload) throws Exception {
-                    //TODO use ByteBuffer maybe
-                    byte[] bytes = new byte[payload.limit()];
-                    payload.get(bytes);
-                    logger.info("get message offset:" + offset);
-                    getStreamQueue().put(new Stream(offset, bytes));
-                }
-            };
-            queues.add(consumer.getStreamQueue());
+            KafkaConsumer consumer = new KafkaConsumer(kafkaTopicMeta.getName(), partitionId, 0, kafkaConfig.getBrokers(), kafkaConfig);
+            queues.add(consumer.getStreamQueue(0));
             executorService.execute(consumer);
         }
         waitForProducerToStop(producer);
