@@ -40,21 +40,23 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Created by qianzhou on 3/25/15.
  */
-public class StreamManagerTest extends LocalFileMetadataTestCase {
+public class StreamingManagerTest extends LocalFileMetadataTestCase {
 
     private KylinConfig kylinConfig;
-    private StreamManager streamManager;
+    private StreamingManager streamingManager;
 
     @Before
     public void before() {
         this.createTestMetadata();
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        streamManager = StreamManager.getInstance(kylinConfig);
+        streamingManager = StreamingManager.getInstance(kylinConfig);
     }
 
     @After
@@ -64,6 +66,28 @@ public class StreamManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void test() {
-        assertNotNull(streamManager.getKafkaConfig("kafka_test"));
+        assertNotNull(streamingManager.getKafkaConfig("kafka_test"));
+    }
+
+    @Test
+    public void testOffset() {
+        final String streaming = "kafka_test";
+        final int partition = 0;
+        assertEquals(0, streamingManager.getOffset(streaming, partition));
+
+        try {
+            updateOffsetAndCompare(streaming, partition, -1);
+            fail("offset cannot be smaller than 0");
+        } catch (IllegalArgumentException e) {
+        }
+        updateOffsetAndCompare(streaming, partition, 1000);
+        updateOffsetAndCompare(streaming, partition, 800);
+        updateOffsetAndCompare(streaming, partition, 2000);
+
+    }
+
+    private void updateOffsetAndCompare(String streaming, int partition, long offset) {
+        streamingManager.updateOffset(streaming, partition, offset);
+        assertEquals(offset, streamingManager.getOffset(streaming, partition));
     }
 }

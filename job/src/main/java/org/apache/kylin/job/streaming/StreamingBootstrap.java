@@ -67,7 +67,7 @@ public class StreamingBootstrap {
     private static Logger logger = LoggerFactory.getLogger(StreamingBootstrap.class);
 
     private KylinConfig kylinConfig;
-    private StreamManager streamManager;
+    private StreamingManager streamingManager;
     private IIManager iiManager;
 
     private Map<String, KafkaConsumer> kafkaConsumers = Maps.newConcurrentMap();
@@ -85,7 +85,7 @@ public class StreamingBootstrap {
 
     private StreamingBootstrap(KylinConfig kylinConfig) {
         this.kylinConfig = kylinConfig;
-        this.streamManager = StreamManager.getInstance(kylinConfig);
+        this.streamingManager = StreamingManager.getInstance(kylinConfig);
         this.iiManager = IIManager.getInstance(kylinConfig);
     }
 
@@ -105,7 +105,7 @@ public class StreamingBootstrap {
     }
 
     public void start(String streaming, int partitionId) throws Exception {
-        final KafkaConfig kafkaConfig = streamManager.getKafkaConfig(streaming);
+        final KafkaConfig kafkaConfig = streamingManager.getKafkaConfig(streaming);
         Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streaming);
         final IIInstance ii = iiManager.getII(kafkaConfig.getIiName());
         Preconditions.checkNotNull(ii, "cannot find ii name:" + kafkaConfig.getIiName());
@@ -119,7 +119,7 @@ public class StreamingBootstrap {
         final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
         Preconditions.checkState(leadBroker != null, "cannot find lead broker");
         final long earliestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
-        long streamOffset = streamManager.getOffset(streaming, partitionId);
+        long streamOffset = streamingManager.getOffset(streaming, partitionId);
         logger.info("offset from ii desc is " + streamOffset);
         logger.info("offset from KafkaRequester is " + earliestOffset);
         if (streamOffset < earliestOffset) {
