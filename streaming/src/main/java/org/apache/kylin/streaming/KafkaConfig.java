@@ -82,6 +82,9 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("parserName")
     private String parserName;
 
+    @JsonProperty("partition")
+    private int partition;
+
     public String getParserName() {
         return parserName;
     }
@@ -159,6 +162,14 @@ public class KafkaConfig extends RootPersistentEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getPartition() {
+        return partition;
+    }
+
+    public void setPartition(int partition) {
+        this.partition = partition;
     }
 
     @Override

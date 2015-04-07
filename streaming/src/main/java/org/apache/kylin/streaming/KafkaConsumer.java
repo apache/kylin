@@ -34,6 +34,7 @@
 
 package org.apache.kylin.streaming;
 
+import com.google.common.base.Preconditions;
 import kafka.cluster.Broker;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.PartitionMetadata;
@@ -45,36 +46,47 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by qianzhou on 2/15/15.
  */
-public abstract class KafkaConsumer implements Runnable {
+public class KafkaConsumer implements Runnable {
 
-    private String topic;
-    private int partitionId;
+    private final String topic;
+    private final int partitionId;
+    private final KafkaConfig kafkaConfig;
+    private final transient int parallelism;
+    private final LinkedBlockingQueue<Stream>[] streamQueue;
 
-    private KafkaConfig kafkaConfig;
-    private List<Broker> replicaBrokers;
     private long offset;
-    private LinkedBlockingQueue<Stream> streamQueue;
+    private List<Broker> replicaBrokers;
 
-    private Logger logger;
+    protected final Logger logger;
 
     private volatile boolean isRunning = true;
 
     public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
+        this(topic, partitionId, startOffset, initialBrokers, kafkaConfig, 1);
+    }
+
+    public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaConfig kafkaConfig, int parallelism) {
+        Preconditions.checkArgument(parallelism > 0);
         this.topic = topic;
         this.partitionId = partitionId;
         this.kafkaConfig = kafkaConfig;
-        offset = startOffset;
+        this.offset = startOffset;
         this.replicaBrokers = initialBrokers;
-        logger = LoggerFactory.getLogger("KafkaConsumer_" + topic + "_" + partitionId);
-        streamQueue = new LinkedBlockingQueue<Stream>(kafkaConfig.getMaxReadCount());
+        this.logger = LoggerFactory.getLogger("KafkaConsumer_" + topic + "_" + partitionId);
+        this.parallelism = parallelism;
+        this.streamQueue = new LinkedBlockingQueue[parallelism];
+        for (int i = 0; i < parallelism; ++i) {
+            streamQueue[i] = new LinkedBlockingQueue<Stream>(kafkaConfig.getMaxReadCount());
+        }
     }
 
-    public BlockingQueue<Stream> getStreamQueue() {
-        return streamQueue;
+    public BlockingQueue<Stream> getStreamQueue(int index) {
+        return streamQueue[index];
     }
 
     private Broker getLeadBroker() {
@@ -85,6 +97,10 @@ public abstract class KafkaConsumer implements Runnable {
         } else {
             return null;
         }
+    }
+
+    protected int hash(long offset) {
+        return (int) (offset % parallelism);
     }
 
     @Override
@@ -132,13 +148,31 @@ public abstract class KafkaConsumer implements Runnable {
                     Thread.sleep(30000);
                 }
             }
-            getStreamQueue().put(Stream.EOF);
+            for (int i = 0; i < streamQueue.length; ++i) {
+                streamQueue[i].put(Stream.EOF);
+            }
         } catch (Exception e) {
             logger.error("consumer has encountered an error", e);
         }
     }
 
-    protected abstract void consume(long offset, ByteBuffer payload) throws Exception;
+    protected void consume(long offset, ByteBuffer payload) throws Exception {
+        byte[] bytes = new byte[payload.limit()];
+        payload.get(bytes);
+        Stream newStream = new Stream(offset, bytes);
+        while (true) {
+            try {
+                if (getStreamQueue(hash(offset)).offer(newStream, 60, TimeUnit.SECONDS)) {
+                    break;
+                } else {
+                    logger.info("the queue is full, wait for builder to catch up");
+                }
+            } catch (InterruptedException e) {
+                logger.info("InterruptedException", e);
+                continue;
+            }
+        }
+    }
 
     public void stop() {
         this.isRunning = false;

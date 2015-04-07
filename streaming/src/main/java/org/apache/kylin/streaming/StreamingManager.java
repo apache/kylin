@@ -116,8 +116,8 @@ public class StreamingManager {
         }
     }
 
-    public long getOffset(String streaming, int partition) {
-        final String resPath = formatStreamingOutputPath(streaming, partition);
+    public long getOffset(String streaming, int shard) {
+        final String resPath = formatStreamingOutputPath(streaming, shard);
         try {
             final InputStream inputStream = getStore().getResource(resPath);
             if (inputStream == null) {
@@ -132,9 +132,9 @@ public class StreamingManager {
         }
     }
 
-    public void updateOffset(String streaming, int partition, long offset) {
+    public void updateOffset(String streaming, int shard, long offset) {
         Preconditions.checkArgument(offset >= 0, "offset cannot be smaller than 0");
-        final String resPath = formatStreamingOutputPath(streaming, partition);
+        final String resPath = formatStreamingOutputPath(streaming, shard);
         try {
             getStore().putResource(resPath, new ByteArrayInputStream(Long.valueOf(offset).toString().getBytes()), getStore().getResourceTimestamp(resPath));
         } catch (IOException e) {
