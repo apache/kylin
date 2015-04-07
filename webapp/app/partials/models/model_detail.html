@@ -35,8 +35,12 @@
             </a>
             <ul class="dropdown-menu">
                 <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
-                    <a href="models/edit/{{model.name}}" data-widget="collapse">Edit Model</a>
+                    <a href="models/edit/{{model.name}}" data-widget="collapse">Edit</a>
                 </li>
+                <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+                    <a ng-click="dropModel(model)">Drop</a>
+                </li>
+                <li role="presentation" class="divider"></li>
                 <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
                     <a href="cubes/add/{{model.name}}" data-widget="collapse">Create Cube</a>
                 </li>

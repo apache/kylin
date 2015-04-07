@@ -32,7 +32,6 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +45,8 @@ import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
+
+import javax.xml.crypto.Data;
 
 /**
  * Serves (and caches) metadata for Kylin instance.
@@ -359,6 +360,27 @@ public class MetadataManager {
         } catch (IOException e) {
             throw new IllegalStateException("Error to load" + path, e);
         }
+    }
+
+    // sync on update
+    public DataModelDesc dropModel(DataModelDesc desc) throws IOException {
+        logger.info("Dropping model '" + desc.getName() + "'");
+        ResourceStore store = getStore();
+        if (desc != null)
+            store.deleteResource(desc.getResourcePath());
+        // delete model from project
+        ProjectManager.getInstance(config).removeModelFromProjects(desc.getName());
+        // clean model cache
+        this.afterModelDropped(desc);
+        return desc;
+    }
+
+    private void afterModelDropped(DataModelDesc desc) {
+        removeModelCache(desc);
+    }
+
+    private void removeModelCache(DataModelDesc desc){
+        dataModelDescMap.remove(desc.getName());
     }
 
     public DataModelDesc createDataModelDesc(DataModelDesc desc,String projectName,String owner) throws IOException {

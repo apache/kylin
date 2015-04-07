@@ -139,8 +139,8 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         }
 
         SweetAlert.swal({
-            title: 'Are you sure to update the model?',
-            text: $scope.isEdit?' Please note: if model schema is changed, all cubes of the model will be affected.':'Are you sure to save the Model ?',
+            title: $scope.isEdit?'Are you sure to update the model?':"Are you sure to save the Model?",
+            text: $scope.isEdit?' Please note: if model schema is changed, all cubes of the model will be affected.':'',
             type: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#DD6B55',

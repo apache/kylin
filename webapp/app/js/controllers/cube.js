@@ -265,7 +265,7 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
 
                 SweetAlert.swal({
                     title: '',
-                    text: "Are you sure to start the build? ",
+                    text: "Are you sure to start the build ?",
                     type: '',
                     showCancelButton: true,
                     confirmButtonColor: '#DD6B55',
@@ -311,7 +311,7 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
                 controller: jobSubmitCtrl,
                 resolve: {
                     cube: function () {
-                        return cube.detail;
+                        return cube;
                     },
                     metaModel:function(){
                         return $scope.metaModel;

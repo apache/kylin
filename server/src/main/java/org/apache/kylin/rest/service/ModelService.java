@@ -19,6 +19,8 @@
 package org.apache.kylin.rest.service;
 
 
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
@@ -113,13 +115,26 @@ public class ModelService extends BasicService {
 
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
-    public void deleteModel(DataModelDesc desc) throws IOException {
-//        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+    public void dropModel(DataModelDesc desc) throws IOException {
 
+        //check cube desc exist
+        List<CubeDesc>  cubeDescs = getCubeDescManager().listAllDesc();
+        for(CubeDesc cubeDesc:cubeDescs){
+            if(cubeDesc.getModelName().equals(desc.getName())){
+                throw new InternalErrorException("Model referenced by cube,drop cubes under model and try again.");
+            }
+        }
 
+        //check II desc exist
+        List<IIDesc> iiDescs = getIIDescManager().listAllDesc();
+        for(IIDesc iidesc:iiDescs){
+            if(iidesc.getModelName().equals(desc.getName())){
+                throw new InternalErrorException("Model referenced by IIDesc.");
+            }
+        }
 
+        getMetadataManager().dropModel(desc);
 
-//        getCubeManager().dropCube(cube.getName(), true);
-//        accessService.clean(cube, true);
+        accessService.clean(desc, true);
     }
 }
