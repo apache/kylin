@@ -53,7 +53,7 @@ public class KafkaRequesterTest extends KafkaBaseTest {
 
     @Before
     public void before() {
-        kafkaConfig = StreamManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+        kafkaConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
     }
 
     @AfterClass
