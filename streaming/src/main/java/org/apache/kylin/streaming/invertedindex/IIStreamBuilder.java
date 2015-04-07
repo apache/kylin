@@ -41,15 +41,13 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
-import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamBuilder;
-import org.apache.kylin.streaming.StreamManager;
+import org.apache.kylin.streaming.StreamingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,9 +126,9 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     private void submitOffset(long offset) {
-        StreamManager streamManager = StreamManager.getInstance(KylinConfig.getInstanceFromEnv());
+        StreamingManager streamingManager = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv());
         try {
-            streamManager.updateOffset(streaming, partitionId, offset);
+            streamingManager.updateOffset(streaming, partitionId, offset);
             logger.info("submit offset:" + offset);
         } catch (Exception e) {
             logger.warn("error submit offset: " + offset + " retrying", e);

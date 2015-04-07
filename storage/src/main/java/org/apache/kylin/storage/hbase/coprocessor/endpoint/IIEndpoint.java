@@ -56,6 +56,8 @@ import it.uniroma3.mat.extendedset.intset.ConciseSet;
  */
 public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, CoprocessorService {
 
+    private static final int MEMORY_LIMIT = 500 * 1024 * 1024;
+
     private RegionCoprocessorEnvironment env;
 
     public IIEndpoint() {
@@ -192,7 +194,9 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
-        byte[] recordBuffer = new byte[recordInfo.getByteFormLen()];
+        final int byteFormLen = recordInfo.getByteFormLen();
+        int totalSize = 0;
+        byte[] recordBuffer = new byte[byteFormLen];
         for (Slice slice : slices) {
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
             ConciseSet result = null;
@@ -202,10 +206,14 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
+                if (totalSize >= MEMORY_LIMIT) {
+                    throw new RuntimeException("the query has exceeded the memory limit, please check the query");
+                }
                 final RawTableRecord rawTableRecord = iterator.next();
                 decodeWithDictionary(recordBuffer, rawTableRecord, slice.getLocalDictionaries(), recordInfo, buffer, rowKeyColumnIO, type);
                 IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(recordBuffer));
                 responseBuilder.addRows(rowBuilder.build());
+                totalSize += byteFormLen;
             }
         }
 

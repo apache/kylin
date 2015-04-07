@@ -66,7 +66,7 @@ public abstract class AggregationCache {
         int size = aggBufMap.size();
         int memUsage = (40 + rowMemBytes) * size;
         if (memUsage > MEMORY_USAGE_CAP) {
-            throw new RuntimeException("Kylin coprocess memory usage goes beyond cap, (40 + " + rowMemBytes + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abord coprocessor.");
+            throw new RuntimeException("Kylin coprocess memory usage goes beyond cap, (40 + " + rowMemBytes + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abort coprocessor.");
         }
     }
 }
