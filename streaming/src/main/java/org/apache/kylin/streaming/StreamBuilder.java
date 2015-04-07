@@ -91,9 +91,6 @@ public abstract class StreamBuilder implements Runnable {
                     continue;
                 } else {
                     if (stream.getOffset() < 0) {
-                        if (!streamToBuild.isEmpty()) {
-                            build(streamToBuild);
-                        }
                         logger.warn("streaming encountered EOF, stop building");
                         break;
                     }
