@@ -19,12 +19,15 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
@@ -32,6 +35,7 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.index.RawTableRecord;
@@ -39,6 +43,7 @@ import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
+import org.apache.kylin.invertedindex.model.KeyValueCodec;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
@@ -63,10 +68,44 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     public IIEndpoint() {
     }
 
-    private Scan buildScan() {
+    private Scan prepareScan(IIProtos.IIRequest request, HRegion region) throws IOException {
         Scan scan = new Scan();
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES);
+
+        int shard = -1;
+        if (request.hasTsStart() || request.hasTsEnd()) {
+            byte[] regionStartKey = region.getStartKey();
+            if (regionStartKey != null) {
+                shard = BytesUtil.readUnsigned(regionStartKey, 0, IIKeyValueCodec.SHARD_LEN);
+            } else {
+                shard = 0;
+            }
+            System.out.println("Start key of the region is: " + BytesUtil.toReadableText(regionStartKey) + ", making shard to be :" + shard);
+        }
+
+        if (request.hasTsStart()) {
+            Preconditions.checkArgument(shard != -1, "Shard is -1!");
+            long tsStart = request.getTsStart();
+
+            byte[] idealStartKey = new byte[IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN];
+            BytesUtil.writeUnsigned(shard, idealStartKey, 0, IIKeyValueCodec.SHARD_LEN);
+            BytesUtil.writeLong(tsStart, idealStartKey, IIKeyValueCodec.SHARD_LEN, IIKeyValueCodec.TIMEPART_LEN);
+            Result result = region.getClosestRowBefore(idealStartKey, IIDesc.HBASE_FAMILY_BYTES);
+            byte[] actualStartKey = Arrays.copyOf(result.getRow(), IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN);
+            scan.setStartRow(actualStartKey);
+            System.out.println("The start key is set to " + BytesUtil.toReadableText(actualStartKey));
+        }
+
+        if (request.hasTsEnd()) {
+            Preconditions.checkArgument(shard != -1, "Shard is -1");
+            long tsEnd = request.getTsEnd();
+            byte[] actualEndKey = new byte[IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN];
+            BytesUtil.writeUnsigned(shard, actualEndKey, 0, IIKeyValueCodec.SHARD_LEN);
+            BytesUtil.writeLong(tsEnd + 1, actualEndKey, IIKeyValueCodec.SHARD_LEN, IIKeyValueCodec.TIMEPART_LEN);//notice +1 here
+            scan.setStopRow(actualEndKey);
+            System.out.println("The stop key is set to " + BytesUtil.toReadableText(actualEndKey));
+        }
         return scan;
     }
 
@@ -74,23 +113,21 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
 
+        System.out.println("Entry of IIEndpoint");
+
         RegionScanner innerScanner = null;
         HRegion region = null;
 
         try {
             region = env.getRegion();
             region.startRegionOperation();
-            innerScanner = region.getScanner(buildScan());
 
-            CoprocessorRowType type;
-            CoprocessorProjector projector;
-            EndpointAggregators aggregators;
-            CoprocessorFilter filter;
+            innerScanner = region.getScanner(prepareScan(request, region));
 
-            type = CoprocessorRowType.deserialize(request.getType().toByteArray());
-            projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
-            aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
-            filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
+            CoprocessorRowType type = CoprocessorRowType.deserialize(request.getType().toByteArray());
+            CoprocessorProjector projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
+            EndpointAggregators aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
+            CoprocessorFilter filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
 
             IIProtos.IIResponse response = getResponse(innerScanner, type, projector, aggregators, filter);
             done.run(response);
@@ -134,16 +171,18 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
-        final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
+
         byte[] recordBuffer = new byte[recordInfo.getByteFormLen()];
+        final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+
         for (Slice slice : slices) {
 
             //TODO localdict
             //dictionaries for fact table columns can not be determined while streaming.
             //a piece of dict coincide with each Slice, we call it "local dict"
-            final  Dictionary<?>[] localDictionaries = slice.getLocalDictionaries();
+            final Dictionary<?>[] localDictionaries = slice.getLocalDictionaries();
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(localDictionaries, type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
 
             ConciseSet result = null;
@@ -173,7 +212,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         return responseBuilder.build();
     }
 
-    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord,  Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
+    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
         final TblColRef[] columns = coprocessorRowType.columns;
         final int columnSize = columns.length;
         final boolean[] isMetric = digest.isMetrics();

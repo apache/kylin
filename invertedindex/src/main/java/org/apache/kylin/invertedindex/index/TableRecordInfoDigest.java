@@ -35,23 +35,23 @@ public class TableRecordInfoDigest {
 
     private String[] metricDataTypes;
     private int nColumns;
-	private int byteFormLen;
+    private int byteFormLen;
 
-	private int[] offsets;// column offset in byte form row
-	private int[] dictMaxIds;// max id for each of the dict
-	private int[] lengths;// length of each encoded dict
-	private boolean[] isMetric;// whether it's metric or dict
+    private int[] offsets;// column offset in byte form row
+    private int[] dictMaxIds;// max id for each of the dict
+    private int[] lengths;// length of each encoded dict
+    private boolean[] isMetric;// whether it's metric or dict
     private FixedLenMeasureCodec[] measureCodecs;
 
-    public TableRecordInfoDigest(int nColumns, int byteFormLen, int[] offsets,
-			int[] dictMaxIds, int[] lengths, boolean[] isMetric,
-			String[] metricDataTypes) {
-		this.nColumns = nColumns;
-		this.byteFormLen = byteFormLen;
-		this.offsets = offsets;
-		this.dictMaxIds = dictMaxIds;
-		this.lengths = lengths;
-		this.isMetric = isMetric;
+
+    public TableRecordInfoDigest(int nColumns, int byteFormLen, //
+            int[] offsets, int[] dictMaxIds, int[] lengths, boolean[] isMetric, String[] metricDataTypes) {
+        this.nColumns = nColumns;
+        this.byteFormLen = byteFormLen;
+        this.offsets = offsets;
+        this.dictMaxIds = dictMaxIds;
+        this.lengths = lengths;
+        this.isMetric = isMetric;
         this.metricDataTypes = metricDataTypes;
         this.measureCodecs = new FixedLenMeasureCodec[nColumns];
         for (int i = 0; i < isMetric.length; i++) {
@@ -61,36 +61,36 @@ public class TableRecordInfoDigest {
         }
     }
 
-	private TableRecordInfoDigest() {
-	}
+    private TableRecordInfoDigest() {
+    }
 
-	public int getByteFormLen() {
-		return byteFormLen;
-	}
+    public int getByteFormLen() {
+        return byteFormLen;
+    }
 
-	public boolean isMetrics(int col) {
-		return isMetric[col];
-	}
+    public boolean isMetrics(int col) {
+        return isMetric[col];
+    }
 
     public boolean[] isMetrics() {
         return isMetric;
     }
 
-	public int getColumnCount() {
-		return nColumns;
-	}
+    public int getColumnCount() {
+        return nColumns;
+    }
 
-	public int offset(int col) {
-		return offsets[col];
-	}
+    public int offset(int col) {
+        return offsets[col];
+    }
 
-	public int length(int col) {
-		return lengths[col];
-	}
+    public int length(int col) {
+        return lengths[col];
+    }
 
-	public int getMaxID(int col) {
-		return dictMaxIds[col];
-	}
+    public int getMaxID(int col) {
+        return dictMaxIds[col];
+    }
 
     public boolean[] getIsMetric() {
         return isMetric;
@@ -101,8 +101,9 @@ public class TableRecordInfoDigest {
     }
 
     public RawTableRecord createTableRecordBytes() {
-		return new RawTableRecord(this);
-	}
+        return new RawTableRecord(this);
+    }
+
 
     @Override
     public int hashCode() {
@@ -116,68 +117,63 @@ public class TableRecordInfoDigest {
         }
         if (obj instanceof TableRecordInfoDigest) {
             TableRecordInfoDigest other = (TableRecordInfoDigest) obj;
-            return Objects.equal(this.nColumns, other.nColumns) &&
-                    Arrays.equals(this.offsets, other.offsets) &&
-                    Arrays.equals(this.dictMaxIds, other.dictMaxIds) &&
-                    Arrays.equals(this.lengths, other.lengths) &&
-                    Arrays.equals(this.isMetric, other.isMetric) &&
-                    Arrays.equals(this.metricDataTypes, other.metricDataTypes);
+            return Objects.equal(this.nColumns, other.nColumns) && Arrays.equals(this.offsets, other.offsets) && Arrays.equals(this.dictMaxIds, other.dictMaxIds) && Arrays.equals(this.lengths, other.lengths) && Arrays.equals(this.isMetric, other.isMetric) && Arrays.equals(this.metricDataTypes, other.metricDataTypes);
         } else {
             return false;
         }
     }
 
     // metrics go with fixed-len codec
-	@SuppressWarnings("unchecked")
-	public FixedLenMeasureCodec<LongWritable> codec(int col) {
-		// yes, all metrics are long currently
+    @SuppressWarnings("unchecked")
+    public FixedLenMeasureCodec<LongWritable> codec(int col) {
+        // yes, all metrics are long currently
         return measureCodecs[col];
-	}
+    }
 
-	public static byte[] serialize(TableRecordInfoDigest o) {
-		ByteBuffer buf = ByteBuffer.allocate(Serializer.SERIALIZE_BUFFER_SIZE);
-		serializer.serialize(o, buf);
-		byte[] result = new byte[buf.position()];
-		System.arraycopy(buf.array(), 0, result, 0, buf.position());
-		return result;
-	}
+    public static byte[] serialize(TableRecordInfoDigest o) {
+        ByteBuffer buf = ByteBuffer.allocate(Serializer.SERIALIZE_BUFFER_SIZE);
+        serializer.serialize(o, buf);
+        byte[] result = new byte[buf.position()];
+        System.arraycopy(buf.array(), 0, result, 0, buf.position());
+        return result;
+    }
 
-	public static TableRecordInfoDigest deserialize(byte[] bytes) {
-		return serializer.deserialize(ByteBuffer.wrap(bytes));
-	}
+    public static TableRecordInfoDigest deserialize(byte[] bytes) {
+        return serializer.deserialize(ByteBuffer.wrap(bytes));
+    }
 
-	public static TableRecordInfoDigest deserialize(ByteBuffer buffer) {
-		return serializer.deserialize(buffer);
-	}
+    public static TableRecordInfoDigest deserialize(ByteBuffer buffer) {
+        return serializer.deserialize(buffer);
+    }
 
-	private static final Serializer serializer = new Serializer();
+    private static final Serializer serializer = new Serializer();
 
-	private static class Serializer implements
-			BytesSerializer<TableRecordInfoDigest> {
+    private static class Serializer implements BytesSerializer<TableRecordInfoDigest> {
 
-		@Override
-		public void serialize(TableRecordInfoDigest value, ByteBuffer out) {
-			BytesUtil.writeVInt(value.nColumns, out);
-			BytesUtil.writeVInt(value.byteFormLen, out);
-			BytesUtil.writeIntArray(value.offsets, out);
-			BytesUtil.writeIntArray(value.dictMaxIds, out);
-			BytesUtil.writeIntArray(value.lengths, out);
-			BytesUtil.writeBooleanArray(value.isMetric, out);
+        @Override
+        public void serialize(TableRecordInfoDigest value, ByteBuffer out) {
+            BytesUtil.writeVInt(value.nColumns, out);
+            BytesUtil.writeVInt(value.byteFormLen, out);
+            BytesUtil.writeIntArray(value.offsets, out);
+            BytesUtil.writeIntArray(value.dictMaxIds, out);
+            BytesUtil.writeIntArray(value.lengths, out);
+            BytesUtil.writeBooleanArray(value.isMetric, out);
             BytesUtil.writeAsciiStringArray(value.metricDataTypes, out);
-		}
 
-		@Override
-		public TableRecordInfoDigest deserialize(ByteBuffer in) {
-			TableRecordInfoDigest result = new TableRecordInfoDigest();
-			result.nColumns = BytesUtil.readVInt(in);
-			result.byteFormLen = BytesUtil.readVInt(in);
-			result.offsets = BytesUtil.readIntArray(in);
-			result.dictMaxIds = BytesUtil.readIntArray(in);
-			result.lengths = BytesUtil.readIntArray(in);
-			result.isMetric = BytesUtil.readBooleanArray(in);
+        }
+
+        @Override
+        public TableRecordInfoDigest deserialize(ByteBuffer in) {
+            TableRecordInfoDigest result = new TableRecordInfoDigest();
+            result.nColumns = BytesUtil.readVInt(in);
+            result.byteFormLen = BytesUtil.readVInt(in);
+            result.offsets = BytesUtil.readIntArray(in);
+            result.dictMaxIds = BytesUtil.readIntArray(in);
+            result.lengths = BytesUtil.readIntArray(in);
+            result.isMetric = BytesUtil.readBooleanArray(in);
             result.metricDataTypes = BytesUtil.readAsciiStringArray(in);
-			return result;
-		}
+            return result;
+        }
 
-	}
+    }
 }
