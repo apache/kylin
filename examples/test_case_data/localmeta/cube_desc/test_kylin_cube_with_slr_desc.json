@@ -134,7 +134,7 @@
       "mandatory" : false
     }, {
       "column" : "lstg_format_name",
-      "length" : 12,
+      "length" : 0,
       "dictionary" : null,
       "mandatory" : false
     }, {
