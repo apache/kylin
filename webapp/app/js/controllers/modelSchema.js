@@ -18,9 +18,9 @@
 
 'use strict';
 
-KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,$log,SweetAlert) {
+KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,$log,SweetAlert,modelsManager) {
 
-    $log.info($scope.model);
+    $scope.modelsManager = modelsManager;
 
     $scope.projects = [];
     $scope.newDimension = null;
@@ -135,7 +135,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
      */
     $scope.check_data_model = function(){
         var errors = [];
-//        if(!$scope.model.lookups.length){
+//        if(!modelsManager.selectedModel.lookups.length){
 //            errors.push("No lookup table defined");
 //        }
         var errorInfo = "";
@@ -158,10 +158,10 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     $scope.check_model_dimensions = function(){
 
         var errors = [];
-        if(!$scope.model.dimensions.length){
+        if(!modelsManager.selectedModel.dimensions.length){
             errors.push("No dimensions defined.");
         }
-        angular.forEach($scope.model.dimensions,function(_dimension){
+        angular.forEach(modelsManager.selectedModel.dimensions,function(_dimension){
             if(!_dimension.columns||!_dimension.columns.length){
             errors.push("No dimension columns defined for Table["+_dimension.table+"]");
             }
@@ -186,7 +186,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     $scope.check_model_measure = function(){
 
         var errors = [];
-        if(!$scope.model.metrics||!$scope.model.metrics.length){
+        if(!modelsManager.selectedModel.metrics||!modelsManager.selectedModel.metrics.length){
             errors.push("Please define your metrics.");
         }
         var errorInfo = "";
@@ -203,7 +203,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     };
     $scope.check_model_setting = function(){
         var errors = [];
-        if($scope.model.partition_desc.partition_date_column!=null&& $scope.model.partition_desc.partition_date_start==null){
+        if(modelsManager.selectedModel.partition_desc.partition_date_column!=null&& modelsManager.selectedModel.partition_desc.partition_date_start==null){
             errors.push("Please indicate start date when partition date column selected.");
         }
         var errorInfo = "";

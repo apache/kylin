@@ -20,7 +20,7 @@
 <ng-form name="forms.model_measure_form" novalidate>
 <div class="dataTables_wrapper form-inline no-footer">
 
-    <table ng-if="state.mode=='view'&&model.metrics.length > 0" class="table table-striped table-hover">
+    <table ng-if="state.mode=='view'&&modelsManager.selectedModel.metrics.length > 0" class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>ID</th>
@@ -28,7 +28,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr ng-repeat="measure in model.metrics track by $index">
+            <tr ng-repeat="measure in modelsManager.selectedModel.metrics track by $index">
                 <td>
                     <!--ID -->
                     <b>{{$index + 1}}</b>
@@ -43,9 +43,9 @@
     <div  ng-if="state.mode=='edit'" class="form-group" style="width: 100%">
         <h3 class="box-title">Select your measures</h3>
         <select style="width: 100%"
-                ng-model="model.metrics"  chosen multiple
+                ng-model="modelsManager.selectedModel.metrics"  chosen multiple
                 ng-change=""
-                ng-options="measure.name as measure.name for measure in getColumnsByTable(model.fact_table)">
+                ng-options="measure.name as measure.name for measure in getColumnsByTable(modelsManager.selectedModel.fact_table)">
             <option value=""></option>
         </select>
     </div>

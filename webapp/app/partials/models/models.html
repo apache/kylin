@@ -40,10 +40,10 @@
             </tab>
         </tabset>
     </div>
-    <div  ng-if="showModels&&!cubeSelected"  class="col-xs-9 models-main">
+    <div  ng-if="showModels&&!modelsManager.cubeSelected"  class="col-xs-9 models-main">
         <div ng-include src="'partials/models/model_detail.html'"></div>
     </div>
-    <div  ng-if="showModels&&cubeSelected"  class="col-xs-9 models-main">
+    <div  ng-if="showModels&&modelsManager.cubeSelected"  class="col-xs-9 models-main">
         <div ng-include src="'partials/cubes/cube_detail.html'"></div>
     </div>
 

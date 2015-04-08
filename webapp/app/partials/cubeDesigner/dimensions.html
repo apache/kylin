@@ -47,7 +47,7 @@
                 </span>
             </div>
         </div>
-        <table class="table table-striped table-hover" ng-if="cubeMetaFrame.dimensions.length > 0">
+        <table class="table table-striped table-hover" ng-if="cubesManager.cubeMetaFrame.dimensions.length > 0">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -59,7 +59,7 @@
                 </tr>
             </thead>
             <tbody class="cube-dimension">
-                <tr ng-repeat="dimension in cubeMetaFrame.dimensions | filter:dimState.filter track by $index">
+                <tr ng-repeat="dimension in cubesManager.cubeMetaFrame.dimensions | filter:dimState.filter track by $index">
                     <!--ID -->
                     <td>
                         <b>{{dimension.id = ($index + 1)}}</b>

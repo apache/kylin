@@ -24,11 +24,11 @@
         <div ng-if="metaModel.model.partition_desc.partition_date_column" class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
-                <div ng-if="!!!(cube.segments) || cube.segments.length < 2">
+                <div ng-if="!!!(cubesManager.currentCube.segments) || cubesManager.currentCube.segments.length < 2">
                     <span class="text-info">NO SEGMENT TO MERGE.</span>
                 </div>
-                <div ng-if="cube.segments.length >= 2" class="row">
-                    <table class="table table-striped list" ng-if="(cube.segments|filter: {status: 'NEW'}).length == 0">
+                <div ng-if="cubesManager.currentCube.segments.length >= 2" class="row">
+                    <table class="table table-striped list" ng-if="(cubesManager.currentCube.segments|filter: {status: 'NEW'}).length == 0">
                         <tbody>
                         <tr>
                             <td>PARTITION DATE COLUMN</td>
@@ -38,8 +38,8 @@
                             <td>MERGE START SEGMENT</td>
                             <td>
                                 <select ng-model="mergeStartSeg"
-                                        ng-init="mergeStartSeg=cube.segments[0];mergeStartSelected(mergeStartSeg)"
-                                        ng-options="segment as segment.name for segment in cube.segments"
+                                        ng-init="mergeStartSeg=cubesManager.currentCube.segments[0];mergeStartSelected(mergeStartSeg)"
+                                        ng-options="segment as segment.name for segment in cubesManager.currentCube.segments"
                                         ng-change="mergeStartSelected(mergeStartSeg)">
                                 </select>
                             </td>
@@ -48,8 +48,8 @@
                             <td>MERGE END SEGMENT</td>
                             <td>
                                 <select ng-model="mergeEndSeg"
-                                        ng-init="mergeEndSeg=cube.segments[cube.segments.length-1];mergeEndSelected(mergeEndSeg)"
-                                        ng-options="segment as segment.name for segment in cube.segments"
+                                        ng-init="mergeEndSeg=cubesManager.currentCube.segments[cubesManager.currentCube.segments.length-1];mergeEndSelected(mergeEndSeg)"
+                                        ng-options="segment as segment.name for segment in cubesManager.currentCube.segments"
                                         ng-change="mergeEndSelected(mergeEndSeg)">
                                 </select>
                             </td>
@@ -103,7 +103,7 @@
                         </tbody>
                     </table>
 
-                    <div ng-if="(cube.segments|filter: {status: 'NEW'}).length > 0">
+                    <div ng-if="(cubesManager.currentCube.segments|filter: {status: 'NEW'}).length > 0">
                         <span class="text-warning">There exists a build request of this cube, the job may be running or error. If you need a new build, please wait for its complete or discard it.</span>
                     </div>
                 </div>

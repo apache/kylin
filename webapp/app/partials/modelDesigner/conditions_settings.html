@@ -27,11 +27,11 @@
                 <div class="col-xs-12 col-sm-6">
                     <select class="form-control"
                         ng-if="state.mode=='edit'"
-                        chosen ng-model="model.partition_desc.partition_type"
+                        chosen ng-model="modelsManager.selectedModel.partition_desc.partition_type"
                         ng-options="ddt as ddt for ddt in cubeConfig.cubePartitionTypes">
                         <option value=""></option>
                     </select>
-                    <span ng-if="state.mode=='view'">{{model.partition_desc.partition_type}}</span>
+                    <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.partition_desc.partition_type}}</span>
                 </div>
             </div>
         </div>
@@ -43,16 +43,16 @@
                 <div class="col-xs-12 col-sm-6">
 
                     <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
-                            ng-model="model.partition_desc.partition_date_column"
+                            ng-model="modelsManager.selectedModel.partition_desc.partition_date_column"
                             ng-if="state.mode=='edit'"
                             data-placement=""
-                            ng-options="model.fact_table+'.'+columns.name as model.fact_table+'.'+columns.name for columns in getPartitonColumns(model.fact_table)" >
+                            ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonColumns(modelsManager.selectedModel.fact_table)" >
                         <option value="">--Select Partition Column--</option>
                     </select>
                     <small class="help-block text-red" ng-show="state.mode=='edit'">(data format in column should be 'YYYY-MM-DD')</small>
 
                     <span ng-if="state.mode=='view'">
-                        {{!!(model.partition_desc.partition_date_column)?model.partition_desc.partition_date_column: ''}}</span>
+                        {{!!(modelsManager.selectedModel.partition_desc.partition_date_column)?modelsManager.selectedModel.partition_desc.partition_date_column: ''}}</span>
                 </div>
             </div>
         </div>
@@ -61,14 +61,14 @@
         <div class="form-group">
             <div class="row">
                 <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Start Date</b></label>
-                <div class="col-xs-12 col-sm-6" ng-class="model.partition_desc.partition_date_column!=null&& model.partition_desc.partition_date_start==null?'has-error':''">
+                <div class="col-xs-12 col-sm-6" ng-class="modelsManager.selectedModel.partition_desc.partition_date_column!=null&& modelsManager.selectedModel.partition_desc.partition_date_start==null?'has-error':''">
                   <!--edit model will convert in MetaModel.converDateToGMT-->
                     <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd"
-                           ng-model="model.partition_desc.partition_date_start" ng-if="state.mode=='edit'"
+                           ng-model="modelsManager.selectedModel.partition_desc.partition_date_start" ng-if="state.mode=='edit'"
                            placeholder="Click to choose start date..." is-open="opened" />
-                    <small class="help-block" ng-show="model.partition_desc.partition_date_column!=null&& model.partition_desc.partition_date_start==null">Please input start date when partition date column selected.</small>
+                    <small class="help-block" ng-show="modelsManager.selectedModel.partition_desc.partition_date_column!=null&& modelsManager.selectedModel.partition_desc.partition_date_start==null">Please input start date when partition date column selected.</small>
                   <!--vier model will convert use filter-->
-                    <span ng-if="state.mode=='view'&&model.partition_desc.partition_date_column">{{(model.partition_desc.partition_date_start)|reverseToGMT0 }}</span>
+                    <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_date_column">{{(modelsManager.selectedModel.partition_desc.partition_date_start)|reverseToGMT0 }}</span>
                 </div>
             </div>
         </div>
@@ -79,11 +79,11 @@
                   <div class="col-xs-12 col-sm-6">
                       <select class="form-control"
                               ng-if="state.mode=='edit'"
-                              chosen ng-model="model.capacity"
+                              chosen ng-model="modelsManager.selectedModel.capacity"
                               ng-options="ddt as ddt for ddt in cubeConfig.cubeCapacities">
                           <option value=""></option>
                       </select>
-                      <span ng-if="state.mode=='view'">{{model.capacity}}</span>
+                      <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.capacity}}</span>
                   </div>
               </div>
           </div>
@@ -103,16 +103,16 @@
                                   style="height:150px"
                                   class="form-control box-default"
                                   placeholder="Please input WHERE clause without typing 'WHERE'"
-                                  ng-model="model.filter_condition">
+                                  ng-model="modelsManager.selectedModel.filter_condition">
                         </textarea>
                     </div>
 
                     <!--view mode-->
                     <div class="form-group row" ng-if="state.mode=='view'"
                          style="font-family:'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro'">
-                        <div ng-if="model.filter_condition" class="col-md-11 col-md-offset-1">
+                        <div ng-if="modelsManager.selectedModel.filter_condition" class="col-md-11 col-md-offset-1">
                             <p style="color: #930f80;"><b>WHERE</b></p>
-                            <span>{{model.filter_condition}}</span>
+                            <span>{{modelsManager.selectedModel.filter_condition}}</span>
                         </div>
                     </div>
 
