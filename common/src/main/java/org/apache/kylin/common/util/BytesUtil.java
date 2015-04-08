@@ -329,13 +329,13 @@ public class BytesUtil {
         in.get(array);
         return array;
     }
-    
+
     public static int peekByteArrayLength(ByteBuffer in) {
         int start = in.position();
         int arrayLen = readVInt(in);
         int sizeLen = in.position() - start;
         in.position(start);
-        
+
         if (arrayLen < 0)
             return sizeLen;
         else
@@ -389,6 +389,8 @@ public class BytesUtil {
     }
 
     public static String toReadableText(byte[] array) {
+        if (array == null)
+            return null;
         return toHex(array);
     }
 

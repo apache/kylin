@@ -122,7 +122,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
         //		return new Decoder(kvs, incompleteDigest);
     }
 
-    private static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Dictionary<?>[] dictionaryMap) {
+    private static TableRecordInfoDigest createDigest(int nColumns,  boolean[] isMetric, String[] dataTypes, Dictionary<?>[] dictionaryMap) {
         int[] dictMaxIds = new int[nColumns];
         int[] lengths = new int[nColumns];
         for (int i = 0; i < nColumns; ++i) {
@@ -205,7 +205,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                             CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), dictionary.getMaxId() - dictionary.getMinId() + 1, 0);
                             c.fromBytes(row.getValue());
                             valueContainers[curCol] = c;
-                            localDictionaries[curCol]= dictionary;
+                            localDictionaries[curCol] = dictionary;
                         }
                         columns++;
                         lastShard = curShard;

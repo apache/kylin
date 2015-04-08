@@ -61,6 +61,7 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+        System.out.println(time(946684800000L));
         long current = System.currentTimeMillis();
         System.out.println(time(current));
 
