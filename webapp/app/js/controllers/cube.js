@@ -18,9 +18,12 @@
 
 'use strict';
 
-KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, TableService, GraphService, UserService,SweetAlert,loadingRequest,ModelList,$modal) {
+KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService, CubeService, TableService, GraphService, UserService,SweetAlert,loadingRequest,modelsManager,$modal,cubesManager) {
     $scope.newAccess = null;
     $scope.state = {jsonEdit: false};
+
+    $scope.modelsManager = modelsManager;
+    $scope.cubesManager = cubesManager;
 
     $scope.buildGraph = function (cube) {
        GraphService.buildTree(cube);
@@ -242,7 +245,9 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
     };
 
     $scope.startJobSubmit = function (cube) {
-        $scope.metaModel.model = ModelList.getModelByCube(cube.name);
+        $scope.metaModel={
+            model:modelsManager.getModelByCube(cube.name)
+        }
         if ($scope.metaModel.model.name) {
             if ($scope.metaModel.model.partition_desc.partition_date_column) {
                 $modal.open({
@@ -306,6 +311,9 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
     };
 
     $scope.startRefresh = function (cube) {
+        $scope.metaModel={
+            model:modelsManager.getModelByCube(cube.name)
+        };
             $modal.open({
                 templateUrl: 'jobRefresh.html',
                 controller: jobSubmitCtrl,
@@ -325,6 +333,9 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
     };
 
     $scope.startMerge = function (cube) {
+        $scope.metaModel={
+            model:modelsManager.getModelByCube(cube.name)
+        };
             $modal.open({
                 templateUrl: 'jobMerge.html',
                 controller: jobSubmitCtrl,

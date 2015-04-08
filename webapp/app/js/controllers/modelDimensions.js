@@ -18,7 +18,8 @@
 
 'use strict';
 
-KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel) {
+KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel,modelsManager) {
+    $scope.modelsManager = modelsManager;
 
     // Available columns list derived from cube data model.
     $scope.availableColumns = {};
@@ -32,24 +33,24 @@ KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
     // Dump available columns plus column table name, whether is from lookup table.
     $scope.initColumns = function () {
-        var factTable = $scope.model.fact_table;
+        var factTable = modelsManager.selectedModel.fact_table;
 
-        $scope.availableTables.push($scope.model.fact_table);
-        var lookups = $scope.model.lookups;
+        $scope.availableTables.push(modelsManager.selectedModel.fact_table);
+        var lookups = modelsManager.selectedModel.lookups;
         for (var j = 0; j < lookups.length; j++) {
             $scope.availableTables.push(lookups[j].table);
         }
 
 //        init dimension only when dimen
-//        if(!$scope.model.dimensions.length){
+//        if(!modelsManager.selectedModel.dimensions.length){
 
             for(var i = 0;i<$scope.availableTables.length;i++){
-                var tableInUse = _.some($scope.model.dimensions,function(item){
+                var tableInUse = _.some(modelsManager.selectedModel.dimensions,function(item){
                     return item.table == $scope.availableTables[i];
                 });
 
                 if(!tableInUse){
-                    $scope.model.dimensions.push(new Dimension($scope.availableTables[i]));
+                    modelsManager.selectedModel.dimensions.push(new Dimension($scope.availableTables[i]));
                 }
             }
 //        }

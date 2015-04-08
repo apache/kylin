@@ -27,9 +27,9 @@
             </label>
             <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.data_model_form.innerform.typeahead.$invalid && (forms.data_model_form.innerform.typeahead.$dirty||forms.data_model_form.$sbumitted)}">
                 <typeahead ng-if="state.mode=='edit'" items="tableModel.selectProjectTables" prompt="Fact Table Name"
-                           title="name" model="model.fact_table" required="true"></typeahead>
+                           title="name" model="modelsManager.selectedModel.fact_table" required="true"></typeahead>
                 <small class="help-block" ng-show="forms.data_model_form.innerform.typeahead.$error.required && (forms.data_model_form.innerform.typeahead.$dirty||forms.data_model_form.$sbumitted)">The fact table is required</small>
-                <span ng-if="state.mode=='view'">{{model.fact_table}}</span>
+                <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.fact_table}}</span>
             </div>
         </div>
     </div>
@@ -38,22 +38,22 @@
     <div class="dataTables_wrapper form-inline no-footer">
         <div class="row">
             <div class="col-xs-6" ng-if="state.mode=='edit'">
-                <button type="button" class="btn btn-primary" ng-disabled="!model.fact_table.length"
+                <button type="button" class="btn btn-primary" ng-disabled="!modelsManager.selectedModel.fact_table.length"
                         ng-click="openLookupModal()">
                     <i class="fa fa-plus"></i> Add Lookup Table
                 </button>
             </div>
             <div class="col-xs-6" ng-if="state.mode!='edit'">
-                <b>{{model.lookups.length ? 'Lookup Tables' : 'No Lookup Tables'}}</b>
+                <b>{{modelsManager.selectedModel.lookups.length ? 'Lookup Tables' : 'No Lookup Tables'}}</b>
             </div>
             <div class="col-xs-6">
-                <span class="pull-right input-icon input-icon-right nav-search" style="margin-left: 22px;" ng-if="model.lookups.length">
+                <span class="pull-right input-icon input-icon-right nav-search" style="margin-left: 22px;" ng-if="modelsManager.selectedModel.lookups.length">
                     <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="lookupState.filter"/>
                     <i class="ace-icon fa fa-search nav-search-icon"></i>
                 </span>
             </div>
         </div>
-        <table class="table table-striped table-hover" ng-if="model.lookups.length">
+        <table class="table table-striped table-hover" ng-if="modelsManager.selectedModel.lookups.length">
             <thead>
             <tr>
                 <th>ID</th>
@@ -64,7 +64,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="lookup in model.lookups | filter:lookupState.filter track by $index">
+            <tr ng-repeat="lookup in modelsManager.selectedModel.lookups | filter:lookupState.filter track by $index">
                 <td>
                     <b>{{$index + 1}}</b>
                 </td>
@@ -80,7 +80,7 @@
                 <td>
                     <ul class="list-unstyled">
                         <li ng-repeat="pk in lookup.join.primary_key track by $index">
-                            <code>{{lookup.table + '.' + pk}} = {{model.fact_table + '.' + lookup.join.foreign_key[$index]}}</code>
+                            <code>{{lookup.table + '.' + pk}} = {{modelsManager.selectedModel.fact_table + '.' + lookup.join.foreign_key[$index]}}</code>
                         </li>
                     </ul>
                 </td>
@@ -147,7 +147,7 @@
                                         <b>=</b>
                                         <select style="width: 45%" chosen data-placeholder="Fact Table Column"
                                                 ng-model="newLookup.join.foreign_key[$index]"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(model.fact_table)" >
+                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(modelsManager.selectedModel.fact_table)" >
                                             <option value=""></option>
                                         </select>
                                         <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete"

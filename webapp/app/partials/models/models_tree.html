@@ -33,7 +33,7 @@
     <!--tree-->
     <div style="width:100%; height:{{window}}px; overflow:auto;">
         <abn-tree
-                tree-data         = "models_treedata"
+                tree-data         = "modelsManager.modelTreeData"
                 tree-control      = "my_tree"
                 icon-leaf         = "fa fa-cubes"
                 icon-expand       = "fa fa-star"
@@ -41,6 +41,6 @@
                 expand-level      = "2"
                 initial-selection = "">
             </abn-tree>
-        <div no-result ng-if="models_treedata.length==0"></div>
+        <div no-result ng-if="modelsManager.modelTreeData.length==0"></div>
     </div>
 </div>

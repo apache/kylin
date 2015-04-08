@@ -18,11 +18,9 @@
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,ModelList) {
-        //selected model
-        $scope.model = {};
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,modelsManager,cubesManager) {
+
         //tree data
-        $scope.models_treedata=[];
 
         $scope.cubeSelected = false;
         $scope.cube = {};
@@ -33,9 +31,10 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
             $scope.showModels = showModel;
         }
 
-        $scope.modelList = ModelList;
+        $scope.modelsManager = modelsManager;
+        $scope.cubesManager = cubesManager;
         $scope.modelConfig = modelConfig;
-        ModelList.removeAll();
+        modelsManager.removeAll();
         $scope.loading = false;
         $scope.action = {};
         $scope.window = 0.68 * $window.innerHeight;
@@ -52,8 +51,6 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
                 defer.resolve([]);
                 return defer.promise;
             }
-//            offset = (!!offset) ? offset : null;
-//            limit = (!!limit) ? limit : null;
 
             var queryParam = {};
             if ($scope.listParams.modelName) {
@@ -63,7 +60,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 
             $scope.loading = true;
 
-             ModelList.list(queryParam).then(function(resp){
+             modelsManager.list(queryParam).then(function(resp){
                 $scope.loading = false;
                 defer.resolve(resp);
             },function(resp){
@@ -74,79 +71,37 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
             return  defer.promise;
         };
 
+        //add ref for selectedModel
+//        $scope.model = modelsManager.selectedModel;
+//        $scope.cubeSelected = modelsManager.cubeSelected;
+//        $scope.cube = modelsManager.selectedCube;
+//        $scope.cubeMetaFrame =modelsManager.cubeDetail;
+//        $scope.cube={detail: modelsManager.cubeDetail};
+//        $scope.metaModel = {model:modelsManager.curModel};
+
         $scope.init = function(){
-            $scope.list().then(function(resp){
-                $scope.models_treedata = [];
-                angular.forEach(ModelList.models,function(model){
-                    var _model = {
-                        label:model.name,
-                        noLeaf:true,
-                        data:model,
-                        onSelect:function(branch){
-                         // set selected model
-                            $scope.model=branch.data;
-                            $scope.cubeSelected = false;
-                        }
-                    };
-                    var _children = [];
-                    angular.forEach(model.cubes,function(cube){
-                        _children.push(
-                            {
-                                label:cube.name,
-                                data:cube,
-                                onSelect:function(branch){
-                                    $log.info("cube selected:"+branch.data.name);
-                                    $scope.cubeSelected = true;
-//                                    $scope.cubeMetaFrame = branch.data;
-                                    $scope.cube = branch.data;
-                                    $scope.listAccess(cube, 'CubeInstance');
 
-                                    CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
-                                        if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
-                                            //cubeMetaFrame for cube view and edit
-                                            $scope.cubeMetaFrame = detail[0];
-                                            //for show detail info
-                                            $scope.cube.detail = detail[0];
-                                            //add model info
-                                            $scope.metaModel ={
-                                                model : ModelList.getModelByCube(cube.name)
-                                            }
-                                        }else{
-                                            SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
-                                        }
-                                    }, function (e) {
-                                        if(e.data&& e.data.exception){
-                                            var message =e.data.exception;
-                                            var msg = !!(message) ? message : 'Failed to take action.';
-                                            SweetAlert.swal('Oops...', msg, 'error');
-                                        }else{
-                                            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                                        }
-                                    });
+            var queryParam = {};
+            if ($scope.listParams.modelName) {
+                queryParam.modelName = $scope.listParams.modelName;
+            }
+            queryParam.projectName = $scope.projectModel.selectedProject;
 
-
-
-                                    // set selecte model
-                                }
-                            }
-                        );
-                    });
-                    if(_children.length){
-                         _model.children = _children;
-                    }
-                    $scope.models_treedata.push(_model);
-                });
-                $scope.models_treedata = _.sortBy($scope.models_treedata, function (i) { return i.label.toLowerCase(); });
-
+            modelsManager.generatorTreeData(queryParam).then(function(resp){
+//                $scope.models_treedata = resp;
             });
+
         };
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
-                ModelList.removeAll();
+                modelsManager.removeAll();
                 //init selected model
-                $scope.model = {};
+//                $scope.model = {};
+                modelsManager.selectedModel;
                 $scope.init();
+
         });
+
 
     $scope.status = {
         isopen: true

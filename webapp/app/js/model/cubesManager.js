@@ -19,4 +19,8 @@
 // TODO add cubes manager
 KylinApp.service('cubesManager',function(){
 
+    this.currentCube = {};
+
+    this.cubeMetaFrame={};
+
 })

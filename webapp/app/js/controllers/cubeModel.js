@@ -18,8 +18,9 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log,TableModel,ModelService,loadingRequest) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log,TableModel,ModelService,loadingRequest,modelsManager) {
 
+    $scope.modelsManager = modelsManager;
 
     $scope.buildGraph = function (model) {
 //        var newModel = jQuery.extend(true, {}, model);
@@ -71,7 +72,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaMod
 
     $scope.newLookup = Lookup();
 
-    var lookupList = $scope.model.lookups;
+    var lookupList = modelsManager.selectedModel.lookups;
 
     $scope.openLookupModal = function () {
         var modalInstance = $modal.open({
@@ -134,7 +135,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaMod
     };
 
         $scope.removeLookup = function (lookup) {
-            var dimExist = _.some($scope.model.dimensions,function(item,index){
+            var dimExist = _.some(modelsManager.selectedModel.dimensions,function(item,index){
                 return item.table===lookup.table;
             });
             if(dimExist) {
@@ -148,9 +149,9 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaMod
                     closeOnConfirm: true
                 }, function (isConfirm) {
                     if (isConfirm) {
-                        for (var i = $scope.model.dimensions.length - 1; i >= 0; i--) {
-                            if ($scope.model.dimensions[i].table === lookup.table) {
-                                $scope.model.dimensions.splice(i, 1);
+                        for (var i = modelsManager.selectedModel.dimensions.length - 1; i >= 0; i--) {
+                            if (modelsManager.selectedModel.dimensions[i].table === lookup.table) {
+                                modelsManager.selectedModel.dimensions.splice(i, 1);
                             }
                         }
                         lookupList.splice(lookupList.indexOf(lookup), 1);
@@ -195,7 +196,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaMod
             }
 
             //column type validate
-            var fact_table = $scope.model.fact_table;
+            var fact_table = modelsManager.selectedModel.fact_table;
             var lookup_table = $scope.newLookup.table;
 
             for(var i = 0;i<$scope.newLookup.join.primary_key.length;i++){

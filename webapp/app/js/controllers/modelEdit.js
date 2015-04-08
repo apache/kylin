@@ -19,7 +19,7 @@
 'use strict';
 
 
-KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel) {
+KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager) {
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.modelMode = absUrl.indexOf("/models/add")!=-1?'addNewModel':absUrl.indexOf("/models/edit")!=-1?'editExistModel':'default';
@@ -28,6 +28,8 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         SweetAlert.swal('Oops...', 'Please select your project first.', 'warning');
         $location.path("/models");
     }
+
+    $scope.modelsManager = modelsManager;
 
     $scope.cubeConfig = cubeConfig;
 
@@ -74,11 +76,11 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         var modelName = $routeParams.modelName;
         ModelDescService.get({model_name: modelName}, function (model) {
                     if (model) {
-                        $scope.model = model;
-                        $scope.model.project = ProjectModel.getProjectByCubeModel(modelName);
+                        modelsManager.selectedModel = model;
+                        modelsManager.selectedModel.project = ProjectModel.getProjectByCubeModel(modelName);
 
                         if(!ProjectModel.getSelectedProject()){
-                            ProjectModel.setSelectedProject($scope.model.project);
+                            ProjectModel.setSelectedProject(modelsManager.selectedModel.project);
                             TableModel.aceSrcTbLoaded();
                         }
 
@@ -95,26 +97,26 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
     } else {
         MetaModel.initModel();
-        $scope.model = MetaModel.getMetaModel();
-        $scope.model.project = ProjectModel.getSelectedProject();
+        modelsManager.selectedModel = MetaModel.getMetaModel();
+        modelsManager.selectedModel.project = ProjectModel.getSelectedProject();
     }
 
 
     $scope.prepareModel = function () {
         // generate column family
 
-        if ($scope.model.partition_desc.partition_date_column!=null&&($scope.model.partition_desc.partition_date_start|$scope.model.partition_desc.partition_date_start==0)) {
-            var dateStart = new Date($scope.model.partition_desc.partition_date_start);
+        if (modelsManager.selectedModel.partition_desc.partition_date_column!=null&&(modelsManager.selectedModel.partition_desc.partition_date_start|modelsManager.selectedModel.partition_desc.partition_date_start==0)) {
+            var dateStart = new Date(modelsManager.selectedModel.partition_desc.partition_date_start);
             dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
             //switch selected time to utc timestamp
-            $scope.model.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
+            modelsManager.selectedModel.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
 
 
         }
-        if($scope.model.partition_desc.partition_date_column==null){
-            $scope.model.partition_desc.partition_date_start=null;
+        if(modelsManager.selectedModel.partition_desc.partition_date_column==null){
+            modelsManager.selectedModel.partition_desc.partition_date_start=null;
         }
-        $scope.state.project = $scope.model.project;
+        $scope.state.project = modelsManager.selectedModel.project;
         var _model = angular.copy($scope.model);
         delete _model.project;
         $scope.state.modelSchema = angular.toJson(_model, true);
@@ -215,17 +217,17 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
 //    reverse the date
     $scope.saveModelRollBack = function (){
-        if($scope.model.partition_desc.partition_date_start==0){
-            $scope.model.partition_desc.partition_date_start = null;
+        if(modelsManager.selectedModel.partition_desc.partition_date_start==0){
+            modelsManager.selectedModel.partition_desc.partition_date_start = null;
         }
-        if($scope.model&&($scope.model.partition_desc.partition_date_start||$scope.model.partition_desc.partition_date_start==0))
+        if($scope.model&&(modelsManager.selectedModel.partition_desc.partition_date_start||modelsManager.selectedModel.partition_desc.partition_date_start==0))
         {
-            $scope.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
+            modelsManager.selectedModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }
     };
 
     $scope.removeTableDimensions = function(tableIndex){
-        $scope.model.dimensions.splice(tableIndex,1);
+        modelsManager.selectedModel.dimensions.splice(tableIndex,1);
     }
 
     $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
