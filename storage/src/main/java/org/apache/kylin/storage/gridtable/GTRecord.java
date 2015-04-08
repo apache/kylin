@@ -36,18 +36,18 @@ public class GTRecord implements Comparable<GTRecord> {
 
     /** set record to the codes of specified values, new space allocated to hold the codes */
     public GTRecord setValues(Object... values) {
-        setValues(new ByteArray(info.getMaxRecordLength()), values);
+        setValues(info.colAll, new ByteArray(info.getMaxRecordLength()), values);
         return this;
     }
 
     /** set record to the codes of specified values, reuse given space to hold the codes */
-    public GTRecord setValues(ByteArray space, Object... values) {
+    public GTRecord setValues(BitSet selectedColumns, ByteArray space, Object... values) {
         ByteBuffer buf = space.asBuffer();
         int pos = buf.position();
-        for (int i = 0; i < info.nColumns; i++) {
-            info.codeSystem.encodeColumnValue(i, values[i], buf);
+        for (int i = 0, c = selectedColumns.nextSetBit(0); c >= 0; i++, c = selectedColumns.nextSetBit(c + 1)) {
+            info.codeSystem.encodeColumnValue(c, values[i], buf);
             int newPos = buf.position();
-            cols[i].set(buf.array(), buf.arrayOffset() + pos, newPos - pos);
+            cols[c].set(buf.array(), buf.arrayOffset() + pos, newPos - pos);
             pos = newPos;
         }
         return this;
