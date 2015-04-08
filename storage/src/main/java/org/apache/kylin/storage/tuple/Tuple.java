@@ -196,6 +196,8 @@ public class Tuple implements ITuple {
             return new BigDecimal(strValue);
         } else if ("timestamp".equals(dataTypeName)) {
             return Long.valueOf(DateFormat.stringToMillis(strValue));
+        } else if ("float".equals(dataTypeName)){
+            return Float.valueOf(strValue);
         } else {
             return strValue;
         }
