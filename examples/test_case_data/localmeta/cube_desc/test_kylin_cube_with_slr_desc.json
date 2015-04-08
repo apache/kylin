@@ -135,7 +135,7 @@
     }, {
       "column" : "lstg_format_name",
       "length" : 12,
-      "dictionary" : "true",
+      "dictionary" : null,
       "mandatory" : false
     }, {
       "column" : "lstg_site_id",
