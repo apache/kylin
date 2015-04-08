@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common.util;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
@@ -43,6 +45,29 @@ public class HyperLogLogCounterTest {
     int errorCount2 = 0;
     int errorCount3 = 0;
 
+    @Test
+    public void testPeekLength() throws IOException {
+        HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(10);
+        HyperLogLogPlusCounter copy = new HyperLogLogPlusCounter(10);
+        byte[] value = new byte[10];
+        for (int i = 0; i < 200000; i++) {
+            rand1.nextBytes(value);
+            hllc.add(value);
+            
+            buf.clear();
+            hllc.writeRegisters(buf);
+            
+            int len = buf.position();
+            buf.position(0);
+            assertEquals(len, hllc.peekLength(buf));
+            
+            copy.readRegisters(buf);
+            assertEquals(len, buf.position());
+            assertEquals(hllc, copy);
+        }
+        buf.clear();
+    }
+    
     private Set<String> generateTestData(int n) {
         Set<String> testData = new HashSet<String>();
         for (int i = 0; i < n; i++) {

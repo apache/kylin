@@ -176,7 +176,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
 
         // decide output scheme -- map (3*size bytes) or array (2^p bytes)
         byte scheme;
-        if ((indexLen + 1) * size < m)
+        if (5 + (indexLen + 1) * size < m) // 5 is max len of vint
             scheme = 0; // map
         else
             scheme = 1; // array
@@ -190,9 +190,10 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                     out.put(registers[i]);
                 }
             }
-        } else { // array scheme
+        } else if (scheme == 1) { // array scheme
             out.put(registers);
-        }
+        } else
+            throw new IllegalStateException();
     }
 
     public void readRegisters(ByteBuffer in) throws IOException {
@@ -208,9 +209,10 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                 int key = readUnsigned(in, indexLen);
                 registers[key] = in.get();
             }
-        } else { // array scheme
+        } else if (scheme == 1) { // array scheme
             in.get(registers);
-        }
+        } else
+            throw new IllegalStateException();
     }
     
     public int peekLength(ByteBuffer in) {

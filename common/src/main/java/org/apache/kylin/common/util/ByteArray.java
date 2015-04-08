@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.util;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.util.Bytes;
@@ -25,7 +26,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 /**
  * @author yangli9
  */
-public class ByteArray implements Comparable<ByteArray> {
+public class ByteArray implements Comparable<ByteArray>, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public static ByteArray allocate(int length) {
         return new ByteArray(new byte[length]);
