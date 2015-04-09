@@ -1,7 +1,6 @@
 package org.apache.kylin.storage.gridtable;
 
 import java.io.IOException;
-import java.util.BitSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -10,121 +9,71 @@ import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
-import org.apache.kylin.storage.gridtable.IGTStore.IGTStoreScanner;
 
 public class GTFilterScanner implements IGTScanner {
 
-    final GTInfo info;
-    final IGTStoreScanner storeScanner;
-    final TupleFilter filter;
-    final BitSet selectedColBlocks;
+    final private IGTScanner inputScanner;
+    final private TupleFilter filter;
+    final private IEvaluatableTuple oneTuple; // avoid instance creation
+    
+    private GTRecord next = null;
 
-    private GTRowBlock.Reader curBlockReader;
-    private GTRecord next;
-    final private GTRecord oneRecord; // avoid instance creation
-    final private TupleAdapter oneTuple; // avoid instance creation
-
-    private int scannedRowCount = 0;
-    private int scannedRowBlockCount = 0;
-
-    public GTFilterScanner(GTInfo info, IGTStore store, GTScanRequest req) throws IOException {
-        this.info = info;
+    public GTFilterScanner(IGTScanner inputScanner, GTScanRequest req) throws IOException {
+        this.inputScanner = inputScanner;
         this.filter = req.getFilterPushDown();
+        this.oneTuple = new IEvaluatableTuple() {
+            @Override
+            public Object getValue(TblColRef col) {
+                return next.get(col.getColumn().getZeroBasedIndex());
+            }
+        };
 
         if (TupleFilter.isEvaluableRecursively(filter) == false)
             throw new IllegalArgumentException();
-
-        ByteArray start = makeScanKey(req.getPkStart());
-        ByteArray end = makeScanKey(req.getPkEnd());
-        this.selectedColBlocks = info.selectColumnBlocks(req.getColumns());
-
-        this.storeScanner = store.scan(start, end, selectedColBlocks, req);
-        this.oneRecord = new GTRecord(info);
-        this.oneTuple = new TupleAdapter(oneRecord);
-    }
-
-    private ByteArray makeScanKey(GTRecord rec) {
-        int firstPKCol = info.primaryKey.nextSetBit(0);
-        if (rec == null || rec.cols[firstPKCol].array() == null)
-            return null;
-
-        BitSet selectedColumns = new BitSet();
-        int len = 0;
-        for (int i = info.primaryKey.nextSetBit(0); i >= 0; i = info.primaryKey.nextSetBit(i + 1)) {
-            if (rec.cols[i].array() == null) {
-                break;
-            }
-            selectedColumns.set(i);
-            len += rec.cols[i].length();
-        }
-
-        ByteArray buf = ByteArray.allocate(len);
-        rec.exportColumns(selectedColumns, buf);
-        return buf;
     }
 
     @Override
     public GTInfo getInfo() {
-        return info;
+        return inputScanner.getInfo();
     }
 
     @Override
     public int getScannedRowCount() {
-        return scannedRowCount;
+        return inputScanner.getScannedRowCount();
     }
 
     @Override
     public int getScannedRowBlockCount() {
-        return scannedRowBlockCount;
+        return inputScanner.getScannedRowBlockCount();
     }
 
     @Override
     public void close() throws IOException {
-        storeScanner.close();
+        inputScanner.close();
     }
 
     @Override
     public Iterator<GTRecord> iterator() {
         return new Iterator<GTRecord>() {
+            
+            private Iterator<GTRecord> inputIterator = inputScanner.iterator();
 
             @Override
             public boolean hasNext() {
                 if (next != null)
                     return true;
 
-                IFilterCodeSystem<ByteArray> filterCodeSystem = info.codeSystem.getFilterCodeSystem();
+                IFilterCodeSystem<ByteArray> filterCodeSystem = getInfo().codeSystem.getFilterCodeSystem();
 
-                while (fetchNext()) {
+                while (inputIterator.hasNext()) {
+                    next = inputIterator.next();
                     if (filter != null && filter.evaluate(oneTuple, filterCodeSystem) == false) {
                         continue;
                     }
-                    next = oneRecord;
                     return true;
                 }
+                next = null;
                 return false;
-            }
-
-            private boolean fetchNext() {
-                while (true) {
-                    // get a block
-                    if (curBlockReader == null) {
-                        if (storeScanner.hasNext()) {
-                            curBlockReader = storeScanner.next().getReader(selectedColBlocks);
-                            scannedRowBlockCount++;
-                        } else {
-                            return false;
-                        }
-                    }
-                    // if block exhausted, try next block
-                    if (curBlockReader.hasNext() == false) {
-                        curBlockReader = null;
-                        continue;
-                    }
-                    // fetch a row
-                    curBlockReader.fetchNext(oneRecord);
-                    scannedRowCount++;
-                    return true;
-                }
             }
 
             @Override
@@ -148,20 +97,4 @@ public class GTFilterScanner implements IGTScanner {
 
         };
     }
-
-    private static class TupleAdapter implements IEvaluatableTuple {
-
-        private GTRecord r;
-
-        private TupleAdapter(GTRecord r) {
-            this.r = r;
-        }
-
-        @Override
-        public Object getValue(TblColRef col) {
-            return r.get(col.getColumn().getZeroBasedIndex());
-        }
-
-    }
-
 }

@@ -5,6 +5,8 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
@@ -16,7 +18,7 @@ import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.RowValueDecoder;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
@@ -25,7 +27,6 @@ import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTRowBlock.Writer;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.IGTStore;
-import org.apache.kylin.storage.hbase.CubeSegmentTupleIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,18 +69,23 @@ public class CubeHBaseReadonlyStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColumnBlocks, GTScanRequest additionalPushDown) throws IOException {
         // TODO enable coprocessor
+
+        // primary key (also the 0th column block) is always selected
+        final BitSet selectedColBlocks = (BitSet) selectedColumnBlocks.clone();
+        selectedColBlocks.set(0);
 
         // globally shared connection, does not require close
         HConnection hbaseConn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
-        
+
         final HTableInterface hbaseTable = hbaseConn.getTable(cubeSeg.getStorageLocationIdentifier());
         final List<Pair<byte[], byte[]>> hbaseColumns = makeHBaseColumns(selectedColBlocks);
 
         Scan hbaseScan = buildScan(pkStart, pkEnd, hbaseColumns);
         final ResultScanner scanner = hbaseTable.getScanner(hbaseScan);
         final Iterator<Result> iterator = scanner.iterator();
+        final GTRowBlock oneBlock = new GTRowBlock(info); // avoid object creation
 
         return new IGTStoreScanner() {
 
@@ -90,12 +96,22 @@ public class CubeHBaseReadonlyStore implements IGTStore {
 
             @Override
             public GTRowBlock next() {
+                // row block is always disabled for cubes, row block contains only one record
                 Result result = iterator.next();
-                result.getRow();
-                for (Pair<byte[], byte[]> hbaseColumn : hbaseColumns) {
-                    result.getColumnLatestCell(hbaseColumn.getFirst(), hbaseColumn.getSecond());
+
+                // dimensions, set to primary key, also the 0th column block
+                byte[] rowkey = result.getRow();
+                oneBlock.getPrimaryKey().set(rowkey, RowConstants.ROWKEY_CUBOIDID_LEN, rowkey.length - RowConstants.ROWKEY_CUBOIDID_LEN);
+                oneBlock.getCellBlock(0).set(rowkey, RowConstants.ROWKEY_CUBOIDID_LEN, rowkey.length - RowConstants.ROWKEY_CUBOIDID_LEN);
+
+                // metrics
+                int hbaseColIdx = 0;
+                for (int colBlockIdx = selectedColBlocks.nextSetBit(1); colBlockIdx >= 0; colBlockIdx = selectedColBlocks.nextSetBit(colBlockIdx + 1)) {
+                    Pair<byte[], byte[]> hbaseColumn = hbaseColumns.get(hbaseColIdx++);
+                    Cell cell = result.getColumnLatestCell(hbaseColumn.getFirst(), hbaseColumn.getSecond());
+                    oneBlock.getCellBlock(colBlockIdx).set(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
                 }
-                return null;
+                return oneBlock;
             }
 
             @Override
@@ -123,15 +139,25 @@ public class CubeHBaseReadonlyStore implements IGTStore {
             scan.addColumn(byteFamily, byteQualifier);
         }
 
-        scan.setStartRow(pkStart.copy().array());
-        scan.setStopRow(pkEnd.copy().array());
+        scan.setStartRow(makeRowKeyToScan(pkStart));
+        scan.setStopRow(makeRowKeyToScan(pkEnd));
         return scan;
+    }
+
+    private byte[] makeRowKeyToScan(ByteArray pk) {
+        if (pk == null || pk.array() == null)
+            return HConstants.EMPTY_BYTE_ARRAY; // from the very beginning, or to the end
+
+        byte[] buf = new byte[pk.length() + RowConstants.ROWKEY_CUBOIDID_LEN];
+        System.arraycopy(cuboid.getBytes(), 0, buf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
+        System.arraycopy(pk.array(), pk.offset(), buf, RowConstants.ROWKEY_CUBOIDID_LEN, pk.length());
+        return buf;
     }
 
     private List<Pair<byte[], byte[]>> makeHBaseColumns(BitSet selectedColBlocks) {
         List<Pair<byte[], byte[]>> result = Lists.newArrayList();
 
-        int colBlockIdx = 0;
+        int colBlockIdx = 1; // start from 1; the 0th column block is primary key which maps to rowkey
         HBaseMappingDesc hbaseMapping = cubeSeg.getCubeDesc().getHbaseMapping();
         for (HBaseColumnFamilyDesc familyDesc : hbaseMapping.getColumnFamily()) {
             byte[] byteFamily = Bytes.toBytes(familyDesc.getName());

@@ -32,7 +32,11 @@ public class GridTable {
     }
 
     public IGTScanner scan(GTScanRequest req) throws IOException {
-        IGTScanner result = new GTFilterScanner(info, store, req);
+        IGTScanner result = new GTRawScanner(info, store, req);
+        
+        if (req.hasFilterPushDown()) {
+            result = new GTFilterScanner(result, req);
+        }
         if (req.hasAggregation()) {
             result = new GTAggregateScanner(result, req);
         }
