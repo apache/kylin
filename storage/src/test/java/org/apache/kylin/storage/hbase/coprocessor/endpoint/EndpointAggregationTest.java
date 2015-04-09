@@ -18,24 +18,18 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import static org.junit.Assert.assertEquals;
-
+import com.google.common.collect.Lists;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
-import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.apache.kylin.metadata.filter.ColumnTupleFilter;
-import org.apache.kylin.metadata.filter.CompareTupleFilter;
-import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.model.*;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
+import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.kylin.storage.hbase.coprocessor.FilterDecorator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -44,6 +38,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.*;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
  *
@@ -51,92 +48,15 @@ import java.util.*;
  */
 @Ignore("need to mock up TableRecordInfo")
 public class EndpointAggregationTest extends LocalFileMetadataTestCase {
-    IIInstance ii;
-    TableRecordInfo tableRecordInfo;
-
-    CoprocessorProjector projector;
-    EndpointAggregators aggregators;
-    CoprocessorFilter filter;
-
-    EndpointAggregationCache aggCache;
-    List<TableRecord> tableData;
-
-    TableDesc factTableDesc;
 
     @Before
     public void setup() throws IOException {
         this.createTestMetadata();
-        this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
-        this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
-        factTableDesc = MetadataManager.getInstance(getTestConfig()).getTableDesc("DEFAULT.TEST_KYLIN_FACT");
-        TblColRef formatName = this.ii.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
-        TblColRef siteId = this.ii.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_SITE_ID");
-
-        Collection<TblColRef> dims = new HashSet<>();
-        dims.add(formatName);
-        projector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, dims);
-        aggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
-
-        CompareTupleFilter rawFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
-        rawFilter.addChild(new ColumnTupleFilter(siteId));
-        rawFilter.addChild(new ConstantTupleFilter("0"));
-        filter = CoprocessorFilter.fromFilter(this.ii.getFirstSegment(), rawFilter, FilterDecorator.FilterConstantsTreatment.AS_IT_IS);
-
-        aggCache = new EndpointAggregationCache(aggregators);
-        tableData = mockTable();
     }
 
     @After
     public void cleanUp() {
         cleanupTestMetadata();
-    }
-
-    private List<TableRecord> mockTable() {
-
-        ColumnDesc[] factTableColumns = factTableDesc.getColumns();
-        int[] factTableColumnIndex = new int[factTableColumns.length];
-        for (int i = 0; i < factTableColumnIndex.length; ++i) {
-            factTableColumnIndex[i] = tableRecordInfo.findColumn(new TblColRef(factTableColumns[i]));
-        }
-
-        TableRecord temp1 = tableRecordInfo.createTableRecord();
-        temp1.setValueString(factTableColumnIndex[0], "10000000239");
-        temp1.setValueString(factTableColumnIndex[1], "2012-03-22");
-        temp1.setValueString(factTableColumnIndex[2], "Auction");
-        temp1.setValueString(factTableColumnIndex[3], "80135");
-        temp1.setValueString(factTableColumnIndex[4], "0");
-        temp1.setValueString(factTableColumnIndex[5], "14");
-        temp1.setValueString(factTableColumnIndex[6], "199.99");
-        temp1.setValueString(factTableColumnIndex[7], "1");
-        temp1.setValueString(factTableColumnIndex[8], "10000005");
-
-        TableRecord temp2 = tableRecordInfo.createTableRecord();
-        temp2.setValueString(factTableColumnIndex[0], "10000000244");
-        temp2.setValueString(factTableColumnIndex[1], "2012-11-11");
-        temp2.setValueString(factTableColumnIndex[2], "Auction");
-        temp2.setValueString(factTableColumnIndex[3], "16509");
-        temp2.setValueString(factTableColumnIndex[4], "101");
-        temp2.setValueString(factTableColumnIndex[5], "12");
-        temp2.setValueString(factTableColumnIndex[6], "2.09");
-        temp2.setValueString(factTableColumnIndex[7], "1");
-        temp2.setValueString(factTableColumnIndex[8], "10000004");
-
-        TableRecord temp3 = tableRecordInfo.createTableRecord();
-        temp3.setValueString(factTableColumnIndex[0], "10000000259");
-        temp3.setValueString(factTableColumnIndex[1], "2012-07-12");
-        temp3.setValueString(factTableColumnIndex[2], "Others");
-        temp3.setValueString(factTableColumnIndex[3], "15687");
-        temp3.setValueString(factTableColumnIndex[4], "0");
-        temp3.setValueString(factTableColumnIndex[5], "14");
-        temp3.setValueString(factTableColumnIndex[6], "100");
-        temp3.setValueString(factTableColumnIndex[7], "1");
-        temp3.setValueString(factTableColumnIndex[8], "10000020");
-
-        List<TableRecord> ret = new ArrayList<TableRecord>();
-        ret.add(temp1);
-        ret.add(temp2);
-        ret.add(temp3);
-        return ret;
     }
 
     private List<FunctionDesc> buildAggregations() {
@@ -164,26 +84,72 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSerializeAggreagtor() {
-        EndpointAggregators endpointAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
+    public void testSerializeAggregator() {
+        final IIInstance ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
+        final TableRecordInfo tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
+        final EndpointAggregators endpointAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
         byte[] x = EndpointAggregators.serialize(endpointAggregators);
-        EndpointAggregators.deserialize(x);
+        final EndpointAggregators result = EndpointAggregators.deserialize(x);
+        assertArrayEquals(endpointAggregators.dataTypes, result.dataTypes);
+        assertArrayEquals(endpointAggregators.funcNames, result.funcNames);
+        assertArrayEquals(endpointAggregators.metricValues, result.metricValues);
+        assertEquals(endpointAggregators.rawTableRecord.getBytes().length, result.rawTableRecord.getBytes().length);
+    }
+
+    private byte[] randomBytes(final int length) {
+        byte[] result = new byte[length];
+        Random random = new Random();
+        for (int i = 0; i < length; i++) {
+            random.nextBytes(result);
+        }
+        return result;
+    }
+
+    private List<byte[]> mockData(TableRecordInfo tableRecordInfo) {
+        ArrayList<byte[]> result = Lists.newArrayList();
+        final int priceColumnIndex = 23;
+        final int groupByColumnIndex = 0;
+        TblColRef column = tableRecordInfo.getDescriptor().listAllColumns().get(priceColumnIndex);
+        FixedLenMeasureCodec codec = FixedLenMeasureCodec.get(column.getType());
+
+        byte[] data = randomBytes(tableRecordInfo.getDigest().getByteFormLen());
+        byte[] groupOne = randomBytes(tableRecordInfo.getDigest().length(groupByColumnIndex));
+        codec.write(codec.valueOf("199.99"), data, tableRecordInfo.getDigest().offset(priceColumnIndex));
+        System.arraycopy(groupOne, 0, data, tableRecordInfo.getDigest().offset(groupByColumnIndex), groupOne.length);
+        result.add(data);
+
+        data = randomBytes(tableRecordInfo.getDigest().getByteFormLen());;
+        codec.write(codec.valueOf("2.09"), data, tableRecordInfo.getDigest().offset(priceColumnIndex));
+        System.arraycopy(groupOne, 0, data, tableRecordInfo.getDigest().offset(groupByColumnIndex), groupOne.length);
+        result.add(data);
+
+        byte[] groupTwo = randomBytes(tableRecordInfo.getDigest().length(groupByColumnIndex));
+        data = randomBytes(tableRecordInfo.getDigest().getByteFormLen());
+        System.arraycopy(groupTwo, 0, data, tableRecordInfo.getDigest().offset(groupByColumnIndex), groupTwo.length);
+        codec.write(codec.valueOf("100"), data, tableRecordInfo.getDigest().offset(priceColumnIndex));
+        result.add(data);
+
+        return result;
     }
 
     @Test
-    @SuppressWarnings("rawtypes")
     public void basicTest() {
-
-        for (int i = 0; i < tableData.size(); ++i) {
-            byte[] data = tableData.get(i).getBytes();
+        final IIInstance ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
+        final TableRecordInfo tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
+        final EndpointAggregators aggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
+        final EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
+        final Collection<TblColRef> dims = new HashSet<>();
+        final TblColRef groupByColumn = ii.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
+        dims.add(groupByColumn);
+        CoprocessorProjector projector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, dims);
+        List<byte[]> rawData = mockData(tableRecordInfo);
+        for (int i = 0; i < rawData.size(); ++i) {
+            byte[] data = rawData.get(i);
             CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
             MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
             aggregators.aggregate(bufs, data);
             aggCache.checkMemoryUsage();
         }
-
-        assertEquals(aggCache.getAllEntries().size(), 2);
-
         long sumTotal = 0;
         long minTotal = 0;
         for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
@@ -193,7 +159,6 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
         }
         assertEquals(3020800, sumTotal);
         assertEquals(1020900, minTotal);
-
     }
 
 }
