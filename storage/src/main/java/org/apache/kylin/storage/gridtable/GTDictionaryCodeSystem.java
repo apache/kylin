@@ -88,8 +88,7 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
 
     @Override
     public int maxCodeLength(int col) {
-        // TODO go with serializer framework
-        return 128;
+        return serializers[col].maxLength();
     }
 
     @Override
