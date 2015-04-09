@@ -34,28 +34,22 @@
 
 package org.apache.kylin.streaming.invertedindex;
 
-import java.util.Collection;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.invertedindex.index.BatchSliceMaker;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.invertedindex.util.IIDictionaryBuilder;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.StreamParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
+import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * Created by qianzhou on 3/27/15.
@@ -81,37 +75,9 @@ public final class SliceBuilder {
                 return streamParser.parse(input);
             }
         });
-        final Dictionary<?>[] dictionaryMap = buildDictionary(table, iiDesc);
+        final Dictionary<?>[] dictionaryMap = IIDictionaryBuilder.buildDictionary(table, iiDesc);
         TableRecordInfo tableRecordInfo = new TableRecordInfo(iiDesc, dictionaryMap);
         return build(table,  tableRecordInfo, dictionaryMap);
-    }
-
-    private Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) {
-        HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
-        final List<TblColRef> allColumns = desc.listAllColumns();
-        for (List<String> row : table) {
-            for (int i = 0; i < row.size(); i++) {
-                String cell = row.get(i);
-                if (!desc.isMetricsCol(i)) {
-                    valueMap.put(allColumns.get(i), cell);
-                }
-            }
-        }
-
-        Dictionary<?>[] result = new Dictionary<?>[allColumns.size()];
-        for (TblColRef tblColRef : valueMap.keySet()) {
-            final Collection<byte[]> bytes = Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
-                @Nullable
-                @Override
-                public byte[] apply(String input) {
-                    return input == null ? null : input.getBytes();
-                }
-            });
-            logger.info("build dictionary for column " + tblColRef);
-            final Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), bytes);
-            result[desc.findColumn(tblColRef)] = dict;
-        }
-        return result;
     }
 
     private Slice build(List<List<String>> table,  final TableRecordInfo tableRecordInfo, Dictionary<?>[] localDictionary) {

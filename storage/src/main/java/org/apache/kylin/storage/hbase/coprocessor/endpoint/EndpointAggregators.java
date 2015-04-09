@@ -21,6 +21,7 @@ package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
@@ -47,7 +48,7 @@ public class EndpointAggregators {
         Count, DimensionAsMetric, DistinctCount, Normal
     }
 
-    private static class MetricInfo {
+    private final static class MetricInfo {
         private MetricType type;
         private int refIndex = -1;
         private int precision = -1;
@@ -69,34 +70,36 @@ public class EndpointAggregators {
 
     }
 
-    public static EndpointAggregators fromFunctions(TableRecordInfo tableInfo, List<FunctionDesc> metrics) {
-        String[] funcNames = new String[metrics.size()];
-        String[] dataTypes = new String[metrics.size()];
-        MetricInfo[] metricInfos = new MetricInfo[metrics.size()];
+    private static MetricInfo generateMetricInfo(int index, FunctionDesc functionDesc) {
+        if (functionDesc.isCount()) {
+            return new MetricInfo(MetricType.Count);
+        } else if (functionDesc.isDimensionAsMetric()) {
+            return new MetricInfo(MetricType.DimensionAsMetric);
+        } else {
+            Preconditions.checkState(index >= 0, "Column " + functionDesc.getParameter().getValue() + " is not found in II");
+            if (functionDesc.isCountDistinct()) {
+                return new MetricInfo(MetricType.DistinctCount, index, functionDesc.getReturnDataType().getPrecision());
+            } else {
+                return new MetricInfo(MetricType.Normal, index);
+            }
+        }
+    }
 
-        for (int i = 0; i < metrics.size(); i++) {
+
+    public static EndpointAggregators fromFunctions(TableRecordInfo tableInfo, List<FunctionDesc> metrics) {
+        final int metricSize = metrics.size();
+        String[] funcNames = new String[metricSize];
+        String[] dataTypes = new String[metricSize];
+        MetricInfo[] metricInfos = new MetricInfo[metricSize];
+
+        for (int i = 0; i < metricSize; i++) {
             FunctionDesc functionDesc = metrics.get(i);
 
             //TODO: what if funcionDesc's type is different from tablDesc? cause scale difference
             funcNames[i] = functionDesc.getExpression();
             dataTypes[i] = functionDesc.getReturnType();
-
-            if (functionDesc.isCount()) {
-                metricInfos[i] = new MetricInfo(MetricType.Count);
-            } else if (functionDesc.isDimensionAsMetric()) {
-                metricInfos[i] = new MetricInfo(MetricType.DimensionAsMetric);
-            } else {
-                int index = tableInfo.findFactTableColumn(functionDesc.getParameter().getValue());
-                if (index < 0) {
-                    throw new IllegalStateException("Column " + functionDesc.getParameter().getValue() + " is not found in II");
-                }
-
-                if (functionDesc.isCountDistinct()) {
-                    metricInfos[i] = new MetricInfo(MetricType.DistinctCount, index, functionDesc.getReturnDataType().getPrecision());
-                } else {
-                    metricInfos[i] = new MetricInfo(MetricType.Normal, index);
-                }
-            }
+            int index = tableInfo.findFactTableColumn(functionDesc.getParameter().getValue());
+            metricInfos[i] = generateMetricInfo(index, functionDesc);
         }
 
         return new EndpointAggregators(funcNames, dataTypes, metricInfos, tableInfo.getDigest());
@@ -115,7 +118,7 @@ public class EndpointAggregators {
 
     final LongWritable ONE = new LongWritable(1);
 
-    public EndpointAggregators(String[] funcNames, String[] dataTypes, MetricInfo[] metricInfos, TableRecordInfoDigest tableInfo) {
+    private EndpointAggregators(String[] funcNames, String[] dataTypes, MetricInfo[] metricInfos, TableRecordInfoDigest tableInfo) {
         this.funcNames = funcNames;
         this.dataTypes = dataTypes;
         this.metricInfos = metricInfos;
@@ -161,16 +164,16 @@ public class EndpointAggregators {
         rawTableRecord.setBytes(row, 0, row.length);
 
         for (int metricIndex = 0; metricIndex < metricInfos.length; ++metricIndex) {
-            if (metricInfos[metricIndex].type == MetricType.Count) {
+            final MetricInfo metricInfo = metricInfos[metricIndex];
+            if (metricInfo.type == MetricType.Count) {
                 measureAggrs[metricIndex].aggregate(ONE);
                 continue;
             }
 
-            if (metricInfos[metricIndex].type == MetricType.DimensionAsMetric) {
+            if (metricInfo.type == MetricType.DimensionAsMetric) {
                 continue;
             }
 
-            MetricInfo metricInfo = metricInfos[metricIndex];
             MeasureAggregator aggregator = measureAggrs[metricIndex];
             FixedLenMeasureCodec measureSerializer = measureSerializers[metricIndex];
 
