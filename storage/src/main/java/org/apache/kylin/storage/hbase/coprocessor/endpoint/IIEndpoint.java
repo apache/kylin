@@ -25,6 +25,7 @@ import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
 import org.apache.hadoop.hbase.client.Result;
@@ -35,6 +36,7 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
@@ -76,7 +78,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         int shard = -1;
         if (request.hasTsStart() || request.hasTsEnd()) {
             byte[] regionStartKey = region.getStartKey();
-            if (regionStartKey != null) {
+            if (!ArrayUtils.isEmpty(regionStartKey)) {
                 shard = BytesUtil.readUnsigned(regionStartKey, 0, IIKeyValueCodec.SHARD_LEN);
             } else {
                 shard = 0;
