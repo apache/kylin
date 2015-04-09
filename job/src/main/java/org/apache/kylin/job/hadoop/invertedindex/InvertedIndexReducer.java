@@ -27,7 +27,7 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.Slice;
-import org.apache.kylin.invertedindex.index.SliceBuilder;
+import org.apache.kylin.invertedindex.index.IncrementalSliceMaker;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
@@ -45,7 +45,7 @@ public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBy
 
     private TableRecordInfo info;
     private TableRecord rec;
-    private SliceBuilder builder;
+    private IncrementalSliceMaker builder;
     private IIKeyValueCodec kv;
 
     @Override
@@ -70,7 +70,7 @@ public class InvertedIndexReducer extends KylinReducer<LongWritable, ImmutableBy
             rec.setBytes(v.get(), v.getOffset(), v.getLength());
 
             if (builder == null) {
-                builder = new SliceBuilder(info, rec.getShard());
+                builder = new IncrementalSliceMaker(info, rec.getShard());
             }
 
             //TODO: to delete this log

@@ -34,6 +34,17 @@
 
 package org.apache.kylin.job;
 
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
@@ -52,10 +63,10 @@ import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.util.DateFormat;
 import org.apache.kylin.streaming.Stream;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.junit.AfterClass;
@@ -65,18 +76,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-
-import static org.junit.Assert.fail;
+import com.google.common.collect.Lists;
 
 /**
  * Created by qianzhou on 3/9/15.
@@ -85,7 +85,7 @@ public class BuildIIWithStreamTest {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildIIWithStreamTest.class);
 
-    private static final String[] II_NAME = new String[]{"test_kylin_ii_left_join", "test_kylin_ii_inner_join"};
+    private static final String[] II_NAME = new String[] { "test_kylin_ii_left_join", "test_kylin_ii_inner_join" };
     private IIManager iiManager;
     private KylinConfig kylinConfig;
 
@@ -120,10 +120,14 @@ public class BuildIIWithStreamTest {
     }
 
     private static int cleanupOldStorage() throws Exception {
-        String[] args = {"--delete", "true"};
+        return 0;
 
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        return exitCode;
+        //do not delete intermediate files for debug purpose
+
+        //        String[] args = {"--delete", "true"};
+        //
+        //        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        //        return exitCode;
     }
 
     private static void backup() throws Exception {
@@ -210,17 +214,19 @@ public class BuildIIWithStreamTest {
         }
         LinkedBlockingDeque<Stream> queue = new LinkedBlockingDeque<Stream>();
         final IISegment segment = createSegment(iiName);
-        String[] args = new String[]{"-iiname", iiName, "-htablename", segment.getStorageLocationIdentifier()};
+        String[] args = new String[] { "-iiname", iiName, "-htablename", segment.getStorageLocationIdentifier() };
         ToolRunner.run(new IICreateHTableJob(), args);
-
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, iiName, segment.getStorageLocationIdentifier(), segment.getIIDesc(), 0);
-        int count = 0;
-        while (reader.next()) {
-            queue.put(parse(reader.getRow()));
-            count++;
+
+        List<String[]> sorted = getSortedRows(reader, desc.getTimestampColumn());
+        int count = sorted.size();
+        for (String[] row : sorted) {
+            logger.info("another row: " + StringUtils.join(row, ","));
+            queue.put(parse(row));
         }
+
         reader.close();
         logger.info("total record count:" + count + " htable:" + segment.getStorageLocationIdentifier());
         queue.put(Stream.EOF);
@@ -249,6 +255,22 @@ public class BuildIIWithStreamTest {
 
     private Stream parse(String[] row) {
         return new Stream(System.currentTimeMillis(), StringUtils.join(row, ",").getBytes());
+    }
+
+    private List<String[]> getSortedRows(HiveTableReader reader, final int tsCol) throws IOException {
+        List<String[]> unsorted = Lists.newArrayList();
+        while (reader.next()) {
+            unsorted.add(reader.getRow());
+        }
+        Collections.sort(unsorted, new Comparator<String[]>() {
+            @Override
+            public int compare(String[] o1, String[] o2) {
+                long t1 = DateFormat.stringToMillis(o1[tsCol]);
+                long t2 = DateFormat.stringToMillis(o2[tsCol]);
+                return Long.compare(t1, t2);
+            }
+        });
+        return unsorted;
     }
 
 }

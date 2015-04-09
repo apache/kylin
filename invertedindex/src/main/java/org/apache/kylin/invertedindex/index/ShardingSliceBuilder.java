@@ -24,13 +24,13 @@ import com.google.common.collect.Lists;
 
 public class ShardingSliceBuilder {
 
-	SliceBuilder[] builders;
+	IncrementalSliceMaker[] builders;
 
 	public ShardingSliceBuilder(TableRecordInfo info) {
 		int sharding = info.getDescriptor().getSharding();
-		builders = new SliceBuilder[sharding];
+		builders = new IncrementalSliceMaker[sharding];
 		for (short i = 0; i < sharding; i++) {
-			builders[i] = new SliceBuilder(info, i);
+			builders[i] = new IncrementalSliceMaker(info, i);
 		}
 	}
 
@@ -42,7 +42,7 @@ public class ShardingSliceBuilder {
 
 	public List<Slice> close() {
 		List<Slice> result = Lists.newArrayList();
-		for (SliceBuilder builder : builders) {
+		for (IncrementalSliceMaker builder : builders) {
 			Slice slice = builder.close();
 			if (slice != null)
 				result.add(slice);

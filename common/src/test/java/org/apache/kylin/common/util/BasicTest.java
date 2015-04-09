@@ -26,6 +26,7 @@ import java.util.*;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,17 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+        String bb = "\\x00\\x00\\x00\\x00\\x01\\x3F\\xD0\\x2D\\58\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/07/12 07:59:37
+        String cc = "\\x00\\x00\\x00\\x00\\x01\\x41\\xBE\\x8F\\xD8\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/10/16 08:00:00
+        String dd = "\\x00\\x00\\x00\\x00\\x01\\x41\\xBE\\x8F\\xD8\\x07\\x00\\x18\\x00\\x00\\x00";
+        byte[] bytes = BytesUtil.fromReadableText(dd);
+        long ttt = BytesUtil.readLong(bytes,2,8);
+        System.out.println(time(ttt));
+
+        System.out.println("\\");
+        System.out.println("\\\\");
+
+        System.out.println("The start key is set to " + null);
         System.out.println(time(946684800000L));
         long current = System.currentTimeMillis();
         System.out.println(time(current));
