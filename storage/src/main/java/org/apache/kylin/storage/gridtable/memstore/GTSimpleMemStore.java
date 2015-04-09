@@ -58,7 +58,7 @@ public class GTSimpleMemStore implements IGTStore {
         @Override
         public void write(GTRowBlock block) throws IOException {
             GTRowBlock copy = block.copy();
-            int id = block.sequenceId();
+            int id = block.getSequenceId();
             if (id < rowBlockList.size()) {
                 rowBlockList.set(id, copy);
             } else {
