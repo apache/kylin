@@ -23,7 +23,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 /**
  * @author yangli9
  */
-public class SliceBuilder {
+public class IncrementalSliceMaker {
 
 	TableRecordInfo info;
 	private int nColumns;
@@ -36,7 +36,7 @@ public class SliceBuilder {
 
 	transient ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
-	public SliceBuilder(TableRecordInfo info, short shard) {
+	public IncrementalSliceMaker(TableRecordInfo info, short shard) {
 		this.info = info;
 		this.nColumns = info.getDigest().getColumnCount();
 		this.nRecordsCap = Math.max(1, info.getDescriptor().getSliceSize());

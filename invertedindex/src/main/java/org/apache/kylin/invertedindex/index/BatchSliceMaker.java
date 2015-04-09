@@ -43,7 +43,7 @@ import java.util.List;
 /**
  * Created by qianzhou on 3/20/15.
  */
-public class BatchSliceBuilder {
+public class BatchSliceMaker {
 
     private final int nColumns;
     private final int nRecordsCap;
@@ -54,7 +54,7 @@ public class BatchSliceBuilder {
 
     transient ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
-    public BatchSliceBuilder(IIDesc desc, short shard) {
+    public BatchSliceMaker(IIDesc desc, short shard) {
         this.desc = desc;
         this.nColumns = desc.listAllColumns().size();
         this.nRecordsCap = Math.max(1, desc.getSliceSize());
@@ -63,7 +63,7 @@ public class BatchSliceBuilder {
         this.sliceTimestamp = Long.MIN_VALUE;
     }
 
-    public Slice build(TableRecordInfoDigest digest, List<TableRecord> records) {
+    public Slice makeSlice(TableRecordInfoDigest digest, List<TableRecord> records) {
         Preconditions.checkArgument(records != null && !records.isEmpty(), "records cannot be empty");
         Preconditions.checkArgument(records.size() <= nRecordsCap, "batch count cannot exceed " + nRecordsCap);
         sliceTimestamp = increaseSliceTimestamp(records.get(0).getTimestamp());
@@ -86,7 +86,7 @@ public class BatchSliceBuilder {
 
     private long increaseSliceTimestamp(long timestamp) {
         if (timestamp <= sliceTimestamp) {
-            return sliceTimestamp+1; // ensure slice timestamp increases
+            return sliceTimestamp + 1; // ensure slice timestamp increases
         } else {
             return timestamp;
         }
