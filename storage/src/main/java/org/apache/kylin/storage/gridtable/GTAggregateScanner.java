@@ -21,6 +21,9 @@ public class GTAggregateScanner implements IGTScanner {
     final IGTScanner inputScanner;
 
     public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
+        if (req.hasAggregation() == false)
+            throw new IllegalStateException();
+        
         this.info = inputScanner.getInfo();
         this.dimensions = (BitSet) req.getColumns().clone();
         this.dimensions.andNot(req.getAggrMetrics());

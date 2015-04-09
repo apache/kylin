@@ -97,10 +97,13 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             BytesUtil.writeLong(tsStart, idealStartKey, IIKeyValueCodec.SHARD_LEN, IIKeyValueCodec.TIMEPART_LEN);
             logger.info("ideaStartKey is(readable) :" + BytesUtil.toReadableText(idealStartKey));
             Result result = region.getClosestRowBefore(idealStartKey, IIDesc.HBASE_FAMILY_BYTES);
-            Preconditions.checkArgument(result != null, "No row before " + BytesUtil.toReadableText(idealStartKey));
-            byte[] actualStartKey = Arrays.copyOf(result.getRow(), IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN);
-            scan.setStartRow(actualStartKey);
-            logger.info("The start key is set to " + BytesUtil.toReadableText(actualStartKey));
+            if (result != null) {
+                byte[] actualStartKey = Arrays.copyOf(result.getRow(), IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN);
+                scan.setStartRow(actualStartKey);
+                logger.info("The start key is set to " + BytesUtil.toReadableText(actualStartKey));
+            } else {
+                logger.info("There is no key before ideaStartKey so ignore tsStart");
+            }
         }
 
         if (request.hasTsEnd()) {

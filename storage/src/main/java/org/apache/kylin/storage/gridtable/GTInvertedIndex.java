@@ -58,7 +58,7 @@ public class GTInvertedIndex {
         }
 
         for (int i = colPreferIndex.nextSetBit(0); i >= 0; i = colPreferIndex.nextSetBit(i + 1)) {
-            index[i].add(distinctValues[i], block.sequenceId());
+            index[i].add(distinctValues[i], block.getSequenceId());
         }
 
         nIndexedBlocks = Math.max(nIndexedBlocks, block.seqId + 1);
