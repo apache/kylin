@@ -128,6 +128,7 @@ public class CoprocessorRowType {
         return columnIdxMap.get(colRef);
     }
 
+
     private void init() {
         int[] offsets = new int[columns.length];
         int o = RowConstants.ROWKEY_CUBOIDID_LEN;

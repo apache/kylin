@@ -24,6 +24,7 @@ import java.util.*;
 import com.google.common.collect.Sets;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
@@ -56,7 +57,6 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 
-
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
  */
@@ -78,6 +78,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     private final CoprocessorFilter pushedDownFilter;
     private final CoprocessorProjector pushedDownProjector;
     private final EndpointAggregators pushedDownAggregators;
+    private final Pair<Long, Long> tsInterval;//timestamp column condition's interval
 
     Iterator<List<IIProtos.IIResponse.IIRow>> regionResponsesIterator = null;
     ITupleIterator tupleIterator = null;
@@ -125,6 +126,8 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
         this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
+
+        this.tsInterval = TsConditionExtractor.extractTsCondition(tableRecordInfo, this.columns, rootFilter);
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
         regionResponsesIterator = getResults(endpointRequest, table);
@@ -202,11 +205,22 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     private IIProtos.IIRequest prepareRequest() throws IOException {
-        IIProtos.IIRequest request = IIProtos.IIRequest.newBuilder() //
-                .setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))) //
+        IIProtos.IIRequest.Builder builder = IIProtos.IIRequest.newBuilder();
+        if (this.tsInterval != null) {
+            if (this.tsInterval.getLeft() != null) {
+                builder.setTsStart(this.tsInterval.getLeft());
+            }
+            if (this.tsInterval.getRight() != null) {
+                builder.setTsEnd(this.tsInterval.getRight());
+            }
+        }
+
+        builder.setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))) //
                 .setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))) //
                 .setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))) //
-                .setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators))).build();
+                .setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators)));
+
+        IIProtos.IIRequest request = builder.build();
 
         return request;
     }

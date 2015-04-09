@@ -104,7 +104,7 @@ public class TableRecordInfo {
 
         int byteFormLen = pos;
 
-        return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
+        return new TableRecordInfoDigest(nColumns, byteFormLen,offsets, dictMaxIds, lengths, isMetric, dataTypes);
     }
 
     public TableRecord createTableRecord() {
