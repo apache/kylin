@@ -32,15 +32,23 @@ public class GTRowBlock {
     /** create a row block that has no underlying space */
     public GTRowBlock(GTInfo info) {
         this.info = info;
-        primaryKey = new ByteArray();
-        cellBlocks = new ByteArray[info.colBlocks.length];
-        for (int i = 0; i < cellBlocks.length; i++) {
-            cellBlocks[i] = new ByteArray();
+        this.primaryKey = new ByteArray();
+        this.cellBlocks = new ByteArray[info.colBlocks.length];
+        for (int i = 0; i < this.cellBlocks.length; i++) {
+            this.cellBlocks[i] = new ByteArray();
         }
     }
     
-    public int sequenceId() {
+    public int getSequenceId() {
         return seqId;
+    }
+    
+    public ByteArray getPrimaryKey() {
+        return primaryKey;
+    }
+    
+    public ByteArray getCellBlock(int i) {
+        return cellBlocks[i];
     }
     
     public Writer getWriter() {
