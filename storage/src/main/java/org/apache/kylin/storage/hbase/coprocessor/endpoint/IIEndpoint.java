@@ -186,7 +186,9 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         byte[] recordBuffer = new byte[recordInfo.getByteFormLen()];
         final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
 
+        int iteratedSliceCount = 0;
         for (Slice slice : slices) {
+            iteratedSliceCount++;
 
             //TODO localdict
             //dictionaries for fact table columns can not be determined while streaming.
@@ -209,6 +211,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 aggCache.checkMemoryUsage();
             }
         }
+
+        logger.info("Iterated Slices count: " + iteratedSliceCount);
 
         for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             CoprocessorProjector.AggrKey aggrKey = entry.getKey();
@@ -245,7 +249,9 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         final int byteFormLen = recordInfo.getByteFormLen();
         int totalSize = 0;
         byte[] recordBuffer = new byte[byteFormLen];
+        int iteratedSliceCount = 0;
         for (Slice slice : slices) {
+            iteratedSliceCount++;
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
             ConciseSet result = null;
             if (filter != null) {
@@ -264,6 +270,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 totalSize += byteFormLen;
             }
         }
+
+        logger.info("Iterated Slices count: " + iteratedSliceCount);
 
         return responseBuilder.build();
     }
