@@ -1,5 +1,7 @@
 package org.apache.kylin.job.hadoop.cubev2;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
@@ -20,6 +22,7 @@ import java.util.BitSet;
  */
 public class MapContextGTRecordWriter implements IGTRecordWriter {
 
+    private static final Log logger = LogFactory.getLog(MapContextGTRecordWriter.class);
     protected MapContext mapContext;
     private Long lastCuboidId;
     protected CubeSegment cubeSegment;
@@ -48,7 +51,7 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
             // output another cuboid
             initVariables(cuboidId);
             if(lastCuboidId != null) {
-                System.out.println("Cuboid " + lastCuboidId + " has " + cuboidRowCount + " rows");
+                logger.info("Cuboid " + lastCuboidId + " has " + cuboidRowCount + " rows");
                 cuboidRowCount = 0;
             }
         }

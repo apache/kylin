@@ -86,11 +86,7 @@ public class InMemCubeBuilder implements Runnable {
     protected IGTRecordWriter gtRecordWriter;
     private GridTable baseCuboidGT;
     private DataTypeSerializer[] serializers;
-    public static final int INTERVAL_TO_COMPRESS = 200000;
-    private int counter = 0;
 
-    private GTBuilder currentBaseGTBuilder;
-    private GTRecord currentBaseGTRecord;
 
     /**
      * @param queue
@@ -179,7 +175,7 @@ public class InMemCubeBuilder implements Runnable {
         allNeededColumns.or(measureColumns);
 
         GTRecord newRecord = new GTRecord(newGridTable.getInfo());
-        int count = 0;
+        int counter = 0;
         ByteArray byteArray = new ByteArray(8);
         ByteBuffer byteBuffer = ByteBuffer.allocate(8);
         try {
@@ -191,7 +187,7 @@ public class InMemCubeBuilder implements Runnable {
             Object[] hllObjects = new Object[dependentMeasures.keySet().size()];
 
             for (GTRecord record : scanner) {
-                count++;
+                counter++;
                 for (int i = allNeededColumns.nextSetBit(0), index = 0; i >= 0; i = allNeededColumns.nextSetBit(i + 1), index++) {
                     newRecord.set(index, record.get(i));
                 }
@@ -218,7 +214,7 @@ public class InMemCubeBuilder implements Runnable {
         } finally {
             builder.close();
         }
-        logger.info("after scanAndAggregateGridTable cuboid " + cuboidId + " has rows: " + count);
+        logger.info("Cuboid " + cuboidId + " has rows: " + counter);
 
         return newGridTable;
     }
@@ -283,70 +279,97 @@ public class InMemCubeBuilder implements Runnable {
 
     @Override
     public void run() {
+        try {
+            createBaseCuboidGT();
 
-        while (true) {
-            List<String> row = null;
-            try {
-                row = queue.take();
-            } catch (InterruptedException e) {
-                logger.error("Error to take from queue", e);
-                throw new RuntimeException(e);
-            }
+            GTBuilder baseGTBuilder = baseCuboidGT.rebuild();
+            final GTRecord baseGTRecord = new GTRecord(baseCuboidGT.getInfo());
 
-            if (row.size() > 0) {
-                // append this row to base cuboid.
+            IGTScanner queueScanner = new IGTScanner() {
+
+                @Override
+                public Iterator<GTRecord> iterator() {
+                    return new Iterator<GTRecord>() {
+
+                        List<String> currentObject = null;
+
+                        @Override
+                        public boolean hasNext() {
+                            try {
+                                currentObject = queue.take();
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                            return currentObject != null && currentObject.size() > 0;
+                        }
+
+                        @Override
+                        public GTRecord next() {
+                            if (currentObject.size() == 0)
+                                throw new IllegalStateException();
+
+                            buildGTRecord(currentObject, baseGTRecord);
+                            return baseGTRecord;
+                        }
+
+                        @Override
+                        public void remove() {
+                            throw new UnsupportedOperationException();
+                        }
+                    };
+                }
+
+                @Override
+                public void close() throws IOException {
+                }
+
+                @Override
+                public GTInfo getInfo() {
+                    return baseCuboidGT.getInfo();
+                }
+
+                @Override
+                public int getScannedRowCount() {
+                    return 0;
+                }
+
+                @Override
+                public int getScannedRowBlockCount() {
+                    return 0;
+                }
+            };
+
+            Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumBitSet(baseCuboidId);
+            GTScanRequest req = new GTScanRequest(baseCuboidGT.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
+            IGTScanner aggregationScanner = new GTAggregateScanner(queueScanner, req);
+
+            int counter = 0;
+            for (GTRecord r : aggregationScanner) {
+                baseGTBuilder.write(r);
                 counter++;
-
-                try {
-                    addRowToBaseCuboid(row);
-
-                    if (counter % INTERVAL_TO_COMPRESS == 0) {
-                        compressBaseCuboid();
-                    }
-
-                } catch (IOException e) {
-                    logger.error("Failed to calculate base cuboid", e);
-                }
-            } else {
-                logger.info("The source data has " + counter + " rows");
-                if(counter == 0)
-                    break; // end the loop
-
-                // end of put data
-                if (counter % INTERVAL_TO_COMPRESS != 0) {
-                    try {
-                        compressBaseCuboid();
-                    } catch (IOException e) {
-                        logger.error("Failed to compress base cuboid", e);
-                        throw new RuntimeException("Failed to compress base cuboid", e);
-                    }
-                }
-
-                // calculate all cuboids
-                try {
-                    currentBaseGTBuilder.close();
-                    createNDCuboidGT(null, -1l, baseCuboidId);
-                } catch (IOException e) {
-                    logger.error("Failed to calculate cuboids", e);
-                    throw new RuntimeException("Failed to calculate cuboids", e);
-                }
-
-                break; // end the loop
             }
+            baseGTBuilder.close();
+            aggregationScanner.close();
+
+            logger.info("Base cuboid has " + counter + " rows;");
+            if (counter > 0)
+                createNDCuboidGT(null, -1l, baseCuboidId);
+
+        } catch (IOException e) {
+            logger.error("Fail to build cube", e);
+            throw new RuntimeException(e);
         }
+
     }
 
-    private void addRowToBaseCuboid(List<String> row) throws IOException {
-        if (this.baseCuboidGT == null) {
-            createBaseCuboidGT();
-        }
+    private void buildGTRecord(List<String> row, GTRecord record) {
 
         Object[] dimensions = buildKey(row, serializers);
         Object[] metricsValues = buildValue(row);
         Object[] recordValues = new Object[dimensions.length + metricsValues.length];
         System.arraycopy(dimensions, 0, recordValues, 0, dimensions.length);
         System.arraycopy(metricsValues, 0, recordValues, dimensions.length, metricsValues.length);
-        currentBaseGTBuilder.write(currentBaseGTRecord.setValues(recordValues));
+        record.setValues(recordValues);
     }
 
     private void createBaseCuboidGT() throws IOException {
@@ -360,25 +383,8 @@ public class InMemCubeBuilder implements Runnable {
         }
 
         this.baseCuboidGT = newGridTableByCuboidID(baseCuboidId);
-        this.currentBaseGTBuilder = baseCuboidGT.rebuild();
-        this.currentBaseGTRecord = new GTRecord(baseCuboidGT.getInfo());
     }
 
-    private void compressBaseCuboid() throws IOException {
-        logger.info("Received " + counter + " rows, going to compress base cuboid table");
-
-        long startTime = System.currentTimeMillis();
-        // close the current builder to flush the data to store
-        currentBaseGTBuilder.close();
-
-        Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumBitSet(baseCuboidId);
-
-        this.baseCuboidGT = scanAndAggregateGridTable(this.baseCuboidGT, baseCuboidId, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond());
-        this.currentBaseGTBuilder = baseCuboidGT.append();
-        this.currentBaseGTRecord = new GTRecord(baseCuboidGT.getInfo());
-
-        logger.info("Compress finished, it took " + (System.currentTimeMillis() - startTime)/1000 + " seconds.");
-    }
 
     private void createNDCuboidGT(GridTable parentCuboid, long parentCuboidId, long cuboidId) throws IOException {
 

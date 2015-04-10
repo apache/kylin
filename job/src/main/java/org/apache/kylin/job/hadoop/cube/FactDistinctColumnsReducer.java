@@ -18,13 +18,8 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -46,8 +41,8 @@ import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author yangli9
@@ -57,7 +52,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     private List<TblColRef> columnList = new ArrayList<TblColRef>();
     private boolean collectStatistics = false;
     private String statisticsOutput = null;
-    private List<Long> rowKeyCountInMappers;
+    private List<Long> rowCountInMappers;
+    private List<Long> baseCuboidRowCountInMappers;
     private Map<Long, Long> rowKeyCountInCuboids;
     protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
     protected long baseCuboidId;
@@ -80,7 +76,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         statisticsOutput = conf.get(BatchConstants.CFG_STATISTICS_OUTPUT);
 
         if (collectStatistics) {
-            rowKeyCountInMappers = Lists.newArrayList();
+            rowCountInMappers = Lists.newArrayList();
+            baseCuboidRowCountInMappers = Lists.newArrayList();
             rowKeyCountInCuboids = Maps.newHashMap();
             cuboidHLLMap = Maps.newHashMap();
         }
@@ -122,7 +119,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
                 if (cuboidId > baseCuboidId) {
                     // if this is the summary info from a mapper, record the number before merge
-                    rowKeyCountInMappers.add(hll.getCountEstimate());
+                    rowCountInMappers.add(hll.getCountEstimate());
+                } else if(cuboidId == baseCuboidId) {
+                    baseCuboidRowCountInMappers.add(hll.getCountEstimate());
                 }
 
                 if (cuboidHLLMap.get(cuboidId) != null) {
@@ -157,22 +156,32 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         try {
             long totalSum = 0;
             String msg;
-            for (int i = 0; i < rowKeyCountInMappers.size(); i++) {
-                if(rowKeyCountInMappers.get(i) > 0) {
-                    msg = "Cube segment in Mapper " + i + " has " + rowKeyCountInMappers.get(i) + " rows.";
-                    totalSum += rowKeyCountInMappers.get(i);
+
+            for (int i = 0; i < baseCuboidRowCountInMappers.size(); i++) {
+                if (baseCuboidRowCountInMappers.get(i) > 0) {
+                    msg = "Base Cuboid in Mapper " + i + " row count: \t " + baseCuboidRowCountInMappers.get(i);
                     out.write(msg.getBytes());
                     out.write('\n');
                 }
             }
 
-            msg = "Sum of the cube segments is " + totalSum;
+
+            for (int i = 0; i < rowCountInMappers.size(); i++) {
+                if (rowCountInMappers.get(i) > 0) {
+                    msg = "Cube segment in Mapper " + i + " total row count: \t " + rowCountInMappers.get(i);
+                    totalSum += rowCountInMappers.get(i);
+                    out.write(msg.getBytes());
+                    out.write('\n');
+                }
+            }
+
+            msg = "Sum of all the cube segments is: \t " + totalSum;
             out.write(msg.getBytes());
             out.write('\n');
 
 
             long grantTotal = rowKeyCountInCuboids.get(baseCuboidId + 1);
-            msg = "The merged cube has " + grantTotal + " rows.";
+            msg = "The merged cube has row count: \t " + grantTotal;
             out.write(msg.getBytes());
             out.write('\n');
 
@@ -186,9 +195,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             Collections.sort(allCuboids);
             for (long i : allCuboids) {
                 if (i <= baseCuboidId) {
-                    msg = "Cuboid " + i + " has " + rowKeyCountInCuboids.get(i) + " rows.";
+                    msg = "Cuboid " + i + " row count is: \t " + rowKeyCountInCuboids.get(i);
                 } else {
-                    msg = "Totally the cube has " + rowKeyCountInCuboids.get(i) + " rows.";
+                    msg = "Total row count is: \t " + rowKeyCountInCuboids.get(i);
                 }
                 out.write(msg.getBytes());
                 out.write('\n');
