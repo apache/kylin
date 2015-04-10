@@ -11,15 +11,15 @@ then
     echo "${version}"
 fi
 
-#package tgz
-echo 'package tgz'
+#package tar.gz
+echo 'package tar.gz'
 rm -rf kylin-${version}
 mkdir kylin-${version}
 cp -r lib bin conf tomcat examples/sample_cube kylin-${version}
 find kylin-${version} -type d -exec chmod 755 {} \;
 find kylin-${version} -type f -exec chmod 644 {} \;
 find kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
-tar -cvzf kylin-${version}.tgz kylin-${version}
+tar -cvzf kylin-${version}.tar.gz kylin-${version}
 rm -rf kylin-${version}
 
-echo "Package ready kylin-${version}.tgz"
+echo "Package ready kylin-${version}.tar.gz"
