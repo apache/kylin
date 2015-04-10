@@ -103,4 +103,39 @@ public class TsConditionExtractorTest extends LocalFileMetadataTestCase {
         Assert.assertEquals(946684800000L, ret.getLeft().longValue());
         Assert.assertEquals(946771200000L, ret.getRight().longValue());
     }
+
+    @Test
+    public void testMoreComplextFilter() {
+        CompareTupleFilter aFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
+        aFilter.addChild(new ColumnTupleFilter(caldt));
+        aFilter.addChild(new ConstantTupleFilter("2000-01-01"));
+
+        CompareTupleFilter bFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        bFilter.addChild(new ColumnTupleFilter(caldt));
+        bFilter.addChild(new ConstantTupleFilter("2000-01-04"));
+
+        CompareTupleFilter cFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        cFilter.addChild(new ColumnTupleFilter(caldt));
+        cFilter.addChild(new ConstantTupleFilter("2000-01-03"));
+
+        CompareTupleFilter dFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
+        dFilter.addChild(new ColumnTupleFilter(siteId));
+        dFilter.addChild(new ConstantTupleFilter("0"));
+
+        LogicalTupleFilter subRoot = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        subRoot.addChildren(Lists.newArrayList(aFilter, bFilter, cFilter, dFilter));
+
+
+        CompareTupleFilter outFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        outFilter.addChild(new ColumnTupleFilter(caldt));
+        outFilter.addChild(new ConstantTupleFilter("2000-01-02"));
+
+        LogicalTupleFilter root = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        root.addChildren(Lists.newArrayList(subRoot,outFilter));
+
+        Pair<Long, Long> ret = TsConditionExtractor.extractTsCondition(tableRecordInfo, ii.getAllColumns(), root);
+
+        Assert.assertEquals(946684800000L, ret.getLeft().longValue());
+        Assert.assertEquals(946771200000L, ret.getRight().longValue());
+    }
 }
