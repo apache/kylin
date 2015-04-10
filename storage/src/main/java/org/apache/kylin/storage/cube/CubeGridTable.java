@@ -12,7 +12,6 @@ import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.gridtable.GTDictionaryCodeSystem;
 import org.apache.kylin.storage.gridtable.GTInfo;
 
 import com.google.common.collect.Maps;
@@ -39,7 +38,7 @@ public class CubeGridTable {
         Map<TblColRef, Dictionary<?>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
         return newGTInfo(cubeSeg.getCubeDesc(), cuboidId, dictionaryMap);
     }
-    
+
     @SuppressWarnings("rawtypes")
     public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
@@ -51,7 +50,8 @@ public class CubeGridTable {
         BitSet metrics = new BitSet();
         metrics.set(dimCols.size(), nColumns);
         DataType[] dataTypes = new DataType[nColumns];
-        Map<Integer, Dictionary> dictionaryByColIndex = Maps.newHashMap();
+        Map<Integer, Dictionary> dictionaryByColIdx = Maps.newHashMap();
+        Map<Integer, Integer> fixLenByColIdx = Maps.newHashMap();
 
         int colIndex = 0;
         for (TblColRef col : dimCols) {
@@ -60,7 +60,14 @@ public class CubeGridTable {
                 Dictionary dict = dictionaryMap.get(col);
                 if (dict == null)
                     throw new IllegalStateException();
-                dictionaryByColIndex.put(colIndex, dict);
+
+                dictionaryByColIdx.put(colIndex, dict);
+            } else {
+                int len = cubeDesc.getRowkey().getColumnLength(col);
+                if (len == 0)
+                    throw new IllegalStateException();
+                
+                fixLenByColIdx.put(colIndex,  len);
             }
             colIndex++;
         }
@@ -71,7 +78,7 @@ public class CubeGridTable {
         }
 
         GTInfo.Builder builder = GTInfo.builder();
-        builder.setCodeSystem(new GTDictionaryCodeSystem(dictionaryByColIndex));
+        builder.setCodeSystem(new CubeCodeSystem(dictionaryByColIdx, fixLenByColIdx));
         builder.setColumns(dataTypes);
         builder.setPrimaryKey(dimensions);
         builder.enableColumnBlock(new BitSet[] { dimensions, metrics });

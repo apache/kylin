@@ -36,6 +36,18 @@ public class GTInfo {
     private GTInfo() {
     }
 
+    public int getColumnCount() {
+        return nColumns;
+    }
+    
+    public DataType getColumnType(int i) {
+        return colTypes[i];
+    }
+
+    public BitSet getPrimaryKey() {
+        return primaryKey;
+    }
+    
     public boolean isShardingEnabled() {
         return nShards > 0;
     }

@@ -27,6 +27,7 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.cube.CubeCodeSystem;
 import org.apache.kylin.storage.gridtable.GTInfo.Builder;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
 import org.junit.Test;
@@ -314,11 +315,11 @@ public class DictGridTableTest {
     }
 
     @SuppressWarnings("rawtypes")
-    private static GTDictionaryCodeSystem newDictCodeSystem() {
+    private static CubeCodeSystem newDictCodeSystem() {
         Map<Integer, Dictionary> dictionaryMap = Maps.newHashMap();
         dictionaryMap.put(1, newDictionaryOfInteger());
         dictionaryMap.put(2, newDictionaryOfString());
-        return new GTDictionaryCodeSystem(dictionaryMap);
+        return new CubeCodeSystem(dictionaryMap);
     }
 
     @SuppressWarnings("rawtypes")

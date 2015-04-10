@@ -1,17 +1,23 @@
-package org.apache.kylin.storage.gridtable;
+package org.apache.kylin.storage.cube;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
+import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.IGTCodeSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.ByteBuffer;
-import java.util.Map;
 
 /**
  * Created by shaoshi on 3/23/15.
@@ -19,28 +25,43 @@ import java.util.Map;
  * its data type to serialize/deserialize it;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class GTDictionaryCodeSystem implements IGTCodeSystem {
-    private static final Logger logger = LoggerFactory.getLogger(CubeManager.class);
+public class CubeCodeSystem implements IGTCodeSystem {
+    private static final Logger logger = LoggerFactory.getLogger(CubeCodeSystem.class);
+
+    // ============================================================================
 
     private GTInfo info;
-    private Map<Integer, Dictionary> dictionaryMap = null; // key: column index; value: dictionary for this column;
+    private Map<Integer, Dictionary> dictionaryMap = null; // column index ==> dictionary of column
+    private Map<Integer, Integer> fixLenMap = null; // column index ==> fixed length of column
     private IFilterCodeSystem<ByteArray> filterCS;
     private DataTypeSerializer[] serializers;
 
-    public GTDictionaryCodeSystem(Map<Integer, Dictionary> dictionaryMap) {
+    public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap) {
+        this(dictionaryMap, Collections.<Integer, Integer>emptyMap());
+    }
+            
+    public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap, Map<Integer, Integer> fixLenMap) {
         this.dictionaryMap = dictionaryMap;
+        this.fixLenMap = fixLenMap;
     }
 
     @Override
     public void init(GTInfo info) {
         this.info = info;
 
-        serializers = new DataTypeSerializer[info.nColumns];
-        for (int i = 0; i < info.nColumns; i++) {
+        serializers = new DataTypeSerializer[info.getColumnCount()];
+        for (int i = 0; i < info.getColumnCount(); i++) {
+            // dimension with dictionary
             if (dictionaryMap.get(i) != null) {
                 serializers[i] = new DictionarySerializer(dictionaryMap.get(i));
-            } else {
-                serializers[i] = DataTypeSerializer.create(info.colTypes[i]);
+            }
+            // dimension of fixed length
+            else if (fixLenMap.get(i) != null) {
+                serializers[i] = new FixLenSerializer(fixLenMap.get(i));
+            }
+            // metrics
+            else {
+                serializers[i] = DataTypeSerializer.create(info.getColumnType(i));
             }
         }
 
@@ -130,10 +151,10 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
 
     @Override
     public MeasureAggregator<?> newMetricsAggregator(String aggrFunction, int col) {
-        return MeasureAggregator.create(aggrFunction, info.colTypes[col].toString());
+        return MeasureAggregator.create(aggrFunction, info.getColumnType(col).toString());
     }
 
-    class DictionarySerializer extends DataTypeSerializer {
+    static class DictionarySerializer extends DataTypeSerializer {
         private Dictionary dictionary;
 
         DictionarySerializer(Dictionary dictionary) {
@@ -161,7 +182,7 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
         public int peekLength(ByteBuffer in) {
             return dictionary.getSizeOfId();
         }
-        
+
         @Override
         public int maxLength() {
             return dictionary.getSizeOfId();
@@ -171,6 +192,71 @@ public class GTDictionaryCodeSystem implements IGTCodeSystem {
         public Object valueOf(byte[] value) {
             throw new UnsupportedOperationException();
         }
+    }
+
+    static class FixLenSerializer extends DataTypeSerializer {
+
+        private int fixLen;
+        private byte[] buf;
+
+        FixLenSerializer(int fixLen) {
+            this.fixLen = fixLen;
+            this.buf = new byte[fixLen];
+        }
+
+        @Override
+        public void serialize(Object value, ByteBuffer out) {
+            if (value == null) {
+                Arrays.fill(buf, Dictionary.NULL);
+                out.put(buf);
+            } else {
+                byte[] bytes = Bytes.toBytes(value.toString());
+                if (bytes.length > fixLen) {
+                    throw new IllegalStateException("Expect at most " + fixLen + " bytes, but got " + bytes.length + ", value string: " + value.toString());
+                }
+                out.put(bytes);
+                for (int i = bytes.length; i < fixLen; i++) {
+                    out.put(RowConstants.ROWKEY_PLACE_HOLDER_BYTE);
+                }
+            }
+        }
+
+        @Override
+        public Object deserialize(ByteBuffer in) {
+            in.get(buf);
+
+            int tail = fixLen;
+            while (tail > 0 && (buf[tail - 1] == RowConstants.ROWKEY_PLACE_HOLDER_BYTE || buf[tail - 1] == Dictionary.NULL)) {
+                tail--;
+            }
+            
+            if (tail == 0) {
+                return buf[0] == Dictionary.NULL ? null : "";
+            }
+            
+            return Bytes.toString(buf, 0, tail);
+        }
+
+        @Override
+        public int peekLength(ByteBuffer in) {
+            return fixLen;
+        }
+
+        @Override
+        public int maxLength() {
+            return fixLen;
+        }
+
+        @Override
+        public Object valueOf(byte[] value) {
+            try {
+                return new String(value, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                // does not happen
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
 }

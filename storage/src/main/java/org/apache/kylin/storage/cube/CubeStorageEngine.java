@@ -90,7 +90,7 @@ public class CubeStorageEngine implements IStorageEngine {
 
         List<CubeScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
-            scanners.add(new CubeScanner(cubeSeg, dimensionsD, groupsD, metrics, filterD, context));
+            scanners.add(new CubeScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD));
         }
         
         return new SerializedCubeTupleIterator(scanners);

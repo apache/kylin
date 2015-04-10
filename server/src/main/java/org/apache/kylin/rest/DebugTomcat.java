@@ -34,38 +34,46 @@ import org.apache.kylin.rest.util.ClasspathUtil;
 
 public class DebugTomcat {
 
+    public static void setupDebugEnv() {
+        try {
+            // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
+            ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
+            System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
+            System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
+            System.setProperty("spring.profiles.active", "testing");
+
+            // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052
+            if (Shell.WINDOWS) {
+                {
+                    Field field = Shell.class.getDeclaredField("WINDOWS");
+                    field.setAccessible(true);
+                    Field modifiersField = Field.class.getDeclaredField("modifiers");
+                    modifiersField.setAccessible(true);
+                    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+                    field.set(null, false);
+                }
+                {
+                    Field field = java.io.File.class.getDeclaredField("pathSeparator");
+                    field.setAccessible(true);
+                    Field modifiersField = Field.class.getDeclaredField("modifiers");
+                    modifiersField.setAccessible(true);
+                    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+                    field.set(null, ":");
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) throws Exception {
+        setupDebugEnv();
+
         int port = 7070;
         if (args.length >= 1) {
             port = Integer.parseInt(args[0]);
         }
-        
-        // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
-        ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
-        System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
-        System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
 
-        // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052
-        if (Shell.WINDOWS) {
-            {
-                Field field = Shell.class.getDeclaredField("WINDOWS");
-                field.setAccessible(true);
-                Field modifiersField = Field.class.getDeclaredField("modifiers");
-                modifiersField.setAccessible(true);
-                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-                field.set(null, false);
-            }
-            {
-                Field field = java.io.File.class.getDeclaredField("pathSeparator");
-                field.setAccessible(true);
-                Field modifiersField = Field.class.getDeclaredField("modifiers");
-                modifiersField.setAccessible(true);
-                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-                field.set(null, ":");
-            }
-        }
-
-        System.setProperty("spring.profiles.active", "testing");
         String webBase = new File("../webapp/app").getAbsolutePath();
         if (new File(webBase, "WEB-INF").exists() == false) {
             throw new RuntimeException("In order to launch Kylin web app from IDE, please make a symblink from webapp/app/WEB-INF to server/src/main/webapp/WEB-INF");
