@@ -70,36 +70,34 @@ public class EndpointAggregators {
 
     }
 
-    private static MetricInfo generateMetricInfo(int index, FunctionDesc functionDesc) {
-        if (functionDesc.isCount()) {
-            return new MetricInfo(MetricType.Count);
-        } else if (functionDesc.isDimensionAsMetric()) {
-            return new MetricInfo(MetricType.DimensionAsMetric);
-        } else {
-            Preconditions.checkState(index >= 0, "Column " + functionDesc.getParameter().getValue() + " is not found in II");
-            if (functionDesc.isCountDistinct()) {
-                return new MetricInfo(MetricType.DistinctCount, index, functionDesc.getReturnDataType().getPrecision());
-            } else {
-                return new MetricInfo(MetricType.Normal, index);
-            }
-        }
-    }
-
-
     public static EndpointAggregators fromFunctions(TableRecordInfo tableInfo, List<FunctionDesc> metrics) {
-        final int metricSize = metrics.size();
-        String[] funcNames = new String[metricSize];
-        String[] dataTypes = new String[metricSize];
-        MetricInfo[] metricInfos = new MetricInfo[metricSize];
+        String[] funcNames = new String[metrics.size()];
+        String[] dataTypes = new String[metrics.size()];
+        MetricInfo[] metricInfos = new MetricInfo[metrics.size()];
 
-        for (int i = 0; i < metricSize; i++) {
+        for (int i = 0; i < metrics.size(); i++) {
             FunctionDesc functionDesc = metrics.get(i);
 
             //TODO: what if funcionDesc's type is different from tablDesc? cause scale difference
             funcNames[i] = functionDesc.getExpression();
             dataTypes[i] = functionDesc.getReturnType();
-            int index = tableInfo.findFactTableColumn(functionDesc.getParameter().getValue());
-            metricInfos[i] = generateMetricInfo(index, functionDesc);
+
+            if (functionDesc.isCount()) {
+                metricInfos[i] = new MetricInfo(MetricType.Count);
+            } else if (functionDesc.isDimensionAsMetric()) {
+                metricInfos[i] = new MetricInfo(MetricType.DimensionAsMetric);
+            } else {
+                int index = tableInfo.findFactTableColumn(functionDesc.getParameter().getValue());
+                if (index < 0) {
+                    throw new IllegalStateException("Column " + functionDesc.getParameter().getValue() + " is not found in II");
+                }
+
+                if (functionDesc.isCountDistinct()) {
+                    metricInfos[i] = new MetricInfo(MetricType.DistinctCount, index, functionDesc.getReturnDataType().getPrecision());
+                } else {
+                    metricInfos[i] = new MetricInfo(MetricType.Normal, index);
+                }
+            }
         }
 
         return new EndpointAggregators(funcNames, dataTypes, metricInfos, tableInfo.getDigest());
