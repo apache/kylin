@@ -76,7 +76,8 @@ public class TableRecord implements Cloneable {
             LongWritable v = rawRecord.codec(col).valueOf(value);
             setValueMetrics(col, v);
         } else {
-            int id = info.dict(col).getIdFromValue(value);
+            final Dictionary<String> dict = info.dict(col);
+            int id = dict.getIdFromValue(value);
             rawRecord.setValueID(col, id);
         }
     }

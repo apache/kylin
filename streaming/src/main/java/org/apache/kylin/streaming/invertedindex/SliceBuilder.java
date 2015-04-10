@@ -75,9 +75,9 @@ public final class SliceBuilder {
                 return streamParser.parse(input);
             }
         });
-        final Dictionary<?>[] dictionaryMap = IIDictionaryBuilder.buildDictionary(table, iiDesc);
-        TableRecordInfo tableRecordInfo = new TableRecordInfo(iiDesc, dictionaryMap);
-        return build(table,  tableRecordInfo, dictionaryMap);
+        final Dictionary<?>[] dictionaries = IIDictionaryBuilder.buildDictionary(table, iiDesc);
+        TableRecordInfo tableRecordInfo = new TableRecordInfo(iiDesc, dictionaries);
+        return build(table,  tableRecordInfo, dictionaries);
     }
 
     private Slice build(List<List<String>> table,  final TableRecordInfo tableRecordInfo, Dictionary<?>[] localDictionary) {

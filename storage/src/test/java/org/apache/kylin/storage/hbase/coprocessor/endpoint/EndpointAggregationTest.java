@@ -118,7 +118,7 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
         System.arraycopy(groupOne, 0, data, tableRecordInfo.getDigest().offset(groupByColumnIndex), groupOne.length);
         result.add(data);
 
-        data = randomBytes(tableRecordInfo.getDigest().getByteFormLen());;
+        data = randomBytes(tableRecordInfo.getDigest().getByteFormLen());
         codec.write(codec.valueOf("2.09"), data, tableRecordInfo.getDigest().offset(priceColumnIndex));
         System.arraycopy(groupOne, 0, data, tableRecordInfo.getDigest().offset(groupByColumnIndex), groupOne.length);
         result.add(data);
