@@ -1,20 +1,5 @@
 [
     {
-        "url": "/home",
-        "params": {
-            "templateUrl": "partials/home.html",
-            "controller": "IndexCtrl"
-        }
-    },
-    {
-        "url": "/cubes",
-        "params": {
-            "templateUrl": "partials/cubes/cubes.html",
-            "tab": "models",
-            "controller": "CubesCtrl"
-        }
-    },
-    {
         "url": "/jobs",
         "params": {
             "templateUrl": "partials/jobs/jobs.html",

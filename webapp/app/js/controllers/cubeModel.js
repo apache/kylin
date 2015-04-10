@@ -18,14 +18,14 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,GraphService,$log,TableModel,ModelService,loadingRequest,modelsManager) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,ModelGraphService,$log,TableModel,ModelService,loadingRequest,modelsManager) {
 
     $scope.modelsManager = modelsManager;
 
     $scope.buildGraph = function (model) {
 //        var newModel = jQuery.extend(true, {}, model);
         var newModel = angular.copy(model);
-        GraphService.buildTree(newModel);
+        ModelGraphService.buildTree(newModel);
     };
 
     $scope.cleanStatus = function(model){
