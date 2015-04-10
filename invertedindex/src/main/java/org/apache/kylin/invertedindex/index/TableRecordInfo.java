@@ -18,9 +18,7 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.dict.Dictionary;
@@ -41,7 +39,7 @@ public class TableRecordInfo {
     final IIDesc desc;
 
     final TableRecordInfoDigest digest;
-    final Dictionary<?>[] dictionaryMap;
+    final Dictionary<?>[] dictionaries;
 
     public TableRecordInfo(IISegment iiSegment) {
         this(iiSegment.getIIDesc());
@@ -51,10 +49,10 @@ public class TableRecordInfo {
         this(desc, new Dictionary<?>[0]);
     }
 
-    public TableRecordInfo(IIDesc desc, Dictionary<?>[] dictionaryMap) {
+    public TableRecordInfo(IIDesc desc, Dictionary<?>[] dictionaries) {
         this.desc = desc;
-        this.dictionaryMap = dictionaryMap;
-        this.digest = createDigest(desc, dictionaryMap);
+        this.dictionaries = dictionaries;
+        this.digest = createDigest(desc, dictionaries);
     }
 
     public TableRecordInfoDigest getDigest() {
@@ -139,7 +137,7 @@ public class TableRecordInfo {
     @SuppressWarnings("unchecked")
     public Dictionary<String> dict(int col) {
         // yes, all dictionaries are string based
-        return (Dictionary<String>) dictionaryMap[col];
+        return (Dictionary<String>) dictionaries[col];
     }
 
     public int getTimestampColumn() {
