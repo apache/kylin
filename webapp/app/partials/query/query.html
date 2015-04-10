@@ -193,7 +193,7 @@
                         class="{{(query==curQuery)? 'active':''}}">
                         <span>
                             <button class="btn {{(query==curQuery)?'active':''}} btn-default btn-xs" style="width: 50px"
-                                    ng-click="refreshCurQuery()">
+                                    ng-click="refreshCurQuery();$event.stopPropagation();">
                                 {{$index+1}}
                                 <span ng-if="query.status=='failed'">
                                     <i style="color: #f0ad4e" class="fa fa-exclamation-triangle"></i>
