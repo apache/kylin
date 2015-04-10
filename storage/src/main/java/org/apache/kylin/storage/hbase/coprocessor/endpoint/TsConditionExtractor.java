@@ -21,26 +21,11 @@ public class TsConditionExtractor {
         int tsCol = recordInfo.getTimestampColumn();
         TblColRef tsColRef = columns.get(tsCol);
 
-        TupleFilter filter = rootFilter;
-        if (filter instanceof CompareTupleFilter) {
-            //where ts > 2000-01-01
-            return extractTsConditionInternal((CompareTupleFilter) filter, tsColRef);
-        } else if (filter instanceof LogicalTupleFilter) {
-            LogicalTupleFilter logicFilter = (LogicalTupleFilter) filter;
-            if (logicFilter.getOperator() != TupleFilter.FilterOperatorEnum.AND) {
-                return null;
-            }
-            //where ts > 2000-01-01 and ts < 2001-01-01 and xColumn > 1000
-            List<Pair<Long, Long>> conditions = Lists.newArrayList();
-            for (TupleFilter child : logicFilter.getChildren()) {
-                if (child instanceof CompareTupleFilter) {
-                    Pair<Long, Long> piece = extractTsConditionInternal((CompareTupleFilter) child, tsColRef);
-                    if (piece != null) {
-                        conditions.add(piece);
-                    }
-                }
-            }
+        List<Pair<Long, Long>> conditions = Lists.newArrayList();
+        extractTsConditionInternal(rootFilter,tsColRef,conditions);
 
+        if(conditions.size() >0)
+        {
             long min = Long.MIN_VALUE;
             long max = Long.MAX_VALUE;
             for (Pair<Long, Long> pair : conditions) {
@@ -56,32 +41,47 @@ public class TsConditionExtractor {
         return null;
     }
 
-    private static Pair<Long, Long> extractTsConditionInternal(CompareTupleFilter filter, TblColRef colRef) {
-        if (filter.getColumn().equals(colRef)) {
-            Object firstValue = filter.getFirstValue();
-            long t;
-            switch (filter.getOperator()) {
-            case EQ:
-                t = DateFormat.stringToMillis((String) firstValue);
-                return Pair.of(t, t);
-            case NEQ:
-                return null;
-            case LT:
-            case LTE:
-                t = DateFormat.stringToMillis((String) firstValue);
-                return Pair.of(null, t);
-            case GT:
-            case GTE:
-                t = DateFormat.stringToMillis((String) firstValue);
-                return Pair.of(t, null);
-            case IN://In is not handled for now
-                return null;
-            default:
-                return null;
+    private static void extractTsConditionInternal(TupleFilter filter, TblColRef colRef, List<Pair<Long, Long>> conditions) {
+        if (filter instanceof LogicalTupleFilter) {
+            if (filter.getOperator() == TupleFilter.FilterOperatorEnum.AND) {
+                for (TupleFilter child : filter.getChildren()) {
+                    extractTsConditionInternal(child, colRef, conditions);
+                }
+            } else {
+                return;
             }
-        } else {
-            return null;
+        }
+
+        if (filter instanceof CompareTupleFilter) {
+            CompareTupleFilter compareTupleFilter = (CompareTupleFilter) filter;
+            if (compareTupleFilter.getColumn() == null)// column will be null at filters like " 1<>1"
+                return;
+
+            if (compareTupleFilter.getColumn().equals(colRef)) {
+                Object firstValue = compareTupleFilter.getFirstValue();
+                long t;
+                switch (compareTupleFilter.getOperator()) {
+                case EQ:
+                    t = DateFormat.stringToMillis((String) firstValue);
+                    conditions.add(Pair.of(t, t));
+                    break;
+                case NEQ:
+                    break;
+                case LT:
+                case LTE:
+                    t = DateFormat.stringToMillis((String) firstValue);
+                    conditions.add(Pair.<Long, Long> of(null, t));
+                    break;
+                case GT:
+                case GTE:
+                    t = DateFormat.stringToMillis((String) firstValue);
+                    conditions.add(Pair.<Long, Long> of(t, null));
+                    break;
+                case IN://In is not handled for now
+                    break;
+                default:
+                }
+            }
         }
     }
-
 }
