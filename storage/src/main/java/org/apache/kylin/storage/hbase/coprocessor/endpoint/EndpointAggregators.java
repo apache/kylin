@@ -41,7 +41,7 @@ import com.google.common.collect.Lists;
 /**
  * @author honma
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class EndpointAggregators {
 
     private enum MetricType {
@@ -70,34 +70,34 @@ public class EndpointAggregators {
 
     }
 
-    public static EndpointAggregators fromFunctions(TableRecordInfo tableInfo, List<FunctionDesc> metrics) {
-        String[] funcNames = new String[metrics.size()];
-        String[] dataTypes = new String[metrics.size()];
-        MetricInfo[] metricInfos = new MetricInfo[metrics.size()];
+    private static MetricInfo generateMetricInfo(TableRecordInfo tableInfo, FunctionDesc functionDesc) {
+        if (functionDesc.isCount()) {
+            return new MetricInfo(MetricType.Count);
+        } else if (functionDesc.isDimensionAsMetric()) {
+            return new MetricInfo(MetricType.DimensionAsMetric);
+        } else {
+            int index = tableInfo.findFactTableColumn(functionDesc.getParameter().getValue());
+            Preconditions.checkState(index >= 0, "Column " + functionDesc.getParameter().getValue() + " is not found in II");
+            if (functionDesc.isCountDistinct()) {
+                return new MetricInfo(MetricType.DistinctCount, index, functionDesc.getReturnDataType().getPrecision());
+            } else {
+                return new MetricInfo(MetricType.Normal, index);
+            }
+        }
+    }
 
-        for (int i = 0; i < metrics.size(); i++) {
+    public static EndpointAggregators fromFunctions(TableRecordInfo tableInfo, List<FunctionDesc> metrics) {
+        final int metricSize = metrics.size();
+        String[] funcNames = new String[metricSize];
+        String[] dataTypes = new String[metricSize];
+        MetricInfo[] metricInfos = new MetricInfo[metricSize];
+        for (int i = 0; i < metricSize; i++) {
             FunctionDesc functionDesc = metrics.get(i);
 
             //TODO: what if funcionDesc's type is different from tablDesc? cause scale difference
             funcNames[i] = functionDesc.getExpression();
             dataTypes[i] = functionDesc.getReturnType();
-
-            if (functionDesc.isCount()) {
-                metricInfos[i] = new MetricInfo(MetricType.Count);
-            } else if (functionDesc.isDimensionAsMetric()) {
-                metricInfos[i] = new MetricInfo(MetricType.DimensionAsMetric);
-            } else {
-                int index = tableInfo.findFactTableColumn(functionDesc.getParameter().getValue());
-                if (index < 0) {
-                    throw new IllegalStateException("Column " + functionDesc.getParameter().getValue() + " is not found in II");
-                }
-
-                if (functionDesc.isCountDistinct()) {
-                    metricInfos[i] = new MetricInfo(MetricType.DistinctCount, index, functionDesc.getReturnDataType().getPrecision());
-                } else {
-                    metricInfos[i] = new MetricInfo(MetricType.Normal, index);
-                }
-            }
+            metricInfos[i] = generateMetricInfo(tableInfo, functionDesc);
         }
 
         return new EndpointAggregators(funcNames, dataTypes, metricInfos, tableInfo.getDigest());
@@ -152,6 +152,7 @@ public class EndpointAggregators {
         }
         return aggrs;
     }
+
 
     /**
      * this method is heavily called at coprocessor side,
