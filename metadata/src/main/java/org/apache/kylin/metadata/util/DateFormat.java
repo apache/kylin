@@ -29,6 +29,10 @@ public class DateFormat {
         return format;
     }
 
+    public static String formatToDateStr(long millis) {
+        return getDateFormat(DEFAULT_DATE_PATTERN).format(new Date(millis));
+    }
+
     public static String dateToString(Date date) {
         return dateToString(date, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
     }
@@ -64,7 +68,7 @@ public class DateFormat {
             throw new IllegalArgumentException("there is no valid date pattern for:" + str);
         }
     }
-    
+
     private static boolean isAllDigits(String str) {
         for (int i = 0, n = str.length(); i < n; i++) {
             if (Character.isDigit(str.charAt(i)) == false)

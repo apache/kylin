@@ -35,13 +35,11 @@ public class StorageEngineFactory {
     public static IStorageEngine getStorageEngine(IRealization realization) {
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
             return new InvertedIndexStorageEngine((IIInstance) realization);
-        }
-
-        if (realization.getType() == RealizationType.CUBE) {
+        } else if (realization.getType() == RealizationType.CUBE) {
             return new CubeStorageEngine((CubeInstance) realization);
+        } else {
+            return new HybridStorageEngine((HybridInstance) realization);
         }
-
-        return new HybridStorageEngine((HybridInstance) realization);
     }
 
 }

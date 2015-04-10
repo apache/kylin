@@ -116,6 +116,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
+        logger.info("Closing CubeSegmentTupleIterator");
         closeScanner();
         closeTable();
     }

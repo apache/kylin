@@ -89,8 +89,8 @@ public class QueryController extends BasicController {
         long startTimestamp = System.currentTimeMillis();
 
         SQLResponse response = doQuery(sqlRequest);
-        response.setDuration(System.currentTimeMillis() - startTimestamp);
 
+        response.setDuration(System.currentTimeMillis() - startTimestamp);
         queryService.logQuery(sqlRequest, response, new Date(startTimestamp), new Date(System.currentTimeMillis()));
 
         return response;
@@ -202,11 +202,13 @@ public class QueryController extends BasicController {
         SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
         try {
             if (null == sqlResponse) {
+                long startTimestamp = System.currentTimeMillis();
                 sqlResponse = queryService.query(sqlRequest);
+                long queryRealExecutionTime = System.currentTimeMillis() - startTimestamp;
 
                 long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
                 long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
-                if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                if (!sqlResponse.getIsException() && (queryRealExecutionTime > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
                     cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                 }
             }
