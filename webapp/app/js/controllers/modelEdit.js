@@ -117,7 +117,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
             modelsManager.selectedModel.partition_desc.partition_date_start=null;
         }
         $scope.state.project = modelsManager.selectedModel.project;
-        var _model = angular.copy($scope.model);
+        var _model = angular.copy(modelsManager.selectedModel);
         delete _model.project;
         $scope.state.modelSchema = angular.toJson(_model, true);
 
@@ -220,7 +220,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         if(modelsManager.selectedModel.partition_desc.partition_date_start==0){
             modelsManager.selectedModel.partition_desc.partition_date_start = null;
         }
-        if($scope.model&&(modelsManager.selectedModel.partition_desc.partition_date_start||modelsManager.selectedModel.partition_desc.partition_date_start==0))
+        if(modelsManager.selectedModel&&(modelsManager.selectedModel.partition_desc.partition_date_start||modelsManager.selectedModel.partition_desc.partition_date_start==0))
         {
             modelsManager.selectedModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
         }

@@ -357,8 +357,8 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
 });
 
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube,metaModel, buildType,SweetAlert,loadingRequest) {
-    $scope.cube = cube;
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube,metaModel, buildType,SweetAlert,loadingRequest,cubesManager) {
+    $scope.cubesManager = cubesManager;
     $scope.metaModel={
         model:metaModel.model
     }
