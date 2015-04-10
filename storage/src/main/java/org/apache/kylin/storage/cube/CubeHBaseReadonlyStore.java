@@ -1,12 +1,12 @@
 package org.apache.kylin.storage.cube;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
@@ -86,6 +86,7 @@ public class CubeHBaseReadonlyStore implements IGTStore {
         final ResultScanner scanner = hbaseTable.getScanner(hbaseScan);
         final Iterator<Result> iterator = scanner.iterator();
         final GTRowBlock oneBlock = new GTRowBlock(info); // avoid object creation
+        oneBlock.setNumberOfRows(1); // row block is always disabled for cubes, row block contains only one record 
 
         return new IGTStoreScanner() {
 
@@ -96,7 +97,6 @@ public class CubeHBaseReadonlyStore implements IGTStore {
 
             @Override
             public GTRowBlock next() {
-                // row block is always disabled for cubes, row block contains only one record
                 Result result = iterator.next();
 
                 // dimensions, set to primary key, also the 0th column block
@@ -139,18 +139,20 @@ public class CubeHBaseReadonlyStore implements IGTStore {
             scan.addColumn(byteFamily, byteQualifier);
         }
 
-        scan.setStartRow(makeRowKeyToScan(pkStart));
-        scan.setStopRow(makeRowKeyToScan(pkEnd));
+        scan.setStartRow(makeRowKeyToScan(pkStart, (byte) 0x00));
+        scan.setStopRow(makeRowKeyToScan(pkEnd, (byte) 0xff));
         return scan;
     }
 
-    private byte[] makeRowKeyToScan(ByteArray pk) {
-        if (pk == null || pk.array() == null)
-            return HConstants.EMPTY_BYTE_ARRAY; // from the very beginning, or to the end
-
-        byte[] buf = new byte[pk.length() + RowConstants.ROWKEY_CUBOIDID_LEN];
+    private byte[] makeRowKeyToScan(ByteArray pk, byte fill) {
+        int pkMaxLen = info.getMaxColumnLength(info.getPrimaryKey());
+        byte[] buf = new byte[pkMaxLen + RowConstants.ROWKEY_CUBOIDID_LEN];
+        Arrays.fill(buf, fill);
+        
         System.arraycopy(cuboid.getBytes(), 0, buf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
-        System.arraycopy(pk.array(), pk.offset(), buf, RowConstants.ROWKEY_CUBOIDID_LEN, pk.length());
+        if (pk != null && pk.array() != null) {
+            System.arraycopy(pk.array(), pk.offset(), buf, RowConstants.ROWKEY_CUBOIDID_LEN, pk.length());
+        }
         return buf;
     }
 

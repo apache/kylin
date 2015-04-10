@@ -162,6 +162,14 @@ public class GTRowBlock {
         else
             return nRows > 0;
     }
+    
+    public int getNumberOfRows() {
+        return nRows;
+    }
+
+    public void setNumberOfRows(int nRows) {
+        this.nRows = nRows;
+    }
 
     // TODO export / load should optimize for disabled row block
     

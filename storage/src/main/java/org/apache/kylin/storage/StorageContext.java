@@ -75,10 +75,12 @@ public class StorageContext {
         this.partialResultReturned = false;
     }
 
+    @Deprecated
     public String getConnUrl() {
         return connUrl;
     }
 
+    @Deprecated
     public void setConnUrl(String connUrl) {
         this.connUrl = connUrl;
     }

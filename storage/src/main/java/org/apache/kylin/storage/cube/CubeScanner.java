@@ -13,8 +13,8 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRawScanner;
 import org.apache.kylin.storage.gridtable.GTRecord;
@@ -35,9 +35,8 @@ public class CubeScanner implements IGTScanner {
     final List<GTScanRequest> scanRequests;
     final Scanner scanner;
 
-    public CubeScanner(CubeSegment cubeSeg, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Collection<FunctionDesc> metrics, TupleFilter filter, StorageContext context) {
-        Cuboid cuboid = context.getCuboid();
+    public CubeScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
+            Collection<FunctionDesc> metrics, TupleFilter filter) {
         info = CubeGridTable.newGTInfo(cubeSeg, cuboid.getId());
         store = new CubeHBaseReadonlyStore(info, cubeSeg, cuboid);
 
@@ -73,8 +72,14 @@ public class CubeScanner implements IGTScanner {
         BitSet result = new BitSet();
         int metricsIndexStart = cuboid.getColumns().size();
         for (FunctionDesc metric : metrics) {
-            int index = cubeDesc.getMeasures().indexOf(metric);
-            if (index < 0)
+            int index = 0;
+            for (MeasureDesc measure : cubeDesc.getMeasures()) {
+                if (metric.equals(measure.getFunction())) {
+                    break;
+                }
+                index++;
+            }
+            if (index == cubeDesc.getMeasures().size())
                 throw new IllegalStateException(metric + " not found in " + cubeDesc);
 
             result.set(metricsIndexStart + index);
@@ -204,5 +209,5 @@ public class CubeScanner implements IGTScanner {
         }
 
     }
-
+    
 }
