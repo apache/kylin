@@ -208,7 +208,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         if (context.hasJoin == false && tableName.equalsIgnoreCase(context.realization.getFactTable()) == false) {
             return "executeLookupTableQuery";
         } else {
-            return "executeIndexQuery";
+            return "executeOLAPQuery";
         }
 
     }

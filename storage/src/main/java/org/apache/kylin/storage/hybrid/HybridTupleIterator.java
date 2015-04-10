@@ -2,11 +2,15 @@ package org.apache.kylin.storage.hybrid;
 
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by shaoshi on 2/27/15.
  */
 public class HybridTupleIterator implements ITupleIterator {
+
+    private final static Logger logger = LoggerFactory.getLogger(HybridTupleIterator.class);
 
     private ITupleIterator[] iterators;
 
@@ -40,6 +44,7 @@ public class HybridTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
+        logger.info("Closing HybridTupleIterator");
         for (ITupleIterator i : iterators) {
             i.close();
         }

@@ -224,7 +224,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         return "OLAPTable {" + getTableName() + "}";
     }
 
-    public Enumerable<Object[]> executeIndexQuery(DataContext optiqContext, int ctxSeq) {
+    public Enumerable<Object[]> executeOLAPQuery(DataContext optiqContext, int ctxSeq) {
         return new OLAPQuery(optiqContext, EnumeratorTypeEnum.OLAP, ctxSeq);
     }
 

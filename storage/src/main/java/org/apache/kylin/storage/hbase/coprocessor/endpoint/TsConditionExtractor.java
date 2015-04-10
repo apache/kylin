@@ -22,10 +22,9 @@ public class TsConditionExtractor {
         TblColRef tsColRef = columns.get(tsCol);
 
         List<Pair<Long, Long>> conditions = Lists.newArrayList();
-        extractTsConditionInternal(rootFilter,tsColRef,conditions);
+        extractTsConditionInternal(rootFilter, tsColRef, conditions);
 
-        if(conditions.size() >0)
-        {
+        if (conditions.size() > 0) {
             long min = Long.MIN_VALUE;
             long max = Long.MAX_VALUE;
             for (Pair<Long, Long> pair : conditions) {

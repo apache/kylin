@@ -1,14 +1,15 @@
 package org.apache.kylin.storage.hybrid;
 
-import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.util.DateFormat;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
@@ -20,15 +21,12 @@ import org.slf4j.LoggerFactory;
  */
 public class HybridStorageEngine implements IStorageEngine {
 
-
     private static final Logger logger = LoggerFactory.getLogger(HybridStorageEngine.class);
 
     private HybridInstance hybridInstance;
 
-
     public HybridStorageEngine(HybridInstance hybridInstance) {
         this.hybridInstance = hybridInstance;
-
     }
 
     @Override
@@ -46,11 +44,12 @@ public class HybridStorageEngine implements IStorageEngine {
             return iterator1;
 
         TblColRef partitionColRef = modelDesc.getPartitionDesc().getPartitionDateColumnRef();
+        DataType partitionColType = partitionColRef.getColumn().getType();
 
         // add the boundary condition to query real-time
 
         TupleFilter originalFilter = sqlDigest.filter;
-        sqlDigest.filter = createFilterForRealtime(originalFilter, partitionColRef, hybridInstance.getHistoryRealizationInstance().getDateRangeEnd());
+        sqlDigest.filter = createFilterForRealtime(originalFilter, partitionColRef, partitionColType, hybridInstance.getHistoryRealizationInstance().getDateRangeEnd());
 
         boolean addFilterColumn = false, addAllColumn = false;
 
@@ -77,14 +76,19 @@ public class HybridStorageEngine implements IStorageEngine {
             sqlDigest.allColumns.remove(partitionColRef);
 
         // combine history and real-time tuple iterator
-        return new HybridTupleIterator(new ITupleIterator[]{iterator1, iterator2});
+        return new HybridTupleIterator(new ITupleIterator[] { iterator1, iterator2 });
     }
 
+    private TupleFilter createFilterForRealtime(TupleFilter originFilter, TblColRef partitionColRef, DataType type, long startDate) {
 
-    private TupleFilter createFilterForRealtime(TupleFilter originFilter, TblColRef partitionColRef, long startDate) {
-
-        FastDateFormat format = FastDateFormat.getInstance("yyyy-MM-dd");
-        String boundaryDate = format.format(startDate);
+        String boundaryDate;
+        if (type == DataType.getInstance("date")) {
+            boundaryDate = DateFormat.formatToDateStr(startDate);
+        } else if (type == DataType.getInstance("long")) {
+            boundaryDate = String.valueOf(startDate);
+        } else {
+            throw new IllegalArgumentException("Illegal type for partition column " + type);
+        }
 
         CompareTupleFilter compareTupleFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GTE);
         ColumnTupleFilter columnTupleFilter = new ColumnTupleFilter(partitionColRef);
