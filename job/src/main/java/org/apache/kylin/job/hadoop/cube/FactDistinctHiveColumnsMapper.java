@@ -18,9 +18,7 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
@@ -36,7 +34,6 @@ import org.apache.kylin.job.constant.BatchConstants;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,10 +46,10 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
 
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
-    protected List<String> rowKeyValues = null;
     protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
     protected HyperLogLogPlusCounter totalHll = null;
     protected int nRowKey;
+    private ByteBuffer byteBuffer = null;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -65,8 +62,8 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         if (collectStatistics) {
             cuboidScheduler = new CuboidScheduler(cubeDesc);
             cuboidHLLMap = Maps.newHashMap();
-            rowKeyValues = Lists.newArrayList();
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
+            byteBuffer = ByteBuffer.allocate(1024 * 1024);
         }
     }
 
@@ -96,11 +93,14 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     }
 
     private void putRowKeyToHLL(String[] row, long cuboidId) {
-        rowKeyValues.clear();
+        byteBuffer.clear();
         long mask = Long.highestOneBit(baseCuboidId);
         for (int i = 0; i < nRowKey; i++) {
             if ((mask & cuboidId) != 0) {
-                rowKeyValues.add(row[intermediateTableDesc.getRowKeyColumnIndexes()[i]]);
+                if (row[intermediateTableDesc.getRowKeyColumnIndexes()[i]] != null)
+                    byteBuffer.put(Bytes.toBytes(row[intermediateTableDesc.getRowKeyColumnIndexes()[i]]));
+                else
+                    byteBuffer.put((byte)0xff);
             }
             mask = mask >> 1;
         }
@@ -111,7 +111,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             cuboidHLLMap.put(cuboidId, hll);
         }
 
-        hll.add(StringUtils.join(rowKeyValues, ","));
+        hll.add(byteBuffer.array(), 0, byteBuffer.position());
 
         Collection<Long> children = cuboidScheduler.getSpanningCuboid(cuboidId);
         for (Long childId : children) {
