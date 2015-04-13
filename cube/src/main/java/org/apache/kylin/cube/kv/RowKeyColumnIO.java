@@ -54,6 +54,26 @@ public class RowKeyColumnIO {
         return (Dictionary<String>) IDictionaryAwareness.getDictionary(col);
     }
 
+    public void writeColumnWithoutDictionary(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength) {
+        if (srcLength >= dstLength) {
+            System.arraycopy(src, srcOffset, dst, dstOffset, dstLength);
+        } else {
+            System.arraycopy(src, srcOffset, dst, dstOffset, srcLength);
+            Arrays.fill(dst, dstOffset + srcLength, dstOffset + dstLength, RowConstants.ROWKEY_PLACE_HOLDER_BYTE);
+        }
+    }
+
+    public void writeColumnWithDictionary(Dictionary<String> dictionary, byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength, int roundingFlag, int defaultValue) {
+        // dict value
+        try {
+            int id = dictionary.getIdFromValueBytes(src, srcOffset, srcLength, roundingFlag);
+            BytesUtil.writeUnsigned(id, dst, dstOffset, dictionary.getSizeOfId());
+        } catch (IllegalArgumentException ex) {
+            Arrays.fill(dst, dstOffset, dstOffset + dstLength, (byte) defaultValue);
+            logger.error("Can't translate value " + Bytes.toString(src, srcOffset, srcLength) + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", defaultValue));
+        }
+    }
+
 
 
     public void writeColumn(TblColRef column, byte[] value, int valueLen, byte defaultValue, byte[] output, int outputOffset) {
