@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.dict.Dictionary;
@@ -122,16 +123,29 @@ public class IIKeyValueCodec implements KeyValueCodec {
         //		return new Decoder(kvs, incompleteDigest);
     }
 
-    private static TableRecordInfoDigest createDigest(int nColumns,  boolean[] isMetric, String[] dataTypes, Dictionary<?>[] dictionaryMap) {
+    private static TableRecordInfoDigest createDigest(int nColumns,  boolean[] isMetric, String[] dataTypes, Dictionary<?>[] dictionaries) {
         int[] dictMaxIds = new int[nColumns];
         int[] lengths = new int[nColumns];
+        final boolean emptyDictionary = Array.isEmpty(dictionaries);
         for (int i = 0; i < nColumns; ++i) {
             if (isMetric[i]) {
                 final FixedLenMeasureCodec<?> fixedLenMeasureCodec = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
                 lengths[i] = fixedLenMeasureCodec.getLength();
             } else {
-                final Dictionary<?> dictionary = dictionaryMap[i];
-                if (dictionary != null) {
+                if (emptyDictionary) {
+                    final DataType dataType = DataType.getInstance(dataTypes[i]);
+                    if (dataType.isNumberFamily()) {
+                        lengths[i] = 16;
+                    } else if (dataType.isStringFamily()) {
+                        lengths[i] = 256;
+                    } else if (dataType.isDateTimeFamily()) {
+                        lengths[i] = 10;
+                    } else {
+                        throw new RuntimeException("invalid data type:" + dataType);
+                    }
+                    dictMaxIds[i] = Integer.MAX_VALUE;
+                } else {
+                    final Dictionary<?> dictionary = dictionaries[i];
                     lengths[i] = dictionary.getSizeOfId();
                     dictMaxIds[i] = dictionary.getMaxId();
                 }
@@ -201,11 +215,18 @@ public class IIKeyValueCodec implements KeyValueCodec {
                             c.fromBytes(row.getValue());
                             valueContainers[curCol] = c;
                         } else {
-                            final Dictionary<?> dictionary = deserialize(row.getDictionary());
-                            CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), dictionary.getMaxId() - dictionary.getMinId() + 1, 0);
-                            c.fromBytes(row.getValue());
-                            valueContainers[curCol] = c;
-                            localDictionaries[curCol] = dictionary;
+                            final ImmutableBytesWritable dictBytes = row.getDictionary();
+                            if (dictBytes.getLength() != 0) {
+                                final Dictionary<?> dictionary = deserialize(dictBytes);
+                                CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), dictionary.getMaxId() - dictionary.getMinId() + 1, 0);
+                                c.fromBytes(row.getValue());
+                                valueContainers[curCol] = c;
+                                localDictionaries[curCol] = dictionary;
+                            } else {
+                                CompressedValueContainer c = new CompressedValueContainer(incompleteDigest.length(curCol), incompleteDigest.getMaxID(curCol) - 0 + 1, 0);
+                                c.fromBytes(row.getValue());
+                                valueContainers[curCol] = c;
+                            }
                         }
                         columns++;
                         lastShard = curShard;

@@ -35,6 +35,7 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
@@ -194,7 +195,14 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             //dictionaries for fact table columns can not be determined while streaming.
             //a piece of dict coincide with each Slice, we call it "local dict"
             final Dictionary<?>[] localDictionaries = slice.getLocalDictionaries();
-            CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(localDictionaries, type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
+            CoprocessorFilter newFilter;
+            final boolean emptyDictionary = Array.isEmpty(localDictionaries);
+            logger.info("empty dictionary:" + emptyDictionary);
+            if (emptyDictionary) {
+                newFilter = filter;
+            } else {
+                newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(localDictionaries, type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
+            }
 
             ConciseSet result = null;
             if (filter != null) {
@@ -229,14 +237,20 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         final TblColRef[] columns = coprocessorRowType.columns;
         final int columnSize = columns.length;
         final boolean[] isMetric = digest.isMetrics();
+        final boolean emptyDictionary = Array.isEmpty(localDictionaries);
         for (int i = 0; i < columnSize; i++) {
             final TblColRef column = columns[i];
             if (isMetric[i]) {
                 System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
                 rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
             } else {
-                final int length = localDictionaries[i].getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
-                rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, recordBuffer, digest.offset(i));
+                if (emptyDictionary) {
+                    System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
+                    rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
+                } else {
+                    final int length = localDictionaries[i].getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
+                    rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, recordBuffer, digest.offset(i));
+                }
             }
         }
     }

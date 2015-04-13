@@ -79,7 +79,7 @@ public class IITest extends LocalFileMetadataTestCase {
 
 
         iiRows = Lists.newArrayList();
-        final Slice slice = new SliceBuilder(iiDesc, (short) 0).buildSlice(streams, StringStreamParser.instance);
+        final Slice slice = new SliceBuilder(iiDesc, (short) 0, true).buildSlice(streams, StringStreamParser.instance);
         IIKeyValueCodec codec = new IIKeyValueCodec(slice.getInfo());
         for (IIRow iiRow : codec.encodeKeyValue(slice)) {
             iiRows.add(iiRow);
