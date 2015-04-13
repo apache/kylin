@@ -46,7 +46,7 @@ public class TableRecordInfo {
     }
 
     public TableRecordInfo(IIDesc desc) {
-        this(desc, new Dictionary<?>[0]);
+        this(desc, new Dictionary<?>[desc.listAllColumns().size()]);
     }
 
     public TableRecordInfo(IIDesc desc, Dictionary<?>[] dictionaries) {

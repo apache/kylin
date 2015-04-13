@@ -60,10 +60,12 @@ public final class SliceBuilder {
 
     private final BatchSliceMaker sliceMaker;
     private final IIDesc iiDesc;
+    private final boolean useLocalDict;
 
-    public SliceBuilder(IIDesc desc, short shard) {
+    public SliceBuilder(IIDesc desc, short shard, boolean useLocalDict) {
         this.iiDesc = desc;
         this.sliceMaker = new BatchSliceMaker(desc, shard);
+        this.useLocalDict = useLocalDict;
     }
 
 
@@ -75,7 +77,7 @@ public final class SliceBuilder {
                 return streamParser.parse(input);
             }
         });
-        final Dictionary<?>[] dictionaries = IIDictionaryBuilder.buildDictionary(table, iiDesc);
+        final Dictionary<?>[] dictionaries = useLocalDict?IIDictionaryBuilder.buildDictionary(table, iiDesc):new Dictionary[iiDesc.listAllColumns().size()];
         TableRecordInfo tableRecordInfo = new TableRecordInfo(iiDesc, dictionaries);
         return build(table,  tableRecordInfo, dictionaries);
     }

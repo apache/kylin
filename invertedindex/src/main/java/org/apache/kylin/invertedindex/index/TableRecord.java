@@ -24,6 +24,8 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.util.DateFormat;
 
+import java.util.Arrays;
+
 /**
  * @author yangli9, honma
  *         <p/>
@@ -34,6 +36,8 @@ public class TableRecord implements Cloneable {
 
     private TableRecordInfo info;
     private RawTableRecord rawRecord;
+
+    public static final byte ROWKEY_PLACE_HOLDER_BYTE = 9;
 
     public TableRecord(RawTableRecord rawRecord, TableRecordInfo info) {
         this.info = info;
@@ -71,14 +75,46 @@ public class TableRecord implements Cloneable {
         return rawRecord.length(col);
     }
 
+    public void setValueStringWithoutDictionary(int col, String value) {
+        int offset = info.digest.offset(col);
+        int length = info.digest.length(col);
+        byte[] src = value.getBytes();
+        if (length >= src.length) {
+            byte[] dst = rawRecord.getBytes();
+            System.arraycopy(src, 0, dst, offset, src.length);
+            Arrays.fill(dst, offset + src.length, offset + length, ROWKEY_PLACE_HOLDER_BYTE);
+        } else {
+            byte[] dst = rawRecord.getBytes();
+            System.arraycopy(src, 0, dst, offset, length);
+        }
+    }
+
+    public String getValueStringWithoutDictionary(int col) {
+        int offset = info.digest.offset(col);
+        int length = info.digest.length(col);
+        byte[] bytes = rawRecord.getBytes();
+        int i;
+        for (i = 0; i < length; ++i) {
+            if (bytes[offset + i] == ROWKEY_PLACE_HOLDER_BYTE) {
+                break;
+            }
+        }
+        return new String(bytes, offset, i);
+    }
+
     public void setValueString(int col, String value) {
         if (rawRecord.isMetric(col)) {
             LongWritable v = rawRecord.codec(col).valueOf(value);
             setValueMetrics(col, v);
         } else {
             final Dictionary<String> dict = info.dict(col);
-            int id = dict.getIdFromValue(value);
-            rawRecord.setValueID(col, id);
+            if (dict != null) {
+                int id = dict.getIdFromValue(value);
+                rawRecord.setValueID(col, id);
+            } else {
+                setValueStringWithoutDictionary(col, value);
+//                throw new UnsupportedOperationException("cannot set value when there is no dictionary");
+            }
         }
     }
 
@@ -94,7 +130,8 @@ public class TableRecord implements Cloneable {
             if (dict != null) {
                 return dict.getValueFromId(rawRecord.getValueID(col));
             } else {
-                throw new UnsupportedOperationException("cannot get value when there is no dictionary");
+                return getValueStringWithoutDictionary(col);
+//                throw new UnsupportedOperationException("cannot get value when there is no dictionary");
             }
         }
     }
