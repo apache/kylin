@@ -241,29 +241,49 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         for (int i = 0; i < columnSize; i++) {
             final TblColRef column = columns[i];
             if (isMetric[i]) {
-                System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
-                rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
+                rowKeyColumnIO.writeColumnWith(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
             } else {
                 if (emptyDictionary) {
-                    System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
-                    rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
+                    rowKeyColumnIO.writeColumnWith(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
                 } else {
                     final int length = localDictionaries[i].getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
-                    rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, recordBuffer, digest.offset(i));
+                    rowKeyColumnIO.writeColumnWith(buffer, 0, length, recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
                 }
             }
         }
     }
 
+//    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
+//        final TblColRef[] columns = coprocessorRowType.columns;
+//        final int columnSize = columns.length;
+//        final boolean[] isMetric = digest.isMetrics();
+//        final boolean emptyDictionary = Array.isEmpty(localDictionaries);
+//        for (int i = 0; i < columnSize; i++) {
+//            final TblColRef column = columns[i];
+//            if (isMetric[i]) {
+//                System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
+//                rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
+//            } else {
+//                if (emptyDictionary) {
+//                    System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
+//                    rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
+//                } else {
+//                    final int length = localDictionaries[i].getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
+//                    rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, recordBuffer, digest.offset(i));
+//                }
+//            }
+//        }
+//    }
+
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
-        final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
         final int byteFormLen = recordInfo.getByteFormLen();
         int totalSize = 0;
         byte[] recordBuffer = new byte[byteFormLen];
         int iteratedSliceCount = 0;
+        final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         for (Slice slice : slices) {
             iteratedSliceCount++;
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
