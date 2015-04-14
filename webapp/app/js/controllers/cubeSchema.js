@@ -75,10 +75,26 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     //map right return type for param
     $scope.measureReturnTypeUpdate = function(){
-        if($scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
+        if($scope.newMeasure.function.parameter.type=="constant"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
+            switch($scope.newMeasure.function.expression){
+                case "SUM":
+                case "COUNT":
+                    $scope.newMeasure.function.returntype = "bigint";
+                    break;
+                default:
+                    $scope.newMeasure.function.returntype = "";
+                    break;
+            }
+        }
+        if($scope.newMeasure.function.parameter.type=="column"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
 
             var column = $scope.newMeasure.function.parameter.value;
             var colType = $scope.getColumnType(column, $scope.metaModel.model.fact_table); // $scope.getColumnType defined in cubeEdit.js
+
+            if(colType==""||!colType){
+                $scope.newMeasure.function.returntype = "";
+                return;
+            }
 
 
             switch($scope.newMeasure.function.expression){
@@ -86,7 +102,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                     if(colType==="smallint"||colType==="int"||colType==="bigint"){
                         $scope.newMeasure.function.returntype= 'bigint';
                     }else{
-                        $scope.newMeasure.function.returntype= 'decimal';
+                        if(colType.indexOf('decimal')!=-1){
+                            $scope.newMeasure.function.returntype= colType;
+                        }else{
+                            $scope.newMeasure.function.returntype= 'decimal';
+                        }
                     }
                     break;
                 case "MIN":
