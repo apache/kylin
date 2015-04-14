@@ -109,6 +109,9 @@
 	</bean>
 	<!-- Rest service binding -->
 
+	<task:annotation-driven />
+	<bean id="performanceMonitorTask" class="org.apache.kylin.rest.util.PerformanceMonitorTask"></bean>
+
 	<!-- Cache Config -->
 	<cache:annotation-driven />
 	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
