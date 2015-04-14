@@ -160,6 +160,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         return Math.max(getHistoryRealizationInstance().getDateRangeEnd(), getRealTimeRealizationInstance().getDateRangeEnd()) +1;
     }
 
+    @Override
     public String getModelName() {
         if (getHistoryRealizationInstance() instanceof CubeInstance) {
             return ((CubeInstance) historyRealizationInstance).getDescriptor().getModelName();

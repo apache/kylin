@@ -57,4 +57,5 @@ public class SQLDigest {
                 "filter on " + this.filterColumns + "," + //
                 "with aggregates" + this.aggregations + ".";
     }
+
 }

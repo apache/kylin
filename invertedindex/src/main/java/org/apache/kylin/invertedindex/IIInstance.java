@@ -351,6 +351,11 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     }
 
     @Override
+    public String getModelName() {
+        return this.getDescriptor().getModelName();
+    }
+
+    @Override
     public List<TblColRef> getAllDimensions() {
         return getDescriptor().listAllDimensions();
     }

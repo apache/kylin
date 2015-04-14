@@ -1,0 +1,83 @@
+package org.apache.kylin.metadata.realization;
+
+import java.util.Arrays;
+
+import org.apache.kylin.metadata.filter.IgnoreTsCondition;
+import org.apache.kylin.metadata.filter.TupleFilterSerializer;
+import org.apache.kylin.metadata.model.TblColRef;
+
+/**
+ * Created by Hongbin Ma(Binmahone) on 4/13/15.
+ *
+ * A encapsulation of {@link SQLDigest},
+ * This class makes {@link SQLDigest} being able to compare with other {@link SQLDigest}
+ * regardless of the timestamp conditions(In top level where conditions concatenated by ANDs)
+ */
+public class StreamSQLDigest {
+
+    private final SQLDigest sqlDigest;
+
+    private final int hashCode;
+    private final byte[] filterSerialized;
+
+    public StreamSQLDigest(SQLDigest sqlDigest, TblColRef tsCol) {
+        this.sqlDigest = sqlDigest;
+
+        //must use new instance of IgnoreTsCondition
+        IgnoreTsCondition decorator = new IgnoreTsCondition(tsCol, sqlDigest.filter);
+        filterSerialized = TupleFilterSerializer.serialize(sqlDigest.filter, decorator, null);
+
+        int nonFilterHashCode = calculateNonFilterHashCode();
+        this.hashCode = 31 * nonFilterHashCode + (filterSerialized != null ? Arrays.hashCode(filterSerialized) : 0);
+    }
+
+    public byte[] getFilterSerialized() {
+        return filterSerialized;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        StreamSQLDigest other = (StreamSQLDigest) o;
+
+        if (filterSerialized != null ? !Arrays.equals(filterSerialized, other.getFilterSerialized()) : other.getFilterSerialized() != null)
+            return false;
+        if (sqlDigest.aggregations != null ? !sqlDigest.aggregations.equals(other.sqlDigest.aggregations) : other.sqlDigest.aggregations != null)
+            return false;
+        if (sqlDigest.allColumns != null ? !sqlDigest.allColumns.equals(other.sqlDigest.allColumns) : other.sqlDigest.allColumns != null)
+            return false;
+        if (sqlDigest.factTable != null ? !sqlDigest.factTable.equals(other.sqlDigest.factTable) : other.sqlDigest.factTable != null)
+            return false;
+        if (sqlDigest.filterColumns != null ? !sqlDigest.filterColumns.equals(other.sqlDigest.filterColumns) : other.sqlDigest.filterColumns != null)
+            return false;
+        if (sqlDigest.groupbyColumns != null ? !sqlDigest.groupbyColumns.equals(other.sqlDigest.groupbyColumns) : other.sqlDigest.groupbyColumns != null)
+            return false;
+        if (sqlDigest.joinDescs != null ? !sqlDigest.joinDescs.equals(other.sqlDigest.joinDescs) : other.sqlDigest.joinDescs != null)
+            return false;
+        if (sqlDigest.metricColumns != null ? !sqlDigest.metricColumns.equals(other.sqlDigest.metricColumns) : other.sqlDigest.metricColumns != null)
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.hashCode;
+    }
+
+    public int calculateNonFilterHashCode() {
+        int result = sqlDigest.factTable != null ? sqlDigest.factTable.hashCode() : 0;
+        result = 31 * result + (sqlDigest.joinDescs != null ? sqlDigest.joinDescs.hashCode() : 0);
+        result = 31 * result + (sqlDigest.allColumns != null ? sqlDigest.allColumns.hashCode() : 0);
+        result = 31 * result + (sqlDigest.groupbyColumns != null ? sqlDigest.groupbyColumns.hashCode() : 0);
+        result = 31 * result + (sqlDigest.filterColumns != null ? sqlDigest.filterColumns.hashCode() : 0);
+        result = 31 * result + (sqlDigest.metricColumns != null ? sqlDigest.metricColumns.hashCode() : 0);
+        result = 31 * result + (sqlDigest.aggregations != null ? sqlDigest.aggregations.hashCode() : 0);
+        return result;
+    }
+
+}

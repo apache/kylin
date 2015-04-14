@@ -38,7 +38,7 @@ public class CoprocessorFilter {
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator, DictCodeSystem.INSTANCE);
         TupleFilter copy = TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
 
-        return new CoprocessorFilter(copy, filterDecorator.getUnstrictlyFilteredColumns());
+        return new CoprocessorFilter(copy, filterDecorator.getInevaluableColumns());
     }
 
     public static byte[] serialize(CoprocessorFilter o) {
@@ -54,19 +54,19 @@ public class CoprocessorFilter {
     // ============================================================================
 
     private final TupleFilter filter;
-    private final Set<TblColRef> unstrictlyFilteredColumns;
+    private final Set<TblColRef> inevaluableColumns;
 
-    public CoprocessorFilter(TupleFilter filter, Set<TblColRef> unstrictlyFilteredColumns) {
+    public CoprocessorFilter(TupleFilter filter, Set<TblColRef> inevaluableColumns) {
         this.filter = filter;
-        this.unstrictlyFilteredColumns = unstrictlyFilteredColumns;
+        this.inevaluableColumns = inevaluableColumns;
     }
 
     public TupleFilter getFilter() {
         return filter;
     }
 
-    public Set<TblColRef> getUnstrictlyFilteredColumns() {
-        return unstrictlyFilteredColumns;
+    public Set<TblColRef> getInevaluableColumns() {
+        return inevaluableColumns;
     }
 
     public boolean evaluate(IEvaluatableTuple tuple) {

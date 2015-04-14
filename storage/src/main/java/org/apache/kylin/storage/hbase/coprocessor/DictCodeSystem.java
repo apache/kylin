@@ -24,7 +24,7 @@ public class DictCodeSystem implements IFilterCodeSystem<String> {
         if (value == null)
             return true;
         
-        String v = (String) value;
+        String v = value;
         for (int i = 0, n = v.length(); i < n; i++) {
             if ((byte) v.charAt(i) != Dictionary.NULL)
                 return false;
@@ -34,12 +34,12 @@ public class DictCodeSystem implements IFilterCodeSystem<String> {
 
     @Override
     public int compare(String tupleValue, String constValue) {
-        return ((String) tupleValue).compareTo((String) constValue);
+        return tupleValue.compareTo(constValue);
     }
 
     @Override
     public void serialize(String value, ByteBuffer buffer) {
-        BytesUtil.writeUTFString((String) value, buffer);
+        BytesUtil.writeUTFString(value, buffer);
     }
 
     @Override
