@@ -125,7 +125,7 @@ public class DateStrDictionary extends Dictionary<String> {
     }
 
     @Override
-    final protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
+    final protected byte[] getValueBytesFromIdImpl(int id) {
         String date = getValueFromId(id);
         byte bytes[];
         try {
@@ -133,6 +133,12 @@ public class DateStrDictionary extends Dictionary<String> {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e); // never happen
         }
+        return bytes;
+    }
+
+    @Override
+    final protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
+        byte bytes[] = getValueBytesFromIdImpl(id);
         System.arraycopy(bytes, 0, returnValue, offset, bytes.length);
         return bytes.length;
     }

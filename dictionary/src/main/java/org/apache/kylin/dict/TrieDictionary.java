@@ -28,6 +28,7 @@ import java.lang.ref.SoftReference;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
@@ -74,9 +75,12 @@ public class TrieDictionary<T> extends Dictionary<T> {
     transient private int childOffsetMask;
     transient private int firstByteOffset;
 
-    transient private boolean enableCache = true;
+    transient private boolean enableValueCache = true;
     transient private SoftReference<HashMap> valueToIdCache;
     transient private SoftReference<Object[]> idToValueCache;
+
+    transient private boolean enableIdToValueBytesCache = false;
+    transient private byte[][] idToValueBytesCache;
 
     public TrieDictionary() { // default constructor for Writable interface
     }
@@ -115,7 +119,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
                 throw new RuntimeException(e);
         }
 
-        if (enableCache) {
+        if (enableValueCache) {
             valueToIdCache = new SoftReference<HashMap>(new HashMap());
             idToValueCache = new SoftReference<Object[]>(new Object[nValues]);
         }
@@ -143,7 +147,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     @Override
     final protected int getIdFromValueImpl(T value, int roundingFlag) {
-        if (enableCache && roundingFlag == 0) {
+        if (enableValueCache && roundingFlag == 0) {
             HashMap cache = valueToIdCache.get(); // SoftReference to skip cache
                                                   // gracefully when short of
                                                   // memory
@@ -255,12 +259,10 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     @Override
     final protected T getValueFromIdImpl(int id) {
-        if (enableCache) {
+        if (enableValueCache) {
             Object[] cache = idToValueCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 int seq = calcSeqNoFromId(id);
-                if (seq < 0 || seq >= nValues)
-                    throw new IllegalArgumentException("Not a valid ID: " + id);
                 if (cache[seq] != null)
                     return (T) cache[seq];
 
@@ -278,12 +280,27 @@ public class TrieDictionary<T> extends Dictionary<T> {
     }
 
     @Override
+    protected byte[] getValueBytesFromIdImpl(int id) {
+        if (enableIdToValueBytesCache) {
+            int seq = calcSeqNoFromId(id);
+            return idToValueBytesCache[seq];
+        }
+
+        byte[] buf = new byte[maxValueLength];
+        int len = getValueBytesFromIdImpl(id, buf, 0);
+
+        if (len == buf.length) {
+            return buf;
+        } else {
+            byte[] result = new byte[len];
+            System.arraycopy(buf, 0, result, 0, len);
+            return result;
+        }
+    }
+
+    @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-        if (id < baseId || id >= baseId + nValues)
-            throw new IllegalArgumentException("Not a valid ID: " + id);
-
         int seq = calcSeqNoFromId(id);
-
         return lookupValueFromSeqNo(headSize, seq, returnValue, offset);
     }
 
@@ -336,6 +353,68 @@ public class TrieDictionary<T> extends Dictionary<T> {
         }
     }
 
+    public void enableIdToValueBytesCache() {
+        enableIdToValueBytesCache(new EnableIdToValueBytesCacheVisitor() {
+            @Override
+            public byte[] getBuffer() {
+                return new byte[getSizeOfValue()];
+            }
+
+            @Override
+            public byte[] makeValueBytes(byte[] buf, int length) {
+                byte[] valueBytes = new byte[length];
+                System.arraycopy(buf, 0, valueBytes, 0, length);
+                return valueBytes;
+            }
+        });
+    }
+
+    interface EnableIdToValueBytesCacheVisitor {
+        byte[] getBuffer();
+
+        byte[] makeValueBytes(byte[] buf, int length);
+    }
+
+    protected void enableIdToValueBytesCache(EnableIdToValueBytesCacheVisitor visitor) {
+        enableIdToValueBytesCache = true;
+        idToValueBytesCache = new byte[nValues][];
+        enableIdToValueBytesCache_recursion(headSize, 0, visitor.getBuffer(), 0, visitor);
+    }
+
+    private void enableIdToValueBytesCache_recursion(int n, int seq, byte[] buf, int tail, EnableIdToValueBytesCacheVisitor visitor) {
+        // write current node value
+        int p = n + firstByteOffset;
+        int len = BytesUtil.readUnsigned(trieBytes, p - 1, 1);
+        System.arraycopy(trieBytes, p, buf, tail, len);
+        tail += len;
+
+        // if the value is ended
+        boolean isEndOfValue = checkFlag(n, BIT_IS_END_OF_VALUE);
+        if (isEndOfValue) {
+            idToValueBytesCache[seq] = visitor.makeValueBytes(buf, tail);
+            seq++;
+        }
+
+        // find a child to continue
+        int c = headSize + (BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask);
+        if (c == headSize) // has no children 
+            return;
+
+        // process each child
+        while (true) {
+            enableIdToValueBytesCache_recursion(c, seq, buf, tail, visitor);
+
+            int nValuesBeneath = BytesUtil.readUnsigned(trieBytes, c + sizeChildOffset, sizeNoValuesBeneath);
+            seq += nValuesBeneath;
+
+            // go next child
+            if (checkFlag(c, BIT_IS_LAST_CHILD))
+                break; // no more child? we are done
+            p = c + firstByteOffset;
+            c = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1);
+        }
+    }
+
     private boolean checkFlag(int offset, int bit) {
         return (trieBytes[offset] & bit) > 0;
     }
@@ -348,7 +427,11 @@ public class TrieDictionary<T> extends Dictionary<T> {
     }
 
     private int calcSeqNoFromId(int id) {
-        return id - baseId;
+        int seq = id - baseId;
+        if (seq < 0 || seq >= nValues) {
+            throw new IllegalArgumentException("Not a valid ID: " + id);
+        }
+        return seq;
     }
 
     @Override
@@ -404,27 +487,25 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     public static void main(String[] args) throws Exception {
         TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
-        // b.addValue("part");
-        // b.print();
-        // b.addValue("part");
-        // b.print();
-        // b.addValue("par");
-        // b.print();
-        // b.addValue("partition");
-        // b.print();
-        // b.addValue("party");
-        // b.print();
-        // b.addValue("parties");
-        // b.print();
-        // b.addValue("paint");
-        // b.print();
-        b.addValue("-000000.41");
-        b.addValue("0000101.81");
-        b.addValue("6779331");
-        String t = "0000001.6131";
+        b.addValue("part");
+        b.print();
+        b.addValue("part");
+        b.print();
+        b.addValue("par");
+        b.print();
+        b.addValue("partition");
+        b.print();
+        b.addValue("party");
+        b.print();
+        b.addValue("parties");
+        b.print();
+        b.addValue("paint");
+        b.print();
         TrieDictionary<String> dict = b.build(0);
 
-        System.out.println(dict.getIdFromValue(t, -1));
-        System.out.println(dict.getIdFromValue(t, 1));
+        dict.enableIdToValueBytesCache();
+        for (int i = 0; i <= dict.getMaxId(); i++) {
+            System.out.println(Bytes.toString(dict.getValueBytesFromId(i)));
+        }
     }
 }
