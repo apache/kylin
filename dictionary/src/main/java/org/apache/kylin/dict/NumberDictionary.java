@@ -185,4 +185,43 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
         return codec.decodeNumber(returnValue, offset);
     }
 
+    @Override
+    public void enableIdToValueBytesCache() {
+        enableIdToValueBytesCache(new EnableIdToValueBytesCacheVisitor() {
+            NumberBytesCodec codec = getCodec();
+            byte[] tmp = new byte[getSizeOfValue()];
+            
+            @Override
+            public byte[] getBuffer() {
+                return codec.buf;
+            }
+
+            @Override
+            public byte[] makeValueBytes(byte[] buf, int length) {
+                // the given buf is the codec buf, which we returned in getBuffer()
+                codec.bufOffset = 0;
+                codec.bufLen = length;
+                int numLen = codec.decodeNumber(tmp, 0);
+                
+                byte[] result = new byte[numLen];
+                System.arraycopy(tmp, 0, result, 0, numLen);
+                return result;
+            }
+        });
+    }
+
+
+    public static void main(String[] args) throws Exception {
+        NumberDictionaryBuilder<String> b = new NumberDictionaryBuilder<String>(new StringBytesConverter());
+        b.addValue("10");
+        b.addValue("100");
+        b.addValue("40");
+        b.addValue("7");
+        TrieDictionary<String> dict = b.build(0);
+
+        dict.enableIdToValueBytesCache();
+        for (int i = 0; i <= dict.getMaxId(); i++) {
+            System.out.println(Bytes.toString(dict.getValueBytesFromId(i)));
+        }
+    }
 }

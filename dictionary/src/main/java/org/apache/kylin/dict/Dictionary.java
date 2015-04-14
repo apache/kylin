@@ -144,6 +144,15 @@ abstract public class Dictionary<T> implements Writable {
 
     abstract protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag);
 
+    final public byte[] getValueBytesFromId(int id) {
+        if (isNullId(id))
+            return BytesUtil.EMPTY_BYTE_ARRAY;
+        else
+            return getValueBytesFromIdImpl(id);
+    }
+    
+    abstract protected byte[] getValueBytesFromIdImpl(int id);
+    
     /**
      * A lower level API, get byte values from ID, return the number of bytes
      * written. Bypassing the cache layer, this could be significantly slower
