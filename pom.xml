@@ -425,23 +425,6 @@
             <id>conjars</id>
             <url>http://conjars.org/repo/</url>
         </repository>
-        
-        <repository>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </snapshots>
-            <id>HDPReleases</id>
-            <name>HDP Releases</name>
-            <url>http://repo.hortonworks.com/content/repositories/releases/</url>
-            <layout>default</layout>
-        </repository>
     </repositories>
 
     <build>
@@ -678,6 +661,19 @@
                 </goals>
               </execution>
             </executions>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.maven.doxia</groupId>
+                    <artifactId>doxia-core</artifactId>
+                    <version>1.6</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>xerces</groupId>
+                            <artifactId>xercesImpl</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
           </plugin>
           <plugin>
             <groupId>net.ju-n.maven.plugins</groupId>
