@@ -61,7 +61,7 @@
         "type" : "column",
         "value" : "PRICE"
       },
-      "returntype" : "decimal"
+      "returntype" : "decimal(19,4)"
     },
     "dependent_measure_ref" : null
   }, {
@@ -73,7 +73,7 @@
         "type" : "column",
         "value" : "PRICE"
       },
-      "returntype" : "decimal"
+      "returntype" : "decimal(19,4)"
     },
     "dependent_measure_ref" : null
   }, {
@@ -85,7 +85,7 @@
         "type" : "column",
         "value" : "PRICE"
       },
-      "returntype" : "decimal"
+      "returntype" : "decimal(19,4)"
     },
     "dependent_measure_ref" : null
   }, {
