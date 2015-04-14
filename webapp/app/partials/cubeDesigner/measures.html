@@ -128,6 +128,7 @@
                                 <select class="form-control" ng-if="newMeasure.function.expression != 'COUNT'"
                                     ng-init="newMeasure.function.parameter.type=(!!newMeasure.function.parameter.type)?newMeasure.function.parameter.type: 'column' "
                                     chosen ng-model="newMeasure.function.parameter.type" required
+                                    ng-change="measureReturnTypeUpdate();"
                                     ng-options="mpt as mpt for mpt in cubeConfig.measureParamType">
                                     <option value=""></option>
                                 </select>
