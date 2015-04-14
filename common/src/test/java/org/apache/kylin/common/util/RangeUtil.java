@@ -11,7 +11,8 @@ public class RangeUtil {
         if (!self.isConnected(other) || self.intersection(other).isEmpty()) {
             return null;
         }
-
-
+        return null;
     }
+
+
 }
