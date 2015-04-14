@@ -40,7 +40,7 @@
         "type" : "column",
         "value" : "PRICE"
       },
-      "returntype" : "decimal"
+      "returntype" : "decimal(19,4)"
     },
     "dependent_measure_ref" : null
   }, {
@@ -52,7 +52,7 @@
         "type" : "column",
         "value" : "PRICE"
       },
-      "returntype" : "decimal"
+      "returntype" : "decimal(19,4)"
     },
     "dependent_measure_ref" : null
   }, {
@@ -64,7 +64,7 @@
         "type" : "column",
         "value" : "PRICE"
       },
-      "returntype" : "decimal"
+      "returntype" : "decimal(19,4)"
     },
     "dependent_measure_ref" : null
   }, {
@@ -93,24 +93,12 @@
     "dependent_measure_ref" : null
   }, {
     "id" : 6,
-    "name" : "SELLER_CNT_LONG",
-    "function" : {
-      "expression" : "COUNT_DISTINCT",
-      "parameter" : {
-        "type" : "column",
-        "value" : "SELLER_ID"
-      },
-      "returntype" : "bigint"
-    },
-    "dependent_measure_ref" : "SELLER_CNT_HLL"
-  }, {
-    "id" : 7,
     "name" : "SELLER_FORMAT_CNT",
     "function" : {
       "expression" : "COUNT_DISTINCT",
       "parameter" : {
         "type" : "column",
-        "value" : "LSTG_FORMAT_NAME,SELLER_ID"
+        "value" : "LSTG_FORMAT_NAME"
       },
       "returntype" : "hllc(10)"
     },
@@ -155,7 +143,7 @@
     } ],
     "aggregation_groups" : [ [ "part_dt", "lstg_site_id", "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name", "lstg_format_name" ] ]
   },
-  "signature" : "ZJWTQ2jIPXjBfuwYeizpxg==",
+  "signature" : "OWc6h/qpWCBgxEnzB5wr0w==",
   "last_modified" : 1426255280419,
   "model_name" : "kylin_sales_model",
   "null_string" : null,
@@ -164,7 +152,7 @@
       "name" : "f1",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt", "seller_cnt_long" ]
+        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt" ]
       } ]
     }, {
       "name" : "f2",
