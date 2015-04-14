@@ -18,11 +18,12 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Map;
-
+import com.google.common.base.Preconditions;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.RpcCallback;
+import com.google.protobuf.RpcController;
+import com.google.protobuf.Service;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hbase.Coprocessor;
@@ -39,6 +40,7 @@ import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.TrieDictionary;
 import org.apache.kylin.invertedindex.index.RawTableRecord;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
@@ -52,12 +54,10 @@ import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.RpcCallback;
-import com.google.protobuf.RpcController;
-import com.google.protobuf.Service;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by honma on 11/7/14.
@@ -201,6 +201,11 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             if (emptyDictionary) {
                 newFilter = filter;
             } else {
+                for (Dictionary<?> localDictionary : localDictionaries) {
+                    if (localDictionary instanceof TrieDictionary) {
+                        ((TrieDictionary) localDictionary).enableIdToValueBytesCache();
+                    }
+                }
                 newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(localDictionaries, type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
             }
 
@@ -212,7 +217,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
                 final RawTableRecord rawTableRecord = iterator.next();
-                decodeWithDictionary(recordBuffer, rawTableRecord, localDictionaries, recordInfo, buffer, rowKeyColumnIO, type);
+                decodeWithDictionary(recordBuffer, rawTableRecord, localDictionaries, recordInfo, rowKeyColumnIO, type);
                 CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(recordBuffer);
                 MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
                 aggregators.aggregate(bufs, recordBuffer);
@@ -233,7 +238,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         return responseBuilder.build();
     }
 
-    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
+    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
         final TblColRef[] columns = coprocessorRowType.columns;
         final int columnSize = columns.length;
         final boolean[] isMetric = digest.isMetrics();
@@ -246,34 +251,13 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 if (emptyDictionary) {
                     rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
                 } else {
-                    final int length = localDictionaries[i].getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
-                    rowKeyColumnIO.writeColumnWithoutDictionary(buffer, 0, length, recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
+                    final Dictionary<?> localDictionary = localDictionaries[i];
+                    final byte[] valueBytesFromId = localDictionary.getValueBytesFromId(encodedRecord.getValueID(i));
+                    rowKeyColumnIO.writeColumnWithoutDictionary(valueBytesFromId, 0, valueBytesFromId.length, recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
                 }
             }
         }
     }
-
-//    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, byte[] buffer, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
-//        final TblColRef[] columns = coprocessorRowType.columns;
-//        final int columnSize = columns.length;
-//        final boolean[] isMetric = digest.isMetrics();
-//        final boolean emptyDictionary = Array.isEmpty(localDictionaries);
-//        for (int i = 0; i < columnSize; i++) {
-//            final TblColRef column = columns[i];
-//            if (isMetric[i]) {
-//                System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
-//                rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
-//            } else {
-//                if (emptyDictionary) {
-//                    System.arraycopy(encodedRecord.getBytes(), encodedRecord.offset(i), buffer, 0, encodedRecord.length(i));
-//                    rowKeyColumnIO.writeColumn(column, buffer, encodedRecord.length(i), Dictionary.NULL, recordBuffer, digest.offset(i));
-//                } else {
-//                    final int length = localDictionaries[i].getValueBytesFromId(encodedRecord.getValueID(i), buffer, 0);
-//                    rowKeyColumnIO.writeColumn(column, buffer, length, Dictionary.NULL, recordBuffer, digest.offset(i));
-//                }
-//            }
-//        }
-//    }
 
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
@@ -283,7 +267,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         int totalSize = 0;
         byte[] recordBuffer = new byte[byteFormLen];
         int iteratedSliceCount = 0;
-        final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
         for (Slice slice : slices) {
             iteratedSliceCount++;
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
@@ -298,7 +281,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                     throw new RuntimeException("the query has exceeded the memory limit, please check the query");
                 }
                 final RawTableRecord rawTableRecord = iterator.next();
-                decodeWithDictionary(recordBuffer, rawTableRecord, slice.getLocalDictionaries(), recordInfo, buffer, rowKeyColumnIO, type);
+                decodeWithDictionary(recordBuffer, rawTableRecord, slice.getLocalDictionaries(), recordInfo, rowKeyColumnIO, type);
                 IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(recordBuffer));
                 responseBuilder.addRows(rowBuilder.build());
                 totalSize += byteFormLen;
