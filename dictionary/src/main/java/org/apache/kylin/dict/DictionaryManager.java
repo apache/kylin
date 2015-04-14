@@ -244,7 +244,7 @@ public class DictionaryManager {
 
     private String unpackDataSet(String tempHDFSDir, String dataSetName) throws IOException {
 
-        InputStream in = this.getClass().getResourceAsStream("/com/kylinolap/dict/" + dataSetName + ".txt");
+        InputStream in = this.getClass().getResourceAsStream("/org/apache/kylin/dict/" + dataSetName + ".txt");
         if (in == null) // data set resource not found
             return null;
 
