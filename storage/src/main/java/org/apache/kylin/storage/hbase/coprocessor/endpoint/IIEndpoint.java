@@ -18,14 +18,15 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.google.common.base.Preconditions;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.RpcCallback;
-import com.google.protobuf.RpcController;
-import com.google.protobuf.Service;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
+
+import com.google.common.collect.Range;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
 import org.apache.hadoop.hbase.client.Result;
@@ -77,8 +78,10 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES);
 
-        int shard = -1;
-        if (request.hasTsStart() || request.hasTsEnd()) {
+        int shard;
+
+        if (request.hasTsRange()) {
+            Range<Long> tsRange = (Range<Long>) SerializationUtils.deserialize(request.getTsRange().toByteArray());
             byte[] regionStartKey = region.getStartKey();
             if (!ArrayUtils.isEmpty(regionStartKey)) {
                 shard = BytesUtil.readUnsigned(regionStartKey, 0, IIKeyValueCodec.SHARD_LEN);
@@ -86,38 +89,39 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 shard = 0;
             }
             logger.info("Start key of the region is: " + BytesUtil.toReadableText(regionStartKey) + ", making shard to be :" + shard);
-        }
 
-        if (request.hasTsStart()) {
-            Preconditions.checkArgument(shard != -1, "Shard is -1!");
-            long tsStart = request.getTsStart();
-            logger.info("ts start is " + tsStart);
+            if (tsRange.hasLowerBound()) {
+                Preconditions.checkArgument(shard != -1, "Shard is -1!");
+                long tsStart = tsRange.lowerEndpoint();
+                logger.info("ts start is " + tsStart);
 
-            byte[] idealStartKey = new byte[IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN];
-            BytesUtil.writeUnsigned(shard, idealStartKey, 0, IIKeyValueCodec.SHARD_LEN);
-            BytesUtil.writeLong(tsStart, idealStartKey, IIKeyValueCodec.SHARD_LEN, IIKeyValueCodec.TIMEPART_LEN);
-            logger.info("ideaStartKey is(readable) :" + BytesUtil.toReadableText(idealStartKey));
-            Result result = region.getClosestRowBefore(idealStartKey, IIDesc.HBASE_FAMILY_BYTES);
-            if (result != null) {
-                byte[] actualStartKey = Arrays.copyOf(result.getRow(), IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN);
-                scan.setStartRow(actualStartKey);
-                logger.info("The start key is set to " + BytesUtil.toReadableText(actualStartKey));
-            } else {
-                logger.info("There is no key before ideaStartKey so ignore tsStart");
+                byte[] idealStartKey = new byte[IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN];
+                BytesUtil.writeUnsigned(shard, idealStartKey, 0, IIKeyValueCodec.SHARD_LEN);
+                BytesUtil.writeLong(tsStart, idealStartKey, IIKeyValueCodec.SHARD_LEN, IIKeyValueCodec.TIMEPART_LEN);
+                logger.info("ideaStartKey is(readable) :" + BytesUtil.toReadableText(idealStartKey));
+                Result result = region.getClosestRowBefore(idealStartKey, IIDesc.HBASE_FAMILY_BYTES);
+                if (result != null) {
+                    byte[] actualStartKey = Arrays.copyOf(result.getRow(), IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN);
+                    scan.setStartRow(actualStartKey);
+                    logger.info("The start key is set to " + BytesUtil.toReadableText(actualStartKey));
+                } else {
+                    logger.info("There is no key before ideaStartKey so ignore tsStart");
+                }
+            }
+
+            if (tsRange.hasUpperBound()) {
+                Preconditions.checkArgument(shard != -1, "Shard is -1");
+                long tsEnd = tsRange.upperEndpoint();
+                logger.info("ts end is " + tsEnd);
+
+                byte[] actualEndKey = new byte[IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN];
+                BytesUtil.writeUnsigned(shard, actualEndKey, 0, IIKeyValueCodec.SHARD_LEN);
+                BytesUtil.writeLong(tsEnd + 1, actualEndKey, IIKeyValueCodec.SHARD_LEN, IIKeyValueCodec.TIMEPART_LEN);//notice +1 here
+                scan.setStopRow(actualEndKey);
+                logger.info("The stop key is set to " + BytesUtil.toReadableText(actualEndKey));
             }
         }
 
-        if (request.hasTsEnd()) {
-            Preconditions.checkArgument(shard != -1, "Shard is -1");
-            long tsEnd = request.getTsEnd();
-            logger.info("ts end is " + tsEnd);
-
-            byte[] actualEndKey = new byte[IIKeyValueCodec.SHARD_LEN + IIKeyValueCodec.TIMEPART_LEN];
-            BytesUtil.writeUnsigned(shard, actualEndKey, 0, IIKeyValueCodec.SHARD_LEN);
-            BytesUtil.writeLong(tsEnd + 1, actualEndKey, IIKeyValueCodec.SHARD_LEN, IIKeyValueCodec.TIMEPART_LEN);//notice +1 here
-            scan.setStopRow(actualEndKey);
-            logger.info("The stop key is set to " + BytesUtil.toReadableText(actualEndKey));
-        }
         return scan;
     }
 

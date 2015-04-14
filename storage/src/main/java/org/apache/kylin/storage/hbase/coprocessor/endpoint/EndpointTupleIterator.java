@@ -21,17 +21,26 @@ package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 import java.io.IOException;
 import java.util.*;
 
-import com.google.common.collect.Sets;
-
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
+import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.invertedindex.index.TableRecord;
+import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.kylin.storage.hbase.coprocessor.FilterDecorator;
@@ -43,19 +52,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
-
-import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.invertedindex.index.TableRecord;
-import org.apache.kylin.invertedindex.index.TableRecordInfo;
-import org.apache.kylin.metadata.model.DataType;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
-import org.apache.kylin.metadata.tuple.ITuple;
-import org.apache.kylin.metadata.tuple.ITupleIterator;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
@@ -78,7 +77,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     private final CoprocessorFilter pushedDownFilter;
     private final CoprocessorProjector pushedDownProjector;
     private final EndpointAggregators pushedDownAggregators;
-    private final Pair<Long, Long> tsInterval;//timestamp column condition's interval
+    private final Range<Long> tsRange;//timestamp column condition's interval
 
     Iterator<List<IIProtos.IIResponse.IIRow>> regionResponsesIterator = null;
     ITupleIterator tupleIterator = null;
@@ -127,7 +126,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
         this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
 
-        this.tsInterval = TsConditionExtractor.extractTsCondition(tableRecordInfo, this.columns, rootFilter);
+        this.tsRange = TsConditionExtractor.extractTsCondition(tableRecordInfo, this.columns, rootFilter);
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
         regionResponsesIterator = getResults(endpointRequest, table);
@@ -206,13 +205,10 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     private IIProtos.IIRequest prepareRequest() throws IOException {
         IIProtos.IIRequest.Builder builder = IIProtos.IIRequest.newBuilder();
-        if (this.tsInterval != null) {
-            if (this.tsInterval.getLeft() != null) {
-                builder.setTsStart(this.tsInterval.getLeft());
-            }
-            if (this.tsInterval.getRight() != null) {
-                builder.setTsEnd(this.tsInterval.getRight());
-            }
+
+        if (this.tsRange != null) {
+            byte[] tsRangeBytes = SerializationUtils.serialize(this.tsRange);
+            builder.setTsRange(ByteString.copyFrom(tsRangeBytes));
         }
 
         builder.setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))) //

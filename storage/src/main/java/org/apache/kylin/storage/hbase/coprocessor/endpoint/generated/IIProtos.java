@@ -51,25 +51,15 @@ public final class IIProtos {
      */
     com.google.protobuf.ByteString getAggregator();
 
-    // optional int64 tsStart = 5;
+    // optional bytes tsRange = 5;
     /**
-     * <code>optional int64 tsStart = 5;</code>
+     * <code>optional bytes tsRange = 5;</code>
      */
-    boolean hasTsStart();
+    boolean hasTsRange();
     /**
-     * <code>optional int64 tsStart = 5;</code>
+     * <code>optional bytes tsRange = 5;</code>
      */
-    long getTsStart();
-
-    // optional int64 tsEnd = 6;
-    /**
-     * <code>optional int64 tsEnd = 6;</code>
-     */
-    boolean hasTsEnd();
-    /**
-     * <code>optional int64 tsEnd = 6;</code>
-     */
-    long getTsEnd();
+    com.google.protobuf.ByteString getTsRange();
   }
   /**
    * Protobuf type {@code IIRequest}
@@ -142,14 +132,9 @@ public final class IIProtos {
               aggregator_ = input.readBytes();
               break;
             }
-            case 40: {
+            case 42: {
               bitField0_ |= 0x00000010;
-              tsStart_ = input.readInt64();
-              break;
-            }
-            case 48: {
-              bitField0_ |= 0x00000020;
-              tsEnd_ = input.readInt64();
+              tsRange_ = input.readBytes();
               break;
             }
           }
@@ -256,36 +241,20 @@ public final class IIProtos {
       return aggregator_;
     }
 
-    // optional int64 tsStart = 5;
-    public static final int TSSTART_FIELD_NUMBER = 5;
-    private long tsStart_;
+    // optional bytes tsRange = 5;
+    public static final int TSRANGE_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString tsRange_;
     /**
-     * <code>optional int64 tsStart = 5;</code>
+     * <code>optional bytes tsRange = 5;</code>
      */
-    public boolean hasTsStart() {
+    public boolean hasTsRange() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional int64 tsStart = 5;</code>
+     * <code>optional bytes tsRange = 5;</code>
      */
-    public long getTsStart() {
-      return tsStart_;
-    }
-
-    // optional int64 tsEnd = 6;
-    public static final int TSEND_FIELD_NUMBER = 6;
-    private long tsEnd_;
-    /**
-     * <code>optional int64 tsEnd = 6;</code>
-     */
-    public boolean hasTsEnd() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
-    }
-    /**
-     * <code>optional int64 tsEnd = 6;</code>
-     */
-    public long getTsEnd() {
-      return tsEnd_;
+    public com.google.protobuf.ByteString getTsRange() {
+      return tsRange_;
     }
 
     private void initFields() {
@@ -293,8 +262,7 @@ public final class IIProtos {
       filter_ = com.google.protobuf.ByteString.EMPTY;
       projector_ = com.google.protobuf.ByteString.EMPTY;
       aggregator_ = com.google.protobuf.ByteString.EMPTY;
-      tsStart_ = 0L;
-      tsEnd_ = 0L;
+      tsRange_ = com.google.protobuf.ByteString.EMPTY;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -337,10 +305,7 @@ public final class IIProtos {
         output.writeBytes(4, aggregator_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeInt64(5, tsStart_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeInt64(6, tsEnd_);
+        output.writeBytes(5, tsRange_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -369,11 +334,7 @@ public final class IIProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(5, tsStart_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(6, tsEnd_);
+          .computeBytesSize(5, tsRange_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -418,15 +379,10 @@ public final class IIProtos {
         result = result && getAggregator()
             .equals(other.getAggregator());
       }
-      result = result && (hasTsStart() == other.hasTsStart());
-      if (hasTsStart()) {
-        result = result && (getTsStart()
-            == other.getTsStart());
-      }
-      result = result && (hasTsEnd() == other.hasTsEnd());
-      if (hasTsEnd()) {
-        result = result && (getTsEnd()
-            == other.getTsEnd());
+      result = result && (hasTsRange() == other.hasTsRange());
+      if (hasTsRange()) {
+        result = result && getTsRange()
+            .equals(other.getTsRange());
       }
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
@@ -457,13 +413,9 @@ public final class IIProtos {
         hash = (37 * hash) + AGGREGATOR_FIELD_NUMBER;
         hash = (53 * hash) + getAggregator().hashCode();
       }
-      if (hasTsStart()) {
-        hash = (37 * hash) + TSSTART_FIELD_NUMBER;
-        hash = (53 * hash) + hashLong(getTsStart());
-      }
-      if (hasTsEnd()) {
-        hash = (37 * hash) + TSEND_FIELD_NUMBER;
-        hash = (53 * hash) + hashLong(getTsEnd());
+      if (hasTsRange()) {
+        hash = (37 * hash) + TSRANGE_FIELD_NUMBER;
+        hash = (53 * hash) + getTsRange().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -582,10 +534,8 @@ public final class IIProtos {
         bitField0_ = (bitField0_ & ~0x00000004);
         aggregator_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
-        tsStart_ = 0L;
+        tsRange_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000010);
-        tsEnd_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -633,11 +583,7 @@ public final class IIProtos {
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.tsStart_ = tsStart_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
-        }
-        result.tsEnd_ = tsEnd_;
+        result.tsRange_ = tsRange_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -666,11 +612,8 @@ public final class IIProtos {
         if (other.hasAggregator()) {
           setAggregator(other.getAggregator());
         }
-        if (other.hasTsStart()) {
-          setTsStart(other.getTsStart());
-        }
-        if (other.hasTsEnd()) {
-          setTsEnd(other.getTsEnd());
+        if (other.hasTsRange()) {
+          setTsRange(other.getTsRange());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -859,68 +802,38 @@ public final class IIProtos {
         return this;
       }
 
-      // optional int64 tsStart = 5;
-      private long tsStart_ ;
+      // optional bytes tsRange = 5;
+      private com.google.protobuf.ByteString tsRange_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>optional int64 tsStart = 5;</code>
+       * <code>optional bytes tsRange = 5;</code>
        */
-      public boolean hasTsStart() {
+      public boolean hasTsRange() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>optional int64 tsStart = 5;</code>
+       * <code>optional bytes tsRange = 5;</code>
        */
-      public long getTsStart() {
-        return tsStart_;
+      public com.google.protobuf.ByteString getTsRange() {
+        return tsRange_;
       }
       /**
-       * <code>optional int64 tsStart = 5;</code>
+       * <code>optional bytes tsRange = 5;</code>
        */
-      public Builder setTsStart(long value) {
-        bitField0_ |= 0x00000010;
-        tsStart_ = value;
+      public Builder setTsRange(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        tsRange_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int64 tsStart = 5;</code>
+       * <code>optional bytes tsRange = 5;</code>
        */
-      public Builder clearTsStart() {
+      public Builder clearTsRange() {
         bitField0_ = (bitField0_ & ~0x00000010);
-        tsStart_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      // optional int64 tsEnd = 6;
-      private long tsEnd_ ;
-      /**
-       * <code>optional int64 tsEnd = 6;</code>
-       */
-      public boolean hasTsEnd() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
-      }
-      /**
-       * <code>optional int64 tsEnd = 6;</code>
-       */
-      public long getTsEnd() {
-        return tsEnd_;
-      }
-      /**
-       * <code>optional int64 tsEnd = 6;</code>
-       */
-      public Builder setTsEnd(long value) {
-        bitField0_ |= 0x00000020;
-        tsEnd_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int64 tsEnd = 6;</code>
-       */
-      public Builder clearTsEnd() {
-        bitField0_ = (bitField0_ & ~0x00000020);
-        tsEnd_ = 0L;
+        tsRange_ = getDefaultInstance().getTsRange();
         onChanged();
         return this;
       }
@@ -2453,15 +2366,15 @@ public final class IIProtos {
     java.lang.String[] descriptorData = {
       "\n[storage/src/main/java/org/apache/kylin" +
       "/storage/hbase/coprocessor/endpoint/prot" +
-      "obuf/II.proto\"p\n\tIIRequest\022\014\n\004type\030\001 \002(\014" +
+      "obuf/II.proto\"a\n\tIIRequest\022\014\n\004type\030\001 \002(\014" +
       "\022\016\n\006filter\030\002 \002(\014\022\021\n\tprojector\030\003 \002(\014\022\022\n\na" +
-      "ggregator\030\004 \002(\014\022\017\n\007tsStart\030\005 \001(\003\022\r\n\005tsEn" +
-      "d\030\006 \001(\003\"Y\n\nIIResponse\022\037\n\004rows\030\001 \003(\0132\021.II" +
-      "Response.IIRow\032*\n\005IIRow\022\017\n\007columns\030\001 \002(\014" +
-      "\022\020\n\010measures\030\002 \001(\01421\n\013RowsService\022\"\n\007get" +
-      "Rows\022\n.IIRequest\032\013.IIResponseBQ\n=org.apa" +
-      "che.kylin.storage.hbase.coprocessor.endp",
-      "oint.generatedB\010IIProtosH\001\210\001\001\240\001\001"
+      "ggregator\030\004 \002(\014\022\017\n\007tsRange\030\005 \001(\014\"Y\n\nIIRe" +
+      "sponse\022\037\n\004rows\030\001 \003(\0132\021.IIResponse.IIRow\032" +
+      "*\n\005IIRow\022\017\n\007columns\030\001 \002(\014\022\020\n\010measures\030\002 " +
+      "\001(\01421\n\013RowsService\022\"\n\007getRows\022\n.IIReques" +
+      "t\032\013.IIResponseBQ\n=org.apache.kylin.stora" +
+      "ge.hbase.coprocessor.endpoint.generatedB",
+      "\010IIProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2473,7 +2386,7 @@ public final class IIProtos {
           internal_static_IIRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_IIRequest_descriptor,
-              new java.lang.String[] { "Type", "Filter", "Projector", "Aggregator", "TsStart", "TsEnd", });
+              new java.lang.String[] { "Type", "Filter", "Projector", "Aggregator", "TsRange", });
           internal_static_IIResponse_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_IIResponse_fieldAccessorTable = new

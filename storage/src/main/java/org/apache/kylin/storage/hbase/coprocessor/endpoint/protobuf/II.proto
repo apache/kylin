@@ -13,8 +13,7 @@ message IIRequest {
     required bytes filter = 2;
     required bytes projector = 3;
     required bytes aggregator = 4;
-    optional int64 tsStart = 5;
-    optional int64 tsEnd = 6;
+    optional bytes tsRange = 5;
 }
 
 message IIResponse {
