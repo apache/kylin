@@ -59,7 +59,7 @@ abstract public class MeasureAggregator<V> {
     }
 
     public static boolean isBigDecimal(String type) {
-        return "decimal".equalsIgnoreCase(type);
+        return type.startsWith("decimal");
     }
 
     public static boolean isDouble(String type) {
