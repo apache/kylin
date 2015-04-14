@@ -1,26 +1,8 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
-package org.apache.kylin.storage.hbase.coprocessor.endpoint;
+package org.apache.kylin.storage.filter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
@@ -38,11 +20,9 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 /**
- * Created by Hongbin Ma(Binmahone) 
- *
- * ii test
+ * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
-public class TsConditionExtractorTest extends LocalFileMetadataTestCase {
+public class IgnoreTsConditionTest extends LocalFileMetadataTestCase {
     IIInstance ii;
     TableRecordInfo tableRecordInfo;
     CoprocessorFilter filter;
@@ -66,57 +46,18 @@ public class TsConditionExtractorTest extends LocalFileMetadataTestCase {
         cleanupTestMetadata();
     }
 
-    @Test
-    public void testSimpleFilter() {
+    private TupleFilter mockFilter1(int year) {
         CompareTupleFilter aFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
         aFilter.addChild(new ColumnTupleFilter(caldt));
-        aFilter.addChild(new ConstantTupleFilter("2000-01-01"));
-        Pair<Long, Long> ret = TsConditionExtractor.extractTsCondition(tableRecordInfo, ii.getAllColumns(), aFilter);
-        Assert.assertEquals(946684800000L, ret.getLeft().longValue());
-        Assert.assertEquals(null, ret.getRight());
-    }
-
-
-    @Test
-    public void testComplexFilter() {
-        CompareTupleFilter aFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
-        aFilter.addChild(new ColumnTupleFilter(caldt));
-        aFilter.addChild(new ConstantTupleFilter("2000-01-01"));
+        aFilter.addChild(new ConstantTupleFilter(year + "-01-01"));
 
         CompareTupleFilter bFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
         bFilter.addChild(new ColumnTupleFilter(caldt));
-        bFilter.addChild(new ConstantTupleFilter("2000-01-03"));
+        bFilter.addChild(new ConstantTupleFilter(year + "-01-04"));
 
         CompareTupleFilter cFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
         cFilter.addChild(new ColumnTupleFilter(caldt));
-        cFilter.addChild(new ConstantTupleFilter("2000-01-02"));
-
-        CompareTupleFilter dFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
-        dFilter.addChild(new ColumnTupleFilter(siteId));
-        dFilter.addChild(new ConstantTupleFilter("0"));
-
-        LogicalTupleFilter rootFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
-        rootFilter.addChildren(Lists.newArrayList(aFilter, bFilter,cFilter, dFilter));
-
-        Pair<Long, Long> ret = TsConditionExtractor.extractTsCondition(tableRecordInfo, ii.getAllColumns(), rootFilter);
-
-        Assert.assertEquals(946684800000L, ret.getLeft().longValue());
-        Assert.assertEquals(946771200000L, ret.getRight().longValue());
-    }
-
-    @Test
-    public void testMoreComplexFilter() {
-        CompareTupleFilter aFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
-        aFilter.addChild(new ColumnTupleFilter(caldt));
-        aFilter.addChild(new ConstantTupleFilter("2000-01-01"));
-
-        CompareTupleFilter bFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
-        bFilter.addChild(new ColumnTupleFilter(caldt));
-        bFilter.addChild(new ConstantTupleFilter("2000-01-04"));
-
-        CompareTupleFilter cFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
-        cFilter.addChild(new ColumnTupleFilter(caldt));
-        cFilter.addChild(new ConstantTupleFilter("2000-01-03"));
+        cFilter.addChild(new ConstantTupleFilter(year + "-01-03"));
 
         CompareTupleFilter dFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         dFilter.addChild(new ColumnTupleFilter(siteId));
@@ -125,17 +66,68 @@ public class TsConditionExtractorTest extends LocalFileMetadataTestCase {
         LogicalTupleFilter subRoot = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
         subRoot.addChildren(Lists.newArrayList(aFilter, bFilter, cFilter, dFilter));
 
-
         CompareTupleFilter outFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
         outFilter.addChild(new ColumnTupleFilter(caldt));
-        outFilter.addChild(new ConstantTupleFilter("2000-01-02"));
+        outFilter.addChild(new ConstantTupleFilter(year + "-01-02"));
 
         LogicalTupleFilter root = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
         root.addChildren(Lists.newArrayList(subRoot, outFilter));
+        return root;
+    }
 
-        Pair<Long, Long> ret = TsConditionExtractor.extractTsCondition(tableRecordInfo, ii.getAllColumns(), root);
+    private TupleFilter mockFilter2(int year) {
+        CompareTupleFilter aFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
+        aFilter.addChild(new ColumnTupleFilter(caldt));
+        aFilter.addChild(new ConstantTupleFilter(year + "-01-01"));
 
-        Assert.assertEquals(946684800000L, ret.getLeft().longValue());
-        Assert.assertEquals(946771200000L, ret.getRight().longValue());
+        CompareTupleFilter bFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        bFilter.addChild(new ColumnTupleFilter(caldt));
+        bFilter.addChild(new ConstantTupleFilter(year + "-01-04"));
+
+        CompareTupleFilter cFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        cFilter.addChild(new ColumnTupleFilter(caldt));
+        cFilter.addChild(new ConstantTupleFilter(year + "-01-03"));
+
+        CompareTupleFilter dFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
+        dFilter.addChild(new ColumnTupleFilter(siteId));
+        dFilter.addChild(new ConstantTupleFilter("0"));
+
+        LogicalTupleFilter subRoot = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.OR);
+        subRoot.addChildren(Lists.newArrayList(aFilter, bFilter, cFilter, dFilter));
+
+        CompareTupleFilter outFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        outFilter.addChild(new ColumnTupleFilter(caldt));
+        outFilter.addChild(new ConstantTupleFilter(year + "-01-02"));
+
+        LogicalTupleFilter root = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        root.addChildren(Lists.newArrayList(subRoot, outFilter));
+        return root;
+    }
+
+    @Test
+    public void positiveTest() {
+
+        TupleFilter a = mockFilter1(2000);
+        TupleFilter b = mockFilter1(2001);
+
+        IgnoreTsCondition decoratorA = new IgnoreTsCondition(caldt, a);
+        byte[] aBytes = TupleFilterSerializer.serialize(a, decoratorA, StringCodeSystem.INSTANCE);
+        IgnoreTsCondition decoratorB = new IgnoreTsCondition(caldt, b);
+        byte[] bBytes = TupleFilterSerializer.serialize(b, decoratorB, StringCodeSystem.INSTANCE);
+        Assert.assertArrayEquals(aBytes, bBytes);
+
+    }
+
+    @Test
+    public void negativeTest()
+    {
+        TupleFilter a = mockFilter2(2000);
+        TupleFilter b = mockFilter2(2001);
+
+        IgnoreTsCondition decoratorA = new IgnoreTsCondition(caldt, a);
+        byte[] aBytes = TupleFilterSerializer.serialize(a, decoratorA, StringCodeSystem.INSTANCE);
+        IgnoreTsCondition decoratorB = new IgnoreTsCondition(caldt, b);
+        byte[] bBytes = TupleFilterSerializer.serialize(b, decoratorB, StringCodeSystem.INSTANCE);
+        Assert.assertFalse(Arrays.equals(aBytes,bBytes));
     }
 }

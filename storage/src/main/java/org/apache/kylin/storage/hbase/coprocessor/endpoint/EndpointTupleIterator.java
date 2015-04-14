@@ -120,7 +120,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         this.pushedDownRowType = CoprocessorRowType.fromTableRecordInfo(tableRecordInfo, this.columns);
         this.pushedDownFilter = CoprocessorFilter.fromFilter(new ClearTextDictionary(this.tableRecordInfo), rootFilter, FilterDecorator.FilterConstantsTreatment.AS_IT_IS);
 
-        for (TblColRef column : this.pushedDownFilter.getUnstrictlyFilteredColumns()) {
+        for (TblColRef column : this.pushedDownFilter.getInevaluableColumns()) {
             groupBy.add(column);
         }
 

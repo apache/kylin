@@ -22,17 +22,17 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
     }
 
     private RowKeyColumnIO columnIO;
-    private Set<TblColRef> unstrictlyFilteredColumns;
+    private Set<TblColRef> inevaluableColumns;
     private FilterConstantsTreatment filterConstantsTreatment;
 
     public FilterDecorator(IDictionaryAware seg, FilterConstantsTreatment filterConstantsTreatment) {
         this.columnIO = new RowKeyColumnIO(seg);
-        this.unstrictlyFilteredColumns = Sets.newHashSet();
+        this.inevaluableColumns = Sets.newHashSet();
         this.filterConstantsTreatment = filterConstantsTreatment;
     }
 
-    public Set<TblColRef> getUnstrictlyFilteredColumns() {
-        return unstrictlyFilteredColumns;
+    public Set<TblColRef> getInevaluableColumns() {
+        return inevaluableColumns;
     }
 
 
@@ -126,11 +126,11 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         if (filter == null)
             return null;
 
-        // In case of NOT(unEvaluatableFilter), we should immediately replace it as TRUE,
-        // Otherwise, unEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter) will
+        // In case of NOT(inEvaluatableFilter), we should immediately replace it as TRUE,
+        // Otherwise, inEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter) will
         // always return FALSE
         if (filter.getOperator() == TupleFilter.FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
-            TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
+            TupleFilter.collectColumns(filter, inevaluableColumns);
             return ConstantTupleFilter.TRUE;
         }
 
@@ -138,7 +138,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
             return filter;
 
         if (!TupleFilter.isEvaluableRecursively(filter)) {
-            TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
+            TupleFilter.collectColumns(filter, inevaluableColumns);
             return ConstantTupleFilter.TRUE;
         }
 

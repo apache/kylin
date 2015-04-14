@@ -24,8 +24,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Range;
+import com.google.common.collect.Ranges;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.lang.math.IntRange;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -62,15 +68,22 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+
+
+        System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(4, 10)));
+        System.out.println(Ranges.open(4, 10).isConnected(Ranges.open(3,5)));
+
+
         String bb = "\\x00\\x00\\x00\\x00\\x01\\x3F\\xD0\\x2D\\58\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/07/12 07:59:37
         String cc = "\\x00\\x00\\x00\\x00\\x01\\x41\\xBE\\x8F\\xD8\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/10/16 08:00:00
         String dd = "\\x00\\x00\\x00\\x00\\x01\\x41\\xBE\\x8F\\xD8\\x07\\x00\\x18\\x00\\x00\\x00";
+
         byte[] bytes = BytesUtil.fromReadableText(dd);
-        long ttt = BytesUtil.readLong(bytes,2,8);
+        long ttt = BytesUtil.readLong(bytes, 2, 8);
         System.out.println(time(ttt));
 
         System.out.println("\\");
-        System.out.println("\\\\");
+        System.out.println("n");
 
         System.out.println("The start key is set to " + null);
         System.out.println(time(946684800000L));
@@ -99,9 +112,8 @@ public class BasicTest {
     @Ignore("fix it later")
     public void test2() throws IOException, ConfigurationException {
         ArrayList<String> x = Lists.newArrayListWithCapacity(10);
-        x.set(2,"dd");
-        for(String y : x)
-        {
+        x.set(2, "dd");
+        for (String y : x) {
             System.out.println(y);
         }
     }
