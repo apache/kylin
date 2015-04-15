@@ -1,11 +1,11 @@
 package org.apache.kylin.storage.cache;
 
-import com.google.common.collect.Range;
-import org.apache.kylin.metadata.tuple.ITuple;
-import org.apache.kylin.storage.tuple.Tuple;
-
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.kylin.metadata.tuple.ITuple;
+
+import com.google.common.collect.Range;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/13/15.

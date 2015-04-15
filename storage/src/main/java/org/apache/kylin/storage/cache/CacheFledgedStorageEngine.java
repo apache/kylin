@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
-public class CacheFledgedTupleIterator implements IStorageEngine {
+public class CacheFledgedStorageEngine implements IStorageEngine {
 
     public static final String SUCCESS_QUERY_CACHE = "SuccessQueryCache";
     public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";//TODO
@@ -58,7 +58,7 @@ public class CacheFledgedTupleIterator implements IStorageEngine {
     private TblColRef partitionColRef;
     private IRealization realization;
 
-    public CacheFledgedTupleIterator(IRealization realization) {
+    public CacheFledgedStorageEngine(IRealization realization) {
         this.realization = realization;
 
         Preconditions.checkArgument(realization.getType() != RealizationType.CUBE, "Cube realization does not need dynamic cache!");

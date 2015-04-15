@@ -22,7 +22,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.storage.cache.CacheFledgedTupleIterator;
+import org.apache.kylin.storage.cache.CacheFledgedStorageEngine;
 import org.apache.kylin.storage.hbase.CubeStorageEngine;
 import org.apache.kylin.storage.hbase.InvertedIndexStorageEngine;
 import org.apache.kylin.storage.hybrid.HybridInstance;
@@ -35,7 +35,7 @@ public class StorageEngineFactory {
 
     public static IStorageEngine getStorageEngine(IRealization realization, boolean allowCache) {
         if (allowCache) {
-            return new CacheFledgedTupleIterator(realization);
+            return new CacheFledgedStorageEngine(realization);
         }
 
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
