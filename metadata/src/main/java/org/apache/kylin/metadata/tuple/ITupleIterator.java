@@ -44,7 +44,16 @@ public interface ITupleIterator extends Iterator<ITuple> {
         @Override
         public void close() {
         }
+
     };
 
     public void close();
+
+    /**
+     * if hasNext() returns false because there's no more data, return true
+     * if hasNext() returns false because limits or threshold, return false
+     * if hasNext() returns true, throw IllegalStateException
+     * @return
+     */
+    //public boolean isDrained();
 }

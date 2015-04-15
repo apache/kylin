@@ -6,7 +6,7 @@ import com.google.common.collect.Range;
 import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.util.DateFormat;
+import org.apache.kylin.common.util.DateFormat;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/14/15.

@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.metadata.model.DataType;
-import org.apache.kylin.metadata.util.DateFormat;
+import org.apache.kylin.common.util.DateFormat;
 
 public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
     

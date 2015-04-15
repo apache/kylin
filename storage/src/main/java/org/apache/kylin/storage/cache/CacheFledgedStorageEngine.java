@@ -1,9 +1,10 @@
 package org.apache.kylin.storage.cache;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.MemoryUnit;
 import net.sf.ehcache.config.PersistenceConfiguration;
@@ -16,27 +17,30 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.*;
-import org.apache.kylin.metadata.tuple.CompoundTupleIterator;
-import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.metadata.tuple.SimpleTupleIterator;
+import org.apache.kylin.metadata.tuple.*;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.TsConditionExtractor;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
 public class CacheFledgedStorageEngine implements IStorageEngine {
 
-    public static final String SUCCESS_QUERY_CACHE = "SuccessQueryCache";
-    public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";//TODO
+    private static final Logger logger = LoggerFactory.getLogger(CacheFledgedStorageEngine.class);
+
+    public static final String STORAGE_LAYER_TUPLE_CACHE = "STORAGE_LAYER_TUPLE_CACHE";
+    //TODO: deal with failed queries
 
     static CacheManager cacheManager;
 
@@ -44,13 +48,13 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
         cacheManager = CacheManager.create();
 
         //Create a Cache specifying its configuration.
-        Cache successCache = new Cache(new CacheConfiguration(SUCCESS_QUERY_CACHE, 0).//
-                memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU).//
+        Cache successCache = new Cache(new CacheConfiguration(STORAGE_LAYER_TUPLE_CACHE, 0).//
+                memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LRU).//
                 eternal(false).//
                 timeToIdleSeconds(86400).//
                 diskExpiryThreadIntervalSeconds(0).//
-                maxBytesLocalHeap(500, MemoryUnit.MEGABYTES).//
-                persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.LOCALTEMPSWAP)));
+                maxBytesLocalHeap(1, MemoryUnit.GIGABYTES).//
+                persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.NONE)));
 
         cacheManager.addCache(successCache);
     }
@@ -73,37 +77,59 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
 
     @Override
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest) {
-        StreamSQLDigest streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
-        StreamSQLResult cachedResult = (StreamSQLResult) cacheManager.getCache(SUCCESS_QUERY_CACHE).get(streamSQLDigest).getObjectValue();
+        final StreamSQLDigest streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
+        StreamSQLResult cachedResult = (StreamSQLResult) cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).get(streamSQLDigest).getObjectValue();
 
-        ITupleIterator ret;
+        final Range<Long> tsRange = TsConditionExtractor.extractTsCondition(partitionColRef, sqlDigest.filter);
 
+        ITupleIterator ret = null;
         if (cachedResult != null) {
-            Range<Long> tsRange = TsConditionExtractor.extractTsCondition(partitionColRef, sqlDigest.filter);
+            logger.debug("current cache    : " + cachedResult);
             Range<Long> reusePeriod = cachedResult.getReusableResults(tsRange);
+
+            logger.info("ts Range in query: " + RangeUtil.formatTsRange(tsRange));
+            logger.info("reusable range   : " + RangeUtil.formatTsRange(reusePeriod));
+
             if (reusePeriod != null) {
+
                 List<Range<Long>> remainings = RangeUtil.remove(tsRange, reusePeriod);
                 if (remainings.size() == 1) {
+
                     SimpleTupleIterator reusedTuples = new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
                     Range<Long> remaining = remainings.get(0);
                     ITupleIterator freshTuples = SQLDigestUtil.appendTsFilterToExecute(sqlDigest, partitionColRef, remaining, new Function<Void, ITupleIterator>() {
-                        @Nullable
                         @Override
                         public ITupleIterator apply(Void input) {
                             return StorageEngineFactory.getStorageEngine(realization, false).search(context, sqlDigest);
                         }
                     });
+
                     ret = new CompoundTupleIterator(Lists.newArrayList(reusedTuples, freshTuples));
-                    //TODO:update cache
-                    return ret;//cache successfully reused
                 }
             }
         }
 
-        //cache cannot reuse case:
-        ret = StorageEngineFactory.getStorageEngine(realization, false).search(context, sqlDigest);
-        //TODO:update cache
-        return ret;
+        if (ret == null) {
+            logger.info("no cache is being leveraged");
+            //cache cannot reuse case:
+            ret = StorageEngineFactory.getStorageEngine(realization, false).search(context, sqlDigest);
+        } else {
+            logger.info("cache is being leveraged");
+        }
 
+        //use another nested ITupleIterator to deal with cache
+        ITupleIterator tee = new TeeTupleIterator(ret, new Function<List<ITuple>, Void>() {
+            @Nullable
+            @Override
+            public Void apply(List<ITuple> input) {
+                //TODO: tsRange needs updated
+                StreamSQLResult newCache = new StreamSQLResult(input, tsRange);
+                cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).put(new Element(streamSQLDigest, newCache));
+                logger.debug("current cache: " + newCache);
+                return null;
+            }
+        });
+
+        return tee;
     }
 }

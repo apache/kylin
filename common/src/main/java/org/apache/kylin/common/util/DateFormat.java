@@ -1,4 +1,4 @@
-package org.apache.kylin.metadata.util;
+package org.apache.kylin.common.util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -31,6 +31,10 @@ public class DateFormat {
 
     public static String formatToDateStr(long millis) {
         return getDateFormat(DEFAULT_DATE_PATTERN).format(new Date(millis));
+    }
+
+    public static String formatToTimeStr(long millis) {
+        return getDateFormat(DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).format(new Date(millis));
     }
 
     public static String dateToString(Date date) {

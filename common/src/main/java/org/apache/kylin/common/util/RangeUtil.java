@@ -2,10 +2,7 @@ package org.apache.kylin.common.util;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.common.collect.RangeSet;
-import com.google.common.collect.TreeRangeSet;
+import com.google.common.collect.*;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/14/15.
@@ -20,5 +17,36 @@ public class RangeUtil {
         rangeSet.add(self);
         rangeSet.remove(other);
         return Lists.newArrayList(rangeSet.asRanges());
+    }
+
+    public static String formatTsRange(Range<Long> tsRange) {
+        if(tsRange == null)
+            return null;
+
+        StringBuilder sb = new StringBuilder();
+        if (tsRange.hasLowerBound()) {
+            if (tsRange.lowerBoundType() == BoundType.CLOSED) {
+                sb.append("[");
+            } else {
+                sb.append("(");
+            }
+            DateFormat.formatToTimeStr(tsRange.lowerEndpoint());
+        } else {
+            sb.append("(null");
+        }
+
+        sb.append("~");
+
+        if (tsRange.hasUpperBound()) {
+            DateFormat.formatToTimeStr(tsRange.upperEndpoint());
+            if (tsRange.upperBoundType() == BoundType.CLOSED) {
+                sb.append("]");
+            } else {
+                sb.append(")");
+            }
+        } else {
+            sb.append("null)");
+        }
+        return sb.toString();
     }
 }
