@@ -90,9 +90,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     @Override
     public void close() {
-        if (cursor != null) {
-            cursor.close();
-        }
+        IOUtils.closeQuietly(cursor);
     }
 
     private Object[] convertCurrentRow(ITuple tuple) {
@@ -138,7 +136,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         bindVariable(olapContext.filter);
 
         // query storage engine
-        IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization);
+        IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization, true);
         ITupleIterator iterator = storageEngine.search(olapContext.storageContext, olapContext.getSQLDigest());
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");

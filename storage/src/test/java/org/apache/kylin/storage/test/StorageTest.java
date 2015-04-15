@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
 import org.apache.kylin.storage.IStorageEngine;
@@ -77,7 +78,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
         cube = cubeMgr.getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_EMPTY");
         Assert.assertNotNull(cube);
-        storageEngine = StorageEngineFactory.getStorageEngine(cube);
+        storageEngine = StorageEngineFactory.getStorageEngine(cube,true);
         String url = KylinConfig.getInstanceFromEnv().getStorageUrl();
         context = new StorageContext();
         context.setConnUrl(url);
@@ -162,9 +163,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (iterator != null) {
-                iterator.close();
-            }
+            IOUtils.closeQuietly(iterator);
         }
         return count;
     }

@@ -18,10 +18,14 @@
 
 package org.apache.kylin.metadata.tuple;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Iterator;
+
 /**
  * @author xjiang
  */
-public interface ITupleIterator {
+public interface ITupleIterator extends Iterator<ITuple>, Closeable {
     public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
         @Override
         public boolean hasNext() {
@@ -34,14 +38,15 @@ public interface ITupleIterator {
         }
 
         @Override
+        public void remove() {
+
+        }
+
+        @Override
         public void close() {
         }
     };
 
-    public boolean hasNext();
-
-    public ITuple next();
-
-    public void close();
-
+    @Override
+    public void close() throws IOException;
 }

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.hbase;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -106,7 +107,9 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
     }
 
     @Override
-    public ITuple next() {
+    public ITuple next()  {
+        //TODO: last not closed
+
         ITuple t = null;
         while (hasNext()) {
             if (segmentIterator.hasNext()) {
@@ -114,7 +117,11 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
                 scanCount++;
                 break;
             } else {
-                segmentIterator.close();
+                try {
+                    segmentIterator.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 segmentIterator = segmentIteratorIterator.next();
             }
         }
@@ -122,7 +129,12 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
     }
 
     @Override
-    public void close() {
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void close() throws IOException {
         context.setTotalScanCount(scanCount);
         segmentIterator.close();
     }

@@ -100,14 +100,14 @@ public class IIStreamBuilder extends StreamBuilder {
                 return;
             }
             logger.info("stream build start, size:" + streamsToBuild.size());
-            Stopwatch stopwatch = new Stopwatch().start();
+            Stopwatch stopwatch = Stopwatch.createStarted();
             final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
             logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
 
             loadToHBase(hTable, slice, new IIKeyValueCodec(slice.getInfo()));
             submitOffset(offset);
             stopwatch.stop();
-            logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
+            logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsed(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
         } else {
             logger.info("nothing to build, skip building");
         }

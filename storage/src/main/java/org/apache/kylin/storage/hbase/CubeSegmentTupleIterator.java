@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 import org.apache.hadoop.hbase.client.HConnection;
@@ -178,6 +179,11 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             throw new IllegalStateException("Can't translate result " + result, e);
         }
         return this.tuple;
+    }
+
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
     }
 
     private void scanNextRange() {

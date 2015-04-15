@@ -126,7 +126,8 @@ public class EndpointTupleIterator implements ITupleIterator {
         this.pushedDownProjector = CoprocessorProjector.makeForEndpoint(tableRecordInfo, groupBy);
         this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
 
-        this.tsRange = TsConditionExtractor.extractTsCondition(tableRecordInfo, this.columns, rootFilter);
+        int tsCol = this.tableRecordInfo.getTimestampColumn();
+        this.tsRange = TsConditionExtractor.extractTsCondition(this.columns.get(tsCol), rootFilter);
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
         regionResponsesIterator = getResults(endpointRequest, table);
@@ -198,7 +199,13 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     @Override
-    public void close() {
+    public void remove() {
+        throw new UnsupportedOperationException();
+
+    }
+
+    @Override
+    public void close() throws IOException {
         IOUtils.closeQuietly(table);
         logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
     }
@@ -326,8 +333,13 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         @Override
-        public void close() {
+        public void remove() {
+            throw new UnsupportedOperationException();
 
+        }
+
+        @Override
+        public void close() {
         }
 
         private ITuple makeTuple(TableRecord tableRecord, List<Object> measureValues) {
