@@ -29,7 +29,7 @@ import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
-import org.apache.kylin.metadata.util.DateFormat;
+import org.apache.kylin.common.util.DateFormat;
 
 /**
  * @author xjiang

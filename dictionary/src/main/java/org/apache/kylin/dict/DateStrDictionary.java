@@ -18,7 +18,7 @@
 
 package org.apache.kylin.dict;
 
-import static org.apache.kylin.metadata.util.DateFormat.*;
+import static org.apache.kylin.common.util.DateFormat.*;
 
 import java.io.DataInput;
 import java.io.DataOutput;

@@ -1,6 +1,6 @@
 package org.apache.kylin.storage.cache;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -8,38 +8,52 @@ import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.MemoryUnit;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-import org.junit.Assert;
+
 import org.junit.Test;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
 public class EhcacheTest {
     @Test
-    public void basicTest() {
+    public void basicTest() throws InterruptedException {
         CacheManager cacheManager = CacheManager.create();
 
         //Create a Cache specifying its configuration.
-        Cache testCache = new Cache(new CacheConfiguration("test", 0).//
-                memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LFU).//
+        Cache testCache = //Create a Cache specifying its configuration.
+        new Cache(new CacheConfiguration("test", 0).//
+                memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LRU).//
                 eternal(false).//
                 timeToIdleSeconds(86400).//
                 diskExpiryThreadIntervalSeconds(0).//
-                maxBytesLocalHeap(500, MemoryUnit.MEGABYTES).//
-                persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.LOCALTEMPSWAP)));
+                maxBytesLocalHeap(100, MemoryUnit.MEGABYTES).//
+                persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.NONE)));
 
         cacheManager.addCache(testCache);
-        testCache.put(new Element("x", Lists.<String> newArrayList()));
 
-        List<String> v = (List<String>) testCache.get("x").getObjectValue();
-        Assert.assertTrue(v.size() == 0);
-        v.add("hi");
-
-        List<String> v2 = (List<String>) testCache.get("x").getObjectValue();
-        Assert.assertTrue(v2.size() == 1);
-
+        //
+        //        byte[] blob2 = new byte[(1024 * 400 * 1024)];//400M
+        //
+        //        testCache.put(new Element("1", blob));
+        //        System.out.println(testCache.get("1") == null);
+        //        System.out.println(testCache.getSize());
+        //        System.out.println(testCache.getStatistics().getLocalHeapSizeInBytes());
+        //        System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
+        //        testCache.put(new Element("2", blob));
+        //        System.out.println(testCache.get("1") == null);
+        //        System.out.println(testCache.getSize());
+        //        System.out.println(testCache.getStatistics().getLocalHeapSizeInBytes());
+        //        System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
+        //        testCache.put(new Element("3", blob));
+        //        System.out.println(testCache.get("1") == null);
+        //        System.out.println(testCache.get("2") == null);
+        //        System.out.println(testCache.get("3") == null);
+        //        System.out.println(testCache.getSize());
+        //        System.out.println(testCache.getStatistics().getLocalHeapSizeInBytes());
+        //        System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
 
         cacheManager.shutdown();
     }

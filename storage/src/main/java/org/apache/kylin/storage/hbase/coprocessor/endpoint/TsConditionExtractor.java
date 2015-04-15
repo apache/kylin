@@ -4,7 +4,7 @@ import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.util.DateFormat;
+import org.apache.kylin.common.util.DateFormat;
 
 import com.google.common.collect.Range;
 
