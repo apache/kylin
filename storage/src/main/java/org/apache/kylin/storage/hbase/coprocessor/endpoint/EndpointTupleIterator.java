@@ -205,7 +205,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         IOUtils.closeQuietly(table);
         logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
     }
@@ -288,6 +288,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     /**
      * Internal class to handle iterators for a single region's returned rows
+     *
      */
     class SingleRegionTupleIterator implements ITupleIterator {
         private List<IIProtos.IIResponse.IIRow> rows;
@@ -335,7 +336,6 @@ public class EndpointTupleIterator implements ITupleIterator {
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
-
         }
 
         @Override

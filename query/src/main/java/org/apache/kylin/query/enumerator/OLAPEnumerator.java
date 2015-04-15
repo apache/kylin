@@ -90,7 +90,8 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     @Override
     public void close() {
-        IOUtils.closeQuietly(cursor);
+        if (cursor != null)
+            cursor.close();
     }
 
     private Object[] convertCurrentRow(ITuple tuple) {

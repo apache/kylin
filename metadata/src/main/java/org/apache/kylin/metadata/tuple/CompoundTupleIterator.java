@@ -1,10 +1,9 @@
 package org.apache.kylin.metadata.tuple;
 
-import com.google.common.collect.Iterators;
-
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+
+import com.google.common.collect.Iterators;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/14/15.
@@ -19,7 +18,7 @@ public class CompoundTupleIterator implements ITupleIterator {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         for (ITupleIterator i : backends) {
             i.close();
         }
