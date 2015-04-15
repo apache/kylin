@@ -24,6 +24,11 @@ public class SerializedCubeTupleIterator implements ITupleIterator {
     }
 
     @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void close() {
         // TODO Auto-generated method stub
 

@@ -70,7 +70,8 @@ public class TsConditionExtractorTest extends LocalFileMetadataTestCase {
         CompareTupleFilter aFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
         aFilter.addChild(new ColumnTupleFilter(calDt));
         aFilter.addChild(new ConstantTupleFilter("2000-01-01"));
-        Range<Long> range = TsConditionExtractor.extractTsCondition(tableRecordInfo, ii.getAllColumns(), aFilter);
+
+        Range<Long> range = TsConditionExtractor.extractTsCondition(ii.getAllColumns().get(tableRecordInfo.getTimestampColumn()), aFilter);
         Assert.assertEquals(946684800000L, range.lowerEndpoint().longValue());
         Assert.assertEquals(BoundType.OPEN, range.lowerBoundType());
         Assert.assertTrue(!range.hasUpperBound());
@@ -97,7 +98,7 @@ public class TsConditionExtractorTest extends LocalFileMetadataTestCase {
         LogicalTupleFilter rootFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
         rootFilter.addChildren(Lists.newArrayList(aFilter, bFilter, cFilter, dFilter));
 
-        Range<Long> range = TsConditionExtractor.extractTsCondition(tableRecordInfo, ii.getAllColumns(), rootFilter);
+        Range<Long> range = TsConditionExtractor.extractTsCondition(ii.getAllColumns().get(tableRecordInfo.getTimestampColumn()), rootFilter);
 
         Assert.assertEquals(946684800000L, range.lowerEndpoint().longValue());
         Assert.assertEquals(946771200000L, range.upperEndpoint().longValue());
@@ -133,7 +134,7 @@ public class TsConditionExtractorTest extends LocalFileMetadataTestCase {
         LogicalTupleFilter root = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
         root.addChildren(Lists.newArrayList(subRoot, outFilter));
 
-        Range<Long> range = TsConditionExtractor.extractTsCondition(tableRecordInfo, ii.getAllColumns(), root);
+        Range<Long> range = TsConditionExtractor.extractTsCondition(ii.getAllColumns().get(tableRecordInfo.getTimestampColumn()), root);
 
         Assert.assertEquals(946684800000L, range.lowerEndpoint().longValue());
         Assert.assertEquals(946771200000L, range.upperEndpoint().longValue());

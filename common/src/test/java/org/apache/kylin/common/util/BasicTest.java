@@ -22,20 +22,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Range;
-import com.google.common.collect.Ranges;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.lang.math.IntRange;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
 
 /**
 * Created by honma on 10/17/14.
@@ -70,8 +66,8 @@ public class BasicTest {
     public void test1() throws Exception {
 
 
-        System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(4, 10)));
-        System.out.println(Ranges.open(4, 10).isConnected(Ranges.open(3,5)));
+        System.out.println(Range.open(3, 5).isConnected(Range.open(4, 10)));
+        System.out.println(Range.open(4, 10).isConnected(Range.open(3,5)));
 
 
         String bb = "\\x00\\x00\\x00\\x00\\x01\\x3F\\xD0\\x2D\\58\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/07/12 07:59:37
