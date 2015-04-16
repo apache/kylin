@@ -77,6 +77,8 @@ import java.util.concurrent.Future;
 
 /**
  * Created by qianzhou on 3/9/15.
+ *
+ * This class is going to be deleted
  */
 @Ignore("For dev testing")
 public class BuildCubeWithStreamTest {

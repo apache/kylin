@@ -569,13 +569,17 @@
                         <configuration>
                             <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
+                                <!--Build cube/II need to be run separately-->
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
-                                <exclude>**/KylinQueryTest.java</exclude>
-                                <exclue>**/SnapshotManagerTest.java</exclue>
-                                <exclue>**/HiveTableReaderTest.java</exclue>
+                                <exclude>**/BuildIIWithStreamTest.java</exclude>
+                                <exclude>**/IIStreamBuilderTest.java</exclude>
+
+                                <!--minicluster does not have hive-->
+                                <exclude>**/SnapshotManagerTest.java</exclude>
+                                <exclude>**/HiveTableReaderTest.java</exclude>
                                 <exclude>**/TableControllerTest.java</exclude>
+
                                 <exclude>**/Kafka*Test.java</exclude>
 				                <exclude>**/RequesterTest.java</exclude>
                             </excludes>
@@ -611,12 +615,12 @@
                         <configuration>
                             <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
+                                <!--Build cube/II need to be run separately-->
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithStreamTest.java</exclude>
                                 <exclude>**/IIStreamBuilderTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
-                                <exclude>**/KylinQueryTest.java</exclude>
+
                                 <exclude>**/Kafka*Test.java</exclude>
                                 <exclude>**/RequesterTest.java</exclude>
                             </excludes>

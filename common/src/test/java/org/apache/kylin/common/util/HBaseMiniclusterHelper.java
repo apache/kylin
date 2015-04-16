@@ -64,7 +64,6 @@ public class HBaseMiniclusterHelper {
      * @throws Exception
      */
     public static void startupMinicluster() throws Exception {
-        HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.MINICLUSTER_TEST_DATA);
 
         if (!clusterStarted) {
             synchronized (HBaseMiniclusterHelper.class) {
@@ -157,6 +156,7 @@ public class HBaseMiniclusterHelper {
         HBaseMiniclusterHelper t = new HBaseMiniclusterHelper();
         logger.info(t);
         try {
+            HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.MINICLUSTER_TEST_DATA);
             HBaseMiniclusterHelper.startupMinicluster();
         } catch (Exception e) {
             e.printStackTrace();

@@ -46,7 +46,7 @@ public class ProjectControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
 
         projectController = new ProjectController();
         projectController.setProjectService(projectService);

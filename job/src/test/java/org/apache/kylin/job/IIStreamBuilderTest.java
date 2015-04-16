@@ -51,7 +51,7 @@ import java.io.IOException;
 /**
  * Created by qianzhou on 3/6/15.
  */
-public class IIStreamBuilderTest extends HBaseMetadataTestCase {
+public class IIStreamBuilderTest  {
 
     private static final Logger logger = LoggerFactory.getLogger(IIStreamBuilderTest.class);
 
@@ -90,6 +90,7 @@ public class IIStreamBuilderTest extends HBaseMetadataTestCase {
     @Before
     public void before() throws Exception {
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+
         kylinConfig = KylinConfig.getInstanceFromEnv();
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();

@@ -51,7 +51,7 @@ public class UserControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
 
         userController = new UserController();
     }

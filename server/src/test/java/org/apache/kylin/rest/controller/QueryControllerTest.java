@@ -44,7 +44,7 @@ public class QueryControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
 
         queryController = new QueryController();
         queryController.setQueryService(queryService);
