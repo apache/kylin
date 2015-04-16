@@ -348,6 +348,10 @@ KylinApp
 
         };
 
+        $scope.cubeEdit = function(cube){
+            $location.path("cubes/edit/"+cube.name);
+        }
+
         $scope.startMerge = function (cube) {
             $scope.loadDetail(cube).then(function(){
               $modal.open({
