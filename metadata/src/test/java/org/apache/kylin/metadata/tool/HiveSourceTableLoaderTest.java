@@ -18,28 +18,28 @@
 
 package org.apache.kylin.metadata.tool;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Set;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.metadata.util.HiveSourceTableLoader;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class HiveSourceTableLoaderTest extends HBaseMetadataTestCase {
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        staticCreateTestMetadata();
+    @Before
+    public void setup() throws Exception {
+        super.createTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
-        staticCleanupTestMetadata();
+    @After
+    public  void after() throws Exception {
+        super.cleanupTestMetadata();
     }
 
     @Test

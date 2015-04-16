@@ -43,7 +43,7 @@ public class TableControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
 
         tableController = new TableController();
         tableController.setCubeService(cubeService);

@@ -43,7 +43,7 @@ public class AdminControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
         adminController = new AdminController();
         adminController.setAdminService(adminService);
         adminController.setCubeMgmtService(cubeService);

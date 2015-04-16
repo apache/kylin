@@ -43,7 +43,6 @@ public class ServiceTestBase extends HBaseMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {
-        staticCreateTestMetadata();
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
@@ -53,7 +52,7 @@ public class ServiceTestBase extends HBaseMetadataTestCase {
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setup() throws Exception {
         this.createTestMetadata();
 
         MetadataManager.clearCache();

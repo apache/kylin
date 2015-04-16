@@ -63,17 +63,17 @@ public class JobControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
 
         jobSchedulerController = new JobController();
         jobSchedulerController.setJobService(jobService);
         cubeController = new CubeController();
         cubeController.setJobService(jobService);
         cubeController.setCubeService(cubeService);
+
         KylinConfig testConfig = getTestConfig();
         cubeManager = CubeManager.getInstance(testConfig);
         cubeDescManager = CubeDescManager.getInstance(testConfig);
-
         executableDAO = ExecutableDao.getInstance(testConfig);
 
     }

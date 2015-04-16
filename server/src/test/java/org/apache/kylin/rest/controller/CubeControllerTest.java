@@ -52,7 +52,7 @@ public class CubeControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
 
         cubeController = new CubeController();
         cubeController.setCubeService(cubeService);

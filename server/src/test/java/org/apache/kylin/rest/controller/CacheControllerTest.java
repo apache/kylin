@@ -38,7 +38,7 @@ public class CacheControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
 
         cacheController = new CacheController();
         cacheController.setCacheService(cacheService);

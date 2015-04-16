@@ -43,7 +43,7 @@ public class AccessControllerTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-        super.setUp();
+        super.setup();
 
         accessController = new AccessController();
         accessController.setAccessService(accessService);

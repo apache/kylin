@@ -22,7 +22,6 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 
@@ -46,10 +45,9 @@ public class KylinQueryTest extends KylinTestBase {
 
     @BeforeClass
     public static void setUp() throws Exception {
-
         printInfo("setUp in KylinQueryTest");
-
         joinType = "left";
+
         setupAll();
     }
 
@@ -58,31 +56,20 @@ public class KylinQueryTest extends KylinTestBase {
         printInfo("tearDown");
         printInfo("Closing connection...");
         clean();
-
     }
 
     protected static void setupAll() throws Exception {
-        setUpEnv();
-        setUpCubeConn();
-        setUpH2Conn();
-    }
-
-    private static void setUpEnv() throws Exception {
+        //setup env
         HBaseMetadataTestCase.staticCreateTestMetadata();
-
         config = KylinConfig.getInstanceFromEnv();
-    }
 
-    private static void setUpCubeConn() throws SQLException {
-        // Cube Connection
+        //setup cube conn
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(ProjectInstance.DEFAULT_PROJECT_NAME, config);
         Properties props = new Properties();
         props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "10000");
         cubeConnection = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath(), props);
-    }
 
-    private static void setUpH2Conn() throws SQLException {
-        // H2 Connection
+        //setup h2
         h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++), "sa", "");
         // Load H2 Tables (inner join)
         H2Database h2DB = new H2Database(h2Connection, config);

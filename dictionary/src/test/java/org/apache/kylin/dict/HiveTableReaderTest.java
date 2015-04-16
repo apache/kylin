@@ -26,11 +26,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * This test case need the hive runtime; Please run it with sandbox; It is in the exclude list of default profile in pom.xml
+ * This test case need the hive runtime; Please run it with sandbox;
  * @author shaoshi
  *
+ * It is in the exclude list of default profile in pom.xml
  */
 public class HiveTableReaderTest extends HBaseMetadataTestCase {
+
 
     @Test
     public void test() throws IOException {
