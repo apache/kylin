@@ -37,7 +37,7 @@ public class HBaseMiniclusterHelper {
 
     public static final String SHARED_STORAGE_PREFIX = "KYLIN_";
     public static final String CUBE_STORAGE_PREFIX = "KYLIN_";
-    public static final String II_STORAGE_PREFIX = "KYLIN_II";
+    public static final String II_STORAGE_PREFIX = "KYLIN_II_";
     public static final String TEST_METADATA_TABLE = "kylin_metadata";
 
     private static final String hbaseTarLocation = "../examples/test_case_data/minicluster/hbase-export.tar.gz";
