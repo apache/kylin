@@ -63,6 +63,7 @@ import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -120,14 +121,9 @@ public class BuildIIWithStreamTest {
     }
 
     private static int cleanupOldStorage() throws Exception {
-        return 0;
-
-        //do not delete intermediate files for debug purpose
-
-        //        String[] args = {"--delete", "true"};
-        //
-        //        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        //        return exitCode;
+        String[] args = { "--delete", "true" };
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
     }
 
     private static void backup() throws Exception {
