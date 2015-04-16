@@ -1,9 +1,11 @@
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.*;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.client.Result;
@@ -39,12 +41,15 @@ import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.StringStreamParser;
 import org.apache.kylin.streaming.invertedindex.SliceBuilder;
-import org.junit.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.*;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 3/26/15.

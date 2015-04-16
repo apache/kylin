@@ -1,5 +1,6 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
+import com.google.common.collect.Ranges;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -21,7 +22,7 @@ public class TsConditionExtractor {
 
         if (filter instanceof LogicalTupleFilter) {
             if (filter.getOperator() == TupleFilter.FilterOperatorEnum.AND) {
-                Range ret = Range.all();
+                Range ret = Ranges.all();
                 for (TupleFilter child : filter.getChildren()) {
                     Range childRange = extractTsConditionInternal(child, colRef);
                     if (childRange != null) {
@@ -45,19 +46,19 @@ public class TsConditionExtractor {
                 switch (compareTupleFilter.getOperator()) {
                 case EQ:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Range.closed(t, t);
+                    return Ranges.closed(t, t);
                 case LT:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Range.lessThan(t);
+                    return Ranges.lessThan(t);
                 case LTE:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Range.atMost(t);
+                    return Ranges.atMost(t);
                 case GT:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Range.greaterThan(t);
+                    return Ranges.greaterThan(t);
                 case GTE:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Range.atLeast(t);
+                    return Ranges.atLeast(t);
                 case NEQ:
                 case IN://not handled for now
                     break;

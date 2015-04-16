@@ -1,8 +1,7 @@
 package org.apache.kylin.storage.hybrid;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
+import javax.annotation.Nullable;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -18,7 +17,9 @@ import org.apache.kylin.storage.StorageEngineFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ranges;
 
 /**
  * Created by shaoshi on 2/13/15.
@@ -50,7 +51,7 @@ public class HybridStorageEngine implements IStorageEngine {
         TblColRef partitionColRef = modelDesc.getPartitionDesc().getPartitionDateColumnRef();
 
         ITupleIterator iterator2 = SQLDigestUtil.appendTsFilterToExecute(sqlDigest, partitionColRef, //
-                Range.atLeast(hybridInstance.getHistoryRealizationInstance().getDateRangeEnd()),//
+                Ranges.atLeast(hybridInstance.getHistoryRealizationInstance().getDateRangeEnd()),//
                 new Function<Void, ITupleIterator>() {
                     @Nullable
                     @Override
