@@ -46,7 +46,6 @@ import static org.junit.Assert.assertEquals;
  *
  * ii test
  */
-@Ignore("need to mock up TableRecordInfo")
 public class EndpointAggregationTest extends LocalFileMetadataTestCase {
 
     @Before
