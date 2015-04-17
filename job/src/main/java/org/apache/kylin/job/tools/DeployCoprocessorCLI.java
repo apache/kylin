@@ -46,6 +46,7 @@ import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kylin.common.KylinConfig;
@@ -304,11 +305,13 @@ public class DeployCoprocessorCLI {
         }
 
         for (IIInstance ii : IIManager.getInstance(config).listAllIIs()) {
-            for (IISegment seg : ii.getSegments(SegmentStatusEnum.READY)) {
-                String tableName = seg.getStorageLocationIdentifier();
-                if (StringUtils.isBlank(tableName) == false) {
-                    result.add(tableName);
-                    System.out.println("added new table: " + tableName);
+            if(ii.getStatus()== RealizationStatusEnum.READY) {
+                for (IISegment seg : ii.getSegments()) {//streaming segment is never "READY"
+                    String tableName = seg.getStorageLocationIdentifier();
+                    if (StringUtils.isBlank(tableName) == false) {
+                        result.add(tableName);
+                        System.out.println("added new table: " + tableName);
+                    }
                 }
             }
         }
