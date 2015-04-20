@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
@@ -75,7 +76,7 @@ public class AggregationScanner implements RegionScanner {
             if (filter != null && filter.evaluate(tuple) == false)
                 continue;
 
-            CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(results);
+            AggrKey aggKey = projector.getAggrKey(results);
             MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
             aggregators.aggregate(bufs, results);
 

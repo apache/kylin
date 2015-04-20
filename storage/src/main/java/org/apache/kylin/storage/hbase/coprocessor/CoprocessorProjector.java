@@ -19,11 +19,9 @@
 package org.apache.kylin.storage.hbase.coprocessor;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
@@ -102,18 +100,12 @@ public class CoprocessorProjector {
 
     // ============================================================================
 
-    final AggrKey aggrKey = new AggrKey();
+    final transient AggrKey aggrKey;
     final byte[] groupByMask; // mask out columns that are not needed (by group by)
-    final BitSet groupByMaskSet;
 
     public CoprocessorProjector(byte[] groupByMask) {
         this.groupByMask = groupByMask;
-        this.groupByMaskSet = new BitSet();
-        for (int i = 0; i < groupByMask.length; i++) {
-            if (groupByMask[i] != 0) {
-                groupByMaskSet.set(i);
-            }
-        }
+        this.aggrKey = new AggrKey(groupByMask);
     }
 
     public AggrKey getAggrKey(List<Cell> rowCells) {
@@ -130,71 +122,4 @@ public class CoprocessorProjector {
         return aggrKey;
     }
 
-    public class AggrKey implements Comparable<AggrKey> {
-        byte[] data;
-        int offset;
-
-        public byte[] get() {
-            return data;
-        }
-
-        public int offset() {
-            return offset;
-        }
-
-        public int length() {
-            return groupByMask.length;
-        }
-
-        void set(byte[] data, int offset) {
-            this.data = data;
-            this.offset = offset;
-        }
-
-        public AggrKey copy() {
-            AggrKey copy = new AggrKey();
-            copy.set(new byte[length()], 0);
-            System.arraycopy(this.data, this.offset, copy.data, copy.offset, length());
-            return copy;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 1;
-            for (int i = groupByMaskSet.nextSetBit(0); i >= 0; i = groupByMaskSet.nextSetBit(i + 1)) {
-                hash = (31 * hash) + data[offset + i];
-            }
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            AggrKey other = (AggrKey) obj;
-            if (this.length() != other.length())
-                return false;
-
-            return compareTo(other) == 0;
-        }
-
-        @Override
-        public int compareTo(AggrKey o) {
-            int comp = this.length() - o.length();
-            if (comp != 0)
-                return comp;
-
-            for (int i = groupByMaskSet.nextSetBit(0); i >= 0; i = groupByMaskSet.nextSetBit(i + 1)) {
-                comp = BytesUtil.compareByteUnsigned(this.data[this.offset + i], o.data[o.offset + i]);
-                if (comp != 0)
-                    return comp;
-            }
-            return 0;
-        }
-    }
-    
 }

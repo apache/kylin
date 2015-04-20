@@ -29,6 +29,7 @@ import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.junit.After;
 import org.junit.Before;
@@ -144,14 +145,14 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
         List<byte[]> rawData = mockData(tableRecordInfo);
         for (int i = 0; i < rawData.size(); ++i) {
             byte[] data = rawData.get(i);
-            CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
+            AggrKey aggKey = projector.getAggrKey(data);
             MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
             aggregators.aggregate(bufs, data);
             aggCache.checkMemoryUsage();
         }
         long sumTotal = 0;
         long minTotal = 0;
-        for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+        for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             sumTotal += ((LongWritable) entry.getValue()[0].getState()).get();
             minTotal += ((LongWritable) entry.getValue()[1].getState()).get();
 
