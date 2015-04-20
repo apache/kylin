@@ -210,9 +210,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
 
         DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
-        int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.name());
+        int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.toString());
 
-        logger.info("Chosen cut for htable is " + cut + "GB");
+        logger.info("Cube capacity " + cubeCapacity.toString() + ", chosen cut for HTable is " + cut + "GB");
 
         Map<Long, Long> cuboidSizeMap = Maps.newHashMap();
         long totalSizeInM = 0;

@@ -52,12 +52,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     private List<TblColRef> columnList = new ArrayList<TblColRef>();
     private boolean collectStatistics = false;
     private String statisticsOutput = null;
-    private List<Long> rowCountInMappers;
     private List<Long> baseCuboidRowCountInMappers;
-    private Map<Long, Long> rowKeyCountInCuboids;
+    private Map<Long, Long> rowCountInCuboids;
     protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
+    private long totalRowsBeforeMerge = 0;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -76,9 +76,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         statisticsOutput = conf.get(BatchConstants.CFG_STATISTICS_OUTPUT);
 
         if (collectStatistics) {
-            rowCountInMappers = Lists.newArrayList();
             baseCuboidRowCountInMappers = Lists.newArrayList();
-            rowKeyCountInCuboids = Maps.newHashMap();
+            rowCountInCuboids = Maps.newHashMap();
             cuboidHLLMap = Maps.newHashMap();
         }
     }
@@ -117,10 +116,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
                 ByteArray byteArray = new ByteArray(value.getBytes());
                 hll.readRegisters(byteArray.asBuffer());
 
-                if (cuboidId > baseCuboidId) {
-                    // if this is the summary info from a mapper, record the number before merge
-                    rowCountInMappers.add(hll.getCountEstimate());
-                } else if(cuboidId == baseCuboidId) {
+                totalRowsBeforeMerge += hll.getCountEstimate();
+
+                if (cuboidId == baseCuboidId) {
                     baseCuboidRowCountInMappers.add(hll.getCountEstimate());
                 }
 
@@ -140,7 +138,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         //output the hll info;
         if (collectStatistics) {
             for (Long cuboidId : cuboidHLLMap.keySet()) {
-                rowKeyCountInCuboids.put(cuboidId, cuboidHLLMap.get(cuboidId).getCountEstimate());
+                rowCountInCuboids.put(cuboidId, cuboidHLLMap.get(cuboidId).getCountEstimate());
             }
 
             writeMapperAndCuboidStatistics(context); // for human check
@@ -154,60 +152,49 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         FSDataOutputStream out = fs.create(new Path(statisticsOutput, BatchConstants.CFG_STATISTICS_CUBE_ESTIMATION));
 
         try {
-            long totalSum = 0;
             String msg;
 
+            List<Long> allCuboids = new ArrayList<Long>();
+            allCuboids.addAll(rowCountInCuboids.keySet());
+            Collections.sort(allCuboids);
+
+            msg = "Total cuboid number: \t" + allCuboids.size();
+            writeLine(out, msg);
+
+            long baseCuboidRow_max, baseCuboidRow_min, baseCuboidRow_avg;
             for (int i = 0; i < baseCuboidRowCountInMappers.size(); i++) {
                 if (baseCuboidRowCountInMappers.get(i) > 0) {
                     msg = "Base Cuboid in Mapper " + i + " row count: \t " + baseCuboidRowCountInMappers.get(i);
-                    out.write(msg.getBytes());
-                    out.write('\n');
+                    writeLine(out, msg);
                 }
             }
 
-
-            for (int i = 0; i < rowCountInMappers.size(); i++) {
-                if (rowCountInMappers.get(i) > 0) {
-                    msg = "Cube segment in Mapper " + i + " total row count: \t " + rowCountInMappers.get(i);
-                    totalSum += rowCountInMappers.get(i);
-                    out.write(msg.getBytes());
-                    out.write('\n');
-                }
-            }
-
-            msg = "Sum of all the cube segments is: \t " + totalSum;
-            out.write(msg.getBytes());
-            out.write('\n');
-
-
-            long grantTotal = rowKeyCountInCuboids.get(baseCuboidId + 1);
-            msg = "The merged cube has row count: \t " + grantTotal;
-            out.write(msg.getBytes());
-            out.write('\n');
-
-            msg = "The compaction rate is " + (grantTotal) + "/" + totalSum + " = " + (grantTotal * 100.0) / totalSum + "%.";
-            out.write(msg.getBytes());
-            out.write('\n');
-            out.write('\n');
-
-            List<Long> allCuboids = new ArrayList<Long>();
-            allCuboids.addAll(rowKeyCountInCuboids.keySet());
-            Collections.sort(allCuboids);
+            long grantTotal = 0;
             for (long i : allCuboids) {
-                if (i <= baseCuboidId) {
-                    msg = "Cuboid " + i + " row count is: \t " + rowKeyCountInCuboids.get(i);
-                } else {
-                    msg = "Total row count is: \t " + rowKeyCountInCuboids.get(i);
-                }
-                out.write(msg.getBytes());
-                out.write('\n');
+                grantTotal += rowCountInCuboids.get(i);
+                msg = "Cuboid " + i + " row count is: \t " + rowCountInCuboids.get(i);
+                writeLine(out, msg);
             }
+
+            msg = "Sum of all the cube segments (before merge) is: \t " + totalRowsBeforeMerge;
+            writeLine(out, msg);
+
+            msg = "After merge, the cube has row count: \t " + grantTotal;
+            writeLine(out, msg);
+
+            msg = "The compaction factor is: \t" + totalRowsBeforeMerge / grantTotal;
+            writeLine(out, msg);
 
         } finally {
             out.close();
         }
     }
 
+    private void writeLine(FSDataOutputStream out, String msg) throws IOException {
+        out.write(msg.getBytes());
+        out.write('\n');
+
+    }
 
     private void writeCuboidStatistics(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
@@ -217,13 +204,11 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
                 SequenceFile.Writer.valueClass(LongWritable.class));
 
         List<Long> allCuboids = new ArrayList<Long>();
-        allCuboids.addAll(rowKeyCountInCuboids.keySet());
+        allCuboids.addAll(rowCountInCuboids.keySet());
         Collections.sort(allCuboids);
         try {
             for (long i : allCuboids) {
-                if (i <= baseCuboidId) {
-                    writer.append(new LongWritable(i), new LongWritable(rowKeyCountInCuboids.get(i)));
-                }
+                writer.append(new LongWritable(i), new LongWritable(rowCountInCuboids.get(i)));
             }
         } finally {
             writer.close();

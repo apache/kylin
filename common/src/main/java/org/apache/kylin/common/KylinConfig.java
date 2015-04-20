@@ -671,12 +671,15 @@ public class KylinConfig {
         switch (capacity) {
             case "SMALL":
                 cut = getProperty(HBASE_REGION_CUT_SMALL, "5");
+                break;
             case "MEDIUM":
                 cut = getProperty(HBASE_REGION_CUT_MEDIUM, "10");
+                break;
             case "LARGE":
                 cut = getProperty(HBASE_REGION_CUT_LARGE, "50");
+                break;
             default:
-                cut = "5";
+                throw new IllegalArgumentException("Capacity not recognized: " + capacity);
         }
 
         return Integer.valueOf(cut);
