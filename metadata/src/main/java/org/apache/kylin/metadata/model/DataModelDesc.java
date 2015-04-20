@@ -119,7 +119,7 @@ public class DataModelDesc extends RootPersistentEntity {
         this.capacity = capacity;
     }
 
-    public TblColRef findPKByFK(TblColRef fk) {
+    public TblColRef findPKByFK(TblColRef fk, String joinType) {
         assert isFactTable(fk.getTable());
 
         TblColRef candidate = null;
@@ -127,6 +127,9 @@ public class DataModelDesc extends RootPersistentEntity {
         for (LookupDesc dim : lookups) {
             JoinDesc join = dim.getJoin();
             if (join == null)
+                continue;
+
+            if(joinType != null && !joinType.equals(join.getType()))
                 continue;
 
             int find = ArrayUtils.indexOf(join.getForeignKeyColumns(), fk);
