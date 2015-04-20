@@ -141,4 +141,65 @@ public class TsConditionExtractorTest extends LocalFileMetadataTestCase {
         Assert.assertEquals(BoundType.OPEN, range.lowerBoundType());
         Assert.assertEquals(BoundType.CLOSED, range.upperBoundType());
     }
+
+    @Test
+    public void testComplexConflictFilter() {
+        CompareTupleFilter aFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
+        aFilter.addChild(new ColumnTupleFilter(calDt));
+        aFilter.addChild(new ConstantTupleFilter("2000-01-01"));
+
+        CompareTupleFilter bFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        bFilter.addChild(new ColumnTupleFilter(calDt));
+        bFilter.addChild(new ConstantTupleFilter("1999-01-03"));
+
+        CompareTupleFilter cFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        cFilter.addChild(new ColumnTupleFilter(calDt));
+        cFilter.addChild(new ConstantTupleFilter("2000-01-02"));
+
+        CompareTupleFilter dFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
+        dFilter.addChild(new ColumnTupleFilter(siteId));
+        dFilter.addChild(new ConstantTupleFilter("0"));
+
+        LogicalTupleFilter rootFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        rootFilter.addChildren(Lists.newArrayList(aFilter, bFilter, cFilter, dFilter));
+
+        Range<Long> range = TsConditionExtractor.extractTsCondition(ii.getAllColumns().get(tableRecordInfo.getTimestampColumn()), rootFilter);
+
+        Assert.assertTrue(range == null);
+
+    }
+
+    @Test
+    public void testMoreComplexConflictFilter() {
+        CompareTupleFilter aFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
+        aFilter.addChild(new ColumnTupleFilter(calDt));
+        aFilter.addChild(new ConstantTupleFilter("2000-01-01"));
+
+        CompareTupleFilter bFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        bFilter.addChild(new ColumnTupleFilter(calDt));
+        bFilter.addChild(new ConstantTupleFilter("2000-01-04"));
+
+        CompareTupleFilter cFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        cFilter.addChild(new ColumnTupleFilter(calDt));
+        cFilter.addChild(new ConstantTupleFilter("2000-01-03"));
+
+        CompareTupleFilter dFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
+        dFilter.addChild(new ColumnTupleFilter(siteId));
+        dFilter.addChild(new ConstantTupleFilter("0"));
+
+        LogicalTupleFilter subRoot = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        subRoot.addChildren(Lists.newArrayList(aFilter, bFilter, cFilter, dFilter));
+
+        CompareTupleFilter outFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
+        outFilter.addChild(new ColumnTupleFilter(calDt));
+        outFilter.addChild(new ConstantTupleFilter("1999-01-02"));
+
+        LogicalTupleFilter root = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
+        root.addChildren(Lists.newArrayList(subRoot, outFilter));
+
+        Range<Long> range = TsConditionExtractor.extractTsCondition(ii.getAllColumns().get(tableRecordInfo.getTimestampColumn()), root);
+
+        Assert.assertTrue(range == null);
+
+    }
 }

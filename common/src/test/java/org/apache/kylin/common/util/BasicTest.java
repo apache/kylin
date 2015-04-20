@@ -22,16 +22,14 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.*;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.*;
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ranges;
 
 /**
 * Created by honma on 10/17/14.
@@ -65,9 +63,7 @@ public class BasicTest {
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
 
-
-        System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(3,10)));
-
+        System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(3, 10)));
 
         String bb = "\\x00\\x00\\x00\\x00\\x01\\x3F\\xD0\\x2D\\58\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/07/12 07:59:37
         String cc = "\\x00\\x00\\x00\\x00\\x01\\x41\\xBE\\x8F\\xD8\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/10/16 08:00:00

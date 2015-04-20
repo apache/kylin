@@ -25,7 +25,7 @@ import java.util.Iterator;
  *
  */
 public interface ITupleIterator extends Iterator<ITuple> {
-    public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
+    ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
         @Override
         public boolean hasNext() {
             return false;
@@ -47,7 +47,7 @@ public interface ITupleIterator extends Iterator<ITuple> {
 
     };
 
-    public void close();
+    void close();
 
     /**
      * if hasNext() returns false because there's no more data, return true

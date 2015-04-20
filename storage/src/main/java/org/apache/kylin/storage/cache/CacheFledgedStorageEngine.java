@@ -2,7 +2,8 @@ package org.apache.kylin.storage.cache;
 
 import java.util.List;
 
-import com.google.common.collect.Ranges;
+import javax.annotation.Nullable;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -23,15 +24,13 @@ import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.TsConditionExtractor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/13/15.
@@ -89,9 +88,11 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
         }
 
         Range<Long> ts = TsConditionExtractor.extractTsCondition(partitionColRef, sqlDigest.filter);
-        //TODO:
-        if (ts == null)
-            ts = Ranges.all();
+        if (ts == null || ts.isEmpty()) {
+            logger.info("ts range in the query conflicts,return empty directly");
+            return ITupleIterator.EMPTY_TUPLE_ITERATOR;
+        }
+
         final Range<Long> tsRange = ts;
 
         ITupleIterator ret = null;
@@ -140,7 +141,7 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
                 @Override
                 public Void apply(List<ITuple> input) {
                     //TODO: tsRange needs updated
-                    StreamSQLResult newCacheEntry = new StreamSQLResult(input, tsRange);
+                    StreamSQLResult newCacheEntry = new StreamSQLResult(input, tsRange, partitionColRef);
                     cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).put(new Element(streamSQLDigest, newCacheEntry));
                     logger.debug("current cache: " + newCacheEntry);
                     return null;

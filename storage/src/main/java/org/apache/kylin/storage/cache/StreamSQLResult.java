@@ -2,10 +2,19 @@ package org.apache.kylin.storage.cache;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.NavigableMap;
+
+import javax.annotation.Nullable;
 
 import org.apache.kylin.common.util.RangeUtil;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.storage.tuple.Tuple;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 
 /**
@@ -13,11 +22,27 @@ import com.google.common.collect.Range;
  */
 
 public class StreamSQLResult {
-    private List<ITuple> rows;
     private Range<Long> timeCovered;
+    private NavigableMap<Long, List<ITuple>> sortedRows;
 
-    public StreamSQLResult(List<ITuple> rows, Range<Long> timeCovered) {
-        this.rows = rows;
+    public StreamSQLResult(List<ITuple> rows, Range<Long> timeCovered, TblColRef partitionCol) {
+        sortedRows = Maps.newTreeMap();
+        for (ITuple row : rows) {
+
+            //TODO: differeniate between partitionCol types
+            long t;
+            if (partitionCol.getDatatype().equals("date")) {
+                t = Tuple.epicDaysToMillis(Integer.valueOf(row.getValue(partitionCol).toString()));
+            } else {
+                t = Long.valueOf(row.getValue(partitionCol).toString());
+            }
+
+            if (!this.sortedRows.containsKey(t)) {
+                this.sortedRows.put(t, Lists.newArrayList(row));
+            } else {
+                this.sortedRows.get(t).add(row);
+            }
+        }
         this.timeCovered = timeCovered;
     }
 
@@ -36,12 +61,18 @@ public class StreamSQLResult {
     }
 
     public Iterator<ITuple> reuse(Range<Long> reusablePeriod) {
-        //TODO: currently regardless of reusablePeriod, all rows are returned
-        return rows.iterator();
+        NavigableMap<Long, List<ITuple>> submap = RangeUtil.filter(sortedRows, reusablePeriod);
+        return Iterators.concat(Iterators.transform(submap.values().iterator(), new Function<List<ITuple>, Iterator<ITuple>>() {
+            @Nullable
+            @Override
+            public Iterator<ITuple> apply(List<ITuple> input) {
+                return input.iterator();
+            }
+        }));
     }
 
     @Override
     public String toString() {
-        return rows.size() + " tuples cached for period " + RangeUtil.formatTsRange(timeCovered);
+        return sortedRows.size() + " tuples cached for period " + RangeUtil.formatTsRange(timeCovered);
     }
 }
