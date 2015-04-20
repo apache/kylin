@@ -211,9 +211,9 @@ public class DictionaryManager {
 
         // normal case, source from lookup table
         if ("true".equals(dict) || "string".equals(dict) || "number".equals(dict) || "any".equals(dict)) {
-            // FK on fact table, use PK from lookup instead
+            // FK on fact table and join type is inner, use PK from lookup instead
             if (model.isFactTable(col.getTable())) {
-                TblColRef pkCol = model.findPKByFK(col);
+                TblColRef pkCol = model.findPKByFK(col, "inner");
                 if (pkCol != null)
                     col = pkCol; // scan the counterparty PK on lookup table
                 // instead
