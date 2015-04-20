@@ -13,6 +13,18 @@ import com.google.common.collect.Ranges;
 public class RangeTest {
 
     @Test
+    public void extremeCase()
+    {
+        Range r1 = Ranges.all();
+        Range r2 = Ranges.all();
+
+        Range a = Ranges.closedOpen(2, 5);
+
+        Assert.assertTrue(RangeUtil.remove(r1, r2).equals(Lists.newArrayList()));
+        Assert.assertTrue(RangeUtil.remove(r1, a).equals(Lists.newArrayList(Ranges.lessThan(2),Ranges.atLeast(5))));
+    }
+
+    @Test
     public void testClosed() {
 
         Range anull = Ranges.closedOpen(0, 0);

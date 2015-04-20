@@ -66,8 +66,7 @@ public class BasicTest {
     public void test1() throws Exception {
 
 
-        System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(4, 10)));
-        System.out.println(Ranges.open(4, 10).isConnected(Ranges.open(3,5)));
+        System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(3,10)));
 
 
         String bb = "\\x00\\x00\\x00\\x00\\x01\\x3F\\xD0\\x2D\\58\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/07/12 07:59:37

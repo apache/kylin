@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -36,6 +37,7 @@ import org.apache.kylin.common.util.DateFormat;
  */
 public class Tuple implements ITuple {
 
+    @IgnoreSizeOf
     private final TupleInfo info;
     private final Object[] values;
 

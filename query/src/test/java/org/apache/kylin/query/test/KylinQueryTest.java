@@ -146,6 +146,11 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testCachedQuery() throws Exception {
+        execAndCompQuery("src/test/resources/query/sql_cache", null, true);
+    }
+
+    @Test
     public void testDerivedColumnQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_derived", null, true);
     }

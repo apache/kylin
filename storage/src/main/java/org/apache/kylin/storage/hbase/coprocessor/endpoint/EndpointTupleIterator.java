@@ -28,6 +28,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.TableRecord;
@@ -128,6 +129,13 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         int tsCol = this.tableRecordInfo.getTimestampColumn();
         this.tsRange = TsConditionExtractor.extractTsCondition(this.columns.get(tsCol), rootFilter);
+
+        if (this.tsRange == null) {
+            logger.info("TsRange conflict for endpoint, return empty directly");
+            this.tupleIterator = ITupleIterator.EMPTY_TUPLE_ITERATOR;
+        } else {
+            logger.info("The tsRange being pushed is " + RangeUtil.formatTsRange(tsRange));
+        }
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
         regionResponsesIterator = getResults(endpointRequest, table);
@@ -304,7 +312,7 @@ public class EndpointTupleIterator implements ITupleIterator {
             this.rows = rows;
             this.index = 0;
             this.tableRecord = tableRecordInfo.createTableRecord();
-            this.tuple = new Tuple(tupleInfo);
+
             rowKeyColumnIO = new RowKeyColumnIO(new ClearTextDictionary(tableRecordInfo));
         }
 
@@ -343,6 +351,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         private ITuple makeTuple(TableRecord tableRecord, List<Object> measureValues) {
+            this.tuple = new Tuple(tupleInfo);
             // groups
             List<String> columnValues = Lists.newArrayList();
             for (int i = 0; i < columns.size(); ++i) {
