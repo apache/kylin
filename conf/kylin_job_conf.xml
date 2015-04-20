@@ -58,8 +58,7 @@
         <description>Block replication</description>
     </property>
 
-    <!--Properties for calculating cube by splits, with which each Mapper need more mem to hold a full cube segment -->
-    <!--
+    <!--Properties for calculating cube by splits (in-mem), with which each Mapper need more mem to hold a full cube segment -->
     <property>
         <name>mapreduce.map.java.opts</name>
         <value>-Xmx3072m</value>
@@ -73,5 +72,21 @@
         <value>3600000</value>
         <description>Set task timeout to 1 hour</description>
     </property>
-    -->
+
+    <property>
+        <name>hive.merge.mapfiles</name>
+        <value>true</value>
+        <description>Enable hive file merge on mapper only job</description>
+    </property>
+    <property>
+        <name>hive.merge.mapredfiles</name>
+        <value>true</value>
+        <description>Enable hive file merge on map-reduce job</description>
+    </property>
+
+    <property>
+        <name>hive.merge.size.per.task</name>
+        <value>16000000</value>
+        <description>Size for the merged file: 16M</description>
+    </property>
 </configuration>
