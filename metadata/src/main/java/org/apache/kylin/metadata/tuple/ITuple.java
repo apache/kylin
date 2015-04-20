@@ -30,14 +30,14 @@ import org.apache.kylin.metadata.model.TblColRef;
  */
 public interface ITuple extends IEvaluatableTuple {
 
-    public List<String> getAllFields();
+    List<String> getAllFields();
 
-    public List<TblColRef> getAllColumns();
+    List<TblColRef> getAllColumns();
 
-    public Object[] getAllValues();
+    Object[] getAllValues();
 
     // declared from IEvaluatableTuple:  public Object getValue(TblColRef col);
 
-    public Object getValue(String field);
+    Object getValue(String field);
 
 }

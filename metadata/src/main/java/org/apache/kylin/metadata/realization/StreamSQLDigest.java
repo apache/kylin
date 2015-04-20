@@ -32,9 +32,6 @@ public class StreamSQLDigest {
         this.hashCode = 31 * nonFilterHashCode + (filterSerialized != null ? Arrays.hashCode(filterSerialized) : 0);
     }
 
-    public byte[] getFilterSerialized() {
-        return filterSerialized;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -45,7 +42,7 @@ public class StreamSQLDigest {
 
         StreamSQLDigest other = (StreamSQLDigest) o;
 
-        if (filterSerialized != null ? !Arrays.equals(filterSerialized, other.getFilterSerialized()) : other.getFilterSerialized() != null)
+        if (filterSerialized != null ? !Arrays.equals(filterSerialized, other.filterSerialized) : other.filterSerialized != null)
             return false;
         if (sqlDigest.aggregations != null ? !sqlDigest.aggregations.equals(other.sqlDigest.aggregations) : other.sqlDigest.aggregations != null)
             return false;

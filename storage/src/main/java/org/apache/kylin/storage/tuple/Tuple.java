@@ -125,6 +125,15 @@ public class Tuple implements ITuple {
         return sb.toString();
     }
 
+    public static long epicDaysToMillis(int days) {
+        return 1L * days * (1000 * 3600 * 24);
+    }
+
+    public static int millisToEpicDays(long millis)
+    {
+        return (int)(millis / (1000 * 3600 * 24));
+    }
+
     public static Object convertOptiqCellValue(String strValue, String dataType) {
         if (strValue == null)
             return null;
@@ -137,8 +146,7 @@ public class Tuple implements ITuple {
             // convert epoch time
             Date dateValue = DateFormat.stringToDate(strValue); // NOTE: forces GMT timezone
             long millis = dateValue.getTime();
-            long days = millis / (1000 * 3600 * 24);
-            return Integer.valueOf((int) days); // Optiq expects Integer instead of Long. by honma
+            return millisToEpicDays(millis);// Optiq expects Integer instead of Long. by honma
         } else if ("tinyint".equals(dataType)) {
             return Byte.valueOf(strValue);
         } else if ("short".equals(dataType) || "smallint".equals(dataType)) {

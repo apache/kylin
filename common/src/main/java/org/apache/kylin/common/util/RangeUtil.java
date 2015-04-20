@@ -2,6 +2,7 @@ package org.apache.kylin.common.util;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.NavigableMap;
 
 import com.google.common.collect.*;
 
@@ -9,6 +10,41 @@ import com.google.common.collect.*;
  * Created by Hongbin Ma(Binmahone) on 4/14/15.
  */
 public class RangeUtil {
+
+    /**
+     * for NavigableMap sorted by C, given a range of C, return the sub map whose key fails in the range
+     */
+    public static <C extends Comparable<?>, V> NavigableMap<C, V> filter(NavigableMap<C, V> values, Range<C> filterRange) {
+        if (filterRange == null || filterRange.isEmpty()) {
+            return Maps.newTreeMap();
+        } else if (filterRange.equals(Ranges.all())) {
+            return values;
+        }
+
+        if (filterRange.hasUpperBound() && !filterRange.hasLowerBound()) {
+            return values.headMap(filterRange.upperEndpoint(), upperBoundInclusive(filterRange));
+        } else if (filterRange.hasLowerBound() && !filterRange.hasUpperBound()) {
+            return values.tailMap(filterRange.lowerEndpoint(), lowerBoundInclusive(filterRange));
+        } else {
+            return values.subMap(filterRange.lowerEndpoint(), lowerBoundInclusive(filterRange),//
+                    filterRange.upperEndpoint(), upperBoundInclusive(filterRange));
+        }
+    }
+
+    public static <C extends Comparable<?>> boolean lowerBoundInclusive(Range<C> range) {
+        if (!range.hasLowerBound()) {
+            throw new IllegalArgumentException(("This range does not have lower bound" + range));
+        }
+        return range.lowerBoundType() == BoundType.CLOSED;
+    }
+
+    public static <C extends Comparable<?>> boolean upperBoundInclusive(Range<C> range) {
+        if (!range.hasUpperBound()) {
+            throw new IllegalArgumentException(("This range does not have upper bound" + range));
+        }
+        return range.upperBoundType() == BoundType.CLOSED;
+    }
+
     /**
      * remove from self the elements that exist in other
      * @return
@@ -91,7 +127,6 @@ public class RangeUtil {
                 }
             }
         }
-
 
         return ret;
 

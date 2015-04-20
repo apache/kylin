@@ -14,6 +14,11 @@ import com.google.common.collect.Range;
  */
 public class TsConditionExtractor {
 
+    /**
+     *
+     * @return null if the ts range conflicts with each other
+     *         Ranges.all() if no ts condition is defined(in surfaced ANDs)
+     */
     public static Range<Long> extractTsCondition(TblColRef tsColRef, TupleFilter rootFilter) {
         return extractTsConditionInternal(rootFilter, tsColRef);
     }
@@ -22,7 +27,7 @@ public class TsConditionExtractor {
 
         if (filter instanceof LogicalTupleFilter) {
             if (filter.getOperator() == TupleFilter.FilterOperatorEnum.AND) {
-                Range ret = Ranges.all();
+                Range<Long> ret = Ranges.all();
                 for (TupleFilter child : filter.getChildren()) {
                     Range childRange = extractTsConditionInternal(child, colRef);
                     if (childRange != null) {
@@ -31,18 +36,20 @@ public class TsConditionExtractor {
                         } else {
                             return null;
                         }
+                    } else {
+                        return null;
                     }
                 }
-                return ret;
+                return ret.isEmpty() ? null : ret;
             } else {
-                return null;
+                return Ranges.all();
             }
         }
 
         if (filter instanceof CompareTupleFilter) {
             CompareTupleFilter compareTupleFilter = (CompareTupleFilter) filter;
             if (compareTupleFilter.getColumn() == null)// column will be null at filters like " 1<>1"
-                return null;
+                return Ranges.all();
 
             if (compareTupleFilter.getColumn().equals(colRef)) {
                 Object firstValue = compareTupleFilter.getFirstValue();
@@ -70,6 +77,6 @@ public class TsConditionExtractor {
                 }
             }
         }
-        return null;
+        return Ranges.all();
     }
 }

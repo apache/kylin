@@ -22,6 +22,7 @@ message IIResponse {
     optional bytes measures = 2;
   }
   repeated IIRow rows = 1;
+  optional int64 lastFinalizedTime = 2;
 }
 
 service RowsService {
