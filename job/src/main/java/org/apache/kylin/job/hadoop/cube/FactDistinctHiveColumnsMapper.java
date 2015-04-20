@@ -18,12 +18,10 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hive.hcatalog.data.HCatRecord;
-import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
-import org.apache.hive.hcatalog.data.schema.HCatSchema;
-import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.RowConstants;
@@ -33,52 +31,84 @@ import org.apache.kylin.job.constant.BatchConstants;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 import java.util.Collection;
-import java.util.Map;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author yangli9
  */
 public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, HCatRecord> {
 
-    private HCatSchema schema = null;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
 
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
-    protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
-    protected HyperLogLogPlusCounter totalHll = null;
     protected int nRowKey;
-    private ByteBuffer byteBuffer = null;
+    private BitSet[] allCuboidsBitSet = null;
+    private HyperLogLogPlusCounter[] allCuboidsHLL = null;
+    private Long[] cuboidIds;
+    private BitSetIterator bitSetIterator = null;
 
     @Override
     protected void setup(Context context) throws IOException {
         super.setup(context);
 
-        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
 
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
             cuboidScheduler = new CuboidScheduler(cubeDesc);
-            cuboidHLLMap = Maps.newHashMap();
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
-            byteBuffer = ByteBuffer.allocate(1024 * 1024);
+
+            List<Long> cuboidIdList = Lists.newArrayList();
+            List<BitSet> allCuboidsBitSetList = Lists.newArrayList();
+            addCuboidBitSet(baseCuboidId, allCuboidsBitSetList, cuboidIdList);
+
+            allCuboidsBitSet = allCuboidsBitSetList.toArray(new BitSet[cuboidIdList.size()]);
+            cuboidIds = cuboidIdList.toArray(new Long[cuboidIdList.size()]);
+
+            allCuboidsHLL = new HyperLogLogPlusCounter[cuboidIds.length];
+            for (int i = 0; i < cuboidIds.length; i++) {
+                allCuboidsHLL[i] = new HyperLogLogPlusCounter(16);
+            }
+
+            bitSetIterator = new BitSetIterator();
+            bitSetIterator.bitSetIndexMap = intermediateTableDesc.getRowKeyColumnIndexes();
+        }
+    }
+
+    private void addCuboidBitSet(long cuboidId, List<BitSet> allCuboidsBitSet, List<Long> allCuboids) {
+        allCuboids.add(cuboidId);
+        BitSet bitSet = new BitSet(nRowKey);
+
+        long mask = Long.highestOneBit(baseCuboidId);
+        for (int i = 0; i < nRowKey; i++) {
+            if ((mask & cuboidId) > 0) {
+                bitSet.set(i);
+            }
+            mask = mask >> 1;
+        }
+
+        allCuboidsBitSet.add(bitSet);
+        Collection<Long> children = cuboidScheduler.getSpanningCuboid(cuboidId);
+        for (Long childId : children) {
+            addCuboidBitSet(childId, allCuboidsBitSet, allCuboids);
         }
     }
 
     @Override
     public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
+        String[] row = HiveTableReader.getRowAsStringArray(record);
         try {
             int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
-            HCatFieldSchema fieldSchema;
             for (int i : factDictCols) {
                 outputKey.set((long) i);
-                fieldSchema = schema.get(flatTableIndexes[i]);
-                Object fieldValue = record.get(fieldSchema.getName(), schema);
+                String fieldValue = row[flatTableIndexes[i]];
                 if (fieldValue == null)
                     continue;
-                byte[] bytes = Bytes.toBytes(fieldValue.toString());
+                byte[] bytes = Bytes.toBytes(fieldValue);
                 outputValue.set(bytes, 0, bytes.length);
                 context.write(outputKey, outputValue);
             }
@@ -87,61 +117,59 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         }
 
         if (collectStatistics) {
-            String[] row = HiveTableReader.getRowAsStringArray(record);
-            putRowKeyToHLL(row, baseCuboidId);
+            putRowKeyToHLL(row);
         }
     }
 
-    private void putRowKeyToHLL(String[] row, long cuboidId) {
-        byteBuffer.clear();
-        long mask = Long.highestOneBit(baseCuboidId);
-        for (int i = 0; i < nRowKey; i++) {
-            if ((mask & cuboidId) != 0) {
-                if (row[intermediateTableDesc.getRowKeyColumnIndexes()[i]] != null)
-                    byteBuffer.put(Bytes.toBytes(row[intermediateTableDesc.getRowKeyColumnIndexes()[i]]));
-                else
-                    byteBuffer.put((byte)0xff);
-            }
-            mask = mask >> 1;
+    private void putRowKeyToHLL(String[] row) {
+        for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {
+            bitSetIterator.array = row;
+            bitSetIterator.bitSet = allCuboidsBitSet[i];
+            bitSetIterator.currentPositon = -1;
+
+            allCuboidsHLL[i].add(StringUtils.join(bitSetIterator, ","));
+        }
+    }
+
+    class BitSetIterator implements Iterator<String> {
+
+        BitSet bitSet = null;
+        String[] array = null;
+        int[] bitSetIndexMap = null;
+        int currentPositon = -1;
+
+        @Override
+        public boolean hasNext() {
+            return bitSet.nextSetBit(currentPositon + 1) >= 0;
         }
 
-        HyperLogLogPlusCounter hll = cuboidHLLMap.get(cuboidId);
-        if (hll == null) {
-            hll = new HyperLogLogPlusCounter(16);
-            cuboidHLLMap.put(cuboidId, hll);
+        @Override
+        public String next() {
+            currentPositon = bitSet.nextSetBit(currentPositon + 1);
+            return array[bitSetIndexMap[currentPositon]];
         }
 
-        hll.add(byteBuffer.array(), 0, byteBuffer.position());
+        @Override
+        public void remove() {
 
-        Collection<Long> children = cuboidScheduler.getSpanningCuboid(cuboidId);
-        for (Long childId : children) {
-            putRowKeyToHLL(row, childId);
         }
-
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         if (collectStatistics) {
             ByteBuffer hllBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-            totalHll = new HyperLogLogPlusCounter(16);
             // output each cuboid's hll to reducer, key is 0 - cuboidId
-            for (Long cuboidId : cuboidHLLMap.keySet()) {
-                HyperLogLogPlusCounter hll = cuboidHLLMap.get(cuboidId);
-                totalHll.merge(hll); // merge each cuboid's counter to the total hll
-                outputKey.set(0 - cuboidId);
+            HyperLogLogPlusCounter hll;
+            for (int i = 0; i < cuboidIds.length; i++) {
+                hll = allCuboidsHLL[i];
+                outputKey.set(0 - cuboidIds[i]);
                 hllBuf.clear();
                 hll.writeRegisters(hllBuf);
                 outputValue.set(hllBuf.array(), 0, hllBuf.position());
                 context.write(outputKey, outputValue);
             }
 
-            //output the total hll for this mapper;
-            outputKey.set(0 - baseCuboidId - 1);
-            hllBuf.clear();
-            totalHll.writeRegisters(hllBuf);
-            outputValue.set(hllBuf.array(), 0, hllBuf.position());
-            context.write(outputKey, outputValue);
         }
     }
 
