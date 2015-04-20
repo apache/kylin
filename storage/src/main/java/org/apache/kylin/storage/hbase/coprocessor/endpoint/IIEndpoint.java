@@ -218,7 +218,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             while (iterator.hasNext()) {
                 final RawTableRecord rawTableRecord = iterator.next();
                 decodeWithDictionary(recordBuffer, rawTableRecord, localDictionaries, recordInfo, rowKeyColumnIO, type);
-                CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(recordBuffer);
+                AggrKey aggKey = projector.getAggrKey(recordBuffer);
                 MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
                 aggregators.aggregate(bufs, recordBuffer);
                 aggCache.checkMemoryUsage();
@@ -227,8 +227,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
         logger.info("Iterated Slices count: " + iteratedSliceCount);
 
-        for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
-            CoprocessorProjector.AggrKey aggrKey = entry.getKey();
+        for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+            AggrKey aggrKey = entry.getKey();
             IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
             int length = aggregators.serializeMetricValues(entry.getValue(), buffer);
             rowBuilder.setMeasures(ByteString.copyFrom(buffer, 0, length));
