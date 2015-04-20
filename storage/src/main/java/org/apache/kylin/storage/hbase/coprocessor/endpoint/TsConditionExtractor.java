@@ -26,7 +26,11 @@ public class TsConditionExtractor {
                 for (TupleFilter child : filter.getChildren()) {
                     Range childRange = extractTsConditionInternal(child, colRef);
                     if (childRange != null) {
-                        ret = ret.intersection(childRange);
+                        if (ret.isConnected(childRange) && !ret.intersection(childRange).isEmpty()) {
+                            ret = ret.intersection(childRange);
+                        } else {
+                            return null;
+                        }
                     }
                 }
                 return ret;

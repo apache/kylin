@@ -11,6 +11,7 @@ import com.google.common.collect.Range;
 /**
  * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
+
 public class StreamSQLResult {
     private List<ITuple> rows;
     private Range<Long> timeCovered;
@@ -21,10 +22,11 @@ public class StreamSQLResult {
     }
 
     public Range<Long> getReusableResults(Range<Long> tsRange) {
+
         if (tsRange.equals(timeCovered))
             return timeCovered;
 
-        if (timeCovered.isConnected(tsRange)) {
+        if (!timeCovered.isConnected(tsRange)) {
             //share nothing in common
             return null;
         }

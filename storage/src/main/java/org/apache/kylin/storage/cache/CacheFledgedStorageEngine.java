@@ -2,6 +2,7 @@ package org.apache.kylin.storage.cache;
 
 import java.util.List;
 
+import com.google.common.collect.Ranges;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -45,6 +46,7 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
     static CacheManager cacheManager;
 
     static {
+        // TODO: L4J [2015-04-20 10:44:03,817][WARN][net.sf.ehcache.pool.sizeof.ObjectGraphWalker] - The configured limit of 1,000 object references was reached while attempting to calculate the size of the object graph. Severe performance degradation could occur if the sizing operation continues. This can be avoided by setting the CacheManger or Cache <sizeOfPolicy> elements maxDepthExceededBehavior to "abort" or adding stop points with @IgnoreSizeOf annotations. If performance degradation is NOT an issue at the configured limit, raise the limit value using the CacheManager or Cache <sizeOfPolicy
         cacheManager = CacheManager.create();
 
         //Create a Cache specifying its configuration.
@@ -77,18 +79,28 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
 
     @Override
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest) {
-        final StreamSQLDigest streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
-        StreamSQLResult cachedResult = (StreamSQLResult) cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).get(streamSQLDigest).getObjectValue();
 
-        final Range<Long> tsRange = TsConditionExtractor.extractTsCondition(partitionColRef, sqlDigest.filter);
+        boolean needUpdateCache = true;
+        final StreamSQLDigest streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
+        StreamSQLResult cachedResult = null;
+        Element element = cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).get(streamSQLDigest);
+        if (element != null) {
+            cachedResult = (StreamSQLResult) element.getObjectValue();
+        }
+
+        Range<Long> ts = TsConditionExtractor.extractTsCondition(partitionColRef, sqlDigest.filter);
+        //TODO:
+        if (ts == null)
+            ts = Ranges.all();
+        final Range<Long> tsRange = ts;
 
         ITupleIterator ret = null;
         if (cachedResult != null) {
-            logger.debug("current cache    : " + cachedResult);
+            logger.debug("existing cache    : " + cachedResult);
             Range<Long> reusePeriod = cachedResult.getReusableResults(tsRange);
 
             logger.info("ts Range in query: " + RangeUtil.formatTsRange(tsRange));
-            logger.info("reusable range   : " + RangeUtil.formatTsRange(reusePeriod));
+            logger.info("potential reusable range   : " + RangeUtil.formatTsRange(reusePeriod));
 
             if (reusePeriod != null) {
 
@@ -105,31 +117,39 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
                     });
 
                     ret = new CompoundTupleIterator(Lists.newArrayList(reusedTuples, freshTuples));
+                } else if (remainings.size() == 0) {
+                    needUpdateCache = false;
+                    ret = new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
                 }
+                //if remaining size > 1, we skip using cache , i.e, ret will == null
             }
         }
 
         if (ret == null) {
-            logger.info("no cache is being leveraged");
+            logger.info("decision: not using cache");
             //cache cannot reuse case:
             ret = StorageEngineFactory.getStorageEngine(realization, false).search(context, sqlDigest);
         } else {
-            logger.info("cache is being leveraged");
+            logger.info("decision: use cache");
         }
 
-        //use another nested ITupleIterator to deal with cache
-        ITupleIterator tee = new TeeTupleIterator(ret, new Function<List<ITuple>, Void>() {
-            @Nullable
-            @Override
-            public Void apply(List<ITuple> input) {
-                //TODO: tsRange needs updated
-                StreamSQLResult newCache = new StreamSQLResult(input, tsRange);
-                cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).put(new Element(streamSQLDigest, newCache));
-                logger.debug("current cache: " + newCache);
-                return null;
-            }
-        });
+        if (needUpdateCache) {
+            //use another nested ITupleIterator to deal with cache
+            ITupleIterator tee = new TeeTupleIterator(ret, new Function<List<ITuple>, Void>() {
+                @Nullable
+                @Override
+                public Void apply(List<ITuple> input) {
+                    //TODO: tsRange needs updated
+                    StreamSQLResult newCacheEntry = new StreamSQLResult(input, tsRange);
+                    cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).put(new Element(streamSQLDigest, newCacheEntry));
+                    logger.debug("current cache: " + newCacheEntry);
+                    return null;
+                }
+            });
 
-        return tee;
+            return tee;
+        } else {
+            return ret;
+        }
     }
 }

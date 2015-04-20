@@ -108,22 +108,22 @@ public class RangeUtil {
             } else {
                 sb.append("(");
             }
-            DateFormat.formatToTimeStr(tsRange.lowerEndpoint());
+            sb.append(DateFormat.formatToTimeStr(tsRange.lowerEndpoint()));
         } else {
-            sb.append("(null");
+            sb.append("(-∞");
         }
 
         sb.append("~");
 
         if (tsRange.hasUpperBound()) {
-            DateFormat.formatToTimeStr(tsRange.upperEndpoint());
+            sb.append(DateFormat.formatToTimeStr(tsRange.upperEndpoint()));
             if (tsRange.upperBoundType() == BoundType.CLOSED) {
                 sb.append("]");
             } else {
                 sb.append(")");
             }
         } else {
-            sb.append("null)");
+            sb.append("+∞)");
         }
         return sb.toString();
     }

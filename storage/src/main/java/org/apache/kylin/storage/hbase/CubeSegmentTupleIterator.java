@@ -163,6 +163,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         }
         // translate result to tuple
         try {
+            this.tuple = new Tuple(tupleInfo);
             translateResult(result, this.tuple);
         } catch (IOException e) {
             throw new IllegalStateException("Can't translate result " + result, e);
@@ -180,7 +181,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             closeScanner();
             HBaseKeyRange keyRange = this.rangeIterator.next();
             this.tupleInfo = buildTupleInfo(keyRange.getCuboid());
-            this.tuple = new Tuple(this.tupleInfo);
 
             this.resultIterator = doScan(keyRange);
         } else {

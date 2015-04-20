@@ -43,7 +43,8 @@ public class IgnoreTsCondition implements TupleFilterSerializer.Decorator {
             classifyChildrenByMarking(filter);
 
             if (filter instanceof CompareTupleFilter) {
-                if (((CompareTupleFilter) filter).getColumn().equals(tsColumn)) {
+                TblColRef c = ((CompareTupleFilter) filter).getColumn();
+                if (c != null && c.equals(tsColumn)) {
                     return null;
                 }
             }
