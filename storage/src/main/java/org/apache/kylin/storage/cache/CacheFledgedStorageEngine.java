@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Ranges;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -82,7 +83,8 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
         boolean needUpdateCache = true;
         final StreamSQLDigest streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
         StreamSQLResult cachedResult = null;
-        Element element = cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).get(streamSQLDigest);
+        Cache cache = cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE);
+        Element element = cache.get(streamSQLDigest);
         if (element != null) {
             cachedResult = (StreamSQLResult) element.getObjectValue();
         }
@@ -93,19 +95,17 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
         }
 
-        final Range<Long> tsRange = ts;
-
         ITupleIterator ret = null;
         if (cachedResult != null) {
             logger.debug("existing cache    : " + cachedResult);
-            Range<Long> reusePeriod = cachedResult.getReusableResults(tsRange);
+            Range<Long> reusePeriod = cachedResult.getReusableResults(ts);
 
-            logger.info("ts Range in query: " + RangeUtil.formatTsRange(tsRange));
+            logger.info("ts Range in query: " + RangeUtil.formatTsRange(ts));
             logger.info("potential reusable range   : " + RangeUtil.formatTsRange(reusePeriod));
 
             if (reusePeriod != null) {
 
-                List<Range<Long>> remainings = RangeUtil.remove(tsRange, reusePeriod);
+                List<Range<Long>> remainings = RangeUtil.remove(ts, reusePeriod);
                 if (remainings.size() == 1) {
 
                     SimpleTupleIterator reusedTuples = new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
@@ -124,6 +124,8 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
                 }
                 //if remaining size > 1, we skip using cache , i.e, ret will == null
             }
+        } else {
+            logger.info("no cache entry for this query");
         }
 
         if (ret == null) {
@@ -135,15 +137,33 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
         }
 
         if (needUpdateCache) {
+            //the tsRange in cache should reflect data aliveness
+            final Range<Long> finalTs = ts;
+
             //use another nested ITupleIterator to deal with cache
-            ITupleIterator tee = new TeeTupleIterator(ret, new Function<List<ITuple>, Void>() {
+            final TeeTupleIterator tee = new TeeTupleIterator(ret);
+            tee.setActionOnSeeingWholeData(new Function<List<ITuple>, Void>() {
                 @Nullable
                 @Override
                 public Void apply(List<ITuple> input) {
-                    //TODO: tsRange needs updated
+                    Range<Long> tsRange = finalTs;
+                    Range<Long> cacheExclude = tee.getCacheExcludedPeriod();
+                    if (cacheExclude != null) {
+                        List<Range<Long>> cachablePeriods = RangeUtil.remove(tsRange, cacheExclude);
+                        if (cachablePeriods.size() == 1) {
+                            if (!tsRange.equals(cachablePeriods.get(0))) {
+                                logger.info("With respect to each shard's build status, the cachable tsRange shrinks from " + RangeUtil.formatTsRange(tsRange) + " to " + RangeUtil.formatTsRange(cachablePeriods.get(0)));
+                            }
+                            tsRange = cachablePeriods.get(0);
+                        } else {
+                            //give up updating the cache, in avoid to make cache complicated
+                            return null;
+                        }
+                    }
+
                     StreamSQLResult newCacheEntry = new StreamSQLResult(input, tsRange, partitionColRef);
                     cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE).put(new Element(streamSQLDigest, newCacheEntry));
-                    logger.debug("current cache: " + newCacheEntry);
+                    logger.debug("cache after the query: " + newCacheEntry);
                     return null;
                 }
             });

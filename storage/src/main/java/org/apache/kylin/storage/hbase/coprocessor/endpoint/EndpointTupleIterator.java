@@ -21,13 +21,17 @@ package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 import java.io.IOException;
 import java.util.*;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.*;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.invertedindex.IISegment;
@@ -51,10 +55,6 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
 
 /**
@@ -80,11 +80,15 @@ public class EndpointTupleIterator implements ITupleIterator {
     private final EndpointAggregators pushedDownAggregators;
     private final Range<Long> tsRange;//timestamp column condition's interval
 
-    Iterator<List<IIProtos.IIResponse.IIRow>> regionResponsesIterator = null;
-    ITupleIterator tupleIterator = null;
-    HTableInterface table = null;
+    private Iterator<List<IIProtos.IIResponse.IIRow>> regionResponsesIterator = null;
+    private ITupleIterator tupleIterator = null;
+    private HTableInterface table = null;
 
-    int rowsInAllMetric = 0;
+    private TblColRef partitionCol;
+    private int shardCount;
+    private long currentShardLastDataTime = Long.MIN_VALUE;
+    private List<Long> shardLastDataTimes = Lists.newArrayList();
+    private int rowsInAllMetric = 0;
 
     public EndpointTupleIterator(IISegment segment, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
 
@@ -128,7 +132,8 @@ public class EndpointTupleIterator implements ITupleIterator {
         this.pushedDownAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, measures);
 
         int tsCol = this.tableRecordInfo.getTimestampColumn();
-        this.tsRange = TsConditionExtractor.extractTsCondition(this.columns.get(tsCol), rootFilter);
+        this.partitionCol = this.columns.get(tsCol);
+        this.tsRange = TsConditionExtractor.extractTsCondition(this.partitionCol, rootFilter);
 
         if (this.tsRange == null) {
             logger.info("TsRange conflict for endpoint, return empty directly");
@@ -138,9 +143,13 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
-        regionResponsesIterator = getResults(endpointRequest, table);
+
+        Collection<List<IIProtos.IIResponse.IIRow>> shardResults = getResults(endpointRequest, table);
+        this.shardCount = shardResults.size();
+        this.regionResponsesIterator = shardResults.iterator();
 
         if (this.regionResponsesIterator.hasNext()) {
+            this.currentShardLastDataTime = Long.MIN_VALUE;
             this.tupleIterator = new SingleRegionTupleIterator(this.regionResponsesIterator.next());
         } else {
             this.tupleIterator = ITupleIterator.EMPTY_TUPLE_ITERATOR;
@@ -186,7 +195,10 @@ public class EndpointTupleIterator implements ITupleIterator {
     @Override
     public boolean hasNext() {
         while (!this.tupleIterator.hasNext()) {
+            this.shardLastDataTimes.add(this.currentShardLastDataTime);
+
             if (this.regionResponsesIterator.hasNext()) {
+                this.currentShardLastDataTime = Long.MIN_VALUE;
                 this.tupleIterator = new SingleRegionTupleIterator(this.regionResponsesIterator.next());
             } else {
                 return false;
@@ -203,7 +215,11 @@ public class EndpointTupleIterator implements ITupleIterator {
             throw new IllegalStateException("No more ITuple in EndpointTupleIterator");
         }
 
-        return this.tupleIterator.next();
+        ITuple tuple = this.tupleIterator.next();
+
+        //update shardLastDataTimes
+        this.currentShardLastDataTime = Tuple.getTs(tuple,this.partitionCol);
+        return tuple;
     }
 
     @Override
@@ -216,6 +232,13 @@ public class EndpointTupleIterator implements ITupleIterator {
     public void close() {
         IOUtils.closeQuietly(table);
         logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
+    }
+
+    @Override
+    public Range<Long> getCacheExcludedPeriod() {
+        Preconditions.checkArgument(shardCount == this.shardLastDataTimes.size());
+        long min = Collections.min(this.shardLastDataTimes);
+        return Ranges.atLeast(min);//inclusive
     }
 
     private IIProtos.IIRequest prepareRequest() throws IOException {
@@ -237,7 +260,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     //TODO : async callback
-    private Iterator<List<IIProtos.IIResponse.IIRow>> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
+    private Collection<List<IIProtos.IIResponse.IIRow>> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
         Map<byte[], List<IIProtos.IIResponse.IIRow>> results = table.coprocessorService(IIProtos.RowsService.class, null, null, new Batch.Call<IIProtos.RowsService, List<IIProtos.IIResponse.IIRow>>() {
             public List<IIProtos.IIResponse.IIRow> call(IIProtos.RowsService rowsService) throws IOException {
                 ServerRpcController controller = new ServerRpcController();
@@ -252,7 +275,7 @@ public class EndpointTupleIterator implements ITupleIterator {
             }
         });
 
-        return results.values().iterator();
+        return results.values();
     }
 
     private TupleInfo buildTupleInfo() {
@@ -296,7 +319,6 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     /**
      * Internal class to handle iterators for a single region's returned rows
-     *
      */
     class SingleRegionTupleIterator implements ITupleIterator {
         private List<IIProtos.IIResponse.IIRow> rows;
@@ -348,6 +370,11 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         @Override
         public void close() {
+        }
+
+        @Override
+        public Range<Long> getCacheExcludedPeriod() {
+            throw new NotImplementedException();
         }
 
         private ITuple makeTuple(TableRecord tableRecord, List<Object> measureValues) {

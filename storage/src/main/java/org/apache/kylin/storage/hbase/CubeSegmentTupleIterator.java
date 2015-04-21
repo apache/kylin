@@ -23,6 +23,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
+import com.google.common.collect.Range;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
 import org.apache.hadoop.hbase.filter.Filter;
@@ -108,6 +109,11 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         logger.info("Closing CubeSegmentTupleIterator");
         closeScanner();
         closeTable();
+    }
+
+    @Override
+    public Range<Long> getCacheExcludedPeriod() {
+        return null;
     }
 
     private void closeScanner() {

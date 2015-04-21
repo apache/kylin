@@ -2,6 +2,8 @@ package org.apache.kylin.metadata.tuple;
 
 import java.util.Iterator;
 
+import com.google.common.collect.Range;
+
 /**
  * Created by Hongbin Ma(Binmahone) on 4/14/15.
  *
@@ -31,5 +33,10 @@ public class SimpleTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
+    }
+
+    @Override
+    public Range<Long> getCacheExcludedPeriod() {
+        return null;
     }
 }

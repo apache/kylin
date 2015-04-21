@@ -244,26 +244,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         return responseBuilder.build();
     }
 
-    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
-        final TblColRef[] columns = coprocessorRowType.columns;
-        final int columnSize = columns.length;
-        final boolean[] isMetric = digest.isMetrics();
-        final boolean emptyDictionary = Array.isEmpty(localDictionaries);
-        for (int i = 0; i < columnSize; i++) {
-            final TblColRef column = columns[i];
-            if (isMetric[i]) {
-                rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
-            } else {
-                if (emptyDictionary) {
-                    rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
-                } else {
-                    final Dictionary<?> localDictionary = localDictionaries[i];
-                    final byte[] valueBytesFromId = localDictionary.getValueBytesFromId(encodedRecord.getValueID(i));
-                    rowKeyColumnIO.writeColumnWithoutDictionary(valueBytesFromId, 0, valueBytesFromId.length, recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
-                }
-            }
-        }
-    }
 
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
@@ -297,6 +277,27 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         logger.info("Iterated Slices count: " + iteratedSliceCount);
 
         return responseBuilder.build();
+    }
+
+    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
+        final TblColRef[] columns = coprocessorRowType.columns;
+        final int columnSize = columns.length;
+        final boolean[] isMetric = digest.isMetrics();
+        final boolean emptyDictionary = Array.isEmpty(localDictionaries);
+        for (int i = 0; i < columnSize; i++) {
+            final TblColRef column = columns[i];
+            if (isMetric[i]) {
+                rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
+            } else {
+                if (emptyDictionary) {
+                    rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
+                } else {
+                    final Dictionary<?> localDictionary = localDictionaries[i];
+                    final byte[] valueBytesFromId = localDictionary.getValueBytesFromId(encodedRecord.getValueID(i));
+                    rowKeyColumnIO.writeColumnWithoutDictionary(valueBytesFromId, 0, valueBytesFromId.length, recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
+                }
+            }
+        }
     }
 
     @Override
