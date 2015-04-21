@@ -46,7 +46,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
     protected int nRowKey;
-    private BitSet[] allCuboidsBitSet = null;
+    private Integer[][] allCuboidsBitSet = null;
     private HyperLogLogPlusCounter[] allCuboidsHLL = null;
     private Long[] cuboidIds;
     private BitSetIterator bitSetIterator = null;
@@ -63,10 +63,10 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
             List<Long> cuboidIdList = Lists.newArrayList();
-            List<BitSet> allCuboidsBitSetList = Lists.newArrayList();
+            List<Integer[]> allCuboidsBitSetList = Lists.newArrayList();
             addCuboidBitSet(baseCuboidId, allCuboidsBitSetList, cuboidIdList);
 
-            allCuboidsBitSet = allCuboidsBitSetList.toArray(new BitSet[cuboidIdList.size()]);
+            allCuboidsBitSet = allCuboidsBitSetList.toArray(new Integer[cuboidIdList.size()][]);
             cuboidIds = cuboidIdList.toArray(new Long[cuboidIdList.size()]);
 
             allCuboidsHLL = new HyperLogLogPlusCounter[cuboidIds.length];
@@ -75,23 +75,25 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             }
 
             bitSetIterator = new BitSetIterator();
-            bitSetIterator.bitSetIndexMap = intermediateTableDesc.getRowKeyColumnIndexes();
         }
     }
 
-    private void addCuboidBitSet(long cuboidId, List<BitSet> allCuboidsBitSet, List<Long> allCuboids) {
+    private void addCuboidBitSet(long cuboidId, List<Integer[]> allCuboidsBitSet, List<Long> allCuboids) {
         allCuboids.add(cuboidId);
-        BitSet bitSet = new BitSet(nRowKey);
+        BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
+        Integer[] indice = new Integer[bitSet.cardinality()];
 
         long mask = Long.highestOneBit(baseCuboidId);
+        int position = 0;
         for (int i = 0; i < nRowKey; i++) {
             if ((mask & cuboidId) > 0) {
-                bitSet.set(i);
+                indice[position] = intermediateTableDesc.getRowKeyColumnIndexes()[i];
+                position++;
             }
             mask = mask >> 1;
         }
 
-        allCuboidsBitSet.add(bitSet);
+        allCuboidsBitSet.add(indice);
         Collection<Long> children = cuboidScheduler.getSpanningCuboid(cuboidId);
         for (Long childId : children) {
             addCuboidBitSet(childId, allCuboidsBitSet, allCuboids);
@@ -125,7 +127,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {
             bitSetIterator.array = row;
             bitSetIterator.bitSet = allCuboidsBitSet[i];
-            bitSetIterator.currentPositon = -1;
+            bitSetIterator.currentPosition = 0;
 
             allCuboidsHLL[i].add(StringUtils.join(bitSetIterator, ","));
         }
@@ -133,20 +135,18 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
 
     class BitSetIterator implements Iterator<String> {
 
-        BitSet bitSet = null;
+        Integer[] bitSet = null;
         String[] array = null;
-        int[] bitSetIndexMap = null;
-        int currentPositon = -1;
+        int currentPosition = 0;
 
         @Override
         public boolean hasNext() {
-            return bitSet.nextSetBit(currentPositon + 1) >= 0;
+            return currentPosition < bitSet.length;
         }
 
         @Override
         public String next() {
-            currentPositon = bitSet.nextSetBit(currentPositon + 1);
-            return array[bitSetIndexMap[currentPositon]];
+            return array[bitSet[currentPosition++]];
         }
 
         @Override
