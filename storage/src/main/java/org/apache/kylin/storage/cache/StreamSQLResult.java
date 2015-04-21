@@ -6,6 +6,7 @@ import java.util.NavigableMap;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Preconditions;
 import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -26,21 +27,21 @@ public class StreamSQLResult {
     private NavigableMap<Long, List<ITuple>> sortedRows;
 
     public StreamSQLResult(List<ITuple> rows, Range<Long> timeCovered, TblColRef partitionCol) {
+
+        Preconditions.checkArgument(timeCovered.hasUpperBound(),"StreamSQLResult requires timeCovered having a upperBound");
+
         sortedRows = Maps.newTreeMap();
         for (ITuple row : rows) {
 
-            //TODO: differeniate between partitionCol types
-            long t;
-            if (partitionCol.getDatatype().equals("date")) {
-                t = Tuple.epicDaysToMillis(Integer.valueOf(row.getValue(partitionCol).toString()));
-            } else {
-                t = Long.valueOf(row.getValue(partitionCol).toString());
-            }
+            long t = Tuple.getTs(row,partitionCol);
 
-            if (!this.sortedRows.containsKey(t)) {
-                this.sortedRows.put(t, Lists.newArrayList(row));
-            } else {
-                this.sortedRows.get(t).add(row);
+            //will only cache rows that are within the time range
+            if (timeCovered.contains(t)) {
+                if (!this.sortedRows.containsKey(t)) {
+                    this.sortedRows.put(t, Lists.newArrayList(row));
+                } else {
+                    this.sortedRows.get(t).add(row);
+                }
             }
         }
         this.timeCovered = timeCovered;
@@ -74,5 +75,10 @@ public class StreamSQLResult {
     @Override
     public String toString() {
         return sortedRows.size() + " tuples cached for period " + RangeUtil.formatTsRange(timeCovered);
+    }
+
+    public long getEndTime()
+    {
+        return this.timeCovered.upperEndpoint();
     }
 }

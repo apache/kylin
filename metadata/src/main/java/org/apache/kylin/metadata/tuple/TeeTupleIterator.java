@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,10 +23,13 @@ public class TeeTupleIterator implements ITupleIterator {
     private ITupleIterator underlying;
     private List<ITuple> duplicatedData;
 
-    public TeeTupleIterator(ITupleIterator underlying, Function<List<ITuple>, Void> actionOnSeeingWholeData) {
-        this.actionOnSeeingWholeData = actionOnSeeingWholeData;
+    public TeeTupleIterator(ITupleIterator underlying) {
         this.underlying = underlying;
         this.duplicatedData = Lists.newArrayList();
+    }
+
+    public void setActionOnSeeingWholeData(Function<List<ITuple>, Void> actionOnSeeingWholeData) {
+        this.actionOnSeeingWholeData = actionOnSeeingWholeData;
     }
 
     @Override
@@ -33,6 +37,11 @@ public class TeeTupleIterator implements ITupleIterator {
         this.underlying.close();
         //if(this.underlying.isDrained)
         actionOnSeeingWholeData.apply(duplicatedData);
+    }
+
+    @Override
+    public Range<Long> getCacheExcludedPeriod() {
+        return this.underlying.getCacheExcludedPeriod();
     }
 
     @Override

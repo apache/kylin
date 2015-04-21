@@ -44,6 +44,7 @@ public class SQLDigestUtil {
         return ret;
     }
 
+    //ts column type differentiate
     private static String formatTimeStr(DataType type, long ts) {
         String ret;
         if (type == DataType.getInstance("date")) {

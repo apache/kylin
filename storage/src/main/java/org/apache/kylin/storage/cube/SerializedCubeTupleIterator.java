@@ -2,6 +2,7 @@ package org.apache.kylin.storage.cube;
 
 import java.util.List;
 
+import com.google.common.collect.Range;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 
@@ -32,6 +33,11 @@ public class SerializedCubeTupleIterator implements ITupleIterator {
     public void close() {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public Range<Long> getCacheExcludedPeriod() {
+        return null;
     }
 
 }

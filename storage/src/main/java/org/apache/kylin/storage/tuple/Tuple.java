@@ -129,9 +129,17 @@ public class Tuple implements ITuple {
         return 1L * days * (1000 * 3600 * 24);
     }
 
-    public static int millisToEpicDays(long millis)
-    {
-        return (int)(millis / (1000 * 3600 * 24));
+    public static int millisToEpicDays(long millis) {
+        return (int) (millis / (1000 * 3600 * 24));
+    }
+
+    public static long getTs(ITuple row, TblColRef partitionCol) {
+        //ts column type differentiate
+        if (partitionCol.getDatatype().equals("date")) {
+            return Tuple.epicDaysToMillis(Integer.valueOf(row.getValue(partitionCol).toString()));
+        } else {
+            return Long.valueOf(row.getValue(partitionCol).toString());
+        }
     }
 
     public static Object convertOptiqCellValue(String strValue, String dataType) {

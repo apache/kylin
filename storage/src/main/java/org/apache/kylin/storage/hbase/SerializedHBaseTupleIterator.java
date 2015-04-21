@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase;
 
 import java.util.*;
 
+import com.google.common.collect.Range;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -134,5 +135,10 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
             segmentIterator = segmentIteratorIterator.next();
             segmentIterator.close();
         }
+    }
+
+    @Override
+    public Range<Long> getCacheExcludedPeriod() {
+        return null;
     }
 }
