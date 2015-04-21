@@ -678,6 +678,7 @@
           <plugin>
             <groupId>net.ju-n.maven.plugins</groupId>
             <artifactId>checksum-maven-plugin</artifactId>
+            <version>1.2</version>
             <executions>
               <execution>
                 <goals>
