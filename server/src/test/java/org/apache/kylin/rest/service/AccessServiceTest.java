@@ -58,7 +58,7 @@ public class AccessServiceTest extends ServiceTestBase {
         // test init
         acl = accessService.init(ae, AclPermission.ADMINISTRATION);
         Assert.assertTrue(((PrincipalSid) acl.getOwner()).getPrincipal().equals("ADMIN"));
-        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
+        Assert.assertEquals(accessService.generateAceResponses(acl).size(), 1);
         AccessEntryResponse aer = accessService.generateAceResponses(acl).get(0);
         Assert.assertTrue(aer.getId() != null);
         Assert.assertTrue(aer.getPermission() == AclPermission.ADMINISTRATION);
@@ -67,7 +67,7 @@ public class AccessServiceTest extends ServiceTestBase {
         // test grant
         Sid modeler = accessService.getSid("MODELER", true);
         acl = accessService.grant(ae, AclPermission.ADMINISTRATION, modeler);
-        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
+        Assert.assertEquals(accessService.generateAceResponses(acl).size(), 2);
 
         Long modelerEntryId = null;
         for (AccessControlEntry ace : acl.getEntries()) {
@@ -82,7 +82,7 @@ public class AccessServiceTest extends ServiceTestBase {
         // test update
         acl = accessService.update(ae, modelerEntryId, AclPermission.READ);
 
-        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 2);
+        Assert.assertEquals(accessService.generateAceResponses(acl).size(), 2);
 
         for (AccessControlEntry ace : acl.getEntries()) {
             PrincipalSid sid = (PrincipalSid) ace.getSid();
@@ -108,7 +108,7 @@ public class AccessServiceTest extends ServiceTestBase {
 
         // test revoke
         acl = accessService.revoke(ae, modelerEntryId);
-        Assert.assertEquals(1,accessService.generateAceResponses(acl).size() );
+        Assert.assertEquals(accessService.generateAceResponses(acl).size(), 1);
 
         // test clean
         accessService.clean(ae, true);
