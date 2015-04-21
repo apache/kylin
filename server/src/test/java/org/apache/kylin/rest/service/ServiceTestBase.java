@@ -58,7 +58,9 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
 
         MetadataManager.clearCache();
         DictionaryManager.clearCache();
+        CubeDescManager.clearCache();
         CubeManager.clearCache();
+        IIDescManager.clearCache();
         IIManager.clearCache();
         ProjectManager.clearCache();
     }
