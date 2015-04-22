@@ -53,15 +53,15 @@ public abstract class StreamBuilder implements Runnable {
     private final int sliceSize;
     private StreamParser streamParser = StringStreamParser.instance;
 
-    private BlockingQueue<Stream> streamQueue;
+    private BlockingQueue<StreamMessage> streamMessageQueue;
     private long lastBuildTime = System.currentTimeMillis();
 
-    public StreamBuilder(BlockingQueue<Stream> streamQueue, int sliceSize) {
-        this.streamQueue = streamQueue;
+    public StreamBuilder(BlockingQueue<StreamMessage> streamMessageQueue, int sliceSize) {
+        this.streamMessageQueue = streamMessageQueue;
         this.sliceSize = sliceSize;
     }
 
-    protected abstract void build(List<Stream> streamsToBuild) throws Exception;
+    protected abstract void build(List<StreamMessage> streamsToBuild) throws Exception;
 
     private void clearCounter() {
         lastBuildTime = System.currentTimeMillis();
@@ -70,36 +70,36 @@ public abstract class StreamBuilder implements Runnable {
     @Override
     public void run() {
         try {
-            List<Stream> streamToBuild = Lists.newArrayList();
+            List<StreamMessage> streamMessageToBuild = Lists.newArrayList();
             clearCounter();
             while (true) {
-                Stream stream;
+                StreamMessage streamMessage;
                 try {
-                    stream = streamQueue.poll(10, TimeUnit.SECONDS);
+                    streamMessage = streamMessageQueue.poll(10, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     logger.warn("stream queue interrupted", e);
                     continue;
                 }
-                if (stream == null) {
+                if (streamMessage == null) {
 
-                    logger.info("The stream queue is drained, current available stream count: " + streamToBuild.size());
+                    logger.info("The stream queue is drained, current available stream count: " + streamMessageToBuild.size());
                     if ((System.currentTimeMillis() - lastBuildTime) > BATCH_BUILD_INTERVAL_THRESHOLD) {
-                        build(streamToBuild);
+                        build(streamMessageToBuild);
                         clearCounter();
-                        streamToBuild.clear();
+                        streamMessageToBuild.clear();
                     }
                     continue;
                 } else {
-                    if (stream.getOffset() < 0) {
+                    if (streamMessage.getOffset() < 0) {
                         logger.warn("streaming encountered EOF, stop building");
                         break;
                     }
                 }
-                streamToBuild.add(stream);
-                if (streamToBuild.size() >= this.sliceSize) {
-                    build(streamToBuild);
+                streamMessageToBuild.add(streamMessage);
+                if (streamMessageToBuild.size() >= this.sliceSize) {
+                    build(streamMessageToBuild);
                     clearCounter();
-                    streamToBuild.clear();
+                    streamMessageToBuild.clear();
                 }
             }
         } catch (Exception e) {

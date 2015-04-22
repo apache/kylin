@@ -62,10 +62,10 @@ public final class JsonStreamParser implements StreamParser {
     }
 
     @Override
-    public List<String> parse(Stream stream) {
+    public List<String> parse(StreamMessage streamMessage) {
         try {
             Map<String, String> json = new ObjectMapper().readValue(
-                    stream.getRawData(), MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class)));
+                    streamMessage.getRawData(), MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class)));
             ArrayList<String> result = Lists.newArrayList();
             for (TblColRef column : allColumns) {
                 for (Map.Entry<String, String> entry : json.entrySet()) {

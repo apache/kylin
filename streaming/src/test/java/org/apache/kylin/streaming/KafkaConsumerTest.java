@@ -42,7 +42,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -88,7 +87,7 @@ public class KafkaConsumerTest extends KafkaBaseTest {
     public void test() throws InterruptedException {
         final TopicMeta kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(kafkaConfig);
         final ExecutorService executorService = Executors.newFixedThreadPool(kafkaTopicMeta.getPartitionIds().size());
-        List<BlockingQueue<Stream>> queues = Lists.newArrayList();
+        List<BlockingQueue<StreamMessage>> queues = Lists.newArrayList();
         for (Integer partitionId : kafkaTopicMeta.getPartitionIds()) {
             KafkaConsumer consumer = new KafkaConsumer(kafkaTopicMeta.getName(), partitionId, 0, kafkaConfig.getBrokers(), kafkaConfig);
             queues.add(consumer.getStreamQueue(0));
@@ -99,7 +98,7 @@ public class KafkaConsumerTest extends KafkaBaseTest {
         //wait some time to ensure consumer has fetched all data
         Thread.sleep(5000);
         int count = 0;
-        for (BlockingQueue<Stream> queue : queues) {
+        for (BlockingQueue<StreamMessage> queue : queues) {
             count += queue.size();
         }
 

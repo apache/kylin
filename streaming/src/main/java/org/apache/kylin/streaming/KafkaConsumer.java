@@ -57,7 +57,7 @@ public class KafkaConsumer implements Runnable {
     private final int partitionId;
     private final KafkaConfig kafkaConfig;
     private final transient int parallelism;
-    private final LinkedBlockingQueue<Stream>[] streamQueue;
+    private final LinkedBlockingQueue<StreamMessage>[] streamQueue;
 
     private long offset;
     private List<Broker> replicaBrokers;
@@ -81,11 +81,11 @@ public class KafkaConsumer implements Runnable {
         this.parallelism = parallelism;
         this.streamQueue = new LinkedBlockingQueue[parallelism];
         for (int i = 0; i < parallelism; ++i) {
-            streamQueue[i] = new LinkedBlockingQueue<Stream>(kafkaConfig.getMaxReadCount());
+            streamQueue[i] = new LinkedBlockingQueue<StreamMessage>(kafkaConfig.getMaxReadCount());
         }
     }
 
-    public BlockingQueue<Stream> getStreamQueue(int index) {
+    public BlockingQueue<StreamMessage> getStreamQueue(int index) {
         return streamQueue[index];
     }
 
@@ -149,7 +149,7 @@ public class KafkaConsumer implements Runnable {
                 }
             }
             for (int i = 0; i < streamQueue.length; ++i) {
-                streamQueue[i].put(Stream.EOF);
+                streamQueue[i].put(StreamMessage.EOF);
             }
         } catch (Exception e) {
             logger.error("consumer has encountered an error", e);
@@ -159,10 +159,10 @@ public class KafkaConsumer implements Runnable {
     protected void consume(long offset, ByteBuffer payload) throws Exception {
         byte[] bytes = new byte[payload.limit()];
         payload.get(bytes);
-        Stream newStream = new Stream(offset, bytes);
+        StreamMessage newStreamMessage = new StreamMessage(offset, bytes);
         while (true) {
             try {
-                if (getStreamQueue(hash(offset)).offer(newStream, 60, TimeUnit.SECONDS)) {
+                if (getStreamQueue(hash(offset)).offer(newStreamMessage, 60, TimeUnit.SECONDS)) {
                     break;
                 } else {
                     logger.info("the queue is full, wait for builder to catch up");

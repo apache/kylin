@@ -34,40 +34,21 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hive.hcatalog.data.schema.HCatSchema;
-import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.AbstractKylinTestCase;
+import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.dict.lookup.HiveTableReader;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
-import org.apache.kylin.job.common.ShellExecutable;
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.metadata.util.DateFormat;
+import org.apache.kylin.streaming.JsonStreamParser;
 import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.junit.AfterClass;
@@ -77,18 +58,26 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+
+import static org.junit.Assert.fail;
 
 /**
  * Created by qianzhou on 3/9/15.
  */
-public class BuildIIWithStreamTest {
+public class BuildIIForEagleTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(BuildIIWithStreamTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(BuildIIForEagleTest.class);
 
-    private static final String[] II_NAME = new String[] { "test_kylin_ii_left_join", "test_kylin_ii_inner_join" };
+    private static final String[] II_NAME = new String[] {"eagle_ii"};
     private IIManager iiManager;
-    private KylinConfig kylinConfig;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -97,14 +86,28 @@ public class BuildIIWithStreamTest {
         System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
     }
 
+    private static void deployMetadata() throws IOException {
+        // install metadata to hbase
+        ResourceTool.reset(KylinConfig.getInstanceFromEnv());
+        ResourceTool.copy(KylinConfig.createInstanceFromUri("../ebayExtension/examples/test_case_data/localmeta"), KylinConfig.getInstanceFromEnv());
+
+        // update cube desc signature.
+        for (CubeInstance cube : CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).listAllCubes()) {
+            cube.getDescriptor().setSignature(cube.getDescriptor().calculateSignature());
+            CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cube);
+        }
+    }
+
     @Before
     public void before() throws Exception {
-        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+        HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
         DeployUtil.overrideJobJarLocations();
+        deployMetadata();
 
-        kylinConfig = KylinConfig.getInstanceFromEnv();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         iiManager = IIManager.getInstance(kylinConfig);
         iiManager = IIManager.getInstance(kylinConfig);
+
         for (String iiInstance : II_NAME) {
 
             IIInstance ii = iiManager.getII(iiInstance);
@@ -117,54 +120,17 @@ public class BuildIIWithStreamTest {
 
     @AfterClass
     public static void afterClass() throws Exception {
-        backup();
     }
 
     private static int cleanupOldStorage() throws Exception {
-        String[] args = { "--delete", "true" };
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        return exitCode;
-    }
+        return 0;
 
-    private static void backup() throws Exception {
-        int exitCode = cleanupOldStorage();
-        if (exitCode == 0) {
-            exportHBaseData();
-        }
-    }
+        //do not delete intermediate files for debug purpose
 
-    private static void exportHBaseData() throws IOException {
-        ExportHBaseData export = new ExportHBaseData();
-        export.exportTables();
-    }
-
-    private String createIntermediateTable(IIDesc desc, KylinConfig kylinConfig) throws IOException {
-        IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(desc);
-        JobEngineConfig jobEngineConfig = new JobEngineConfig(kylinConfig);
-        final String uuid = UUID.randomUUID().toString();
-        final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, uuid);
-        final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, jobEngineConfig.getHdfsWorkingDirectory() + "/kylin-" + uuid, uuid);
-        String insertDataHqls;
-        try {
-            insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, uuid, jobEngineConfig);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-            throw new RuntimeException("Failed to generate insert data SQL for intermediate table.");
-        }
-
-        ShellExecutable step = new ShellExecutable();
-        StringBuffer buf = new StringBuffer();
-        buf.append("hive -e \"");
-        buf.append(dropTableHql + "\n");
-        buf.append(createTableHql + "\n");
-        buf.append(insertDataHqls + "\n");
-        buf.append("\"");
-
-        step.setCmd(buf.toString());
-        logger.info(step.getCmd());
-        step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
-        kylinConfig.getCliCommandExecutor().execute(step.getCmd(), null);
-        return intermediateTableDesc.getTableName(uuid);
+        //        String[] args = {"--delete", "true"};
+        //
+        //        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        //        return exitCode;
     }
 
     private void clearSegment(String iiName) throws Exception {
@@ -192,15 +158,10 @@ public class BuildIIWithStreamTest {
     }
 
     private void buildII(String iiName) throws Exception {
-        final IIDesc desc = iiManager.getII(iiName).getDescriptor();
-        final String tableName = createIntermediateTable(desc, kylinConfig);
-        logger.info("intermediate table name:" + tableName);
-        final Configuration conf = new Configuration();
-        HCatInputFormat.setInput(conf, "default", tableName);
-        final HCatSchema tableSchema = HCatInputFormat.getTableSchema(conf);
-        logger.info(StringUtils.join(tableSchema.getFieldNames(), "\n"));
-        HiveTableReader reader = new HiveTableReader("default", tableName);
+        final IIInstance ii = iiManager.getII(iiName);
+        final IIDesc desc = ii.getDescriptor();
         final List<TblColRef> tblColRefs = desc.listAllColumns();
+        final IISegment segment = ii.getFirstSegment();
         for (TblColRef tblColRef : tblColRefs) {
             if (desc.isMetricsCol(tblColRef)) {
                 logger.info("matrix:" + tblColRef.getName());
@@ -209,21 +170,21 @@ public class BuildIIWithStreamTest {
             }
         }
         LinkedBlockingDeque<StreamMessage> queue = new LinkedBlockingDeque<StreamMessage>();
-        final IISegment segment = createSegment(iiName);
         String[] args = new String[] { "-iiname", iiName, "-htablename", segment.getStorageLocationIdentifier() };
         ToolRunner.run(new IICreateHTableJob(), args);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, iiName, segment.getStorageLocationIdentifier(), segment.getIIDesc(), 0);
+        final IIStreamBuilder streamBuilder = new IIStreamBuilder(queue, iiName, segment.getStorageLocationIdentifier(), segment.getIIDesc(), 0, desc.isUseLocalDictionary());
+        streamBuilder.setStreamParser(new JsonStreamParser(segment.getIIDesc().listAllColumns()));
 
-        List<String[]> sorted = getSortedRows(reader, desc.getTimestampColumn());
-        int count = sorted.size();
-        for (String[] row : sorted) {
-            logger.info("another row: " + StringUtils.join(row, ","));
-            queue.put(parse(row));
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("/Users/qianzhou/Projects/Kylin/eagle_5m.data")));
+        String line;
+        int count = 0;
+        while ((line = br.readLine()) != null) {
+            queue.put(new StreamMessage(System.currentTimeMillis(), line.getBytes()));
+            count++;
         }
-
-        reader.close();
+        br.close();
         logger.info("total record count:" + count + " htable:" + segment.getStorageLocationIdentifier());
         queue.put(StreamMessage.EOF);
         final Future<?> future = executorService.submit(streamBuilder);
@@ -247,26 +208,6 @@ public class BuildIIWithStreamTest {
                 iiManager.updateII(ii);
             }
         }
-    }
-
-    private StreamMessage parse(String[] row) {
-        return new StreamMessage(System.currentTimeMillis(), StringUtils.join(row, ",").getBytes());
-    }
-
-    private List<String[]> getSortedRows(HiveTableReader reader, final int tsCol) throws IOException {
-        List<String[]> unsorted = Lists.newArrayList();
-        while (reader.next()) {
-            unsorted.add(reader.getRow());
-        }
-        Collections.sort(unsorted, new Comparator<String[]>() {
-            @Override
-            public int compare(String[] o1, String[] o2) {
-                long t1 = DateFormat.stringToMillis(o1[tsCol]);
-                long t2 = DateFormat.stringToMillis(o2[tsCol]);
-                return Long.compare(t1, t2);
-            }
-        });
-        return unsorted;
     }
 
 }

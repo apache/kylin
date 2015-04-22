@@ -51,7 +51,7 @@ import java.io.IOException;
 /**
  * Created by qianzhou on 3/6/15.
  */
-public class IIStreamBuilderTest  {
+public class IIStreamBuilderTest {
 
     private static final Logger logger = LoggerFactory.getLogger(IIStreamBuilderTest.class);
 

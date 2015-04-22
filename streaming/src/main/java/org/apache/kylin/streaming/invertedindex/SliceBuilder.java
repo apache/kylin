@@ -43,7 +43,7 @@ import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.util.IIDictionaryBuilder;
-import org.apache.kylin.streaming.Stream;
+import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.StreamParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,20 +69,20 @@ public final class SliceBuilder {
     }
 
 
-    public Slice buildSlice(List<Stream> streams, final StreamParser streamParser) {
-        List<List<String>> table = Lists.transform(streams, new Function<Stream, List<String>>() {
+    public Slice buildSlice(List<StreamMessage> streamMessages, final StreamParser streamParser) {
+        List<List<String>> table = Lists.transform(streamMessages, new Function<StreamMessage, List<String>>() {
             @Nullable
             @Override
-            public List<String> apply(@Nullable Stream input) {
+            public List<String> apply(@Nullable StreamMessage input) {
                 return streamParser.parse(input);
             }
         });
-        final Dictionary<?>[] dictionaries = useLocalDict?IIDictionaryBuilder.buildDictionary(table, iiDesc):new Dictionary[iiDesc.listAllColumns().size()];
+        final Dictionary<?>[] dictionaries = useLocalDict ? IIDictionaryBuilder.buildDictionary(table, iiDesc) : new Dictionary[iiDesc.listAllColumns().size()];
         TableRecordInfo tableRecordInfo = new TableRecordInfo(iiDesc, dictionaries);
-        return build(table,  tableRecordInfo, dictionaries);
+        return build(table, tableRecordInfo, dictionaries);
     }
 
-    private Slice build(List<List<String>> table,  final TableRecordInfo tableRecordInfo, Dictionary<?>[] localDictionary) {
+    private Slice build(List<List<String>> table, final TableRecordInfo tableRecordInfo, Dictionary<?>[] localDictionary) {
         final Slice slice = sliceMaker.makeSlice(tableRecordInfo.getDigest(), Lists.transform(table, new Function<List<String>, TableRecord>() {
             @Nullable
             @Override

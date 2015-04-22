@@ -45,7 +45,7 @@ import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
-import org.apache.kylin.streaming.Stream;
+import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.StreamBuilder;
 import org.apache.kylin.streaming.StreamingManager;
 import org.slf4j.Logger;
@@ -72,11 +72,11 @@ public class IIStreamBuilder extends StreamBuilder {
 
 
 
-    public IIStreamBuilder(BlockingQueue<Stream> queue, String streaming, String hTableName, IIDesc iiDesc, int shard) {
+    public IIStreamBuilder(BlockingQueue<StreamMessage> queue, String streaming, String hTableName, IIDesc iiDesc, int shard) {
         this(queue, streaming, hTableName, iiDesc, shard, true);
     }
 
-    public IIStreamBuilder(BlockingQueue<Stream> queue, String streaming, String hTableName, IIDesc iiDesc, int shard, boolean useLocalDict) {
+    public IIStreamBuilder(BlockingQueue<StreamMessage> queue, String streaming, String hTableName, IIDesc iiDesc, int shard, boolean useLocalDict) {
         super(queue, iiDesc.getSliceSize());
         this.streaming = streaming;
         this.desc = iiDesc;
@@ -92,7 +92,7 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     @Override
-    protected void build(List<Stream> streamsToBuild) throws IOException {
+    protected void build(List<StreamMessage> streamsToBuild) throws IOException {
         if (streamsToBuild.size() > 0) {
             long offset = streamsToBuild.get(0).getOffset();
             if (offset < streamingManager.getOffset(streaming, shardId)) {

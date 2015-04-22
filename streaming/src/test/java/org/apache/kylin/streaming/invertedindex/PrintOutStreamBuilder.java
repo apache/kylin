@@ -37,7 +37,7 @@ package org.apache.kylin.streaming.invertedindex;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.streaming.JsonStreamParser;
-import org.apache.kylin.streaming.Stream;
+import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.StreamBuilder;
 
 import java.util.List;
@@ -50,17 +50,17 @@ public class PrintOutStreamBuilder extends StreamBuilder {
 
     private final List<TblColRef> allColumns;
 
-    public PrintOutStreamBuilder(BlockingQueue<Stream> streamQueue, int sliceSize, List<TblColRef> allColumns) {
-        super(streamQueue, sliceSize);
+    public PrintOutStreamBuilder(BlockingQueue<StreamMessage> streamMessageQueue, int sliceSize, List<TblColRef> allColumns) {
+        super(streamMessageQueue, sliceSize);
         setStreamParser(new JsonStreamParser(allColumns));
         this.allColumns = allColumns;
     }
 
     @Override
-    protected void build(List<Stream> streamsToBuild) throws Exception {
-        for (Stream stream : streamsToBuild) {
-            final List<String> row = getStreamParser().parse(stream);
-            System.out.println("offset:" + stream.getOffset() + " " + StringUtils.join(row, ","));
+    protected void build(List<StreamMessage> streamsToBuild) throws Exception {
+        for (StreamMessage streamMessage : streamsToBuild) {
+            final List<String> row = getStreamParser().parse(streamMessage);
+            System.out.println("offset:" + streamMessage.getOffset() + " " + StringUtils.join(row, ","));
         }
     }
 }
