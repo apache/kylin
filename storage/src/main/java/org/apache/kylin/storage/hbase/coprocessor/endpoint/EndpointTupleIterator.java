@@ -21,8 +21,8 @@ package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 import java.io.IOException;
 import java.util.*;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
+import javax.annotation.Nullable;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.SerializationUtils;
@@ -31,7 +31,6 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.invertedindex.IISegment;
@@ -55,6 +54,8 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.collect.*;
 import com.google.protobuf.ByteString;
 
 /**
@@ -85,9 +86,8 @@ public class EndpointTupleIterator implements ITupleIterator {
     private HTableInterface table = null;
 
     private TblColRef partitionCol;
-    private int shardCount;
-    private long currentShardLastDataTime = Long.MIN_VALUE;
     private List<Long> shardLastDataTimes = Lists.newArrayList();
+    private long lastDataTime;
     private int rowsInAllMetric = 0;
 
     public EndpointTupleIterator(IISegment segment, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
@@ -144,12 +144,25 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
 
-        Collection<List<IIProtos.IIResponse.IIRow>> shardResults = getResults(endpointRequest, table);
-        this.shardCount = shardResults.size();
-        this.regionResponsesIterator = shardResults.iterator();
+        Collection<IIProtos.IIResponse> shardResults = getResults(endpointRequest, table);
+
+        this.lastDataTime = Collections.min(Collections2.transform(shardResults, new Function<IIProtos.IIResponse, Long>() {
+            @Nullable
+            @Override
+            public Long apply(IIProtos.IIResponse input) {
+                return input.getLatestDataTime();
+            }
+        }));
+
+        this.regionResponsesIterator = Collections2.transform(shardResults, new Function<IIProtos.IIResponse, List<IIProtos.IIResponse.IIRow>>() {
+            @Nullable
+            @Override
+            public List<IIProtos.IIResponse.IIRow> apply(@Nullable IIProtos.IIResponse input) {
+                return input.getRowsList();
+            }
+        }).iterator();
 
         if (this.regionResponsesIterator.hasNext()) {
-            this.currentShardLastDataTime = Long.MIN_VALUE;
             this.tupleIterator = new SingleRegionTupleIterator(this.regionResponsesIterator.next());
         } else {
             this.tupleIterator = ITupleIterator.EMPTY_TUPLE_ITERATOR;
@@ -195,10 +208,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     @Override
     public boolean hasNext() {
         while (!this.tupleIterator.hasNext()) {
-            this.shardLastDataTimes.add(this.currentShardLastDataTime);
-
             if (this.regionResponsesIterator.hasNext()) {
-                this.currentShardLastDataTime = Long.MIN_VALUE;
                 this.tupleIterator = new SingleRegionTupleIterator(this.regionResponsesIterator.next());
             } else {
                 return false;
@@ -216,9 +226,6 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         ITuple tuple = this.tupleIterator.next();
-
-        //update shardLastDataTimes
-        this.currentShardLastDataTime = Tuple.getTs(tuple,this.partitionCol);
         return tuple;
     }
 
@@ -236,9 +243,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     @Override
     public Range<Long> getCacheExcludedPeriod() {
-        Preconditions.checkArgument(shardCount == this.shardLastDataTimes.size());
-        long min = Collections.min(this.shardLastDataTimes);
-        return Ranges.atLeast(min);//inclusive
+        return Ranges.atLeast(lastDataTime + 1);//notice +1
     }
 
     private IIProtos.IIRequest prepareRequest() throws IOException {
@@ -260,9 +265,9 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     //TODO : async callback
-    private Collection<List<IIProtos.IIResponse.IIRow>> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
-        Map<byte[], List<IIProtos.IIResponse.IIRow>> results = table.coprocessorService(IIProtos.RowsService.class, null, null, new Batch.Call<IIProtos.RowsService, List<IIProtos.IIResponse.IIRow>>() {
-            public List<IIProtos.IIResponse.IIRow> call(IIProtos.RowsService rowsService) throws IOException {
+    private Collection<IIProtos.IIResponse> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
+        Map<byte[], IIProtos.IIResponse> results = table.coprocessorService(IIProtos.RowsService.class, null, null, new Batch.Call<IIProtos.RowsService, IIProtos.IIResponse>() {
+            public IIProtos.IIResponse call(IIProtos.RowsService rowsService) throws IOException {
                 ServerRpcController controller = new ServerRpcController();
                 BlockingRpcCallback<IIProtos.IIResponse> rpcCallback = new BlockingRpcCallback<>();
                 rowsService.getRows(controller, request, rpcCallback);
@@ -271,7 +276,7 @@ public class EndpointTupleIterator implements ITupleIterator {
                     throw controller.getFailedOn();
                 }
 
-                return response.getRowsList();
+                return response;
             }
         });
 

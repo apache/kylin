@@ -80,7 +80,9 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
     @Override
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest) {
 
-        boolean needUpdateCache = true;
+        //enable storage layer cache iff ts column is contained in filter
+        boolean needUpdateCache = sqlDigest.groupbyColumns.contains(partitionColRef);
+
         final StreamSQLDigest streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
         StreamSQLResult cachedResult = null;
         Cache cache = cacheManager.getCache(STORAGE_LAYER_TUPLE_CACHE);
@@ -152,7 +154,7 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
                         List<Range<Long>> cachablePeriods = RangeUtil.remove(tsRange, cacheExclude);
                         if (cachablePeriods.size() == 1) {
                             if (!tsRange.equals(cachablePeriods.get(0))) {
-                                logger.info("With respect to each shard's build status, the cachable tsRange shrinks from " + RangeUtil.formatTsRange(tsRange) + " to " + RangeUtil.formatTsRange(cachablePeriods.get(0)));
+                                logger.info("With respect to each shard's build status, the cacheable tsRange shrinks from " + RangeUtil.formatTsRange(tsRange) + " to " + RangeUtil.formatTsRange(cachablePeriods.get(0)));
                             }
                             tsRange = cachablePeriods.get(0);
                         } else {

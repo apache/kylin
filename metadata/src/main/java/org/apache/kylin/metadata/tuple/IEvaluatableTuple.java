@@ -4,6 +4,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 public interface IEvaluatableTuple {
 
-    public Object getValue(TblColRef col);
+    Object getValue(TblColRef col);
 
 }
