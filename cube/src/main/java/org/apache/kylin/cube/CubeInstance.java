@@ -25,10 +25,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.*;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -119,6 +116,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     public CubeDesc getDescriptor() {
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
+
+    public DataModelDesc getDataModelDesc(){return this.getDescriptor().getModel();}
 
     public boolean isReady() {
         return getStatus() == RealizationStatusEnum.READY;

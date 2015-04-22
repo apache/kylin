@@ -18,6 +18,6 @@
 
 'use strict';
 
-KylinApp.controller('CubeFilterCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel) {
+KylinApp.controller('CubeFilterCtrl', function ($scope, $modal,cubeConfig,MetaModel) {
 
 });

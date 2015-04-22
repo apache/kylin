@@ -19,6 +19,7 @@
 package org.apache.kylin.cube;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -94,6 +95,10 @@ public class CubeDescManager {
 
     public CubeDesc getCubeDesc(String name) {
         return cubeDescMap.get(name);
+    }
+
+    public List<CubeDesc> listAllDesc(){
+        return new ArrayList<CubeDesc>(cubeDescMap.values());
     }
 
     /**

@@ -18,9 +18,9 @@
 
 KylinApp.service('UserService', function ($http, $q) {
     var roles = {
-        'ROLE_MODELER': '/cubes',
-        'ROLE_ANALYST': '/cubes',
-        'ROLE_ADMIN': '/cubes'
+        'ROLE_MODELER': '/models',
+        'ROLE_ANALYST': '/models',
+        'ROLE_ADMIN': '/models'
     };
     var curUser = {};
 

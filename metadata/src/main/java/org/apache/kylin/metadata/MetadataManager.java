@@ -22,15 +22,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,8 @@ import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
+
+import javax.xml.crypto.Data;
 
 /**
  * Serves (and caches) metadata for Kylin instance.
@@ -257,7 +260,6 @@ public class MetadataManager {
         ResourceStore store = getStore();
         TableDesc t = store.getResource(path, TableDesc.class, TABLE_SERIALIZER);
         if (t == null) {
-            logger.error("Didn't load table at " + path);
             return null;
         }
         t.init();
@@ -285,6 +287,45 @@ public class MetadataManager {
     public DataModelDesc getDataModelDesc(String name) {
         return dataModelDescMap.get(name);
     }
+
+    public List<DataModelDesc> getModels() {
+        return new ArrayList<DataModelDesc>(dataModelDescMap.values());
+    }
+
+    public List<DataModelDesc> getModels(String projectName) throws IOException{
+        ProjectInstance projectInstance =  ProjectManager.getInstance(config).getProject(projectName);
+        HashSet<DataModelDesc> ret = new HashSet<>();
+
+        if (projectInstance != null&&projectInstance.getModels()!=null) {
+            for (String modelName : projectInstance.getModels()) {
+                DataModelDesc model = getDataModelDesc(modelName);
+                if (null != model) {
+                    ret.add(model);
+                } else {
+                    logger.error("Failed to load model" + modelName);
+                }
+            }
+        }
+
+        //TODO, list model from realization,compatible with old meta data,will remove
+        RealizationRegistry registry = RealizationRegistry.getInstance(config);
+        for (RealizationEntry realization : projectInstance.getRealizationEntries()) {
+            IRealization rel = registry.getRealization(realization.getType(), realization.getRealization());
+            if (rel != null) {
+                DataModelDesc modelDesc = rel.getDataModelDesc();
+                if(!ret.contains(modelDesc)){
+                    ProjectManager.getInstance(config).updateModelToProject(modelDesc.getName(),projectName);
+                    ret.add(modelDesc);
+                }
+            } else {
+                logger.warn("Realization '" + realization + "' defined under project '" + projectInstance + "' is not found");
+            }
+        }
+
+
+        return new ArrayList<>(ret);
+    }
+
 
     private void reloadAllDataModel() throws IOException {
         ResourceStore store = getStore();
@@ -321,12 +362,33 @@ public class MetadataManager {
         }
     }
 
-    public DataModelDesc createDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-        String name = dataModelDesc.getName();
+    // sync on update
+    public DataModelDesc dropModel(DataModelDesc desc) throws IOException {
+        logger.info("Dropping model '" + desc.getName() + "'");
+        ResourceStore store = getStore();
+        if (desc != null)
+            store.deleteResource(desc.getResourcePath());
+        // delete model from project
+        ProjectManager.getInstance(config).removeModelFromProjects(desc.getName());
+        // clean model cache
+        this.afterModelDropped(desc);
+        return desc;
+    }
+
+    private void afterModelDropped(DataModelDesc desc) {
+        removeModelCache(desc);
+    }
+
+    private void removeModelCache(DataModelDesc desc){
+        dataModelDescMap.remove(desc.getName());
+    }
+
+    public DataModelDesc createDataModelDesc(DataModelDesc desc,String projectName,String owner) throws IOException {
+        String name = desc.getName();
         if (dataModelDescMap.containsKey(name))
             throw new IllegalArgumentException("DataModelDesc '" + name + "' already exists");
-
-        return saveDataModelDesc(dataModelDesc);
+        ProjectManager.getInstance(config).updateModelToProject(name,projectName);
+        return saveDataModelDesc(desc);
     }
 
     public DataModelDesc updateDataModelDesc(DataModelDesc desc) throws IOException {

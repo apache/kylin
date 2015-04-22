@@ -7,6 +7,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -159,7 +160,17 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         return Math.max(getHistoryRealizationInstance().getDateRangeEnd(), getRealTimeRealizationInstance().getDateRangeEnd()) +1;
     }
 
-    @Override
+    
+
+    public DataModelDesc getDataModelDesc(){
+        if (getHistoryRealizationInstance() instanceof CubeInstance) {
+            return ((CubeInstance) historyRealizationInstance).getDescriptor().getModel();
+        }
+
+        return ((IIInstance) historyRealizationInstance).getDescriptor().getModel();
+    }
+
+   @Override
     public String getModelName() {
         if (getHistoryRealizationInstance() instanceof CubeInstance) {
             return ((CubeInstance) historyRealizationInstance).getDescriptor().getModelName();

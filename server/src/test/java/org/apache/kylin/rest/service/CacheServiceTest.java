@@ -303,7 +303,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertTrue(metadataManagerB.getDataModelDesc(dataModelName) == null);
 
         dataModelDesc.setName(dataModelName);
-        metadataManager.createDataModelDesc(dataModelDesc);
+        metadataManager.createDataModelDesc(dataModelDesc,"default","ADMIN");
         //only one for data model update
         assertEquals(1, broadcaster.getCounterAndClear());
         waitForCounterAndClear(1);

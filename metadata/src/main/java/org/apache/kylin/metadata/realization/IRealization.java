@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.realization;
 
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -46,6 +47,8 @@ public interface IRealization {
      * @return
      */
     public RealizationType getType();
+
+    public DataModelDesc getDataModelDesc();
 
     public String getFactTable();
 

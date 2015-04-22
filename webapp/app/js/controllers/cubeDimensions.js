@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/license$s/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,9 @@
 
 'use strict';
 
-KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
+KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cubesManager) {
 
+    $scope.cubeManager = cubesManager;
     // Available columns list derived from cube data model.
     $scope.availableColumns = {};
 
@@ -63,7 +64,8 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
         var factTable = $scope.metaModel.model.fact_table;
 
         // At first dump the columns of fact table.
-        var cols = $scope.getColumnsByTable(factTable);
+//        var cols = $scope.getColumnsByTable(factTable);
+        var cols = $scope.getDimColumnsByTable(factTable);
 
         // Initialize selected available.
         var factAvailable = {};
@@ -87,7 +89,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
         var lookups = $scope.metaModel.model.lookups;
 
         for (var j = 0; j < lookups.length; j++) {
-            var cols2 = $scope.getColumnsByTable(lookups[j].table);
+            var cols2 = $scope.getDimColumnsByTable(lookups[j].table);
 
             // Initialize selected available.
             var lookupAvailable = {};
@@ -105,13 +107,15 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
             $scope.availableColumns[lookups[j].table] = lookupAvailable;
             $scope.selectedColumns[lookups[j].table] = lookupSelectAvailable;
-            $scope.availableTables.push(lookups[j].table);
+            if($scope.availableTables.indexOf(lookups[j].table)==-1){
+                $scope.availableTables.push(lookups[j].table);
+            }
         }
     };
 
     // Check column status: selected or disabled based on current cube dimensions.
     $scope.initColumnStatus = function () {
-        angular.forEach($scope.cubeMetaFrame.dimensions, function (dim) {
+        angular.forEach(cubesManager.cubeMetaFrame.dimensions, function (dim) {
             var cols = dimCols(dim);
 
             angular.forEach(cols, function (colName) {
@@ -186,7 +190,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
         return types;
     };
 
-    var dimList = $scope.cubeMetaFrame.dimensions;
+    var dimList = cubesManager.cubeMetaFrame.dimensions;
 
     // Open add/edit dimension modal.
     $scope.openDimModal = function (dimType) {
@@ -216,7 +220,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
     };
 
     // Controller for cube dimension add/edit modal.
-    var cubeDimModalCtrl = function ($scope, $modalInstance, dimType) {
+    var cubeDimModalCtrl = function ($scope, $modalInstance, dimType,SweetAlert) {
         $scope.dimType = dimType;
 
         $scope.ok = function () {
@@ -226,6 +230,65 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
         $scope.cancel = function () {
             $modalInstance.dismiss('cancel');
         };
+
+        $scope.checkDimension = function(){
+            var errors = [];
+            // null validate
+
+            if($scope.dimType[0]=="hierarchy"){
+                if($scope.newDimension.column.length<2){
+                    errors.push("Please define at least 2 hierarchy columns.");
+                }else{
+                    for(var i = 0;i<$scope.newDimension.column.length;i++){
+                        if($scope.newDimension.column[i]===""){
+                            errors.push("Hierarchy value can't be null.");
+                            break;
+                        }
+                    }
+                    var _columns = angular.copy($scope.newDimension.column).sort();
+                    for(var i = 0;i<_columns.length-1;i++){
+                        if(_columns[i]==_columns[i+1]&&_columns[i]!==""){
+                            errors.push("Duplicate column "+_columns[i]+".");
+                        }
+                    }
+                }
+            }
+
+            if($scope.dimType[0]=="derived"){
+                if(!$scope.newDimension.derived.length){
+                    errors.push("Please define your derived columns.");
+                }
+                for(var i = 0;i<$scope.newDimension.derived.length;i++){
+                    if($scope.newDimension.derived[i]===""){
+                        errors.push("Derived value can't be null.");
+                        break;
+                    }
+                }
+                if($scope.newDimension.derived.length>1){
+                    var _columns = angular.copy($scope.newDimension.derived).sort();
+                    for(var i = 0;i<_columns.length-1;i++){
+                        if(_columns[i]==_columns[i+1]&&_columns[i]!==""){
+                            errors.push("Duplicate column "+_columns[i]+".");
+                        }
+                    }
+                }
+
+            }
+
+            var errorInfo = "";
+            angular.forEach(errors,function(item){
+                errorInfo+="\n"+item;
+            });
+            if(errors.length){
+//                SweetAlert.swal('Warning!', errorInfo, '');
+                SweetAlert.swal('', errorInfo, 'warning');
+                return false;
+            }else{
+                return true;
+            }
+        }
+
+
     };
 
     $scope.addDim = function (dimType) {
@@ -355,7 +418,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
     // Check whether there is column conflicts.
     $scope.dimConflicts = [];
 
-    $scope.$watch('cubeMetaFrame.dimensions', function (newVal, oldVal) {
+    $scope.$watch('cubesManager.cubeMetaFrame.dimensions', function (newVal, oldVal) {
         if (!newVal || !newVal.length) {
             return;
         }
@@ -389,8 +452,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel) {
 
         $scope.dimConflicts = conflicts;
     }, true);
-
-
 
     if ($scope.state.mode == 'edit') {
         $scope.$on('$destroy', function () {

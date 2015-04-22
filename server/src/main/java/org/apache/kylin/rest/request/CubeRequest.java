@@ -23,10 +23,8 @@ public class CubeRequest {
     private String uuid;
     private String cubeName;
     private String cubeDescData;
-    private String modelDescData;
     private boolean successful;
     private String message;
-    private String cubeDescName;
     private String project;
 
     public String getUuid() {
@@ -35,21 +33,6 @@ public class CubeRequest {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
-    }
-
-    /**
-     * @return the cubeDescName
-     */
-    public String getCubeDescName() {
-        return cubeDescName;
-    }
-
-    /**
-     * @param cubeDescName
-     *            the cubeDescName to set
-     */
-    public void setCubeDescName(String cubeDescName) {
-        this.cubeDescName = cubeDescName;
     }
 
     /**
@@ -85,10 +68,9 @@ public class CubeRequest {
     public CubeRequest() {
     }
 
-    public CubeRequest(long id, String cubeName, String cubeDescData,String modelDescData) {
+    public CubeRequest( String cubeName, String cubeDescData) {
         this.cubeName = cubeName;
         this.cubeDescData = cubeDescData;
-        this.modelDescData = modelDescData;
     }
 
     public String getCubeDescData() {
@@ -98,16 +80,7 @@ public class CubeRequest {
     public void setCubeDescData(String cubeDescData) {
         this.cubeDescData = cubeDescData;
     }
-    
-    
-    
-    public String getModelDescData() {
-        return modelDescData;
-    }
 
-    public void setModelDescData(String modelDescData) {
-        this.modelDescData = modelDescData;
-    }
 
     /**
      * @return the cubeDescName

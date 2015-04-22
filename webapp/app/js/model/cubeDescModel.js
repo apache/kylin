@@ -24,6 +24,7 @@ KylinApp.service('CubeDescModel',function(){
     this.createNew = function () {
             var cubeMeta = {
                 "name": "",
+                "model_name": "",
                 "description": "",
                 "dimensions": [],
                 "measures": [

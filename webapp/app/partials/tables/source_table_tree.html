@@ -16,7 +16,7 @@
 * limitations under the License.
 -->
 
-<div class="tree-border">
+<div class="tree-border" ng-controller="SourceMetaCtrl">
     <div class="row">
         <div class="col-xs-7">
             <h3 class="text-info">Tables</h3>
@@ -34,13 +34,14 @@
     <div class="space-4"></div>
     <!--tree-->
     <div style="width:100%; height:{{window}}px; overflow:auto;">
-        <treecontrol ng-if="tableModel.selectedSrcDb.length > 0" class="tree-light"
-                     dirSelection="true"
-                     tree-model="tableModel.selectedSrcDb"
-                     options="tableModel.treeOptions"
-                     on-selection="showSelected(node)"
-                     selected-node="tableModel.selectedSrcTable">
-            {{node.name}} {{!!(node.datatype)?'(' + trimType(node.datatype) + ')' : ''}}
-        </treecontrol>
+        <abn-tree
+                tree-data         = "tableModel.selectedSrcDb"
+                tree-control      = "my_tree"
+                icon-leaf         = "fa fa-columns"
+                icon-expand       = "fa fa-database"
+                icon-collapse     = "fa fa-database"
+                expand-level      = "3">
+        </abn-tree>
+        <div no-result ng-if="tableModel.selectedSrcDb.length == 0"></div>
     </div>
 </div>

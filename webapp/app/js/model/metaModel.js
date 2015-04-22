@@ -16,30 +16,40 @@
  * limitations under the License.
 */
 
+/**
+ *MetaModel will manage model info of cube
+ */
 KylinApp.service('MetaModel',function(){
 
     //data model when edit model
     this.model={
         name: null,
+        description:null,
         fact_table: null,
         lookups: [],
         filter_condition:null,
         capacity:null,
+        dimensions:[],
+        metrics:[],
         "partition_desc" : {
-            "partition_date_column" : '',
-            "partition_date_start" : 0,
+            "partition_date_column" : null,
+            "partition_date_start" : null,
             "partition_type" : 'APPEND'
         },
         last_modified:0
     };
 
+
     this.setMetaModel =function(model){
         var _model = {};
         _model.name = model.name;
+        _model.description = model.description;
         _model.fact_table = model.fact_table;
         _model.lookups =model.lookups;
         _model.filter_condition = model.filter_condition;
         _model.capacity = model.capacity;
+        _model.dimensions = model.dimensions;
+        _model.metrics = model.metrics;
         _model.partition_desc = model.partition_desc;
         _model.last_modified = model.last_modified;
         this.model = _model;
@@ -65,20 +75,23 @@ KylinApp.service('MetaModel',function(){
     };
     //
     this.createNew = function () {
-            var metaModel = {
-                name: '',
-                fact_table: '',
-                lookups: [],
-                filter_condition:'',
-                capacity:'MEDIUM',
-                "partition_desc" : {
-                    "partition_date_column" : '',
-                    "partition_date_start" : 0,
-                    "partition_type" : 'APPEND'
-                },
-                last_modified:0
-            };
+        var metaModel = {
+            name: '',
+            description:'',
+            fact_table: '',
+            lookups: [],
+            filter_condition:'',
+            capacity:'MEDIUM',
+            dimensions:[],
+            metrics:[],
+            "partition_desc" : {
+                "partition_date_column" : null,
+                "partition_date_start" : null,
+                "partition_type" : 'APPEND'
+            },
+            last_modified:0
+        };
 
-            return metaModel;
-        }
+        return metaModel;
+    }
 })

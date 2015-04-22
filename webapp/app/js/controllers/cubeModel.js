@@ -18,7 +18,30 @@
 
 'use strict';
 
-KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel,SweetAlert,$log) {
+KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,MetaModel,SweetAlert,ModelGraphService,$log,TableModel,ModelService,loadingRequest,modelsManager) {
+
+    $scope.modelsManager = modelsManager;
+
+    $scope.buildGraph = function (model) {
+//        var newModel = jQuery.extend(true, {}, model);
+        var newModel = angular.copy(model);
+        ModelGraphService.buildTree(newModel);
+    };
+
+    $scope.cleanStatus = function(model){
+
+        if (!model)
+        {
+            return;
+        }
+        var newModel = jQuery.extend(true, {}, model);
+        delete newModel.project;
+        delete  newModel.accessEntities;
+        delete  newModel.visiblePage;
+        delete  newModel.cubes;
+
+        return newModel;
+    };
 
     $scope.cubeConfig = cubeConfig;
     var DataModel = function () {
@@ -49,7 +72,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
 
     $scope.newLookup = Lookup();
 
-    var lookupList = $scope.metaModel.model.lookups;
+    var lookupList = modelsManager.selectedModel.lookups;
 
     $scope.openLookupModal = function () {
         var modalInstance = $modal.open({
@@ -73,7 +96,8 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
 
     // Controller for cube model lookup modal.
     var cubeModelLookupModalCtrl = function ($scope, $modalInstance) {
-        $scope.ok = function () {
+        $scope.ok = function (lookup_form) {
+            console.log(lookup_form);
             $modalInstance.close();
         };
 
@@ -111,7 +135,7 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
     };
 
         $scope.removeLookup = function (lookup) {
-            var dimExist = _.some($scope.cubeMetaFrame.dimensions,function(item,index){
+            var dimExist = _.some(modelsManager.selectedModel.dimensions,function(item,index){
                 return item.table===lookup.table;
             });
             if(dimExist) {
@@ -125,9 +149,9 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
                     closeOnConfirm: true
                 }, function (isConfirm) {
                     if (isConfirm) {
-                        for (var i = $scope.cubeMetaFrame.dimensions.length - 1; i >= 0; i--) {
-                            if ($scope.cubeMetaFrame.dimensions[i].table === lookup.table) {
-                                $scope.cubeMetaFrame.dimensions.splice(i, 1);
+                        for (var i = modelsManager.selectedModel.dimensions.length - 1; i >= 0; i--) {
+                            if (modelsManager.selectedModel.dimensions[i].table === lookup.table) {
+                                modelsManager.selectedModel.dimensions.splice(i, 1);
                             }
                         }
                         lookupList.splice(lookupList.indexOf(lookup), 1);
@@ -154,4 +178,88 @@ KylinApp.controller('CubeModelCtrl', function ($scope, $modal,cubeConfig,ModelSe
         $scope.lookupState.editingIndex = -1;
         $scope.newLookup = Lookup();
     };
+
+    $scope.checkLookupForm = function(){
+            var errors = [];
+            // null validate
+            for(var i = 0;i<$scope.newLookup.join.primary_key.length;i++){
+                if($scope.newLookup.join.primary_key[i]==='null'){
+                    errors.push("Primary Key can't be null.");
+                    break;
+                }
+            }
+            for(var i = 0;i<$scope.newLookup.join.foreign_key.length;i++){
+                if($scope.newLookup.join.foreign_key[i]==='null'){
+                    errors.push("Foreign Key can't be null.");
+                    break;
+                }
+            }
+
+            //column type validate
+            var fact_table = modelsManager.selectedModel.fact_table;
+            var lookup_table = $scope.newLookup.table;
+
+            for(var i = 0;i<$scope.newLookup.join.primary_key.length;i++){
+                var pk_column = $scope.newLookup.join.primary_key[i];
+                var fk_column = $scope.newLookup.join.foreign_key[i];
+                if(pk_column!=='null'&&fk_column!=='null'){
+                    var pk_type = TableModel.getColumnType(pk_column,lookup_table);
+                    var fk_type = TableModel.getColumnType(fk_column,fact_table);
+                    if(pk_type!==fk_type){
+                        errors.push(" Column Type incompatible "+pk_column+"["+pk_type+"]"+","+fk_column+"["+fk_type+"].");
+                    }
+                }
+            }
+
+            var errorInfo = "";
+            angular.forEach(errors,function(item){
+                errorInfo+="\n"+item;
+            });
+            if(errors.length){
+//                SweetAlert.swal('Warning!', errorInfo, '');
+                SweetAlert.swal('', errorInfo, 'warning');
+                return false;
+            }else{
+                return true;
+            }
+
+    };
+
+
+    $scope.dropModel = function (model) {
+
+        SweetAlert.swal({
+            title: '',
+            text: "Are you sure to drop this model?",
+            type: '',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: "Yes",
+            closeOnConfirm: true
+        }, function(isConfirm) {
+            if(isConfirm){
+
+                loadingRequest.show();
+                ModelService.drop({modelId: model.name}, {}, function (result) {
+                    loadingRequest.hide();
+//                    CubeList.removeCube(cube);
+                    SweetAlert.swal('Success!', 'Model drop is done successfully', 'success');
+                    location.reload();
+                },function(e){
+                    loadingRequest.hide();
+                    if(e.data&& e.data.exception){
+                        var message =e.data.exception;
+                        var msg = !!(message) ? message : 'Failed to take action.';
+                        SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
+                });
+            }
+
+        });
+    };
+
+
+
 });

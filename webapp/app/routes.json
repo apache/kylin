@@ -1,20 +1,5 @@
 [
     {
-        "url": "/home",
-        "params": {
-            "templateUrl": "partials/home.html",
-            "controller": "IndexCtrl"
-        }
-    },
-    {
-        "url": "/cubes",
-        "params": {
-            "templateUrl": "partials/cubes/cubes.html",
-            "tab": "cubes",
-            "controller": "CubesCtrl"
-        }
-    },
-    {
         "url": "/jobs",
         "params": {
             "templateUrl": "partials/jobs/jobs.html",
@@ -31,10 +16,10 @@
         }
     },
     {
-        "url": "/cubes/add",
+        "url": "/cubes/add/:modelName",
         "params": {
             "templateUrl": "partials/cubes/cube_edit.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubeEditCtrl"
         }
     },
@@ -42,7 +27,7 @@
         "url": "/cubes/add/json",
         "params": {
             "templateUrl": "partials/cubes/cube_json_edit.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubeEditCtrl"
         }
     },
@@ -50,7 +35,7 @@
         "url": "/cubes/edit/:cubeName/json",
         "params": {
             "templateUrl": "partials/cubes/cube_json_edit.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubeEditCtrl"
         }
     },
@@ -58,7 +43,7 @@
         "url": "/cubes/edit/:cubeName",
         "params": {
             "templateUrl": "partials/cubes/cube_edit.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubeEditCtrl"
         }
     },
@@ -66,7 +51,7 @@
         "url": "/cubes/:projectName/:cubeName",
         "params": {
             "templateUrl": "partials/cubes/cubes.html",
-            "tab": "cubes",
+            "tab": "models",
             "controller": "CubesCtrl"
         }
     },
@@ -102,6 +87,30 @@
             "templateUrl": "partials/login.html",
             "controller": "LoginCtrl",
             "reloadOnSearch": false
+        }
+    },
+    {
+        "url": "/models",
+        "params": {
+            "templateUrl": "partials/models/models.html",
+            "tab": "models",
+            "controller": "ModelsCtrl"
+        }
+    },
+    {
+        "url": "/models/add",
+        "params": {
+            "templateUrl": "partials/models/model_edit.html",
+            "tab": "models",
+            "controller": "ModelEditCtrl"
+        }
+    },
+    {
+        "url": "/models/edit/:modelName",
+        "params": {
+            "templateUrl": "partials/models/model_edit.html",
+            "tab": "models",
+            "controller": "ModelEditCtrl"
         }
     }
 ]

@@ -18,7 +18,7 @@
 
 KylinApp.factory('QueryService', ['$resource', function ($resource, config) {
     return $resource(Config.service.url + ':subject/:subject_id/:propName/:propValue/:action', {}, {
-        query: {method: 'POST', params: {action: 'query'}, isArray: false},
+        query: {method: 'POST', params: {action: 'query'},timeout:300000, isArray: false},
         save: {method: 'POST', params: {subject: 'saved_queries'}, isArray: false},
         delete: {method: 'DELETE', params: {subject: 'saved_queries'}, isArray: false},
         list: {method: 'GET', params: {subject: 'saved_queries'}, isArray: true},

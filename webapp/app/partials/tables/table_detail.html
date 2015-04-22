@@ -1,50 +1,5 @@
-<!--
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
--->
-
-<div class="page-header" style="height: 50px;">
-    <!--Project-->
-    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
-        <div class="form-group">
-            <span><b>Project: </b></span>
-            <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                    ng-options="project as project for project in projectModel.projects"
-                    style="width: 150px"
-                    data-placeholder="select a project"
-                    class="chosen-select">
-                <option  ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="projectModel.selectedProject==null"  value=""> -- Choose Project -- </option>
-            </select>
-            <!--Project-->
-            <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-            <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_ADMIN')||userService.hasRole('ROLE_MODELER')&&kylinConfig.getDeployEnv()!=='PROD'" tooltip="Add Project" ng-click="toCreateProj()">
-                <i class="fa fa-plus"></i>
-            </a>
-
-        </div>
-    </form>
-</div>
-
-<div class="row" ng-controller="SourceMetaCtrl">
-    <!--table_tree-->
-    <div class="col-xs-3">
-        <div ng-include src="'partials/tables/source_table_tree.html'"></div>
-    </div>
-    <!--Tab-->
-    <div class="col-xs-9">
+<div  ng-controller="SourceMetaCtrl" class="nav-tabs-custom">
+    <div class="col-xs-12" ng-show="tableModel.selectedSrcDb&&tableModel.selectedSrcTable.name">
         <h3 class="text-info">Table Schema:{{ tableModel.selectedSrcTable.name}}</h3>
         <div class="tabbable nav-tabs-custom">
             <ul class="nav nav-tabs">
@@ -61,50 +16,50 @@
                     <div ng-if="tableModel.selectedSrcTable.uuid" class="table-responsive">
                         <table class="table">
                             <tbody>
-                                <tr>
-                                    <th style="width:20%">NAME</th>
-                                    <td>{{ tableModel.selectedSrcTable.name}}</td>
-                                </tr>
-                                <tr>
-                                    <th>Hive DATABASE</th>
-                                    <td>{{tableModel.selectedSrcTable.database}}</td>
-                                </tr>
-                                <tr>
-                                    <th>SNAPSHOT TIME</th>
-                                    <td>{{tableModel.selectedSrcTable.exd.lastUpdateTime | utcToConfigTimeZone}}</td>
-                                </tr>
-                                <tr>
-                                    <th>LOCATION</th>
-                                    <td>{{tableModel.selectedSrcTable.exd.location}}</td>
-                                </tr>
-                                <tr>
-                                    <th>INPUT FORMAT</th>
-                                    <td>{{tableModel.selectedSrcTable.exd.inputformat}}</td>
-                                </tr>
-                                <tr>
-                                    <th>OUTPUT FORMAT</th>
-                                    <td>{{tableModel.selectedSrcTable.exd.outputformat}}</td>
-                                </tr>
-                                <tr>
-                                    <th>OWNER</th>
-                                    <td><a href="mailto:{{tableModel.selectedSrcTable.exd.owner}}">{{tableModel.selectedSrcTable.exd.owner}}</a></td>
-                                </tr>
-                                <tr>
-                                    <th>TOTAL FILE NUMBER</th>
-                                    <td>{{tableModel.selectedSrcTable.exd.totalNumberFiles}}</td>
-                                </tr>
-                                <tr>
-                                    <th>TOTAL FILE SIZE</th>
-                                    <td>{{tableModel.selectedSrcTable.exd.totalFileSize}}</td>
-                                </tr>
-                                <tr>
-                                    <th>PARTITIONED</th>
-                                    <td>{{tableModel.selectedSrcTable.exd.partitioned}}</td>
-                                </tr>
-                                <tr>
-                                    <th>PARTITION COLUMNS</th>
-                                    <td>{{tableModel.selectedSrcTable.exd.partitionColumns}}</td>
-                                </tr>
+                            <tr>
+                                <th style="width:20%">NAME</th>
+                                <td>{{ tableModel.selectedSrcTable.name}}</td>
+                            </tr>
+                            <tr>
+                                <th>Hive DATABASE</th>
+                                <td>{{tableModel.selectedSrcTable.database}}</td>
+                            </tr>
+                            <tr>
+                                <th>SNAPSHOT TIME</th>
+                                <td>{{tableModel.selectedSrcTable.exd.lastUpdateTime | utcToConfigTimeZone}}</td>
+                            </tr>
+                            <tr>
+                                <th>LOCATION</th>
+                                <td>{{tableModel.selectedSrcTable.exd.location}}</td>
+                            </tr>
+                            <tr>
+                                <th>INPUT FORMAT</th>
+                                <td>{{tableModel.selectedSrcTable.exd.inputformat}}</td>
+                            </tr>
+                            <tr>
+                                <th>OUTPUT FORMAT</th>
+                                <td>{{tableModel.selectedSrcTable.exd.outputformat}}</td>
+                            </tr>
+                            <tr>
+                                <th>OWNER</th>
+                                <td><a href="mailto:{{tableModel.selectedSrcTable.exd.owner}}">{{tableModel.selectedSrcTable.exd.owner}}</a></td>
+                            </tr>
+                            <tr>
+                                <th>TOTAL FILE NUMBER</th>
+                                <td>{{tableModel.selectedSrcTable.exd.totalNumberFiles}}</td>
+                            </tr>
+                            <tr>
+                                <th>TOTAL FILE SIZE</th>
+                                <td>{{tableModel.selectedSrcTable.exd.totalFileSize}}</td>
+                            </tr>
+                            <tr>
+                                <th>PARTITIONED</th>
+                                <td>{{tableModel.selectedSrcTable.exd.partitioned}}</td>
+                            </tr>
+                            <tr>
+                                <th>PARTITION COLUMNS</th>
+                                <td>{{tableModel.selectedSrcTable.exd.partitionColumns}}</td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -165,6 +120,52 @@
         </div>
     </div>
 
+
+    <!--show load hive table tip when no models list-->
+    <div ng-show="!tableModel.selectedSrcDb.length" style="margin-top:40px;">
+
+        <!--project selected tip-->
+        <div ng-if="projectModel.getSelectedProject();" class="box box-primary">
+            <div class="box-header with-border">
+                <i class="fa fa-bullhorn"></i>
+                <h3 class="box-title">No tables</h3>
+            </div>
+            <div class="box-body">
+                <div>
+                    <a tooltip="Load Hive Table" href="javascript:void(0);" ng-if="userService.hasRole('ROLE_MODELER')" ng-click="openModal()">Click here to load your hive table</a>
+                </div>
+            </div><!-- /.box-body -->
+        </div>
+        <!--roject not selected tip-->
+        <div ng-if="!projectModel.getSelectedProject();" class="box box-primary">
+            <div class="box-header with-border">
+                <i class="icon fa fa-warning"></i>
+                <h3 class="box-title">No project selected</h3>
+            </div>
+            <div class="box-body">
+                <div class="callout callout-danger">
+                    <p  class="text-danger">
+                       Please select your project first
+                    </p>
+                </div>
+            </div><!-- /.box-body -->
+        </div>
+    </div>
+
+    <!--show load hive table tip when no models list-->
+    <div ng-show="tableModel.selectedSrcDb.length&&!tableModel.selectedSrcTable.name" style="margin-top:40px;">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <i class="fa fa-bullhorn"></i>
+                <h3 class="box-title">No table selected</h3>
+            </div>
+            <div class="box-body">
+                Select your table
+            </div><!-- /.box-body -->
+        </div>
+    </div>
+
+
     <script type="text/ng-template" id="addHiveTable.html">
         <div class="modal-header">
             <h4>Load Hive Table Metadata</h4>
@@ -181,5 +182,3 @@
         </div>
     </script>
 </div>
-
-<div ng-include="'partials/projects/project_create.html'"></div>

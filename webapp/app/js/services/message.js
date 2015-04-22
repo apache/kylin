@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('MessageService', ['config_ui_messenger', function (config_ui_messenger) {
+KylinApp.service('MessageService', ['config_ui_messenger', function (config_ui_messenger,$log) {
 
     this.sendMsg = function (msg, type, actions, sticky, position) {
         var options = {

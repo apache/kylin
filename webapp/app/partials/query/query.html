@@ -20,15 +20,6 @@
     <!--Project-->
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
         <div class="form-group">
-            <span><b>Project: </b></span>
-            <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                    ng-options="project as project for project in projectModel.projects"
-                    style="width: 150px"
-                    data-placeholder="select a project"
-                    class="chosen-select">
-                <option ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="projectModel.selectedProject==null"  value=""> -- Choose Project -- </option>
-            </select>
-            <!--Project-->
             <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
             <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')||userService.hasRole('ROLE_MODELER')&&kylinConfig.getDeployEnv()!=='PROD'" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>

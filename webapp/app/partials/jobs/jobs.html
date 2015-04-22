@@ -21,15 +21,6 @@
     <div class="col-xs-3">
         <form ng-if="userService.isAuthorized()">
             <div class="form-group">
-                <span><b>Project: </b></span>
-                <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                        ng-options="project as project for project in projectModel.projects"
-                        style="width: 150px"
-                        data-placeholder="select a project"
-                        class="chosen-select">
-                    <option ng-if="userService.hasRole('ROLE_ADMIN')"  ng-selected="projectModel.selectedProject==null"  value=""> -- Select All -- </option>
-                </select>
-                <!--Project-->
                 <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
                 <a class="btn btn-xs btn-primary" style="width: 29px" ng-if="userService.hasRole('ROLE_ADMIN')||userService.hasRole('ROLE_MODELER')&&kylinConfig.getDeployEnv()!=='PROD'"  tooltip="Add Project" ng-click="toCreateProj()">
                     <i class="fa fa-plus"></i>
@@ -39,8 +30,8 @@
     </div>
     <!--Cube Name: -->
     <div class="col-xs-3">
-        <form ng-submit="jobList.removeAll();reload()" style="display: inline" >
-            <span class="input-icon input-icon-right nav-search"><b>Cube Name:</b>
+        <form class="" ng-submit="jobList.removeAll();reload()" style="display: inline" >
+            <span class="input-icon input-icon-right nav-search" style="font-size:14px;"><b>Cube Name:</b>
                 <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="cubeName" />
                 <i class="ace-icon fa fa-search blue" ng-click="jobList.removeAll();reload()"></i>
             </span>
