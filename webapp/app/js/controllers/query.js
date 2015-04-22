@@ -354,7 +354,11 @@ KylinApp
 
         $scope.refreshCurQuery = function () {
             $scope.curQuery = this.query;
-        }
+            $scope.curQuery.result = {
+                isResponsePartial: false
+            };
+            $scope.query($scope.curQuery);
+        };
 
         $scope.showSavePanel = function () {
             $modal.open({

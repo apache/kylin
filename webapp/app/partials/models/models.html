@@ -1,0 +1,60 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<div class="page-header" style="height: 50px;">
+    <!--Project-->
+    <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
+        <div class="form-group">
+            <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
+            <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')||userService.hasRole('ROLE_MODELER')&&kylinConfig.getDeployEnv()!=='PROD'" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+                <i class="fa fa-plus"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="row models-main"  style="padding-top:10px;">
+    <!--table_tree-->
+    <div class="col-xs-3">
+        <tabset class="nav-tabs-custom">
+            <tab heading="Models" select="toggleTab(true);">
+                <div ng-include src="'partials/models/models_tree.html'"></div>
+            </tab>
+            <tab heading="Data Source"  select="toggleTab(false);">
+                <div ng-include src="'partials/tables/source_table_tree.html'"></div>
+            </tab>
+        </tabset>
+    </div>
+    <div  ng-if="showModels&&!modelsManager.cubeSelected"  class="col-xs-9 models-main">
+        <div ng-include src="'partials/models/model_detail.html'"></div>
+    </div>
+    <div  ng-if="showModels&&modelsManager.cubeSelected"  class="col-xs-9 models-main">
+        <div ng-include src="'partials/cubes/cube_detail.html'"></div>
+    </div>
+
+    <div ng-if="!showModels" class="col-xs-9 models-main">
+        <div ng-include src="'partials/tables/table_detail.html'"></div>
+    </div>
+
+
+</div>
+
+<div ng-include="'partials/jobs/job_submit.html'"></div>
+<div ng-include="'partials/jobs/job_refresh.html'"></div>
+<div ng-include="'partials/jobs/job_merge.html'"></div>
+<div ng-include="'partials/projects/project_create.html'"></div>

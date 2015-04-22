@@ -81,7 +81,7 @@ public class CubeService extends BasicService {
     private AccessService accessService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<CubeInstance> listAllCubes(final String cubeName, final String projectName) {
+    public List<CubeInstance> listAllCubes(final String cubeName, final String projectName,final String modelName) {
         List<CubeInstance> cubeInstances = null;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -91,8 +91,21 @@ public class CubeService extends BasicService {
             cubeInstances = listAllCubes(projectName);
         }
 
+        List<CubeInstance> filterModelCubes = new ArrayList<CubeInstance>();
+
+        if(modelName!=null){
+            for (CubeInstance cubeInstance : cubeInstances) {
+                boolean isCubeMatch = cubeInstance.getDescriptor().getModelName().toLowerCase().equals(modelName.toLowerCase());
+                if (isCubeMatch) {
+                    filterModelCubes.add(cubeInstance);
+                }
+            }
+        }else{
+            filterModelCubes = cubeInstances;
+        }
+
         List<CubeInstance> filterCubes = new ArrayList<CubeInstance>();
-        for (CubeInstance cubeInstance : cubeInstances) {
+        for (CubeInstance cubeInstance : filterModelCubes) {
             boolean isCubeMatch = (null == cubeName) || cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase());
 
             if (isCubeMatch) {
@@ -103,12 +116,17 @@ public class CubeService extends BasicService {
         return filterCubes;
     }
 
-    public List<CubeInstance> getCubes(final String cubeName, final String projectName, final Integer limit, final Integer offset) {
-        int climit = (null == limit) ? 30 : limit;
-        int coffset = (null == offset) ? 0 : offset;
+    public List<CubeInstance> getCubes(final String cubeName, final String projectName,final String modelName ,final Integer limit, final Integer offset) {
 
         List<CubeInstance> cubes;
-        cubes = listAllCubes(cubeName, projectName);
+        cubes = listAllCubes(cubeName, projectName,modelName);
+
+        if(limit==null||offset==null){
+            return cubes;
+        }
+
+        int climit = (null == limit) ? 30 : limit;
+        int coffset = (null == offset) ? 0 : offset;
 
         if (cubes.size() <= coffset) {
             return Collections.emptyList();
@@ -217,7 +235,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws UnknownHostException, IOException, JobException {
+    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws  IOException, JobException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new JobException("Cube schema shouldn't be changed with running job.");
@@ -302,7 +320,6 @@ public class CubeService extends BasicService {
      * @param cube
      * @return
      * @throws IOException
-     * @throws CubeIntegrityException
      * @throws JobException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
@@ -328,7 +345,6 @@ public class CubeService extends BasicService {
      * Update a cube status from ready to disabled.
      *
      * @return
-     * @throws CubeIntegrityException
      * @throws IOException
      * @throws JobException
      */
@@ -356,7 +372,6 @@ public class CubeService extends BasicService {
      * Update a cube status from disable to ready.
      *
      * @return
-     * @throws CubeIntegrityException
      * @throws IOException
      * @throws JobException
      */
@@ -518,7 +533,6 @@ public class CubeService extends BasicService {
      *
      * @throws IOException
      * @throws JobException
-     * @throws CubeIntegrityException
      */
     private void releaseAllSegments(CubeInstance cube) throws IOException, JobException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);

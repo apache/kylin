@@ -16,21 +16,21 @@
  * limitations under the License.
 */
 
-KylinApp.service('CubeGraphService', function () {
+KylinApp.service('ModelGraphService', function () {
 
     var margin = {top: 20, right: 100, bottom: 20, left: 100},
         width = 1100 - margin.right - margin.left,
         height = 600;
 
-    this.buildTree = function (cube) {
-        $("#cube_graph_" + cube.name).empty();
+    this.buildTree = function (model) {
+        $("#model_graph_" + model.name).empty();
 
         var tree = d3.layout.tree().size([height, width - 160]);
         var diagonal = d3.svg.diagonal().projection(function (d) {
             return [d.y, d.x];
         });
 
-        var svg = d3.select("#cube_graph_" + cube.name).append("svg:svg")
+        var svg = d3.select("#model_graph_" + model.name).append("svg:svg")
             .attr("width", width + margin.right + margin.left)
             .attr("height", height)
             .append("svg:g")
@@ -38,14 +38,13 @@ KylinApp.service('CubeGraphService', function () {
 
         var graphData = {
             "type": "fact",
-            "name": cube.model.fact_table,
+            "name": model.fact_table,
             "children": []
         };
 
-        cube.graph = (!!cube.graph) ? cube.graph : {};
+        model.graph = (!!model.graph) ? model.graph : {};
 
-      //angular.forEach(cube.detail.dimensions, function (dimension, index) {
-      angular.forEach(cube.model.lookups, function (lookup, index) {
+      angular.forEach(model.lookups, function (lookup, index) {
         if (lookup.join && lookup.join.primary_key.length > 0) {
 
           var dimensionNode;
@@ -76,9 +75,9 @@ KylinApp.service('CubeGraphService', function () {
         }
       });
 
-      angular.forEach(cube.detail.dimensions, function (dimension, index) {
+      angular.forEach(model.dimensions, function (dimension, index) {
         // for dimension on lookup table
-        if(cube.model.fact_table!==dimension.table){
+        if(model.fact_table!==dimension.table){
             var lookup = _.find(graphData.children,function(item){
               return item.name === dimension.table;
             });
@@ -95,63 +94,30 @@ KylinApp.service('CubeGraphService', function () {
                       });
                   }
           });
-
-          if (dimension.derived&&dimension.derived.length)
-          {
-              angular.forEach(dimension.derived, function(derived, index){
-                  for (var i = 0; i < lookup._children.length; i++) {
-                      if(lookup._children[i].name == derived)
-                          break;
-                  }
-                  if(i == lookup._children.length) {
-                    lookup._children.push({
-                          "type": "column",
-                          "name": derived + "(DERIVED)"
-                      });
-                  }
-              });
-          }
-
-          if (dimension.hierarchy)
-          {
-              angular.forEach(dimension.column, function(hierarchy, index){
-                  for (var i = 0; i < lookup._children.length; i++) {
-                      if(lookup._children[i].name == hierarchy)
-                          break;
-                  }
-                  if(i == lookup._children.length) {
-                    lookup._children.push({
-                          "type": "column",
-                          "name": hierarchy + "(HIERARCHY)"
-                      });
-                  }
-              });
-          }
-
         };
       });
-        cube.graph.columnsCount = 0;
-        cube.graph.tree = tree;
-        cube.graph.root = graphData;
-        cube.graph.svg = svg;
-        cube.graph.diagonal = diagonal;
-        cube.graph.i = 0;
+        model.graph.columnsCount = 0;
+        model.graph.tree = tree;
+        model.graph.root = graphData;
+        model.graph.svg = svg;
+        model.graph.diagonal = diagonal;
+        model.graph.i = 0;
 
-        cube.graph.root.x0 = height / 2;
-        cube.graph.root.y0 = 0;
-        update(cube.graph.root, cube);
+        model.graph.root.x0 = height / 2;
+        model.graph.root.y0 = 0;
+        update(model.graph.root, model);
     }
 
-    function update(source, cube) {
+    function update(source, model) {
         var duration = 750;
 
         // Compute the new tree layout.
-        var nodes = cube.graph.tree.nodes(cube.graph.root).reverse();
+        var nodes = model.graph.tree.nodes(model.graph.root).reverse();
 
         // Update the nodes
-        var node = cube.graph.svg.selectAll("g.node")
+        var node = model.graph.svg.selectAll("g.node")
             .data(nodes, function (d) {
-                return d.id || (d.id = ++cube.graph.i);
+                return d.id || (d.id = ++model.graph.i);
             });
 
         var nodeEnter = node.enter().append("svg:g")
@@ -181,22 +147,22 @@ KylinApp.service('CubeGraphService', function () {
                     d.children = null;
 
                     if (d.type == 'dimension') {
-                        cube.graph.columnsCount -= d._children.length;
+                        model.graph.columnsCount -= d._children.length;
                     }
                 } else {
                     d.children = d._children;
                     d._children = null;
 
                     if (d.type == 'dimension') {
-                        cube.graph.columnsCount += d.children.length;
+                        model.graph.columnsCount += d.children.length;
                     }
                 }
 
                 var perColumn = 35;
-                var newHeight = (((cube.graph.columnsCount * perColumn > height) ? cube.graph.columnsCount * perColumn : height));
-                $("#cube_graph_" + cube.name + " svg").height(newHeight);
-                cube.graph.tree.size([newHeight, width - 160]);
-                update(d, cube);
+                var newHeight = (((model.graph.columnsCount * perColumn > height) ? model.graph.columnsCount * perColumn : height));
+                $("#model_graph_" + model.name + " svg").height(newHeight);
+                model.graph.tree.size([newHeight, width - 160]);
+                update(d, model);
             });
 
         nodeEnter.append("svg:text")
@@ -210,7 +176,7 @@ KylinApp.service('CubeGraphService', function () {
                     var joinTip = "";
 
                     angular.forEach(d.join.primary_key, function (pk, index) {
-                        joinTip += ( cube.graph.root.name + "." + d.join.foreign_key[index] + " = " + d.name + "." + pk + "<br>");
+                        joinTip += ( model.graph.root.name + "." + d.join.foreign_key[index] + " = " + d.name + "." + pk + "<br>");
                     });
 
                     d.tooltip = d3.select("body")
@@ -286,8 +252,8 @@ KylinApp.service('CubeGraphService', function () {
             .remove();
 
         // Update the links…
-        var link = cube.graph.svg.selectAll("path.link")
-            .data(cube.graph.tree.links(nodes), function (d) {
+        var link = model.graph.svg.selectAll("path.link")
+            .data(model.graph.tree.links(nodes), function (d) {
                 return d.target.id;
             });
 
@@ -296,23 +262,23 @@ KylinApp.service('CubeGraphService', function () {
             .attr("class", "link")
             .attr("d", function (d) {
                 var o = {x: source.x0, y: source.y0};
-                return cube.graph.diagonal({source: o, target: o});
+                return model.graph.diagonal({source: o, target: o});
             })
             .transition()
             .duration(duration)
-            .attr("d", cube.graph.diagonal);
+            .attr("d", model.graph.diagonal);
 
         // Transition links to their new position.
         link.transition()
             .duration(duration)
-            .attr("d", cube.graph.diagonal);
+            .attr("d", model.graph.diagonal);
 
         // Transition exiting nodes to the parent's new position.
         link.exit().transition()
             .duration(duration)
             .attr("d", function (d) {
                 var o = {x: source.x, y: source.y};
-                return cube.graph.diagonal({source: o, target: o});
+                return model.graph.diagonal({source: o, target: o});
             })
             .remove();
 

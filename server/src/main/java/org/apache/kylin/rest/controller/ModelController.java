@@ -17,51 +17,176 @@
 */
 
 package org.apache.kylin.rest.controller;
+import java.util.Iterator;
+import com.codahale.metrics.annotation.Metered;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.exception.ForbiddenException;
+import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.NotFoundException;
+import org.apache.kylin.rest.request.ModelRequest;
+import org.apache.kylin.rest.service.ModelService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-
-import org.apache.kylin.rest.service.CubeService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.DataModelDesc;
+import java.util.List;
+import java.util.UUID;
 
 /**
+ * ModelController is defined as Restful API entrance for UI.
+ *
  * @author jiazhong
- * 
  */
 @Controller
-@RequestMapping(value = "/model")
-public class ModelController {
+@RequestMapping(value = "/models")
+public class ModelController extends BasicController {
+    private static final Logger logger = LoggerFactory.getLogger(ModelController.class);
 
     @Autowired
-    private CubeService cubeService;
+    private ModelService modelService;
+
+    @RequestMapping(value = "", method = {RequestMethod.GET})
+    @ResponseBody
+    @Metered(name = "listModels")
+    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value="limit",required=false) Integer limit, @RequestParam(value="offset",required=false) Integer offset) {
+        try{
+            return modelService.getModels(modelName, projectName, limit, offset);
+        }
+        catch (IOException e){
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+        }
+    }
 
     /**
-     * Get detail information of the "Cube ID"
-     * 
-     * @param cubeDescName
-     *            Cube ID
-     * @return
-     * @throws IOException
+     *
+     * create model
+     * @throws java.io.IOException
      */
-    @RequestMapping(value = "/{model_name}", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = {RequestMethod.POST})
     @ResponseBody
-    public DataModelDesc getModel(@PathVariable String model_name) {
-        MetadataManager metaManager= MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        DataModelDesc modeDesc = metaManager.getDataModelDesc(model_name);
-        return modeDesc;
-            
+    @Metered(name = "saveModel")
+    public ModelRequest saveModelDesc(@RequestBody ModelRequest modelRequest) {
+        //Update Model
+        DataModelDesc modelDesc = deserializeDataModelDesc(modelRequest);
+        if (modelDesc == null || StringUtils.isEmpty(modelDesc.getName())) {
+            return modelRequest;
+        }
+        if (StringUtils.isEmpty(modelDesc.getName())) {
+            logger.info("Model name should not be empty.");
+            throw new BadRequestException("Model name should not be empty.");
+        }
+
+        try {
+            modelDesc.setUuid(UUID.randomUUID().toString());
+            String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
+
+            modelService.createModelDesc(projectName, modelDesc);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+        }
+
+        modelRequest.setUuid(modelDesc.getUuid());
+        modelRequest.setSuccessful(true);
+        return modelRequest;
     }
 
-    public void setCubeService(CubeService cubeService) {
-        this.cubeService = cubeService;
+    @RequestMapping(value = "", method = {RequestMethod.PUT})
+    @ResponseBody
+    @Metered(name = "updateModel")
+    public ModelRequest updateModelDesc(@RequestBody ModelRequest modelRequest) throws JsonProcessingException {
+        DataModelDesc modelDesc = deserializeDataModelDesc(modelRequest);
+        if (modelDesc == null) {
+            return modelRequest;
+        }
+        try {
+            modelDesc =  modelService.updateModelAndDesc(modelDesc);
+        } catch (AccessDeniedException accessDeniedException) {
+            throw new ForbiddenException("You don't have right to update this cube.");
+        }  catch (Exception e) {
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+        }
+
+        if (modelDesc.getError().isEmpty()) {
+            modelRequest.setSuccessful(true);
+        } else {
+            logger.warn("Model " + modelDesc.getName() + " fail to update because " + modelDesc.getError());
+            updateRequest(modelRequest, false, omitMessage(modelDesc.getError()));
+        }
+        String descData = JsonUtil.writeValueAsIndentString(modelDesc);
+        modelRequest.setModelDescData(descData);
+        return modelRequest;
     }
 
+    @RequestMapping(value = "/{modelName}", method = {RequestMethod.DELETE})
+    @ResponseBody
+    @Metered(name = "deleteModel")
+    public void deleteModel(@PathVariable String modelName) {
+        DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);
+        if (null == desc) {
+            throw new NotFoundException("Data Model with name " + modelName + " not found..");
+        }
+        try {
+            modelService.dropModel(desc);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to delete model. " + " Caused by: " + e.getMessage(), e);
+        }
+    }
+
+    private DataModelDesc deserializeDataModelDesc(ModelRequest modelRequest) {
+        DataModelDesc desc = null;
+        try {
+            logger.debug("Saving MODEL " + modelRequest.getModelDescData());
+            desc = JsonUtil.readValue(modelRequest.getModelDescData(), DataModelDesc.class);
+        } catch (JsonParseException e) {
+            logger.error("The data model definition is not valid.", e);
+            updateRequest(modelRequest, false, e.getMessage());
+        } catch (JsonMappingException e) {
+            logger.error("The data model definition is not valid.", e);
+            updateRequest(modelRequest, false, e.getMessage());
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
+        }
+        return desc;
+    }
+
+    private void updateRequest(ModelRequest request, boolean success, String message) {
+        request.setModelDescData("");
+        request.setSuccessful(success);
+        request.setMessage(message);
+    }
+
+    public void setModelService(ModelService modelService) {
+        this.modelService = modelService;
+    }
+
+    /**
+     * @param errors
+     * @return
+     */
+    private String omitMessage(List<String> errors) {
+        StringBuffer buffer = new StringBuffer();
+        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext();) {
+            String string = (String) iterator.next();
+            buffer.append(string);
+            buffer.append("\n");
+        }
+        return buffer.toString();
+    }
 }

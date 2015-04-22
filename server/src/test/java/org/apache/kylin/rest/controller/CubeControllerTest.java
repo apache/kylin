@@ -43,7 +43,6 @@ public class CubeControllerTest extends ServiceTestBase {
 
     private CubeController cubeController;
     private CubeDescController cubeDescController;
-    private ModelController modelController;
 
     @Autowired
     CubeService cubeService;
@@ -60,8 +59,6 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
 
-        modelController = new ModelController();
-        modelController.setCubeService(cubeService);
     }
 
     @Test
@@ -69,7 +66,7 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeDesc[] cubes = (CubeDesc[]) cubeDescController.getCube("test_kylin_cube_with_slr_ready");
         Assert.assertNotNull(cubes);
         Assert.assertNotNull(cubeController.getSql("test_kylin_cube_with_slr_ready", "20130331080000_20131212080000"));
-        Assert.assertNotNull(cubeController.getCubes(null, null, 0, 5));
+        Assert.assertNotNull(cubeController.getCubes(null, null, null,0, 5));
 
         CubeDesc cube = cubes[0];
         CubeDesc newCube = new CubeDesc();
@@ -104,19 +101,15 @@ public class CubeControllerTest extends ServiceTestBase {
 
         CubeRequest cubeRequest = new CubeRequest();
         cubeRequest.setCubeDescData(cubeDescWriter.toString());
-        cubeRequest.setModelDescData(modelDescWriter.toString());
         cubeRequest = cubeController.saveCubeDesc(cubeRequest);
 
-
-        DataModelDesc model = modelController.getModel(newModelName);
-        Assert.assertNotNull(model);
 
         List<String> notifyList = Lists.newArrayList();
         notifyList.add("john@example.com");
         cubeController.updateNotifyList(newCubeName, notifyList);
         cubeController.updateCubeCost(newCubeName, 80);
 
-        List<CubeInstance> cubeInstances = cubeController.getCubes(newCubeName, "default", 1, 0);
+        List<CubeInstance> cubeInstances = cubeController.getCubes(newCubeName, "default",null, 1, 0);
 
         CubeInstance cubeInstance = cubeInstances.get(0);
         Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));

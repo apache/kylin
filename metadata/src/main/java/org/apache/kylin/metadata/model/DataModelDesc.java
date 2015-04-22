@@ -41,6 +41,9 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("description")
+    private String description;
+
     @JsonProperty("fact_table")
     private String factTable;
 
@@ -61,12 +64,27 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
+
+    /**
+     * Error messages during resolving json metadata
+     */
+    private List<String> errors = new ArrayList<String>();
+
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Collection<String> getAllTables() {
@@ -212,6 +230,58 @@ public class DataModelDesc extends RootPersistentEntity {
             }
 
         }
+    }
+
+    /**
+     * Add error info and thrown exception out
+     *
+     * @param message
+     */
+    public void addError(String message) {
+        addError(message, false);
+    }
+
+    /**
+     * @param message
+     *            error message
+     * @param silent
+     *            if throw exception
+     */
+    public void addError(String message, boolean silent) {
+        if (!silent) {
+            throw new IllegalStateException(message);
+        } else {
+            this.errors.add(message);
+        }
+    }
+
+    public List<String> getError() {
+        return this.errors;
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        DataModelDesc modelDesc = (DataModelDesc) o;
+
+        if (!name.equals(modelDesc.name))
+            return false;
+        if (!getFactTable().equals(modelDesc.getFactTable()))
+            return false;
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = 0;
+        result = 31 * result + name.hashCode();
+        result = 31 * result + getFactTable().hashCode();
+        return result;
     }
 
     @Override

@@ -23,9 +23,7 @@ KylinApp.service('ProjectModel',function(){
 
 
     this.setSelectedProject = function(project) {
-        if(this.projects.indexOf(project) > -1) {
             this.selectedProject = project;
-        }
     };
     this.getSelectedProject = function(project) {
          return this.selectedProject;
@@ -52,9 +50,11 @@ KylinApp.service('ProjectModel',function(){
     }
 
     this.updateProject = function (_new,_old) {
-        var index =this.projects.indexOf(_old);
-        if(index>-1){
-            this.projects[index] = _new;
+        for(var i = 0;i<projects.length; i++){
+          if(projects[i].name === _old){
+              projects[i].name = _new;
+              break;
+          }
         }
     }
 
@@ -62,8 +62,23 @@ KylinApp.service('ProjectModel',function(){
         return this.projects;
     }
 
+    this.getProjectByCubeModel = function(modelName){
+        for(var i = 0;i<this.projects.length;i++){
+            if(!this.projects[i].models){
+                continue;
+            }
+            for(var j = 0;j<this.projects[i].models.length;j++){
+                var model = this.projects[i].models[j];
+                if(model.toUpperCase()===modelName.toUpperCase()){
+                    return this.projects[i].name;
+                }
+            }
+        };
+        return this.getSelectedProject();
+    }
+
     this.sortProjects = function (){
-        this.projects = _.sortBy(this.projects, function (i) { return i.toLowerCase(); });
+        this.projects = _.sortBy(this.projects, function (i) { return i.name.toLowerCase(); });
     }
 
 })

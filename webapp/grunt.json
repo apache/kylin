@@ -59,6 +59,7 @@
                 "app/components/angular-chosen-localytics/chosen-spinner.css",
                 "app/components/nvd3/nv.d3.min.css",
                 "app/css/AdminLTE.css",
+                "app/css/skins/_all-skins.min.css",
                 "app/components/bootstrap-sweetalert/lib/sweet-alert.css",
                 "tmp/css/styles.css"
             ],

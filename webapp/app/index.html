@@ -29,7 +29,7 @@
 
     <!-- ref:css css/styles.min.<%= buildNumber %>.css -->
     <link rel="stylesheet" type="text/css" href="components/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="components/font-awesome/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="components/components-font-awesome/css/font-awesome.css">
 
     <link rel="stylesheet" type="text/css" href="components/angular-tree-control/css/tree-control.css">
     <link rel="stylesheet" type="text/css" href="components/angular-tree-control/css/tree-control-attribute.css">
@@ -44,6 +44,7 @@
     <link rel="stylesheet" type="text/css" href="css/AdminLTE-fonts.css">
     <link rel="stylesheet" type="text/css" href="css/AdminLTE.css">
     <link rel="stylesheet" type="text/css" href="components/bootstrap-sweetalert/lib/sweet-alert.css">
+    <link rel="stylesheet" type="text/css" href="components/angular-bootstrap-nav-tree/dist/abn_tree.css">
 
     <link rel="stylesheet/less" href="less/build.less">
     <!-- endref -->
@@ -107,6 +108,7 @@
 <script src="js/listeners.js"></script>
 <script src="js/filters/filter.js"></script>
 <script src="js/directives/directives.js"></script>
+<script src="js/directives/kylin_abn_tree_directive.js"></script>
 <script src="js/factories/graph.js"></script>
 <script src="js/services/cache.js"></script>
 <script src="js/services/message.js"></script>
@@ -127,17 +129,26 @@
 <script src="js/services/tree.js"></script>
 <script src="js/services/users.js"></script>
 <script src="js/services/ngLoading.js"></script>
+<!--New GUI-->
+<script src="js/services/models.js"></script>
 
 <script src="js/model/cubeConfig.js"></script>
 <script src="js/model/jobConfig.js"></script>
 <script src="js/model/projectConfig.js"></script>
 <script src="js/model/tableConfig.js"></script>
+<!--New GUI-->
+<script src="js/model/modelConfig.js"></script>
+
 <script src="js/model/cubeDescModel.js"></script>
 <script src="js/model/metaModel.js"></script>
 <script src="js/model/projectModel.js"></script>
 <script src="js/model/tableModel.js"></script>
 <script src="js/model/cubeListModel.js"></script>
 <script src="js/model/jobListModel.js"></script>
+<script src="js/model/cubesManager.js"></script>
+
+<!--New GUI-->
+<script src="js/model/modelsManager.js"></script>
 
 <script src="js/controllers/page.js"></script>
 <script src="js/controllers/index.js"></script>
@@ -158,6 +169,15 @@
 <script src="js/controllers/cubeFilter.js"></script>
 <script src="js/controllers/cubeRefresh.js"></script>
 <script src="js/controllers/cubeAdvanceSetting.js"></script>
+<!--New GUI-->
+<script src="js/controllers/modelSchema.js"></script>
+<script src="js/controllers/modelDimensions.js"></script>
+<script src="js/controllers/modelRefresh.js"></script>
+<script src="js/controllers/modelEdit.js"></script>
+
+<!--New GUI-->
+<script src="js/controllers/models.js"></script>
+
 <!-- endref -->
 
 <!-- ref:remove -->
@@ -167,11 +187,11 @@
 <!--template-->
 <!-- static template for cube save/update result notification -->
 <script type="text/ng-template" id="cubeResultError.html">
-    <div class="callout callout-danger">
+    <div class="callout">
         <h4>Error Message</h4>
         <p>{{text}}</p>
     </div>
-    <div class="callout callout-info">
+    <div class="callout callout-danger">
         <h4>Cube Schema</h4>
         <pre>{{schema}}</pre>
     </div>
@@ -183,6 +203,24 @@
     </div>
 </script>
 
+<!--template-->
+<!-- static template for cube save/update result notification -->
+<script type="text/ng-template" id=" modelResultError.html">
+    <div class="callout callout-info">
+        <h4>Error Message</h4>
+        <p>{{text}}</p>
+    </div>
+    <div class="callout callout-danger">
+        <h4>Model Schema</h4>
+        <pre>{{schema}}</pre>
+    </div>
+</script>
+
+<script type="text/ng-template" id="modelResultSuccess.html">
+    <div class="callout callout-info">
+        <p>{{text}}</p>
+    </div>
+</script>
 
 </body>
 </html>

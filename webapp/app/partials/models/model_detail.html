@@ -1,0 +1,63 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applnewAccess.sidicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<!--show detail when exist models-->
+<div ng-controller="CubeModelCtrl" class="nav-tabs-custom" style="margin-top:40px;">
+    <ul ng-show="modelsManager.selectedModel.name" class="nav nav-tabs">
+        <li class="{{(!modelsManager.selectedModel.visiblePage || modelsManager.selectedModel.visiblePage=='metadata')? 'active':''}}">
+            <a href="" ng-click="modelsManager.selectedModel.visiblePage='metadata'">Grid</a>
+        </li>
+        <li class="{{modelsManager.selectedModel.visiblePage=='graph'? 'active':''}}">
+            <a href="" ng-click="modelsManager.selectedModel.visiblePage='graph';buildGraph(modelsManager.selectedModel);$event.stopPropagation();">Visualization</a>
+        </li>
+        <li class="{{modelsManager.selectedModel.visiblePage=='json_model'? 'active':''}}"
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, 16) && !newAccess">
+            <a href="" ng-click="modelsManager.selectedModel.visiblePage='json_model';">JSON</a>
+        </li>
+        <li class="dropdown" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+            <a class="dropdown-toggle highlight-bule" data-toggle="dropdown" href="#" aria-expanded="true">
+                <i class="fa fa-star"> Action </i> <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+                    <a href="models/edit/{{modelsManager.selectedModel.name}}" data-widget="collapse">Edit</a>
+                </li>
+                <li ng-if="userService.hasRole('ROLE_ADMIN')">
+                    <a ng-click="dropModel(modelsManager.selectedModel)">Drop</a>
+                </li>
+                <li role="presentation" class="divider"></li>
+                <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+                    <a href="cubes/add/{{modelsManager.selectedModel.name}}" data-widget="collapse">Create Cube</a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <div class="model-detail" ng-if="!modelsManager.selectedModel.visiblePage || modelsManager.selectedModel.visiblePage=='metadata'">
+        <div ng-include="'partials/models/model_schema.html'" ng-controller="ModelSchemaCtrl"
+             ng-init="state={mode:'view', modelName:modelsManager.selectedModel.name}">
+        </div>
+    </div>
+    <div ng-show="modelsManager.selectedModel.visiblePage=='graph'" id="model_graph_{{modelsManager.selectedModel.name}}" class="model-detail model_graph">
+    </div>
+    <div ng-show="modelsManager.selectedModel.visiblePage=='json_model'" class="model-detail">
+          <pre ng-if="!state.jsonEdit"
+               style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(modelsManager.selectedModel), true)}}</pre>
+    </div>
+
+</div>

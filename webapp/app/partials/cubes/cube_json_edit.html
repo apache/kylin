@@ -23,21 +23,6 @@
         </div>
         <div class="col-xs-9">
             <form role="form" name="cube_form" novalidate>
-                <div class="row">
-                    <div class="col-xs-12">
-                        <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
-                            <div class="form-group">
-                                <span><b>Project: </b></span>
-                                <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                                        ng-options="project as project for project in projectModel.projects"
-                                        style="width: 150px"
-                                        class="chosen-select">
-                                    <option  ng-if="userService.hasRole('ROLE_ADMIN')"  selected value=""> -- Choose Project -- </option>
-                                </select>
-                            </div>
-                        </form>
-                    </div>
-                </div>
                 <section style="padding-bottom: 20px">
                     <div style="height: 620px; font-size: 14px;" ui-ace="{
                                       useWrapMode : true,

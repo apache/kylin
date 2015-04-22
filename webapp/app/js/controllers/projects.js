@@ -77,7 +77,7 @@ KylinApp
                     if (pIndex > -1) {
                         $scope.projects.splice(pIndex, 1);
                     }
-                    ProjectModel.removeProject(project.name);
+                ProjectModel.removeProject(project.name);
                 SweetAlert.swal('Success!',"Project [" + project.name + "] has been deleted successfully!", 'success');
                 },function(e){
                     if(e.data&& e.data.exception){

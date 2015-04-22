@@ -26,25 +26,31 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="home" style="padding: 2px 10px 0px 0px"><img src="image/logo.png" height="40px" width="40px"/><small> Kylin </small></a>
+                <a class="navbar-brand" href="query" style="padding: 2px 10px 0px 0px"><img src="image/logo.png" height="40px" width="40px"/><small> Kylin </small></a>
             </div>
 
             <div class="navbar-collapse collapse" collapse="isCollapsed">
                 <ul class="nav navbar-nav">
-                    <li class="{{activeTab=='query'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="query">Query</a>
+                    <li class="project-cntnr"  style="padding:7px 15px;background-color:#2e8965;" ng-if="userService.isAuthorized()">
+                        <select chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
+                                ng-options="project.name as project.name for project in projectModel.projects"
+                                style="width: 180px"
+                                data-placeholder="select a project"
+                                class="chosen-select">
+                            <option ng-if="userService.hasRole('ROLE_ADMIN')" ng-selected="projectModel.selectedProject==null"  value=""> -- Choose Project -- </option>
+                        </select>
                     </li>
-                    <li class="{{activeTab=='cubes'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="cubes">Cubes</a>
+                    <li class="{{activeTab=='query'?'purple':'green'}}" ng-if="userService.isAuthorized()">
+                        <a href="query">Insight</a>
+                    </li>
+                    <li class="{{activeTab=='models'?'purple':'green'}}" ng-if="userService.isAuthorized()">
+                        <a href="models">Model</a>
                     </li>
                     <li class="{{activeTab=='jobs'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="jobs">Jobs</a>
+                        <a href="jobs">Monitor</a>
                     </li>
-                    <li class="{{activeTab=='sourceMeta'?'purple':'green'}}" ng-if="userService.isAuthorized()">
-                        <a href="sourceMeta">Tables</a>
-                    </li>
-                    <li class="{{activeTab=='admin'?'purple':'green'}}" ng-if="userService.hasRole('ROLE_ADMIN')">
-                        <a href="admin">Admin</a>
+                    <li class="{{activeTab=='admin'?'purple':'green'}}" ng-if="userService.isAuthorized()">
+                        <a href="admin">System</a>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">

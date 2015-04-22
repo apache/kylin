@@ -16,6 +16,10 @@
  * limitations under the License.
 */
 
+/*
+ *jobListModel will manage data in list job page
+ */
+
 KylinApp.service('JobList',function(JobService,$q){
     var _this = this;
     this.jobs=[];

@@ -65,13 +65,12 @@ public class ProjectService extends BasicService {
         return createdProject;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public ProjectInstance updateProject(UpdateProjectRequest projectRequest) throws IOException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION') or hasPermission(#currentProject, 'MANAGEMENT')")
+    public ProjectInstance updateProject(UpdateProjectRequest projectRequest,ProjectInstance currentProject) throws IOException {
         String formerProjectName = projectRequest.getFormerProjectName();
         String newProjectName = projectRequest.getNewProjectName();
         String newDescription = projectRequest.getNewDescription();
 
-        ProjectInstance currentProject = getProjectManager().getProject(formerProjectName);
 
         if (currentProject == null) {
             throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
@@ -101,9 +100,8 @@ public class ProjectService extends BasicService {
         return projects.subList(coffset, coffset + climit);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public void deleteProject(String projectName) throws IOException {
-        ProjectInstance project = getProjectManager().getProject(projectName);
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public void deleteProject(String projectName,ProjectInstance project) throws IOException {
         getProjectManager().dropProject(projectName);
 
         accessService.clean(project, true);
