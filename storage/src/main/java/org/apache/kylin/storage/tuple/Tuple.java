@@ -166,7 +166,8 @@ public class Tuple implements ITuple {
         }
         String[] derivedFieldNames = new String[deriveInfo.columns.length];
         for (int i = 0; i < deriveInfo.columns.length; i++) {
-            derivedFieldNames[i] = tupleInfo.getFieldName(deriveInfo.columns[i]);
+            if (tupleInfo.hasColumn(deriveInfo.columns[i]))
+                derivedFieldNames[i] = tupleInfo.getFieldName(deriveInfo.columns[i]);
         }
 
         switch (deriveInfo.type) {
@@ -196,8 +197,10 @@ public class Tuple implements ITuple {
 
         @Override
         public void fillDerivedColumns(List<String> rowValues, Tuple tuple) {
-            String value = rowValues.get(hostIndex);
-            tuple.setDimensionValue(derivedFieldName, value);
+            if (derivedFieldName != null) {
+                String value = rowValues.get(hostIndex);
+                tuple.setDimensionValue(derivedFieldName, value);
+            }
         }
     }
 
@@ -235,12 +238,16 @@ public class Tuple implements ITuple {
 
             if (lookupRow != null) {
                 for (int i = 0; i < derivedLen; i++) {
-                    String value = lookupRow[derivedIndex[i]];
-                    tuple.setDimensionValue(derivedFieldNames[i], value);
+                    if (derivedFieldNames[i] != null) {
+                        String value = lookupRow[derivedIndex[i]];
+                        tuple.setDimensionValue(derivedFieldNames[i], value);
+                    }
                 }
             } else {
                 for (int i = 0; i < derivedLen; i++) {
-                    tuple.setDimensionValue(derivedFieldNames[i], null);
+                    if (derivedFieldNames[i] != null) {
+                        tuple.setDimensionValue(derivedFieldNames[i], null);
+                    }
                 }
             }
         }

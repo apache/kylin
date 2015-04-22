@@ -294,7 +294,9 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
                 // mark name for each derived field
                 for (TblColRef derivedCol : deriveInfo.columns) {
                     String derivedField = getFieldName(derivedCol, context.getAliasMap());
-                    info.setField(derivedField, derivedCol, derivedCol.getType().getName(), index++);
+                    if (info.hasField(derivedField) == false) {
+                        info.setField(derivedField, derivedCol, derivedCol.getType().getName(), index++);
+                    }
                 }
                 // add filler
                 info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo, info, CubeManager.getInstance(this.cube.getConfig()), cubeSeg));
