@@ -100,9 +100,8 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
         int hashCode = tuple.getAllFields().hashCode();
 
-
         // build field index map, if the map doesn't exit or the tuple fields structure changed
-       if (this.fieldIndexes == null || tupleFieldsHash != hashCode) {
+        if (this.fieldIndexes == null || tupleFieldsHash != hashCode) {
             List<String> fields = tuple.getAllFields();
             int size = fields.size();
             this.fieldIndexes = new int[size];
@@ -116,8 +115,8 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
                 }
             }
 
-           tupleFieldsHash = hashCode;
-       }
+            tupleFieldsHash = hashCode;
+        }
 
         // set field value
         Object[] values = tuple.getAllValues();
@@ -141,11 +140,9 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         // bind dynamic variables
         bindVariable(olapContext.filter);
 
-
-
         // query storage engine
         IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization);
-        ITupleIterator iterator = storageEngine.search(olapContext.storageContext,olapContext.getSQLDigest());
+        ITupleIterator iterator = storageEngine.search(olapContext.storageContext, olapContext.getSQLDigest());
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
         }
@@ -154,7 +151,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         this.tupleFieldsHash = -1;
         return iterator;
     }
-
 
     private void bindVariable(TupleFilter filter) {
         if (filter == null) {

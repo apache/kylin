@@ -66,6 +66,10 @@ public class TupleInfo {
     public int getFieldIndex(String fieldName) {
         return fieldMap.get(fieldName);
     }
+    
+    public boolean hasField(String fieldName) {
+        return fieldMap.containsKey(fieldName);
+    }
 
     public String getFieldName(TblColRef col) {
         int idx = columnMap.get(col);
