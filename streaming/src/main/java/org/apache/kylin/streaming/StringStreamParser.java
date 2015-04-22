@@ -47,7 +47,7 @@ public final class StringStreamParser implements StreamParser {
 
     private StringStreamParser(){}
     @Override
-    public List<String> parse(Stream stream) {
-        return Lists.newArrayList(new String(stream.getRawData()).split(","));
+    public List<String> parse(StreamMessage streamMessage) {
+        return Lists.newArrayList(new String(streamMessage.getRawData()).split(","));
     }
 }

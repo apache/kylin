@@ -36,7 +36,7 @@ import org.apache.kylin.storage.hbase.coprocessor.endpoint.ClearTextDictionary;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.EndpointAggregators;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
-import org.apache.kylin.streaming.Stream;
+import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.StringStreamParser;
 import org.apache.kylin.streaming.invertedindex.SliceBuilder;
 import org.junit.*;
@@ -69,17 +69,17 @@ public class IITest extends LocalFileMetadataTestCase {
         this.ii = IIManager.getInstance(getTestConfig()).getII(iiName);
         this.iiDesc = ii.getDescriptor();
 
-        List<Stream> streams = Lists.transform(Arrays.asList(inputData), new Function<String, Stream>() {
+        List<StreamMessage> streamMessages = Lists.transform(Arrays.asList(inputData), new Function<String, StreamMessage>() {
             @Nullable
             @Override
-            public Stream apply(String input) {
-                return new Stream(System.currentTimeMillis(), input.getBytes());
+            public StreamMessage apply(String input) {
+                return new StreamMessage(System.currentTimeMillis(), input.getBytes());
             }
         });
 
 
         iiRows = Lists.newArrayList();
-        final Slice slice = new SliceBuilder(iiDesc, (short) 0, true).buildSlice(streams, StringStreamParser.instance);
+        final Slice slice = new SliceBuilder(iiDesc, (short) 0, true).buildSlice(streamMessages, StringStreamParser.instance);
         IIKeyValueCodec codec = new IIKeyValueCodec(slice.getInfo());
         for (IIRow iiRow : codec.encodeKeyValue(slice)) {
             iiRows.add(iiRow);

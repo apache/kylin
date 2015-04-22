@@ -37,14 +37,14 @@ package org.apache.kylin.streaming;
 /**
  * Created by qianzhou on 2/15/15.
  */
-public class Stream {
+public class StreamMessage {
 
     private long offset;
     private byte[] rawData;
 
-    public static final Stream EOF = new Stream(-1, new byte[0]);
+    public static final StreamMessage EOF = new StreamMessage(-1, new byte[0]);
 
-    public Stream(long offset, byte[] rawData) {
+    public StreamMessage(long offset, byte[] rawData) {
         this.offset = offset;
         this.rawData = rawData;
     }

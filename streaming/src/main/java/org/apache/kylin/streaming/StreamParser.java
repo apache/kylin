@@ -41,5 +41,5 @@ import java.util.List;
  */
 public interface StreamParser {
 
-    List<String> parse(Stream stream);
+    List<String> parse(StreamMessage streamMessage);
 }
