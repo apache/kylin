@@ -49,7 +49,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
     private final Object[] current;
     private ITupleIterator cursor;
     private int[] fieldIndexes;
-    private int tupleFieldsHash;
+    private List<String> tupleFieldsSnapshot;
 
     public OLAPEnumerator(OLAPContext olapContext, DataContext optiqContext) {
         this.olapContext = olapContext;
@@ -57,7 +57,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         this.current = new Object[olapContext.olapRowType.getFieldCount()];
         this.cursor = null;
         this.fieldIndexes = null;
-        this.tupleFieldsHash = -1;
     }
 
     @Override
@@ -98,10 +97,8 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     private Object[] convertCurrentRow(ITuple tuple) {
 
-        int hashCode = tuple.getAllFields().hashCode();
-
         // build field index map, if the map doesn't exit or the tuple fields structure changed
-        if (this.fieldIndexes == null || tupleFieldsHash != hashCode) {
+        if (tupleFieldsSnapshot != tuple.getAllFields()) { // note != for fast comparison
             List<String> fields = tuple.getAllFields();
             int size = fields.size();
             this.fieldIndexes = new int[size];
@@ -114,8 +111,8 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
                     fieldIndexes[i] = -1;
                 }
             }
-
-            tupleFieldsHash = hashCode;
+            
+            tupleFieldsSnapshot = tuple.getAllFields();
         }
 
         // set field value
@@ -148,7 +145,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         }
 
         this.fieldIndexes = null;
-        this.tupleFieldsHash = -1;
+        this.tupleFieldsSnapshot = null;
         return iterator;
     }
 
