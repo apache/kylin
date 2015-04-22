@@ -243,7 +243,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     @Override
     public Range<Long> getCacheExcludedPeriod() {
-        return Ranges.atLeast(lastDataTime + 1);//notice +1
+        return Ranges.greaterThan(lastDataTime );
     }
 
     private IIProtos.IIRequest prepareRequest() throws IOException {
