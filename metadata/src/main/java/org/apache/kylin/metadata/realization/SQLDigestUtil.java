@@ -14,6 +14,7 @@ import org.apache.kylin.common.util.DateFormat;
 public class SQLDigestUtil {
 
     public static <F, T> T appendTsFilterToExecute(SQLDigest sqlDigest, TblColRef partitionColRef, Range<Long> tsRange, Function<F, T> action) {
+
         // add the boundary condition to query real-time
         TupleFilter originalFilter = sqlDigest.filter;
         sqlDigest.filter = createFilterForRealtime(originalFilter, partitionColRef, tsRange);

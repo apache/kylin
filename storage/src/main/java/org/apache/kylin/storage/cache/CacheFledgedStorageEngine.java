@@ -112,6 +112,7 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
 
                     SimpleTupleIterator reusedTuples = new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
                     Range<Long> remaining = remainings.get(0);
+                    logger.info("Appending ts " + RangeUtil.formatTsRange(remaining) + " as additional filter");
                     ITupleIterator freshTuples = SQLDigestUtil.appendTsFilterToExecute(sqlDigest, partitionColRef, remaining, new Function<Void, ITupleIterator>() {
                         @Override
                         public ITupleIterator apply(Void input) {
