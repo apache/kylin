@@ -93,6 +93,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             logger.info("Start key of the region is: " + BytesUtil.toReadableText(regionStartKey) + ", making shard to be :" + shard);
 
             if (tsRange.hasLowerBound()) {
+                //differentiate GT and GTE seems not very beneficial
                 Preconditions.checkArgument(shard != -1, "Shard is -1!");
                 long tsStart = tsRange.lowerEndpoint();
                 logger.info("ts start is " + tsStart);
@@ -112,6 +113,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             }
 
             if (tsRange.hasUpperBound()) {
+                //differentiate LT and LTE seems not very beneficial
                 Preconditions.checkArgument(shard != -1, "Shard is -1");
                 long tsEnd = tsRange.upperEndpoint();
                 logger.info("ts end is " + tsEnd);
@@ -194,10 +196,11 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
 
         int iteratedSliceCount = 0;
+        long latestSliceTs = Long.MIN_VALUE;
         for (Slice slice : slices) {
+            latestSliceTs = slice.getTimestamp();
             iteratedSliceCount++;
 
-            //TODO localdict
             //dictionaries for fact table columns can not be determined while streaming.
             //a piece of dict coincide with each Slice, we call it "local dict"
             final Dictionary<?>[] localDictionaries = slice.getLocalDictionaries();
@@ -240,6 +243,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             rowBuilder.setMeasures(ByteString.copyFrom(buffer, 0, length));
             responseBuilder.addRows(rowBuilder.build());
         }
+        responseBuilder.setLatestDataTime(latestSliceTs);
 
         return responseBuilder.build();
     }
@@ -253,7 +257,9 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         int totalSize = 0;
         byte[] recordBuffer = new byte[byteFormLen];
         int iteratedSliceCount = 0;
+        long latestSliceTs = Long.MIN_VALUE;
         for (Slice slice : slices) {
+            latestSliceTs = slice.getTimestamp();
             iteratedSliceCount++;
             CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
             ConciseSet result = null;
@@ -273,6 +279,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 totalSize += byteFormLen;
             }
         }
+        responseBuilder.setLatestDataTime(latestSliceTs);
 
         logger.info("Iterated Slices count: " + iteratedSliceCount);
 

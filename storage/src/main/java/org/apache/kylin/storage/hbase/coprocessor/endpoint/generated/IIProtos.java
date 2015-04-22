@@ -51,13 +51,13 @@ public final class IIProtos {
      */
     com.google.protobuf.ByteString getAggregator();
 
-    // optional bytes tsRange = 5;
+    // optional bytes tsRange = 6;
     /**
-     * <code>optional bytes tsRange = 5;</code>
+     * <code>optional bytes tsRange = 6;</code>
      */
     boolean hasTsRange();
     /**
-     * <code>optional bytes tsRange = 5;</code>
+     * <code>optional bytes tsRange = 6;</code>
      */
     com.google.protobuf.ByteString getTsRange();
   }
@@ -132,7 +132,7 @@ public final class IIProtos {
               aggregator_ = input.readBytes();
               break;
             }
-            case 42: {
+            case 50: {
               bitField0_ |= 0x00000010;
               tsRange_ = input.readBytes();
               break;
@@ -241,17 +241,17 @@ public final class IIProtos {
       return aggregator_;
     }
 
-    // optional bytes tsRange = 5;
-    public static final int TSRANGE_FIELD_NUMBER = 5;
+    // optional bytes tsRange = 6;
+    public static final int TSRANGE_FIELD_NUMBER = 6;
     private com.google.protobuf.ByteString tsRange_;
     /**
-     * <code>optional bytes tsRange = 5;</code>
+     * <code>optional bytes tsRange = 6;</code>
      */
     public boolean hasTsRange() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional bytes tsRange = 5;</code>
+     * <code>optional bytes tsRange = 6;</code>
      */
     public com.google.protobuf.ByteString getTsRange() {
       return tsRange_;
@@ -305,7 +305,7 @@ public final class IIProtos {
         output.writeBytes(4, aggregator_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(5, tsRange_);
+        output.writeBytes(6, tsRange_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -334,7 +334,7 @@ public final class IIProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, tsRange_);
+          .computeBytesSize(6, tsRange_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -802,22 +802,22 @@ public final class IIProtos {
         return this;
       }
 
-      // optional bytes tsRange = 5;
+      // optional bytes tsRange = 6;
       private com.google.protobuf.ByteString tsRange_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>optional bytes tsRange = 5;</code>
+       * <code>optional bytes tsRange = 6;</code>
        */
       public boolean hasTsRange() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>optional bytes tsRange = 5;</code>
+       * <code>optional bytes tsRange = 6;</code>
        */
       public com.google.protobuf.ByteString getTsRange() {
         return tsRange_;
       }
       /**
-       * <code>optional bytes tsRange = 5;</code>
+       * <code>optional bytes tsRange = 6;</code>
        */
       public Builder setTsRange(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -829,7 +829,7 @@ public final class IIProtos {
         return this;
       }
       /**
-       * <code>optional bytes tsRange = 5;</code>
+       * <code>optional bytes tsRange = 6;</code>
        */
       public Builder clearTsRange() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -876,6 +876,16 @@ public final class IIProtos {
      */
     org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder getRowsOrBuilder(
         int index);
+
+    // required int64 latestDataTime = 2;
+    /**
+     * <code>required int64 latestDataTime = 2;</code>
+     */
+    boolean hasLatestDataTime();
+    /**
+     * <code>required int64 latestDataTime = 2;</code>
+     */
+    long getLatestDataTime();
   }
   /**
    * Protobuf type {@code IIResponse}
@@ -934,6 +944,11 @@ public final class IIProtos {
                 mutable_bitField0_ |= 0x00000001;
               }
               rows_.add(input.readMessage(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.PARSER, extensionRegistry));
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000001;
+              latestDataTime_ = input.readInt64();
               break;
             }
           }
@@ -1516,6 +1531,7 @@ public final class IIProtos {
       // @@protoc_insertion_point(class_scope:IIResponse.IIRow)
     }
 
+    private int bitField0_;
     // repeated .IIResponse.IIRow rows = 1;
     public static final int ROWS_FIELD_NUMBER = 1;
     private java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> rows_;
@@ -1552,14 +1568,35 @@ public final class IIProtos {
       return rows_.get(index);
     }
 
+    // required int64 latestDataTime = 2;
+    public static final int LATESTDATATIME_FIELD_NUMBER = 2;
+    private long latestDataTime_;
+    /**
+     * <code>required int64 latestDataTime = 2;</code>
+     */
+    public boolean hasLatestDataTime() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required int64 latestDataTime = 2;</code>
+     */
+    public long getLatestDataTime() {
+      return latestDataTime_;
+    }
+
     private void initFields() {
       rows_ = java.util.Collections.emptyList();
+      latestDataTime_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
 
+      if (!hasLatestDataTime()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       for (int i = 0; i < getRowsCount(); i++) {
         if (!getRows(i).isInitialized()) {
           memoizedIsInitialized = 0;
@@ -1576,6 +1613,9 @@ public final class IIProtos {
       for (int i = 0; i < rows_.size(); i++) {
         output.writeMessage(1, rows_.get(i));
       }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt64(2, latestDataTime_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1588,6 +1628,10 @@ public final class IIProtos {
       for (int i = 0; i < rows_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, rows_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, latestDataTime_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1614,6 +1658,11 @@ public final class IIProtos {
       boolean result = true;
       result = result && getRowsList()
           .equals(other.getRowsList());
+      result = result && (hasLatestDataTime() == other.hasLatestDataTime());
+      if (hasLatestDataTime()) {
+        result = result && (getLatestDataTime()
+            == other.getLatestDataTime());
+      }
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
       return result;
@@ -1630,6 +1679,10 @@ public final class IIProtos {
       if (getRowsCount() > 0) {
         hash = (37 * hash) + ROWS_FIELD_NUMBER;
         hash = (53 * hash) + getRowsList().hashCode();
+      }
+      if (hasLatestDataTime()) {
+        hash = (37 * hash) + LATESTDATATIME_FIELD_NUMBER;
+        hash = (53 * hash) + hashLong(getLatestDataTime());
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1747,6 +1800,8 @@ public final class IIProtos {
         } else {
           rowsBuilder_.clear();
         }
+        latestDataTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -1774,6 +1829,7 @@ public final class IIProtos {
       public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse buildPartial() {
         org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse result = new org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse(this);
         int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         if (rowsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001)) {
             rows_ = java.util.Collections.unmodifiableList(rows_);
@@ -1783,6 +1839,11 @@ public final class IIProtos {
         } else {
           result.rows_ = rowsBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.latestDataTime_ = latestDataTime_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -1824,11 +1885,18 @@ public final class IIProtos {
             }
           }
         }
+        if (other.hasLatestDataTime()) {
+          setLatestDataTime(other.getLatestDataTime());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
+        if (!hasLatestDataTime()) {
+          
+          return false;
+        }
         for (int i = 0; i < getRowsCount(); i++) {
           if (!getRows(i).isInitialized()) {
             
@@ -2095,6 +2163,39 @@ public final class IIProtos {
           rows_ = null;
         }
         return rowsBuilder_;
+      }
+
+      // required int64 latestDataTime = 2;
+      private long latestDataTime_ ;
+      /**
+       * <code>required int64 latestDataTime = 2;</code>
+       */
+      public boolean hasLatestDataTime() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required int64 latestDataTime = 2;</code>
+       */
+      public long getLatestDataTime() {
+        return latestDataTime_;
+      }
+      /**
+       * <code>required int64 latestDataTime = 2;</code>
+       */
+      public Builder setLatestDataTime(long value) {
+        bitField0_ |= 0x00000002;
+        latestDataTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int64 latestDataTime = 2;</code>
+       */
+      public Builder clearLatestDataTime() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        latestDataTime_ = 0L;
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:IIResponse)
@@ -2368,13 +2469,14 @@ public final class IIProtos {
       "/storage/hbase/coprocessor/endpoint/prot" +
       "obuf/II.proto\"a\n\tIIRequest\022\014\n\004type\030\001 \002(\014" +
       "\022\016\n\006filter\030\002 \002(\014\022\021\n\tprojector\030\003 \002(\014\022\022\n\na" +
-      "ggregator\030\004 \002(\014\022\017\n\007tsRange\030\005 \001(\014\"Y\n\nIIRe" +
-      "sponse\022\037\n\004rows\030\001 \003(\0132\021.IIResponse.IIRow\032" +
-      "*\n\005IIRow\022\017\n\007columns\030\001 \002(\014\022\020\n\010measures\030\002 " +
-      "\001(\01421\n\013RowsService\022\"\n\007getRows\022\n.IIReques" +
-      "t\032\013.IIResponseBQ\n=org.apache.kylin.stora" +
-      "ge.hbase.coprocessor.endpoint.generatedB",
-      "\010IIProtosH\001\210\001\001\240\001\001"
+      "ggregator\030\004 \002(\014\022\017\n\007tsRange\030\006 \001(\014\"q\n\nIIRe" +
+      "sponse\022\037\n\004rows\030\001 \003(\0132\021.IIResponse.IIRow\022" +
+      "\026\n\016latestDataTime\030\002 \002(\003\032*\n\005IIRow\022\017\n\007colu" +
+      "mns\030\001 \002(\014\022\020\n\010measures\030\002 \001(\01421\n\013RowsServi" +
+      "ce\022\"\n\007getRows\022\n.IIRequest\032\013.IIResponseBQ" +
+      "\n=org.apache.kylin.storage.hbase.coproce",
+      "ssor.endpoint.generatedB\010IIProtosH\001\210\001\001\240\001" +
+      "\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2392,7 +2494,7 @@ public final class IIProtos {
           internal_static_IIResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_IIResponse_descriptor,
-              new java.lang.String[] { "Rows", });
+              new java.lang.String[] { "Rows", "LatestDataTime", });
           internal_static_IIResponse_IIRow_descriptor =
             internal_static_IIResponse_descriptor.getNestedTypes().get(0);
           internal_static_IIResponse_IIRow_fieldAccessorTable = new
