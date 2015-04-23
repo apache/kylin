@@ -92,7 +92,7 @@ public class OLAPToEnumerableConverter extends ConverterRelImpl implements Enume
     private Result buildHiveResult(EnumerableRelImplementor enumImplementor, Prefer pref, OLAPContext context) {
         RelDataType hiveRowType = getRowType();
 
-        context.olapRowType = hiveRowType;
+        context.setReturnTupleInfo(hiveRowType, null);
         PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), hiveRowType, pref.preferArray());
 
         RelOptTable factTable = context.firstTableScan.getTable();

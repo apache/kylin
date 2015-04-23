@@ -87,8 +87,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         try {
             return new OLAPJoinRel(getCluster(), traitSet, left, right, condition, joinInfo.leftKeys, joinInfo.rightKeys, joinType, variablesStopped);
         } catch (InvalidRelException e) {
-            // Semantic error not possible. Must be a bug. Convert to
-            // internal error.
+            // Semantic error not possible. Must be a bug. Convert to internal error.
             throw new AssertionError(e);
         }
     }
@@ -114,8 +113,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         this.isTopJoin = !this.context.hasJoin;
         this.context.hasJoin = true;
 
-        // as we keep the first table as fact table, we need to visit from left
-        // to right
+        // as we keep the first table as fact table, we need to visit from left to right
         implementor.visitChild(this.left, this);
         if (this.context != implementor.getContext() || ((OLAPRel) this.left).hasSubQuery()) {
             this.hasSubQuery = true;
@@ -134,8 +132,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
 
         if (!this.hasSubQuery) {
             this.context.allColumns.clear();
-            this.context.olapRowType = getRowType();
-            buildAliasMap();
+            this.context.setReturnTupleInfo(getRowType(), getColumnRowType());
 
             // build JoinDesc
             RexCall condition = (RexCall) this.getCondition();
@@ -216,16 +213,6 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         }
     }
 
-    private void buildAliasMap() {
-        int size = this.rowType.getFieldList().size();
-
-        for (int i = 0; i < size; i++) {
-            RelDataTypeField field = this.rowType.getFieldList().get(i);
-            TblColRef column = this.columnRowType.getColumnByIndex(i);
-            context.storageContext.addAlias(column, field.getName());
-        }
-    }
-
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
         Result result = null;
@@ -271,10 +258,12 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
             fieldInfo.addAll(this.rowType.getFieldList());
             fieldInfo.addAll(newFieldList);
             this.rowType = getCluster().getTypeFactory().createStructType(fieldInfo);
-            this.context.olapRowType = this.rowType;
 
             // rebuild columns
             this.columnRowType = this.buildColumnRowType();
+            
+            // rebuild return tuple info
+            this.context.setReturnTupleInfo(rowType, columnRowType);
         }
     }
 

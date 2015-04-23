@@ -21,6 +21,7 @@ package org.apache.kylin.storage.hbase;
 import java.util.*;
 
 import com.google.common.collect.Range;
+
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -30,6 +31,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.tuple.TupleInfo;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -48,8 +50,11 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
 
     private ITupleIterator segmentIterator;
     private int scanCount;
+    private ITuple next;
 
-    public SerializedHBaseTupleIterator(HConnection conn, List<HBaseKeyRange> segmentKeyRanges, CubeInstance cube, Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
+    public SerializedHBaseTupleIterator(HConnection conn, List<HBaseKeyRange> segmentKeyRanges, CubeInstance cube, //
+            Set<TblColRef> dimensions, TupleFilter filter, Set<TblColRef> groupBy, List<RowValueDecoder> rowValueDecoders, //
+            StorageContext context, TupleInfo returnTupleInfo) {
 
         this.context = context;
         int limit = context.getLimit();
@@ -58,7 +63,7 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
         this.segmentIteratorList = new ArrayList<CubeSegmentTupleIterator>(segmentKeyRanges.size());
         Map<CubeSegment, List<HBaseKeyRange>> rangesMap = makeRangesMap(segmentKeyRanges);
         for (Map.Entry<CubeSegment, List<HBaseKeyRange>> entry : rangesMap.entrySet()) {
-            CubeSegmentTupleIterator segIter = new CubeSegmentTupleIterator(entry.getKey(), entry.getValue(), conn, dimensions, filter, groupBy, rowValueDecoders, context);
+            CubeSegmentTupleIterator segIter = new CubeSegmentTupleIterator(entry.getKey(), entry.getValue(), conn, dimensions, filter, groupBy, rowValueDecoders, context, returnTupleInfo);
             this.segmentIteratorList.add(segIter);
         }
 
@@ -85,6 +90,9 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
 
     @Override
     public boolean hasNext() {
+        if (next != null)
+            return true;
+        
         // 1. check limit
         if (context.isLimitEnabled() && scanCount >= context.getLimit()) {
             return false;
@@ -99,24 +107,28 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
             throw new ScanOutOfLimitException("Scan row count exceeded threshold: " + context.getThreshold() + ", please add filter condition to narrow down backend scan range, like where clause.");
         }
         // 4. check cube segments
-        return segmentIteratorIterator.hasNext() || segmentIterator.hasNext();
+        if (segmentIterator.hasNext()) {
+            next = segmentIterator.next();
+            scanCount++;
+            return true;
+        } else if (segmentIteratorIterator.hasNext()) {
+            segmentIterator.close();
+            segmentIterator = segmentIteratorIterator.next();
+            return hasNext();
+        }
+        return false;
     }
 
     @Override
     public ITuple next() {
-        ITuple t = null;
-        while (hasNext()) {
-            if (segmentIterator.hasNext()) {
-                t = segmentIterator.next();
-                scanCount++;
-                break;
-            } else {
-                segmentIterator.close();
-                segmentIterator = segmentIteratorIterator.next();
-            }
+        if (next == null) {
+            hasNext();
+            if (next == null)
+                throw new NoSuchElementException();
         }
-
-        return t;
+        ITuple r = next;
+        next = null;
+        return r;
     }
 
     @Override
@@ -128,8 +140,8 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
     public void close() {
         context.setTotalScanCount(scanCount);
 
-        //hasNext() is complex, the loop might exited because of limit, threshold, etc.
-        //close all the remaining segmentIterator
+        // hasNext() loop may exit because of limit, threshold, etc.
+        // close all the remaining segmentIterator
         segmentIterator.close();
         while (segmentIteratorIterator.hasNext()) {
             segmentIterator = segmentIteratorIterator.next();

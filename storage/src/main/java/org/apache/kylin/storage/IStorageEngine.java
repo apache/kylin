@@ -20,6 +20,7 @@ package org.apache.kylin.storage;
 
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.storage.tuple.TupleInfo;
 
 /**
  * 
@@ -28,6 +29,6 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
  */
 public interface IStorageEngine {
 
-    ITupleIterator search(StorageContext context, SQLDigest sqlDigest);
+    ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo);
 
 }

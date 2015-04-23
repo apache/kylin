@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.tuple.Tuple.IDerivedColumnFiller;
 
 /**
  * 
@@ -37,16 +36,12 @@ public class TupleInfo {
     private final Map<TblColRef, Integer> columnMap;
     private final List<String> fields;
     private final List<TblColRef> columns;
-    private final List<String> dataTypes;
-    private final List<IDerivedColumnFiller> derivedColumnFillers;
 
     public TupleInfo() {
         fieldMap = new HashMap<String, Integer>();
         columnMap = new HashMap<TblColRef, Integer>();
         fields = new ArrayList<String>();
         columns = new ArrayList<TblColRef>();
-        dataTypes = new ArrayList<String>();
-        derivedColumnFillers = new ArrayList<IDerivedColumnFiller>();
     }
 
     public TblColRef getColumn(String fieldName) {
@@ -59,8 +54,7 @@ public class TupleInfo {
     }
 
     public String getDataType(String fieldName) {
-        int idx = getFieldIndex(fieldName);
-        return dataTypes.get(idx);
+        return getColumn(fieldName).getDatatype();
     }
 
     public int getFieldIndex(String fieldName) {
@@ -80,7 +74,7 @@ public class TupleInfo {
         return columnMap.containsKey(col);
     }
 
-    public void setField(String fieldName, TblColRef col, String dataType, int index) {
+    public void setField(String fieldName, TblColRef col, int index) {
         fieldMap.put(fieldName, index);
         if (col != null)
             columnMap.put(col, index);
@@ -94,15 +88,6 @@ public class TupleInfo {
             columns.set(index, col);
         else
             columns.add(index, col);
-
-        if (dataTypes.size() > index)
-            dataTypes.set(index, dataType);
-        else
-            dataTypes.add(index, dataType);
-    }
-
-    public int size() {
-        return fields.size();
     }
 
     public List<String> getAllFields() {
@@ -113,12 +98,8 @@ public class TupleInfo {
         return columns;
     }
 
-    public void addDerivedColumnFiller(IDerivedColumnFiller derivedColumnFiller) {
-        derivedColumnFillers.add(derivedColumnFiller);
-    }
-
-    public List<IDerivedColumnFiller> getDerivedColumnFillers() {
-        return derivedColumnFillers;
+    public int size() {
+        return fields.size();
     }
 
 }

@@ -54,7 +54,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
     public OLAPEnumerator(OLAPContext olapContext, DataContext optiqContext) {
         this.olapContext = olapContext;
         this.optiqContext = optiqContext;
-        this.current = new Object[olapContext.olapRowType.getFieldCount()];
+        this.current = new Object[olapContext.returnTupleInfo.size()];
         this.cursor = null;
         this.fieldIndexes = null;
     }
@@ -138,7 +138,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
         // query storage engine
         IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization, true);
-        ITupleIterator iterator = storageEngine.search(olapContext.storageContext, olapContext.getSQLDigest());
+        ITupleIterator iterator = storageEngine.search(olapContext.storageContext, olapContext.getSQLDigest(), olapContext.returnTupleInfo);
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
         }

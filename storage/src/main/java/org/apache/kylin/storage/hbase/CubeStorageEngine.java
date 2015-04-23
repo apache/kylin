@@ -26,6 +26,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
+import org.apache.kylin.storage.tuple.TupleInfo;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
@@ -75,7 +76,7 @@ public class CubeStorageEngine implements IStorageEngine {
     }
 
     @Override
-    public ITupleIterator search(StorageContext context, SQLDigest sqlDigest) {
+    public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
 
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
         TupleFilter filter = sqlDigest.filter;
@@ -129,7 +130,7 @@ public class CubeStorageEngine implements IStorageEngine {
         setLimit(filter, context);
 
         HConnection conn = HBaseConnection.get(context.getConnUrl());
-        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, valueDecoders, context);
+        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, valueDecoders, context, returnTupleInfo);
     }
 
     private void buildDimensionsAndMetrics(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics, SQLDigest sqlDigest) {

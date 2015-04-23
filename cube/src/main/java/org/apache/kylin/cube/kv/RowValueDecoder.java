@@ -19,20 +19,19 @@
 package org.apache.kylin.cube.kv;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.List;
 
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  * 
@@ -42,38 +41,34 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 public class RowValueDecoder implements Cloneable {
 
     private final HBaseColumnDesc hbaseColumn;
+    private final byte[] hbaseColumnFamily;
+    private final byte[] hbaseColumnQualifier;
+    
     private final MeasureCodec codec;
     private final BitSet projectionIndex;
     private final MeasureDesc[] measures;
-    private final List<String> names;
     private Object[] values;
-
-    public RowValueDecoder(RowValueDecoder rowValueDecoder) {
-        this.hbaseColumn = rowValueDecoder.getHBaseColumn();
-        this.projectionIndex = rowValueDecoder.getProjectionIndex();
-        this.names = new ArrayList<String>();
-        this.measures = hbaseColumn.getMeasures();
-        for (MeasureDesc measure : measures) {
-            this.names.add(measure.getFunction().getRewriteFieldName());
-        }
-        this.codec = new MeasureCodec(measures);
-        this.values = new Object[measures.length];
-    }
 
     public RowValueDecoder(HBaseColumnDesc hbaseColumn) {
         this.hbaseColumn = hbaseColumn;
+        this.hbaseColumnFamily = Bytes.toBytes(hbaseColumn.getColumnFamilyName());
+        this.hbaseColumnQualifier = Bytes.toBytes(hbaseColumn.getQualifier());
         this.projectionIndex = new BitSet();
-        this.names = new ArrayList<String>();
         this.measures = hbaseColumn.getMeasures();
-        for (MeasureDesc measure : measures) {
-            this.names.add(measure.getFunction().getRewriteFieldName());
-        }
         this.codec = new MeasureCodec(measures);
         this.values = new Object[measures.length];
     }
 
+    public void decode(Result hbaseRow) {
+        decode(hbaseRow.getValueAsByteBuffer(hbaseColumnFamily, hbaseColumnQualifier));
+    }
+    
     public void decode(byte[] bytes) {
-        codec.decode(ByteBuffer.wrap(bytes), values);
+        decode(ByteBuffer.wrap(bytes));
+    }
+
+    private void decode(ByteBuffer buffer) {
+        codec.decode(buffer, values);
         convertToJavaObjects(values, values);
     }
 
@@ -108,10 +103,6 @@ public class RowValueDecoder implements Cloneable {
 
     public Object[] getValues() {
         return values;
-    }
-
-    public List<String> getNames() {
-        return names;
     }
 
     public MeasureDesc[] getMeasures() {

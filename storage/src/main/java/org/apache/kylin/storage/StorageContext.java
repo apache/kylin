@@ -23,10 +23,6 @@ import java.util.List;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 
 /**
  * @author xjiang
@@ -47,7 +43,6 @@ public class StorageContext {
     private List<MeasureDesc> sortMeasures;
     private List<OrderEnum> sortOrders;
     private boolean acceptPartialResult;
-    private BiMap<TblColRef, String> aliasMap;
 
     private boolean exactAggregation;
     private boolean enableLimit;
@@ -62,7 +57,6 @@ public class StorageContext {
         this.limit = DEFAULT_THRESHOLD;
         this.totalScanCount = 0;
         this.cuboid = null;
-        this.aliasMap = HashBiMap.create();
         this.hasSort = false;
         this.sortOrders = new ArrayList<OrderEnum>();
         this.sortMeasures = new ArrayList<MeasureDesc>();
@@ -83,18 +77,6 @@ public class StorageContext {
     @Deprecated
     public void setConnUrl(String connUrl) {
         this.connUrl = connUrl;
-    }
-
-    // the name that maps to optiq row
-    public String getFieldName(TblColRef col) {
-        String name = null;
-        if (aliasMap != null) {
-            name = aliasMap.get(col);
-        }
-        if (name == null) {
-            name = col.getName();
-        }
-        return name;
     }
 
     public int getThreshold() {
@@ -119,14 +101,6 @@ public class StorageContext {
 
     public boolean isLimitEnabled() {
         return this.enableLimit;
-    }
-
-    public void addAlias(TblColRef column, String alias) {
-        this.aliasMap.put(column, alias);
-    }
-
-    public BiMap<TblColRef, String> getAliasMap() {
-        return aliasMap;
     }
 
     public void addSort(MeasureDesc measure, OrderEnum order) {

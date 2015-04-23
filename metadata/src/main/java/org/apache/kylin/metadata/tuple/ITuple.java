@@ -24,7 +24,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Tuple is a record row, contains multiple values being lookup by either field
- * (optiq notion) or column (kylin notion).
+ * (calcite notion) or column (kylin notion).
  * 
  * @author yangli9
  */
@@ -37,7 +37,5 @@ public interface ITuple extends IEvaluatableTuple {
     Object[] getAllValues();
 
     // declared from IEvaluatableTuple:  public Object getValue(TblColRef col);
-
-    Object getValue(String field);
 
 }

@@ -18,13 +18,18 @@
 
 package org.apache.kylin.storage.hbase;
 
-import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
-import com.google.common.collect.Range;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
@@ -33,26 +38,21 @@ import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.common.persistence.StorageException;
-import org.apache.kylin.common.util.Array;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.RowKeyDecoder;
 import org.apache.kylin.cube.kv.RowValueDecoder;
-import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.apache.kylin.storage.tuple.Tuple;
-import org.apache.kylin.storage.tuple.Tuple.IDerivedColumnFiller;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Range;
 
 /**
  * @author xjiang
@@ -64,35 +64,42 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     public static final int SCAN_CACHE = 1024;
 
-    private final CubeInstance cube;
     private final CubeSegment cubeSeg;
-    private final Collection<TblColRef> dimensions;
     private final TupleFilter filter;
     private final Collection<TblColRef> groupBy;
     private final Collection<RowValueDecoder> rowValueDecoders;
     private final StorageContext context;
     private final String tableName;
     private final HTableInterface table;
-    private final RowKeyDecoder rowKeyDecoder;
+
+    private final CubeSegmentTupleConverter tupleConverter;
     private final Iterator<HBaseKeyRange> rangeIterator;
+    private final Tuple oneTuple; // avoid new instance
 
     private Scan scan;
     private ResultScanner scanner;
     private Iterator<Result> resultIterator;
-    private TupleInfo tupleInfo;
-    private Tuple tuple;
     private int scanCount;
+    private Tuple next;
 
-    public CubeSegmentTupleIterator(CubeSegment cubeSeg, Collection<HBaseKeyRange> keyRanges, HConnection conn, Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
-        this.cube = cubeSeg.getCubeInstance();
+    public CubeSegmentTupleIterator(CubeSegment cubeSeg, List<HBaseKeyRange> keyRanges, HConnection conn, //
+            Set<TblColRef> dimensions, TupleFilter filter, Set<TblColRef> groupBy, //
+            List<RowValueDecoder> rowValueDecoders, StorageContext context, TupleInfo returnTupleInfo) {
         this.cubeSeg = cubeSeg;
-        this.dimensions = dimensions;
         this.filter = filter;
         this.groupBy = groupBy;
         this.rowValueDecoders = rowValueDecoders;
         this.context = context;
         this.tableName = cubeSeg.getStorageLocationIdentifier();
-        this.rowKeyDecoder = new RowKeyDecoder(this.cubeSeg);
+
+        Cuboid cuboid = keyRanges.get(0).getCuboid();
+        for (HBaseKeyRange range : keyRanges) {
+            assert cuboid.equals(range.getCuboid());
+        }
+
+        this.tupleConverter = new CubeSegmentTupleConverter(cubeSeg, cuboid, rowValueDecoders, returnTupleInfo);
+        this.oneTuple = new Tuple(returnTupleInfo);
+        this.rangeIterator = keyRanges.iterator();
         this.scanCount = 0;
 
         try {
@@ -100,15 +107,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         } catch (Throwable t) {
             throw new StorageException("Error when open connection to table " + tableName, t);
         }
-        this.rangeIterator = keyRanges.iterator();
-        scanNextRange();
-    }
-
-    @Override
-    public void close() {
-        logger.info("Closing CubeSegmentTupleIterator");
-        closeScanner();
-        closeTable();
     }
 
     @Override
@@ -116,65 +114,41 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         return null;
     }
 
-    private void closeScanner() {
-        if (logger.isDebugEnabled() && scan != null) {
-            logger.debug("Scan " + scan.toString());
-            byte[] metricsBytes = scan.getAttribute(Scan.SCAN_ATTRIBUTES_METRICS_DATA);
-            if (metricsBytes != null) {
-                ScanMetrics scanMetrics = ProtobufUtil.toScanMetrics(metricsBytes);
-                logger.debug("HBase Metrics: " + "count={}, ms={}, bytes={}, remote_bytes={}, regions={}, not_serving_region={}, rpc={}, rpc_retries={}, remote_rpc={}, remote_rpc_retries={}", //
-                        new Object[] { scanCount, scanMetrics.sumOfMillisSecBetweenNexts, scanMetrics.countOfBytesInResults, scanMetrics.countOfBytesInRemoteResults, scanMetrics.countOfRegions, scanMetrics.countOfNSRE, scanMetrics.countOfRPCcalls, scanMetrics.countOfRPCRetries, scanMetrics.countOfRemoteRPCcalls, scanMetrics.countOfRemoteRPCRetries });
-            }
-        }
-        try {
-            if (scanner != null) {
-                scanner.close();
-                scanner = null;
-            }
-        } catch (Throwable t) {
-            throw new StorageException("Error when close scanner for table " + tableName, t);
-        }
-    }
-
-    private void closeTable() {
-        try {
-            if (table != null) {
-                table.close();
-            }
-        } catch (Throwable t) {
-            throw new StorageException("Error when close table " + tableName, t);
-        }
-    }
-
     @Override
     public boolean hasNext() {
-        return rangeIterator.hasNext() || resultIterator.hasNext();
+        if (next != null)
+            return true;
+
+        if (resultIterator == null) {
+            if (rangeIterator.hasNext() == false)
+                return false;
+
+            resultIterator = doScan(rangeIterator.next());
+        }
+
+        if (resultIterator.hasNext() == false) {
+            closeScanner();
+            resultIterator = null;
+            return hasNext();
+        }
+
+        Result result = resultIterator.next();
+        scanCount++;
+        tupleConverter.translateResult(result, oneTuple);
+        next = oneTuple;
+        return true;
     }
 
     @Override
     public Tuple next() {
-        // get next result from hbase
-        Result result = null;
-        while (hasNext()) {
-            if (resultIterator.hasNext()) {
-                result = this.resultIterator.next();
-                scanCount++;
-                break;
-            } else {
-                scanNextRange();
-            }
+        if (next == null) {
+            hasNext();
+            if (next == null)
+                throw new NoSuchElementException();
         }
-        if (result == null) {
-            return null;
-        }
-        // translate result to tuple
-        try {
-            this.tuple = new Tuple(tupleInfo);
-            translateResult(result, this.tuple);
-        } catch (IOException e) {
-            throw new IllegalStateException("Can't translate result " + result, e);
-        }
-        return this.tuple;
+        Tuple r = next;
+        next = null;
+        return r;
     }
 
     @Override
@@ -182,20 +156,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         throw new UnsupportedOperationException();
     }
 
-    private void scanNextRange() {
-        if (this.rangeIterator.hasNext()) {
-            closeScanner();
-            HBaseKeyRange keyRange = this.rangeIterator.next();
-            this.tupleInfo = buildTupleInfo(keyRange.getCuboid());
-
-            this.resultIterator = doScan(keyRange);
-        } else {
-            this.resultIterator = Collections.<Result> emptyList().iterator();
-        }
-    }
-
     private final Iterator<Result> doScan(HBaseKeyRange keyRange) {
-
         Iterator<Result> iter = null;
         try {
             scan = buildScan(keyRange);
@@ -272,94 +233,41 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         }
     }
 
-    private TupleInfo buildTupleInfo(Cuboid cuboid) {
-        TupleInfo info = new TupleInfo();
-        int index = 0;
-        rowKeyDecoder.setCuboid(cuboid);
-        List<TblColRef> rowColumns = rowKeyDecoder.getColumns();
-        List<String> colNames = rowKeyDecoder.getNames(context.getAliasMap());
-        for (int i = 0; i < rowColumns.size(); i++) {
-            TblColRef column = rowColumns.get(i);
-            if (!dimensions.contains(column)) {
-                continue;
-            }
-            // add normal column
-            info.setField(colNames.get(i), rowColumns.get(i), rowColumns.get(i).getType().getName(), index++);
-        }
-
-        // derived columns and filler
-        Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cubeSeg.getCubeDesc().getHostToDerivedInfo(rowColumns, null);
-        for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
-            TblColRef[] hostCols = entry.getKey().data;
-            for (DeriveInfo deriveInfo : entry.getValue()) {
-                // mark name for each derived field
-                for (TblColRef derivedCol : deriveInfo.columns) {
-                    String derivedField = getFieldName(derivedCol, context.getAliasMap());
-                    if (info.hasField(derivedField) == false) {
-                        info.setField(derivedField, derivedCol, derivedCol.getType().getName(), index++);
-                    }
-                }
-                // add filler
-                info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo, info, CubeManager.getInstance(this.cube.getConfig()), cubeSeg));
+    private void closeScanner() {
+        if (logger.isDebugEnabled() && scan != null) {
+            logger.debug("Scan " + scan.toString());
+            byte[] metricsBytes = scan.getAttribute(Scan.SCAN_ATTRIBUTES_METRICS_DATA);
+            if (metricsBytes != null) {
+                ScanMetrics scanMetrics = ProtobufUtil.toScanMetrics(metricsBytes);
+                logger.debug("HBase Metrics: " + "count={}, ms={}, bytes={}, remote_bytes={}, regions={}, not_serving_region={}, rpc={}, rpc_retries={}, remote_rpc={}, remote_rpc_retries={}", //
+                        new Object[] { scanCount, scanMetrics.sumOfMillisSecBetweenNexts, scanMetrics.countOfBytesInResults, scanMetrics.countOfBytesInRemoteResults, scanMetrics.countOfRegions, scanMetrics.countOfNSRE, scanMetrics.countOfRPCcalls, scanMetrics.countOfRPCRetries, scanMetrics.countOfRemoteRPCcalls, scanMetrics.countOfRemoteRPCRetries });
             }
         }
-
-        for (RowValueDecoder rowValueDecoder : this.rowValueDecoders) {
-            List<String> names = rowValueDecoder.getNames();
-            MeasureDesc[] measures = rowValueDecoder.getMeasures();
-            for (int i = 0; i < measures.length; i++) {
-                String dataType = measures[i].getFunction().getSQLType();
-                info.setField(names.get(i), null, dataType, index++);
+        try {
+            if (scanner != null) {
+                scanner.close();
+                scanner = null;
             }
+        } catch (Throwable t) {
+            throw new StorageException("Error when close scanner for table " + tableName, t);
         }
-        return info;
     }
 
-    private String getFieldName(TblColRef column, Map<TblColRef, String> aliasMap) {
-        String name = null;
-        if (aliasMap != null) {
-            name = aliasMap.get(column);
+    private void closeTable() {
+        try {
+            if (table != null) {
+                table.close();
+            }
+        } catch (Throwable t) {
+            throw new StorageException("Error when close table " + tableName, t);
         }
-        if (name == null) {
-            name = column.getName();
-        }
-        return name;
     }
 
-    private void translateResult(Result res, Tuple tuple) throws IOException {
-        // groups
-        byte[] rowkey = res.getRow();
-        rowKeyDecoder.decode(rowkey);
-        List<TblColRef> columns = rowKeyDecoder.getColumns();
-        List<String> dimensionNames = rowKeyDecoder.getNames(context.getAliasMap());
-        List<String> dimensionValues = rowKeyDecoder.getValues();
-        for (int i = 0; i < dimensionNames.size(); i++) {
-            TblColRef column = columns.get(i);
-            if (!tuple.hasColumn(column)) {
-                continue;
-            }
-            tuple.setDimensionValue(dimensionNames.get(i), dimensionValues.get(i));
-        }
-
-        // derived
-        for (IDerivedColumnFiller filler : tupleInfo.getDerivedColumnFillers()) {
-            filler.fillDerivedColumns(dimensionValues, tuple);
-        }
-
-        // aggregations
-        for (RowValueDecoder rowValueDecoder : this.rowValueDecoders) {
-            HBaseColumnDesc hbaseColumn = rowValueDecoder.getHBaseColumn();
-            String columnFamily = hbaseColumn.getColumnFamilyName();
-            String qualifier = hbaseColumn.getQualifier();
-            // FIXME: avoidable bytes array creation, why not use res.getValueAsByteBuffer directly?
-            byte[] valueBytes = res.getValue(Bytes.toBytes(columnFamily), Bytes.toBytes(qualifier));
-            rowValueDecoder.decode(valueBytes);
-            List<String> measureNames = rowValueDecoder.getNames();
-            Object[] measureValues = rowValueDecoder.getValues();
-            BitSet projectionIndex = rowValueDecoder.getProjectionIndex();
-            for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
-                tuple.setMeasureValue(measureNames.get(i), measureValues[i]);
-            }
-        }
+    @Override
+    public void close() {
+        logger.info("Closing CubeSegmentTupleIterator");
+        closeScanner();
+        closeTable();
     }
+
 }
