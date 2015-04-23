@@ -51,13 +51,13 @@ public final class IIProtos {
      */
     com.google.protobuf.ByteString getAggregator();
 
-    // optional bytes tsRange = 6;
+    // optional bytes tsRange = 5;
     /**
-     * <code>optional bytes tsRange = 6;</code>
+     * <code>optional bytes tsRange = 5;</code>
      */
     boolean hasTsRange();
     /**
-     * <code>optional bytes tsRange = 6;</code>
+     * <code>optional bytes tsRange = 5;</code>
      */
     com.google.protobuf.ByteString getTsRange();
   }
@@ -132,7 +132,7 @@ public final class IIProtos {
               aggregator_ = input.readBytes();
               break;
             }
-            case 50: {
+            case 42: {
               bitField0_ |= 0x00000010;
               tsRange_ = input.readBytes();
               break;
@@ -241,17 +241,17 @@ public final class IIProtos {
       return aggregator_;
     }
 
-    // optional bytes tsRange = 6;
-    public static final int TSRANGE_FIELD_NUMBER = 6;
+    // optional bytes tsRange = 5;
+    public static final int TSRANGE_FIELD_NUMBER = 5;
     private com.google.protobuf.ByteString tsRange_;
     /**
-     * <code>optional bytes tsRange = 6;</code>
+     * <code>optional bytes tsRange = 5;</code>
      */
     public boolean hasTsRange() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional bytes tsRange = 6;</code>
+     * <code>optional bytes tsRange = 5;</code>
      */
     public com.google.protobuf.ByteString getTsRange() {
       return tsRange_;
@@ -305,7 +305,7 @@ public final class IIProtos {
         output.writeBytes(4, aggregator_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeBytes(6, tsRange_);
+        output.writeBytes(5, tsRange_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -334,7 +334,7 @@ public final class IIProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(6, tsRange_);
+          .computeBytesSize(5, tsRange_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -802,22 +802,22 @@ public final class IIProtos {
         return this;
       }
 
-      // optional bytes tsRange = 6;
+      // optional bytes tsRange = 5;
       private com.google.protobuf.ByteString tsRange_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>optional bytes tsRange = 6;</code>
+       * <code>optional bytes tsRange = 5;</code>
        */
       public boolean hasTsRange() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>optional bytes tsRange = 6;</code>
+       * <code>optional bytes tsRange = 5;</code>
        */
       public com.google.protobuf.ByteString getTsRange() {
         return tsRange_;
       }
       /**
-       * <code>optional bytes tsRange = 6;</code>
+       * <code>optional bytes tsRange = 5;</code>
        */
       public Builder setTsRange(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -829,7 +829,7 @@ public final class IIProtos {
         return this;
       }
       /**
-       * <code>optional bytes tsRange = 6;</code>
+       * <code>optional bytes tsRange = 5;</code>
        */
       public Builder clearTsRange() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -877,15 +877,19 @@ public final class IIProtos {
     org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder getRowsOrBuilder(
         int index);
 
-    // required int64 latestDataTime = 2;
+    // required .IIResponse.Stats stats = 2;
     /**
-     * <code>required int64 latestDataTime = 2;</code>
+     * <code>required .IIResponse.Stats stats = 2;</code>
      */
-    boolean hasLatestDataTime();
+    boolean hasStats();
     /**
-     * <code>required int64 latestDataTime = 2;</code>
+     * <code>required .IIResponse.Stats stats = 2;</code>
      */
-    long getLatestDataTime();
+    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats getStats();
+    /**
+     * <code>required .IIResponse.Stats stats = 2;</code>
+     */
+    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder getStatsOrBuilder();
   }
   /**
    * Protobuf type {@code IIResponse}
@@ -946,9 +950,17 @@ public final class IIProtos {
               rows_.add(input.readMessage(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.PARSER, extensionRegistry));
               break;
             }
-            case 16: {
+            case 18: {
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = stats_.toBuilder();
+              }
+              stats_ = input.readMessage(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(stats_);
+                stats_ = subBuilder.buildPartial();
+              }
               bitField0_ |= 0x00000001;
-              latestDataTime_ = input.readInt64();
               break;
             }
           }
@@ -1531,6 +1543,808 @@ public final class IIProtos {
       // @@protoc_insertion_point(class_scope:IIResponse.IIRow)
     }
 
+    public interface StatsOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // optional int32 myShard = 1;
+      /**
+       * <code>optional int32 myShard = 1;</code>
+       */
+      boolean hasMyShard();
+      /**
+       * <code>optional int32 myShard = 1;</code>
+       */
+      int getMyShard();
+
+      // optional int64 latestDataTime = 2;
+      /**
+       * <code>optional int64 latestDataTime = 2;</code>
+       */
+      boolean hasLatestDataTime();
+      /**
+       * <code>optional int64 latestDataTime = 2;</code>
+       */
+      long getLatestDataTime();
+
+      // optional int64 serviceStartTime = 3;
+      /**
+       * <code>optional int64 serviceStartTime = 3;</code>
+       */
+      boolean hasServiceStartTime();
+      /**
+       * <code>optional int64 serviceStartTime = 3;</code>
+       */
+      long getServiceStartTime();
+
+      // optional int64 serviceEndTime = 4;
+      /**
+       * <code>optional int64 serviceEndTime = 4;</code>
+       */
+      boolean hasServiceEndTime();
+      /**
+       * <code>optional int64 serviceEndTime = 4;</code>
+       */
+      long getServiceEndTime();
+
+      // optional int32 scannedSlices = 5;
+      /**
+       * <code>optional int32 scannedSlices = 5;</code>
+       */
+      boolean hasScannedSlices();
+      /**
+       * <code>optional int32 scannedSlices = 5;</code>
+       */
+      int getScannedSlices();
+    }
+    /**
+     * Protobuf type {@code IIResponse.Stats}
+     *
+     * <pre>
+     *all entries in this struct be optional to conveniently add more entries in the future
+     * </pre>
+     */
+    public static final class Stats extends
+        com.google.protobuf.GeneratedMessage
+        implements StatsOrBuilder {
+      // Use Stats.newBuilder() to construct.
+      private Stats(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private Stats(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final Stats defaultInstance;
+      public static Stats getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public Stats getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private Stats(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 8: {
+                bitField0_ |= 0x00000001;
+                myShard_ = input.readInt32();
+                break;
+              }
+              case 16: {
+                bitField0_ |= 0x00000002;
+                latestDataTime_ = input.readInt64();
+                break;
+              }
+              case 24: {
+                bitField0_ |= 0x00000004;
+                serviceStartTime_ = input.readInt64();
+                break;
+              }
+              case 32: {
+                bitField0_ |= 0x00000008;
+                serviceEndTime_ = input.readInt64();
+                break;
+              }
+              case 40: {
+                bitField0_ |= 0x00000010;
+                scannedSlices_ = input.readInt32();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<Stats> PARSER =
+          new com.google.protobuf.AbstractParser<Stats>() {
+        public Stats parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Stats(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Stats> getParserForType() {
+        return PARSER;
+      }
+
+      private int bitField0_;
+      // optional int32 myShard = 1;
+      public static final int MYSHARD_FIELD_NUMBER = 1;
+      private int myShard_;
+      /**
+       * <code>optional int32 myShard = 1;</code>
+       */
+      public boolean hasMyShard() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int32 myShard = 1;</code>
+       */
+      public int getMyShard() {
+        return myShard_;
+      }
+
+      // optional int64 latestDataTime = 2;
+      public static final int LATESTDATATIME_FIELD_NUMBER = 2;
+      private long latestDataTime_;
+      /**
+       * <code>optional int64 latestDataTime = 2;</code>
+       */
+      public boolean hasLatestDataTime() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int64 latestDataTime = 2;</code>
+       */
+      public long getLatestDataTime() {
+        return latestDataTime_;
+      }
+
+      // optional int64 serviceStartTime = 3;
+      public static final int SERVICESTARTTIME_FIELD_NUMBER = 3;
+      private long serviceStartTime_;
+      /**
+       * <code>optional int64 serviceStartTime = 3;</code>
+       */
+      public boolean hasServiceStartTime() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional int64 serviceStartTime = 3;</code>
+       */
+      public long getServiceStartTime() {
+        return serviceStartTime_;
+      }
+
+      // optional int64 serviceEndTime = 4;
+      public static final int SERVICEENDTIME_FIELD_NUMBER = 4;
+      private long serviceEndTime_;
+      /**
+       * <code>optional int64 serviceEndTime = 4;</code>
+       */
+      public boolean hasServiceEndTime() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int64 serviceEndTime = 4;</code>
+       */
+      public long getServiceEndTime() {
+        return serviceEndTime_;
+      }
+
+      // optional int32 scannedSlices = 5;
+      public static final int SCANNEDSLICES_FIELD_NUMBER = 5;
+      private int scannedSlices_;
+      /**
+       * <code>optional int32 scannedSlices = 5;</code>
+       */
+      public boolean hasScannedSlices() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int32 scannedSlices = 5;</code>
+       */
+      public int getScannedSlices() {
+        return scannedSlices_;
+      }
+
+      private void initFields() {
+        myShard_ = 0;
+        latestDataTime_ = 0L;
+        serviceStartTime_ = 0L;
+        serviceEndTime_ = 0L;
+        scannedSlices_ = 0;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeInt32(1, myShard_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeInt64(2, latestDataTime_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeInt64(3, serviceStartTime_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeInt64(4, serviceEndTime_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeInt32(5, scannedSlices_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(1, myShard_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(2, latestDataTime_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(3, serviceStartTime_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(4, serviceEndTime_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(5, scannedSlices_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats)) {
+          return super.equals(obj);
+        }
+        org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats other = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats) obj;
+
+        boolean result = true;
+        result = result && (hasMyShard() == other.hasMyShard());
+        if (hasMyShard()) {
+          result = result && (getMyShard()
+              == other.getMyShard());
+        }
+        result = result && (hasLatestDataTime() == other.hasLatestDataTime());
+        if (hasLatestDataTime()) {
+          result = result && (getLatestDataTime()
+              == other.getLatestDataTime());
+        }
+        result = result && (hasServiceStartTime() == other.hasServiceStartTime());
+        if (hasServiceStartTime()) {
+          result = result && (getServiceStartTime()
+              == other.getServiceStartTime());
+        }
+        result = result && (hasServiceEndTime() == other.hasServiceEndTime());
+        if (hasServiceEndTime()) {
+          result = result && (getServiceEndTime()
+              == other.getServiceEndTime());
+        }
+        result = result && (hasScannedSlices() == other.hasScannedSlices());
+        if (hasScannedSlices()) {
+          result = result && (getScannedSlices()
+              == other.getScannedSlices());
+        }
+        result = result &&
+            getUnknownFields().equals(other.getUnknownFields());
+        return result;
+      }
+
+      private int memoizedHashCode = 0;
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptorForType().hashCode();
+        if (hasMyShard()) {
+          hash = (37 * hash) + MYSHARD_FIELD_NUMBER;
+          hash = (53 * hash) + getMyShard();
+        }
+        if (hasLatestDataTime()) {
+          hash = (37 * hash) + LATESTDATATIME_FIELD_NUMBER;
+          hash = (53 * hash) + hashLong(getLatestDataTime());
+        }
+        if (hasServiceStartTime()) {
+          hash = (37 * hash) + SERVICESTARTTIME_FIELD_NUMBER;
+          hash = (53 * hash) + hashLong(getServiceStartTime());
+        }
+        if (hasServiceEndTime()) {
+          hash = (37 * hash) + SERVICEENDTIME_FIELD_NUMBER;
+          hash = (53 * hash) + hashLong(getServiceEndTime());
+        }
+        if (hasScannedSlices()) {
+          hash = (37 * hash) + SCANNEDSLICES_FIELD_NUMBER;
+          hash = (53 * hash) + getScannedSlices();
+        }
+        hash = (29 * hash) + getUnknownFields().hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code IIResponse.Stats}
+       *
+       * <pre>
+       *all entries in this struct be optional to conveniently add more entries in the future
+       * </pre>
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder.class);
+        }
+
+        // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          myShard_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          latestDataTime_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          serviceStartTime_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          serviceEndTime_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          scannedSlices_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000010);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_descriptor;
+        }
+
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats getDefaultInstanceForType() {
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
+        }
+
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats build() {
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats buildPartial() {
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats result = new org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.myShard_ = myShard_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.latestDataTime_ = latestDataTime_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.serviceStartTime_ = serviceStartTime_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.serviceEndTime_ = serviceEndTime_;
+          if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.scannedSlices_ = scannedSlices_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats) {
+            return mergeFrom((org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats other) {
+          if (other == org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance()) return this;
+          if (other.hasMyShard()) {
+            setMyShard(other.getMyShard());
+          }
+          if (other.hasLatestDataTime()) {
+            setLatestDataTime(other.getLatestDataTime());
+          }
+          if (other.hasServiceStartTime()) {
+            setServiceStartTime(other.getServiceStartTime());
+          }
+          if (other.hasServiceEndTime()) {
+            setServiceEndTime(other.getServiceEndTime());
+          }
+          if (other.hasScannedSlices()) {
+            setScannedSlices(other.getScannedSlices());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // optional int32 myShard = 1;
+        private int myShard_ ;
+        /**
+         * <code>optional int32 myShard = 1;</code>
+         */
+        public boolean hasMyShard() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional int32 myShard = 1;</code>
+         */
+        public int getMyShard() {
+          return myShard_;
+        }
+        /**
+         * <code>optional int32 myShard = 1;</code>
+         */
+        public Builder setMyShard(int value) {
+          bitField0_ |= 0x00000001;
+          myShard_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 myShard = 1;</code>
+         */
+        public Builder clearMyShard() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          myShard_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional int64 latestDataTime = 2;
+        private long latestDataTime_ ;
+        /**
+         * <code>optional int64 latestDataTime = 2;</code>
+         */
+        public boolean hasLatestDataTime() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>optional int64 latestDataTime = 2;</code>
+         */
+        public long getLatestDataTime() {
+          return latestDataTime_;
+        }
+        /**
+         * <code>optional int64 latestDataTime = 2;</code>
+         */
+        public Builder setLatestDataTime(long value) {
+          bitField0_ |= 0x00000002;
+          latestDataTime_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int64 latestDataTime = 2;</code>
+         */
+        public Builder clearLatestDataTime() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          latestDataTime_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        // optional int64 serviceStartTime = 3;
+        private long serviceStartTime_ ;
+        /**
+         * <code>optional int64 serviceStartTime = 3;</code>
+         */
+        public boolean hasServiceStartTime() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional int64 serviceStartTime = 3;</code>
+         */
+        public long getServiceStartTime() {
+          return serviceStartTime_;
+        }
+        /**
+         * <code>optional int64 serviceStartTime = 3;</code>
+         */
+        public Builder setServiceStartTime(long value) {
+          bitField0_ |= 0x00000004;
+          serviceStartTime_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int64 serviceStartTime = 3;</code>
+         */
+        public Builder clearServiceStartTime() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          serviceStartTime_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        // optional int64 serviceEndTime = 4;
+        private long serviceEndTime_ ;
+        /**
+         * <code>optional int64 serviceEndTime = 4;</code>
+         */
+        public boolean hasServiceEndTime() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional int64 serviceEndTime = 4;</code>
+         */
+        public long getServiceEndTime() {
+          return serviceEndTime_;
+        }
+        /**
+         * <code>optional int64 serviceEndTime = 4;</code>
+         */
+        public Builder setServiceEndTime(long value) {
+          bitField0_ |= 0x00000008;
+          serviceEndTime_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int64 serviceEndTime = 4;</code>
+         */
+        public Builder clearServiceEndTime() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          serviceEndTime_ = 0L;
+          onChanged();
+          return this;
+        }
+
+        // optional int32 scannedSlices = 5;
+        private int scannedSlices_ ;
+        /**
+         * <code>optional int32 scannedSlices = 5;</code>
+         */
+        public boolean hasScannedSlices() {
+          return ((bitField0_ & 0x00000010) == 0x00000010);
+        }
+        /**
+         * <code>optional int32 scannedSlices = 5;</code>
+         */
+        public int getScannedSlices() {
+          return scannedSlices_;
+        }
+        /**
+         * <code>optional int32 scannedSlices = 5;</code>
+         */
+        public Builder setScannedSlices(int value) {
+          bitField0_ |= 0x00000010;
+          scannedSlices_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int32 scannedSlices = 5;</code>
+         */
+        public Builder clearScannedSlices() {
+          bitField0_ = (bitField0_ & ~0x00000010);
+          scannedSlices_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:IIResponse.Stats)
+      }
+
+      static {
+        defaultInstance = new Stats(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:IIResponse.Stats)
+    }
+
     private int bitField0_;
     // repeated .IIResponse.IIRow rows = 1;
     public static final int ROWS_FIELD_NUMBER = 1;
@@ -1568,32 +2382,38 @@ public final class IIProtos {
       return rows_.get(index);
     }
 
-    // required int64 latestDataTime = 2;
-    public static final int LATESTDATATIME_FIELD_NUMBER = 2;
-    private long latestDataTime_;
+    // required .IIResponse.Stats stats = 2;
+    public static final int STATS_FIELD_NUMBER = 2;
+    private org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats stats_;
     /**
-     * <code>required int64 latestDataTime = 2;</code>
+     * <code>required .IIResponse.Stats stats = 2;</code>
      */
-    public boolean hasLatestDataTime() {
+    public boolean hasStats() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required int64 latestDataTime = 2;</code>
+     * <code>required .IIResponse.Stats stats = 2;</code>
      */
-    public long getLatestDataTime() {
-      return latestDataTime_;
+    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats getStats() {
+      return stats_;
+    }
+    /**
+     * <code>required .IIResponse.Stats stats = 2;</code>
+     */
+    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder getStatsOrBuilder() {
+      return stats_;
     }
 
     private void initFields() {
       rows_ = java.util.Collections.emptyList();
-      latestDataTime_ = 0L;
+      stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
 
-      if (!hasLatestDataTime()) {
+      if (!hasStats()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1614,7 +2434,7 @@ public final class IIProtos {
         output.writeMessage(1, rows_.get(i));
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt64(2, latestDataTime_);
+        output.writeMessage(2, stats_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -1631,7 +2451,7 @@ public final class IIProtos {
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(2, latestDataTime_);
+          .computeMessageSize(2, stats_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1658,10 +2478,10 @@ public final class IIProtos {
       boolean result = true;
       result = result && getRowsList()
           .equals(other.getRowsList());
-      result = result && (hasLatestDataTime() == other.hasLatestDataTime());
-      if (hasLatestDataTime()) {
-        result = result && (getLatestDataTime()
-            == other.getLatestDataTime());
+      result = result && (hasStats() == other.hasStats());
+      if (hasStats()) {
+        result = result && getStats()
+            .equals(other.getStats());
       }
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
@@ -1680,9 +2500,9 @@ public final class IIProtos {
         hash = (37 * hash) + ROWS_FIELD_NUMBER;
         hash = (53 * hash) + getRowsList().hashCode();
       }
-      if (hasLatestDataTime()) {
-        hash = (37 * hash) + LATESTDATATIME_FIELD_NUMBER;
-        hash = (53 * hash) + hashLong(getLatestDataTime());
+      if (hasStats()) {
+        hash = (37 * hash) + STATS_FIELD_NUMBER;
+        hash = (53 * hash) + getStats().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1786,6 +2606,7 @@ public final class IIProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getRowsFieldBuilder();
+          getStatsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -1800,7 +2621,11 @@ public final class IIProtos {
         } else {
           rowsBuilder_.clear();
         }
-        latestDataTime_ = 0L;
+        if (statsBuilder_ == null) {
+          stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
+        } else {
+          statsBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
@@ -1842,7 +2667,11 @@ public final class IIProtos {
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.latestDataTime_ = latestDataTime_;
+        if (statsBuilder_ == null) {
+          result.stats_ = stats_;
+        } else {
+          result.stats_ = statsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1885,15 +2714,15 @@ public final class IIProtos {
             }
           }
         }
-        if (other.hasLatestDataTime()) {
-          setLatestDataTime(other.getLatestDataTime());
+        if (other.hasStats()) {
+          mergeStats(other.getStats());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
-        if (!hasLatestDataTime()) {
+        if (!hasStats()) {
           
           return false;
         }
@@ -2165,37 +2994,121 @@ public final class IIProtos {
         return rowsBuilder_;
       }
 
-      // required int64 latestDataTime = 2;
-      private long latestDataTime_ ;
+      // required .IIResponse.Stats stats = 2;
+      private org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder> statsBuilder_;
       /**
-       * <code>required int64 latestDataTime = 2;</code>
+       * <code>required .IIResponse.Stats stats = 2;</code>
        */
-      public boolean hasLatestDataTime() {
+      public boolean hasStats() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required int64 latestDataTime = 2;</code>
+       * <code>required .IIResponse.Stats stats = 2;</code>
        */
-      public long getLatestDataTime() {
-        return latestDataTime_;
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats getStats() {
+        if (statsBuilder_ == null) {
+          return stats_;
+        } else {
+          return statsBuilder_.getMessage();
+        }
       }
       /**
-       * <code>required int64 latestDataTime = 2;</code>
+       * <code>required .IIResponse.Stats stats = 2;</code>
        */
-      public Builder setLatestDataTime(long value) {
+      public Builder setStats(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats value) {
+        if (statsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          stats_ = value;
+          onChanged();
+        } else {
+          statsBuilder_.setMessage(value);
+        }
         bitField0_ |= 0x00000002;
-        latestDataTime_ = value;
-        onChanged();
         return this;
       }
       /**
-       * <code>required int64 latestDataTime = 2;</code>
+       * <code>required .IIResponse.Stats stats = 2;</code>
        */
-      public Builder clearLatestDataTime() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        latestDataTime_ = 0L;
-        onChanged();
+      public Builder setStats(
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder builderForValue) {
+        if (statsBuilder_ == null) {
+          stats_ = builderForValue.build();
+          onChanged();
+        } else {
+          statsBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
         return this;
+      }
+      /**
+       * <code>required .IIResponse.Stats stats = 2;</code>
+       */
+      public Builder mergeStats(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats value) {
+        if (statsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              stats_ != org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance()) {
+            stats_ =
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.newBuilder(stats_).mergeFrom(value).buildPartial();
+          } else {
+            stats_ = value;
+          }
+          onChanged();
+        } else {
+          statsBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .IIResponse.Stats stats = 2;</code>
+       */
+      public Builder clearStats() {
+        if (statsBuilder_ == null) {
+          stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
+          onChanged();
+        } else {
+          statsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .IIResponse.Stats stats = 2;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder getStatsBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getStatsFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .IIResponse.Stats stats = 2;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder getStatsOrBuilder() {
+        if (statsBuilder_ != null) {
+          return statsBuilder_.getMessageOrBuilder();
+        } else {
+          return stats_;
+        }
+      }
+      /**
+       * <code>required .IIResponse.Stats stats = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder> 
+          getStatsFieldBuilder() {
+        if (statsBuilder_ == null) {
+          statsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder>(
+                  stats_,
+                  getParentForChildren(),
+                  isClean());
+          stats_ = null;
+        }
+        return statsBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:IIResponse)
@@ -2456,6 +3369,11 @@ public final class IIProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_IIResponse_IIRow_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_IIResponse_Stats_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_IIResponse_Stats_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -2469,14 +3387,17 @@ public final class IIProtos {
       "/storage/hbase/coprocessor/endpoint/prot" +
       "obuf/II.proto\"a\n\tIIRequest\022\014\n\004type\030\001 \002(\014" +
       "\022\016\n\006filter\030\002 \002(\014\022\021\n\tprojector\030\003 \002(\014\022\022\n\na" +
-      "ggregator\030\004 \002(\014\022\017\n\007tsRange\030\006 \001(\014\"q\n\nIIRe" +
-      "sponse\022\037\n\004rows\030\001 \003(\0132\021.IIResponse.IIRow\022" +
-      "\026\n\016latestDataTime\030\002 \002(\003\032*\n\005IIRow\022\017\n\007colu" +
-      "mns\030\001 \002(\014\022\020\n\010measures\030\002 \001(\01421\n\013RowsServi" +
-      "ce\022\"\n\007getRows\022\n.IIRequest\032\013.IIResponseBQ" +
-      "\n=org.apache.kylin.storage.hbase.coproce",
-      "ssor.endpoint.generatedB\010IIProtosH\001\210\001\001\240\001" +
-      "\001"
+      "ggregator\030\004 \002(\014\022\017\n\007tsRange\030\005 \001(\014\"\366\001\n\nIIR" +
+      "esponse\022\037\n\004rows\030\001 \003(\0132\021.IIResponse.IIRow" +
+      "\022 \n\005stats\030\002 \002(\0132\021.IIResponse.Stats\032*\n\005II" +
+      "Row\022\017\n\007columns\030\001 \002(\014\022\020\n\010measures\030\002 \001(\014\032y" +
+      "\n\005Stats\022\017\n\007myShard\030\001 \001(\005\022\026\n\016latestDataTi" +
+      "me\030\002 \001(\003\022\030\n\020serviceStartTime\030\003 \001(\003\022\026\n\016se",
+      "rviceEndTime\030\004 \001(\003\022\025\n\rscannedSlices\030\005 \001(" +
+      "\00521\n\013RowsService\022\"\n\007getRows\022\n.IIRequest\032" +
+      "\013.IIResponseBQ\n=org.apache.kylin.storage" +
+      ".hbase.coprocessor.endpoint.generatedB\010I" +
+      "IProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2494,13 +3415,19 @@ public final class IIProtos {
           internal_static_IIResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_IIResponse_descriptor,
-              new java.lang.String[] { "Rows", "LatestDataTime", });
+              new java.lang.String[] { "Rows", "Stats", });
           internal_static_IIResponse_IIRow_descriptor =
             internal_static_IIResponse_descriptor.getNestedTypes().get(0);
           internal_static_IIResponse_IIRow_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_IIResponse_IIRow_descriptor,
               new java.lang.String[] { "Columns", "Measures", });
+          internal_static_IIResponse_Stats_descriptor =
+            internal_static_IIResponse_descriptor.getNestedTypes().get(1);
+          internal_static_IIResponse_Stats_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_IIResponse_Stats_descriptor,
+              new java.lang.String[] { "MyShard", "LatestDataTime", "ServiceStartTime", "ServiceEndTime", "ScannedSlices", });
           return null;
         }
       };

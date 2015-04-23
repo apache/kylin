@@ -35,6 +35,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.TableRecord;
@@ -145,14 +146,20 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
-
         Collection<IIProtos.IIResponse> shardResults = getResults(endpointRequest, table);
-
         this.lastDataTime = Collections.min(Collections2.transform(shardResults, new Function<IIProtos.IIResponse, Long>() {
             @Nullable
             @Override
             public Long apply(IIProtos.IIResponse input) {
-                return input.getLatestDataTime();
+                IIProtos.IIResponse.Stats status = input.getStats();
+                logger.info("Endpoints all returned, stats from shard {}: start moment:{}, finish moment: {}, elapsed ms: {}, scanned slices: {}, latest slice time is {}",//
+                        new Object[] { String.valueOf(status.getMyShard()),//
+                                DateFormat.formatToTimeStr(status.getServiceStartTime()),//
+                                DateFormat.formatToTimeStr(status.getServiceEndTime()),//
+                                String.valueOf(status.getServiceEndTime() - status.getServiceStartTime()),//
+                                String.valueOf(status.getScannedSlices()), DateFormat.formatToTimeStr(status.getLatestDataTime()) });
+
+                return status.getLatestDataTime();
             }
         }));
 
@@ -242,7 +249,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     @Override
     public Range<Long> getCacheExcludedPeriod() {
-        return Ranges.greaterThan(lastDataTime );
+        return Ranges.greaterThan(lastDataTime);
     }
 
     private IIProtos.IIRequest prepareRequest() throws IOException {

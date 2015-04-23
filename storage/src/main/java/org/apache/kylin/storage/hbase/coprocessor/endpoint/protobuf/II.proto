@@ -21,9 +21,19 @@ message IIResponse {
     required bytes columns = 1;
     optional bytes measures = 2;
   }
+  //all entries in this struct be optional to conveniently add more entries in the future
+  message Stats {
+    optional int32 myShard = 1;
+    optional int64 latestDataTime = 2;
+    optional int64 serviceStartTime = 3;
+    optional int64 serviceEndTime = 4;
+    optional int32 scannedSlices = 5;
+  }
   repeated IIRow rows = 1;
-  required int64 latestDataTime = 2;
+  required Stats stats = 2;
 }
+
+
 
 service RowsService {
   rpc getRows(IIRequest)
