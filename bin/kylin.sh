@@ -99,7 +99,8 @@ then
             then source ${dir}/setenv.sh
         fi
 
-        export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
+        mkdir -p ${KYLIN_HOME}/ext
+        export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
         export JAVA_OPTS="-Xms2048M -Xmx2048M -XX:MaxPermSize=512m"
 
         hbase ${JAVA_OPTS} ${KYLIN_EXTRA_START_OPTS} \
@@ -107,7 +108,7 @@ then
         -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
         -Dkylin.hive.dependency=${hive_dependency} \
         -Dspring.profiles.active=${spring_profile} \
-        org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-*.jar org.apache.kylin.job.streaming.StreamingCLI start $3 $4 > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/$3_$4 &
+        org.apache.kylin.job.streaming.StreamingCLI start $3 $4 > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/$3_$4 &
         echo "streaming started $3 partition $4"
         exit 0
     elif [ $2 == "stop" ]
