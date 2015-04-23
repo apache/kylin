@@ -389,13 +389,14 @@ public class InMemCubeBuilder implements Runnable {
     private void createNDCuboidGT(GridTable parentCuboid, long parentCuboidId, long cuboidId) throws IOException {
 
         GridTable thisCuboid;
+        long startTime = System.currentTimeMillis();
         if (parentCuboidId < 0) {
             thisCuboid = this.baseCuboidGT;
         } else {
             thisCuboid = aggregateCuboid(parentCuboid, parentCuboidId, cuboidId);
         }
 
-        logger.info("Cuboid " + cuboidId + " is built, cache it to calculate children.");
+        logger.info("Cuboid " + cuboidId + " build takes (second): " + (System.currentTimeMillis() - startTime) / 1000);
 
         ArrayList<Long> children = (ArrayList<Long>) cuboidScheduler.getSpanningCuboid(cuboidId);
         Collections.sort(children); // sort cuboids
@@ -403,10 +404,11 @@ public class InMemCubeBuilder implements Runnable {
             createNDCuboidGT(thisCuboid, cuboidId, childId);
         }
 
-        logger.info("Cuboid " + cuboidId + " children is completed; output itself now.");
 
+        startTime = System.currentTimeMillis();
         //output the grid table
         outputGT(cuboidId, thisCuboid);
+        logger.info("Cuboid" + cuboidId + " output takes (second) " + (System.currentTimeMillis() - startTime) / 1000);
 
     }
 
