@@ -239,8 +239,11 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(reader);
         }
 
+        List<Long> allCuboids = Lists.newArrayList();
+        allCuboids.addAll(cuboidSizeMap.keySet());
+        Collections.sort(allCuboids);
 
-        for (long cuboidId : cuboidSizeMap.keySet()) {
+        for (long cuboidId : allCuboids) {
             long cuboidSize = estimateCuboidStorageSize(cuboidId, cuboidSizeMap.get(cuboidId), baseCuboidId, rowkeyColumnSize);
             cuboidSizeMap.put(cuboidId, cuboidSize);
             totalSizeInM += cuboidSize;
@@ -260,9 +263,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
         List<Long> regionSplit = Lists.newArrayList();
 
 
-        List<Long> allCuboids = Lists.newArrayList();
-        allCuboids.addAll(cuboidSizeMap.keySet());
-        Collections.sort(allCuboids);
 
         long size = 0;
         int regionIndex = 0;
