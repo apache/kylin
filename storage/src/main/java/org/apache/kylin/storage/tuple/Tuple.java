@@ -23,14 +23,10 @@ import java.util.Date;
 import java.util.List;
 
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
-import org.apache.kylin.common.util.Array;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
-import org.apache.kylin.dict.lookup.LookupStringTable;
+
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
-import org.apache.kylin.common.util.DateFormat;
 
 /**
  * @author xjiang
@@ -80,22 +76,25 @@ public class Tuple implements ITuple {
         return values[index];
     }
 
-    public String getDataType(String fieldName) {
-        return info.getDataType(fieldName);
-    }
-
-    private void setFieldObjectValue(String fieldName, Object fieldValue) {
-        int index = info.getFieldIndex(fieldName);
-        values[index] = fieldValue;
+    public String getDataType(int idx) {
+        return info.getAllColumns().get(idx).getDatatype();
     }
 
     public void setDimensionValue(String fieldName, String fieldValue) {
-        Object objectValue = convertOptiqCellValue(fieldValue, getDataType(fieldName));
-        setFieldObjectValue(fieldName, objectValue);
+        setDimensionValue(info.getFieldIndex(fieldName), fieldValue);
+    }
+    
+    public void setDimensionValue(int idx, String fieldValue) {
+        Object objectValue = convertOptiqCellValue(fieldValue, getDataType(idx));
+        values[idx] = objectValue;
     }
 
     public void setMeasureValue(String fieldName, Object fieldValue) {
-        String dataType = info.getDataType(fieldName);
+        setMeasureValue(info.getFieldIndex(fieldName), fieldValue);
+    }
+    
+    public void setMeasureValue(int idx, Object fieldValue) {
+        String dataType = getDataType(idx);
         // special handling for BigDecimal, allow double be aggregated as
         // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
@@ -105,8 +104,7 @@ public class Tuple implements ITuple {
         } else if ("float".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).floatValue();
         }
-
-        setFieldObjectValue(fieldName, fieldValue);
+        values[idx] = fieldValue;
     }
 
     public boolean hasColumn(TblColRef column) {
@@ -174,100 +172,4 @@ public class Tuple implements ITuple {
         }
     }
 
-    // ============================================================================
-
-    public static IDerivedColumnFiller newDerivedColumnFiller(List<TblColRef> rowColumns, TblColRef[] hostCols, DeriveInfo deriveInfo, TupleInfo tupleInfo, CubeManager cubeMgr, CubeSegment cubeSegment) {
-
-        int[] hostIndex = new int[hostCols.length];
-        for (int i = 0; i < hostCols.length; i++) {
-            hostIndex[i] = rowColumns.indexOf(hostCols[i]);
-        }
-        String[] derivedFieldNames = new String[deriveInfo.columns.length];
-        for (int i = 0; i < deriveInfo.columns.length; i++) {
-            if (tupleInfo.hasColumn(deriveInfo.columns[i]))
-                derivedFieldNames[i] = tupleInfo.getFieldName(deriveInfo.columns[i]);
-        }
-
-        switch (deriveInfo.type) {
-        case LOOKUP:
-            LookupStringTable lookupTable = cubeMgr.getLookupTable(cubeSegment, deriveInfo.dimension);
-            return new LookupFiller(hostIndex, lookupTable, deriveInfo, derivedFieldNames);
-        case PK_FK:
-            // composite key are split, see CubeDesc.initDimensionColumns()
-            return new PKFKFiller(hostIndex[0], derivedFieldNames[0]);
-        default:
-            throw new IllegalArgumentException();
-        }
-    }
-
-    public interface IDerivedColumnFiller {
-        public void fillDerivedColumns(List<String> rowValues, Tuple tuple);
-    }
-
-    static class PKFKFiller implements IDerivedColumnFiller {
-        final int hostIndex;
-        final String derivedFieldName;
-
-        public PKFKFiller(int hostIndex, String derivedFieldName) {
-            this.hostIndex = hostIndex;
-            this.derivedFieldName = derivedFieldName;
-        }
-
-        @Override
-        public void fillDerivedColumns(List<String> rowValues, Tuple tuple) {
-            if (derivedFieldName != null) {
-                String value = rowValues.get(hostIndex);
-                tuple.setDimensionValue(derivedFieldName, value);
-            }
-        }
-    }
-
-    static class LookupFiller implements IDerivedColumnFiller {
-
-        final int[] hostIndex;
-        final int hostLen;
-        final Array<String> lookupKey;
-        final LookupStringTable lookupTable;
-        final int[] derivedIndex;
-        final int derivedLen;
-        final String[] derivedFieldNames;
-
-        public LookupFiller(int[] hostIndex, LookupStringTable lookupTable, DeriveInfo deriveInfo, String[] derivedFieldNames) {
-            this.hostIndex = hostIndex;
-            this.hostLen = hostIndex.length;
-            this.lookupKey = new Array<String>(new String[hostLen]);
-            this.lookupTable = lookupTable;
-            this.derivedIndex = new int[deriveInfo.columns.length];
-            this.derivedLen = derivedIndex.length;
-            this.derivedFieldNames = derivedFieldNames;
-
-            for (int i = 0; i < derivedLen; i++) {
-                derivedIndex[i] = deriveInfo.columns[i].getColumn().getZeroBasedIndex();
-            }
-        }
-
-        @Override
-        public void fillDerivedColumns(List<String> rowValues, Tuple tuple) {
-            for (int i = 0; i < hostLen; i++) {
-                lookupKey.data[i] = rowValues.get(hostIndex[i]);
-            }
-
-            String[] lookupRow = lookupTable.getRow(lookupKey);
-
-            if (lookupRow != null) {
-                for (int i = 0; i < derivedLen; i++) {
-                    if (derivedFieldNames[i] != null) {
-                        String value = lookupRow[derivedIndex[i]];
-                        tuple.setDimensionValue(derivedFieldNames[i], value);
-                    }
-                }
-            } else {
-                for (int i = 0; i < derivedLen; i++) {
-                    if (derivedFieldNames[i] != null) {
-                        tuple.setDimensionValue(derivedFieldNames[i], null);
-                    }
-                }
-            }
-        }
-    }
 }

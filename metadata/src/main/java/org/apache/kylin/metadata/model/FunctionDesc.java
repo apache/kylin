@@ -54,14 +54,14 @@ public class FunctionDesc {
         if (isSum()) {
             return getParameter().getValue();
         } else if (isCount()) {
-            return "COUNT__"; // ignores parameter, count(*), count(1),
-                              // count(col) are all the same
+            return "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
         } else {
             return getFullExpression().replaceAll("[(), ]", "_");
         }
     }
 
     public boolean needRewrite() {
+        // Yang: why holistic count distinct does not require rewrite?? 
         return !isSum() && !isHolisticCountDistinct() && !isDimensionAsMetric();
     }
 

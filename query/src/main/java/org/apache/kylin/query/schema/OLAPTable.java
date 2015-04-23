@@ -153,8 +153,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         else
             result = typeFactory.createSqlType(sqlTypeName);
 
-        // due to left join and uncertain data quality, dimension value can be
-        // null
+        // due to left join and uncertain data quality, dimension value can be null
         if (column.isNullable()) {
             result = typeFactory.createTypeWithNullability(result, true);
         } else {

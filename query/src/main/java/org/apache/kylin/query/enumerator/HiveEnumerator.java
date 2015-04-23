@@ -23,11 +23,11 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
 import net.hydromatic.linq4j.Enumerator;
 
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.eigenbase.reltype.RelDataTypeField;
 
 /**
  * Hive Query Result Enumerator
@@ -44,7 +44,7 @@ public class HiveEnumerator implements Enumerator<Object[]> {
 
     public HiveEnumerator(OLAPContext olapContext) {
         this.olapContext = olapContext;
-        this.current = new Object[olapContext.olapRowType.getFieldCount()];
+        this.current = new Object[olapContext.returnTupleInfo.size()];
     }
 
     @Override
@@ -96,9 +96,10 @@ public class HiveEnumerator implements Enumerator<Object[]> {
         try {
             boolean hasNext = rs.next();
             if (hasNext) {
-                for (RelDataTypeField relField : olapContext.olapRowType.getFieldList()) {
-                    Object value = rs.getObject(relField.getName().toLowerCase());
-                    current[relField.getIndex()] = value;
+                List<String> allFields = olapContext.returnTupleInfo.getAllFields();
+                for (int i = 0; i < allFields.size(); i++) {
+                    Object value = rs.getObject(allFields.get(i).toLowerCase());
+                    current[i] = value;
                 }
             }
             return hasNext;

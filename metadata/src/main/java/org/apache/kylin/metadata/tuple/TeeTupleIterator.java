@@ -1,23 +1,21 @@
 package org.apache.kylin.metadata.tuple;
 
-import java.util.Iterator;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/15/15.
  *
- * Like "tee" command in linux,it effectively duplicates the underlying
+ * Like "tee" command in linux, it effectively duplicates the underlying
  * ITupleIterator's results
  */
 public class TeeTupleIterator implements ITupleIterator {
-
-    private static final Logger logger = LoggerFactory.getLogger(TeeTupleIterator.class);
 
     private Function<List<ITuple>, Void> actionOnSeeingWholeData;
     private ITupleIterator underlying;

@@ -21,11 +21,10 @@ package org.apache.kylin.cube.kv;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
-import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -42,7 +41,6 @@ public class RowKeyDecoder {
     private final RowKeySplitter rowKeySplitter;
 
     private Cuboid cuboid;
-    private List<String> names;
     private List<String> values;
 
     public RowKeyDecoder(CubeSegment cubeSegment) {
@@ -89,33 +87,6 @@ public class RowKeyDecoder {
 
     public void setCuboid(Cuboid cuboid) {
         this.cuboid = cuboid;
-        this.names = null;
-    }
-
-    public List<String> getNames(Map<TblColRef, String> aliasMap) {
-        if (names == null) {
-            names = buildNameList(aliasMap);
-        }
-        return names;
-    }
-
-    private List<String> buildNameList(Map<TblColRef, String> aliasMap) {
-        List<TblColRef> columnList = getColumns();
-        List<String> result = new ArrayList<String>(columnList.size());
-        for (TblColRef col : columnList)
-            result.add(findName(col, aliasMap));
-        return result;
-    }
-
-    private String findName(TblColRef column, Map<TblColRef, String> aliasMap) {
-        String name = null;
-        if (aliasMap != null) {
-            name = aliasMap.get(column);
-        }
-        if (name == null) {
-            name = column.getName();
-        }
-        return name;
     }
 
     public List<TblColRef> getColumns() {

@@ -30,12 +30,25 @@ import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.PhysType;
 import net.hydromatic.optiq.rules.java.PhysTypeImpl;
 
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.query.optrule.OLAPAggregateRule;
+import org.apache.kylin.query.optrule.OLAPFilterRule;
+import org.apache.kylin.query.optrule.OLAPJoinRule;
+import org.apache.kylin.query.optrule.OLAPLimitRule;
+import org.apache.kylin.query.optrule.OLAPProjectRule;
+import org.apache.kylin.query.optrule.OLAPSortRule;
+import org.apache.kylin.query.optrule.OLAPToEnumerableConverterRule;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.query.schema.OLAPTable;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.TableAccessRelBase;
-import org.eigenbase.rel.rules.*;
+import org.eigenbase.rel.rules.PushFilterPastJoinRule;
+import org.eigenbase.rel.rules.PushFilterPastProjectRule;
+import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
+import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
+import org.eigenbase.rel.rules.SwapJoinRule;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
@@ -48,15 +61,6 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 
 import com.google.common.base.Preconditions;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.query.optrule.OLAPAggregateRule;
-import org.apache.kylin.query.optrule.OLAPFilterRule;
-import org.apache.kylin.query.optrule.OLAPJoinRule;
-import org.apache.kylin.query.optrule.OLAPLimitRule;
-import org.apache.kylin.query.optrule.OLAPProjectRule;
-import org.apache.kylin.query.optrule.OLAPSortRule;
-import org.apache.kylin.query.optrule.OLAPToEnumerableConverterRule;
 
 /**
  * @author xjiang
@@ -172,7 +176,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
             context.firstTableScan = this;
         }
 
-        context.olapRowType = rowType;
+        context.setReturnTupleInfo(rowType, columnRowType);
     }
 
     private ColumnRowType buildColumnRowType() {

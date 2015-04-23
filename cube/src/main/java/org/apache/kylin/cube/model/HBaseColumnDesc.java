@@ -38,7 +38,7 @@ public class HBaseColumnDesc {
     @JsonProperty("measure_refs")
     private String[] measureRefs;
 
-    // these two will be assemble in runtime.
+    // these two will be assemble at runtime
     private MeasureDesc[] measures;
     private String columnFamilyName;
 

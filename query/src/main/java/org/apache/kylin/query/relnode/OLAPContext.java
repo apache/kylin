@@ -29,12 +29,13 @@ import java.util.Map;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.eigenbase.reltype.RelDataType;
-
+import org.eigenbase.reltype.RelDataTypeField;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.tuple.TupleInfo;
 import org.apache.kylin.metadata.filter.TupleFilter;
 
 /**
@@ -95,9 +96,8 @@ public class OLAPContext {
 
     // query info
     public OLAPSchema olapSchema = null;
-    public OLAPTableScan firstTableScan = null; // to be fact table scan except
-                                                // "select * from lookupTable"
-    public RelDataType olapRowType = null;
+    public OLAPTableScan firstTableScan = null; // to be fact table scan except "select * from lookupTable"
+    public TupleInfo returnTupleInfo = null;
     public boolean afterAggregate = false;
     public boolean afterJoin = false;
     public boolean hasJoin = false;
@@ -129,5 +129,16 @@ public class OLAPContext {
         if (sqlDigest == null)
             sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations);
         return sqlDigest;
+    }
+
+    public void setReturnTupleInfo(RelDataType rowType, ColumnRowType columnRowType) {
+        TupleInfo info = new TupleInfo();
+        List<RelDataTypeField> fieldList = rowType.getFieldList();
+        for (int i = 0; i < fieldList.size(); i++) {
+            RelDataTypeField field = fieldList.get(i);
+            TblColRef col = columnRowType == null ? null : columnRowType.getColumnByIndex(i);
+            info.setField(field.getName(), col, i);
+        }
+        this.returnTupleInfo = info;
     }
 }
