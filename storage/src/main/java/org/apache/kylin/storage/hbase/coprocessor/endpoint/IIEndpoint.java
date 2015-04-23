@@ -71,6 +71,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     private static final int MEMORY_LIMIT = 500 * 1024 * 1024;
 
     private RegionCoprocessorEnvironment env;
+    private long serviceStartTime;
+    private int shard;
 
     public IIEndpoint() {
     }
@@ -79,8 +81,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         Scan scan = new Scan();
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES);
-
-        int shard;
 
         if (request.hasTsRange()) {
             Range<Long> tsRange = (Range<Long>) SerializationUtils.deserialize(request.getTsRange().toByteArray());
@@ -132,6 +132,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     //TODO: protobuf does not provide built-in compression
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
+
+        this.serviceStartTime = System.currentTimeMillis();
 
         RegionScanner innerScanner = null;
         HRegion region = null;
@@ -243,11 +245,10 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             rowBuilder.setMeasures(ByteString.copyFrom(buffer, 0, length));
             responseBuilder.addRows(rowBuilder.build());
         }
-        responseBuilder.setLatestDataTime(latestSliceTs);
 
+        responseBuilder.setStats(IIProtos.IIResponse.Stats.newBuilder().setLatestDataTime(latestSliceTs).setServiceStartTime(this.serviceStartTime).setServiceEndTime(System.currentTimeMillis()).setScannedSlices(iteratedSliceCount));
         return responseBuilder.build();
     }
-
 
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
@@ -279,10 +280,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 totalSize += byteFormLen;
             }
         }
-        responseBuilder.setLatestDataTime(latestSliceTs);
-
         logger.info("Iterated Slices count: " + iteratedSliceCount);
-
+        responseBuilder.setStats(IIProtos.IIResponse.Stats.newBuilder().setLatestDataTime(latestSliceTs).setServiceStartTime(this.serviceStartTime).setServiceEndTime(System.currentTimeMillis()).setScannedSlices(iteratedSliceCount));
         return responseBuilder.build();
     }
 
