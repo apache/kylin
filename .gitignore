@@ -53,13 +53,14 @@ hs_err_pid*
 .classpath
 .project
 .idea
-.DS_Store
+**/*.DS_Store
 target
 logs
 *.jar
 *.releaseBackup
 *.log
 *.DS_Store
+*.releaseBackup
 
 # .settings
 org.eclipse.m2e.core.prefs

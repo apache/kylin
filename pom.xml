@@ -658,8 +658,22 @@
                                 <exclude>**/*.dict</exclude>
                                 <exclude>**/*.snapshot</exclude>
                                 <exclude>**/*.pdf</exclude>
+
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
+                                <exclude>lib/**</exclude>
+                                <!-- Kylin's website content -->
+                                <exclude>**/.sass-cache/**</exclude>
+                                <exclude>docs/website/**</exclude>
+                                <!-- tomcat package -->
+                                <exclude>tomcat/**</exclude>
+                                <!-- front end libary and generated files -->
+                                <exclude>webapp/node_modules/**</exclude>
+                                <exclude>webapp/dist/**</exclude>
+                                <exclude>webapp/app/components/**</exclude>
+                                <!-- Temp -->
+                                <exclude>webapp/template/nginx_default.conf</exclude>
+                                <exclude>webapp/validate-commit-msg.js</exclude>
                             </excludes>
                         </configuration>
                         <executions>
