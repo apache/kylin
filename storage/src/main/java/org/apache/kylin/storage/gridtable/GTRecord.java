@@ -187,7 +187,14 @@ public class GTRecord implements Comparable<GTRecord> {
             buf.put(cols[i].array(), cols[i].offset(), cols[i].length());
         }
     }
-    
+
+    public void exportColumns(int[] fieldIndex, ByteBuffer buf) {
+        for (int i : fieldIndex) {
+            buf.put(cols[i].array(), cols[i].offset(), cols[i].length());
+        }
+    }
+
+
     /** write data to given buffer, like serialize */
     public void exportColumnBlock(int c, ByteBuffer buf) {
         exportColumns(info.colBlocks[c], buf);

@@ -239,13 +239,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(reader);
         }
 
-        List<Long> allCuboids = Lists.newArrayList();
-        allCuboids.addAll(cuboidSizeMap.keySet());
-        Collections.sort(allCuboids);
 
-        for (long i : allCuboids) {
-            long cuboidSize = estimateCuboidStorageSize(i, cuboidSizeMap.get(i), baseCuboidId, rowkeyColumnSize);
-            cuboidSizeMap.put(i, cuboidSize);
+        for (long cuboidId : cuboidSizeMap.keySet()) {
+            long cuboidSize = estimateCuboidStorageSize(cuboidId, cuboidSizeMap.get(cuboidId), baseCuboidId, rowkeyColumnSize);
+            cuboidSizeMap.put(cuboidId, cuboidSize);
             totalSizeInM += cuboidSize;
         }
 
@@ -256,24 +253,32 @@ public class CreateHTableJob extends AbstractHadoopJob {
         int mbPerRegion = (int) (totalSizeInM / (nRegion));
         mbPerRegion = Math.max(1, mbPerRegion);
 
-        logger.info("Total size " + totalSizeInM + "M");
-        logger.info(nRegion + " regions");
-        logger.info(mbPerRegion + " MB per region");
+        logger.info("Total size " + totalSizeInM + "M (estimated)");
+        logger.info(nRegion + " regions (estimated)");
+        logger.info(mbPerRegion + " MB per region (estimated)");
 
         List<Long> regionSplit = Lists.newArrayList();
 
+
+        List<Long> allCuboids = Lists.newArrayList();
+        allCuboids.addAll(cuboidSizeMap.keySet());
+        Collections.sort(allCuboids);
+
         long size = 0;
         int regionIndex = 0;
+        int cuboidCount = 0;
         for (int i = 0; i < allCuboids.size(); i++) {
             long cuboidId = allCuboids.get(i);
-            size += cuboidSizeMap.get(cuboidId);
-            if (size >= mbPerRegion && i != (allCuboids.size() - 1)) {
-                // if the size is bigger than threshold and this is not the last cuboid
+            if (size >= mbPerRegion || (size + cuboidSizeMap.get(cuboidId)) >= mbPerRegion * 1.2) {
+                // if the size already bigger than threshold, or it will exceed by 20%, cut for next region
                 regionSplit.add(cuboidId);
-                logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboid to " + cuboidId);
+                logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboids < " + cuboidId + " (" + cuboidCount + ") cuboids");
                 size = 0;
+                cuboidCount = 0;
                 regionIndex++;
             }
+            size += cuboidSizeMap.get(cuboidId);
+            cuboidCount++;
         }
 
 

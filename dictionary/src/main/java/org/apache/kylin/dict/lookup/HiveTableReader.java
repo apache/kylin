@@ -115,8 +115,12 @@ public class HiveTableReader implements TableReader {
     }
 
     public static List<String> getRowAsList(HCatRecord record) {
+        List<String> rowValues = new ArrayList<String>(record.size());
+        return getRowAsList(record, rowValues);
+    }
+
+    public static List<String> getRowAsList(HCatRecord record, List<String> rowValues) {
         List<Object> allFields = record.getAll();
-        List<String> rowValues = new ArrayList<String>(allFields.size());
         for (Object o : allFields) {
             rowValues.add(o != null ? o.toString() : null);
         }

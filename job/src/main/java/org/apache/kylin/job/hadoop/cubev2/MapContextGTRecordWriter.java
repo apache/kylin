@@ -31,7 +31,7 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
     private int bytesLength;
     private int dimensions;
     private byte[] keyBuf;
-    private BitSet measureColumns;
+    private int[] measureColumnsIndex;
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
     private ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
     private Text outputValue = new Text();
@@ -65,7 +65,7 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
 
         //output measures
         valueBuf.clear();
-        record.exportColumns(measureColumns, valueBuf);
+        record.exportColumns(measureColumnsIndex, valueBuf);
 
         outputKey.set(keyBuf, 0, offSet);
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
@@ -85,8 +85,10 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
 
         keyBuf = new byte[bytesLength];
         dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
-        measureColumns = new BitSet();
-        measureColumns.set(dimensions, dimensions + cubeDesc.getMeasures().size());
+        measureColumnsIndex = new int[cubeDesc.getMeasures().size()];
+        for(int i =0; i< cubeDesc.getMeasures().size(); i++) {
+            measureColumnsIndex[i] = dimensions + i;
+        }
 
         System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
     }
