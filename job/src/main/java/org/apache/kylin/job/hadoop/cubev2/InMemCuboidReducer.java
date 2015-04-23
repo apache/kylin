@@ -41,6 +41,8 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
     List<KeyValueCreator> keyValueCreators;
+    private boolean simpleFullCopy = false;
+    private int nColumns = 0;
 //    private Text keyText = new Text();
 
     @Override
@@ -66,6 +68,9 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
                 keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
             }
         }
+
+        simpleFullCopy = (keyValueCreators.size() == 1 && keyValueCreators.get(0).isFullCopy);
+        nColumns = keyValueCreators.size();
     }
 
     @Override
@@ -82,8 +87,7 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
 
         KeyValue outputValue;
 
-        int n = keyValueCreators.size();
-        if (n == 1 && keyValueCreators.get(0).isFullCopy) { // shortcut for
+        if (simpleFullCopy) { // shortcut for
             // simple full copy
 
             valueBuf.clear();
@@ -94,7 +98,7 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
         } else { // normal (complex) case that distributes measures to multiple
             // HBase columns
 
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < nColumns; i++) {
                 outputValue = keyValueCreators.get(i).create(key.get(), 0, key.getLength(), result);
                 context.write(key, outputValue);
             }

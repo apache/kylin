@@ -22,6 +22,8 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.RowConstants;
@@ -31,16 +33,14 @@ import org.apache.kylin.job.constant.BatchConstants;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author yangli9
  */
 public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, HCatRecord> {
 
+    private HCatSchema schema = null;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
 
     protected boolean collectStatistics = false;
@@ -50,13 +50,14 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private HyperLogLogPlusCounter[] allCuboidsHLL = null;
     private Long[] cuboidIds;
     private BitSetIterator bitSetIterator = null;
+    private List<String> rowArray;
 
     @Override
     protected void setup(Context context) throws IOException {
         super.setup(context);
-
+        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
-
+        rowArray = new ArrayList<String>(schema.getFields().size());
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
             cuboidScheduler = new CuboidScheduler(cubeDesc);
@@ -102,12 +103,12 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
 
     @Override
     public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
-        String[] row = HiveTableReader.getRowAsStringArray(record);
+        rowArray.clear();
+        HiveTableReader.getRowAsList(record, rowArray);
         try {
-            int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
             for (int i : factDictCols) {
                 outputKey.set((long) i);
-                String fieldValue = row[flatTableIndexes[i]];
+                String fieldValue = rowArray.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]);
                 if (fieldValue == null)
                     continue;
                 byte[] bytes = Bytes.toBytes(fieldValue);
@@ -119,13 +120,13 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         }
 
         if (collectStatistics) {
-            putRowKeyToHLL(row);
+            putRowKeyToHLL(rowArray);
         }
     }
 
-    private void putRowKeyToHLL(String[] row) {
+    private void putRowKeyToHLL(List<String> row) {
+        bitSetIterator.array = row;
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {
-            bitSetIterator.array = row;
             bitSetIterator.bitSet = allCuboidsBitSet[i];
             bitSetIterator.currentPosition = 0;
 
@@ -136,7 +137,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     class BitSetIterator implements Iterator<String> {
 
         Integer[] bitSet = null;
-        String[] array = null;
+        List<String> array = null;
         int currentPosition = 0;
 
         @Override
@@ -146,7 +147,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
 
         @Override
         public String next() {
-            return array[bitSet[currentPosition++]];
+            return array.get(bitSet[currentPosition++]);
         }
 
         @Override

@@ -59,6 +59,7 @@
     </property>
 
     <!--Properties for calculating cube by splits (in-mem), with which each Mapper need more mem to hold a full cube segment -->
+    <!--
     <property>
         <name>mapreduce.map.java.opts</name>
         <value>-Xmx3072m</value>
@@ -67,6 +68,7 @@
         <name>mapreduce.map.memory.mb</name>
         <value>4096</value>
     </property>
+    -->
     <property>
         <name>mapred.task.timeout</name>
         <value>3600000</value>
