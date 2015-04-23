@@ -34,7 +34,7 @@ public class DateFormat {
     }
 
     public static String formatToTimeStr(long millis) {
-        return getDateFormat(DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).format(new Date(millis));
+        return getDateFormat(DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).format(new Date(millis));
     }
 
     public static String dateToString(Date date) {
