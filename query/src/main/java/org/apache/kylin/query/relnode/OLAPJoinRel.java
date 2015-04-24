@@ -132,7 +132,6 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
 
         if (!this.hasSubQuery) {
             this.context.allColumns.clear();
-            this.context.setReturnTupleInfo(getRowType(), getColumnRowType());
 
             // build JoinDesc
             RexCall condition = (RexCall) this.getCondition();
@@ -219,8 +218,10 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         if (this.hasSubQuery) {
             result = super.implement(implementor, pref);
         } else {
+            // prepare return tuple info for execution
+            this.context.setReturnTupleInfo(rowType, columnRowType);
+            
             PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
-
             RelOptTable factTable = context.firstTableScan.getTable();
             result = implementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeOLAPQuery", implementor.getRootExpression(), Expressions.constant(context.id))));
         }
@@ -261,9 +262,6 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
 
             // rebuild columns
             this.columnRowType = this.buildColumnRowType();
-            
-            // rebuild return tuple info
-            this.context.setReturnTupleInfo(rowType, columnRowType);
         }
     }
 

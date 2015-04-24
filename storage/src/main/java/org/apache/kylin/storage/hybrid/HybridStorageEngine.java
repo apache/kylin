@@ -14,8 +14,7 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.kylin.storage.tuple.TupleInfo;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -26,8 +25,6 @@ import com.google.common.collect.Ranges;
  */
 public class HybridStorageEngine implements IStorageEngine {
 
-    private static final Logger logger = LoggerFactory.getLogger(HybridStorageEngine.class);
-
     private HybridInstance hybridInstance;
 
     public HybridStorageEngine(HybridInstance hybridInstance) {
@@ -35,10 +32,10 @@ public class HybridStorageEngine implements IStorageEngine {
     }
 
     @Override
-    public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest) {
+    public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo) {
 
         // search the historic realization
-        ITupleIterator iterator1 = searchRealization(hybridInstance.getHistoryRealizationInstance(), context, sqlDigest);
+        ITupleIterator iterator1 = searchRealization(hybridInstance.getHistoryRealizationInstance(), context, sqlDigest, returnTupleInfo);
 
         String modelName = hybridInstance.getModelName();
         MetadataManager metaMgr = getMetadataManager();
@@ -56,7 +53,7 @@ public class HybridStorageEngine implements IStorageEngine {
                     @Nullable
                     @Override
                     public ITupleIterator apply(@Nullable Void input) {
-                        ITupleIterator iterator2 = searchRealization(hybridInstance.getRealTimeRealizationInstance(), context, sqlDigest);
+                        ITupleIterator iterator2 = searchRealization(hybridInstance.getRealTimeRealizationInstance(), context, sqlDigest, returnTupleInfo);
                         return iterator2;
                     }
                 });
@@ -65,10 +62,9 @@ public class HybridStorageEngine implements IStorageEngine {
         return new CompoundTupleIterator(Lists.newArrayList(iterator1, iterator2));
     }
 
-    private ITupleIterator searchRealization(IRealization realization, StorageContext context, SQLDigest sqlDigest) {
-
-        IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(realization,false);
-        return storageEngine.search(context, sqlDigest);
+    private ITupleIterator searchRealization(IRealization realization, StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
+        IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(realization, false);
+        return storageEngine.search(context, sqlDigest, returnTupleInfo);
     }
 
     private MetadataManager getMetadataManager() {

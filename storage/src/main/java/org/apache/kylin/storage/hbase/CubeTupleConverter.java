@@ -23,7 +23,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 
 import com.google.common.collect.Lists;
 
-public class CubeSegmentTupleConverter {
+public class CubeTupleConverter {
 
     final CubeSegment cubeSeg;
     final Cuboid cuboid;
@@ -36,7 +36,7 @@ public class CubeSegmentTupleConverter {
     final int[][] metricsMeasureIdx;
     final int[][] metricsTupleIdx;
 
-    public CubeSegmentTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, List<RowValueDecoder> rowValueDecoders, TupleInfo tupleInfo) {
+    public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, List<RowValueDecoder> rowValueDecoders, TupleInfo tupleInfo) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
         this.tupleInfo = tupleInfo;
@@ -50,7 +50,7 @@ public class CubeSegmentTupleConverter {
         dimensionTupleIdx = new int[dimCols.size()];
         for (int i = 0; i < dimCols.size(); i++) {
             TblColRef col = dimCols.get(i);
-            dimensionTupleIdx[i] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(dimCols.get(i)) : -1;
+            dimensionTupleIdx[i] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
         }
 
         // pre-calculate metrics index mapping to tuple
@@ -62,7 +62,7 @@ public class CubeSegmentTupleConverter {
             BitSet selectedMeasures = decoder.getProjectionIndex();
             metricsMeasureIdx[i] = new int[selectedMeasures.cardinality()];
             metricsTupleIdx[i] = new int[selectedMeasures.cardinality()];
-            for (int j = 0, mi = selectedMeasures.nextSetBit(0); j < metricsMeasureIdx.length; j++, mi = selectedMeasures.nextSetBit(mi + 1)) {
+            for (int j = 0, mi = selectedMeasures.nextSetBit(0); j < metricsMeasureIdx[i].length; j++, mi = selectedMeasures.nextSetBit(mi + 1)) {
                 FunctionDesc aggrFunc = measures[mi].getFunction();
                 int tupleIdx;
                 // a rewrite metrics is identified by its rewrite field name
@@ -73,7 +73,7 @@ public class CubeSegmentTupleConverter {
                 // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
                 else {
                     TblColRef col = aggrFunc.getParameter().getColRefs().get(0);
-                    tupleIdx = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(dimCols.get(i)) : -1;
+                    tupleIdx = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
                 }
                 metricsMeasureIdx[i][j] = mi;
                 metricsTupleIdx[i][j] = tupleIdx;

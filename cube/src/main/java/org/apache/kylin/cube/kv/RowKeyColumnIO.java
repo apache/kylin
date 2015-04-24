@@ -141,10 +141,6 @@ public class RowKeyColumnIO {
         return readColumnString(col, bytes, 0, bytesLen);
     }
 
-    private boolean isNull(byte[] bytes) {
-        return isNull(bytes, 0, bytes.length);
-    }
-
     private boolean isNull(byte[] bytes, int offset, int length) {
         // all 0xFF is NULL
         if (length == 0) {

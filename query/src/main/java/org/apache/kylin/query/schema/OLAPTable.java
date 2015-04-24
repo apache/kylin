@@ -174,11 +174,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             String fieldName = func.getRewriteFieldName();
             if (!metFields.contains(fieldName)) {
                 metFields.add(fieldName);
-                ColumnDesc fakeCountCol = new ColumnDesc();
-                fakeCountCol.setName(fieldName);
-                fakeCountCol.setDatatype(func.getSQLType());
-                fakeCountCol.setNullable(false);
-                fakeCountCol.init(sourceTable);
+                ColumnDesc fakeCountCol = func.newFakeRewriteColumn(sourceTable);
                 exposedColumns.add(fakeCountCol);
             }
         }

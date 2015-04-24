@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Ranges;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -19,12 +18,21 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.*;
-import org.apache.kylin.metadata.tuple.*;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.realization.SQLDigestUtil;
+import org.apache.kylin.metadata.realization.StreamSQLDigest;
+import org.apache.kylin.metadata.tuple.CompoundTupleIterator;
+import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.tuple.SimpleTupleIterator;
+import org.apache.kylin.metadata.tuple.TeeTupleIterator;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.TsConditionExtractor;
+import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +86,7 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
     }
 
     @Override
-    public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest) {
+    public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo) {
 
         //enable storage layer cache iff ts column is contained in filter
         boolean needUpdateCache = sqlDigest.groupbyColumns.contains(partitionColRef);
@@ -116,7 +124,7 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
                     ITupleIterator freshTuples = SQLDigestUtil.appendTsFilterToExecute(sqlDigest, partitionColRef, remaining, new Function<Void, ITupleIterator>() {
                         @Override
                         public ITupleIterator apply(Void input) {
-                            return StorageEngineFactory.getStorageEngine(realization, false).search(context, sqlDigest);
+                            return StorageEngineFactory.getStorageEngine(realization, false).search(context, sqlDigest, returnTupleInfo);
                         }
                     });
 
@@ -134,7 +142,7 @@ public class CacheFledgedStorageEngine implements IStorageEngine {
         if (ret == null) {
             logger.info("decision: not using cache");
             //cache cannot reuse case:
-            ret = StorageEngineFactory.getStorageEngine(realization, false).search(context, sqlDigest);
+            ret = StorageEngineFactory.getStorageEngine(realization, false).search(context, sqlDigest, returnTupleInfo);
         } else {
             logger.info("decision: use cache");
         }

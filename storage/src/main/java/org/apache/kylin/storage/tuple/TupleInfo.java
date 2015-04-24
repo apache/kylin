@@ -34,14 +34,17 @@ public class TupleInfo {
 
     private final Map<String, Integer> fieldMap;
     private final Map<TblColRef, Integer> columnMap;
+    
     private final List<String> fields;
     private final List<TblColRef> columns;
+    private final List<String> dataTypeNames;
 
     public TupleInfo() {
         fieldMap = new HashMap<String, Integer>();
         columnMap = new HashMap<TblColRef, Integer>();
         fields = new ArrayList<String>();
         columns = new ArrayList<TblColRef>();
+        dataTypeNames = new ArrayList<String>();
     }
 
     public TblColRef getColumn(String fieldName) {
@@ -53,8 +56,8 @@ public class TupleInfo {
         return columnMap.get(col);
     }
 
-    public String getDataType(String fieldName) {
-        return getColumn(fieldName).getDatatype();
+    public String getDataTypeName(int index) {
+        return dataTypeNames.get(index);
     }
 
     public int getFieldIndex(String fieldName) {
@@ -88,6 +91,11 @@ public class TupleInfo {
             columns.set(index, col);
         else
             columns.add(index, col);
+        
+        if (dataTypeNames.size() > index)
+            dataTypeNames.set(index, col.getType().getName());
+        else
+            dataTypeNames.add(index, col.getType().getName());
     }
 
     public List<String> getAllFields() {

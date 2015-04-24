@@ -19,7 +19,11 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -32,7 +36,6 @@ import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.util.RangeUtil;
-import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
@@ -55,7 +58,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.collect.*;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.collect.Ranges;
+import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
 
 /**
@@ -66,14 +74,12 @@ public class EndpointTupleIterator implements ITupleIterator {
     private final static Logger logger = LoggerFactory.getLogger(EndpointTupleIterator.class);
 
     private final IISegment seg;
-    private final StorageContext context;
-    private final List<FunctionDesc> measures;
 
     private final String factTableName;
     private final List<TblColRef> columns;
-    private final List<String> columnNames;
     private final TupleInfo tupleInfo;
     private final TableRecordInfo tableRecordInfo;
+    private final EndpointTupleConverter tupleConverter;
 
     private final CoprocessorRowType pushedDownRowType;
     private final CoprocessorFilter pushedDownFilter;
@@ -86,11 +92,10 @@ public class EndpointTupleIterator implements ITupleIterator {
     private HTableInterface table = null;
 
     private TblColRef partitionCol;
-    private List<Long> shardLastDataTimes = Lists.newArrayList();
     private long lastDataTime;
     private int rowsInAllMetric = 0;
 
-    public EndpointTupleIterator(IISegment segment, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn) throws Throwable {
+    public EndpointTupleIterator(IISegment segment, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn, TupleInfo returnTupleInfo) throws Throwable {
 
         String tableName = segment.getStorageLocationIdentifier();
         table = conn.getTable(tableName);
@@ -112,13 +117,10 @@ public class EndpointTupleIterator implements ITupleIterator {
         rewriteMeasureParameters(measures, segment.getColumns());
 
         this.seg = segment;
-        this.context = context;
-        this.measures = measures;
-
         this.columns = segment.getColumns();
-        this.columnNames = getColumnNames(columns);
 
-        this.tupleInfo = buildTupleInfo();
+        this.tupleInfo = returnTupleInfo;
+        this.tupleConverter = new EndpointTupleConverter(columns, measures, returnTupleInfo);
         this.tableRecordInfo = new TableRecordInfo(this.seg);
 
         this.pushedDownRowType = CoprocessorRowType.fromTableRecordInfo(tableRecordInfo, this.columns);
@@ -171,9 +173,6 @@ public class EndpointTupleIterator implements ITupleIterator {
 
     /**
      * measure comes from query engine, does not contain enough information
-     *
-     * @param measures
-     * @param columns
      */
     private void rewriteMeasureParameters(List<FunctionDesc> measures, List<TblColRef> columns) {
         for (FunctionDesc functionDesc : measures) {
@@ -283,45 +282,6 @@ public class EndpointTupleIterator implements ITupleIterator {
         return results.values();
     }
 
-    private TupleInfo buildTupleInfo() {
-        TupleInfo info = new TupleInfo();
-        int index = 0;
-
-        for (int i = 0; i < columns.size(); i++) {
-            TblColRef column = columns.get(i);
-            //            if (!dimensions.contains(column)) {
-            //                continue;
-            //            }
-            info.setField(columnNames.get(i), columns.get(i), columns.get(i).getType().getName(), index++);
-        }
-
-        for (FunctionDesc measure : measures) {
-            info.setField(measure.getRewriteFieldName(), null, measure.getSQLType(), index++);
-        }
-
-        return info;
-    }
-
-    private List<String> getColumnNames(List<TblColRef> dimensionColumns) {
-        Map<TblColRef, String> aliasMap = context.getAliasMap();
-        List<String> result = new ArrayList<String>(dimensionColumns.size());
-        for (TblColRef col : dimensionColumns)
-            result.add(findName(col, aliasMap));
-        return result;
-    }
-
-    private String findName(TblColRef column, Map<TblColRef, String> aliasMap) {
-        String name = null;
-        if (aliasMap != null) {
-            name = aliasMap.get(column);
-        }
-        if (name == null) {
-            name = column.getName();
-        }
-        return name;
-
-    }
-
     /**
      * Internal class to handle iterators for a single region's returned rows
      */
@@ -333,14 +293,12 @@ public class EndpointTupleIterator implements ITupleIterator {
         private TableRecord tableRecord;
         private List<Object> measureValues;
         private Tuple tuple;
-        private RowKeyColumnIO rowKeyColumnIO;
 
         public SingleRegionTupleIterator(List<IIProtos.IIResponse.IIRow> rows) {
             this.rows = rows;
             this.index = 0;
             this.tableRecord = tableRecordInfo.createTableRecord();
-
-            rowKeyColumnIO = new RowKeyColumnIO(new ClearTextDictionary(tableRecordInfo));
+            this.tuple = new Tuple(tupleInfo);
         }
 
         @Override
@@ -364,8 +322,8 @@ public class EndpointTupleIterator implements ITupleIterator {
             }
 
             index++;
-
-            return makeTuple(this.tableRecord, this.measureValues);
+            
+            return tupleConverter.makeTuple(this.tableRecord, this.measureValues, this.tuple);
         }
 
         @Override
@@ -380,44 +338,6 @@ public class EndpointTupleIterator implements ITupleIterator {
         @Override
         public Range<Long> getCacheExcludedPeriod() {
             throw new NotImplementedException();
-        }
-
-        private ITuple makeTuple(TableRecord tableRecord, List<Object> measureValues) {
-            this.tuple = new Tuple(tupleInfo);
-            // groups
-            List<String> columnValues = Lists.newArrayList();
-            for (int i = 0; i < columns.size(); ++i) {
-                final TblColRef tblColRef = columns.get(i);
-                columnValues.add(rowKeyColumnIO.readColumnString(tblColRef, tableRecord.getBytes(), tableRecordInfo.getDigest().offset(i), tableRecordInfo.getDigest().length(i)));
-            }
-            for (int i = 0; i < columnNames.size(); i++) {
-                TblColRef column = columns.get(i);
-                if (!tuple.hasColumn(column)) {
-                    continue;
-                }
-                final String columnName = columnNames.get(i);
-                if (tableRecordInfo.getDigest().isMetrics(i)) {
-                    tuple.setDimensionValue(columnName, tableRecord.getValueString(i));
-                } else {
-                    tuple.setDimensionValue(columnName, columnValues.get(i));
-                }
-            }
-
-            if (measureValues != null) {
-                for (int i = 0; i < measures.size(); ++i) {
-                    if (!measures.get(i).isDimensionAsMetric()) {
-                        String fieldName = measures.get(i).getRewriteFieldName();
-                        Object value = measureValues.get(i);
-                        String dataType = tuple.getDataType(fieldName);
-                        //TODO: currently in II all metrics except HLLC is returned as String
-                        if (value instanceof String) {
-                            value = Tuple.convertOptiqCellValue((String) value, dataType);
-                        }
-                        tuple.setMeasureValue(fieldName, value);
-                    }
-                }
-            }
-            return tuple;
         }
     }
 }

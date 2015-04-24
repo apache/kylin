@@ -61,8 +61,16 @@ public class FunctionDesc {
     }
 
     public boolean needRewrite() {
-        // Yang: why holistic count distinct does not require rewrite?? 
-        return !isSum() && !isHolisticCountDistinct() && !isDimensionAsMetric();
+        return !isSum() && !isDimensionAsMetric();
+    }
+    
+    public ColumnDesc newFakeRewriteColumn(TableDesc sourceTable) {
+        ColumnDesc fakeCol = new ColumnDesc();
+        fakeCol.setName(getRewriteFieldName());
+        fakeCol.setDatatype(getSQLType());
+        fakeCol.setNullable(false);
+        fakeCol.init(sourceTable);
+        return fakeCol;
     }
 
     public boolean isMin() {

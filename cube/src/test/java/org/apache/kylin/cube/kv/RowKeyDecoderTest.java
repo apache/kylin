@@ -61,12 +61,8 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
         byte[] key = { 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
 
         rowKeyDecoder.decode(key);
-        List<String> names = rowKeyDecoder.getNames(null);
         List<String> values = rowKeyDecoder.getValues();
-
-        assertEquals("[CAL_DT, LEAF_CATEG_ID, META_CATEG_NAME, CATEG_LVL2_NAME, CATEG_LVL3_NAME, LSTG_FORMAT_NAME, LSTG_SITE_ID, SLR_SEGMENT_CD]", names.toString());
         assertEquals("[2012-12-15, 11848, Health & Beauty, Fragrances, Women, FP-GTC, 0, 15]", values.toString());
-
     }
 
     @Test
@@ -78,12 +74,8 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
         byte[] key = { 0, 0, 0, 0, 0, 0, 1, -1, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 54, -105, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
 
         rowKeyDecoder.decode(key);
-        List<String> names = rowKeyDecoder.getNames(null);
         List<String> values = rowKeyDecoder.getValues();
-
-        assertEquals("[SELLER_ID, CAL_DT, LEAF_CATEG_ID, META_CATEG_NAME, CATEG_LVL2_NAME, CATEG_LVL3_NAME, LSTG_FORMAT_NAME, LSTG_SITE_ID, SLR_SEGMENT_CD]", names.toString());
         assertEquals("[10000000, 2012-01-02, 20213, Collectibles, Postcards, US StateCities & Towns, ABIN, 0, -99]", values.toString());
-
     }
 
     @Test
@@ -110,9 +102,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
         rowKeyDecoder.decode(encodedKey);
-        List<String> names = rowKeyDecoder.getNames(null);
         List<String> values = rowKeyDecoder.getValues();
-        assertEquals("[CAL_DT, LEAF_CATEG_ID, META_CATEG_NAME, CATEG_LVL2_NAME, CATEG_LVL3_NAME, LSTG_FORMAT_NAME, LSTG_SITE_ID, SLR_SEGMENT_CD]", names.toString());
         assertEquals("[2012-12-15, 11848, Health & Beauty, Fragrances, Women, 刊登格式, 0, 15]", values.toString());
     }
 }

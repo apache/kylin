@@ -34,6 +34,10 @@ import org.apache.kylin.storage.hybrid.HybridStorageEngine;
 public class StorageEngineFactory {
 
     public static IStorageEngine getStorageEngine(IRealization realization, boolean allowCache) {
+        if (realization.getType() == RealizationType.CUBE) {
+            allowCache = false;
+        }
+        
         if (allowCache) {
             return new CacheFledgedStorageEngine(realization);
         }

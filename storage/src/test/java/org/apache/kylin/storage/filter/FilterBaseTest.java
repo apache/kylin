@@ -23,11 +23,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.kylin.metadata.filter.*;
+import org.apache.kylin.metadata.filter.CaseTupleFilter;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.DynamicTupleFilter;
+import org.apache.kylin.metadata.filter.IFilterCodeSystem;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.StringCodeSystem;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
 
@@ -37,6 +45,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
  */
 public class FilterBaseTest {
     
+    @SuppressWarnings("rawtypes")
     static final IFilterCodeSystem CS = StringCodeSystem.INSTANCE;
 
     protected List<TblColRef> buildGroups() {
@@ -180,7 +189,7 @@ public class FilterBaseTest {
         TupleInfo info = new TupleInfo();
         for (int i = 0; i < columns.size(); i++) {
             TblColRef column = columns.get(i);
-            info.setField(column.getName(), column, column.getDatatype(), i);
+            info.setField(column.getName(), column, i);
         }
 
         int allMatches = 0;

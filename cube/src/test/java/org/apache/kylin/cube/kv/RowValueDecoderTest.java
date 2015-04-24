@@ -23,21 +23,19 @@ import static org.junit.Assert.*;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.FunctionDesc;
 
 /**
  * @author George Song (ysong1)
@@ -81,10 +79,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         }
 
         rowValueDecoder.decode(valueBytes);
-        List<String> measureNames = rowValueDecoder.getNames();
         Object[] measureValues = rowValueDecoder.getValues();
-
-        assertEquals("[PRICE, MIN_PRICE_, MAX_PRICE_, COUNT__]", measureNames.toString());
         assertEquals("[333.1234567, 333.1111111, 333.1999999, 2]", Arrays.toString(measureValues));
     }
 

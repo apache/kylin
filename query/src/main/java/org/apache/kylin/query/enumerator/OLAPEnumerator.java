@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.enumerator;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -33,7 +32,6 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageEngineFactory;
-import org.eigenbase.reltype.RelDataTypeField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,17 +44,13 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     private final OLAPContext olapContext;
     private final DataContext optiqContext;
-    private final Object[] current;
+    private Object[] current;
     private ITupleIterator cursor;
-    private int[] fieldIndexes;
-    private List<String> tupleFieldsSnapshot;
 
     public OLAPEnumerator(OLAPContext olapContext, DataContext optiqContext) {
         this.olapContext = olapContext;
         this.optiqContext = optiqContext;
-        this.current = new Object[olapContext.returnTupleInfo.size()];
         this.cursor = null;
-        this.fieldIndexes = null;
     }
 
     @Override
@@ -82,6 +76,13 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         return true;
     }
 
+    private Object[] convertCurrentRow(ITuple tuple) {
+        // make sure the tuple layout is correct
+        assert tuple.getAllFields() == olapContext.returnTupleInfo.getAllFields();
+        current = tuple.getAllValues();
+        return current;
+    }
+
     @Override
     public void reset() {
         close();
@@ -92,39 +93,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
     public void close() {
         if (cursor != null)
             cursor.close();
-    }
-
-    private Object[] convertCurrentRow(ITuple tuple) {
-
-        // build field index map, if the map doesn't exit or the tuple fields structure changed
-        if (tupleFieldsSnapshot != tuple.getAllFields()) { // note != for fast comparison
-            List<String> fields = tuple.getAllFields();
-            int size = fields.size();
-            this.fieldIndexes = new int[size];
-            for (int i = 0; i < size; i++) {
-                String field = fields.get(i);
-                RelDataTypeField relField = olapContext.olapRowType.getField(field, true);
-                if (relField != null) {
-                    fieldIndexes[i] = relField.getIndex();
-                } else {
-                    fieldIndexes[i] = -1;
-                }
-            }
-            
-            tupleFieldsSnapshot = tuple.getAllFields();
-        }
-
-        // set field value
-        Object[] values = tuple.getAllValues();
-        for (int i = 0, n = values.length; i < n; i++) {
-            Object value = values[i];
-            int index = fieldIndexes[i];
-            if (index >= 0) {
-                current[index] = value;
-            }
-        }
-
-        return current;
     }
 
     private ITupleIterator queryStorage() {
@@ -143,8 +111,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
             logger.debug("return TupleIterator...");
         }
 
-        this.fieldIndexes = null;
-        this.tupleFieldsSnapshot = null;
         return iterator;
     }
 
