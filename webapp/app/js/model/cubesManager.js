@@ -17,7 +17,7 @@
  */
 
 // TODO add cubes manager
-KylinApp.service('cubesManager',function(){
+KylinApp.service('cubesManager', function () {
 
     this.currentCube = {};
 

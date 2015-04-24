@@ -14,13 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.factory('AdminService', ['$resource', function ($resource, config) {
-    return $resource(Config.service.url + 'admin/:action', {}, {
-        env: {method: 'GET', params: {action: 'env'}, isArray: false},
-        config: {method: 'GET', params: {action: 'config'}, isArray: false},
-        cleanStorage: {method: 'DELETE', params:{action: 'storage'}, isArray: false},
-        updateConfig: {method: 'PUT', params:{action: 'config'}, isArray:false}
-    });
+  return $resource(Config.service.url + 'admin/:action', {}, {
+    env: {method: 'GET', params: {action: 'env'}, isArray: false},
+    config: {method: 'GET', params: {action: 'config'}, isArray: false},
+    cleanStorage: {method: 'DELETE', params: {action: 'storage'}, isArray: false},
+    updateConfig: {method: 'PUT', params: {action: 'config'}, isArray: false}
+  });
 }]);

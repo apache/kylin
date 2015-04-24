@@ -14,14 +14,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.constant('projectConfig', {
-    theaditems : [
-        {attr: 'name', name: 'Name'},
-        {attr: 'owner', name: 'Owner'},
-        {attr: 'description', name: 'Description'},
-        {attr: 'create_time', name: 'Create Time'}
-    ]
+  theaditems: [
+    {attr: 'name', name: 'Name'},
+    {attr: 'owner', name: 'Owner'},
+    {attr: 'description', name: 'Description'},
+    {attr: 'create_time', name: 'Create Time'}
+  ]
 
 });

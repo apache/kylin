@@ -14,14 +14,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.factory('JobService', ['$resource', function ($resource, config) {
-    return $resource(Config.service.url + 'jobs/:jobId/:propName/:propValue/:action', {}, {
-        list: {method: 'GET', params: {}, isArray: true},
-        get: {method: 'GET', params: {}, isArray: false},
-        stepOutput: {method: 'GET', params: {propName: 'steps', action: 'output'}, isArray: false},
-        resume: {method: 'PUT', params: {action: 'resume'}, isArray: false},
-        cancel: {method: 'PUT', params: {action: 'cancel'}, isArray: false}
-    });
+  return $resource(Config.service.url + 'jobs/:jobId/:propName/:propValue/:action', {}, {
+    list: {method: 'GET', params: {}, isArray: true},
+    get: {method: 'GET', params: {}, isArray: false},
+    stepOutput: {method: 'GET', params: {propName: 'steps', action: 'output'}, isArray: false},
+    resume: {method: 'PUT', params: {action: 'resume'}, isArray: false},
+    cancel: {method: 'PUT', params: {action: 'cancel'}, isArray: false}
+  });
 }]);

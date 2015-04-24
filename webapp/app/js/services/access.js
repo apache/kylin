@@ -14,13 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.factory('AccessService', ['$resource', function ($resource, config) {
-    return $resource(Config.service.url + 'access/:type/:uuid', {}, {
-        list: {method: 'GET', params: {}, isArray: true},
-        grant: {method: 'POST', params: {}, isArray: true},
-        update: {method: 'PUT', params: {}, isArray: true},
-        revoke: {method: 'DELETE', params: {}, isArray: false}
-    });
+  return $resource(Config.service.url + 'access/:type/:uuid', {}, {
+    list: {method: 'GET', params: {}, isArray: true},
+    grant: {method: 'POST', params: {}, isArray: true},
+    update: {method: 'PUT', params: {}, isArray: true},
+    revoke: {method: 'DELETE', params: {}, isArray: false}
+  });
 }]);
