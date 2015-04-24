@@ -27,10 +27,9 @@ import org.apache.kylin.common.util.DateFormat;
 import java.util.Arrays;
 
 /**
+ * TableRecord extends RawTableRecord by decorating it with a TableRecordInfo.
+ * 
  * @author yangli9, honma
- *         <p/>
- *         TableRecord extends RawTableRecord by decorating it with a
- *         TableRecordInfo
  */
 public class TableRecord implements Cloneable {
 
@@ -49,6 +48,10 @@ public class TableRecord implements Cloneable {
         this.rawRecord = (RawTableRecord) another.rawRecord.clone();
     }
 
+    public TableRecordInfo getInfo() {
+        return info;
+    }
+    
     @Override
     public Object clone() {
         return new TableRecord(this);

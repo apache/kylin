@@ -192,6 +192,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
         if (!(implementor instanceof JavaImplementor))
             throw new IllegalStateException("implementor is not JavaImplementor");
+        
         JavaImplementor javaImplementor = (JavaImplementor) implementor;
 
         int ctxId = this.context.id;

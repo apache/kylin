@@ -343,7 +343,7 @@ public class CubeStorageEngine implements IStorageEngine {
                 bestIndex = hbCol.findMeasureIndex(aggrFunc);
                 MeasureDesc measure = hbCol.getMeasures()[bestIndex];
                 // criteria for holistic measure: Exact Aggregation && Exact Cuboid
-                if (measure.isHolisticCountDistinct() && context.isExactAggregation()) {
+                if (measure.getFunction().isHolisticCountDistinct() && context.isExactAggregation()) {
                     logger.info("Holistic count distinct chosen for " + aggrFunc);
                     break;
                 }

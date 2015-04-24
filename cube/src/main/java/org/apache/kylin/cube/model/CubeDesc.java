@@ -628,7 +628,7 @@ public class CubeDesc extends RootPersistentEntity {
             }
             
             // verify holistic count distinct as a dependent measure
-            if (m.isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
+            if (m.getFunction().isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
                 throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
             }
         }

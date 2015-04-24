@@ -76,8 +76,8 @@ public class Tuple implements ITuple {
         return values[index];
     }
 
-    public String getDataType(int idx) {
-        return info.getAllColumns().get(idx).getDatatype();
+    public String getDataTypeName(int idx) {
+        return info.getDataTypeName(idx);
     }
 
     public void setDimensionValue(String fieldName, String fieldValue) {
@@ -85,7 +85,7 @@ public class Tuple implements ITuple {
     }
     
     public void setDimensionValue(int idx, String fieldValue) {
-        Object objectValue = convertOptiqCellValue(fieldValue, getDataType(idx));
+        Object objectValue = convertOptiqCellValue(fieldValue, getDataTypeName(idx));
         values[idx] = objectValue;
     }
 
@@ -94,7 +94,7 @@ public class Tuple implements ITuple {
     }
     
     public void setMeasureValue(int idx, Object fieldValue) {
-        String dataType = getDataType(idx);
+        String dataType = getDataTypeName(idx);
         // special handling for BigDecimal, allow double be aggregated as
         // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
@@ -140,32 +140,32 @@ public class Tuple implements ITuple {
         }
     }
 
-    public static Object convertOptiqCellValue(String strValue, String dataType) {
+    public static Object convertOptiqCellValue(String strValue, String dataTypeName) {
         if (strValue == null)
             return null;
 
-        if ((strValue.equals("") || strValue.equals("\\N")) && !dataType.equals("string"))
+        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string"))
             return null;
 
         // TODO use data type enum instead of string comparison
-        if ("date".equals(dataType)) {
+        if ("date".equals(dataTypeName)) {
             // convert epoch time
             Date dateValue = DateFormat.stringToDate(strValue); // NOTE: forces GMT timezone
             long millis = dateValue.getTime();
             return millisToEpicDays(millis);// Optiq expects Integer instead of Long. by honma
-        } else if ("tinyint".equals(dataType)) {
+        } else if ("tinyint".equals(dataTypeName)) {
             return Byte.valueOf(strValue);
-        } else if ("short".equals(dataType) || "smallint".equals(dataType)) {
+        } else if ("short".equals(dataTypeName) || "smallint".equals(dataTypeName)) {
             return Short.valueOf(strValue);
-        } else if ("integer".equals(dataType)) {
+        } else if ("integer".equals(dataTypeName)) {
             return Integer.valueOf(strValue);
-        } else if ("long".equals(dataType) || "bigint".equals(dataType)) {
+        } else if ("long".equals(dataTypeName) || "bigint".equals(dataTypeName)) {
             return Long.valueOf(strValue);
-        } else if ("double".equals(dataType)) {
+        } else if ("double".equals(dataTypeName)) {
             return Double.valueOf(strValue);
-        } else if ("decimal".equals(dataType)) {
+        } else if ("decimal".equals(dataTypeName)) {
             return new BigDecimal(strValue);
-        } else if ("timestamp".equals(dataType)) {
+        } else if ("timestamp".equals(dataTypeName)) {
             return Long.valueOf(DateFormat.stringToMillis(strValue));
         } else {
             return strValue;

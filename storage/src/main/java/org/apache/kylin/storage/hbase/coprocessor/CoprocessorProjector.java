@@ -19,9 +19,10 @@
 package org.apache.kylin.storage.hbase.coprocessor;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;

@@ -38,6 +38,7 @@ import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
 import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
+import org.apache.kylin.storage.tuple.TupleInfo;
 import org.junit.*;
 
 public class StorageTest extends HBaseMetadataTestCase {
@@ -137,7 +138,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         ITupleIterator iterator = null;
         try {
             SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", filter, null, Collections.<TblColRef> emptySet(), groups, Collections.<TblColRef> emptySet(), Collections.<TblColRef> emptySet(), aggregations);
-            iterator = storageEngine.search(context, sqlDigest);
+            iterator = storageEngine.search(context, sqlDigest, newTupleInfo(groups, aggregations));
             while (iterator.hasNext()) {
                 ITuple tuple = iterator.next();
                 System.out.println("Tuple = " + tuple);
@@ -150,6 +151,23 @@ public class StorageTest extends HBaseMetadataTestCase {
                 iterator.close();
         }
         return count;
+    }
+
+    private TupleInfo newTupleInfo(List<TblColRef> groups, List<FunctionDesc> aggregations) {
+        TupleInfo info = new TupleInfo();
+        int idx = 0;
+        
+        for (TblColRef col : groups) {
+            info.setField(col.getName(), col, idx++);
+        }
+        
+        TableDesc sourceTable = groups.get(0).getColumn().getTable();
+        for (FunctionDesc func : aggregations) {
+            TblColRef col = new TblColRef(func.newFakeRewriteColumn(sourceTable));
+            info.setField(col.getName(), col, idx++);
+        }
+        
+        return info;
     }
 
     private List<TblColRef> buildGroups() {

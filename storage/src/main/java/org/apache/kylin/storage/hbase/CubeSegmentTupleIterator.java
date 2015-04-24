@@ -72,7 +72,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     private final String tableName;
     private final HTableInterface table;
 
-    private final CubeSegmentTupleConverter tupleConverter;
+    private final CubeTupleConverter tupleConverter;
     private final Iterator<HBaseKeyRange> rangeIterator;
     private final Tuple oneTuple; // avoid new instance
 
@@ -97,7 +97,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             assert cuboid.equals(range.getCuboid());
         }
 
-        this.tupleConverter = new CubeSegmentTupleConverter(cubeSeg, cuboid, rowValueDecoders, returnTupleInfo);
+        this.tupleConverter = new CubeTupleConverter(cubeSeg, cuboid, rowValueDecoders, returnTupleInfo);
         this.oneTuple = new Tuple(returnTupleInfo);
         this.rangeIterator = keyRanges.iterator();
         this.scanCount = 0;

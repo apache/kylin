@@ -29,6 +29,7 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
+import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,13 +47,14 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
     }
 
     @Override
-    public ITupleIterator search(StorageContext context, SQLDigest sqlDigest) {
+    public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
         String tableName = seg.getStorageLocationIdentifier();
 
         //HConnection is cached, so need not be closed
+        @SuppressWarnings("deprecation")
         HConnection conn = HBaseConnection.get(context.getConnUrl());
         try {
-            return new EndpointTupleIterator(seg, sqlDigest.filter, sqlDigest.groupbyColumns, new ArrayList<>(sqlDigest.aggregations), context, conn);
+            return new EndpointTupleIterator(seg, sqlDigest.filter, sqlDigest.groupbyColumns, new ArrayList<>(sqlDigest.aggregations), context, conn, returnTupleInfo);
         } catch (Throwable e) {
             logger.error("Error when connecting to II htable " + tableName, e);
             throw new IllegalStateException("Error when connecting to II htable " + tableName, e);
