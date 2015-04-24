@@ -695,12 +695,12 @@
                                 <exclude>webapp/node_modules/**</exclude>
                                 <exclude>webapp/dist/**</exclude>
                                 <exclude>webapp/app/components/**</exclude>
-                                <!-- Temp -->
-                                <exclude>webapp/template/nginx_default.conf</exclude>
-                                <exclude>webapp/validate-commit-msg.js</exclude>
                                 <!-- json configuration file-->
                                 <exclude>webapp/.bowerrc</exclude>
                                 <exclude>webapp/.jshintrc</exclude>
+                                <!-- MIT license -->
+                                <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
+                                <exclude>webapp/app/css/AdminLTE.css</exclude>
                             </excludes>
                         </configuration>
                         <executions>
