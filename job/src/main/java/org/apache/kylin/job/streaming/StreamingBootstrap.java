@@ -117,16 +117,16 @@ public class StreamingBootstrap {
         Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streaming);
         final IIInstance ii = iiManager.getII(kafkaConfig.getIiName());
         Preconditions.checkNotNull(ii, "cannot find ii name:" + kafkaConfig.getIiName());
-        Preconditions.checkArgument(partitionId >= 0 && partitionId < kafkaConfig.getPartition(), "invalid partition id:" + partitionId);
+        final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaConfig).getPartitionIds().size();
+        Preconditions.checkArgument(partitionId >= 0 && partitionId < partitionCount, "invalid partition id:" + partitionId);
         Preconditions.checkArgument(ii.getSegments().size() > 0);
         final IISegment iiSegment = ii.getSegments().get(0);
 
         final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
         Preconditions.checkState(leadBroker != null, "cannot find lead broker");
-        final int partition = kafkaConfig.getPartition();
         final int shard = ii.getDescriptor().getSharding();
-        Preconditions.checkArgument(shard % partition == 0);
-        final int parallelism = shard / partition;
+        Preconditions.checkArgument(shard % partitionCount == 0);
+        final int parallelism = shard / partitionCount;
         final int startShard = partitionId * parallelism;
         final int endShard = startShard + parallelism;
         long streamingOffset = getEarliestStreamingOffset(streaming, startShard, endShard);
