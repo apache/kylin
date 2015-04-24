@@ -97,6 +97,7 @@ public class KylinConfig {
     public static final String KYLIN_JOB_LOG_DIR = "kylin.job.log.dir";
 
     public static final String KYLIN_JOB_CUBING_IN_MEM = "kylin.job.cubing.inMem";
+    public static final String KYLIN_JOB_CUBING_IN_MEM_SAMPLING_MAX = "kylin.job.cubing.inMem.sampling.max";
 
     public static final String KYLIN_HDFS_WORKING_DIR = "kylin.hdfs.working.dir";
 
@@ -474,6 +475,10 @@ public class KylinConfig {
 
     public boolean isCubingInMem() {
         return Boolean.parseBoolean(this.getOptional(KYLIN_JOB_CUBING_IN_MEM, "false"));
+    }
+
+    public int getCubingInMemSamplingMax() {
+        return Integer.parseInt(this.getOptional(KYLIN_JOB_CUBING_IN_MEM_SAMPLING_MAX, "100000"));
     }
 
     private String getOptional(String prop) {

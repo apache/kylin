@@ -57,6 +57,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             options.addOption(OPTION_SEGMENT_NAME);
             options.addOption(OPTION_STATISTICS_ENABLED);
             options.addOption(OPTION_STATISTICS_OUTPUT);
+            options.addOption(OPTION_STATISTICS_SAMPLING_MAX);
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
@@ -66,6 +67,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
             String statistics_enabled = getOptionValue(OPTION_STATISTICS_ENABLED);
             String statistics_output = getOptionValue(OPTION_STATISTICS_OUTPUT);
+            String statistics_sampling_max = getOptionValue(OPTION_STATISTICS_SAMPLING_MAX);
 
             // ----------------------------------------------------------------------------
             // add metadata to distributed cache
@@ -76,6 +78,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_ENABLED, statistics_enabled);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_OUTPUT, statistics_output);
+            job.getConfiguration().set(BatchConstants.CFG_STATISTICS_SAMPLING_MAX, statistics_sampling_max);
             log.info("Starting: " + job.getJobName());
 
             setJobClasspath(job);
