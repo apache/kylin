@@ -14,37 +14,37 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-KylinApp.service('JobList',function(JobService,$q){
-    var _this = this;
-    this.jobs=[];
+KylinApp.service('JobList', function (JobService, $q) {
+  var _this = this;
+  this.jobs = [];
 
-    this.list = function(jobRequest){
+  this.list = function (jobRequest) {
 
-        var defer = $q.defer();
-        JobService.list(jobRequest, function (jobs) {
-            angular.forEach(jobs, function (job) {
-                var id = job.uuid;
-                if (angular.isDefined(_this.jobs[id])) {
-                    if (job.last_modified != _this.jobs[id].last_modified) {
-                        _this.jobs[id] = job;
-                    } else {
-                    }
-                } else {
-                    _this.jobs[id] = job;
-                }
-            });
+    var defer = $q.defer();
+    JobService.list(jobRequest, function (jobs) {
+      angular.forEach(jobs, function (job) {
+        var id = job.uuid;
+        if (angular.isDefined(_this.jobs[id])) {
+          if (job.last_modified != _this.jobs[id].last_modified) {
+            _this.jobs[id] = job;
+          } else {
+          }
+        } else {
+          _this.jobs[id] = job;
+        }
+      });
 
-            defer.resolve(jobs.length);
-        });
+      defer.resolve(jobs.length);
+    });
 
-        return defer.promise;
+    return defer.promise;
 
-    };
+  };
 
-    this.removeAll = function(){
-        _this.jobs=[];
-    };
+  this.removeAll = function () {
+    _this.jobs = [];
+  };
 
 });

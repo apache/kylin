@@ -14,13 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.factory('ProjectService', ['$resource', function ($resource, config) {
-    return $resource(Config.service.url + 'projects/:projecId/:propName/:propValue/:action', {}, {
-        list: {method: 'GET', params: {}, isArray: true},
-        save: {method: 'POST', params: {}, isArray: false},
-        update: {method: 'PUT', params:{}, isArray: false},
-        delete: {method: 'DELETE', params: {}, isArray: false }
-    });
+  return $resource(Config.service.url + 'projects/:projecId/:propName/:propValue/:action', {}, {
+    list: {method: 'GET', params: {}, isArray: true},
+    save: {method: 'POST', params: {}, isArray: false},
+    update: {method: 'PUT', params: {}, isArray: false},
+    delete: {method: 'DELETE', params: {}, isArray: false}
+  });
 }]);

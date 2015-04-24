@@ -14,52 +14,54 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-KylinApp.service('CubeList',function(CubeService,$q){
-    var cubes=[];
-    var _this = this;
+KylinApp.service('CubeList', function (CubeService, $q) {
+  var cubes = [];
+  var _this = this;
 
-    this.list = function(queryParam){
+  this.list = function (queryParam) {
 
-        var defer = $q.defer();
-        CubeService.list(queryParam, function (_cubes) {
-            angular.forEach(_cubes, function (cube, index) {
-                if(cube.name){
+    var defer = $q.defer();
+    CubeService.list(queryParam, function (_cubes) {
+      angular.forEach(_cubes, function (cube, index) {
+        if (cube.name) {
 //                    $scope.listAccess(cube, 'CubeInstance');
-                    if (cube.segments && cube.segments.length > 0) {
-                        for(var i= cube.segments.length-1;i>=0;i--){
-                            if(cube.segments[i].status==="READY"){
-                                cube.last_build_time = cube.segments[i].last_build_time;
-                                break;
-                            }else if(i===0){
-                                cube.last_build_time = cube.create_time_utc;
-                            }
-                        }
-                    } else {
-                        cube.last_build_time = cube.create_time_utc;
-                    }
-                }
-            });
-            _cubes = _.filter(_cubes,function(cube){return cube.name!=undefined});
-            _this.cubes = _this.cubes.concat(_cubes);
-            defer.resolve(_this.cubes.length);
-        },function(){
-            defer.reject("Failed to load cubes");
-        });
-        return defer.promise;
-
-    };
-
-    this.removeCube = function(cube){
-        var cubeIndex = _this.cubes.indexOf(cube);
-        if (cubeIndex > -1) {
-            _this.cubes.splice(cubeIndex, 1);
+          if (cube.segments && cube.segments.length > 0) {
+            for (var i = cube.segments.length - 1; i >= 0; i--) {
+              if (cube.segments[i].status === "READY") {
+                cube.last_build_time = cube.segments[i].last_build_time;
+                break;
+              } else if (i === 0) {
+                cube.last_build_time = cube.create_time_utc;
+              }
+            }
+          } else {
+            cube.last_build_time = cube.create_time_utc;
+          }
         }
-    }
+      });
+      _cubes = _.filter(_cubes, function (cube) {
+        return cube.name != undefined
+      });
+      _this.cubes = _this.cubes.concat(_cubes);
+      defer.resolve(_this.cubes.length);
+    }, function () {
+      defer.reject("Failed to load cubes");
+    });
+    return defer.promise;
 
-    this.removeAll = function(){
-        _this.cubes=[];
-    };
+  };
+
+  this.removeCube = function (cube) {
+    var cubeIndex = _this.cubes.indexOf(cube);
+    if (cubeIndex > -1) {
+      _this.cubes.splice(cubeIndex, 1);
+    }
+  }
+
+  this.removeAll = function () {
+    _this.cubes = [];
+  };
 
 });
