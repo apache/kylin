@@ -14,29 +14,29 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 'use strict';
 
-KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,ModelService,MetaModel) {
+KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal, cubeConfig, ModelService, MetaModel) {
 
-    //convert some undefined or null value
-    angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(rowkey){
-            if(!rowkey.dictionary){
-                rowkey.dictionary = "false";
-            }
-        }
-    );
-    //edit model
-    if($scope.state.mode==="edit") {
-        $scope.metaModel = MetaModel;
+  //convert some undefined or null value
+  angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns, function (rowkey) {
+      if (!rowkey.dictionary) {
+        rowkey.dictionary = "false";
+      }
+    }
+  );
+  //edit model
+  if ($scope.state.mode === "edit") {
+    $scope.metaModel = MetaModel;
+  }
+
+
+  $scope.dictionaryUpdated = function (rowkey_column) {
+    if (rowkey_column.dictionary === "true") {
+      rowkey_column.length = 0;
     }
 
-
-    $scope.dictionaryUpdated = function(rowkey_column){
-        if(rowkey_column.dictionary==="true"){
-            rowkey_column.length=0;
-        }
-
-    }
+  }
 });

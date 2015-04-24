@@ -14,23 +14,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.constant('jobConfig', {
-    allStatus : [
-        {name: 'NEW', value: 0},
-        {name: 'PENDING', value: 1},
-        {name: 'RUNNING', value: 2},
-        {name: 'FINISHED', value: 4},
-        {name: 'ERROR', value: 8},
-        {name: 'DISCARDED', value: 16}
-    ],
-    theaditems : [
-        {attr: 'name', name: 'Job Name'},
-        {attr: 'related_cube', name: 'Cube'},
-        {attr: 'progress', name: 'Progress'},
-        {attr: 'last_modified', name: 'Last Modified Time'},
-        {attr: 'duration', name: 'Duration'}
-    ]
+  allStatus: [
+    {name: 'NEW', value: 0},
+    {name: 'PENDING', value: 1},
+    {name: 'RUNNING', value: 2},
+    {name: 'FINISHED', value: 4},
+    {name: 'ERROR', value: 8},
+    {name: 'DISCARDED', value: 16}
+  ],
+  theaditems: [
+    {attr: 'name', name: 'Job Name'},
+    {attr: 'related_cube', name: 'Cube'},
+    {attr: 'progress', name: 'Progress'},
+    {attr: 'last_modified', name: 'Last Modified Time'},
+    {attr: 'duration', name: 'Duration'}
+  ]
 
 });

@@ -14,33 +14,33 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.service('GraphService', function (GraphBuilder) {
 
-    this.buildGraph = function (query) {
-        var graphData = null;
-        var dimension = query.graph.state.dimensions;
+  this.buildGraph = function (query) {
+    var graphData = null;
+    var dimension = query.graph.state.dimensions;
 
-        if (dimension && query.graph.type.dimension.types.indexOf(dimension.type) > -1) {
-            var metricsList = [];
-            metricsList = metricsList.concat(query.graph.state.metrics);
-            angular.forEach(metricsList, function (metrics, index) {
-                var aggregatedData = {};
-                angular.forEach(query.result.results, function (data, index) {
-                    aggregatedData[data[dimension.index]] = (!!aggregatedData[data[dimension.index]] ? aggregatedData[data[dimension.index]] : 0)
-                        + parseFloat(data[metrics.index].replace(/[^\d\.\-]/g, ""));
-                });
+    if (dimension && query.graph.type.dimension.types.indexOf(dimension.type) > -1) {
+      var metricsList = [];
+      metricsList = metricsList.concat(query.graph.state.metrics);
+      angular.forEach(metricsList, function (metrics, index) {
+        var aggregatedData = {};
+        angular.forEach(query.result.results, function (data, index) {
+          aggregatedData[data[dimension.index]] = (!!aggregatedData[data[dimension.index]] ? aggregatedData[data[dimension.index]] : 0)
+          + parseFloat(data[metrics.index].replace(/[^\d\.\-]/g, ""));
+        });
 
-                var newData = GraphBuilder["build" + capitaliseFirstLetter(query.graph.type.value) + "Graph"](dimension, metrics, aggregatedData);
-                graphData = (!!graphData) ? graphData.concat(newData) : newData;
-            });
-        }
-
-        return graphData;
+        var newData = GraphBuilder["build" + capitaliseFirstLetter(query.graph.type.value) + "Graph"](dimension, metrics, aggregatedData);
+        graphData = (!!graphData) ? graphData.concat(newData) : newData;
+      });
     }
 
-    function capitaliseFirstLetter(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
+    return graphData;
+  }
+
+  function capitaliseFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
 });

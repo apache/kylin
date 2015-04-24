@@ -14,56 +14,58 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-KylinApp.service('ProjectModel',function(){
+KylinApp.service('ProjectModel', function () {
 
-    this.projects = [];
-    this.selectedProject =null;
+  this.projects = [];
+  this.selectedProject = null;
 
 
-    this.setSelectedProject = function(project) {
-        if(this.projects.indexOf(project) > -1) {
-            this.selectedProject = project;
-        }
-    };
-    this.getSelectedProject = function(project) {
-         return this.selectedProject;
-    };
-
-    this.setProjects = function(projects){
-        if(projects.length){
-            this.projects = projects;
-        }
+  this.setSelectedProject = function (project) {
+    if (this.projects.indexOf(project) > -1) {
+      this.selectedProject = project;
     }
+  };
+  this.getSelectedProject = function (project) {
+    return this.selectedProject;
+  };
 
-    this.addProject = function(project){
-        this.projects.push(project);
-        this.sortProjects();
+  this.setProjects = function (projects) {
+    if (projects.length) {
+      this.projects = projects;
     }
+  }
 
-    this.removeProject = function(project){
-        var index =this.projects.indexOf(project);
-        if(index>-1){
-            this.projects.splice(index,1);
-        }
-        this.selectedProject = this.projects[0];
-        this.sortProjects();
-    }
+  this.addProject = function (project) {
+    this.projects.push(project);
+    this.sortProjects();
+  }
 
-    this.updateProject = function (_new,_old) {
-        var index =this.projects.indexOf(_old);
-        if(index>-1){
-            this.projects[index] = _new;
-        }
+  this.removeProject = function (project) {
+    var index = this.projects.indexOf(project);
+    if (index > -1) {
+      this.projects.splice(index, 1);
     }
+    this.selectedProject = this.projects[0];
+    this.sortProjects();
+  }
 
-    this.getProjects = function(){
-        return this.projects;
+  this.updateProject = function (_new, _old) {
+    var index = this.projects.indexOf(_old);
+    if (index > -1) {
+      this.projects[index] = _new;
     }
+  }
 
-    this.sortProjects = function (){
-        this.projects = _.sortBy(this.projects, function (i) { return i.toLowerCase(); });
-    }
+  this.getProjects = function () {
+    return this.projects;
+  }
+
+  this.sortProjects = function () {
+    this.projects = _.sortBy(this.projects, function (i) {
+      return i.toLowerCase();
+    });
+  }
 
 })
