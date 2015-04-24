@@ -91,7 +91,7 @@ public class JoinedFlatTable {
     public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID, JobEngineConfig engineConfig) throws IOException {
         StringBuilder sql = new StringBuilder();
 
-        File hadoopPropertiesFile = new File(engineConfig.getHadoopJobConfFilePath(intermediateTableDesc.getCapacity()));
+        File hadoopPropertiesFile = new File(engineConfig.getHiveConfFilePath());
 
         if (hadoopPropertiesFile.exists()) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -116,10 +116,6 @@ public class JoinedFlatTable {
             }
         }
 
-        // hard coded below mr parameters to enable map-side join
-        sql.append("SET hive.exec.compress.output=true;").append("\n");
-        sql.append("SET hive.auto.convert.join.noconditionaltask = true;").append("\n");
-        sql.append("SET hive.auto.convert.join.noconditionaltask.size = 300000000;").append("\n");
         sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName(jobUUID) + " " + generateSelectDataStatement(intermediateTableDesc) + ";").append("\n");
 
         return sql.toString();

@@ -33,6 +33,7 @@ import java.io.*;
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
     public static String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
+    public static String HIVE_CONF_FILENAME = "kylin_hive_conf";
 
     private static File getJobConfig(String fileName) {
         String path = System.getProperty(KylinConfig.KYLIN_CONF);
@@ -80,6 +81,19 @@ public class JobEngineConfig {
             }
         }
         return "";
+    }
+
+
+    public String getHiveConfFilePath() throws IOException {
+        String hiveConfFile = (HIVE_CONF_FILENAME + ".xml");
+
+        File jobConfig = getJobConfig(hiveConfFile);
+        if (jobConfig == null || !jobConfig.exists()) {
+
+            logger.error("fail to locate " + HIVE_CONF_FILENAME + ".xml");
+            throw new RuntimeException("fail to locate " + HIVE_CONF_FILENAME + ".xml");
+        }
+        return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
     }
 
     private void inputStreamToFile(InputStream ins, File file) throws IOException {
