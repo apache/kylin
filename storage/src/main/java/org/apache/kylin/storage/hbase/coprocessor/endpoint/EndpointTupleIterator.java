@@ -150,18 +150,17 @@ public class EndpointTupleIterator implements ITupleIterator {
         Collection<IIProtos.IIResponse> compressedShardResults = getResults(endpointRequest, table);
 
         //decompress
-        Collection<IIProtos.IIResponseInternal> shardResults = Collections2.transform(compressedShardResults, new Function<IIProtos.IIResponse, IIProtos.IIResponseInternal>() {
-            @Nullable
-            @Override
-            public IIProtos.IIResponseInternal apply(@Nullable IIProtos.IIResponse input) {
-                byte[] compressed = input.getBlob().toByteArray();
-                try {
-                    return IIProtos.IIResponseInternal.parseFrom(CompressionUtils.decompress(compressed));
-                } catch (Exception e) {
-                    throw new RuntimeException("decompress endpoint response error");
-                }
+        Collection<IIProtos.IIResponseInternal> shardResults = new ArrayList<>();
+        for(IIProtos.IIResponse input : compressedShardResults)
+        {
+            byte[] compressed = input.getBlob().toByteArray();
+            try {
+                byte[] decompressed = CompressionUtils.decompress(compressed);
+                shardResults.add(IIProtos.IIResponseInternal.parseFrom(decompressed));
+            } catch (Exception e) {
+                throw new RuntimeException("decompress endpoint response error");
             }
-        });
+        }
 
         this.lastDataTime = Collections.min(Collections2.transform(shardResults, new Function<IIProtos.IIResponseInternal, Long>() {
             @Nullable
