@@ -58,6 +58,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
     private long totalRowsBeforeMerge = 0;
+    private double averageSamplingRatio = 1;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -111,22 +112,34 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             // for hll
             long cuboidId = 0 - key.get();
 
-            for (Text value : values) {
-                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
-                ByteArray byteArray = new ByteArray(value.getBytes());
-                hll.readRegisters(byteArray.asBuffer());
+            if (cuboidId <= baseCuboidId) {
+                for (Text value : values) {
+                    HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
+                    ByteArray byteArray = new ByteArray(value.getBytes());
+                    hll.readRegisters(byteArray.asBuffer());
 
-                totalRowsBeforeMerge += hll.getCountEstimate();
+                    totalRowsBeforeMerge += hll.getCountEstimate();
 
-                if (cuboidId == baseCuboidId) {
-                    baseCuboidRowCountInMappers.add(hll.getCountEstimate());
+                    if (cuboidId == baseCuboidId) {
+                        baseCuboidRowCountInMappers.add(hll.getCountEstimate());
+                    }
+
+                    if (cuboidHLLMap.get(cuboidId) != null) {
+                        cuboidHLLMap.get(cuboidId).merge(hll);
+                    } else {
+                        cuboidHLLMap.put(cuboidId, hll);
+                    }
+                }
+            } else {
+                int mapperCount = 0;
+                averageSamplingRatio = 0;
+                for (Text value : values) {
+                    averageSamplingRatio += Bytes.toDouble(value.getBytes());
+                    mapperCount++;
                 }
 
-                if (cuboidHLLMap.get(cuboidId) != null) {
-                    cuboidHLLMap.get(cuboidId).merge(hll);
-                } else {
-                    cuboidHLLMap.put(cuboidId, hll);
-                }
+                averageSamplingRatio = averageSamplingRatio / mapperCount;
+
             }
         }
 
@@ -160,8 +173,10 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
             msg = "Total cuboid number: \t" + allCuboids.size();
             writeLine(out, msg);
+            msg = "Avg samping ratio: \t" + averageSamplingRatio;
+            writeLine(out, msg);
 
-            long baseCuboidRow_max, baseCuboidRow_min, baseCuboidRow_avg;
+            writeLine(out, "The following statistics are collected based sampling data, not all data (only if samping ratio = 1).");
             for (int i = 0; i < baseCuboidRowCountInMappers.size(); i++) {
                 if (baseCuboidRowCountInMappers.get(i) > 0) {
                     msg = "Base Cuboid in Mapper " + i + " row count: \t " + baseCuboidRowCountInMappers.get(i);
@@ -208,7 +223,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         Collections.sort(allCuboids);
         try {
             for (long i : allCuboids) {
-                writer.append(new LongWritable(i), new LongWritable(rowCountInCuboids.get(i)));
+                writer.append(new LongWritable(i), new LongWritable((long) (rowCountInCuboids.get(i) / averageSamplingRatio)));
             }
         } finally {
             writer.close();

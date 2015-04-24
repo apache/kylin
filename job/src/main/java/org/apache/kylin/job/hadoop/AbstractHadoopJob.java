@@ -88,6 +88,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected static final Option OPTION_STATISTICS_ENABLED = OptionBuilder.withArgName("statisticsenabled").hasArg().isRequired(false).withDescription("Statistics enabled").create("statisticsenabled");
     protected static final Option OPTION_STATISTICS_OUTPUT = OptionBuilder.withArgName("statisticsoutput").hasArg().isRequired(false).withDescription("Statistics output").create("statisticsoutput");
+    protected static final Option OPTION_STATISTICS_SAMPLING_MAX = OptionBuilder.withArgName("statisticssamplingmax").hasArg().isRequired(false).withDescription("Statistics sampling max").create("statisticssamplingmax");
 
     protected String name;
     protected String description;

@@ -19,11 +19,14 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.RowConstants;
@@ -33,7 +36,10 @@ import org.apache.kylin.job.constant.BatchConstants;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author yangli9
@@ -49,8 +55,10 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private Integer[][] allCuboidsBitSet = null;
     private HyperLogLogPlusCounter[] allCuboidsHLL = null;
     private Long[] cuboidIds;
-    private BitSetIterator bitSetIterator = null;
     private List<String> rowArray;
+    private HashFunction hf = null;
+    private int rowCount = 0;
+    private int MAX_SAMPING_COUNT = 100000;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -60,6 +68,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         rowArray = new ArrayList<String>(schema.getFields().size());
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
+            MAX_SAMPING_COUNT = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_MAX, "100000"));
             cuboidScheduler = new CuboidScheduler(cubeDesc);
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
@@ -75,7 +84,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                 allCuboidsHLL[i] = new HyperLogLogPlusCounter(16);
             }
 
-            bitSetIterator = new BitSetIterator();
+            hf = Hashing.md5();
         }
     }
 
@@ -119,40 +128,22 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             handleErrorRecord(record, ex);
         }
 
-        if (collectStatistics) {
+        if (collectStatistics && rowCount < MAX_SAMPING_COUNT) {
             putRowKeyToHLL(rowArray);
         }
+
+        rowCount++;
     }
 
     private void putRowKeyToHLL(List<String> row) {
-        bitSetIterator.array = row;
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {
-            bitSetIterator.bitSet = allCuboidsBitSet[i];
-            bitSetIterator.currentPosition = 0;
+            Hasher hc = hf.newHasher();
+            for (int position = 0; position < allCuboidsBitSet[i].length; position++) {
+                hc.putString(row.get(allCuboidsBitSet[i][position]));
+                hc.putString(",");
+            }
 
-            allCuboidsHLL[i].add(StringUtils.join(bitSetIterator, ","));
-        }
-    }
-
-    class BitSetIterator implements Iterator<String> {
-
-        Integer[] bitSet = null;
-        List<String> array = null;
-        int currentPosition = 0;
-
-        @Override
-        public boolean hasNext() {
-            return currentPosition < bitSet.length;
-        }
-
-        @Override
-        public String next() {
-            return array.get(bitSet[currentPosition++]);
-        }
-
-        @Override
-        public void remove() {
-
+            allCuboidsHLL[i].add(hc.hash().asBytes());
         }
     }
 
@@ -171,6 +162,11 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                 context.write(outputKey, outputValue);
             }
 
+            double samplingRatio = rowCount < MAX_SAMPING_COUNT ? 1.0 : ((double) MAX_SAMPING_COUNT) / rowCount;
+            //output the total hll for this mapper;
+            outputKey.set(0 - baseCuboidId - 1);
+            outputValue.set(Bytes.toBytes(samplingRatio));
+            context.write(outputKey, outputValue);
         }
     }
 
