@@ -62,7 +62,7 @@ public class KafkaConfig extends RootPersistentEntity {
     private List<BrokerConfig> brokerConfigs;
 
     @JsonProperty("zookeeper")
-    private String zookeeper;
+    private List<String> zookeepers;
 
     @JsonProperty("topic")
     private String topic;
@@ -81,9 +81,6 @@ public class KafkaConfig extends RootPersistentEntity {
 
     @JsonProperty("parserName")
     private String parserName;
-
-    @JsonProperty("partition")
-    private int partition;
 
     public String getParserName() {
         return parserName;
@@ -116,14 +113,6 @@ public class KafkaConfig extends RootPersistentEntity {
 
     public void setBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
-    }
-
-    public String getZookeeper() {
-        return zookeeper;
-    }
-
-    public void setZookeeper(String zookeeper) {
-        this.zookeeper = zookeeper;
     }
 
     public String getTopic() {
@@ -164,14 +153,6 @@ public class KafkaConfig extends RootPersistentEntity {
         this.name = name;
     }
 
-    public int getPartition() {
-        return partition;
-    }
-
-    public void setPartition(int partition) {
-        this.partition = partition;
-    }
-
     @Override
     public KafkaConfig clone() {
         try {
@@ -179,7 +160,8 @@ public class KafkaConfig extends RootPersistentEntity {
             SERIALIZER.serialize(this, new DataOutputStream(baos));
             return SERIALIZER.deserialize(new DataInputStream(new ByteArrayInputStream(baos.toByteArray())));
         } catch (IOException e) {
-            return null;//in mem, should not happen
+            throw new RuntimeException(e);//in mem, should not happen
         }
     }
+
 }
