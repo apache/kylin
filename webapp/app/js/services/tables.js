@@ -14,15 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.factory('TableService', ['$resource', function ($resource, config) {
-    return $resource(Config.service.url + 'tables/:tableName/:action', {}, {
-        list: {method: 'GET', params: {}, cache: true, isArray: true},
-        get: {method: 'GET', params: {}, isArray: false},
-        getExd: {method: 'GET', params: {action: 'exd-map'}, isArray: false},
-        reload: {method: 'PUT', params: {action: 'reload'}, isArray: false},
-        loadHiveTable: {method: 'POST', params: {}, isArray: false},
-        genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false}
-    });
+  return $resource(Config.service.url + 'tables/:tableName/:action', {}, {
+    list: {method: 'GET', params: {}, cache: true, isArray: true},
+    get: {method: 'GET', params: {}, isArray: false},
+    getExd: {method: 'GET', params: {action: 'exd-map'}, isArray: false},
+    reload: {method: 'PUT', params: {action: 'reload'}, isArray: false},
+    loadHiveTable: {method: 'POST', params: {}, isArray: false},
+    genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false}
+  });
 }]);

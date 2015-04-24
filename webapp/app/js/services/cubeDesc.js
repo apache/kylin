@@ -14,10 +14,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.factory('CubeDescService', ['$resource', function ($resource, config) {
-    return $resource(Config.service.url + 'cube_desc/:cube_name/:propName/:propValue/:action', {}, {
-        get: {method: 'GET', params: {}, isArray: true}
-    });
+  return $resource(Config.service.url + 'cube_desc/:cube_name/:propName/:propValue/:action', {}, {
+    get: {method: 'GET', params: {}, isArray: true}
+  });
 }])

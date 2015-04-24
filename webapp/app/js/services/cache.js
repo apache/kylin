@@ -14,10 +14,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 KylinApp.factory('CacheService', ['$resource', function ($resource, config) {
-    return $resource(Config.service.url + 'cache/:type/:name/:action', {}, {
-        clean: {method: 'PUT', params: {type:'all', name:'all', action: 'update'}, isArray: false}
-    });
+  return $resource(Config.service.url + 'cache/:type/:name/:action', {}, {
+    clean: {method: 'PUT', params: {type: 'all', name: 'all', action: 'update'}, isArray: false}
+  });
 }]);
