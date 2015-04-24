@@ -849,67 +849,67 @@ public final class IIProtos {
     // @@protoc_insertion_point(class_scope:IIRequest)
   }
 
-  public interface IIResponseOrBuilder
+  public interface IIResponseInternalOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // repeated .IIResponse.IIRow rows = 1;
+    // repeated .IIResponseInternal.IIRow rows = 1;
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
-    java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> 
+    java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow> 
         getRowsList();
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
-    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow getRows(int index);
+    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow getRows(int index);
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
     int getRowsCount();
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
-    java.util.List<? extends org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder> 
+    java.util.List<? extends org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder> 
         getRowsOrBuilderList();
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
-    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder getRowsOrBuilder(
+    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder getRowsOrBuilder(
         int index);
 
-    // required .IIResponse.Stats stats = 2;
+    // required .IIResponseInternal.Stats stats = 2;
     /**
-     * <code>required .IIResponse.Stats stats = 2;</code>
+     * <code>required .IIResponseInternal.Stats stats = 2;</code>
      */
     boolean hasStats();
     /**
-     * <code>required .IIResponse.Stats stats = 2;</code>
+     * <code>required .IIResponseInternal.Stats stats = 2;</code>
      */
-    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats getStats();
+    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats getStats();
     /**
-     * <code>required .IIResponse.Stats stats = 2;</code>
+     * <code>required .IIResponseInternal.Stats stats = 2;</code>
      */
-    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder getStatsOrBuilder();
+    org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.StatsOrBuilder getStatsOrBuilder();
   }
   /**
-   * Protobuf type {@code IIResponse}
+   * Protobuf type {@code IIResponseInternal}
    */
-  public static final class IIResponse extends
+  public static final class IIResponseInternal extends
       com.google.protobuf.GeneratedMessage
-      implements IIResponseOrBuilder {
-    // Use IIResponse.newBuilder() to construct.
-    private IIResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      implements IIResponseInternalOrBuilder {
+    // Use IIResponseInternal.newBuilder() to construct.
+    private IIResponseInternal(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
       this.unknownFields = builder.getUnknownFields();
     }
-    private IIResponse(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+    private IIResponseInternal(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
 
-    private static final IIResponse defaultInstance;
-    public static IIResponse getDefaultInstance() {
+    private static final IIResponseInternal defaultInstance;
+    public static IIResponseInternal getDefaultInstance() {
       return defaultInstance;
     }
 
-    public IIResponse getDefaultInstanceForType() {
+    public IIResponseInternal getDefaultInstanceForType() {
       return defaultInstance;
     }
 
@@ -919,7 +919,7 @@ public final class IIProtos {
         getUnknownFields() {
       return this.unknownFields;
     }
-    private IIResponse(
+    private IIResponseInternal(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -944,18 +944,18 @@ public final class IIProtos {
             }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                rows_ = new java.util.ArrayList<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow>();
+                rows_ = new java.util.ArrayList<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              rows_.add(input.readMessage(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.PARSER, extensionRegistry));
+              rows_.add(input.readMessage(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.PARSER, extensionRegistry));
               break;
             }
             case 18: {
-              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder subBuilder = null;
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = stats_.toBuilder();
               }
-              stats_ = input.readMessage(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.PARSER, extensionRegistry);
+              stats_ = input.readMessage(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(stats_);
                 stats_ = subBuilder.buildPartial();
@@ -980,28 +980,28 @@ public final class IIProtos {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_descriptor;
+      return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_fieldAccessorTable
+      return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Builder.class);
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<IIResponse> PARSER =
-        new com.google.protobuf.AbstractParser<IIResponse>() {
-      public IIResponse parsePartialFrom(
+    public static com.google.protobuf.Parser<IIResponseInternal> PARSER =
+        new com.google.protobuf.AbstractParser<IIResponseInternal>() {
+      public IIResponseInternal parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IIResponse(input, extensionRegistry);
+        return new IIResponseInternal(input, extensionRegistry);
       }
     };
 
     @java.lang.Override
-    public com.google.protobuf.Parser<IIResponse> getParserForType() {
+    public com.google.protobuf.Parser<IIResponseInternal> getParserForType() {
       return PARSER;
     }
 
@@ -1029,7 +1029,7 @@ public final class IIProtos {
       com.google.protobuf.ByteString getMeasures();
     }
     /**
-     * Protobuf type {@code IIResponse.IIRow}
+     * Protobuf type {@code IIResponseInternal.IIRow}
      */
     public static final class IIRow extends
         com.google.protobuf.GeneratedMessage
@@ -1103,14 +1103,14 @@ public final class IIProtos {
       }
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_IIRow_descriptor;
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_IIRow_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_IIRow_fieldAccessorTable
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_IIRow_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder.class);
+                org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder.class);
       }
 
       public static com.google.protobuf.Parser<IIRow> PARSER =
@@ -1221,10 +1221,10 @@ public final class IIProtos {
         if (obj == this) {
          return true;
         }
-        if (!(obj instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow)) {
+        if (!(obj instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow)) {
           return super.equals(obj);
         }
-        org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow other = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow) obj;
+        org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow other = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow) obj;
 
         boolean result = true;
         result = result && (hasColumns() == other.hasColumns());
@@ -1263,53 +1263,53 @@ public final class IIProtos {
         return hash;
       }
 
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseFrom(byte[] data)
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseFrom(java.io.InputStream input)
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseFrom(input, extensionRegistry);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseDelimitedFrom(java.io.InputStream input)
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseDelimitedFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -1318,7 +1318,7 @@ public final class IIProtos {
 
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow prototype) {
+      public static Builder newBuilder(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
@@ -1330,24 +1330,24 @@ public final class IIProtos {
         return builder;
       }
       /**
-       * Protobuf type {@code IIResponse.IIRow}
+       * Protobuf type {@code IIResponseInternal.IIRow}
        */
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder {
+         implements org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_IIRow_descriptor;
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_IIRow_descriptor;
         }
 
         protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_IIRow_fieldAccessorTable
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_IIRow_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder.class);
+                  org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder.class);
         }
 
-        // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.newBuilder()
+        // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
@@ -1380,23 +1380,23 @@ public final class IIProtos {
 
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_IIRow_descriptor;
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_IIRow_descriptor;
         }
 
-        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow getDefaultInstanceForType() {
-          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.getDefaultInstance();
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow getDefaultInstanceForType() {
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.getDefaultInstance();
         }
 
-        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow build() {
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow result = buildPartial();
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow build() {
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow result = buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return result;
         }
 
-        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow buildPartial() {
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow result = new org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow(this);
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow buildPartial() {
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow result = new org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1413,16 +1413,16 @@ public final class IIProtos {
         }
 
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow) {
-            return mergeFrom((org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow)other);
+          if (other instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow) {
+            return mergeFrom((org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow other) {
-          if (other == org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.getDefaultInstance()) return this;
+        public Builder mergeFrom(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow other) {
+          if (other == org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.getDefaultInstance()) return this;
           if (other.hasColumns()) {
             setColumns(other.getColumns());
           }
@@ -1445,11 +1445,11 @@ public final class IIProtos {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow parsedMessage = null;
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow parsedMessage = null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow) e.getUnfinishedMessage();
+            parsedMessage = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow) e.getUnfinishedMessage();
             throw e;
           } finally {
             if (parsedMessage != null) {
@@ -1532,7 +1532,7 @@ public final class IIProtos {
           return this;
         }
 
-        // @@protoc_insertion_point(builder_scope:IIResponse.IIRow)
+        // @@protoc_insertion_point(builder_scope:IIResponseInternal.IIRow)
       }
 
       static {
@@ -1540,7 +1540,7 @@ public final class IIProtos {
         defaultInstance.initFields();
       }
 
-      // @@protoc_insertion_point(class_scope:IIResponse.IIRow)
+      // @@protoc_insertion_point(class_scope:IIResponseInternal.IIRow)
     }
 
     public interface StatsOrBuilder
@@ -1597,7 +1597,7 @@ public final class IIProtos {
       int getScannedSlices();
     }
     /**
-     * Protobuf type {@code IIResponse.Stats}
+     * Protobuf type {@code IIResponseInternal.Stats}
      *
      * <pre>
      *all entries in this struct be optional to conveniently add more entries in the future
@@ -1690,14 +1690,14 @@ public final class IIProtos {
       }
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_descriptor;
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_Stats_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_fieldAccessorTable
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_Stats_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder.class);
+                org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.Builder.class);
       }
 
       public static com.google.protobuf.Parser<Stats> PARSER =
@@ -1876,10 +1876,10 @@ public final class IIProtos {
         if (obj == this) {
          return true;
         }
-        if (!(obj instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats)) {
+        if (!(obj instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats)) {
           return super.equals(obj);
         }
-        org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats other = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats) obj;
+        org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats other = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats) obj;
 
         boolean result = true;
         result = result && (hasMyShard() == other.hasMyShard());
@@ -1945,53 +1945,53 @@ public final class IIProtos {
         return hash;
       }
 
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(byte[] data)
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseFrom(
           byte[] data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(java.io.InputStream input)
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseFrom(input, extensionRegistry);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseDelimitedFrom(java.io.InputStream input)
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseDelimitedFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseDelimitedFrom(
           java.io.InputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return PARSER.parseDelimitedFrom(input, extensionRegistry);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseFrom(
           com.google.protobuf.CodedInputStream input)
           throws java.io.IOException {
         return PARSER.parseFrom(input);
       }
-      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parseFrom(
+      public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -2000,7 +2000,7 @@ public final class IIProtos {
 
       public static Builder newBuilder() { return Builder.create(); }
       public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats prototype) {
+      public static Builder newBuilder(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats prototype) {
         return newBuilder().mergeFrom(prototype);
       }
       public Builder toBuilder() { return newBuilder(this); }
@@ -2012,7 +2012,7 @@ public final class IIProtos {
         return builder;
       }
       /**
-       * Protobuf type {@code IIResponse.Stats}
+       * Protobuf type {@code IIResponseInternal.Stats}
        *
        * <pre>
        *all entries in this struct be optional to conveniently add more entries in the future
@@ -2020,20 +2020,20 @@ public final class IIProtos {
        */
       public static final class Builder extends
           com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder {
+         implements org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.StatsOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
-          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_descriptor;
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_Stats_descriptor;
         }
 
         protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_fieldAccessorTable
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_Stats_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder.class);
+                  org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.Builder.class);
         }
 
-        // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.newBuilder()
+        // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
@@ -2072,23 +2072,23 @@ public final class IIProtos {
 
         public com.google.protobuf.Descriptors.Descriptor
             getDescriptorForType() {
-          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_Stats_descriptor;
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_Stats_descriptor;
         }
 
-        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats getDefaultInstanceForType() {
-          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats getDefaultInstanceForType() {
+          return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.getDefaultInstance();
         }
 
-        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats build() {
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats result = buildPartial();
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats build() {
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats result = buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
           return result;
         }
 
-        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats buildPartial() {
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats result = new org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats(this);
+        public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats buildPartial() {
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats result = new org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2117,16 +2117,16 @@ public final class IIProtos {
         }
 
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats) {
-            return mergeFrom((org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats)other);
+          if (other instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats) {
+            return mergeFrom((org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats)other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats other) {
-          if (other == org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance()) return this;
+        public Builder mergeFrom(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats other) {
+          if (other == org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.getDefaultInstance()) return this;
           if (other.hasMyShard()) {
             setMyShard(other.getMyShard());
           }
@@ -2154,11 +2154,11 @@ public final class IIProtos {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats parsedMessage = null;
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats parsedMessage = null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats) e.getUnfinishedMessage();
+            parsedMessage = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats) e.getUnfinishedMessage();
             throw e;
           } finally {
             if (parsedMessage != null) {
@@ -2334,7 +2334,7 @@ public final class IIProtos {
           return this;
         }
 
-        // @@protoc_insertion_point(builder_scope:IIResponse.Stats)
+        // @@protoc_insertion_point(builder_scope:IIResponseInternal.Stats)
       }
 
       static {
@@ -2342,71 +2342,71 @@ public final class IIProtos {
         defaultInstance.initFields();
       }
 
-      // @@protoc_insertion_point(class_scope:IIResponse.Stats)
+      // @@protoc_insertion_point(class_scope:IIResponseInternal.Stats)
     }
 
     private int bitField0_;
-    // repeated .IIResponse.IIRow rows = 1;
+    // repeated .IIResponseInternal.IIRow rows = 1;
     public static final int ROWS_FIELD_NUMBER = 1;
-    private java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> rows_;
+    private java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow> rows_;
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
-    public java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> getRowsList() {
+    public java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow> getRowsList() {
       return rows_;
     }
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
-    public java.util.List<? extends org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder> 
+    public java.util.List<? extends org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder> 
         getRowsOrBuilderList() {
       return rows_;
     }
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
     public int getRowsCount() {
       return rows_.size();
     }
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
-    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow getRows(int index) {
+    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow getRows(int index) {
       return rows_.get(index);
     }
     /**
-     * <code>repeated .IIResponse.IIRow rows = 1;</code>
+     * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
      */
-    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder getRowsOrBuilder(
+    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder getRowsOrBuilder(
         int index) {
       return rows_.get(index);
     }
 
-    // required .IIResponse.Stats stats = 2;
+    // required .IIResponseInternal.Stats stats = 2;
     public static final int STATS_FIELD_NUMBER = 2;
-    private org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats stats_;
+    private org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats stats_;
     /**
-     * <code>required .IIResponse.Stats stats = 2;</code>
+     * <code>required .IIResponseInternal.Stats stats = 2;</code>
      */
     public boolean hasStats() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required .IIResponse.Stats stats = 2;</code>
+     * <code>required .IIResponseInternal.Stats stats = 2;</code>
      */
-    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats getStats() {
+    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats getStats() {
       return stats_;
     }
     /**
-     * <code>required .IIResponse.Stats stats = 2;</code>
+     * <code>required .IIResponseInternal.Stats stats = 2;</code>
      */
-    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder getStatsOrBuilder() {
+    public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.StatsOrBuilder getStatsOrBuilder() {
       return stats_;
     }
 
     private void initFields() {
       rows_ = java.util.Collections.emptyList();
-      stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
+      stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2470,10 +2470,10 @@ public final class IIProtos {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse)) {
+      if (!(obj instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal)) {
         return super.equals(obj);
       }
-      org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse other = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse) obj;
+      org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal other = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal) obj;
 
       boolean result = true;
       result = result && getRowsList()
@@ -2503,6 +2503,829 @@ public final class IIProtos {
       if (hasStats()) {
         hash = (37 * hash) + STATS_FIELD_NUMBER;
         hash = (53 * hash) + getStats().hashCode();
+      }
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code IIResponseInternal}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternalOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Builder.class);
+      }
+
+      // Construct using org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getRowsFieldBuilder();
+          getStatsFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (rowsBuilder_ == null) {
+          rows_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          rowsBuilder_.clear();
+        }
+        if (statsBuilder_ == null) {
+          stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.getDefaultInstance();
+        } else {
+          statsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponseInternal_descriptor;
+      }
+
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal getDefaultInstanceForType() {
+        return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.getDefaultInstance();
+      }
+
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal build() {
+        org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal buildPartial() {
+        org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal result = new org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (rowsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            rows_ = java.util.Collections.unmodifiableList(rows_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.rows_ = rows_;
+        } else {
+          result.rows_ = rowsBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (statsBuilder_ == null) {
+          result.stats_ = stats_;
+        } else {
+          result.stats_ = statsBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal) {
+          return mergeFrom((org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal other) {
+        if (other == org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.getDefaultInstance()) return this;
+        if (rowsBuilder_ == null) {
+          if (!other.rows_.isEmpty()) {
+            if (rows_.isEmpty()) {
+              rows_ = other.rows_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureRowsIsMutable();
+              rows_.addAll(other.rows_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.rows_.isEmpty()) {
+            if (rowsBuilder_.isEmpty()) {
+              rowsBuilder_.dispose();
+              rowsBuilder_ = null;
+              rows_ = other.rows_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              rowsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getRowsFieldBuilder() : null;
+            } else {
+              rowsBuilder_.addAllMessages(other.rows_);
+            }
+          }
+        }
+        if (other.hasStats()) {
+          mergeStats(other.getStats());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasStats()) {
+          
+          return false;
+        }
+        for (int i = 0; i < getRowsCount(); i++) {
+          if (!getRows(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .IIResponseInternal.IIRow rows = 1;
+      private java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow> rows_ =
+        java.util.Collections.emptyList();
+      private void ensureRowsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          rows_ = new java.util.ArrayList<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow>(rows_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder> rowsBuilder_;
+
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow> getRowsList() {
+        if (rowsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(rows_);
+        } else {
+          return rowsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public int getRowsCount() {
+        if (rowsBuilder_ == null) {
+          return rows_.size();
+        } else {
+          return rowsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow getRows(int index) {
+        if (rowsBuilder_ == null) {
+          return rows_.get(index);
+        } else {
+          return rowsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder setRows(
+          int index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow value) {
+        if (rowsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRowsIsMutable();
+          rows_.set(index, value);
+          onChanged();
+        } else {
+          rowsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder setRows(
+          int index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder builderForValue) {
+        if (rowsBuilder_ == null) {
+          ensureRowsIsMutable();
+          rows_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          rowsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder addRows(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow value) {
+        if (rowsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRowsIsMutable();
+          rows_.add(value);
+          onChanged();
+        } else {
+          rowsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder addRows(
+          int index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow value) {
+        if (rowsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRowsIsMutable();
+          rows_.add(index, value);
+          onChanged();
+        } else {
+          rowsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder addRows(
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder builderForValue) {
+        if (rowsBuilder_ == null) {
+          ensureRowsIsMutable();
+          rows_.add(builderForValue.build());
+          onChanged();
+        } else {
+          rowsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder addRows(
+          int index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder builderForValue) {
+        if (rowsBuilder_ == null) {
+          ensureRowsIsMutable();
+          rows_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          rowsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder addAllRows(
+          java.lang.Iterable<? extends org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow> values) {
+        if (rowsBuilder_ == null) {
+          ensureRowsIsMutable();
+          super.addAll(values, rows_);
+          onChanged();
+        } else {
+          rowsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder clearRows() {
+        if (rowsBuilder_ == null) {
+          rows_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          rowsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public Builder removeRows(int index) {
+        if (rowsBuilder_ == null) {
+          ensureRowsIsMutable();
+          rows_.remove(index);
+          onChanged();
+        } else {
+          rowsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder getRowsBuilder(
+          int index) {
+        return getRowsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder getRowsOrBuilder(
+          int index) {
+        if (rowsBuilder_ == null) {
+          return rows_.get(index);  } else {
+          return rowsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public java.util.List<? extends org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder> 
+           getRowsOrBuilderList() {
+        if (rowsBuilder_ != null) {
+          return rowsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(rows_);
+        }
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder addRowsBuilder() {
+        return getRowsFieldBuilder().addBuilder(
+            org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder addRowsBuilder(
+          int index) {
+        return getRowsFieldBuilder().addBuilder(
+            index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .IIResponseInternal.IIRow rows = 1;</code>
+       */
+      public java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder> 
+           getRowsBuilderList() {
+        return getRowsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder> 
+          getRowsFieldBuilder() {
+        if (rowsBuilder_ == null) {
+          rowsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRowOrBuilder>(
+                  rows_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          rows_ = null;
+        }
+        return rowsBuilder_;
+      }
+
+      // required .IIResponseInternal.Stats stats = 2;
+      private org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.StatsOrBuilder> statsBuilder_;
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      public boolean hasStats() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats getStats() {
+        if (statsBuilder_ == null) {
+          return stats_;
+        } else {
+          return statsBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      public Builder setStats(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats value) {
+        if (statsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          stats_ = value;
+          onChanged();
+        } else {
+          statsBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      public Builder setStats(
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.Builder builderForValue) {
+        if (statsBuilder_ == null) {
+          stats_ = builderForValue.build();
+          onChanged();
+        } else {
+          statsBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      public Builder mergeStats(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats value) {
+        if (statsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              stats_ != org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.getDefaultInstance()) {
+            stats_ =
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.newBuilder(stats_).mergeFrom(value).buildPartial();
+          } else {
+            stats_ = value;
+          }
+          onChanged();
+        } else {
+          statsBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      public Builder clearStats() {
+        if (statsBuilder_ == null) {
+          stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.getDefaultInstance();
+          onChanged();
+        } else {
+          statsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.Builder getStatsBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getStatsFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.StatsOrBuilder getStatsOrBuilder() {
+        if (statsBuilder_ != null) {
+          return statsBuilder_.getMessageOrBuilder();
+        } else {
+          return stats_;
+        }
+      }
+      /**
+       * <code>required .IIResponseInternal.Stats stats = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.StatsOrBuilder> 
+          getStatsFieldBuilder() {
+        if (statsBuilder_ == null) {
+          statsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.StatsOrBuilder>(
+                  stats_,
+                  getParentForChildren(),
+                  isClean());
+          stats_ = null;
+        }
+        return statsBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:IIResponseInternal)
+    }
+
+    static {
+      defaultInstance = new IIResponseInternal(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:IIResponseInternal)
+  }
+
+  public interface IIResponseOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required bytes blob = 1;
+    /**
+     * <code>required bytes blob = 1;</code>
+     */
+    boolean hasBlob();
+    /**
+     * <code>required bytes blob = 1;</code>
+     */
+    com.google.protobuf.ByteString getBlob();
+  }
+  /**
+   * Protobuf type {@code IIResponse}
+   */
+  public static final class IIResponse extends
+      com.google.protobuf.GeneratedMessage
+      implements IIResponseOrBuilder {
+    // Use IIResponse.newBuilder() to construct.
+    private IIResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private IIResponse(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final IIResponse defaultInstance;
+    public static IIResponse getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public IIResponse getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private IIResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              blob_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.internal_static_IIResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.class, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<IIResponse> PARSER =
+        new com.google.protobuf.AbstractParser<IIResponse>() {
+      public IIResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new IIResponse(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<IIResponse> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // required bytes blob = 1;
+    public static final int BLOB_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString blob_;
+    /**
+     * <code>required bytes blob = 1;</code>
+     */
+    public boolean hasBlob() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes blob = 1;</code>
+     */
+    public com.google.protobuf.ByteString getBlob() {
+      return blob_;
+    }
+
+    private void initFields() {
+      blob_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasBlob()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, blob_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, blob_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse)) {
+        return super.equals(obj);
+      }
+      org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse other = (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse) obj;
+
+      boolean result = true;
+      result = result && (hasBlob() == other.hasBlob());
+      if (hasBlob()) {
+        result = result && getBlob()
+            .equals(other.getBlob());
+      }
+      result = result &&
+          getUnknownFields().equals(other.getUnknownFields());
+      return result;
+    }
+
+    private int memoizedHashCode = 0;
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      if (hasBlob()) {
+        hash = (37 * hash) + BLOB_FIELD_NUMBER;
+        hash = (53 * hash) + getBlob().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -2605,8 +3428,6 @@ public final class IIProtos {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          getRowsFieldBuilder();
-          getStatsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -2615,18 +3436,8 @@ public final class IIProtos {
 
       public Builder clear() {
         super.clear();
-        if (rowsBuilder_ == null) {
-          rows_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-        } else {
-          rowsBuilder_.clear();
-        }
-        if (statsBuilder_ == null) {
-          stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
-        } else {
-          statsBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000002);
+        blob_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
 
@@ -2655,23 +3466,10 @@ public final class IIProtos {
         org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse result = new org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (rowsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
-            rows_ = java.util.Collections.unmodifiableList(rows_);
-            bitField0_ = (bitField0_ & ~0x00000001);
-          }
-          result.rows_ = rows_;
-        } else {
-          result.rows_ = rowsBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        if (statsBuilder_ == null) {
-          result.stats_ = stats_;
-        } else {
-          result.stats_ = statsBuilder_.build();
-        }
+        result.blob_ = blob_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2688,49 +3486,17 @@ public final class IIProtos {
 
       public Builder mergeFrom(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse other) {
         if (other == org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.getDefaultInstance()) return this;
-        if (rowsBuilder_ == null) {
-          if (!other.rows_.isEmpty()) {
-            if (rows_.isEmpty()) {
-              rows_ = other.rows_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-            } else {
-              ensureRowsIsMutable();
-              rows_.addAll(other.rows_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.rows_.isEmpty()) {
-            if (rowsBuilder_.isEmpty()) {
-              rowsBuilder_.dispose();
-              rowsBuilder_ = null;
-              rows_ = other.rows_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-              rowsBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                   getRowsFieldBuilder() : null;
-            } else {
-              rowsBuilder_.addAllMessages(other.rows_);
-            }
-          }
-        }
-        if (other.hasStats()) {
-          mergeStats(other.getStats());
+        if (other.hasBlob()) {
+          setBlob(other.getBlob());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
-        if (!hasStats()) {
+        if (!hasBlob()) {
           
           return false;
-        }
-        for (int i = 0; i < getRowsCount(); i++) {
-          if (!getRows(i).isInitialized()) {
-            
-            return false;
-          }
         }
         return true;
       }
@@ -2754,361 +3520,40 @@ public final class IIProtos {
       }
       private int bitField0_;
 
-      // repeated .IIResponse.IIRow rows = 1;
-      private java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> rows_ =
-        java.util.Collections.emptyList();
-      private void ensureRowsIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          rows_ = new java.util.ArrayList<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow>(rows_);
-          bitField0_ |= 0x00000001;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder> rowsBuilder_;
-
+      // required bytes blob = 1;
+      private com.google.protobuf.ByteString blob_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
+       * <code>required bytes blob = 1;</code>
        */
-      public java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> getRowsList() {
-        if (rowsBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(rows_);
-        } else {
-          return rowsBuilder_.getMessageList();
-        }
+      public boolean hasBlob() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
+       * <code>required bytes blob = 1;</code>
        */
-      public int getRowsCount() {
-        if (rowsBuilder_ == null) {
-          return rows_.size();
-        } else {
-          return rowsBuilder_.getCount();
-        }
+      public com.google.protobuf.ByteString getBlob() {
+        return blob_;
       }
       /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
+       * <code>required bytes blob = 1;</code>
        */
-      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow getRows(int index) {
-        if (rowsBuilder_ == null) {
-          return rows_.get(index);
-        } else {
-          return rowsBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder setRows(
-          int index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow value) {
-        if (rowsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureRowsIsMutable();
-          rows_.set(index, value);
-          onChanged();
-        } else {
-          rowsBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder setRows(
-          int index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder builderForValue) {
-        if (rowsBuilder_ == null) {
-          ensureRowsIsMutable();
-          rows_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          rowsBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder addRows(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow value) {
-        if (rowsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureRowsIsMutable();
-          rows_.add(value);
-          onChanged();
-        } else {
-          rowsBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder addRows(
-          int index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow value) {
-        if (rowsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureRowsIsMutable();
-          rows_.add(index, value);
-          onChanged();
-        } else {
-          rowsBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder addRows(
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder builderForValue) {
-        if (rowsBuilder_ == null) {
-          ensureRowsIsMutable();
-          rows_.add(builderForValue.build());
-          onChanged();
-        } else {
-          rowsBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder addRows(
-          int index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder builderForValue) {
-        if (rowsBuilder_ == null) {
-          ensureRowsIsMutable();
-          rows_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          rowsBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder addAllRows(
-          java.lang.Iterable<? extends org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow> values) {
-        if (rowsBuilder_ == null) {
-          ensureRowsIsMutable();
-          super.addAll(values, rows_);
-          onChanged();
-        } else {
-          rowsBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder clearRows() {
-        if (rowsBuilder_ == null) {
-          rows_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-          onChanged();
-        } else {
-          rowsBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public Builder removeRows(int index) {
-        if (rowsBuilder_ == null) {
-          ensureRowsIsMutable();
-          rows_.remove(index);
-          onChanged();
-        } else {
-          rowsBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder getRowsBuilder(
-          int index) {
-        return getRowsFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder getRowsOrBuilder(
-          int index) {
-        if (rowsBuilder_ == null) {
-          return rows_.get(index);  } else {
-          return rowsBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public java.util.List<? extends org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder> 
-           getRowsOrBuilderList() {
-        if (rowsBuilder_ != null) {
-          return rowsBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(rows_);
-        }
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder addRowsBuilder() {
-        return getRowsFieldBuilder().addBuilder(
-            org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder addRowsBuilder(
-          int index) {
-        return getRowsFieldBuilder().addBuilder(
-            index, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .IIResponse.IIRow rows = 1;</code>
-       */
-      public java.util.List<org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder> 
-           getRowsBuilderList() {
-        return getRowsFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder> 
-          getRowsFieldBuilder() {
-        if (rowsBuilder_ == null) {
-          rowsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRowOrBuilder>(
-                  rows_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
-                  getParentForChildren(),
-                  isClean());
-          rows_ = null;
-        }
-        return rowsBuilder_;
-      }
-
-      // required .IIResponse.Stats stats = 2;
-      private org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
-      private com.google.protobuf.SingleFieldBuilder<
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder> statsBuilder_;
-      /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
-       */
-      public boolean hasStats() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
-       */
-      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats getStats() {
-        if (statsBuilder_ == null) {
-          return stats_;
-        } else {
-          return statsBuilder_.getMessage();
-        }
-      }
-      /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
-       */
-      public Builder setStats(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats value) {
-        if (statsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          stats_ = value;
-          onChanged();
-        } else {
-          statsBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
-       */
-      public Builder setStats(
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder builderForValue) {
-        if (statsBuilder_ == null) {
-          stats_ = builderForValue.build();
-          onChanged();
-        } else {
-          statsBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
-       */
-      public Builder mergeStats(org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats value) {
-        if (statsBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) == 0x00000002) &&
-              stats_ != org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance()) {
-            stats_ =
-              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.newBuilder(stats_).mergeFrom(value).buildPartial();
-          } else {
-            stats_ = value;
-          }
-          onChanged();
-        } else {
-          statsBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
-       */
-      public Builder clearStats() {
-        if (statsBuilder_ == null) {
-          stats_ = org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.getDefaultInstance();
-          onChanged();
-        } else {
-          statsBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-      /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
-       */
-      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder getStatsBuilder() {
-        bitField0_ |= 0x00000002;
+      public Builder setBlob(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        blob_ = value;
         onChanged();
-        return getStatsFieldBuilder().getBuilder();
+        return this;
       }
       /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
+       * <code>required bytes blob = 1;</code>
        */
-      public org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder getStatsOrBuilder() {
-        if (statsBuilder_ != null) {
-          return statsBuilder_.getMessageOrBuilder();
-        } else {
-          return stats_;
-        }
-      }
-      /**
-       * <code>required .IIResponse.Stats stats = 2;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilder<
-          org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder> 
-          getStatsFieldBuilder() {
-        if (statsBuilder_ == null) {
-          statsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.Stats.Builder, org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.StatsOrBuilder>(
-                  stats_,
-                  getParentForChildren(),
-                  isClean());
-          stats_ = null;
-        }
-        return statsBuilder_;
+      public Builder clearBlob() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        blob_ = getDefaultInstance().getBlob();
+        onChanged();
+        return this;
       }
 
       // @@protoc_insertion_point(builder_scope:IIResponse)
@@ -3360,20 +3805,25 @@ public final class IIProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_IIRequest_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_IIResponseInternal_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_IIResponseInternal_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_IIResponseInternal_IIRow_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_IIResponseInternal_IIRow_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_IIResponseInternal_Stats_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_IIResponseInternal_Stats_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_IIResponse_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_IIResponse_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_IIResponse_IIRow_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_IIResponse_IIRow_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_IIResponse_Stats_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_IIResponse_Stats_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -3387,17 +3837,18 @@ public final class IIProtos {
       "/storage/hbase/coprocessor/endpoint/prot" +
       "obuf/II.proto\"a\n\tIIRequest\022\014\n\004type\030\001 \002(\014" +
       "\022\016\n\006filter\030\002 \002(\014\022\021\n\tprojector\030\003 \002(\014\022\022\n\na" +
-      "ggregator\030\004 \002(\014\022\017\n\007tsRange\030\005 \001(\014\"\366\001\n\nIIR" +
-      "esponse\022\037\n\004rows\030\001 \003(\0132\021.IIResponse.IIRow" +
-      "\022 \n\005stats\030\002 \002(\0132\021.IIResponse.Stats\032*\n\005II" +
-      "Row\022\017\n\007columns\030\001 \002(\014\022\020\n\010measures\030\002 \001(\014\032y" +
-      "\n\005Stats\022\017\n\007myShard\030\001 \001(\005\022\026\n\016latestDataTi" +
-      "me\030\002 \001(\003\022\030\n\020serviceStartTime\030\003 \001(\003\022\026\n\016se",
-      "rviceEndTime\030\004 \001(\003\022\025\n\rscannedSlices\030\005 \001(" +
-      "\00521\n\013RowsService\022\"\n\007getRows\022\n.IIRequest\032" +
-      "\013.IIResponseBQ\n=org.apache.kylin.storage" +
-      ".hbase.coprocessor.endpoint.generatedB\010I" +
-      "IProtosH\001\210\001\001\240\001\001"
+      "ggregator\030\004 \002(\014\022\017\n\007tsRange\030\005 \001(\014\"\216\002\n\022IIR" +
+      "esponseInternal\022\'\n\004rows\030\001 \003(\0132\031.IIRespon" +
+      "seInternal.IIRow\022(\n\005stats\030\002 \002(\0132\031.IIResp" +
+      "onseInternal.Stats\032*\n\005IIRow\022\017\n\007columns\030\001" +
+      " \002(\014\022\020\n\010measures\030\002 \001(\014\032y\n\005Stats\022\017\n\007mySha" +
+      "rd\030\001 \001(\005\022\026\n\016latestDataTime\030\002 \001(\003\022\030\n\020serv",
+      "iceStartTime\030\003 \001(\003\022\026\n\016serviceEndTime\030\004 \001" +
+      "(\003\022\025\n\rscannedSlices\030\005 \001(\005\"\032\n\nIIResponse\022" +
+      "\014\n\004blob\030\001 \002(\01421\n\013RowsService\022\"\n\007getRows\022" +
+      "\n.IIRequest\032\013.IIResponseBQ\n=org.apache.k" +
+      "ylin.storage.hbase.coprocessor.endpoint." +
+      "generatedB\010IIProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3410,24 +3861,30 @@ public final class IIProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_IIRequest_descriptor,
               new java.lang.String[] { "Type", "Filter", "Projector", "Aggregator", "TsRange", });
-          internal_static_IIResponse_descriptor =
+          internal_static_IIResponseInternal_descriptor =
             getDescriptor().getMessageTypes().get(1);
+          internal_static_IIResponseInternal_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_IIResponseInternal_descriptor,
+              new java.lang.String[] { "Rows", "Stats", });
+          internal_static_IIResponseInternal_IIRow_descriptor =
+            internal_static_IIResponseInternal_descriptor.getNestedTypes().get(0);
+          internal_static_IIResponseInternal_IIRow_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_IIResponseInternal_IIRow_descriptor,
+              new java.lang.String[] { "Columns", "Measures", });
+          internal_static_IIResponseInternal_Stats_descriptor =
+            internal_static_IIResponseInternal_descriptor.getNestedTypes().get(1);
+          internal_static_IIResponseInternal_Stats_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_IIResponseInternal_Stats_descriptor,
+              new java.lang.String[] { "MyShard", "LatestDataTime", "ServiceStartTime", "ServiceEndTime", "ScannedSlices", });
+          internal_static_IIResponse_descriptor =
+            getDescriptor().getMessageTypes().get(2);
           internal_static_IIResponse_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_IIResponse_descriptor,
-              new java.lang.String[] { "Rows", "Stats", });
-          internal_static_IIResponse_IIRow_descriptor =
-            internal_static_IIResponse_descriptor.getNestedTypes().get(0);
-          internal_static_IIResponse_IIRow_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_IIResponse_IIRow_descriptor,
-              new java.lang.String[] { "Columns", "Measures", });
-          internal_static_IIResponse_Stats_descriptor =
-            internal_static_IIResponse_descriptor.getNestedTypes().get(1);
-          internal_static_IIResponse_Stats_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_IIResponse_Stats_descriptor,
-              new java.lang.String[] { "MyShard", "LatestDataTime", "ServiceStartTime", "ServiceEndTime", "ScannedSlices", });
+              new java.lang.String[] { "Blob", });
           return null;
         }
       };

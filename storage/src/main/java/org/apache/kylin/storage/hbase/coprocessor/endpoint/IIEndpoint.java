@@ -38,6 +38,7 @@ import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.TrieDictionary;
@@ -149,8 +150,12 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             EndpointAggregators aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
             CoprocessorFilter filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
 
-            IIProtos.IIResponse response = getResponse(innerScanner, type, projector, aggregators, filter);
-            done.run(response);
+            //compression
+            IIProtos.IIResponseInternal response = getResponse(innerScanner, type, projector, aggregators, filter);
+            byte[] compressed = CompressionUtils.compress(response.toByteArray());
+            IIProtos.IIResponse compressedR = IIProtos.IIResponse.newBuilder().setBlob(ByteString.copyFrom(compressed)).build();
+
+            done.run(compressedR);
         } catch (IOException ioe) {
             logger.error(ioe.toString());
             ResponseConverter.setControllerException(controller, ioe);
@@ -167,11 +172,11 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         }
     }
 
-    public IIProtos.IIResponse getResponse(RegionScanner innerScanner, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators, CoprocessorFilter filter) {
+    public IIProtos.IIResponseInternal getResponse(RegionScanner innerScanner, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators, CoprocessorFilter filter) {
 
         TableRecordInfoDigest tableRecordInfoDigest = aggregators.getTableRecordInfoDigest();
 
-        IIProtos.IIResponse response;
+        IIProtos.IIResponseInternal response;
 
         synchronized (innerScanner) {
             IIKeyValueCodec codec = new IIKeyValueCodec(tableRecordInfoDigest);
@@ -188,9 +193,9 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     }
 
     //TODO check current memory checking is good enough
-    private IIProtos.IIResponse getAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
+    private IIProtos.IIResponseInternal getAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
-        IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+        IIProtos.IIResponseInternal.Builder responseBuilder = IIProtos.IIResponseInternal.newBuilder();
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
 
@@ -240,18 +245,18 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
         for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             AggrKey aggrKey = entry.getKey();
-            IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
+            IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
             int length = aggregators.serializeMetricValues(entry.getValue(), buffer);
             rowBuilder.setMeasures(ByteString.copyFrom(buffer, 0, length));
             responseBuilder.addRows(rowBuilder.build());
         }
 
-        responseBuilder.setStats(IIProtos.IIResponse.Stats.newBuilder().setLatestDataTime(latestSliceTs).setServiceStartTime(this.serviceStartTime).setServiceEndTime(System.currentTimeMillis()).setScannedSlices(iteratedSliceCount));
+        responseBuilder.setStats(IIProtos.IIResponseInternal.Stats.newBuilder().setLatestDataTime(latestSliceTs).setServiceStartTime(this.serviceStartTime).setServiceEndTime(System.currentTimeMillis()).setScannedSlices(iteratedSliceCount));
         return responseBuilder.build();
     }
 
-    private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
-        IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
+    private IIProtos.IIResponseInternal getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
+        IIProtos.IIResponseInternal.Builder responseBuilder = IIProtos.IIResponseInternal.newBuilder();
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
         final int byteFormLen = recordInfo.getByteFormLen();
@@ -275,13 +280,13 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 }
                 final RawTableRecord rawTableRecord = iterator.next();
                 decodeWithDictionary(recordBuffer, rawTableRecord, slice.getLocalDictionaries(), recordInfo, rowKeyColumnIO, type);
-                IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(recordBuffer));
+                IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(recordBuffer));
                 responseBuilder.addRows(rowBuilder.build());
                 totalSize += byteFormLen;
             }
         }
         logger.info("Iterated Slices count: " + iteratedSliceCount);
-        responseBuilder.setStats(IIProtos.IIResponse.Stats.newBuilder().setLatestDataTime(latestSliceTs).setServiceStartTime(this.serviceStartTime).setServiceEndTime(System.currentTimeMillis()).setScannedSlices(iteratedSliceCount));
+        responseBuilder.setStats(IIProtos.IIResponseInternal.Stats.newBuilder().setLatestDataTime(latestSliceTs).setServiceStartTime(this.serviceStartTime).setServiceEndTime(System.currentTimeMillis()).setScannedSlices(iteratedSliceCount));
         return responseBuilder.build();
     }
 

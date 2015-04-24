@@ -16,7 +16,7 @@ message IIRequest {
     optional bytes tsRange = 5;
 }
 
-message IIResponse {
+message IIResponseInternal {
   message IIRow {
     required bytes columns = 1;
     optional bytes measures = 2;
@@ -31,6 +31,11 @@ message IIResponse {
   }
   repeated IIRow rows = 1;
   required Stats stats = 2;
+}
+
+message IIResponse
+{
+    required bytes blob = 1;
 }
 
 

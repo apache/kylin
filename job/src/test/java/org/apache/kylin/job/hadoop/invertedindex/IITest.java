@@ -146,7 +146,7 @@ public class IITest extends LocalFileMetadataTestCase {
         final Iterator<IIRow> iiRowIterator = iiRows.iterator();
 
         IIEndpoint endpoint = new IIEndpoint();
-        IIProtos.IIResponse response = endpoint.getResponse(new RegionScanner() {
+        IIProtos.IIResponseInternal response = endpoint.getResponse(new RegionScanner() {
             @Override
             public HRegionInfo getRegionInfo() {
                 throw new NotImplementedException();
@@ -208,7 +208,7 @@ public class IITest extends LocalFileMetadataTestCase {
         System.out.println(response.getRowsList().size());
 
         Set<String> answers = Sets.newHashSet("120.4747", "26.8551");
-        for (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponse.IIRow responseRow : response.getRowsList()) {
+        for (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow responseRow : response.getRowsList()) {
             byte[] measuresBytes = responseRow.getMeasures().toByteArray();
             List<Object> metrics = aggregators.deserializeMetricValues(measuresBytes, 0);
             Assert.assertTrue(answers.contains(metrics.get(0)));
