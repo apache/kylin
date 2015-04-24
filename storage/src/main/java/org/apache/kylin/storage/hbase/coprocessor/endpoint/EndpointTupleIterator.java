@@ -35,6 +35,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.invertedindex.IISegment;
@@ -88,7 +89,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     private final EndpointAggregators pushedDownAggregators;
     private final Range<Long> tsRange;//timestamp column condition's interval
 
-    private Iterator<List<IIProtos.IIResponse.IIRow>> regionResponsesIterator = null;
+    private Iterator<List<IIProtos.IIResponseInternal.IIRow>> regionResponsesIterator = null;
     private ITupleIterator tupleIterator = null;
     private HTableInterface table = null;
 
@@ -146,12 +147,28 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         IIProtos.IIRequest endpointRequest = prepareRequest();
-        Collection<IIProtos.IIResponse> shardResults = getResults(endpointRequest, table);
-        this.lastDataTime = Collections.min(Collections2.transform(shardResults, new Function<IIProtos.IIResponse, Long>() {
+        Collection<IIProtos.IIResponse> compressedShardResults = getResults(endpointRequest, table);
+
+        //decompress
+        Collection<IIProtos.IIResponseInternal> shardResults = Collections2.transform(compressedShardResults, new Function<IIProtos.IIResponse, IIProtos.IIResponseInternal>() {
             @Nullable
             @Override
-            public Long apply(IIProtos.IIResponse input) {
-                IIProtos.IIResponse.Stats status = input.getStats();
+            public IIProtos.IIResponseInternal apply(@Nullable IIProtos.IIResponse input) {
+                byte[] compressed = input.getBlob().toByteArray();
+                try {
+                    return IIProtos.IIResponseInternal.parseFrom(CompressionUtils.decompress(compressed));
+                } catch (Exception e) {
+                    throw new RuntimeException("decompress endpoint response error");
+                }
+            }
+        });
+
+        this.lastDataTime = Collections.min(Collections2.transform(shardResults, new Function<IIProtos.IIResponseInternal, Long>() {
+            @Nullable
+            @Override
+            public Long apply(IIProtos.IIResponseInternal input) {
+
+                IIProtos.IIResponseInternal.Stats status = input.getStats();
                 logger.info("Endpoints all returned, stats from shard {}: start moment:{}, finish moment: {}, elapsed ms: {}, scanned slices: {}, latest slice time is {}",//
                         new Object[] { String.valueOf(status.getMyShard()),//
                                 DateFormat.formatToTimeStr(status.getServiceStartTime()),//
@@ -163,10 +180,10 @@ public class EndpointTupleIterator implements ITupleIterator {
             }
         }));
 
-        this.regionResponsesIterator = Collections2.transform(shardResults, new Function<IIProtos.IIResponse, List<IIProtos.IIResponse.IIRow>>() {
+        this.regionResponsesIterator = Collections2.transform(shardResults, new Function<IIProtos.IIResponseInternal, List<IIProtos.IIResponseInternal.IIRow>>() {
             @Nullable
             @Override
-            public List<IIProtos.IIResponse.IIRow> apply(@Nullable IIProtos.IIResponse input) {
+            public List<IIProtos.IIResponseInternal.IIRow> apply(@Nullable IIProtos.IIResponseInternal input) {
                 return input.getRowsList();
             }
         }).iterator();
@@ -293,7 +310,7 @@ public class EndpointTupleIterator implements ITupleIterator {
      * Internal class to handle iterators for a single region's returned rows
      */
     class SingleRegionTupleIterator implements ITupleIterator {
-        private List<IIProtos.IIResponse.IIRow> rows;
+        private List<IIProtos.IIResponseInternal.IIRow> rows;
         private int index = 0;
 
         //not thread safe!
@@ -301,7 +318,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         private List<Object> measureValues;
         private Tuple tuple;
 
-        public SingleRegionTupleIterator(List<IIProtos.IIResponse.IIRow> rows) {
+        public SingleRegionTupleIterator(List<IIProtos.IIResponseInternal.IIRow> rows) {
             this.rows = rows;
             this.index = 0;
             this.tableRecord = tableRecordInfo.createTableRecord();
@@ -319,7 +336,7 @@ public class EndpointTupleIterator implements ITupleIterator {
                 throw new IllegalStateException("No more Tuple in the SingleRegionTupleIterator");
             }
 
-            IIProtos.IIResponse.IIRow currentRow = rows.get(index);
+            IIProtos.IIResponseInternal.IIRow currentRow = rows.get(index);
             byte[] columnsBytes = currentRow.getColumns().toByteArray();
             this.tableRecord.setBytes(columnsBytes, 0, columnsBytes.length);
             if (currentRow.hasMeasures()) {
