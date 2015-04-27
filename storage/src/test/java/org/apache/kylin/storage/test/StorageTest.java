@@ -41,6 +41,8 @@ import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.junit.*;
 
+import com.google.common.collect.ImmutableList;
+
 public class StorageTest extends HBaseMetadataTestCase {
 
     private IStorageEngine storageEngine;
@@ -172,7 +174,7 @@ public class StorageTest extends HBaseMetadataTestCase {
 
     private List<TblColRef> buildGroups() {
         List<TblColRef> groups = new ArrayList<TblColRef>();
-
+        
         TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
         ColumnDesc c1 = ColumnDesc.mockup(t1, 2, "CAL_DT", "string");
         TblColRef cf1 = new TblColRef(c1);
@@ -189,11 +191,16 @@ public class StorageTest extends HBaseMetadataTestCase {
     private List<FunctionDesc> buildAggregations() {
         List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
 
+        TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
+        TblColRef priceCol = new TblColRef(ColumnDesc.mockup(t1, 7, "PRICE", "decimal(19,4)"));
+        TblColRef sellerCol = new TblColRef(ColumnDesc.mockup(t1, 9, "SELLER_ID", "bigint"));
+        
         FunctionDesc f1 = new FunctionDesc();
         f1.setExpression("SUM");
         ParameterDesc p1 = new ParameterDesc();
         p1.setType("column");
         p1.setValue("PRICE");
+        p1.setColRefs(ImmutableList.of(priceCol));
         f1.setParameter(p1);
         functions.add(f1);
 
@@ -202,6 +209,7 @@ public class StorageTest extends HBaseMetadataTestCase {
         ParameterDesc p2 = new ParameterDesc();
         p2.setType("column");
         p2.setValue("SELLER_ID");
+        p2.setColRefs(ImmutableList.of(sellerCol));
         f2.setParameter(p2);
         functions.add(f2);
 
