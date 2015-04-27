@@ -41,7 +41,7 @@ import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
  */
 public class IIFlattenHiveJob extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(InvertedIndexJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(IIFlattenHiveJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -74,13 +74,14 @@ public class IIFlattenHiveJob extends AbstractHadoopJob {
             System.out.println(buf.toString());
             System.out.println("========================");
 
-            ShellCmd cmd = new ShellCmd(buf.toString(), null, null, null, false);
+            ShellCmd cmd = new ShellCmd(buf.toString(), null, 0, null, null, false);
             ICommandOutput output = cmd.execute();
             System.out.println(output.getOutput());
             System.out.println(output.getExitCode());
             
             return 0;
         } catch (Exception e) {
+            logger.error("error execute IIFlattenHiveJob", e);
             printUsage(options);
             throw e;
         }

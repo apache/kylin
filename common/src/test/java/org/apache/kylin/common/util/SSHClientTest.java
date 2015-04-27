@@ -37,6 +37,7 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
 
     private boolean isRemote;
     private String hostname;
+    private int port;
     private String username;
     private String password;
 
@@ -45,6 +46,7 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
         KylinConfig cfg = KylinConfig.getInstanceFromEnv();
 
         this.isRemote = cfg.getRunAsRemoteCommand();
+        this.port = cfg.getRemoteHadoopCliPort();
         this.hostname = cfg.getRemoteHadoopCliHostname();
         this.username = cfg.getRemoteHadoopCliUsername();
         this.password = cfg.getRemoteHadoopCliPassword();
@@ -66,7 +68,7 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
         if (isRemote == false)
             return;
 
-        SSHClient ssh = new SSHClient(this.hostname, this.username, this.password);
+        SSHClient ssh = new SSHClient(this.hostname, this.port, this.username, this.password);
         SSHClientOutput output = ssh.execCommand("echo hello");
         assertEquals(0, output.getExitCode());
         assertEquals("hello\n", output.getText());
@@ -77,7 +79,7 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
         if (isRemote == false)
             return;
 
-        SSHClient ssh = new SSHClient(this.hostname, this.username, this.password);
+        SSHClient ssh = new SSHClient(this.hostname, this.port, this.username, this.password);
         File tmpFile = FileUtil.createLocalTempFile(new File("/tmp/test_scp"), "temp_", false);
         ssh.scpFileToRemote(tmpFile.getAbsolutePath(), "/tmp");
     }

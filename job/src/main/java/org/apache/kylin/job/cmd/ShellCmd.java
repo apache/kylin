@@ -42,16 +42,16 @@ public class ShellCmd implements IJobCommand {
 
     private FutureTask<Integer> future;
 
-    protected ShellCmd(String executeCmd, ICommandOutput out, String host, String user, String password, boolean async) {
+    private ShellCmd(String executeCmd, ICommandOutput out, String host, int port, String user, String password, boolean async) {
         this.executeCommand = executeCmd;
         this.output = out;
-        cliCommandExecutor = new CliCommandExecutor();
-        cliCommandExecutor.setRunAtRemote(host, user, password);
+        this.cliCommandExecutor = new CliCommandExecutor();
+        this.cliCommandExecutor.setRunAtRemote(host, port, user, password);
         this.isAsync = async;
     }
 
-    public ShellCmd(String executeCmd, String host, String user, String password, boolean async) {
-        this(executeCmd, new ShellCmdOutput(), host, user, password, async);
+    public ShellCmd(String executeCmd, String host, int port, String user, String password, boolean async) {
+        this(executeCmd, new ShellCmdOutput(), host, port, user, password, async);
     }
 
     @Override
@@ -101,13 +101,4 @@ public class ShellCmd implements IJobCommand {
         future.cancel(true);
     }
 
-    public static void main(String[] args) throws JobException {
-        ShellCmdOutput output = new ShellCmdOutput();
-        ShellCmd shellCmd = new ShellCmd(args[0], output, args[1], args[2], args[3], false);
-        shellCmd.execute();
-
-        System.out.println("============================================================================");
-        System.out.println(output.getExitCode());
-        System.out.println(output.getOutput());
-    }
 }

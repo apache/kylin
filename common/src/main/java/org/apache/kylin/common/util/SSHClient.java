@@ -41,11 +41,12 @@ public class SSHClient {
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(SSHClient.class);
 
     private String hostname;
+    private int port;
     private String username;
     private String password;
     private String identityPath;
 
-    public SSHClient(String hostname, String username, String password) {
+    public SSHClient(String hostname, int port, String username, String password) {
         this.hostname = hostname;
         this.username = username;
         if (password != null && new File(password).exists()) {

@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.util.Pair;
 public class CliCommandExecutor {
 
     private String remoteHost;
+    private int port;
     private String remoteUser;
     private String remotePwd;
     private int remoteTimeoutSeconds = 3600;
@@ -39,8 +40,9 @@ public class CliCommandExecutor {
     public CliCommandExecutor() {
     }
 
-    public void setRunAtRemote(String host, String user, String pwd) {
+    public void setRunAtRemote(String host, int port, String user, String pwd) {
         this.remoteHost = host;
+        this.port = port;
         this.remoteUser = user;
         this.remotePwd = pwd;
     }
@@ -65,7 +67,7 @@ public class CliCommandExecutor {
     }
 
     private void copyRemote(String localFile, String destDir) throws IOException {
-        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd);
+        SSHClient ssh = new SSHClient(remoteHost, port, remoteUser, remotePwd);
         try {
             ssh.scpFileToRemote(localFile, destDir);
         } catch (IOException e) {
@@ -96,7 +98,7 @@ public class CliCommandExecutor {
     }
 
     private Pair<Integer, String> runRemoteCommand(String command, Logger logAppender) throws IOException {
-        SSHClient ssh = new SSHClient(remoteHost, remoteUser, remotePwd);
+        SSHClient ssh = new SSHClient(remoteHost, port, remoteUser, remotePwd);
 
         SSHClientOutput sshOutput;
         try {

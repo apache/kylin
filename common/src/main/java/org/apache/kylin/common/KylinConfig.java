@@ -73,6 +73,8 @@ public class KylinConfig {
 
     public static final String KYLIN_JOB_REMOTE_CLI_HOSTNAME = "kylin.job.remote.cli.hostname";
 
+    public static final String KYLIN_JOB_REMOTE_CLI_PORT = "kylin.job.remote.cli.port";
+
     public static final String KYLIN_JOB_REMOTE_CLI_WORKING_DIR = "kylin.job.remote.cli.working.dir";
 
     public static final String KYLIN_JOB_CMD_EXTRA_ARGS = "kylin.job.cmd.extra.args";
@@ -266,7 +268,7 @@ public class KylinConfig {
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
         CliCommandExecutor exec = new CliCommandExecutor();
         if (getRunAsRemoteCommand()) {
-            exec.setRunAtRemote(getRemoteHadoopCliHostname(), getRemoteHadoopCliUsername(), getRemoteHadoopCliPassword());
+            exec.setRunAtRemote(getRemoteHadoopCliHostname(), getRemoteHadoopCliPort(), getRemoteHadoopCliUsername(), getRemoteHadoopCliPassword());
         }
         return exec;
     }
@@ -368,6 +370,10 @@ public class KylinConfig {
 
     public boolean getRunAsRemoteCommand() {
         return Boolean.parseBoolean(getOptional(KYLIN_JOB_RUN_AS_REMOTE_CMD));
+    }
+
+    public int getRemoteHadoopCliPort() {
+        return Integer.parseInt(getOptional(KYLIN_JOB_REMOTE_CLI_PORT, "22"));
     }
 
     public String getRemoteHadoopCliHostname() {
