@@ -133,7 +133,7 @@ public class ExportHBaseData {
         String localArchive = "../examples/test_case_data/minicluster/hbase-export.tar.gz";
 
         if (kylinConfig.getRunAsRemoteCommand()) {
-            SSHClient ssh = new SSHClient(kylinConfig.getRemoteHadoopCliHostname(), kylinConfig.getRemoteHadoopCliUsername(), kylinConfig.getRemoteHadoopCliPassword());
+            SSHClient ssh = new SSHClient(kylinConfig.getRemoteHadoopCliHostname(), kylinConfig.getRemoteHadoopCliPort(), kylinConfig.getRemoteHadoopCliUsername(), kylinConfig.getRemoteHadoopCliPassword());
             try {
                 ssh.scpFileToLocal(backupArchive, localArchive);
             } catch (Exception e) {
