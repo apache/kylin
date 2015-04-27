@@ -162,10 +162,16 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                 }
 
                 int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[i + 1].value, 0, splittedByteses[i + 1].length);
-                int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBuf, bufOffset);
-                int idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBuf, bufOffset, size);
-                BytesUtil.writeUnsigned(idInMergedDict, newKeyBuf, bufOffset, mergedDict.getSizeOfId());
+                int idInMergedDict;
 
+                int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBuf, bufOffset);
+                if (size < 0) {
+                    idInMergedDict = mergedDict.nullId();
+                } else {
+                    idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBuf, bufOffset, size);
+                }
+
+                BytesUtil.writeUnsigned(idInMergedDict, newKeyBuf, bufOffset, mergedDict.getSizeOfId());
                 bufOffset += mergedDict.getSizeOfId();
             } else {
                 // keep as it is
