@@ -609,7 +609,7 @@
     					<configuration>
       						<fork>true</fork>
      						<meminitial>1024m</meminitial>
-      						<maxmem>1024m</maxmem>
+      						<maxmem>2048m</maxmem>
     					</configuration>
   					</plugin>
                     <plugin>
@@ -690,8 +690,10 @@
                                 <exclude>**/*.md</exclude>
                                 <!-- binary files -->
                                 <exclude>**/*.dict</exclude>
+                                <exclude>**/*.dic</exclude>
                                 <exclude>**/*.snapshot</exclude>
                                 <exclude>**/*.pdf</exclude>
+                                <exclude>**/*.log</exclude>
 
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
@@ -708,10 +710,15 @@
                                 <!-- json configuration file-->
                                 <exclude>webapp/.bowerrc</exclude>
                                 <exclude>webapp/.jshintrc</exclude>
+                                <!-- generated dict files -->                               
+                                <exclude>dictionary/metastore_db/**</exclude>
+                                
                                 <!-- MIT license -->
                                 <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
+                              	
                             </excludes>
+                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=256M</argLine>
                         </configuration>
                         <executions>
                             <execution>
