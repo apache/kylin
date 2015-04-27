@@ -70,8 +70,6 @@ public class IIStreamBuilder extends StreamBuilder {
     private final String streaming;
     private StreamingManager streamingManager;
 
-
-
     public IIStreamBuilder(BlockingQueue<StreamMessage> queue, String streaming, String hTableName, IIDesc iiDesc, int shard) {
         this(queue, streaming, hTableName, iiDesc, shard, true);
     }
@@ -83,6 +81,7 @@ public class IIStreamBuilder extends StreamBuilder {
         this.shardId = shard;
         try {
             this.hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
+            this.hTable.setAutoFlushTo(true);
         } catch (IOException e) {
             logger.error("cannot open htable name:" + hTableName, e);
             throw new RuntimeException("cannot open htable name:" + hTableName, e);
@@ -114,27 +113,33 @@ public class IIStreamBuilder extends StreamBuilder {
         }
     }
 
-    private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
+    @Override
+    protected void onStop() {
         try {
-            List<Put> data = Lists.newArrayList();
-            for (IIRow row : codec.encodeKeyValue(slice)) {
-                final byte[] key = row.getKey().get();
-                final byte[] value = row.getValue().get();
-                Put put = new Put(key);
-                put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
-                final ImmutableBytesWritable dictionary = row.getDictionary();
-                final byte[] dictBytes = dictionary.get();
-                if (dictionary.getOffset() == 0 && dictionary.getLength() == dictBytes.length) {
-                    put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES, dictBytes);
-                } else {
-                    throw new RuntimeException("dict offset should be 0, and dict length should be " + dictBytes.length + " but they are" + dictionary.getOffset() + " " + dictionary.getLength());
-                }
-                data.add(put);
-            }
-            hTable.put(data);
-        } finally {
-            hTable.close();
+            this.hTable.close();
+        } catch (IOException e) {
+            logger.error("onStop throw exception", e);
         }
+    }
+
+    private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
+        List<Put> data = Lists.newArrayList();
+        for (IIRow row : codec.encodeKeyValue(slice)) {
+            final byte[] key = row.getKey().get();
+            final byte[] value = row.getValue().get();
+            Put put = new Put(key);
+            put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
+            final ImmutableBytesWritable dictionary = row.getDictionary();
+            final byte[] dictBytes = dictionary.get();
+            if (dictionary.getOffset() == 0 && dictionary.getLength() == dictBytes.length) {
+                put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES, dictBytes);
+            } else {
+                throw new RuntimeException("dict offset should be 0, and dict length should be " + dictBytes.length + " but they are" + dictionary.getOffset() + " " + dictionary.getLength());
+            }
+            data.add(put);
+        }
+        hTable.put(data);
+        //omit hTable.flushCommits(), because htable is auotflush
     }
 
     private void submitOffset(long offset) {

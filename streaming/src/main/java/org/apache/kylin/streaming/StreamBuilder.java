@@ -49,7 +49,7 @@ public abstract class StreamBuilder implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
 
-    private static final int BATCH_BUILD_INTERVAL_THRESHOLD = 5 * 60 * 1000;
+    private static final int BATCH_BUILD_INTERVAL_THRESHOLD = 2 * 60 * 1000;
     private final int sliceSize;
     private StreamParser streamParser = StringStreamParser.instance;
 
@@ -63,6 +63,8 @@ public abstract class StreamBuilder implements Runnable {
 
     protected abstract void build(List<StreamMessage> streamsToBuild) throws Exception;
 
+    protected abstract void onStop();
+
     private void clearCounter() {
         lastBuildTime = System.currentTimeMillis();
     }
@@ -75,7 +77,7 @@ public abstract class StreamBuilder implements Runnable {
             while (true) {
                 StreamMessage streamMessage;
                 try {
-                    streamMessage = streamMessageQueue.poll(10, TimeUnit.SECONDS);
+                    streamMessage = streamMessageQueue.poll(30, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     logger.warn("stream queue interrupted", e);
                     continue;
@@ -91,6 +93,7 @@ public abstract class StreamBuilder implements Runnable {
                     continue;
                 } else {
                     if (streamMessage.getOffset() < 0) {
+                        onStop();
                         logger.warn("streaming encountered EOF, stop building");
                         break;
                     }
