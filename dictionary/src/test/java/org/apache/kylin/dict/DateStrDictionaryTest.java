@@ -64,7 +64,7 @@ public class DateStrDictionaryTest {
         int nullId = dict.getIdFromValue(null);
         assertNull(dict.getValueFromId(nullId));
         int nullId2 = dict.getIdFromValueBytes(null, 0, 0);
-        assertEquals(dict.getValueBytesFromId(nullId2, null, 0), 0);
+        assertEquals(dict.getValueBytesFromId(nullId2, null, 0), -1);
         assertEquals(nullId, nullId2);
     }
 
