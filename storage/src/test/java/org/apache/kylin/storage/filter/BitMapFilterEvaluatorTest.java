@@ -40,18 +40,12 @@ public class BitMapFilterEvaluatorTest {
     static TblColRef colB;
 
     static {
-        TableDesc table = new TableDesc();
-        table.setName("TABLE");
-        table.setDatabase("DEFAULT");
+        TableDesc table = TableDesc.mockup("DEFAULT.TABLE");
 
-        ColumnDesc col = new ColumnDesc();
-        col.setTable(table);
-        col.setName("colA");
+        ColumnDesc col = ColumnDesc.mockup(table, 1, "colA", "string");
         colA = new TblColRef(col);
 
-        col = new ColumnDesc();
-        col.setTable(table);
-        col.setName("colB");
+        col = ColumnDesc.mockup(table, 1, "colB", "string");
         colB = new TblColRef(col);
     }
 

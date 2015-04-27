@@ -102,6 +102,7 @@ public class CoprocessorRowType {
                 ColumnDesc col = new ColumnDesc();
                 col.setTable(table);
                 col.setName(colName);
+                col.init(table);
                 cols[i] = new TblColRef(col);
 
                 int colSize = BytesUtil.readVInt(in);
