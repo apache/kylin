@@ -41,3 +41,12 @@ The cardinality of dimensions is an important measure of cube complexity. The hi
 
 #### What is the difference between Kylin and Druid
 take a look at http://mail-archives.apache.org/mod_mbox/incubator-kylin-dev/201503.mbox/%3Ctencent_0DAD681A15F3B2F2379CADC9%40qq.com%3E
+
+#### Getting wrong result for the query with order by
+By default if you're making queries on the web client, a mode called "AcceptPartialResults" is enabled​, this is a protection mechanism that will only return part of the results to reduce server overhead. Honestly it might hurt the correctness of order by queries. 
+
+If you're seeking 100% correctness, after running the query you will find a notification:
+Note: Current results are partial, please click 'Show All' button to get all results.
+Click the "Show All" button to disable the "AcceptPartialResults" mode, and you'll get a right result.
+
+Notice "AcceptPartialResults" is only enabled by default at web client, you'll not meet such problems if you're using JDBC, ODBC or standard REST API.
