@@ -51,23 +51,13 @@ public class FilterBaseTest {
     protected List<TblColRef> buildGroups() {
         List<TblColRef> groups = new ArrayList<TblColRef>();
 
-        TableDesc t1 = new TableDesc();
-        t1.setName("TEST_KYLIN_FACT");
-        t1.setDatabase("DEFAULT");
-        ColumnDesc c1 = new ColumnDesc();
-        c1.setName("CAL_DT");
-        c1.setDatatype("String");
-        c1.setTable(t1);
+        TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
+        ColumnDesc c1 = ColumnDesc.mockup(t1, 2, "CAL_DT", "string");
         TblColRef cf1 = new TblColRef(c1);
         groups.add(cf1);
 
-        TableDesc t2 = new TableDesc();
-        t2.setName("TEST_CATEGORY_GROUPINGS");
-        t2.setDatabase("DEFAULT");
-        ColumnDesc c2 = new ColumnDesc();
-        c2.setName("META_CATEG_NAME");
-        c1.setDatatype("String");
-        c2.setTable(t2);
+        TableDesc t2 = TableDesc.mockup("DEFAULT.TEST_CATEGORY_GROUPINGS");
+        ColumnDesc c2 = ColumnDesc.mockup(t2, 14, "META_CATEG_NAME", "string");
         TblColRef cf2 = new TblColRef(c2);
         groups.add(cf2);
 

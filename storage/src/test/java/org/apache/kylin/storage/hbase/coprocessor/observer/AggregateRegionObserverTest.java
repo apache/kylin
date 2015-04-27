@@ -202,16 +202,13 @@ public class AggregateRegionObserverTest {
         TableDesc t = new TableDesc();
         t.setName("TABLE");
         t.setDatabase("DEFAULT");
-        TblColRef[] cols = new TblColRef[] { newCol("A", t), newCol("B", t), newCol("C", t), newCol("D", t) };
+        TblColRef[] cols = new TblColRef[] { newCol(1, "A", t), newCol(2, "B", t), newCol(3, "C", t), newCol(4, "D", t) };
         int[] sizes = new int[] { 1, 1, 1, 1 };
         return new CoprocessorRowType(cols, sizes);
     }
 
-    private TblColRef newCol(String name, TableDesc t) {
-        ColumnDesc col = new ColumnDesc();
-        col.setName(name);
-        col.setTable(t);
-        return new TblColRef(col);
+    private TblColRef newCol(int i, String name, TableDesc t) {
+        return new TblColRef(ColumnDesc.mockup(t, i, name, null));
     }
 
     public static class MockupRegionScanner implements RegionScanner {

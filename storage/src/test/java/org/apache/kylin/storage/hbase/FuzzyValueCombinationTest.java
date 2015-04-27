@@ -104,11 +104,7 @@ public class FuzzyValueCombinationTest {
     }
 
     private static TblColRef col(int i, TableDesc t) {
-        ColumnDesc col = new ColumnDesc();
-        col.setId("" + i);
-        col.setName("Col" + i);
-        col.setDatatype("string");
-        col.setTable(t);
+        ColumnDesc col = ColumnDesc.mockup(t, i, "Col" + i, "string");
         return new TblColRef(col);
     }
 
