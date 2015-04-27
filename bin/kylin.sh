@@ -101,7 +101,7 @@ then
 
         mkdir -p ${KYLIN_HOME}/ext
         export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
-        export JAVA_OPTS="-Xms2048M -Xmx2048M -XX:MaxPermSize=512m"
+        export JAVA_OPTS="-Xms4g -Xmx4g -XX:MaxPermSize=512m"
 
         hbase ${JAVA_OPTS} ${KYLIN_EXTRA_START_OPTS} \
         -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \

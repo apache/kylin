@@ -128,6 +128,7 @@ public class KafkaConsumer implements Runnable {
                 final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, kafkaConfig);
                 if (fetchResponse.errorCode(topic, partitionId) != 0) {
                     logger.warn("fetch response offset:" + offset + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
+                    Thread.sleep(30000);
                     continue;
                 }
 

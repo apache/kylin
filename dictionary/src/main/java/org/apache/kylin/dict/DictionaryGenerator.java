@@ -75,8 +75,8 @@ public class DictionaryGenerator {
             }
             buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
         }
-        logger.info("Dictionary value samples: " + buf.toString());
-        logger.info("Dictionary cardinality " + dict.getSize());
+        logger.debug("Dictionary value samples: " + buf.toString());
+        logger.debug("Dictionary cardinality " + dict.getSize());
         if (dict instanceof TrieDictionary &&  dict.getSize() > DICT_MAX_CARDINALITY) {
             throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + values.size());
         }
@@ -109,7 +109,7 @@ public class DictionaryGenerator {
         // currently all data types are casted to string to build dictionary
         // String dataType = info.getDataType();
 
-        logger.info("Building dictionary " + JsonUtil.writeValueAsString(info));
+        logger.debug("Building dictionary " + JsonUtil.writeValueAsString(info));
 
         ArrayList<byte[]> values = loadColumnValues(inpTable, info.getSourceColumnIndex());
 

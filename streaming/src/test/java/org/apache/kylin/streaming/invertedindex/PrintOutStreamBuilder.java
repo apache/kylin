@@ -63,4 +63,9 @@ public class PrintOutStreamBuilder extends StreamBuilder {
             System.out.println("offset:" + streamMessage.getOffset() + " " + StringUtils.join(row, ","));
         }
     }
+
+    @Override
+    protected void onStop() {
+
+    }
 }
