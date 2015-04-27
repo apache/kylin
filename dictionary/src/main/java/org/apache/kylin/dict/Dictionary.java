@@ -145,13 +145,15 @@ abstract public class Dictionary<T> implements Writable {
      * A lower level API, get byte values from ID, return the number of bytes
      * written. Bypassing the cache layer, this could be significantly slower
      * than getIdFromValue(T value).
-     * 
+     *
+     * @return size of value bytes, 0 if empty string, -1 if null
+     *
      * @throws IllegalArgumentException
      *             if ID is not found in dictionary
      */
     final public int getValueBytesFromId(int id, byte[] returnValue, int offset) {
         if (isNullId(id))
-            return 0;
+            return -1;
         else
             return getValueBytesFromIdImpl(id, returnValue, offset);
     }
