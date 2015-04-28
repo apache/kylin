@@ -108,7 +108,7 @@ public class AggregateRegionObserverTest {
     public void test() throws IOException {
 
         CoprocessorRowType rowType = newRowType();
-        CoprocessorProjector projector = new CoprocessorProjector(mask);
+        CoprocessorProjector projector = new CoprocessorProjector(mask, true);
         ObserverAggregators aggregators = new ObserverAggregators(new HCol[] { c1, c2 });
         CoprocessorFilter filter = CoprocessorFilter.deserialize(null); // a default,
         // always-true,
@@ -159,7 +159,7 @@ public class AggregateRegionObserverTest {
     public void testNoMeasure() throws IOException {
 
         CoprocessorRowType rowType = newRowType();
-        CoprocessorProjector projector = new CoprocessorProjector(mask);
+        CoprocessorProjector projector = new CoprocessorProjector(mask, true);
         ObserverAggregators aggregators = new ObserverAggregators(new HCol[] {});
         CoprocessorFilter filter = CoprocessorFilter.deserialize(null); // a default,
         // always-true,

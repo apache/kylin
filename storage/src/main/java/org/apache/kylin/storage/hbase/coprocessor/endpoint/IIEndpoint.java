@@ -130,7 +130,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         return scan;
     }
 
-    //TODO: protobuf does not provide built-in compression
     @Override
     public void getRows(RpcController controller, IIProtos.IIRequest request, RpcCallback<IIProtos.IIResponse> done) {
 
@@ -183,18 +182,20 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             //TODO pass projector to codec to skip loading columns
             Iterable<Slice> slices = codec.decodeKeyValue(new HbaseServerKVIterator(innerScanner));
 
-            if (aggregators.isEmpty()) {
-                response = getNonAggregatedResponse(slices, tableRecordInfoDigest, filter, type);
-            } else {
-                response = getAggregatedResponse(slices, tableRecordInfoDigest, filter, type, projector, aggregators);
-            }
+            response = getResponseInternal(slices, tableRecordInfoDigest, filter, type, projector, aggregators);
         }
         return response;
     }
 
-    //TODO check current memory checking is good enough
-    private IIProtos.IIResponseInternal getAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
+    private IIProtos.IIResponseInternal getResponseInternal(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
+        boolean hasGroupby = projector.hasGroupby();
+
+        //for hasGroupby use
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
+        //for no groupby use
+        final int byteFormLen = recordInfo.getByteFormLen();
+        int totalByteFormLen = 0;
+
         IIProtos.IIResponseInternal.Builder responseBuilder = IIProtos.IIResponseInternal.newBuilder();
         ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
@@ -234,21 +235,35 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             while (iterator.hasNext()) {
                 final RawTableRecord rawTableRecord = iterator.next();
                 decodeWithDictionary(recordBuffer, rawTableRecord, localDictionaries, recordInfo, rowKeyColumnIO, type);
-                AggrKey aggKey = projector.getAggrKey(recordBuffer);
-                MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-                aggregators.aggregate(bufs, recordBuffer);
-                aggCache.checkMemoryUsage();
+
+                if (hasGroupby) {
+                    //if has group by, group them first, and extract entries later
+                    AggrKey aggKey = projector.getAggrKey(recordBuffer);
+                    MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
+                    aggregators.aggregate(bufs, recordBuffer);
+                    aggCache.checkMemoryUsage();
+                } else {
+                    //otherwise directly extract entry and put into response
+                    if (totalByteFormLen >= MEMORY_LIMIT) {
+                        throw new RuntimeException("the query has exceeded the memory limit, please check the query");
+                    }
+                    IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(recordBuffer));
+                    responseBuilder.addRows(rowBuilder.build());
+                    totalByteFormLen += byteFormLen;
+                }
             }
         }
 
         logger.info("Iterated Slices count: " + iteratedSliceCount);
 
-        for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
-            AggrKey aggrKey = entry.getKey();
-            IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
-            int length = aggregators.serializeMetricValues(entry.getValue(), buffer);
-            rowBuilder.setMeasures(ByteString.copyFrom(buffer, 0, length));
-            responseBuilder.addRows(rowBuilder.build());
+        if (hasGroupby) {
+            for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+                AggrKey aggrKey = entry.getKey();
+                IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
+                int length = aggregators.serializeMetricValues(entry.getValue(), buffer);
+                rowBuilder.setMeasures(ByteString.copyFrom(buffer, 0, length));
+                responseBuilder.addRows(rowBuilder.build());
+            }
         }
 
         responseBuilder.setStats(IIProtos.IIResponseInternal.Stats.newBuilder().setLatestDataTime(latestSliceTs).setServiceStartTime(this.serviceStartTime).setServiceEndTime(System.currentTimeMillis()).setScannedSlices(iteratedSliceCount));

@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 public class RowProjectorTest {
 
     byte[] mask = new byte[] { (byte) 0xff, 0x00, 0x00, (byte) 0xff };
-    CoprocessorProjector sample = new CoprocessorProjector(mask);
+    CoprocessorProjector sample = new CoprocessorProjector(mask,true);
 
     @Test
     public void testSerialize() {
