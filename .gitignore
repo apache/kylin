@@ -43,6 +43,10 @@ release.properties
 *.jar
 *.war
 *.ear
+*.tgz
+*.tar.gz
+
+
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
@@ -54,13 +58,14 @@ hs_err_pid*
 .project
 .idea
 **/*.DS_Store
-target
-logs
 *.jar
 *.releaseBackup
 *.log
+jdbc/kylin_jdbc.log.*
 *.DS_Store
 *.releaseBackup
+
+
 
 # .settings
 org.eclipse.m2e.core.prefs
@@ -71,15 +76,18 @@ server/.settings/.jsdtscope
 server/.settings/org.eclipse.wst.common.project.facet.core.prefs.xml
 server/.settings/org.eclipse.wst.jsdt.ui.superType.container
 server/.settings/org.eclipse.wst.jsdt.ui.superType.name
+
 #web
 webapp/app/WEB-INF/*
 webapp/dist
 webapp/node_modules:
 webapp/CHANGELOG.md
 
-# package file
+# generated files
+target
+logs
+
+# package file and folder
 tomcat
 lib
-*.tgz
-*.tar.gz
 webapp/app/components/*
