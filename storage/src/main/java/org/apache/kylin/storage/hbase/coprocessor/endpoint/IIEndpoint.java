@@ -188,11 +188,11 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     }
 
     private IIProtos.IIResponseInternal getResponseInternal(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type, CoprocessorProjector projector, EndpointAggregators aggregators) {
-        boolean hasGroupby = projector.hasGroupby();
+        boolean needAgg = projector.hasGroupby() || !aggregators.isEmpty();
 
-        //for hasGroupby use
+        //for needAgg use
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
-        //for no groupby use
+        //for no needAgg use
         final int byteFormLen = recordInfo.getByteFormLen();
         int totalByteFormLen = 0;
 
@@ -236,7 +236,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 final RawTableRecord rawTableRecord = iterator.next();
                 decodeWithDictionary(recordBuffer, rawTableRecord, localDictionaries, recordInfo, rowKeyColumnIO, type);
 
-                if (hasGroupby) {
+                if (needAgg) {
                     //if has group by, group them first, and extract entries later
                     AggrKey aggKey = projector.getAggrKey(recordBuffer);
                     MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
@@ -256,7 +256,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
         logger.info("Iterated Slices count: " + iteratedSliceCount);
 
-        if (hasGroupby) {
+        if (needAgg) {
             for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
                 AggrKey aggrKey = entry.getKey();
                 IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
