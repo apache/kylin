@@ -2,9 +2,6 @@ package org.apache.kylin.metadata.tuple;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
@@ -50,7 +47,7 @@ public class TeeTupleIterator implements ITupleIterator {
     @Override
     public ITuple next() {
         ITuple ret = this.underlying.next();
-        duplicatedData.add(ret);
+        duplicatedData.add(ret.makeCopy());
         return ret;
     }
 

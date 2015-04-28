@@ -36,6 +36,8 @@ public interface ITuple extends IEvaluatableTuple {
 
     Object[] getAllValues();
 
+    ITuple makeCopy();
+
     // declared from IEvaluatableTuple:  public Object getValue(TblColRef col);
 
 }

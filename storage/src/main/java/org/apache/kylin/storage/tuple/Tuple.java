@@ -54,6 +54,16 @@ public class Tuple implements ITuple {
         return values;
     }
 
+    @Override
+    public ITuple makeCopy() {
+        Tuple ret = new Tuple(this.info);
+        for(int i = 0 ; i < this.values.length; ++i)
+        {
+            ret.values[i] = this.values[i];
+        }
+        return ret;
+    }
+
     public TupleInfo getInfo() {
         return info;
     }
@@ -83,7 +93,7 @@ public class Tuple implements ITuple {
     public void setDimensionValue(String fieldName, String fieldValue) {
         setDimensionValue(info.getFieldIndex(fieldName), fieldValue);
     }
-    
+
     public void setDimensionValue(int idx, String fieldValue) {
         Object objectValue = convertOptiqCellValue(fieldValue, getDataTypeName(idx));
         values[idx] = objectValue;
@@ -92,7 +102,7 @@ public class Tuple implements ITuple {
     public void setMeasureValue(String fieldName, Object fieldValue) {
         setMeasureValue(info.getFieldIndex(fieldName), fieldValue);
     }
-    
+
     public void setMeasureValue(int idx, Object fieldValue) {
         String dataType = getDataTypeName(idx);
         // special handling for BigDecimal, allow double be aggregated as

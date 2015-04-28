@@ -78,7 +78,8 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     private Object[] convertCurrentRow(ITuple tuple) {
         // make sure the tuple layout is correct
-        assert tuple.getAllFields() == olapContext.returnTupleInfo.getAllFields();
+        //assert tuple.getAllFields().equals(olapContext.returnTupleInfo.getAllFields());
+
         current = tuple.getAllValues();
         return current;
     }
