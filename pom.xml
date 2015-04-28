@@ -674,6 +674,34 @@
             <id>apache-release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.16</version>
+                        <configuration>
+                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
+                            <excludes>
+                                <exclude>**/BuildCubeWithEngineTest.java</exclude>
+                                <exclude>**/BuildIIWithEngineTest.java</exclude>
+                                <exclude>**/SampleCubeSetupTest.java</exclude>
+                                <exclude>**/KylinQueryTest.java</exclude>
+                                <exclue>**/SnapshotManagerTest.java</exclue>
+                                <exclue>**/HiveTableReaderTest.java</exclue>
+                                <exclude>**/TableControllerTest.java</exclude>
+                            </excludes>
+                            <systemProperties>
+                                <property>
+                                    <name>useSandbox</name>
+                                    <value>false</value>
+                                </property>
+                                <property>
+                                    <name>buildCubeUsingProvidedData</name>
+                                    <value>false</value>
+                                </property>
+                            </systemProperties>
+                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=256M</argLine>
+                        </configuration>
+                    </plugin>
                     <!-- Apache-RAT checks for files without headers.
                          If run on a messy developer's sandbox, it will fail.
                          This serves as a reminder to only build a release in a clean
@@ -716,9 +744,11 @@
                                 <!-- MIT license -->
                                 <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
+
+                                <!-- jdbc log -->
+                                <exclude>jdbc/kylin_jdbc.*</exclude>
                               	
                             </excludes>
-                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=256M</argLine>
                         </configuration>
                         <executions>
                             <execution>
