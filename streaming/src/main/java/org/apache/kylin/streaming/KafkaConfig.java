@@ -61,9 +61,6 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("brokers")
     private List<BrokerConfig> brokerConfigs;
 
-    @JsonProperty("zookeeper")
-    private List<String> zookeepers;
-
     @JsonProperty("topic")
     private String topic;
 
