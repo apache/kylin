@@ -54,7 +54,7 @@ public class CoprocessorProjector {
         };
 
         byte[] mask = rowKeyMaskEncoder.encode(new byte[cuboid.getColumns().size()][]);
-        return new CoprocessorProjector(mask);
+        return new CoprocessorProjector(mask, dimensionColumns.size() != 0);
     }
 
     public static CoprocessorProjector makeForEndpoint(final TableRecordInfo tableInfo, final Collection<TblColRef> groupby) {
@@ -68,7 +68,7 @@ public class CoprocessorProjector {
                 mask[maskIdx++] = bits;
             }
         }
-        return new CoprocessorProjector(mask);
+        return new CoprocessorProjector(mask, groupby.size() != 0);
     }
 
     public static byte[] serialize(CoprocessorProjector o) {
@@ -90,12 +90,14 @@ public class CoprocessorProjector {
         @Override
         public void serialize(CoprocessorProjector value, ByteBuffer out) {
             BytesUtil.writeByteArray(value.groupByMask, out);
+            BytesUtil.writeVInt(value.hasGroupby ? 1 : 0, out);
         }
 
         @Override
         public CoprocessorProjector deserialize(ByteBuffer in) {
             byte[] mask = BytesUtil.readByteArray(in);
-            return new CoprocessorProjector(mask);
+            boolean hasGroupBy = BytesUtil.readVInt(in) == 1;
+            return new CoprocessorProjector(mask,hasGroupBy);
         }
     }
 
@@ -103,10 +105,16 @@ public class CoprocessorProjector {
 
     final transient AggrKey aggrKey;
     final byte[] groupByMask; // mask out columns that are not needed (by group by)
+    final boolean hasGroupby;
 
-    public CoprocessorProjector(byte[] groupByMask) {
+    public CoprocessorProjector(byte[] groupByMask, boolean hasGroupby) {
         this.groupByMask = groupByMask;
         this.aggrKey = new AggrKey(groupByMask);
+        this.hasGroupby = hasGroupby;
+    }
+
+    public boolean hasGroupby() {
+        return hasGroupby;
     }
 
     public AggrKey getAggrKey(List<Cell> rowCells) {

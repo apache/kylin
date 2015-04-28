@@ -3,6 +3,7 @@ package org.apache.kylin.storage.hbase.coprocessor;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.BytesUtil;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
@@ -11,6 +12,7 @@ import java.util.LinkedList;
 public class AggrKey implements Comparable<AggrKey> {
 
     final byte[] groupByMask;
+
     AggrKey(byte[] groupByMask) {
         this.groupByMask = groupByMask;
         LinkedList<Integer> list = Lists.newLinkedList();
@@ -51,10 +53,17 @@ public class AggrKey implements Comparable<AggrKey> {
         this.offset = offset;
     }
 
+    public byte[] getGroupByMask() {
+        return this.groupByMask;
+    }
+
+    public byte[] copyBytes() {
+        return Arrays.copyOfRange(data, offset, offset + length());
+    }
+
     AggrKey copy() {
         AggrKey copy = new AggrKey(this.groupByMask, this.groupByMaskSet);
-        copy.set(new byte[length()], 0);
-        System.arraycopy(this.data, this.offset, copy.data, copy.offset, length());
+        copy.set(copyBytes(), 0);
         return copy;
     }
 
