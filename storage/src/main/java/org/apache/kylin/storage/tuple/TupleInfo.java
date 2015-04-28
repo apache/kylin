@@ -79,6 +79,7 @@ public class TupleInfo {
 
     public void setField(String fieldName, TblColRef col, int index) {
         fieldMap.put(fieldName, index);
+
         if (col != null)
             columnMap.put(col, index);
 
