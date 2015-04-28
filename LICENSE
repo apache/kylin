@@ -52,3 +52,21 @@ You may add Your own copyright statement to Your modifications and may provide a
 
 END OF TERMS AND CONDITIONS
 
+
+
+
+==============================================================================
+Apache Kylin (incubating) Subcomponents:
+
+The Apache Kylin project contains subcomponents with separate copyright
+notices and license terms. Your use of the source code for the these
+subcomponents is subject to the terms and conditions of the following
+licenses.
+
+
+==============================================================================
+For AdminLTE:
+==============================================================================
+This product bundles AdminLTE, which is available under a
+"MIT" license.  For details, see
+https://github.com/almasaeed2010/AdminLTE/blob/master/LICENSE.
