@@ -67,7 +67,7 @@ public class HBaseStorageEngine implements IStorageEngine {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseStorageEngine.class);
 
-    private static final int MERGE_KEYRANGE_THRESHOLD = 7;
+    private static final int MERGE_KEYRANGE_THRESHOLD = 100;
     private static final long MEM_BUDGET_PER_QUERY = 3L * 1024 * 1024 * 1024; // 3G
 
     private final CubeInstance cubeInstance;
