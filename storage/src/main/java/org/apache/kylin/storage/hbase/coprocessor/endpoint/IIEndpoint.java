@@ -214,7 +214,6 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             final Dictionary<?>[] localDictionaries = slice.getLocalDictionaries();
             CoprocessorFilter newFilter;
             final boolean emptyDictionary = Array.isEmpty(localDictionaries);
-            logger.info("empty dictionary:" + emptyDictionary);
             if (emptyDictionary) {
                 newFilter = filter;
             } else {
@@ -232,9 +231,16 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             }
 
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
+
+            TblColRef[] columns = type.columns;
+            int[] finalColumnLength = new int[columns.length];
+            for (int i = 0; i < columns.length; ++i) {
+                finalColumnLength[i] = rowKeyColumnIO.getColumnLength(columns[i]);
+            }
+
             while (iterator.hasNext()) {
                 final RawTableRecord rawTableRecord = iterator.next();
-                decodeWithDictionary(recordBuffer, rawTableRecord, localDictionaries, recordInfo, rowKeyColumnIO, type);
+                decodeWithDictionary(recordBuffer, rawTableRecord, localDictionaries, recordInfo, rowKeyColumnIO, finalColumnLength);
 
                 if (needAgg) {
                     //if has group by, group them first, and extract entries later
@@ -270,57 +276,19 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         return responseBuilder.build();
     }
 
-    private IIProtos.IIResponseInternal getNonAggregatedResponse(Iterable<Slice> slices, TableRecordInfoDigest recordInfo, CoprocessorFilter filter, CoprocessorRowType type) {
-        IIProtos.IIResponseInternal.Builder responseBuilder = IIProtos.IIResponseInternal.newBuilder();
-        ClearTextDictionary clearTextDictionary = new ClearTextDictionary(recordInfo, type);
-        RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
-        final int byteFormLen = recordInfo.getByteFormLen();
-        int totalSize = 0;
-        byte[] recordBuffer = new byte[byteFormLen];
-        int iteratedSliceCount = 0;
-        long latestSliceTs = Long.MIN_VALUE;
-        for (Slice slice : slices) {
-            latestSliceTs = slice.getTimestamp();
-            iteratedSliceCount++;
-            CoprocessorFilter newFilter = CoprocessorFilter.fromFilter(new LocalDictionary(slice.getLocalDictionaries(), type, slice.getInfo()), filter.getFilter(), FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_LOCAL_DICT);
-            ConciseSet result = null;
-            if (filter != null) {
-                result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(newFilter.getFilter());
-            }
-
-            Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
-            while (iterator.hasNext()) {
-                if (totalSize >= MEMORY_LIMIT) {
-                    throw new RuntimeException("the query has exceeded the memory limit, please check the query");
-                }
-                final RawTableRecord rawTableRecord = iterator.next();
-                decodeWithDictionary(recordBuffer, rawTableRecord, slice.getLocalDictionaries(), recordInfo, rowKeyColumnIO, type);
-                IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(recordBuffer));
-                responseBuilder.addRows(rowBuilder.build());
-                totalSize += byteFormLen;
-            }
-        }
-        logger.info("Iterated Slices count: " + iteratedSliceCount);
-        responseBuilder.setStats(IIProtos.IIResponseInternal.Stats.newBuilder().setLatestDataTime(latestSliceTs).setServiceStartTime(this.serviceStartTime).setServiceEndTime(System.currentTimeMillis()).setScannedSlices(iteratedSliceCount));
-        return responseBuilder.build();
-    }
-
-    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, RowKeyColumnIO rowKeyColumnIO, CoprocessorRowType coprocessorRowType) {
-        final TblColRef[] columns = coprocessorRowType.columns;
-        final int columnSize = columns.length;
+    private void decodeWithDictionary(byte[] recordBuffer, RawTableRecord encodedRecord, Dictionary<?>[] localDictionaries, TableRecordInfoDigest digest, RowKeyColumnIO rowKeyColumnIO, int[] finalColumnLengths) {
         final boolean[] isMetric = digest.isMetrics();
         final boolean emptyDictionary = Array.isEmpty(localDictionaries);
-        for (int i = 0; i < columnSize; i++) {
-            final TblColRef column = columns[i];
+        for (int i = 0; i < finalColumnLengths.length; i++) {
             if (isMetric[i]) {
-                rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
+                rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), finalColumnLengths[i]);
             } else {
                 if (emptyDictionary) {
-                    rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
+                    rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), finalColumnLengths[i]);
                 } else {
                     final Dictionary<?> localDictionary = localDictionaries[i];
                     final byte[] valueBytesFromId = localDictionary.getValueBytesFromId(encodedRecord.getValueID(i));
-                    rowKeyColumnIO.writeColumnWithoutDictionary(valueBytesFromId, 0, valueBytesFromId.length, recordBuffer, digest.offset(i), rowKeyColumnIO.getColumnLength(column));
+                    rowKeyColumnIO.writeColumnWithoutDictionary(valueBytesFromId, 0, valueBytesFromId.length, recordBuffer, digest.offset(i), finalColumnLengths[i]);
                 }
             }
         }

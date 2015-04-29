@@ -1,10 +1,12 @@
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.BytesUtil;
-
 import java.util.Arrays;
 import java.util.LinkedList;
+
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.cube.kv.RowConstants;
+
+import com.google.common.collect.Lists;
 
 /**
  * Created by qianzhou on 4/20/15.
@@ -12,6 +14,10 @@ import java.util.LinkedList;
 public class AggrKey implements Comparable<AggrKey> {
 
     final byte[] groupByMask;
+    final transient int[] groupByMaskSet;
+    transient int hashcode;
+    byte[] data;
+    int offset;
 
     AggrKey(byte[] groupByMask) {
         this.groupByMask = groupByMask;
@@ -27,14 +33,25 @@ public class AggrKey implements Comparable<AggrKey> {
         }
     }
 
-    private AggrKey(byte[] groupByMask, int[] groupByMaskSet) {
+    private AggrKey(byte[] groupByMask, int[] groupByMaskSet, byte[] data, int offset, int hashcode) {
         this.groupByMask = groupByMask;
         this.groupByMaskSet = groupByMaskSet;
+        this.data = data;
+        this.offset = offset;
+        this.hashcode = hashcode;
     }
 
-    final transient int[] groupByMaskSet;
-    byte[] data;
-    int offset;
+    private int calculateHash()
+    {
+        int hash = 1;
+        for (int i = 0; i < groupByMaskSet.length; i++) {
+            byte t = data[offset + groupByMaskSet[i]];
+            if(t!= RowConstants.ROWKEY_PLACE_HOLDER_BYTE) {
+                hash = (31 * hash) + t;
+            }
+        }
+        return hash; 
+    }
 
     public byte[] get() {
         return data;
@@ -51,6 +68,7 @@ public class AggrKey implements Comparable<AggrKey> {
     void set(byte[] data, int offset) {
         this.data = data;
         this.offset = offset;
+        this.hashcode = calculateHash();
     }
 
     public byte[] getGroupByMask() {
@@ -62,18 +80,13 @@ public class AggrKey implements Comparable<AggrKey> {
     }
 
     AggrKey copy() {
-        AggrKey copy = new AggrKey(this.groupByMask, this.groupByMaskSet);
-        copy.set(copyBytes(), 0);
+        AggrKey copy = new AggrKey(this.groupByMask, this.groupByMaskSet, copyBytes(), 0, this.hashcode);
         return copy;
     }
 
     @Override
     public int hashCode() {
-        int hash = 1;
-        for (int i = 0; i < groupByMaskSet.length; i++) {
-            hash = (31 * hash) + data[offset + groupByMaskSet[i]];
-        }
-        return hash;
+        return hashcode;
     }
 
     @Override
@@ -85,9 +98,6 @@ public class AggrKey implements Comparable<AggrKey> {
         if (getClass() != obj.getClass())
             return false;
         AggrKey other = (AggrKey) obj;
-        if (this.length() != other.length())
-            return false;
-
         return compareTo(other) == 0;
     }
 

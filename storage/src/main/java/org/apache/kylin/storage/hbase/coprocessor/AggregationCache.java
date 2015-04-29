@@ -18,22 +18,24 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
+
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 
-import java.util.SortedMap;
+import com.google.common.collect.Maps;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
 @SuppressWarnings("rawtypes")
 public abstract class AggregationCache {
-    transient int rowMemBytes;
     static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
-    protected final SortedMap<AggrKey, MeasureAggregator[]> aggBufMap;
+    protected final Map<AggrKey, MeasureAggregator[]> aggBufMap;
+    transient int rowMemBytes;
+    private AggrKey firstKey = null;
 
     public AggregationCache() {
-        this.aggBufMap = Maps.newTreeMap();
+        this.aggBufMap = Maps.newHashMap();
     }
 
     public abstract MeasureAggregator[] createBuffer();
@@ -42,7 +44,12 @@ public abstract class AggregationCache {
         MeasureAggregator[] aggBuf = aggBufMap.get(aggkey);
         if (aggBuf == null) {
             aggBuf = createBuffer();
-            aggBufMap.put(aggkey.copy(), aggBuf);
+            AggrKey key = aggkey.copy();
+            aggBufMap.put(key, aggBuf);
+
+            if (firstKey == null) {
+                firstKey = key;
+            }
         }
         return aggBuf;
     }
@@ -52,12 +59,15 @@ public abstract class AggregationCache {
     }
 
     public void checkMemoryUsage() {
+        if (firstKey == null)
+            return;
+
         // about memory calculation,
         // http://seniorjava.wordpress.com/2013/09/01/java-objects-memory-size-reference/
         if (rowMemBytes <= 0) {
             if (aggBufMap.size() > 0) {
                 rowMemBytes = 0;
-                MeasureAggregator[] measureAggregators = aggBufMap.get(aggBufMap.firstKey());
+                MeasureAggregator[] measureAggregators = aggBufMap.get(firstKey);
                 for (MeasureAggregator agg : measureAggregators) {
                     rowMemBytes += agg.getMemBytes();
                 }
