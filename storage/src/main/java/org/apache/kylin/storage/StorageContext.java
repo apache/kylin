@@ -24,6 +24,9 @@ import java.util.List;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
 /**
  * @author xjiang
  */
