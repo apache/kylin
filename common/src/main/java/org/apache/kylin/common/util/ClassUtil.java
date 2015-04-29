@@ -22,12 +22,15 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.WeakHashMap;
 
 /**
  * @author xduo
  * 
  */
 public class ClassUtil {
+
+    private static WeakHashMap<String, Class<?>> forNameCache = new WeakHashMap<>();
 
     public static void addClasspath(String path) throws Exception {
         System.out.println("Adding path " + path + " to class path");
@@ -41,13 +44,22 @@ public class ClassUtil {
             method.invoke(urlClassLoader, new Object[] { file.toURI().toURL() });
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     public static <T> Class<? extends T> forName(String name, Class<T> clz) throws ClassNotFoundException {
+
         if (name.startsWith("com.kylinolap")) {
             name = "org.apache.kylin" + name.substring("com.kylinolap".length());
         }
-        return (Class<? extends T>) Class.forName(name);
+
+        if (forNameCache.containsKey(name)) {
+            return (Class<? extends T>) forNameCache.get(name);
+        }
+
+        Class<?> ret = Class.forName(name);
+        forNameCache.put(name, ret);
+
+        return (Class<? extends T>) ret;
     }
 
 }

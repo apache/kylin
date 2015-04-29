@@ -106,7 +106,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
             String converterName = headIn.readUTF();
             if (converterName.isEmpty() == false)
-                this.bytesConvert = (BytesConverter<T>) ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
 
             this.nValues = BytesUtil.readUnsigned(trieBytes, headSize + sizeChildOffset, sizeNoValuesBeneath);
             this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
