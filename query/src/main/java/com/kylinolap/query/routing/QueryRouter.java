@@ -284,7 +284,7 @@ public class QueryRouter {
                 if (col != null) {
                     metricColumns.remove(col);
                     dimensionColumns.add(col);
-                    olapContext.storageContext.addOtherMandatoryColumns(col);
+                    olapContext.groupByColumns.add(col);
                 }
                 logger.info("Adjust OLAPContext for " + functionDesc);
             }

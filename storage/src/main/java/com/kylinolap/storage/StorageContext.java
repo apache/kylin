@@ -16,9 +16,7 @@
 package com.kylinolap.storage;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -50,7 +48,6 @@ public class StorageContext {
     // To hint records shall be returned at most granular level, avoid aggregation (coprocessor) wherever possible.
     private boolean avoidAggregation;
     private boolean exactAggregation;
-    private Set<TblColRef> otherMandatoryColumns;
     private boolean enableLimit;
     private boolean enableCoprocessor;
 
@@ -70,7 +67,6 @@ public class StorageContext {
 
         this.avoidAggregation = false;
         this.exactAggregation = false;
-        this.otherMandatoryColumns = new HashSet<TblColRef>();
         this.enableLimit = false;
         this.enableCoprocessor = false;
 
@@ -191,14 +187,6 @@ public class StorageContext {
     
     public boolean isExactAggregation() {
         return this.exactAggregation;
-    }
-    
-    public void addOtherMandatoryColumns(TblColRef col) {
-        this.otherMandatoryColumns.add(col);
-    }
-    
-    public Set<TblColRef> getOtherMandatoryColumns() {
-        return this.otherMandatoryColumns;
     }
     
     public void enableCoprocessor() {

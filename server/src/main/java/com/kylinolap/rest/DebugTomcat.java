@@ -16,31 +16,54 @@
 package com.kylinolap.rest;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
 import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.hadoop.util.Shell;
 
-import com.kylinolap.rest.util.ClasspathUtil;
+import com.kylinolap.common.KylinConfig;
+import com.kylinolap.common.util.ClasspathUtil;
 
 public class DebugTomcat {
 
     public static void main(String[] args) throws Exception {
-        if (args.length >= 1) {
-            System.setProperty("kylin.metadata.url", args[0]);
-        }
         int port = 7070;
-        if (args.length >= 2) {
-            port = Integer.parseInt(args[1]);
+        if (args.length >= 1) {
+            port = Integer.parseInt(args[0]);
         }
-
+        
+        // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
         ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
+        System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
         System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
 
+        // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052
+        if (Shell.WINDOWS) {
+            {
+                Field field = Shell.class.getDeclaredField("WINDOWS");
+                field.setAccessible(true);
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+                field.set(null, false);
+            }
+            {
+                Field field = java.io.File.class.getDeclaredField("pathSeparator");
+                field.setAccessible(true);
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+                field.set(null, ":");
+            }
+        }
+
+        System.setProperty("spring.profiles.active", "testing");
         String webBase = new File("../webapp/app").getAbsolutePath();
-//        String apiBase = new File("src/main/webapp").getAbsolutePath();
         if (new File(webBase, "WEB-INF").exists() == false) {
             throw new RuntimeException("In order to launch Kylin web app from IDE, please make a symblink from webapp/app/WEB-INF to server/src/main/webapp/WEB-INF");
         }
@@ -54,7 +77,6 @@ public class DebugTomcat {
         AprLifecycleListener listener = new AprLifecycleListener();
         server.addLifecycleListener(listener);
 
-//        tomcat.addWebapp("/kylin", apiBase);
         Context webContext = tomcat.addWebapp("/kylin", webBase);
         ErrorPage notFound = new ErrorPage();
         notFound.setErrorCode(404);
