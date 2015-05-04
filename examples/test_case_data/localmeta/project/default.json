@@ -33,6 +33,11 @@
       "realization": "test_kylin_ii_inner_join"
     },
     {
+      "name": "test_streaming_table",
+      "type": "INVERTED_INDEX",
+      "realization": "test_streaming_table"
+    },
+    {
       "name": "test_kylin_hybrid_left_join",
       "type": "HYBRID",
       "realization": "test_kylin_hybrid_left_join"
