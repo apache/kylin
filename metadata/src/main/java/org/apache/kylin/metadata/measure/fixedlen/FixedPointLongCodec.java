@@ -18,27 +18,22 @@
 
 package org.apache.kylin.metadata.measure.fixedlen;
 
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.hadoop.io.LongWritable;
-
 import org.apache.kylin.common.util.BytesUtil;
-
-import java.math.BigDecimal;
+import org.apache.kylin.metadata.model.DataType;
 
 public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
 
     private static final int SIZE = 8;
     // number of digits after decimal point
     int scale;
-    BigDecimal scalePower;
     DataType type;
-    // avoid mass object creation
+    // avoid massive object creation
     LongWritable current = new LongWritable();
 
     public FixedPointLongCodec(DataType type) {
         this.type = type;
         this.scale = Math.max(0, type.getScale());
-        this.scalePower = new BigDecimal((long) Math.pow(10, scale));
     }
 
     @Override
@@ -51,12 +46,48 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
         return type;
     }
 
+    long getValueIgnoringDecimalPoint(String value) {
+        int index = value.indexOf('.');
+
+        if (index == 0 || index == value.length() - 1) {
+            throw new RuntimeException("Bad decimal format: " + value);
+        } else if (index < 0) {
+            return Long.valueOf(value) * (int) Math.pow(10, scale);
+        } else {
+            StringBuilder sb = new StringBuilder();
+            sb.append(value.substring(0, index));
+
+            //if there are more than scale digits after the decimal point, the tail will be discarded
+            int end = Math.min(value.length(), index + scale + 1);
+            sb.append(value.substring(index + 1, end));
+            int diff = index + scale + 1 - value.length();
+            //if there are less than scale digits after the decimal point, the tail will be compensated
+            for (int i = 0; i < diff; i++) {
+                sb.append('0');
+            }
+            return Long.valueOf(sb.toString());
+        }
+    }
+
+    String restoreDecimalPoint(long value) {
+        String valueStr = Long.toString(value);
+        if (scale < 0 || scale >= valueStr.length()) {
+            throw new RuntimeException("Bad scale: " + scale + " with value: " + value);
+        } else if (scale == 0) {
+            return Long.toString(value);
+        } else {
+            StringBuilder sb = new StringBuilder(valueStr);
+            sb.insert(valueStr.length() - scale, '.');
+            return sb.toString();
+        }
+    }
+
     @Override
     public LongWritable valueOf(String value) {
         if (value == null)
             current.set(0L);
         else
-            current.set((new BigDecimal(value).multiply(scalePower).longValue()));
+            current.set(getValueIgnoringDecimalPoint(value));
         return current;
     }
 
@@ -65,7 +96,7 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
         if (scale == 0)
             return current.toString();
         else
-            return "" + (new BigDecimal(current.get()).divide(scalePower));
+            return restoreDecimalPoint(current.get());
     }
 
     @Override

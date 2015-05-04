@@ -28,7 +28,7 @@
   }, {
     "id" : "7",
     "name" : "PRICE",
-    "datatype" : "decimal(19,4)"
+    "datatype" : "decimal"
   }, {
     "id" : "8",
     "name" : "ITEM_COUNT",
