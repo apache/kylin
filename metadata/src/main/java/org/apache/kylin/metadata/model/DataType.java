@@ -153,8 +153,8 @@ public class DataType {
 
         // FIXME (19,4) for unknown decimal precision
         if ((name.equals("decimal") || name.equals("numeric")) && precision == -1) {
-            precision = 39;
-            scale = 16;
+            precision = 19;
+            scale = 4;
         }
 
         if (isHLLC() && HLLC_PRECISIONS.contains(precision) == false)
