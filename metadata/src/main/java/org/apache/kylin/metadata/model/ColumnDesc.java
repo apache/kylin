@@ -135,7 +135,7 @@ public class ColumnDesc {
         if (id != null)
             zeroBasedIndex = Integer.parseInt(id) - 1;
 
-        type = DataType.getInstance(datatype);
+        this.setDatatype(DataType.getInstance(datatype).toString());
     }
 
     public boolean isSameAs(String tableName, String columnName) {
