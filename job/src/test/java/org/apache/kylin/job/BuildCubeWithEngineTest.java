@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,12 +51,15 @@ import static org.junit.Assert.assertEquals;
 
 public class BuildCubeWithEngineTest {
 
-    private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
-
     private JobEngineConfig jobEngineConfig;
+
     private CubeManager cubeManager;
+
     private DefaultScheduler scheduler;
+
     protected ExecutableManager jobService;
+
+    private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
 
     protected void waitForJob(String jobId) {
         while (true) {
@@ -104,6 +107,7 @@ public class BuildCubeWithEngineTest {
                 jobService.deleteJob(jobId);
             }
         }
+
     }
 
     @After
@@ -121,7 +125,7 @@ public class BuildCubeWithEngineTest {
     private void testInner() throws Exception {
         String[] testCase = new String[]{
                 "testInnerJoinCube",
-                //"testInnerJoinCube2",
+                "testInnerJoinCube2",
         };
         runTestAndAssertSucceed(testCase);
     }
@@ -129,7 +133,7 @@ public class BuildCubeWithEngineTest {
     private void testLeft() throws Exception {
         String[] testCase = new String[]{
                 "testLeftJoinCube",
-               // "testLeftJoinCube2",
+                "testLeftJoinCube2",
         };
         runTestAndAssertSucceed(testCase);
     }
@@ -190,7 +194,7 @@ public class BuildCubeWithEngineTest {
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         long date1 = 0;
         long date2 = f.parse("2013-01-01").getTime();
-        long date3 = f.parse("2015-01-01").getTime();
+        long date3 = f.parse("2022-01-01").getTime();
         List<String> result = Lists.newArrayList();
         result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
         result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));
@@ -205,8 +209,12 @@ public class BuildCubeWithEngineTest {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
 
+        // this cube's start date is 0, end date is 20501112000000
         long date1 = 0;
-        long date2 = f.parse("2013-01-12").getTime();
+        long date2 = f.parse("2013-01-01").getTime();
+
+
+        // this cube doesn't support incremental build, always do full build
 
         List<String> result = Lists.newArrayList();
         result.add(buildSegment("test_kylin_cube_without_slr_empty", date1, date2));
@@ -227,9 +235,9 @@ public class BuildCubeWithEngineTest {
         result.add(buildSegment(cubeName, dateStart, dateEnd));
 
         // then submit an append job, start date is 20120601000000, end
-        // date is 20150101000000
+        // date is 20220101000000
         dateStart = f.parse("2012-06-01").getTime();
-        dateEnd = f.parse("2015-01-01").getTime();
+        dateEnd = f.parse("2022-01-01").getTime();
         result.add(buildSegment(cubeName, dateStart, dateEnd));
         return result;
 
@@ -243,8 +251,9 @@ public class BuildCubeWithEngineTest {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         long dateStart = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
-        long dateEnd = f.parse("2012-12-31").getTime();
+        long dateEnd = f.parse("2050-11-12").getTime();
 
+        // this cube's start date is 0, end date is 20501112000000
         List<String> result = Lists.newArrayList();
         result.add(buildSegment(cubeName, dateStart, dateEnd));
         return result;
