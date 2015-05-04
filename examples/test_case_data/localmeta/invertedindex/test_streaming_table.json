@@ -1,0 +1,33 @@
+{
+  "uuid": "daa53e80-41be-49a5-89ca-9fb729999812",
+  "name": "test_streaming_table",
+  "owner": null,
+  "version": null,
+  "cost": 10,
+  "status": "READY",
+  "segments": [
+    {
+      "uuid": null,
+      "name": "19700101000000_20140901000000",
+      "status": "READY",
+      "dictionaries": {
+      },
+      "storage_location_identifier": "",
+      "date_range_start": 0,
+      "date_range_end": 0,
+      "size_kb": 0,
+      "input_records": 0,
+      "input_records_size": 0,
+      "last_build_time": 0,
+      "last_build_job_id": null,
+      "create_time": null,
+      "binary_signature": null
+    }
+  ],
+  "last_modified": 0,
+  "descriptor": "test_streaming_table_desc",
+  "create_time": null,
+  "input_records_size": 0,
+  "size_kb": 0,
+  "source_records_count": 0
+}
