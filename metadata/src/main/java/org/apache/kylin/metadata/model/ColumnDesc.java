@@ -18,11 +18,13 @@
 
 package org.apache.kylin.metadata.model;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Column Metadata from Source. All name should be uppercase.
@@ -32,6 +34,9 @@ import org.apache.commons.lang.StringUtils;
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ColumnDesc {
+
+    private static final Logger logger = LoggerFactory.getLogger(ColumnDesc.class);
+
     @JsonProperty("id")
     private String id;
     @JsonProperty("name")
@@ -49,6 +54,16 @@ public class ColumnDesc {
     public ColumnDesc() { // default constructor for Jackson
     }
 
+    public static ColumnDesc mockup(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
+        ColumnDesc desc = new ColumnDesc();
+        String id = "" + oneBasedColumnIndex;
+        desc.setId(id);
+        desc.setName(name);
+        desc.setDatatype(datatype);
+        desc.init(table);
+        return desc;
+    }
+
     public int getZeroBasedIndex() {
         return zeroBasedIndex;
     }
@@ -58,6 +73,7 @@ public class ColumnDesc {
     }
 
     public void setDatatype(String datatype) {
+        logger.info("setting datatype to " + datatype);
         this.datatype = datatype;
         type = DataType.getInstance(datatype);
     }
@@ -102,12 +118,12 @@ public class ColumnDesc {
         return type.getScale();
     }
 
-    public void setNullable(boolean nullable) {
-        this.isNullable = nullable;
-    }
-
     public boolean isNullable() {
         return this.isNullable;
+    }
+
+    public void setNullable(boolean nullable) {
+        this.isNullable = nullable;
     }
 
     public void init(TableDesc table) {
@@ -130,15 +146,5 @@ public class ColumnDesc {
     @Override
     public String toString() {
         return "ColumnDesc [name=" + name + ",table=" + table.getIdentity() + "]";
-    }
-
-    public static ColumnDesc mockup(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
-        ColumnDesc desc = new ColumnDesc();
-        String id = "" + oneBasedColumnIndex;
-        desc.setId(id);
-        desc.setName(name);
-        desc.setDatatype(datatype);
-        desc.init(table);
-        return desc;
     }
 }
