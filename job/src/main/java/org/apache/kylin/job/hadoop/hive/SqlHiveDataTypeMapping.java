@@ -26,6 +26,8 @@ public class SqlHiveDataTypeMapping {
 
     public static String getHiveDataType(String javaDataType) {
         String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
+        hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
+
         return hiveDataType.toLowerCase();
     }
 }
