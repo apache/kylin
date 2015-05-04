@@ -18,29 +18,14 @@
 
 package org.apache.kylin.job.hadoop.hive;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author George Song (ysong1)
  * 
  */
 public class SqlHiveDataTypeMapping {
 
-    private static final Map<String, String> sqlToHiveDataTypeMapping = new HashMap<String, String>();
-
-    static {
-        sqlToHiveDataTypeMapping.put("short", "smallint");
-        sqlToHiveDataTypeMapping.put("long", "bigint");
-        sqlToHiveDataTypeMapping.put("byte", "tinyint");
-        sqlToHiveDataTypeMapping.put("datetime", "date");
-    }
-
     public static String getHiveDataType(String javaDataType) {
-        String hiveDataType = sqlToHiveDataTypeMapping.get(javaDataType.toLowerCase());
-        if (hiveDataType == null) {
-            hiveDataType = javaDataType;
-        }
+        String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
         return hiveDataType.toLowerCase();
     }
 }
