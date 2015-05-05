@@ -1,0 +1,20 @@
+{
+  "uuid": "8b2b9dfe-900c-4d39-bf89-8472ec909322",
+  "name": "test_streaming_table",
+  "zookeeper": "sandbox:2181",
+  "topic": "test_streaming_table",
+  "timeout": 60000,
+  "maxReadCount": 1000,
+  "bufferSize": 65536,
+  "iiName": "test_streaming_table",
+  "parserName": "org.apache.kylin.streaming.JsonStreamParser",
+  "partition": 1,
+  "last_modified": 0,
+  "brokers": [
+    {
+      "id": 0,
+      "host": "sandbox",
+      "port": 6667
+    }
+  ]
+}

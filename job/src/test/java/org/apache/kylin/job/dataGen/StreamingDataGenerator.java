@@ -1,17 +1,18 @@
 package org.apache.kylin.job.dataGen;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -25,23 +26,23 @@ public class StreamingDataGenerator {
     private static Random random = new Random();
     private static String[] decimalFormat = new String[] { "%.4f", "%.5f", "%.6f" };
 
-    public static Iterator<List<String>> generate(final long start, final long end, final int count) {
+    public static Iterator<String> generate(final long start, final long end, final int count) {
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
         final IIInstance ii = IIManager.getInstance(config).getII("test_streaming_table");
         final IIDesc iiDesc = ii.getDescriptor();
-        final MetadataManager metadataManager = MetadataManager.getInstance(config);
-        final ColumnDesc[] columnDescs = metadataManager.getTableDesc(iiDesc.getFactTableName()).getColumns();
+        final List<TblColRef> columns = iiDesc.listAllColumns();
 
-        return new Iterator<List<String>>() {
-            private Map<String, String> values = Maps.newHashMap();
+        return new Iterator<String>() {
+            private Map<String, String> values = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
+            private int index = 0;
 
             @Override
             public boolean hasNext() {
-                return false;
+                return this.index < count;
             }
 
             @Override
-            public List<String> next() {
+            public String next() {
                 values.clear();
                 long ts = this.createTs(start, end);
                 values.put("ts", Long.toString(ts));
@@ -53,16 +54,19 @@ public class StreamingDataGenerator {
                 values.put("gmv", String.format(decimalFormat[random.nextInt(3)], random.nextFloat() * 100));
                 values.put("item_count", Integer.toString(random.nextInt(5)));
 
-                if (values.size() != columnDescs.length) {
+                if (values.size() != columns.size()) {
                     throw new RuntimeException("the structure of streaming table has changed, need to modify generator too");
                 }
 
-                List<String> ret = Lists.newArrayList();
-                for (ColumnDesc columnDesc : columnDescs) {
-                    String name = columnDesc.getName();
-                    ret.add(values.get(name));
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                try {
+                    JsonUtil.writeValue(os, values);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
-                return ret;
+                index++;
+                return new String(os.toByteArray());
             }
 
             @Override
