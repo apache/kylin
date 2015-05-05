@@ -70,15 +70,12 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
     }
 
     String restoreDecimalPoint(long value) {
-        String valueStr = Long.toString(value);
-        if (scale < 0 || scale >= valueStr.length()) {
+        if (scale < 0) {
             throw new RuntimeException("Bad scale: " + scale + " with value: " + value);
         } else if (scale == 0) {
             return Long.toString(value);
         } else {
-            StringBuilder sb = new StringBuilder(valueStr);
-            sb.insert(valueStr.length() - scale, '.');
-            return sb.toString();
+            return String.format("%." + scale + "f", value / (Math.pow(10, scale)));
         }
     }
 
