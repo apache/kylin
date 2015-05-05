@@ -34,27 +34,30 @@
 
 package org.apache.kylin.job.streaming;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.streaming.*;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 /**
  * Created by qianzhou on 3/26/15.
@@ -69,6 +72,12 @@ public class StreamingBootstrap {
 
     private Map<String, KafkaConsumer> kafkaConsumers = Maps.newConcurrentMap();
 
+    private StreamingBootstrap(KylinConfig kylinConfig) {
+        this.kylinConfig = kylinConfig;
+        this.streamingManager = StreamingManager.getInstance(kylinConfig);
+        this.iiManager = IIManager.getInstance(kylinConfig);
+    }
+
     public static StreamingBootstrap getInstance(KylinConfig kylinConfig) {
         final StreamingBootstrap bootstrap = new StreamingBootstrap(kylinConfig);
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -78,12 +87,6 @@ public class StreamingBootstrap {
             }
         }));
         return bootstrap;
-    }
-
-    private StreamingBootstrap(KylinConfig kylinConfig) {
-        this.kylinConfig = kylinConfig;
-        this.streamingManager = StreamingManager.getInstance(kylinConfig);
-        this.iiManager = IIManager.getInstance(kylinConfig);
     }
 
     private static Broker getLeadBroker(KafkaConfig kafkaConfig, int partitionId) {
@@ -137,11 +140,7 @@ public class StreamingBootstrap {
         streamingOffset = Math.max(streamingOffset, earliestOffset);
         logger.info("starting offset is " + streamingOffset);
 
-        if (!HBaseConnection.tableExists(kylinConfig.getStorageUrl(), iiSegment.getStorageLocationIdentifier())) {
-            logger.error("no htable:" + iiSegment.getStorageLocationIdentifier() + " found");
-            throw new IllegalStateException("please create htable:" + iiSegment.getStorageLocationIdentifier() + " first");
-        }
-
+        IICreateHTableJob.main(new String[] { "-iiname", "nous_ii", "-htablename", "KYLIN_2SKJ8JNOUS" });
 
         KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId, streamingOffset, kafkaConfig.getBrokers(), kafkaConfig, parallelism);
         kafkaConsumers.put(getKey(streaming, partitionId), consumer);
@@ -165,7 +164,6 @@ public class StreamingBootstrap {
                 streamingBuilderPool.submit(task);
             }
         }
-
 
     }
 
