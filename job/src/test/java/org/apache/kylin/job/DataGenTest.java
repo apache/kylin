@@ -72,13 +72,15 @@ public class DataGenTest extends LocalFileMetadataTestCase {
         int totalCount = 10000;
         int counter = 0;
 
-        Iterator<String> iterator = StreamingDataGenerator.generate(DateFormat.stringToMillis("2015-01-03"), DateFormat.stringToMillis("2015-01-06"), totalCount);
+        Iterator<String> iterator = StreamingDataGenerator.generate(DateFormat.stringToMillis("2015-01-03"), DateFormat.stringToMillis("2015-02-05"), totalCount);
 
         iterator = SortUtil.extractAndSort(iterator, new Function<String, Comparable>() {
             public Comparable apply(String input) {
                 return getTsStr(input);
             }
         });
+
+        //FileUtils.writeLines(new File("//Users/honma/streaming_table_data"),Lists.newArrayList(iterator));
 
         long lastTs = 0;
         while (iterator.hasNext()) {
