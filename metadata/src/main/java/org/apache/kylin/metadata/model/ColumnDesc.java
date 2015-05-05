@@ -73,7 +73,7 @@ public class ColumnDesc {
     }
 
     public void setDatatype(String datatype) {
-        logger.info("setting datatype to " + datatype);
+        //logger.info("setting datatype to " + datatype);
         this.datatype = datatype;
         type = DataType.getInstance(datatype);
     }

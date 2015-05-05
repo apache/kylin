@@ -34,6 +34,7 @@
 
 package org.apache.kylin.streaming;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
@@ -54,18 +55,19 @@ import java.util.Map;
 public final class JsonStreamParser implements StreamParser {
 
     private static final Logger logger = LoggerFactory.getLogger(JsonStreamParser.class);
+    private static final JavaType javaType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final List<TblColRef> allColumns;
 
-    public JsonStreamParser(List<TblColRef> allColumns){
+    public JsonStreamParser(List<TblColRef> allColumns) {
         this.allColumns = allColumns;
     }
 
     @Override
     public List<String> parse(StreamMessage streamMessage) {
         try {
-            Map<String, String> json = new ObjectMapper().readValue(
-                    streamMessage.getRawData(), MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class)));
+            Map<String, String> json = objectMapper.readValue(streamMessage.getRawData(), javaType);
             ArrayList<String> result = Lists.newArrayList();
             for (TblColRef column : allColumns) {
                 for (Map.Entry<String, String> entry : json.entrySet()) {
