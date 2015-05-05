@@ -15,7 +15,7 @@ public class DateFormat {
 
     static final private Map<String, ThreadLocal<SimpleDateFormat>> threadLocalMap = new ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>();
 
-    static SimpleDateFormat getDateFormat(String datePattern) {
+    public static SimpleDateFormat getDateFormat(String datePattern) {
         ThreadLocal<SimpleDateFormat> formatThreadLocal = threadLocalMap.get(datePattern);
         if (formatThreadLocal == null) {
             threadLocalMap.put(datePattern, formatThreadLocal = new ThreadLocal<SimpleDateFormat>());
@@ -35,10 +35,6 @@ public class DateFormat {
 
     public static String formatToTimeStr(long millis) {
         return getDateFormat(DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).format(new Date(millis));
-    }
-
-    public static String dateToString(Date date) {
-        return dateToString(date, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
     }
 
     public static String dateToString(Date date, String pattern) {

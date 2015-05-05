@@ -13,6 +13,7 @@
       ]
     }
   ],
+  "lookups": [],
   "metrics": [
     "gmv",
     "item_count"
