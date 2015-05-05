@@ -54,4 +54,8 @@ public class DataGenTest extends LocalFileMetadataTestCase {
         DeployUtil.overrideFactTableData(content, "default.test_kylin_fact");
     }
 
+    @Test
+    public void testStreaming() throws Exception {
+    }
+
 }
