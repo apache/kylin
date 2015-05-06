@@ -287,7 +287,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "statisticsenabled", String.valueOf(inMemoryCubing()));
         appendExecCmdParameters(cmd, "statisticsoutput", getStatisticsPath(seg, jobId));
-        appendExecCmdParameters(cmd, "statisticssamplingmax", String.valueOf(engineConfig.getConfig().getCubingInMemSamplingMax()));
+        appendExecCmdParameters(cmd, "statisticssamplingpercent", String.valueOf(engineConfig.getConfig().getCubingInMemSamplingPercent()));
         appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + seg.getCubeInstance().getName() + "_Step");
         appendExecCmdParameters(cmd, "tablename", intermediateHiveTableName);
 

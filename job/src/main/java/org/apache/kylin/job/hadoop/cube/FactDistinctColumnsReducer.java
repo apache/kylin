@@ -58,7 +58,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
     private long totalRowsBeforeMerge = 0;
-    private double averageSamplingRatio = 1;
+    private int SAMPING_PERCENTAGE = 5;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -80,6 +80,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             baseCuboidRowCountInMappers = Lists.newArrayList();
             rowCountInCuboids = Maps.newHashMap();
             cuboidHLLMap = Maps.newHashMap();
+            SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
         }
     }
 
@@ -112,7 +113,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             // for hll
             long cuboidId = 0 - key.get();
 
-            if (cuboidId <= baseCuboidId) {
                 for (Text value : values) {
                     HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
                     ByteArray byteArray = new ByteArray(value.getBytes());
@@ -130,17 +130,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
                         cuboidHLLMap.put(cuboidId, hll);
                     }
                 }
-            } else {
-                int mapperCount = 0;
-                averageSamplingRatio = 0;
-                for (Text value : values) {
-                    averageSamplingRatio += Bytes.toDouble(value.getBytes());
-                    mapperCount++;
-                }
-
-                averageSamplingRatio = averageSamplingRatio / mapperCount;
-
-            }
         }
 
     }
@@ -173,10 +162,10 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
             msg = "Total cuboid number: \t" + allCuboids.size();
             writeLine(out, msg);
-            msg = "Avg samping ratio: \t" + averageSamplingRatio;
+            msg = "Samping percentage: \t" + SAMPING_PERCENTAGE;
             writeLine(out, msg);
 
-            writeLine(out, "The following statistics are collected based sampling data, not all data (only if samping ratio = 1).");
+            writeLine(out, "The following statistics are collected based sampling data.");
             for (int i = 0; i < baseCuboidRowCountInMappers.size(); i++) {
                 if (baseCuboidRowCountInMappers.get(i) > 0) {
                     msg = "Base Cuboid in Mapper " + i + " row count: \t " + baseCuboidRowCountInMappers.get(i);
@@ -223,7 +212,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         Collections.sort(allCuboids);
         try {
             for (long i : allCuboids) {
-                writer.append(new LongWritable(i), new LongWritable((long) (rowCountInCuboids.get(i) / averageSamplingRatio)));
+                writer.append(new LongWritable(i), new LongWritable((long) (rowCountInCuboids.get(i) *100 / SAMPING_PERCENTAGE)));
             }
         } finally {
             writer.close();
