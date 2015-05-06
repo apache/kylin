@@ -203,6 +203,11 @@ public class DataType {
         return DATETIME_FAMILY.contains(name);
     }
 
+    public boolean isDate()
+    {
+        return name.equals("date");
+    }
+
     public boolean isTinyInt() {
         return name.equals("tinyint");
     }

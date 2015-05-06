@@ -36,14 +36,14 @@ import java.util.*;
 /**
  * @author yangli9
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
 
     private static final int DICT_MAX_CARDINALITY = 2000000; // 2 million
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
-    private static final String[] DATE_PATTERNS = new String[]{"yyyy-MM-dd"};
+    private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd" };
 
     public static Dictionary<?> buildDictionaryFromValueList(DictionaryInfo info, Collection<byte[]> values) {
         Dictionary<?> dict = buildDictionaryFromValueList(DataType.getInstance(info.getDataType()), values);
@@ -60,7 +60,7 @@ public class DictionaryGenerator {
 
         // build dict, case by data type
         if (dataType.isDateTimeFamily()) {
-            dict = buildDateStrDict(values, baseId, nSamples, samples);
+            dict = buildDateTimeDict(values, baseId, nSamples, samples);
         } else if (dataType.isNumberFamily()) {
             dict = buildNumberDict(values, baseId, nSamples, samples);
         } else {
@@ -77,7 +77,7 @@ public class DictionaryGenerator {
         }
         logger.debug("Dictionary value samples: " + buf.toString());
         logger.debug("Dictionary cardinality " + dict.getSize());
-        if (dict instanceof TrieDictionary &&  dict.getSize() > DICT_MAX_CARDINALITY) {
+        if (dict instanceof TrieDictionary && dict.getSize() > DICT_MAX_CARDINALITY) {
             throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + values.size());
         }
         return dict;
@@ -116,7 +116,7 @@ public class DictionaryGenerator {
         return buildDictionaryFromValueList(info, values);
     }
 
-    private static Dictionary buildDateStrDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildDateTimeDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         final int BAD_THRESHOLD = 2;
         String matchPattern = null;
 
@@ -142,10 +142,13 @@ public class DictionaryGenerator {
                     }
                 }
             }
-            if (matchPattern != null)
+            if (matchPattern != null) {
                 return new DateStrDictionary(matchPattern, baseId);
+            }
         }
-        throw new IllegalStateException("Unrecognized datetime value");
+
+        //FIXME: except for date type, all other date time family types are treated as string
+        return buildStringDict(values, baseId, nSamples, samples);
     }
 
     private static Dictionary buildStringDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {

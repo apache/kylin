@@ -18,18 +18,19 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ranges;
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
 * Created by honma on 10/17/14.
@@ -62,6 +63,8 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+        System.out.println(Long.parseLong("0032"));
+        System.out.println(time(1000L * Integer.MAX_VALUE));
 
         System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(3, 10)));
 
