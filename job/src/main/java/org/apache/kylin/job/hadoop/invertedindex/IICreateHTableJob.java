@@ -18,13 +18,6 @@
 
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
-import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
-import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IIManager;
-import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
-import org.apache.kylin.job.tools.DeployCoprocessorCLI;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -33,12 +26,18 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
+import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.job.tools.DeployCoprocessorCLI;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 
 /**
@@ -121,7 +120,6 @@ public class IICreateHTableJob extends AbstractHadoopJob {
     public static void main(String[] args) throws Exception {
         IICreateHTableJob job = new IICreateHTableJob();
         job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
-        int exitCode = ToolRunner.run(job, args);
-        System.exit(exitCode);
+        ToolRunner.run(job, args);
     }
 }
