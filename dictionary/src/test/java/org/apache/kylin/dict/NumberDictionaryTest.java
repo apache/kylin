@@ -18,22 +18,17 @@
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.*;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.kylin.metadata.model.DataType;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.math.BigDecimal;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author yangli9
@@ -70,6 +65,7 @@ public class NumberDictionaryTest {
         checkCodec("-12345.123", "-9999999999987654.876;");
         checkCodec("0", "00000000000000000");
         checkCodec("0.0", "00000000000000000.0");
+        checkCodec("123456789123456789", "-9999999999987654;");
     }
 
     private void checkCodec(String number, String code) {

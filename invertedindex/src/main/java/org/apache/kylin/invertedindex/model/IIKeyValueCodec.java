@@ -20,18 +20,22 @@ package org.apache.kylin.invertedindex.model;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.invertedindex.index.*;
+import org.apache.kylin.invertedindex.index.ColumnValueContainer;
+import org.apache.kylin.invertedindex.index.CompressedValueContainer;
+import org.apache.kylin.invertedindex.index.Slice;
+import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * @author yangli9
@@ -139,7 +143,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                     } else if (dataType.isStringFamily()) {
                         lengths[i] = 256;
                     } else if (dataType.isDateTimeFamily()) {
-                        lengths[i] = 10;
+                        lengths[i] = 23;
                     } else {
                         throw new RuntimeException("invalid data type:" + dataType);
                     }

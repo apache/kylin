@@ -18,13 +18,6 @@
 
 package org.apache.kylin.query.test;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.sql.DriverManager;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -39,6 +32,13 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.File;
+import java.sql.DriverManager;
+import java.util.List;
+import java.util.Properties;
+
+import static org.junit.Assert.assertTrue;
 
 @Ignore("KylinQueryTest is contained by CombinationTest")
 public class KylinQueryTest extends KylinTestBase {
@@ -95,11 +95,13 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql_subquery/query04.sql";
+        String queryFileName = "src/test/resources/query/sample.sql";
 
         File sqlFile = new File(queryFileName);
-        runSQL(sqlFile, true, true);
-        runSQL(sqlFile, true, false);
+        if (sqlFile.exists()) {
+            runSQL(sqlFile, true, true);
+            runSQL(sqlFile, true, false);
+        }
     }
 
     @Test
@@ -207,7 +209,6 @@ public class KylinQueryTest extends KylinTestBase {
             throw new IllegalStateException(queryName + " should be error!");
         }
     }
-
 
     @Test
     public void testDynamicQuery() throws Exception {
