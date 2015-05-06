@@ -41,10 +41,10 @@ import kafka.cluster.Broker;
 import kafka.javaapi.PartitionMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.streaming.*;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.slf4j.Logger;
@@ -137,7 +137,10 @@ public class StreamingBootstrap {
         streamingOffset = Math.max(streamingOffset, earliestOffset);
         logger.info("starting offset is " + streamingOffset);
 
-        IICreateHTableJob.main(new String[] { "-iiname", kafkaConfig.getIiName(), "-htablename", iiSegment.getStorageLocationIdentifier() });
+        if (!HBaseConnection.tableExists(kylinConfig.getStorageUrl(), iiSegment.getStorageLocationIdentifier())) {
+            logger.error("no htable:" + iiSegment.getStorageLocationIdentifier() + " found");
+            throw new IllegalStateException("please create htable:" + iiSegment.getStorageLocationIdentifier() + " first");
+        }
 
         KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId, streamingOffset, kafkaConfig.getBrokers(), kafkaConfig, parallelism);
         kafkaConsumers.put(getKey(streaming, partitionId), consumer);
