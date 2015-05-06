@@ -26,7 +26,6 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.RowConstants;
@@ -58,7 +57,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private List<String> rowArray;
     private HashFunction hf = null;
     private int rowCount = 0;
-    private int MAX_SAMPING_COUNT = 100000;
+    private int SAMPING_PERCENTAGE = 5;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -68,7 +67,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         rowArray = new ArrayList<String>(schema.getFields().size());
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
-            MAX_SAMPING_COUNT = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_MAX, "100000"));
+            SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
             cuboidScheduler = new CuboidScheduler(cubeDesc);
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
@@ -128,18 +127,20 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             handleErrorRecord(record, ex);
         }
 
-        if (collectStatistics && rowCount < MAX_SAMPING_COUNT) {
+        if (collectStatistics && rowCount < SAMPING_PERCENTAGE) {
             putRowKeyToHLL(rowArray);
         }
 
-        rowCount++;
+        if (rowCount++ == 100)
+            rowCount = 0;
     }
 
     private void putRowKeyToHLL(List<String> row) {
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {
             Hasher hc = hf.newHasher();
             for (int position = 0; position < allCuboidsBitSet[i].length; position++) {
-                hc.putString(row.get(allCuboidsBitSet[i][position]));
+                if (row.get(allCuboidsBitSet[i][position]) != null)
+                    hc.putString(row.get(allCuboidsBitSet[i][position]));
                 hc.putString(",");
             }
 
@@ -161,12 +162,6 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                 outputValue.set(hllBuf.array(), 0, hllBuf.position());
                 context.write(outputKey, outputValue);
             }
-
-            double samplingRatio = rowCount < MAX_SAMPING_COUNT ? 1.0 : ((double) MAX_SAMPING_COUNT) / rowCount;
-            //output the total hll for this mapper;
-            outputKey.set(0 - baseCuboidId - 1);
-            outputValue.set(Bytes.toBytes(samplingRatio));
-            context.write(outputKey, outputValue);
         }
     }
 
