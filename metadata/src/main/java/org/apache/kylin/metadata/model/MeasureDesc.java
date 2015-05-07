@@ -80,7 +80,7 @@ public class MeasureDesc {
 
         MeasureDesc that = (MeasureDesc) o;
 
-        if (id != that.id)
+        if (!name.equalsIgnoreCase(that.getName()))
             return false;
 
         return true;

@@ -32,6 +32,7 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.hadoop.cube.*;
 import org.apache.kylin.job.hadoop.cubev2.InMemCuboidJob;
+import org.apache.kylin.job.hadoop.cubev2.MergeCuboidFromHBaseJob;
 import org.apache.kylin.job.hadoop.dict.CreateDictionaryJob;
 import org.apache.kylin.job.hadoop.hbase.BulkLoadJob;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
@@ -69,8 +70,6 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
 
         if (this.inMemoryCubing()) {
-            // bulk load step
-            result.addTask(createBulkLoadStep(seg, result.getId()));
             result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, baseCuboidStepId, jobId));
         } else {
             // convert htable
@@ -103,16 +102,24 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
         List<String> mergingSegmentIds = Lists.newArrayList();
         List<String> mergingCuboidPaths = Lists.newArrayList();
+        List<String> mergingHTables = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
+            mergingHTables.add(merging.getStorageLocationIdentifier());
             if (merging.equals(appendSegment))
                 mergingCuboidPaths.add(appendRootPath + "*");
             else
                 mergingCuboidPaths.add(getPathToMerge(merging));
         }
 
-        // merge cuboid
-        addMergeSteps(mergeSegment, mergingSegmentIds, mergingCuboidPaths, mergedRootPath, result);
+        if(this.inMemoryCubing()) {
+            // merge from HTable
+            addMergeFromHBaseSteps(mergeSegment, mergingSegmentIds, mergingHTables, mergedRootPath, result);
+        } else {
+            // merge cuboid
+            addMergeSteps(mergeSegment, mergingSegmentIds, mergingCuboidPaths, mergedRootPath, result);
+        }
+
 
         // convert htable
         AbstractExecutable convertCuboidToHfileStep = addHTableSteps(mergeSegment, mergedRootPath, result);
@@ -134,14 +141,20 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
         List<String> mergingSegmentIds = Lists.newArrayList();
         List<String> mergingCuboidPaths = Lists.newArrayList();
+        List<String> mergingHTables = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
             mergingCuboidPaths.add(getPathToMerge(merging));
+            mergingHTables.add(merging.getStorageLocationIdentifier());
         }
 
-        // merge cuboid
-        addMergeSteps(seg, mergingSegmentIds, mergingCuboidPaths, mergedCuboidPath, result);
-
+        if(this.inMemoryCubing()) {
+            // merge from HTable
+            addMergeFromHBaseSteps(seg, mergingSegmentIds, mergingHTables, mergedCuboidPath, result);
+        } else {
+            // merge cuboid
+            addMergeSteps(seg, mergingSegmentIds, mergingCuboidPaths, mergedCuboidPath, result);
+        }
         // convert htable
         AbstractExecutable convertCuboidToHfileStep = addHTableSteps(seg, mergedCuboidPath, result);
 
@@ -157,6 +170,15 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         String formattedPath = StringUtils.join(mergingCuboidPaths, ",");
         result.addTask(createMergeCuboidDataStep(seg, formattedPath, mergedCuboidPath));
+    }
+
+
+    void addMergeFromHBaseSteps(CubeSegment seg, List<String> mergingSegmentIds, List<String> mergingHTables, String mergedCuboidPath, CubingJob result) {
+
+        result.addTask(createMergeDictionaryStep(seg, mergingSegmentIds));
+
+        String formattedTables = StringUtils.join(mergingHTables, ",");
+        result.addTask(createMergeCuboidDataFromHBaseStep(seg, formattedTables, mergedCuboidPath));
     }
 
     Pair<AbstractExecutable, AbstractExecutable> addCubingSteps(CubeSegment seg, String cuboidRootPath, CubingJob result) {
@@ -190,6 +212,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             result.addTask(createCreateHTableStep(seg, jobId));
             baseCuboidStep = createInMemCubingStep(seg, intermediateHiveTableLocation, intermediateHiveTableName, cuboidOutputTempPath, result.getId());
             result.addTask(baseCuboidStep);
+            // bulk load step
+            result.addTask(createBulkLoadStep(seg, result.getId()));
         }
 
         return new Pair<AbstractExecutable, AbstractExecutable>(intermediateHiveTableStep, baseCuboidStep);
@@ -477,6 +501,24 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         mergeCuboidDataStep.setMapReduceParams(cmd.toString());
         mergeCuboidDataStep.setMapReduceJobClass(MergeCuboidJob.class);
+        return mergeCuboidDataStep;
+    }
+
+
+    private MapReduceExecutable createMergeCuboidDataFromHBaseStep(CubeSegment seg, String inputPath, String outputPath) {
+        MapReduceExecutable mergeCuboidDataStep = new MapReduceExecutable();
+        mergeCuboidDataStep.setName(ExecutableConstants.STEP_NAME_MERGE_CUBOID);
+        StringBuilder cmd = new StringBuilder();
+
+        appendMapReduceParameters(cmd, seg);
+        appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "segmentname", seg.getName());
+        appendExecCmdParameters(cmd, "input", inputPath);
+        appendExecCmdParameters(cmd, "output", outputPath);
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Merge_Cuboid_" + seg.getCubeInstance().getName() + "_Step");
+
+        mergeCuboidDataStep.setMapReduceParams(cmd.toString());
+        mergeCuboidDataStep.setMapReduceJobClass(MergeCuboidFromHBaseJob.class);
         return mergeCuboidDataStep;
     }
 
