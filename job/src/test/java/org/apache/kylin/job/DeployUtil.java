@@ -26,7 +26,7 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;

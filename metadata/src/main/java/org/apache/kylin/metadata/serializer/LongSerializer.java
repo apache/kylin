@@ -20,7 +20,7 @@ package org.apache.kylin.metadata.serializer;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.DataType;

@@ -40,7 +40,7 @@ import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.junit.Before;
 import org.junit.Test;

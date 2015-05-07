@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 
 /**
  * @author yangli9

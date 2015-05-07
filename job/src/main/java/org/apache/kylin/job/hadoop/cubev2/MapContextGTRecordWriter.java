@@ -3,7 +3,7 @@ package org.apache.kylin.job.hadoop.cubev2;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.kylin.cube.CubeSegment;

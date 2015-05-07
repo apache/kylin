@@ -1,7 +1,7 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;

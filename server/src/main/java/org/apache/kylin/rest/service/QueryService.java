@@ -48,7 +48,7 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.metrics.QueryMetrics;
 import org.apache.kylin.rest.model.ColumnMeta;

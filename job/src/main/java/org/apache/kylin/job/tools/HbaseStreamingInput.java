@@ -12,7 +12,7 @@ import java.util.concurrent.Semaphore;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

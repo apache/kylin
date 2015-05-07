@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 
 import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Array;

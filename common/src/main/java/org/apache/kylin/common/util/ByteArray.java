@@ -21,7 +21,7 @@ package org.apache.kylin.common.util;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 
 /**
  * @author yangli9

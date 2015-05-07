@@ -20,7 +20,7 @@ package org.apache.kylin.dict;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.dict.lookup.ReadableTable;
 import org.apache.kylin.dict.lookup.TableReader;

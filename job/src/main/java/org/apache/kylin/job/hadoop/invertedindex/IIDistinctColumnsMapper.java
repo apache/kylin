@@ -20,7 +20,7 @@ package org.apache.kylin.job.hadoop.invertedindex;
 
 import java.io.IOException;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hive.hcatalog.data.HCatRecord;
