@@ -193,7 +193,7 @@ public class GTInvertedIndex {
         }
 
         private int col(CompareTupleFilter filter) {
-            return filter.getColumn().getColumn().getZeroBasedIndex();
+            return filter.getColumn().getColumnDesc().getZeroBasedIndex();
         }
 
     }

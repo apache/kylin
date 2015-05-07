@@ -67,7 +67,7 @@ public class TblColRef {
         this.column = column;
     }
 
-    public ColumnDesc getColumn() {
+    public ColumnDesc getColumnDesc() {
         return column;
     }
 

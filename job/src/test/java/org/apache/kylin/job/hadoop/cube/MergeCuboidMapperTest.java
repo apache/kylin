@@ -121,7 +121,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
             signature.setLastModifiedTime(System.currentTimeMillis());
             signature.setPath("fake_dict_for" + lfn.getName() + segment.getName());
 
-            DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumn().getName(), lfn.getColumn().getZeroBasedIndex(), "string", signature, "");
+            DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumnDesc().getName(), lfn.getColumnDesc().getZeroBasedIndex(), "string", signature, "");
 
             List<byte[]> values = new ArrayList<byte[]>();
             values.add(new byte[] { 97, 97, 97 });

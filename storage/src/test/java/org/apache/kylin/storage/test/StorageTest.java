@@ -163,7 +163,7 @@ public class StorageTest extends HBaseMetadataTestCase {
             info.setField(col.getName(), col, idx++);
         }
         
-        TableDesc sourceTable = groups.get(0).getColumn().getTable();
+        TableDesc sourceTable = groups.get(0).getColumnDesc().getTable();
         for (FunctionDesc func : aggregations) {
             TblColRef col = new TblColRef(func.newFakeRewriteColumn(sourceTable));
             info.setField(col.getName(), col, idx++);

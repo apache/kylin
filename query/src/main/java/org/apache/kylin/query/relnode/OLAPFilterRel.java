@@ -29,6 +29,7 @@ import net.hydromatic.optiq.runtime.SqlFunctions;
 import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.hbase.coprocessor.DateConditionInplaceModifier;
 import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
@@ -39,7 +40,10 @@ import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.util.NlsString;
 
-import java.util.*;
+import java.util.GregorianCalendar;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author xjiang
@@ -188,7 +192,8 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
                 strValue = ((NlsString) literalValue).getValue();
             } else if (literalValue instanceof GregorianCalendar) {
                 GregorianCalendar g = (GregorianCalendar) literalValue;
-                strValue = "" + g.get(Calendar.YEAR) + "-" + normToTwoDigits(g.get(Calendar.MONTH) + 1) + "-" + normToTwoDigits(g.get(Calendar.DAY_OF_MONTH));
+                //strValue = "" + g.get(Calendar.YEAR) + "-" + normToTwoDigits(g.get(Calendar.MONTH) + 1) + "-" + normToTwoDigits(g.get(Calendar.DAY_OF_MONTH));
+                strValue = Long.toString(g.getTimeInMillis());
             } else if (literalValue instanceof SqlFunctions.TimeUnitRange) {
                 // Extract(x from y) in where clause
                 strValue = ((SqlFunctions.TimeUnitRange) literalValue).name();
@@ -255,6 +260,7 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
 
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType, context);
         context.filter = this.condition.accept(visitor);
+        DateConditionInplaceModifier.modify(context.filter);
         context.filterColumns = collectColumns(context.filter);
     }
 

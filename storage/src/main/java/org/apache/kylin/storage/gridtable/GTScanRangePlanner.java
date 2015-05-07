@@ -73,7 +73,7 @@ public class GTScanRangePlanner {
         List<GTRecord> hbaseFuzzyKeys = Lists.newArrayList();
 
         for (ColumnRange range : andDimRanges) {
-            int col = range.column.getColumn().getZeroBasedIndex();
+            int col = range.column.getColumnDesc().getZeroBasedIndex();
             if (info.primaryKey.get(col) == false)
                 continue;
 

@@ -104,7 +104,7 @@ public class GTInfo {
     }
 
     public void validateColRef(TblColRef ref) {
-        TblColRef expected = colRef(ref.getColumn().getZeroBasedIndex());
+        TblColRef expected = colRef(ref.getColumnDesc().getZeroBasedIndex());
         if (expected != ref)
             throw new IllegalArgumentException();
     }

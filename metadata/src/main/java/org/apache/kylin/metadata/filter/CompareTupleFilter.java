@@ -18,16 +18,12 @@
 
 package org.apache.kylin.metadata.filter;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
+
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * @author xjiang
@@ -92,6 +88,15 @@ public class CompareTupleFilter extends TupleFilter {
     @Override
     public Set<?> getValues() {
         return conditionValues;
+    }
+
+    public void updateValues(Collection<?> values, boolean clear) {
+        if (clear) {
+            this.conditionValues.clear();
+        }
+
+        this.conditionValues.addAll(values);
+        this.firstCondValue = this.conditionValues.iterator().next();
     }
 
     public Object getFirstValue() {

@@ -18,15 +18,14 @@
 
 package org.apache.kylin.storage.tuple;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
-
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author xjiang
@@ -57,8 +56,7 @@ public class Tuple implements ITuple {
     @Override
     public ITuple makeCopy() {
         Tuple ret = new Tuple(this.info);
-        for(int i = 0 ; i < this.values.length; ++i)
-        {
+        for (int i = 0; i < this.values.length; ++i) {
             ret.values[i] = this.values[i];
         }
         return ret;
@@ -163,6 +161,8 @@ public class Tuple implements ITuple {
             Date dateValue = DateFormat.stringToDate(strValue); // NOTE: forces GMT timezone
             long millis = dateValue.getTime();
             return millisToEpicDays(millis);// Optiq expects Integer instead of Long. by honma
+        } else if ("timestamp".equals(dataTypeName) || "datetime".equals(dataTypeName)) {
+            return Long.parseLong(strValue);
         } else if ("tinyint".equals(dataTypeName)) {
             return Byte.valueOf(strValue);
         } else if ("short".equals(dataTypeName) || "smallint".equals(dataTypeName)) {

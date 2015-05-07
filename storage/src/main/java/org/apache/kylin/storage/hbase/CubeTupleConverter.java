@@ -163,7 +163,7 @@ public class CubeTupleConverter {
                 private int[] initDerivedColIdx() {
                     int[] idx = new int[deriveInfo.columns.length];
                     for (int i = 0; i < idx.length; i++) {
-                        idx[i] = deriveInfo.columns[i].getColumn().getZeroBasedIndex();
+                        idx[i] = deriveInfo.columns[i].getColumnDesc().getZeroBasedIndex();
                     }
                     return idx;
                 }

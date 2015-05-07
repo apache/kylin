@@ -208,7 +208,7 @@ class ProjectL2Cache {
                 return false;
             }
             ColumnDesc foundCol = table.findColumnByName(col.getName());
-            if (col.getColumn().equals(foundCol) == false) {
+            if (col.getColumnDesc().equals(foundCol) == false) {
                 logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but it is not equal to '" + foundCol + "' according to MetadataManager");
                 return false;
             }
@@ -239,7 +239,7 @@ class ProjectL2Cache {
             TableCache tableCache = prjCache.tables.get(col.getTable());
             prjCache.exposedTables.add(tableCache.tableDesc);
             tableCache.exposed = true;
-            tableCache.exposedColumns.add(col.getColumn());
+            tableCache.exposedColumns.add(col.getColumnDesc());
         }
     }
 

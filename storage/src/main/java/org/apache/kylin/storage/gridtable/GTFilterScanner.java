@@ -24,7 +24,7 @@ public class GTFilterScanner implements IGTScanner {
         this.oneTuple = new IEvaluatableTuple() {
             @Override
             public Object getValue(TblColRef col) {
-                return next.get(col.getColumn().getZeroBasedIndex());
+                return next.get(col.getColumnDesc().getZeroBasedIndex());
             }
         };
 

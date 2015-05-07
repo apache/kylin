@@ -1,12 +1,13 @@
 package org.apache.kylin.metadata.realization;
 
-import com.google.common.base.Function;
-import com.google.common.collect.BoundType;
-import com.google.common.collect.Range;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.common.util.DateFormat;
+
+import com.google.common.base.Function;
+import com.google.common.collect.BoundType;
+import com.google.common.collect.Range;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/14/15.
@@ -59,7 +60,7 @@ public class SQLDigestUtil {
     }
 
     private static TupleFilter createFilterForRealtime(TupleFilter originFilter, TblColRef partitionColRef, Range<Long> tsRange) {
-        DataType type = partitionColRef.getColumn().getType();
+        DataType type = partitionColRef.getColumnDesc().getType();
 
         String startTimeStr, endTimeStr;
         CompareTupleFilter startFilter = null, endFilter = null;
