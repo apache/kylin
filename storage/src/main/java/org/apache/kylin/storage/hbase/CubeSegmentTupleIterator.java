@@ -19,12 +19,9 @@
 package org.apache.kylin.storage.hbase;
 
 import java.text.MessageFormat;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
@@ -35,7 +32,7 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.cube.CubeSegment;
@@ -216,9 +213,9 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     }
 
     private void applyFuzzyFilter(Scan scan, HBaseKeyRange keyRange) {
-        List<Pair<byte[], byte[]>> fuzzyKeys = keyRange.getFuzzyKeys();
+        List<org.apache.kylin.common.util.Pair<byte[], byte[]>> fuzzyKeys = keyRange.getFuzzyKeys();
         if (fuzzyKeys != null && fuzzyKeys.size() > 0) {
-            FuzzyRowFilter rowFilter = new FuzzyRowFilter(fuzzyKeys);
+            FuzzyRowFilter rowFilter = new FuzzyRowFilter(convertToHBasePair(fuzzyKeys));
 
             Filter filter = scan.getFilter();
             if (filter != null) {
@@ -231,6 +228,16 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
                 scan.setFilter(rowFilter);
             }
         }
+    }
+
+    private List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> convertToHBasePair(List<org.apache.kylin.common.util.Pair<byte[], byte[]>> pairList) {
+        List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> result = Lists.newArrayList();
+        for(org.apache.kylin.common.util.Pair pair : pairList) {
+            org.apache.hadoop.hbase.util.Pair element = new org.apache.hadoop.hbase.util.Pair(pair.getFirst(), pair.getSecond());
+            result.add(element);
+        }
+
+        return result;
     }
 
     private void closeScanner() {

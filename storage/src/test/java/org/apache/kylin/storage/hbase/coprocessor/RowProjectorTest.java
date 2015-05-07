@@ -21,7 +21,7 @@ package org.apache.kylin.storage.hbase.coprocessor;
 import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.junit.Test;
 
 import java.util.ArrayList;

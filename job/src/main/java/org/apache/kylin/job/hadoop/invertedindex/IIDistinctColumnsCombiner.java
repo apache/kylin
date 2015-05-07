@@ -21,7 +21,7 @@ package org.apache.kylin.job.hadoop.invertedindex;
 import java.io.IOException;
 import java.util.HashSet;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 

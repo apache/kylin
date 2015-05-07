@@ -25,7 +25,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;

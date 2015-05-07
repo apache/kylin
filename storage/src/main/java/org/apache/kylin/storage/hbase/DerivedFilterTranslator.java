@@ -21,7 +21,7 @@ package org.apache.kylin.storage.hbase;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.cube.kv.RowKeyColumnOrder;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;

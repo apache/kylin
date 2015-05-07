@@ -138,8 +138,7 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-common</artifactId>
-            <!-- This is default scope to be included in the job jar, we depends on
-                hbase utils like Bytes, ImmutableBytesWritable etc. -->
+            <scope>provided</scope>
         </dependency>
 
         <!-- Env & Test -->

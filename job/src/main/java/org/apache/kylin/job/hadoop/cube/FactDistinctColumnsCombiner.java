@@ -23,7 +23,7 @@ import java.util.HashSet;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.mr.KylinReducer;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
 
 import org.apache.kylin.common.util.ByteArray;
