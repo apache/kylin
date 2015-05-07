@@ -178,7 +178,7 @@ public class NewBaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, T
                 // create join infos
                 LinkedList<Integer> fkIndice = new LinkedList<Integer>();
                 for (TblColRef colRef : join.getForeignKeyColumns()) {
-                    fkIndice.add(colRef.getColumn().getZeroBasedIndex());
+                    fkIndice.add(colRef.getColumnDesc().getZeroBasedIndex());
                 }
                 this.tableJoins.add(new TableJoin(joinType, fkIndice, lookupTableName, this.findColumnRowKeyRelationships(dim)));
 
@@ -200,7 +200,7 @@ public class NewBaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, T
     private LinkedList<Pair<Integer, Integer>> findColumnRowKeyRelationships(DimensionDesc dim) {
         LinkedList<Pair<Integer, Integer>> dimTblColAsRowKey = new LinkedList<Pair<Integer, Integer>>();
         for (TblColRef colRef : dim.getColumnRefs()) {
-            int dimTableIndex = colRef.getColumn().getZeroBasedIndex();
+            int dimTableIndex = colRef.getColumnDesc().getZeroBasedIndex();
             int rowKeyIndex = cubeDesc.getRowkey().getRowKeyIndexByColumnName(colRef.getName());
             dimTblColAsRowKey.add(new Pair<Integer, Integer>(dimTableIndex, rowKeyIndex));
         }

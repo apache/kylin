@@ -147,8 +147,8 @@ public class DictionaryGenerator {
             }
         }
 
-        //FIXME: except for date type, all other date time family types are treated as string
-        return buildStringDict(values, baseId, nSamples, samples);
+        //FIXME: except for date type, all other date time family types are treated as TimeStrDictionary
+        return new TimeStrDictionary();
     }
 
     private static Dictionary buildStringDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {

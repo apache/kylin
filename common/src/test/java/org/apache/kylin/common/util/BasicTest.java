@@ -63,8 +63,9 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
-        System.out.println(Long.parseLong("0032"));
-        System.out.println(time(1000L * Integer.MAX_VALUE));
+        System.out.println(time(946684800000L));
+
+        System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1000L * Integer.MAX_VALUE));
 
         System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(3, 10)));
 
@@ -80,7 +81,6 @@ public class BasicTest {
         System.out.println("n");
 
         System.out.println("The start key is set to " + null);
-        System.out.println(time(946684800000L));
         long current = System.currentTimeMillis();
         System.out.println(time(current));
 

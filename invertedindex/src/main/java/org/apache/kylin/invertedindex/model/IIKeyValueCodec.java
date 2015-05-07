@@ -143,7 +143,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                     } else if (dataType.isStringFamily()) {
                         lengths[i] = 256;
                     } else if (dataType.isDateTimeFamily()) {
-                        lengths[i] = 23;
+                        lengths[i] = 19;
                     } else {
                         throw new RuntimeException("invalid data type:" + dataType);
                     }

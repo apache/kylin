@@ -98,7 +98,7 @@ public class GTUtil {
                 newCompareFilter.addChild(new ColumnTupleFilter(externalCol));
 
                 Object firstValue = constValues.iterator().next();
-                int col = colMapping == null ? externalCol.getColumn().getZeroBasedIndex() : colMapping.indexOf(externalCol);
+                int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : colMapping.indexOf(externalCol);
 
                 TupleFilter result;
                 ByteArray code;

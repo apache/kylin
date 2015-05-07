@@ -194,7 +194,7 @@ public class DictionaryManager {
         if (model == null) {
             srcTable = col.getTable();
             srcCol = col.getName();
-            srcColIdx = col.getColumn().getZeroBasedIndex();
+            srcColIdx = col.getColumnDesc().getZeroBasedIndex();
             int nColumns = metaMgr.getTableDesc(col.getTable()).getColumnCount();
             table = new FileTable(factColumnsPath + "/" + col.getName(), nColumns);
             return new Object[] { srcTable, srcCol, srcColIdx, table };
@@ -220,7 +220,7 @@ public class DictionaryManager {
             }
             srcTable = col.getTable();
             srcCol = col.getName();
-            srcColIdx = col.getColumn().getZeroBasedIndex();
+            srcColIdx = col.getColumnDesc().getZeroBasedIndex();
             if (model.isFactTable(col.getTable())) {
                 table = new FileTable(factColumnsPath + "/" + col.getName(), -1);
             } else {

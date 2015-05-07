@@ -18,13 +18,13 @@
 
 package org.apache.kylin.metadata.filter;
 
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
+
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
 /**
  * 
@@ -77,6 +77,7 @@ public class ConstantTupleFilter extends TupleFilter {
     public Collection<?> getValues() {
         return this.constantValues;
     }
+
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override

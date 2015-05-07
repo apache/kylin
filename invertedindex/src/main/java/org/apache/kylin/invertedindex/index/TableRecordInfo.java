@@ -71,16 +71,16 @@ public class TableRecordInfo {
             isMetric[i] = desc.isMetricsCol(i);
             dataTypes[i] = tblColRef.getDatatype();
             if (isMetric[i]) {
-                lengths[i] = FixedLenMeasureCodec.get(DataType.getInstance(tblColRef.getColumn().getDatatype())).getLength();
+                lengths[i] = FixedLenMeasureCodec.get(DataType.getInstance(tblColRef.getColumnDesc().getDatatype())).getLength();
             } else {
                 if (Array.isEmpty(dictionaryMap)) {
-                    final DataType dataType = DataType.getInstance(tblColRef.getColumn().getDatatype());
+                    final DataType dataType = DataType.getInstance(tblColRef.getColumnDesc().getDatatype());
                     if (dataType.isNumberFamily()) {
                         lengths[i] = 16;
                     } else if (dataType.isStringFamily()) {
                         lengths[i] = 256;
                     } else if (dataType.isDateTimeFamily()) {
-                        lengths[i] = 23;
+                        lengths[i] = 19;
                     } else {
                         throw new RuntimeException("invalid data type:" + dataType);
                     }

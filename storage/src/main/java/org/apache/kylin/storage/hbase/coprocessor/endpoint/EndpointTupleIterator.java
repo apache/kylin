@@ -18,11 +18,9 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import java.io.IOException;
-import java.util.*;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.collect.*;
+import com.google.protobuf.ByteString;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.SerializationUtils;
@@ -55,14 +53,9 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.common.collect.Ranges;
-import com.google.common.collect.Sets;
-import com.google.protobuf.ByteString;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
@@ -208,7 +201,7 @@ public class EndpointTupleIterator implements ITupleIterator {
                             functionDesc.setReturnType(iiDefaultHLLC);
                             functionDesc.setReturnDataType(DataType.getInstance(iiDefaultHLLC));
                         } else {
-                            functionDesc.setReturnType(column.getColumn().getType().toString());
+                            functionDesc.setReturnType(column.getColumnDesc().getType().toString());
                             functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
                         }
                         functionDesc.getParameter().setColRefs(ImmutableList.of(column));

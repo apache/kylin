@@ -91,7 +91,7 @@ public class GTScanRequest {
             // filter columns must belong to the table
             info.validateColRef(col);
             // filter columns must be returned to satisfy upper layer evaluation (calcite)
-            columns.set(col.getColumn().getZeroBasedIndex());
+            columns.set(col.getColumnDesc().getZeroBasedIndex());
         }
 
         // un-evaluatable filter must be removed
@@ -102,7 +102,7 @@ public class GTScanRequest {
             // columns in un-evaluatable filter must be returned without loss so upper layer can do final evaluation
             if (hasAggregation()) {
                 for (TblColRef col : unevaluableColumns) {
-                    aggrGroupBy.set(col.getColumn().getZeroBasedIndex());
+                    aggrGroupBy.set(col.getColumnDesc().getZeroBasedIndex());
                 }
             }
         }

@@ -18,12 +18,11 @@
 
 package org.apache.kylin.dict;
 
+import org.apache.hadoop.io.Writable;
+import org.apache.kylin.common.util.BytesUtil;
+
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-
-import org.apache.hadoop.io.Writable;
-
-import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -45,7 +44,7 @@ abstract public class Dictionary<T> implements Writable {
     public static final byte NULL = (byte) 0xff;
 
     // ID with all bit-1 (0xff e.g.) reserved for NULL value
-    public static final int NULL_ID[] = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffff };
+    public static final int NULL_ID[] = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };
 
     abstract public int getMinId();
 

@@ -65,11 +65,11 @@ public class DerivedFilterTranslator {
         assert hostInfo.type == DeriveType.LOOKUP;
         assert hostCols.length == pkCols.length;
 
-        int di = derivedCol.getColumn().getZeroBasedIndex();
+        int di = derivedCol.getColumnDesc().getZeroBasedIndex();
         int[] pi = new int[pkCols.length];
         int hn = hostCols.length;
         for (int i = 0; i < hn; i++) {
-            pi[i] = pkCols[i].getColumn().getZeroBasedIndex();
+            pi[i] = pkCols[i].getColumnDesc().getZeroBasedIndex();
         }
 
         Set<Array<String>> satisfyingHostRecords = Sets.newHashSet();
