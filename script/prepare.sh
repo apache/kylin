@@ -9,19 +9,12 @@ then
     version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\['`
 fi
 echo "version ${version}"
+export version
 
-echo "copy lib file"
-rm -rf lib
-mkdir lib
+sh script/prepare_libs.sh || { exit 1; }
+
 cp server/target/kylin-server-${version}.war tomcat/webapps/kylin.war
-cp job/target/kylin-job-${version}-job.jar lib/kylin-job-${version}.jar
-cp storage/target/kylin-storage-${version}-coprocessor.jar lib/kylin-coprocessor-${version}.jar
-cp jdbc/target/kylin-jdbc-${version}.jar lib/kylin-jdbc-${version}.jar
-# Copied file becomes 000 for some env (e.g. my Cygwin)
 chmod 644 tomcat/webapps/kylin.war
-chmod 644 lib/kylin-job-${version}.jar
-chmod 644 lib/kylin-coprocessor-${version}.jar
-chmod 644 lib/kylin-jdbc-${version}.jar
 
 echo "add js css to war"
 if [ ! -d "webapp/dist" ]
