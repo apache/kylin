@@ -18,10 +18,6 @@
 
 package org.apache.kylin.cube.kv;
 
-import java.nio.ByteBuffer;
-import java.util.BitSet;
-import java.util.Collection;
-
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.DoubleWritable;
@@ -33,17 +29,19 @@ import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
+import java.nio.ByteBuffer;
+import java.util.BitSet;
+import java.util.Collection;
+
 /**
- * 
  * @author xjiang
- * 
  */
 public class RowValueDecoder implements Cloneable {
 
     private final HBaseColumnDesc hbaseColumn;
     private final byte[] hbaseColumnFamily;
     private final byte[] hbaseColumnQualifier;
-    
+
     private final MeasureCodec codec;
     private final BitSet projectionIndex;
     private final MeasureDesc[] measures;
@@ -60,19 +58,29 @@ public class RowValueDecoder implements Cloneable {
     }
 
     public void decode(Result hbaseRow) {
-        decode(hbaseRow.getValueAsByteBuffer(hbaseColumnFamily, hbaseColumnQualifier));
+        decode(hbaseRow, true);
     }
-    
+
+    public void decode(Result hbaseRow, boolean convertToJavaObject) {
+        decode(hbaseRow.getValueAsByteBuffer(hbaseColumnFamily, hbaseColumnQualifier), convertToJavaObject);
+    }
+
     public void decode(byte[] bytes) {
-        decode(ByteBuffer.wrap(bytes));
+        decode(bytes, true);
     }
 
-    private void decode(ByteBuffer buffer) {
+    public void decode(byte[] bytes, boolean convertToJavaObject) {
+        decode(ByteBuffer.wrap(bytes), convertToJavaObject);
+    }
+
+    private void decode(ByteBuffer buffer, boolean convertToJavaObject) {
         codec.decode(buffer, values);
-        convertToJavaObjects(values, values);
+        if (convertToJavaObject) {
+            convertToJavaObjects(values, values, convertToJavaObject);
+        }
     }
 
-    private void convertToJavaObjects(Object[] mapredObjs, Object[] results) {
+    private void convertToJavaObjects(Object[] mapredObjs, Object[] results, boolean convertToJavaObject) {
         for (int i = 0; i < mapredObjs.length; i++) {
             Object o = mapredObjs[i];
 
