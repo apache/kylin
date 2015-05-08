@@ -20,16 +20,6 @@ package org.apache.kylin.dict;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import static org.junit.Assert.*;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.metadata.model.DataType;
 import org.junit.Test;
@@ -75,7 +65,6 @@ public class NumberDictionaryTest {
         checkCodec("-12345.123", "-9999999999987654.876;");
         checkCodec("0", "00000000000000000");
         checkCodec("0.0", "00000000000000000.0");
-        checkCodec("123456789123456789", "-9999999999987654;");
     }
 
     private void checkCodec(String number, String code) {
