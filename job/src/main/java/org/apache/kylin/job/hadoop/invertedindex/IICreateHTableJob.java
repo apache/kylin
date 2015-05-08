@@ -39,6 +39,7 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.tools.DeployCoprocessorCLI;
+import org.apache.kylin.job.tools.LZOSupportnessChecker;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 
 /**
@@ -66,7 +67,14 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
             HColumnDescriptor cf = new HColumnDescriptor(IIDesc.HBASE_FAMILY);
             cf.setMaxVersions(1);
-            cf.setCompressionType(Compression.Algorithm.LZO);
+
+            if (LZOSupportnessChecker.getSupportness()) {
+                logger.info("hbase will use lzo to compress II data");
+                cf.setCompressionType(Compression.Algorithm.LZO);
+            } else {
+                logger.info("hbase will not use lzo to compress II data");
+            }
+
             cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
             tableDesc.addFamily(cf);
             tableDesc.setValue(IRealizationConstants.HTableTag, config.getMetadataUrlPrefix());
