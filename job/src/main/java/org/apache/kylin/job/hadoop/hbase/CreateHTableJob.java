@@ -119,10 +119,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 cf.setMaxVersions(1);
 
                 if (LZOSupportnessChecker.getSupportness()) {
-                    logger.info("hbase will use lzo to compress data");
+                    logger.info("hbase will use lzo to compress cube data");
                     cf.setCompressionType(Algorithm.LZO);
                 } else {
-                    logger.info("hbase will not use lzo to compress data");
+                    logger.info("hbase will not use lzo to compress cube data");
                 }
 
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
