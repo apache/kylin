@@ -490,6 +490,7 @@ public class KylinConfig {
 
     void reloadKylinConfig(InputStream is) {
         PropertiesConfiguration config = new PropertiesConfiguration();
+        config.setListDelimiter((char)0); // disable list delimiter, Kylin will parse and split
         try {
             config.load(is);
         } catch (ConfigurationException e) {
