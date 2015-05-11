@@ -20,7 +20,7 @@ With both command successfully run you can go to ambari homepage at <http://your
 
 ![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
 
-** Additonal Info for setting up HortonWorks Sandbox on Virtual Box**
+**Additonal Info for setting up HortonWorks Sandbox on Virtual Box**
 
 	Please make sure Hbase Master port [Default 60000] and Zookeeper [Default 2181] is forwarded to Host OS.
  
