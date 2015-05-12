@@ -12,13 +12,13 @@ import java.io.OutputStream;
 /**
  * Created by qianzhou on 5/6/15.
  */
-public class HadoopFileSystem implements FileSystem {
+class HadoopFileSystem implements FileSystem {
 
     private static final Logger logger = LoggerFactory.getLogger(HadoopFileSystem.class);
 
     final org.apache.hadoop.fs.FileSystem fileSystem;
 
-    public HadoopFileSystem() {
+    HadoopFileSystem() {
         try {
             fileSystem = org.apache.hadoop.fs.FileSystem.get(HadoopUtil.getCurrentConfiguration());
         } catch (IOException e) {
@@ -42,6 +42,16 @@ public class HadoopFileSystem implements FileSystem {
             return fileSystem.delete(new Path(path), true);
         } catch (IOException e) {
             logger.error("error delete, path:" + path, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void deleteOnExit(String path) {
+        try {
+            fileSystem.deleteOnExit(new Path(path));
+        } catch (IOException e) {
+            logger.error("error deleteOnExit, path:" + path, e);
             throw new RuntimeException(e);
         }
     }

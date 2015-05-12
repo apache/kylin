@@ -12,6 +12,8 @@ interface FileSystem {
 
     boolean delete(String path);
 
+    void deleteOnExit(String path);
+
     boolean createDirectory(String path);
 
     boolean createFile(String path);
