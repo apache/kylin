@@ -81,7 +81,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
     CubeDesc cubeDesc = null;
     String segmentName = null;
     KylinConfig kylinConfig;
-    private int SAMPING_PERCENTAGE = 5;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -92,15 +91,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
         options.addOption(OPTION_PARTITION_FILE_PATH);
         options.addOption(OPTION_HTABLE_NAME);
         options.addOption(OPTION_STATISTICS_ENABLED);
-        options.addOption(OPTION_STATISTICS_SAMPLING_PERCENT);
         parseOptions(options, args);
 
         Path partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
         boolean statistics_enabled = Boolean.parseBoolean(getOptionValue(OPTION_STATISTICS_ENABLED));
-
-        String statistics_sampling_percent = getOptionValue(OPTION_STATISTICS_SAMPLING_PERCENT);
-
-        SAMPING_PERCENTAGE = Integer.parseInt(statistics_sampling_percent);
 
         String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -228,7 +222,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         long totalSizeInM = 0;
 
         ResourceStore rs = ResourceStore.getStore(kylinConfig);
-        String fileKey = ResourceStore.CUBE_STATISTICS_ROOT + "/" + cube.getName() + "/" + cubeSegment.getUuid() + ".seq";
+        String fileKey = cubeSegment.getStatisticsResourcePath();
         InputStream is = rs.getResource(fileKey);
         File tempFile = null;
         FileOutputStream tempFileStream = null;
@@ -241,18 +235,23 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(tempFileStream);
         }
 
-        FileSystem fs = HadoopUtil.getFileSystem("file:///" +tempFile.getAbsolutePath());
+        FileSystem fs = HadoopUtil.getFileSystem("file:///" + tempFile.getAbsolutePath());
         SequenceFile.Reader reader = null;
         try {
             reader = new SequenceFile.Reader(fs, new Path(tempFile.getAbsolutePath()), conf);
             LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+            int samplingPercentage = 25;
             while (reader.next(key, value)) {
-                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
-                ByteArray byteArray = new ByteArray(value.getBytes());
-                hll.readRegisters(byteArray.asBuffer());
+                if (key.get() == 0l) {
+                    samplingPercentage = Bytes.toInt(value.getBytes());
+                } else {
+                    HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
+                    ByteArray byteArray = new ByteArray(value.getBytes());
+                    hll.readRegisters(byteArray.asBuffer());
 
-                cuboidSizeMap.put(key.get(), hll.getCountEstimate() * 100 / SAMPING_PERCENTAGE);
+                    cuboidSizeMap.put(key.get(), hll.getCountEstimate() * 100 / samplingPercentage);
+                }
 
             }
         } catch (Exception e) {

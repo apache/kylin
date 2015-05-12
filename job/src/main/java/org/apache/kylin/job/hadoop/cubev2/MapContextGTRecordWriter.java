@@ -23,7 +23,7 @@ import java.util.BitSet;
 public class MapContextGTRecordWriter implements IGTRecordWriter {
 
     private static final Log logger = LogFactory.getLog(MapContextGTRecordWriter.class);
-    protected MapContext mapContext;
+    protected MapContext<?, ?, ImmutableBytesWritable, Text> mapContext;
     private Long lastCuboidId;
     protected CubeSegment cubeSegment;
     protected CubeDesc cubeDesc;
@@ -37,7 +37,7 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
     private Text outputValue = new Text();
     long cuboidRowCount = 0;
 
-    public MapContextGTRecordWriter(MapContext mapContext, CubeDesc cubeDesc, CubeSegment cubeSegment) {
+    public MapContextGTRecordWriter(MapContext<?, ?, ImmutableBytesWritable, Text> mapContext, CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.mapContext = mapContext;
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;

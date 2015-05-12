@@ -18,22 +18,23 @@
 
 package org.apache.kylin.cube;
 
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware {
@@ -335,5 +336,12 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware {
     public void setSnapshots(ConcurrentHashMap<String, String> snapshots) {
         this.snapshots = snapshots;
     }
-    
+
+    public String getStatisticsResourcePath() {
+        return getStatisticsResourcePath(this.getCubeInstance().getName(), this.getUuid());
+    }
+
+    public static String getStatisticsResourcePath(String cubeName, String cubeSegmentId) {
+        return ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + cubeSegmentId + ".seq";
+    }
 }
