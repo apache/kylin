@@ -11,6 +11,9 @@ import java.io.*;
 class LocalFileSystem implements FileSystem {
 
     private static Logger logger = LoggerFactory.getLogger(LocalFileSystem.class);
+
+    LocalFileSystem(){}
+
     @Override
     public boolean checkExistence(String path) {
         return new File(path).exists();
@@ -19,6 +22,11 @@ class LocalFileSystem implements FileSystem {
     @Override
     public boolean delete(String path) {
         return new File(path).delete();
+    }
+
+    @Override
+    public void deleteOnExit(String path) {
+        new File(path).deleteOnExit();
     }
 
     @Override
@@ -42,7 +50,7 @@ class LocalFileSystem implements FileSystem {
             return new FileOutputStream(path);
         } catch (FileNotFoundException e) {
             //should not happen
-            logger.error("path:" + path + " nout found");
+            logger.error("path:" + path + " out found");
             throw new RuntimeException(e);
         }
     }
@@ -53,7 +61,7 @@ class LocalFileSystem implements FileSystem {
             return new FileInputStream(path);
         } catch (FileNotFoundException e) {
             //should not happen
-            logger.error("path:" + path + " nout found");
+            logger.error("path:" + path + " out found");
             throw new RuntimeException(e);
         }
     }

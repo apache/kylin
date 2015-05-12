@@ -69,6 +69,7 @@ import java.util.concurrent.BlockingQueue;
 @SuppressWarnings("rawtypes")
 public class InMemCubeBuilder implements Runnable {
 
+    //estimation of (size of aggregation cache) / (size of mem store)
     private static final double AGGREGATION_CACHE_FACTOR = 3;
     private static Logger logger = LoggerFactory.getLogger(InMemCubeBuilder.class);
 
@@ -380,48 +381,41 @@ public class InMemCubeBuilder implements Runnable {
         record.setValues(recordValues);
     }
 
-    private boolean checkMemory(long threshold) {
+    private long checkMemory(long threshold) {
         final long freeMemory = Runtime.getRuntime().freeMemory();
-        logger.info("available memory:" + (freeMemory>>10) + " KB");
-        if (freeMemory >= threshold) {
-            logger.info("no need to flush to disk");
-            return true;
-        } else {
-            return false;
-        }
+        logger.info("available memory:" + (freeMemory >> 10) + " KB, memory needed:" + (threshold >> 10) + " KB");
+        return freeMemory - threshold;
     }
 
     private boolean gc(TreeNode<GridTable> parentNode) {
         final long parentCuboidMem = SizeOfUtil.deepSizeOf(parentNode.data.getStore());
         long threshold = (long) (parentCuboidMem * (AGGREGATION_CACHE_FACTOR + 1));
-        logger.info((threshold >> 10) + " KB is needed to create " + parentNode.id + "'s child");
-        if (checkMemory(threshold)) {
-            return true;
-        }
         final List<TreeNode<GridTable>> gridTables = parentNode.getAncestorList();
+        long memoryLeft = checkMemory(threshold);
         for (TreeNode<GridTable> gridTable : gridTables) {
-            logger.info("wait 10 seconds for gc");
-            try {
-                Thread.sleep(10 * 1000);
-            } catch (InterruptedException e) {
-                logger.error("this should not happen", e);
-            }
-            if (checkMemory(threshold)) {
+            if (memoryLeft >= 0) {
                 return true;
             } else {
                 logger.info("memory is low, try to select one node to flush to disk from:" + StringUtils.join(",", gridTables));
                 final IGTStore store = gridTable.data.getStore();
                 assert store instanceof GTComboStore;
                 if (store.memoryUsage() > 0) {
-                    logger.info("cuboid id:" + gridTable.id + " selected, memory used:" + (SizeOfUtil.deepSizeOf(store)>>10) + " KB");
+                    final long storeSize = SizeOfUtil.deepSizeOf(store);
+                    memoryLeft += storeSize;
+                    logger.info("cuboid id:" + gridTable.id + " selected, memory used:" + (storeSize >> 10) + " KB");
                     long t = System.currentTimeMillis();
                     ((GTComboStore) store).switchToDiskStore();
                     logger.info("switch to disk store cost:" + (System.currentTimeMillis() - t) + "ms");
                 }
             }
         }
-        logger.info("no store has been flushed to disk");
-        return true;
+        if (memoryLeft >= 0) {
+            return true;
+        } else {
+            logger.warn("all ancestor nodes of " + parentNode.id + " has been flushed to disk, memory is still insufficient, usually due to jvm gc not finished, forced to use memory store");
+            return true;
+        }
+
     }
 
     private void createNDCuboidGT(SimpleGridTableTree parentNode, long parentCuboidId, long cuboidId) throws IOException {
@@ -431,7 +425,7 @@ public class InMemCubeBuilder implements Runnable {
         if (parentNode.data.getStore().memoryUsage() <= 0) {
             long t = System.currentTimeMillis();
             ((GTComboStore) parentNode.data.getStore()).switchToMemStore();
-            logger.info("switch to mem store cost:" + (System.currentTimeMillis() - t) + "ms");
+            logger.info("node " + parentNode.id + " switch to mem store cost:" + (System.currentTimeMillis() - t) + "ms");
         }
 
         boolean inMem = gc(parentNode);

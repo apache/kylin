@@ -33,6 +33,7 @@ public class GTDiskStore implements IGTStore {
         this.identifier = generateIdentifier(fileSystem);
         logger.info("disk store created, identifier:" + identifier);
         this.writer = new DiskStoreWriter(fileSystem.getWriter(getRowBlockFile(identifier)));
+        deleteTmpFilesOnExit();
     }
 
     private String generateIdentifier(FileSystem fs) {
@@ -153,8 +154,12 @@ public class GTDiskStore implements IGTStore {
         } catch (Exception e) {
             logger.error("error to close writer", e);
         }
-        fileSystem.delete(getRowBlockFile(identifier));
-        fileSystem.delete(getRootDirectory(identifier));
+        deleteTmpFilesOnExit();
+    }
+
+    private void deleteTmpFilesOnExit() {
+        fileSystem.deleteOnExit(getRowBlockFile(identifier));
+        fileSystem.deleteOnExit(getRootDirectory(identifier));
     }
 
 }
