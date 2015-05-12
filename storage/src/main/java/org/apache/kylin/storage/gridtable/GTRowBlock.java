@@ -1,5 +1,7 @@
 package org.apache.kylin.storage.gridtable;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 
@@ -54,7 +56,7 @@ public class GTRowBlock {
     public Writer getWriter() {
         return new Writer();
     }
-    
+
     public class Writer {
         ByteBuffer[] cellBlockBuffers;
         
@@ -180,6 +182,21 @@ public class GTRowBlock {
         }
         return len;
     }
+
+    public void export(DataOutputStream dataOutputStream) throws IOException {
+        dataOutputStream.writeInt(seqId);
+        dataOutputStream.writeInt(nRows);
+        export(dataOutputStream, primaryKey);
+        for (ByteArray cb : cellBlocks) {
+            export(dataOutputStream, cb);
+        }
+    }
+
+    public void export(DataOutputStream dataOutputStream, ByteArray array) throws IOException {
+        dataOutputStream.writeInt(array.length());
+        dataOutputStream.write(array.array(), array.offset(), array.length());
+    }
+
 
     /** write data to given buffer, like serialize */
     public void export(ByteBuffer buf) {

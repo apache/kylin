@@ -23,8 +23,8 @@ import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.DictionarySerializer;
 import org.apache.kylin.invertedindex.index.ColumnValueContainer;
 import org.apache.kylin.invertedindex.index.CompressedValueContainer;
 import org.apache.kylin.invertedindex.index.Slice;
@@ -32,7 +32,6 @@ import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -73,31 +72,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
         if (dictionary == null) {
             return new IIRow(key, value, new ImmutableBytesWritable(BytesUtil.EMPTY_BYTE_ARRAY));
         } else {
-            return new IIRow(key, value, serialize(dictionary));
-        }
-    }
-
-    private static Dictionary<?> deserialize(ImmutableBytesWritable dictBytes) {
-        try {
-            final DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(dictBytes.get(), dictBytes.getOffset(), dictBytes.getLength()));
-            final String type = dataInputStream.readUTF();
-            final Dictionary dictionary = ClassUtil.forName(type, Dictionary.class).newInstance();
-            dictionary.readFields(dataInputStream);
-            return dictionary;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static ImmutableBytesWritable serialize(Dictionary<?> dict) {
-        try {
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DataOutputStream out = new DataOutputStream(baos);
-            out.writeUTF(dict.getClass().getName());
-            dict.write(out);
-            return new ImmutableBytesWritable(baos.toByteArray());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return new IIRow(key, value, DictionarySerializer.serialize(dictionary));
         }
     }
 
@@ -221,7 +196,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                         } else {
                             final ImmutableBytesWritable dictBytes = row.getDictionary();
                             if (dictBytes.getLength() != 0) {
-                                final Dictionary<?> dictionary = deserialize(dictBytes);
+                                final Dictionary<?> dictionary = DictionarySerializer.deserialize(dictBytes);
                                 CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), dictionary.getMaxId() - dictionary.getMinId() + 1, 0);
                                 c.fromBytes(row.getValue());
                                 valueContainers[curCol] = c;

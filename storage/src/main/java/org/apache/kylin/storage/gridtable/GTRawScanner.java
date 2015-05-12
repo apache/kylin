@@ -24,32 +24,12 @@ public class GTRawScanner implements IGTScanner {
     public GTRawScanner(GTInfo info, IGTStore store, GTScanRequest req) throws IOException {
         this.info = info;
 
-        ByteArray start = makeScanKey(req.getPkStart());
-        ByteArray end = makeScanKey(req.getPkEnd());
+        ByteArray start = ScanKey.makeScanKey(info, req.getPkStart());
+        ByteArray end = ScanKey.makeScanKey(info, req.getPkEnd());
         this.selectedColBlocks = info.selectColumnBlocks(req.getColumns());
 
         this.storeScanner = store.scan(start, end, selectedColBlocks, req);
         this.oneRecord = new GTRecord(info);
-    }
-
-    private ByteArray makeScanKey(GTRecord rec) {
-        int firstPKCol = info.primaryKey.nextSetBit(0);
-        if (rec == null || rec.cols[firstPKCol].array() == null)
-            return null;
-
-        BitSet selectedColumns = new BitSet();
-        int len = 0;
-        for (int i = info.primaryKey.nextSetBit(0); i >= 0; i = info.primaryKey.nextSetBit(i + 1)) {
-            if (rec.cols[i].array() == null) {
-                break;
-            }
-            selectedColumns.set(i);
-            len += rec.cols[i].length();
-        }
-
-        ByteArray buf = ByteArray.allocate(len);
-        rec.exportColumns(selectedColumns, buf);
-        return buf;
     }
 
     @Override

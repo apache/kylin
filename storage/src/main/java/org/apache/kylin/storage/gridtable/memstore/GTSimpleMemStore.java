@@ -1,44 +1,41 @@
 package org.apache.kylin.storage.gridtable.memstore;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Iterator;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.IGTStore;
 
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.Iterator;
+import java.util.List;
+
 public class GTSimpleMemStore implements IGTStore {
 
-    final GTInfo info;
     final List<GTRowBlock> rowBlockList;
 
     public GTSimpleMemStore(GTInfo info) {
-        this.info = info;
-        this.rowBlockList = new ArrayList<GTRowBlock>();
+        this.rowBlockList = Lists.newLinkedList();
 
         if (info.isShardingEnabled())
             throw new UnsupportedOperationException();
     }
 
     @Override
-    public GTInfo getInfo() {
-        return info;
-    }
-
-    @Override
-    public String getStorageDescription() {
-        return this.toString();
+    public long memoryUsage() {
+        if (rowBlockList.size() == 0) {
+            return 0;
+        } else {
+            return rowBlockList.get(0).exportLength() * Long.valueOf(rowBlockList.size());
+        }
     }
 
     @Override
     public IGTStoreWriter rebuild(int shard) {
         rowBlockList.clear();
-        return new Writer();
+        return new Writer(rowBlockList);
     }
 
     @Override
@@ -47,10 +44,16 @@ public class GTSimpleMemStore implements IGTStore {
             GTRowBlock last = rowBlockList.get(rowBlockList.size() - 1);
             fillLast.copyFrom(last);
         }
-        return new Writer();
+        return new Writer(rowBlockList);
     }
 
-    private class Writer implements IGTStoreWriter {
+    private static class Writer implements IGTStoreWriter {
+
+        private final List<GTRowBlock> rowBlockList;
+
+        Writer(List<GTRowBlock> rowBlockList) {
+            this.rowBlockList = rowBlockList;
+        }
         @Override
         public void close() throws IOException {
         }
@@ -66,7 +69,7 @@ public class GTSimpleMemStore implements IGTStore {
                 rowBlockList.add(copy);
             }
         }
-    };
+    }
 
     @Override
     public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) {
@@ -93,6 +96,12 @@ public class GTSimpleMemStore implements IGTStore {
             public void close() throws IOException {
             }
         };
+    }
+
+    @Override
+    public void drop() throws IOException {
+        //will there be any concurrent issue? If yes, ArrayList should be replaced
+        rowBlockList.clear();
     }
 
 }
