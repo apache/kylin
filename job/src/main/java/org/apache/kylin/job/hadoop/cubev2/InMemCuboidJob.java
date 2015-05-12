@@ -104,7 +104,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
-            long timeout = 1000*60*60l; // 1 hour
+            long timeout = 1000*60*60L; // 1 hour
             job.getConfiguration().set("mapred.task.timeout", String.valueOf(timeout));
             Configuration conf = HBaseConfiguration.create(getConf());
 

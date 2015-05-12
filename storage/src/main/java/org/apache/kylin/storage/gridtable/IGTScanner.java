@@ -4,10 +4,10 @@ import java.io.Closeable;
 
 public interface IGTScanner extends Iterable<GTRecord>, Closeable {
     
-    public GTInfo getInfo();
+    GTInfo getInfo();
     
-    public int getScannedRowCount();
+    int getScannedRowCount();
     
-    public int getScannedRowBlockCount();
+    int getScannedRowBlockCount();
 
 }

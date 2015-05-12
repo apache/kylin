@@ -49,13 +49,8 @@ public class CubeHBaseReadonlyStore implements IGTStore {
     }
 
     @Override
-    public GTInfo getInfo() {
-        return info;
-    }
-
-    @Override
-    public String getStorageDescription() {
-        return cubeSeg.toString();
+    public long memoryUsage() {
+        return 0;
     }
 
     @Override
@@ -125,6 +120,11 @@ public class CubeHBaseReadonlyStore implements IGTStore {
                 hbaseTable.close();
             }
         };
+    }
+
+    @Override
+    public void drop() throws IOException {
+        throw new UnsupportedOperationException();
     }
 
     private Scan buildScan(ByteArray pkStart, ByteArray pkEnd, List<Pair<byte[], byte[]>> selectedColumns) {

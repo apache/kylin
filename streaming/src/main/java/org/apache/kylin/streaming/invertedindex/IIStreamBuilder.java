@@ -71,10 +71,6 @@ public class IIStreamBuilder extends StreamBuilder {
     private StreamingManager streamingManager;
 
     public IIStreamBuilder(BlockingQueue<StreamMessage> queue, String streaming, String hTableName, IIDesc iiDesc, int shard) {
-        this(queue, streaming, hTableName, iiDesc, shard, true);
-    }
-
-    public IIStreamBuilder(BlockingQueue<StreamMessage> queue, String streaming, String hTableName, IIDesc iiDesc, int shard, boolean useLocalDict) {
         super(queue, iiDesc.getSliceSize());
         this.streaming = streaming;
         this.desc = iiDesc;
@@ -86,7 +82,7 @@ public class IIStreamBuilder extends StreamBuilder {
             logger.error("cannot open htable name:" + hTableName, e);
             throw new RuntimeException("cannot open htable name:" + hTableName, e);
         }
-        this.sliceBuilder = new SliceBuilder(desc, (short) shard, useLocalDict);
+        this.sliceBuilder = new SliceBuilder(desc, (short) shard, iiDesc.isUseLocalDictionary());
         this.streamingManager = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv());
     }
 

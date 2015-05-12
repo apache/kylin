@@ -16,7 +16,7 @@ public class GTRecord implements Comparable<GTRecord> {
 
     public GTRecord(GTInfo info) {
         this.info = info;
-        this.cols = new ByteArray[info.nColumns];
+        this.cols = new ByteArray[info.getColumnCount()];
         for (int i = 0; i < cols.length; i++)
             this.cols[i] = new ByteArray();
         this.maskForEqualHashComp = info.colAll;
@@ -55,7 +55,7 @@ public class GTRecord implements Comparable<GTRecord> {
 
     /** decode and return the values of this record */
     public Object[] getValues() {
-        return getValues(info.colAll, new Object[info.nColumns]);
+        return getValues(info.colAll, new Object[info.getColumnCount()]);
     }
 
     /** decode and return the values of this record */

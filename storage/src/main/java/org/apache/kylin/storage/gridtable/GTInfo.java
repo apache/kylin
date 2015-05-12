@@ -17,7 +17,6 @@ public class GTInfo {
     IGTCodeSystem codeSystem;
 
     // column schema
-    int nColumns;
     DataType[] colTypes;
     BitSet colAll;
     BitSet colPreferIndex;
@@ -37,7 +36,7 @@ public class GTInfo {
     }
 
     public int getColumnCount() {
-        return nColumns;
+        return colTypes.length;
     }
     
     public DataType getColumnType(int i) {
@@ -74,7 +73,7 @@ public class GTInfo {
     
     public int getMaxColumnLength() {
         int max = 0;
-        for (int i = 0; i < nColumns; i++)
+        for (int i = 0; i < colTypes.length; i++)
             max = Math.max(max, codeSystem.maxCodeLength(i));
         return max;
     }
@@ -95,7 +94,7 @@ public class GTInfo {
 
     public TblColRef colRef(int i) {
         if (colRefs == null) {
-            colRefs = new TblColRef[nColumns];
+            colRefs = new TblColRef[colTypes.length];
         }
         if (colRefs[i] == null) {
             colRefs[i] = GTUtil.tblColRef(i, colTypes[i].toString());
@@ -124,7 +123,7 @@ public class GTInfo {
 
     private void validateColumnBlocks() {
         colAll = new BitSet();
-        colAll.flip(0, nColumns);
+        colAll.flip(0, colTypes.length);
         
         if (colBlocks == null) {
             colBlocks = new BitSet[2];
@@ -185,7 +184,6 @@ public class GTInfo {
 
         /** required */
         public Builder setColumns(DataType... colTypes) {
-            info.nColumns = colTypes.length;
             info.colTypes = colTypes;
             return this;
         }

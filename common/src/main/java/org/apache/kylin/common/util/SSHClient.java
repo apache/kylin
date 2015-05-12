@@ -49,6 +49,7 @@ public class SSHClient {
     public SSHClient(String hostname, int port, String username, String password) {
         this.hostname = hostname;
         this.username = username;
+        this.port = port;
         if (password != null && new File(password).exists()) {
             this.identityPath = new File(password).getAbsolutePath();
             this.password = null;
@@ -324,7 +325,7 @@ public class SSHClient {
                     throw ee;
                 }
                 if (timeout < 0)
-                    throw new Exception("Remote commmand not finished within " + timeoutSeconds + " seconds.");
+                    throw new Exception("Remote command not finished within " + timeoutSeconds + " seconds.");
             }
             channel.disconnect();
             session.disconnect();
@@ -340,7 +341,7 @@ public class SSHClient {
             jsch.addIdentity(identityPath);
         }
 
-        Session session = jsch.getSession(username, hostname, 22);
+        Session session = jsch.getSession(username, hostname, port);
         if (password != null) {
             session.setPassword(password);
         }

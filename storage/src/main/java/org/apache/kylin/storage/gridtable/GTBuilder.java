@@ -51,7 +51,6 @@ public class GTBuilder implements Closeable, Flushable {
         blockWriter.readyForFlush();
         storeWriter.write(block);
         writtenRowBlockCount++;
-
         if (block.isFull()) {
             blockWriter.clearForNext();
         }
