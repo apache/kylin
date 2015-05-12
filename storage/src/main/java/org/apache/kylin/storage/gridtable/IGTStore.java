@@ -8,22 +8,22 @@ import java.util.Iterator;
 import org.apache.kylin.common.util.ByteArray;
 
 public interface IGTStore {
+
+    long memoryUsage();
     
-    public GTInfo getInfo();
+    IGTStoreWriter rebuild(int shard) throws IOException;
     
-    public String getStorageDescription();
+    IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast) throws IOException;
     
-    public IGTStoreWriter rebuild(int shard) throws IOException;
+    IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException;
+
+    void drop() throws IOException;
     
-    public IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast) throws IOException;
-    
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException;
-    
-    public interface IGTStoreWriter extends Closeable {
+    interface IGTStoreWriter extends Closeable {
         void write(GTRowBlock block) throws IOException;
     }
     
-    public interface IGTStoreScanner extends Iterator<GTRowBlock>, Closeable {
+    interface IGTStoreScanner extends Iterator<GTRowBlock>, Closeable {
     }
     
 }

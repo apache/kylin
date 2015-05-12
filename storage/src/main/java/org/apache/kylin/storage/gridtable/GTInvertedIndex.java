@@ -34,7 +34,7 @@ public class GTInvertedIndex {
         this.colPreferIndex = info.colPreferIndex;
         this.colBlocks = info.selectColumnBlocks(colPreferIndex);
 
-        index = new GTInvertedIndexOfColumn[info.nColumns];
+        index = new GTInvertedIndexOfColumn[info.getColumnCount()];
         for (int i = colPreferIndex.nextSetBit(0); i >= 0; i = colPreferIndex.nextSetBit(i + 1)) {
             index[i] = new GTInvertedIndexOfColumn(info.codeSystem.getFilterCodeSystem());
         }
@@ -43,7 +43,7 @@ public class GTInvertedIndex {
     public void add(GTRowBlock block) {
 
         @SuppressWarnings("unchecked")
-        Set<ByteArray>[] distinctValues = new Set[info.nColumns];
+        Set<ByteArray>[] distinctValues = new Set[info.getColumnCount()];
         for (int i = colPreferIndex.nextSetBit(0); i >= 0; i = colPreferIndex.nextSetBit(i + 1)) {
             distinctValues[i] = new HashSet<ByteArray>();
         }

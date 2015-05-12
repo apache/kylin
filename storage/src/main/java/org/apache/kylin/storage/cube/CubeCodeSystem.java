@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.Dictionary;

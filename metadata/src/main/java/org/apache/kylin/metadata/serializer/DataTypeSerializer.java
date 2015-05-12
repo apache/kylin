@@ -20,8 +20,11 @@ package org.apache.kylin.metadata.serializer;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.metadata.model.DataType;
 
@@ -31,20 +34,23 @@ import org.apache.kylin.metadata.model.DataType;
  */
 abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
-    final static HashMap<String, Class<?>> implementations = new HashMap<String, Class<?>>();
+    final static Map<String, Class<?>> implementations;
     static {
-        implementations.put("varchar", StringSerializer.class);
-        implementations.put("decimal", BigDecimalSerializer.class);
-        implementations.put("double", DoubleSerializer.class);
-        implementations.put("float", DoubleSerializer.class);
-        implementations.put("bigint", LongSerializer.class);
-        implementations.put("long", LongSerializer.class);
-        implementations.put("integer", LongSerializer.class);
-        implementations.put("int", LongSerializer.class);
-        implementations.put("smallint", LongSerializer.class);
-        implementations.put("date", DateTimeSerializer.class);
-        implementations.put("datetime", DateTimeSerializer.class);
-        implementations.put("timestamp", DateTimeSerializer.class);
+        HashMap<String, Class<?>> impl = Maps.newHashMap();
+        impl.put("varchar", StringSerializer.class);
+        impl.put("decimal", BigDecimalSerializer.class);
+        impl.put("double", DoubleSerializer.class);
+        impl.put("float", DoubleSerializer.class);
+        impl.put("bigint", LongSerializer.class);
+        impl.put("long", LongSerializer.class);
+        impl.put("integer", LongSerializer.class);
+        impl.put("int", LongSerializer.class);
+        impl.put("smallint", LongSerializer.class);
+        impl.put("date", DateTimeSerializer.class);
+        impl.put("datetime", DateTimeSerializer.class);
+        impl.put("timestamp", DateTimeSerializer.class);
+        implementations = Collections.unmodifiableMap(impl);
+
     }
 
     public static DataTypeSerializer<?> create(String dataType) {
