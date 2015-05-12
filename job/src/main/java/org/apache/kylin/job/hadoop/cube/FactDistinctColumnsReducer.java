@@ -24,24 +24,23 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.*;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.mr.KylinReducer;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
@@ -53,7 +52,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     private boolean collectStatistics = false;
     private String statisticsOutput = null;
     private List<Long> baseCuboidRowCountInMappers;
-    private Map<Long, Long> rowCountInCuboids;
+    //    private Map<Long, Long> rowCountInCuboids;
     protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
@@ -78,7 +77,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
         if (collectStatistics) {
             baseCuboidRowCountInMappers = Lists.newArrayList();
-            rowCountInCuboids = Maps.newHashMap();
+//            rowCountInCuboids = Maps.newHashMap();
             cuboidHLLMap = Maps.newHashMap();
             SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
         }
@@ -113,23 +112,23 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             // for hll
             long cuboidId = 0 - key.get();
 
-                for (Text value : values) {
-                    HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
-                    ByteArray byteArray = new ByteArray(value.getBytes());
-                    hll.readRegisters(byteArray.asBuffer());
+            for (Text value : values) {
+                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
+                ByteArray byteArray = new ByteArray(value.getBytes());
+                hll.readRegisters(byteArray.asBuffer());
 
-                    totalRowsBeforeMerge += hll.getCountEstimate();
+                totalRowsBeforeMerge += hll.getCountEstimate();
 
-                    if (cuboidId == baseCuboidId) {
-                        baseCuboidRowCountInMappers.add(hll.getCountEstimate());
-                    }
-
-                    if (cuboidHLLMap.get(cuboidId) != null) {
-                        cuboidHLLMap.get(cuboidId).merge(hll);
-                    } else {
-                        cuboidHLLMap.put(cuboidId, hll);
-                    }
+                if (cuboidId == baseCuboidId) {
+                    baseCuboidRowCountInMappers.add(hll.getCountEstimate());
                 }
+
+                if (cuboidHLLMap.get(cuboidId) != null) {
+                    cuboidHLLMap.get(cuboidId).merge(hll);
+                } else {
+                    cuboidHLLMap.put(cuboidId, hll);
+                }
+            }
         }
 
     }
@@ -139,12 +138,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
         //output the hll info;
         if (collectStatistics) {
-            for (Long cuboidId : cuboidHLLMap.keySet()) {
-                rowCountInCuboids.put(cuboidId, cuboidHLLMap.get(cuboidId).getCountEstimate());
-            }
-
             writeMapperAndCuboidStatistics(context); // for human check
-            writeCuboidStatistics(context); // for CreateHTableJob
+            writeCuboidStatistics(context.getConfiguration(), statisticsOutput, cuboidHLLMap); // for CreateHTableJob
         }
     }
 
@@ -157,7 +152,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             String msg;
 
             List<Long> allCuboids = new ArrayList<Long>();
-            allCuboids.addAll(rowCountInCuboids.keySet());
+            allCuboids.addAll(cuboidHLLMap.keySet());
             Collections.sort(allCuboids);
 
             msg = "Total cuboid number: \t" + allCuboids.size();
@@ -175,8 +170,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
             long grantTotal = 0;
             for (long i : allCuboids) {
-                grantTotal += rowCountInCuboids.get(i);
-                msg = "Cuboid " + i + " row count is: \t " + rowCountInCuboids.get(i);
+                grantTotal += cuboidHLLMap.get(i).getCountEstimate();
+                msg = "Cuboid " + i + " row count is: \t " + cuboidHLLMap.get(i).getCountEstimate();
                 writeLine(out, msg);
             }
 
@@ -200,19 +195,23 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
     }
 
-    private void writeCuboidStatistics(Context context) throws IOException {
-        Configuration conf = context.getConfiguration();
-        Path seqFilePath = new Path(statisticsOutput, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
+    public static void writeCuboidStatistics(Configuration conf, String outputPath, Map<Long, HyperLogLogPlusCounter> cuboidHLLMap) throws IOException {
+        Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
         SequenceFile.Writer writer = SequenceFile.createWriter(conf,
                 SequenceFile.Writer.file(seqFilePath), SequenceFile.Writer.keyClass(LongWritable.class),
-                SequenceFile.Writer.valueClass(LongWritable.class));
+                SequenceFile.Writer.valueClass(BytesWritable.class));
 
         List<Long> allCuboids = new ArrayList<Long>();
-        allCuboids.addAll(rowCountInCuboids.keySet());
+        allCuboids.addAll(cuboidHLLMap.keySet());
         Collections.sort(allCuboids);
+
+        ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
         try {
             for (long i : allCuboids) {
-                writer.append(new LongWritable(i), new LongWritable((long) (rowCountInCuboids.get(i) *100 / SAMPING_PERCENTAGE)));
+                valueBuf.clear();
+                cuboidHLLMap.get(i).writeRegisters(valueBuf);
+                valueBuf.flip();
+                writer.append(new LongWritable(i), new BytesWritable(valueBuf.array(), valueBuf.limit()));
             }
         } finally {
             writer.close();

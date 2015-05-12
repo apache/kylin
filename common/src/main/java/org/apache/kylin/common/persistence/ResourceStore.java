@@ -53,6 +53,8 @@ abstract public class ResourceStore {
     public static final String HYBRID_RESOURCE_ROOT = "/hybrid";
     public static final String STREAMING_RESOURCE_ROOT = "/streaming";
     public static final String STREAMING_OUTPUT_RESOURCE_ROOT = "/streaming_output";
+    public static final String CUBE_STATISTICS_ROOT = "/cube_statistics";
+
 
     private static ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 

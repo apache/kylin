@@ -89,10 +89,10 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, HCatRecord, IntWr
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         Iterator<Integer> it = hllcMap.keySet().iterator();
+        ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
         while (it.hasNext()) {
             int key = it.next();
             HyperLogLogPlusCounter hllc = hllcMap.get(key);
-            ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
             buf.clear();
             hllc.writeRegisters(buf);
             buf.flip();
