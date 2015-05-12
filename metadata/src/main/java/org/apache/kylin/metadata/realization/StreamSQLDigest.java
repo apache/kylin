@@ -2,7 +2,7 @@ package org.apache.kylin.metadata.realization;
 
 import java.util.Arrays;
 
-import org.apache.kylin.metadata.filter.IgnoreTsCondition;
+import org.apache.kylin.metadata.filter.TsConditionEraser;
 import org.apache.kylin.metadata.filter.StringCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -25,7 +25,7 @@ public class StreamSQLDigest {
         this.sqlDigest = sqlDigest;
 
         //must use new instance of IgnoreTsCondition
-        IgnoreTsCondition decorator = new IgnoreTsCondition(tsCol, sqlDigest.filter);
+        TsConditionEraser decorator = new TsConditionEraser(tsCol, sqlDigest.filter);
         filterSerialized = TupleFilterSerializer.serialize(sqlDigest.filter, decorator, StringCodeSystem.INSTANCE);
 
         int nonFilterHashCode = calculateNonFilterHashCode();

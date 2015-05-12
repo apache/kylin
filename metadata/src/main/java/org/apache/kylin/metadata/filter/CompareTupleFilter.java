@@ -69,6 +69,8 @@ public class CompareTupleFilter extends TupleFilter {
             // if value is before column, we need to reverse the operator. e.g. "1 >= c1" => "c1 <= 1"
             if (!this.conditionValues.isEmpty() && needSwapOperator()) {
                 this.operator = SWAP_OP_MAP.get(this.operator);
+                TupleFilter last = this.children.remove(this.children.size() - 1);
+                this.children.add(0, last);
             }
         } else if (child instanceof ConstantTupleFilter) {
             this.conditionValues.addAll(child.getValues());
@@ -88,15 +90,6 @@ public class CompareTupleFilter extends TupleFilter {
     @Override
     public Set<?> getValues() {
         return conditionValues;
-    }
-
-    public void updateValues(Collection<?> values, boolean clear) {
-        if (clear) {
-            this.conditionValues.clear();
-        }
-
-        this.conditionValues.addAll(values);
-        this.firstCondValue = this.conditionValues.iterator().next();
     }
 
     public Object getFirstValue() {

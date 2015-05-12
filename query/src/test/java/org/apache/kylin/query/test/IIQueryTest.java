@@ -61,7 +61,7 @@ public class IIQueryTest extends KylinQueryTest {
 
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
-        return Arrays.asList(new Object[][]{{"inner"}, {"left"}});
+        return Arrays.asList(new Object[][] { { "inner" }, { "left" } });
     }
 
     public IIQueryTest(String joinType) throws Exception {
@@ -71,6 +71,11 @@ public class IIQueryTest extends KylinQueryTest {
         KylinQueryTest.joinType = joinType;
         KylinQueryTest.setupAll();
 
+    }
+
+    @Test
+    public void testSingleRunQuery() throws Exception {
+        super.testSingleRunQuery();
     }
 
     @Test

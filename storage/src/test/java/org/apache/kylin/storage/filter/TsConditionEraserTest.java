@@ -22,7 +22,7 @@ import com.google.common.collect.Lists;
 /**
  * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
-public class IgnoreTsConditionTest extends LocalFileMetadataTestCase {
+public class TsConditionEraserTest extends LocalFileMetadataTestCase {
     IIInstance ii;
     TableRecordInfo tableRecordInfo;
     CoprocessorFilter filter;
@@ -110,9 +110,9 @@ public class IgnoreTsConditionTest extends LocalFileMetadataTestCase {
         TupleFilter a = mockFilter1(2000);
         TupleFilter b = mockFilter1(2001);
 
-        IgnoreTsCondition decoratorA = new IgnoreTsCondition(caldt, a);
+        TsConditionEraser decoratorA = new TsConditionEraser(caldt, a);
         byte[] aBytes = TupleFilterSerializer.serialize(a, decoratorA, StringCodeSystem.INSTANCE);
-        IgnoreTsCondition decoratorB = new IgnoreTsCondition(caldt, b);
+        TsConditionEraser decoratorB = new TsConditionEraser(caldt, b);
         byte[] bBytes = TupleFilterSerializer.serialize(b, decoratorB, StringCodeSystem.INSTANCE);
         Assert.assertArrayEquals(aBytes, bBytes);
 
@@ -124,9 +124,9 @@ public class IgnoreTsConditionTest extends LocalFileMetadataTestCase {
         TupleFilter a = mockFilter2(2000);
         TupleFilter b = mockFilter2(2001);
 
-        IgnoreTsCondition decoratorA = new IgnoreTsCondition(caldt, a);
+        TsConditionEraser decoratorA = new TsConditionEraser(caldt, a);
         byte[] aBytes = TupleFilterSerializer.serialize(a, decoratorA, StringCodeSystem.INSTANCE);
-        IgnoreTsCondition decoratorB = new IgnoreTsCondition(caldt, b);
+        TsConditionEraser decoratorB = new TsConditionEraser(caldt, b);
         byte[] bBytes = TupleFilterSerializer.serialize(b, decoratorB, StringCodeSystem.INSTANCE);
         Assert.assertFalse(Arrays.equals(aBytes,bBytes));
     }

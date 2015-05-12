@@ -18,22 +18,24 @@
 
 package org.apache.kylin.query.enumerator;
 
-import java.util.Map;
-import java.util.Properties;
-
 import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.jdbc.OptiqConnection;
-
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.DateConditionModifier;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageEngineFactory;
+import org.apache.kylin.storage.hbase.coprocessor.DictCodeSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author xjiang
@@ -105,6 +107,10 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         // bind dynamic variables
         bindVariable(olapContext.filter);
 
+        //modify date condition
+        olapContext.filter = modifyDateCondition(olapContext.filter);
+        olapContext.resetSQLDigest();
+
         // query storage engine
         IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization, true);
         ITupleIterator iterator = storageEngine.search(olapContext.storageContext, olapContext.getSQLDigest(), olapContext.returnTupleInfo);
@@ -113,6 +119,12 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         }
 
         return iterator;
+    }
+
+    private TupleFilter modifyDateCondition(TupleFilter filter) {
+        DateConditionModifier filterDecorator = new DateConditionModifier(filter);
+        byte[] bytes = TupleFilterSerializer.serialize(filter, filterDecorator, DictCodeSystem.INSTANCE);
+        return TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
     }
 
     private void bindVariable(TupleFilter filter) {
