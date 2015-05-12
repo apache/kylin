@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
@@ -60,6 +61,7 @@ public class Broadcaster {
                     logger.warn("There is no available rest server; check the 'kylin.rest.servers' config");
                     return;
                 }
+                logger.debug(nodes.length + " nodes in the cluster: " + Arrays.toString(nodes));
                 final List<RestClient> restClients = Lists.newArrayList();
                 for (String node : nodes) {
                     restClients.add(new RestClient(node));
