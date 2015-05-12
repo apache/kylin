@@ -58,22 +58,4 @@
         <description>Block replication</description>
     </property>
 
-
-	<property>
-		<name>hive.merge.mapfiles</name>
-		<value>true</value>
-		<description>Enable hive file merge on mapper only job</description>
-	</property>
-
-	<property>
-		<name>hive.merge.mapredfiles</name>
-		<value>true</value>
-		<description>Enable hive file merge on map-reduce job</description>
-	</property>
-
-	<property>
-		<name>hive.merge.size.per.task</name>
-		<value>16000000</value>
-		<description>Size for the merged file: 16M</description>
-	</property>
 </configuration>
