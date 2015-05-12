@@ -18,10 +18,12 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.Options;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -31,13 +33,18 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * @author yangli9
@@ -63,7 +70,8 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             String cubeName = getOptionValue(OPTION_CUBE_NAME);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-            String intermediateTable = getOptionValue(OPTION_TABLE_NAME);;
+            String intermediateTable = getOptionValue(OPTION_TABLE_NAME);
+            ;
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
             String statistics_enabled = getOptionValue(OPTION_STATISTICS_ENABLED);
             String statistics_output = getOptionValue(OPTION_STATISTICS_OUTPUT);
@@ -73,6 +81,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             // add metadata to distributed cache
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cubeInstance = cubeMgr.getCube(cubeName);
+            CubeSegment newSegment = cubeInstance.getSegment(segmentName, SegmentStatusEnum.NEW);
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
@@ -82,14 +91,21 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             log.info("Starting: " + job.getJobName());
 
             setJobClasspath(job);
-            
+
             setupMapper(intermediateTable);
             setupReducer(output);
 
             // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
             attachKylinPropsAndMetadata(cubeInstance, job.getConfiguration());
 
-            return waitForCompletion(job);
+            int result = waitForCompletion(job);
+
+            if(Boolean.parseBoolean(statistics_enabled)) {
+                putStatisticsToResourceStore(statistics_output, newSegment);
+            }
+
+            return result;
+
 
         } catch (Exception e) {
             logger.error("error in FactDistinctColumnsJob", e);
@@ -105,7 +121,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
         HCatInputFormat.setInput(job, dbTableNames[0],
                 dbTableNames[1]);
-        
+
         job.setInputFormatClass(HCatInputFormat.class);
         job.setMapperClass(FactDistinctHiveColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);
@@ -125,6 +141,23 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         job.setNumReduceTasks(1);
 
         deletePath(job.getConfiguration(), output);
+    }
+
+    private void putStatisticsToResourceStore(String statisticsFolder, CubeSegment cubeSegment) throws IOException {
+        Path statisticsFilePath = new Path(statisticsFolder, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
+        FileSystem fs = HadoopUtil.getFileSystem("hdfs:///" + statisticsFilePath);
+        if (!fs.exists(statisticsFilePath))
+            throw new IOException("File " + statisticsFilePath + " does not exists;");
+
+        FSDataInputStream is = fs.open(statisticsFilePath);
+        try {
+            // put the statistics to metadata store
+            String statisticsFileName = ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment.getUuid() + ".seq";
+            ResourceStore rs = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+            rs.putResource(statisticsFileName, is, System.currentTimeMillis());
+        } finally {
+            IOUtils.closeStream(is);
+        }
     }
 
     public static void main(String[] args) throws Exception {

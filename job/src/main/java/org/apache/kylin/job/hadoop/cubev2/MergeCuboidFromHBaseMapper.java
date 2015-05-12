@@ -59,7 +59,7 @@ import java.util.List;
 /**
  * @author shaoshi
  */
-public class MergeCuboidFromHBaseMapper extends TableMapper<Text, Text> {
+public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritable, Text> {
 
     private KylinConfig config;
     private String cubeName;
@@ -71,7 +71,8 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<Text, Text> {
     private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
     // life cycle
 
-    private Text outputKey = new Text();
+//    private Text outputKey = new Text();
+    private ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
 
     private byte[] newKeyBuf;
     private RowKeySplitter rowKeySplitter;

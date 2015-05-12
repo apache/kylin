@@ -22,7 +22,11 @@ import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat;
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
@@ -55,10 +59,12 @@ public class MergeCuboidFromHBaseJob extends CuboidJob {
             options.addOption(OPTION_SEGMENT_NAME);
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_OUTPUT_PATH);
+            options.addOption(OPTION_HTABLE_NAME);
             parseOptions(options, args);
 
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME).toUpperCase();
+            String htableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
@@ -87,14 +93,17 @@ public class MergeCuboidFromHBaseJob extends CuboidJob {
                 scans.add(scan);
             }
 
-            TableMapReduceUtil.initTableMapperJob(scans, MergeCuboidFromHBaseMapper.class, Text.class,
+            TableMapReduceUtil.initTableMapperJob(scans, MergeCuboidFromHBaseMapper.class, ImmutableBytesWritable.class,
                     Text.class, job);
 
+            /*
             // Reducer - only one
             job.setReducerClass(CuboidReducer.class);
             job.setOutputFormatClass(SequenceFileOutputFormat.class);
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
+
+*/
 
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
@@ -103,7 +112,16 @@ public class MergeCuboidFromHBaseJob extends CuboidJob {
             // add metadata to distributed cache
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
-            setReduceTaskNum(job, config, cubeName, 0);
+
+            HTable htable = new HTable(conf, htableName);
+            HFileOutputFormat.configureIncrementalLoad(job,
+                    htable);
+
+
+            // set Reducer; This need be after configureIncrementalLoad, to overwrite the default reducer class
+            job.setReducerClass(InMemCuboidReducer.class);
+            job.setOutputKeyClass(ImmutableBytesWritable.class);
+            job.setOutputValueClass(KeyValue.class);
 
             this.deletePath(job.getConfiguration(), output);
 

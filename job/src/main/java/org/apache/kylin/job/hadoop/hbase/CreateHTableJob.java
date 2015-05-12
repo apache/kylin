@@ -33,12 +33,16 @@ import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -46,7 +50,6 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
-import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.tools.DeployCoprocessorCLI;
 import org.apache.kylin.job.tools.LZOSupportnessChecker;
@@ -55,7 +58,10 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +81,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
     CubeDesc cubeDesc = null;
     String segmentName = null;
     KylinConfig kylinConfig;
+    private int SAMPING_PERCENTAGE = 5;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -85,12 +92,15 @@ public class CreateHTableJob extends AbstractHadoopJob {
         options.addOption(OPTION_PARTITION_FILE_PATH);
         options.addOption(OPTION_HTABLE_NAME);
         options.addOption(OPTION_STATISTICS_ENABLED);
-        options.addOption(OPTION_STATISTICS_OUTPUT);
+        options.addOption(OPTION_STATISTICS_SAMPLING_PERCENT);
         parseOptions(options, args);
 
         Path partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
         boolean statistics_enabled = Boolean.parseBoolean(getOptionValue(OPTION_STATISTICS_ENABLED));
-        Path statisticsFilePath = new Path(getOptionValue(OPTION_STATISTICS_OUTPUT), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
+
+        String statistics_sampling_percent = getOptionValue(OPTION_STATISTICS_SAMPLING_PERCENT);
+
+        SAMPING_PERCENTAGE = Integer.parseInt(statistics_sampling_percent);
 
         String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -133,7 +143,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
             byte[][] splitKeys;
             if (statistics_enabled) {
-                splitKeys = getSplitsFromCuboidStatistics(conf, statisticsFilePath);
+                splitKeys = getSplitsFromCuboidStatistics(conf);
             } else {
                 splitKeys = getSplits(conf, partitionFilePath);
             }
@@ -196,7 +206,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
 
     @SuppressWarnings("deprecation")
-    protected byte[][] getSplitsFromCuboidStatistics(Configuration conf, Path statisticsFilePath) throws IOException {
+    protected byte[][] getSplitsFromCuboidStatistics(Configuration conf) throws IOException {
 
         List<Integer> rowkeyColumnSize = Lists.newArrayList();
         CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
@@ -217,20 +227,33 @@ public class CreateHTableJob extends AbstractHadoopJob {
         Map<Long, Long> cuboidSizeMap = Maps.newHashMap();
         long totalSizeInM = 0;
 
-        SequenceFile.Reader reader = null;
-
-        FileSystem fs = statisticsFilePath.getFileSystem(conf);
-        if (fs.exists(statisticsFilePath) == false) {
-            System.err.println("Path " + statisticsFilePath + " not found, no region split, HTable will be one region");
-            return null;
+        ResourceStore rs = ResourceStore.getStore(kylinConfig);
+        String fileKey = ResourceStore.CUBE_STATISTICS_ROOT + "/" + cube.getName() + "/" + cubeSegment.getUuid() + ".seq";
+        InputStream is = rs.getResource(fileKey);
+        File tempFile = null;
+        FileOutputStream tempFileStream = null;
+        try {
+            tempFile = File.createTempFile(cubeSegment.getUuid(), ".seq");
+            tempFileStream = new FileOutputStream(tempFile);
+            org.apache.commons.io.IOUtils.copy(is, tempFileStream);
+        } finally {
+            IOUtils.closeStream(is);
+            IOUtils.closeStream(tempFileStream);
         }
 
+        FileSystem fs = HadoopUtil.getFileSystem("file:///" +tempFile.getAbsolutePath());
+        SequenceFile.Reader reader = null;
         try {
-            reader = new SequenceFile.Reader(fs, statisticsFilePath, conf);
+            reader = new SequenceFile.Reader(fs, new Path(tempFile.getAbsolutePath()), conf);
             LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-            LongWritable value = (LongWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+            BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
             while (reader.next(key, value)) {
-                cuboidSizeMap.put(key.get(), value.get());
+                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
+                ByteArray byteArray = new ByteArray(value.getBytes());
+                hll.readRegisters(byteArray.asBuffer());
+
+                cuboidSizeMap.put(key.get(), hll.getCountEstimate() * 100 / SAMPING_PERCENTAGE);
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -261,7 +284,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
         logger.info(mbPerRegion + " MB per region (estimated)");
 
         List<Long> regionSplit = Lists.newArrayList();
-
 
 
         long size = 0;
