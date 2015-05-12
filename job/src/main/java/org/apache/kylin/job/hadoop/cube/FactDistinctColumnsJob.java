@@ -19,7 +19,6 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import org.apache.commons.cli.Options;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -100,7 +99,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
             int result = waitForCompletion(job);
 
-            if(Boolean.parseBoolean(statistics_enabled)) {
+            if(result == 0 && Boolean.parseBoolean(statistics_enabled)) {
                 putStatisticsToResourceStore(statistics_output, newSegment);
             }
 
@@ -145,14 +144,14 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
     private void putStatisticsToResourceStore(String statisticsFolder, CubeSegment cubeSegment) throws IOException {
         Path statisticsFilePath = new Path(statisticsFolder, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
-        FileSystem fs = HadoopUtil.getFileSystem("hdfs:///" + statisticsFilePath);
+        FileSystem fs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
         if (!fs.exists(statisticsFilePath))
             throw new IOException("File " + statisticsFilePath + " does not exists;");
 
         FSDataInputStream is = fs.open(statisticsFilePath);
         try {
             // put the statistics to metadata store
-            String statisticsFileName = ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment.getUuid() + ".seq";
+            String statisticsFileName = cubeSegment.getStatisticsResourcePath();
             ResourceStore rs = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
             rs.putResource(statisticsFileName, is, System.currentTimeMillis());
         } finally {

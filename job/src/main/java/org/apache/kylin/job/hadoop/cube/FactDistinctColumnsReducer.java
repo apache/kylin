@@ -52,7 +52,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     private boolean collectStatistics = false;
     private String statisticsOutput = null;
     private List<Long> baseCuboidRowCountInMappers;
-    //    private Map<Long, Long> rowCountInCuboids;
     protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
@@ -77,7 +76,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
         if (collectStatistics) {
             baseCuboidRowCountInMappers = Lists.newArrayList();
-//            rowCountInCuboids = Maps.newHashMap();
             cuboidHLLMap = Maps.newHashMap();
             SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
         }
@@ -113,7 +111,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             long cuboidId = 0 - key.get();
 
             for (Text value : values) {
-                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(16);
+                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
                 ByteArray byteArray = new ByteArray(value.getBytes());
                 hll.readRegisters(byteArray.asBuffer());
 
@@ -139,7 +137,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         //output the hll info;
         if (collectStatistics) {
             writeMapperAndCuboidStatistics(context); // for human check
-            writeCuboidStatistics(context.getConfiguration(), statisticsOutput, cuboidHLLMap); // for CreateHTableJob
+            writeCuboidStatistics(context.getConfiguration(), statisticsOutput, cuboidHLLMap, SAMPING_PERCENTAGE); // for CreateHTableJob
         }
     }
 
@@ -195,7 +193,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
     }
 
-    public static void writeCuboidStatistics(Configuration conf, String outputPath, Map<Long, HyperLogLogPlusCounter> cuboidHLLMap) throws IOException {
+    public static void writeCuboidStatistics(Configuration conf, String outputPath, Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage) throws IOException {
         Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
         SequenceFile.Writer writer = SequenceFile.createWriter(conf,
                 SequenceFile.Writer.file(seqFilePath), SequenceFile.Writer.keyClass(LongWritable.class),
@@ -205,6 +203,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         allCuboids.addAll(cuboidHLLMap.keySet());
         Collections.sort(allCuboids);
 
+        // persist the sample percentage with key 0
+        writer.append(new LongWritable(0l), new BytesWritable(Bytes.toBytes(samplingPercentage)));
         ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
         try {
             for (long i : allCuboids) {
