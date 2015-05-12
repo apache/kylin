@@ -19,6 +19,7 @@
 package org.apache.kylin.common;
 
 import com.google.common.collect.Sets;
+import jodd.util.StringUtil;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
@@ -414,10 +415,7 @@ public class KylinConfig {
     }
 
     public String[] getRestServers() {
-        String nodes = getOptional(KYLIN_REST_SERVERS);
-        if (StringUtils.isBlank(nodes))
-            return null;
-        return nodes.split("\\s*,\\s*");
+        return getOptionalStringArray(KYLIN_REST_SERVERS);
     }
 
     /**
@@ -471,6 +469,15 @@ public class KylinConfig {
         return property != null ? property : kylinConfig.getString(prop);
     }
 
+
+    private String[] getOptionalStringArray(String prop) {
+        final String property = System.getProperty(prop);
+        if (!StringUtil.isBlank(property))
+            return property.split("\\s*,\\s*");
+
+        return kylinConfig.getStringArray(prop);
+    }
+
     private String getOptional(String prop, String dft) {
         final String property = System.getProperty(prop);
         return property != null ? property : kylinConfig.getString(prop, dft);
@@ -490,7 +497,6 @@ public class KylinConfig {
 
     void reloadKylinConfig(InputStream is) {
         PropertiesConfiguration config = new PropertiesConfiguration();
-        config.setListDelimiter((char)0); // disable list delimiter, Kylin will parse and split
         try {
             config.load(is);
         } catch (ConfigurationException e) {
