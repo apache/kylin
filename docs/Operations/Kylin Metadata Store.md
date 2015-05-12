@@ -1,31 +1,27 @@
-Kylin organizes all of its metadata(including cube descriptions and instances, projects, inverted index description and instances, jobs, tables and dictionaries) as a hierarchy file system. However, Kylin uses hbase to store it, rather than normal file system. If you check your kylin configuration file(kylin.properties) you will find such a line:
+Kylin organizes all of its metadata (including cube descriptions and instances, projects, inverted index description and instances, jobs, tables and dictionaries) as a hierarchy of files, that are stored in HBase. You can backup and restore these metadata by download to local file system and upload again.
 
-`# The metadata store in hbase`
-`kylin.metadata.url=kylin_metadata@hbase:sandbox.hortonworks.com:2181:/hbase-unsecure`
+Check the `conf/kylin.properties`
 
-This indicates that the metadata will be saved as a htable called `kylin_metadata`. You can scan the htable in hbase shell to check it out.
+	kylin.metadata.url=kylin_metadata@hbase
+
+This indicates that the metadata will be saved as a HTable called `kylin_metadata`. You can scan the HTable in HBase shell.
 
 # Backup Metadata Store
 
-Sometimes you need to backup the Kylin's Metadata Store from hbase to your disk file system.
-In such cases, assuming you're on the hadoop CLI(or sandbox) where you deployed Kylin, you can use:
+Sometimes you want to backup Kylin's metadata. Below command downloads all metadata to local directory `~/meta_dump`.
 
-	mkdir ~/meta_dump
+	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar  org.apache.kylin.common.persistence.ResourceTool  download  ~/meta_dump
 
-	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar org.apache.kylin.common.persistence.ResourceTool  copy ${KYLIN_HOME}/conf/kylin.properties ~/meta_dump 
-
-to dump your metadata to your local folder ~/meta_dump.
+Add `-Dexclude=/dict,/job_output,/table_snapshot` flag to the command to exclude certain metadata sub-directories.
 
 # Restore Metadata Store
 
-In case you find your metadata store messed up, and you want to restore to a previous backup:
+To restore a backup, first clean up the metadata store.
 
-first clean up the metadata store:
+	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar  org.apache.kylin.common.persistence.ResourceTool  reset  
 
-	hbase  org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar org.apache.kylin.common.persistence.ResourceTool  reset  
+Then upload the backup metadata from local file system.
 
-then upload the backup metadata in ~/meta_dump to Kylin's metadata store:
-
-	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar org.apache.kylin.common.persistence.ResourceTool  copy ~/meta_dump ${KYLIN_HOME}/conf/kylin.properties  
+	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar  org.apache.kylin.common.persistence.ResourceTool  upload  ~/meta_dump
 
 
