@@ -62,7 +62,6 @@ public class GTComboStore implements IGTStore {
             logger.error("fail to switch to mem store", e);
             throw new RuntimeException(e);
         }
-        logger.info("switch to mem store");
     }
 
     public void switchToDiskStore() {
@@ -77,7 +76,6 @@ public class GTComboStore implements IGTStore {
             logger.error("fail to switch to disk store", e);
             throw new RuntimeException(e);
         }
-        logger.info("switch to disk store");
     }
 
     @Override
