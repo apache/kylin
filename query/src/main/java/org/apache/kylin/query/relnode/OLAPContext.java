@@ -18,25 +18,19 @@
 
 package org.apache.kylin.query.relnode;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.query.schema.OLAPSchema;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.tuple.TupleInfo;
-import org.apache.kylin.metadata.filter.TupleFilter;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
+
+import java.util.*;
 
 /**
  * @author xjiang
@@ -130,6 +124,11 @@ public class OLAPContext {
         if (sqlDigest == null)
             sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations);
         return sqlDigest;
+    }
+
+    public void resetSQLDigest()
+    {
+        this.sqlDigest = null;
     }
 
     public void setReturnTupleInfo(RelDataType rowType, ColumnRowType columnRowType) {

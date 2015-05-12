@@ -1,22 +1,21 @@
 package org.apache.kylin.metadata.filter;
 
-import java.util.IdentityHashMap;
-
+import com.google.common.collect.Maps;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Maps;
+import java.util.IdentityHashMap;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
-public class IgnoreTsCondition implements TupleFilterSerializer.Decorator {
+public class TsConditionEraser implements TupleFilterSerializer.Decorator {
 
     private final TblColRef tsColumn;
     private final TupleFilter root;
 
     private IdentityHashMap<TupleFilter, Boolean> isInTopLevelANDs;
 
-    public IgnoreTsCondition(TblColRef tsColumn, TupleFilter root) {
+    public TsConditionEraser(TblColRef tsColumn, TupleFilter root) {
         this.tsColumn = tsColumn;
         this.root = root;
         this.isInTopLevelANDs = Maps.newIdentityHashMap();

@@ -1,10 +1,9 @@
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import java.io.IOException;
-import java.util.*;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -27,9 +26,13 @@ import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.invertedindex.model.*;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.cube.FactDistinctIIColumnsMapper;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
@@ -46,10 +49,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 3/26/15.
@@ -81,7 +83,6 @@ public class IITest extends LocalFileMetadataTestCase {
                 return new StreamMessage(System.currentTimeMillis(), input.getBytes());
             }
         });
-
 
         iiRows = Lists.newArrayList();
         final Slice slice = new SliceBuilder(iiDesc, (short) 0, true).buildSlice(streamMessages, StringStreamParser.instance);
@@ -140,8 +141,16 @@ public class IITest extends LocalFileMetadataTestCase {
         f1.setParameter(p1);
         f1.setReturnType("decimal(19,4)");
 
+        TblColRef column = ii.getDescriptor().findColumnRef("default.test_kylin_fact", "cal_dt");
+        CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GTE);
+        ColumnTupleFilter columnFilter = new ColumnTupleFilter(column);
+        compareFilter.addChild(columnFilter);
+        ConstantTupleFilter constantFilter = null;
+        constantFilter = new ConstantTupleFilter(("2012-08-16"));
+        compareFilter.addChild(constantFilter);
+
         EndpointAggregators aggregators = EndpointAggregators.fromFunctions(info, Collections.singletonList(f1));
-        CoprocessorFilter filter = CoprocessorFilter.fromFilter(new ClearTextDictionary(info), ConstantTupleFilter.TRUE, FilterDecorator.FilterConstantsTreatment.AS_IT_IS);
+        CoprocessorFilter filter = CoprocessorFilter.fromFilter(new ClearTextDictionary(info), compareFilter, FilterDecorator.FilterConstantsTreatment.AS_IT_IS);
 
         final Iterator<IIRow> iiRowIterator = iiRows.iterator();
 
@@ -205,8 +214,8 @@ public class IITest extends LocalFileMetadataTestCase {
             }
         }, type, projector, aggregators, filter);
 
+        Assert.assertEquals(2, response.getRowsList().size());
         System.out.println(response.getRowsList().size());
-
         Set<String> answers = Sets.newHashSet("120.4747", "26.8551");
         for (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow responseRow : response.getRowsList()) {
             byte[] measuresBytes = responseRow.getMeasures().toByteArray();

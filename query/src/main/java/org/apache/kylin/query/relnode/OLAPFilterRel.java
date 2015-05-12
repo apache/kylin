@@ -29,7 +29,6 @@ import net.hydromatic.optiq.runtime.SqlFunctions;
 import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.hbase.coprocessor.DateConditionInplaceModifier;
 import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
@@ -260,9 +259,10 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
 
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType, context);
         context.filter = this.condition.accept(visitor);
-        DateConditionInplaceModifier.modify(context.filter);
+
         context.filterColumns = collectColumns(context.filter);
     }
+
 
     private Set<TblColRef> collectColumns(TupleFilter filter) {
         Set<TblColRef> ret = Sets.newHashSet();
