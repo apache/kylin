@@ -22,11 +22,7 @@ package org.apache.kylin.cube.cuboid;
  * @author George Song (ysong1)
  * 
  */
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.cube.model.CubeDesc;
@@ -38,21 +34,21 @@ public class CuboidScheduler {
     private final CubeDesc cubeDef;
     private final int size;
     private final long max;
-    private final Map<Long, Collection<Long>> cache;
+    private final Map<Long, List<Long>> cache;
 
     public CuboidScheduler(CubeDesc cube) {
         this.cubeDef = cube;
         this.size = cube.getRowkey().getRowKeyColumns().length;
         this.max = (long) Math.pow(2, size) - 1;
-        this.cache = new ConcurrentHashMap<Long, Collection<Long>>();
+        this.cache = new ConcurrentHashMap<Long, List<Long>>();
     }
 
-    public Collection<Long> getSpanningCuboid(long cuboid) {
+    public List<Long> getSpanningCuboid(long cuboid) {
         if (cuboid > max || cuboid < 0) {
             throw new IllegalArgumentException("Cuboid " + cuboid + " is out of scope 0-" + max);
         }
 
-        Collection<Long> result = cache.get(cuboid);
+        List<Long> result = cache.get(cuboid);
         if (result != null) {
             return result;
         }

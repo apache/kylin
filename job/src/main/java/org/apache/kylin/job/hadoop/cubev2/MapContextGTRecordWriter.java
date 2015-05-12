@@ -72,7 +72,7 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
         try {
             mapContext.write(outputKey, outputValue);
         } catch (InterruptedException e) {
-            throw new IOException(e);
+            throw new RuntimeException(e);
         }
     }
 

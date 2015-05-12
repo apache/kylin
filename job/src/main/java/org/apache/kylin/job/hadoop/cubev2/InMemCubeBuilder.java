@@ -38,6 +38,7 @@ import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Pair;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
@@ -51,10 +52,9 @@ import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 import org.apache.kylin.storage.cube.CubeGridTable;
 import org.apache.kylin.storage.gridtable.*;
-import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
+import org.apache.kylin.storage.util.SizeOfUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +69,7 @@ import java.util.concurrent.BlockingQueue;
 @SuppressWarnings("rawtypes")
 public class InMemCubeBuilder implements Runnable {
 
+    private static final double AGGREGATION_CACHE_FACTOR = 3;
     private static Logger logger = LoggerFactory.getLogger(InMemCubeBuilder.class);
 
     private BlockingQueue<List<String>> queue;
@@ -78,14 +79,11 @@ public class InMemCubeBuilder implements Runnable {
     private Map<TblColRef, Dictionary<?>> dictionaryMap = null;
     private CubeJoinedFlatTableDesc intermediateTableDesc;
     private MeasureCodec measureCodec;
-    private int measureNumber;
     private String[] metricsAggrFuncs = null;
     private Map<Integer, Integer> dependentMeasures = null; // key: index of Measure which depends on another measure; value: index of Measure which is depended on;
     public static final LongWritable ONE = new LongWritable(1l);
 
     protected IGTRecordWriter gtRecordWriter;
-    private GridTable baseCuboidGT;
-    private DataTypeSerializer[] serializers;
 
 
     /**
@@ -95,30 +93,31 @@ public class InMemCubeBuilder implements Runnable {
      * @param gtRecordWriter
      */
     public InMemCubeBuilder(BlockingQueue<List<String>> queue, CubeInstance cube, Map<TblColRef, Dictionary<?>> dictionaryMap, IGTRecordWriter gtRecordWriter) {
+        if (dictionaryMap == null || dictionaryMap.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
         this.queue = queue;
         this.desc = cube.getDescriptor();
         this.cuboidScheduler = new CuboidScheduler(desc);
         this.dictionaryMap = dictionaryMap;
         this.gtRecordWriter = gtRecordWriter;
-        baseCuboidId = Cuboid.getBaseCuboidId(desc);
+        this.baseCuboidId = Cuboid.getBaseCuboidId(desc);
+        this.intermediateTableDesc = new CubeJoinedFlatTableDesc(desc, null);
+        this.measureCodec = new MeasureCodec(desc.getMeasures());
 
-        intermediateTableDesc = new CubeJoinedFlatTableDesc(desc, null);
-        measureCodec = new MeasureCodec(desc.getMeasures());
-        measureNumber = desc.getMeasures().size();
-
-        dependentMeasures = Maps.newHashMap();
-
-        Map<String, Integer> measureIndexMap = new HashMap<String, Integer>();
+        Map<String, Integer> measureIndexMap = Maps.newHashMap();
         List<String> metricsAggrFuncsList = Lists.newArrayList();
-        for (int i = 0, n = desc.getMeasures().size(); i < n; i++) {
+        final int measureCount = desc.getMeasures().size();
+        for (int i = 0; i < measureCount; i++) {
             MeasureDesc measureDesc = desc.getMeasures().get(i);
             metricsAggrFuncsList.add(measureDesc.getFunction().getExpression());
 
             measureIndexMap.put(desc.getMeasures().get(i).getName(), i);
         }
-        metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
+        this.metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
 
-        for (int i = 0; i < measureNumber; i++) {
+        this.dependentMeasures = Maps.newHashMap();
+        for (int i = 0; i < measureCount; i++) {
             String depMsrRef = desc.getMeasures().get(i).getDependentMeasureRef();
             if (depMsrRef != null) {
                 int index = measureIndexMap.get(depMsrRef);
@@ -126,21 +125,19 @@ public class InMemCubeBuilder implements Runnable {
             }
         }
 
-        if (dictionaryMap == null || dictionaryMap.isEmpty())
-            throw new IllegalArgumentException();
     }
 
 
-    private GridTable newGridTableByCuboidID(long cuboidID) {
+    private GridTable newGridTableByCuboidID(long cuboidID, boolean memStore) {
         GTInfo info = CubeGridTable.newGTInfo(desc, cuboidID, dictionaryMap);
-        GTSimpleMemStore store = new GTSimpleMemStore(info);
+        GTComboStore store = new GTComboStore(info, memStore);
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
     }
 
-    private GridTable aggregateCuboid(GridTable parentCuboid, long parentCuboidId, long cuboidId) throws IOException {
+    private GridTable aggregateCuboid(GridTable parentCuboid, long parentCuboidId, long cuboidId, boolean inMem) throws IOException {
         logger.info("Calculating cuboid " + cuboidId + " from parent " + parentCuboidId);
-        Pair<BitSet, BitSet> columnBitSets = getDimensionAndMetricColumBitSet(parentCuboidId);
+        Pair<BitSet, BitSet> columnBitSets = getDimensionAndMetricColumnBitSet(parentCuboidId);
         BitSet parentDimensions = columnBitSets.getFirst();
         BitSet measureColumns = columnBitSets.getSecond();
         BitSet childDimensions = (BitSet) parentDimensions.clone();
@@ -160,14 +157,14 @@ public class InMemCubeBuilder implements Runnable {
             mask = mask >> 1;
         }
 
-        return scanAndAggregateGridTable(parentCuboid, cuboidId, childDimensions, measureColumns);
+        return scanAndAggregateGridTable(parentCuboid, cuboidId, childDimensions, measureColumns, inMem);
 
     }
 
-    private GridTable scanAndAggregateGridTable(GridTable gridTable, long cuboidId, BitSet aggregationColumns, BitSet measureColumns) throws IOException {
+    private GridTable scanAndAggregateGridTable(GridTable gridTable, long cuboidId, BitSet aggregationColumns, BitSet measureColumns, boolean inMem) throws IOException {
         GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
         IGTScanner scanner = gridTable.scan(req);
-        GridTable newGridTable = newGridTableByCuboidID(cuboidId);
+        GridTable newGridTable = newGridTableByCuboidID(cuboidId, inMem);
         GTBuilder builder = newGridTable.rebuild();
 
         BitSet allNeededColumns = new BitSet();
@@ -181,7 +178,7 @@ public class InMemCubeBuilder implements Runnable {
         try {
             BitSet dependentMetrics = new BitSet(allNeededColumns.cardinality());
             for (Integer i : dependentMeasures.keySet()) {
-                dependentMetrics.set((allNeededColumns.cardinality() - measureNumber + dependentMeasures.get(i)));
+                dependentMetrics.set((allNeededColumns.cardinality() - desc.getMeasures().size() + dependentMeasures.get(i)));
             }
 
             Object[] hllObjects = new Object[dependentMeasures.keySet().size()];
@@ -197,13 +194,13 @@ public class InMemCubeBuilder implements Runnable {
 
                 for (Integer i : dependentMeasures.keySet()) {
                     for (int index = 0, c = dependentMetrics.nextSetBit(0); c >= 0; index++, c = dependentMetrics.nextSetBit(c + 1)) {
-                        if (c == allNeededColumns.cardinality() - measureNumber + dependentMeasures.get(i)) {
+                        if (c == allNeededColumns.cardinality() - desc.getMeasures().size() + dependentMeasures.get(i)) {
                             assert hllObjects[index] instanceof HyperLogLogPlusCounter; // currently only HLL is allowed
 
                             byteBuffer.clear();
                             BytesUtil.writeVLong(((HyperLogLogPlusCounter) hllObjects[index]).getCountEstimate(), byteBuffer);
                             byteArray.set(byteBuffer.array(), 0, byteBuffer.position());
-                            newRecord.set(allNeededColumns.cardinality() - measureNumber + i, byteArray);
+                            newRecord.set(allNeededColumns.cardinality() - desc.getMeasures().size() + i, byteArray);
                         }
                     }
 
@@ -219,16 +216,16 @@ public class InMemCubeBuilder implements Runnable {
         return newGridTable;
     }
 
-    private Pair<BitSet, BitSet> getDimensionAndMetricColumBitSet(long cuboidId) {
+    private Pair<BitSet, BitSet> getDimensionAndMetricColumnBitSet(long cuboidId) {
         BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
         BitSet dimension = new BitSet();
         dimension.set(0, bitSet.cardinality());
         BitSet metrics = new BitSet();
-        metrics.set(bitSet.cardinality(), bitSet.cardinality() + this.measureNumber);
+        metrics.set(bitSet.cardinality(), bitSet.cardinality() + this.desc.getMeasures().size());
         return new Pair<BitSet, BitSet>(dimension, metrics);
     }
 
-    private Object[] buildKey(List<String> row, DataTypeSerializer[] serializers) {
+    private Object[] buildKey(List<String> row) {
         int keySize = intermediateTableDesc.getRowKeyColumnIndexes().length;
         Object[] key = new Object[keySize];
 
@@ -280,7 +277,8 @@ public class InMemCubeBuilder implements Runnable {
     @Override
     public void run() {
         try {
-            createBaseCuboidGT();
+            logger.info("Create base cuboid " + baseCuboidId);
+            final GridTable baseCuboidGT = newGridTableByCuboidID(baseCuboidId, true);
 
             GTBuilder baseGTBuilder = baseCuboidGT.rebuild();
             final GTRecord baseGTRecord = new GTRecord(baseCuboidGT.getInfo());
@@ -339,7 +337,7 @@ public class InMemCubeBuilder implements Runnable {
                 }
             };
 
-            Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumBitSet(baseCuboidId);
+            Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumnBitSet(baseCuboidId);
             GTScanRequest req = new GTScanRequest(baseCuboidGT.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
             IGTScanner aggregationScanner = new GTAggregateScanner(queueScanner, req);
 
@@ -352,8 +350,18 @@ public class InMemCubeBuilder implements Runnable {
             aggregationScanner.close();
 
             logger.info("Base cuboid has " + counter + " rows;");
-            if (counter > 0)
-                createNDCuboidGT(null, -1l, baseCuboidId);
+            SimpleGridTableTree tree = new SimpleGridTableTree();
+            tree.data = baseCuboidGT;
+            tree.id = baseCuboidId;
+            tree.parent = null;
+            if (counter > 0) {
+                List<Long> children = cuboidScheduler.getSpanningCuboid(baseCuboidId);
+                Collections.sort(children);
+                for (Long childId : children) {
+                    createNDCuboidGT(tree, baseCuboidId, childId);
+                }
+            }
+            baseCuboidGT.getStore().drop();
 
         } catch (IOException e) {
             logger.error("Fail to build cube", e);
@@ -364,7 +372,7 @@ public class InMemCubeBuilder implements Runnable {
 
     private void buildGTRecord(List<String> row, GTRecord record) {
 
-        Object[] dimensions = buildKey(row, serializers);
+        Object[] dimensions = buildKey(row);
         Object[] metricsValues = buildValue(row);
         Object[] recordValues = new Object[dimensions.length + metricsValues.length];
         System.arraycopy(dimensions, 0, recordValues, 0, dimensions.length);
@@ -372,43 +380,84 @@ public class InMemCubeBuilder implements Runnable {
         record.setValues(recordValues);
     }
 
-    private void createBaseCuboidGT() throws IOException {
-
-        logger.info("Create base cuboid " + baseCuboidId);
-        Cuboid baseCuboid = Cuboid.findById(this.desc, baseCuboidId);
-        serializers = new DataTypeSerializer[baseCuboid.getColumns().size()];
-
-        for (int i = 0; i < baseCuboid.getColumns().size(); i++) {
-            serializers[i] = DataTypeSerializer.create(baseCuboid.getColumns().get(i).getType());
+    private boolean checkMemory(long threshold) {
+        final long freeMemory = Runtime.getRuntime().freeMemory();
+        logger.info("available memory:" + (freeMemory>>10) + " KB");
+        if (freeMemory >= threshold) {
+            logger.info("no need to flush to disk");
+            return true;
+        } else {
+            return false;
         }
-
-        this.baseCuboidGT = newGridTableByCuboidID(baseCuboidId);
     }
 
+    private boolean gc(TreeNode<GridTable> parentNode) {
+        final long parentCuboidMem = SizeOfUtil.deepSizeOf(parentNode.data.getStore());
+        long threshold = (long) (parentCuboidMem * (AGGREGATION_CACHE_FACTOR + 1));
+        logger.info((threshold >> 10) + " KB is needed to create " + parentNode.id + "'s child");
+        if (checkMemory(threshold)) {
+            return true;
+        }
+        final List<TreeNode<GridTable>> gridTables = parentNode.getAncestorList();
+        for (TreeNode<GridTable> gridTable : gridTables) {
+            logger.info("wait 10 seconds for gc");
+            try {
+                Thread.sleep(10 * 1000);
+            } catch (InterruptedException e) {
+                logger.error("this should not happen", e);
+            }
+            if (checkMemory(threshold)) {
+                return true;
+            } else {
+                logger.info("memory is low, try to select one node to flush to disk from:" + StringUtils.join(",", gridTables));
+                final IGTStore store = gridTable.data.getStore();
+                assert store instanceof GTComboStore;
+                if (store.memoryUsage() > 0) {
+                    logger.info("cuboid id:" + gridTable.id + " selected, memory used:" + (SizeOfUtil.deepSizeOf(store)>>10) + " KB");
+                    long t = System.currentTimeMillis();
+                    ((GTComboStore) store).switchToDiskStore();
+                    logger.info("switch to disk store cost:" + (System.currentTimeMillis() - t) + "ms");
+                }
+            }
+        }
+        logger.info("no store has been flushed to disk");
+        return true;
+    }
 
-    private void createNDCuboidGT(GridTable parentCuboid, long parentCuboidId, long cuboidId) throws IOException {
+    private void createNDCuboidGT(SimpleGridTableTree parentNode, long parentCuboidId, long cuboidId) throws IOException {
 
-        GridTable thisCuboid;
         long startTime = System.currentTimeMillis();
-        if (parentCuboidId < 0) {
-            thisCuboid = this.baseCuboidGT;
-        } else {
-            thisCuboid = aggregateCuboid(parentCuboid, parentCuboidId, cuboidId);
+        assert parentNode.data.getStore() instanceof GTComboStore;
+        if (parentNode.data.getStore().memoryUsage() <= 0) {
+            long t = System.currentTimeMillis();
+            ((GTComboStore) parentNode.data.getStore()).switchToMemStore();
+            logger.info("switch to mem store cost:" + (System.currentTimeMillis() - t) + "ms");
         }
 
-        logger.info("Cuboid " + cuboidId + " build takes (second): " + (System.currentTimeMillis() - startTime) / 1000);
+        boolean inMem = gc(parentNode);
+        GridTable currentCuboid = aggregateCuboid(parentNode.data, parentCuboidId, cuboidId, inMem);
+        SimpleGridTableTree node = new SimpleGridTableTree();
+        node.parent = parentNode;
+        node.data = currentCuboid;
+        node.id = cuboidId;
+        parentNode.children.add(node);
 
-        ArrayList<Long> children = (ArrayList<Long>) cuboidScheduler.getSpanningCuboid(cuboidId);
-        Collections.sort(children); // sort cuboids
-        for (Long childId : children) {
-            createNDCuboidGT(thisCuboid, cuboidId, childId);
+        logger.info("Cuboid " + cuboidId + " build takes " + (System.currentTimeMillis() - startTime) + "ms");
+
+        List<Long> children = cuboidScheduler.getSpanningCuboid(cuboidId);
+        if (!children.isEmpty()) {
+            Collections.sort(children); // sort cuboids
+            for (Long childId : children) {
+                createNDCuboidGT(node, cuboidId, childId);
+            }
         }
-
 
         startTime = System.currentTimeMillis();
         //output the grid table
-        outputGT(cuboidId, thisCuboid);
-        logger.info("Cuboid" + cuboidId + " output takes (second) " + (System.currentTimeMillis() - startTime) / 1000);
+        outputGT(cuboidId, currentCuboid);
+        currentCuboid.getStore().drop();
+        parentNode.children.remove(node);
+        logger.info("Cuboid" + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
 
     }
 
@@ -419,4 +468,30 @@ public class InMemCubeBuilder implements Runnable {
             this.gtRecordWriter.write(cuboidId, record);
         }
     }
+
+    private static class TreeNode<T> {
+        T data;
+        long id;
+        TreeNode<T> parent;
+        List<TreeNode<T>> children = Lists.newArrayList();
+
+        List<TreeNode<T>> getAncestorList() {
+            ArrayList<TreeNode<T>> result = Lists.newArrayList();
+            TreeNode<T> parent = this.parent;
+            while (parent != null) {
+                result.add(parent);
+                parent = parent.parent;
+            }
+            return Lists.reverse(result);
+        }
+
+        @Override
+        public String toString() {
+            return id + "";
+        }
+    }
+
+    private static class SimpleGridTableTree extends TreeNode<GridTable> {}
+
+
 }

@@ -3,6 +3,7 @@ package org.apache.kylin.storage.gridtable;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
@@ -30,8 +31,8 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     public void init(GTInfo info) {
         this.info = info;
 
-        this.serializers = new DataTypeSerializer[info.nColumns];
-        for (int i = 0; i < info.nColumns; i++) {
+        this.serializers = new DataTypeSerializer[info.getColumnCount()];
+        for (int i = 0; i < info.getColumnCount(); i++) {
             this.serializers[i] = DataTypeSerializer.create(info.colTypes[i]);
         }
 
