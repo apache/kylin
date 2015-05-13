@@ -22,11 +22,12 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
@@ -58,6 +59,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private HashFunction hf = null;
     private int rowCount = 0;
     private int SAMPING_PERCENTAGE = 5;
+    private ByteArray[] row_hashcodes = null;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -83,7 +85,11 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                 allCuboidsHLL[i] = new HyperLogLogPlusCounter(14);
             }
 
-            hf = Hashing.md5();
+            hf = Hashing.murmur3_32();
+            row_hashcodes = new ByteArray[nRowKey];
+            for (int i = 0; i < nRowKey; i++) {
+                row_hashcodes[i] = new ByteArray();
+            }
         }
     }
 
@@ -96,7 +102,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         int position = 0;
         for (int i = 0; i < nRowKey; i++) {
             if ((mask & cuboidId) > 0) {
-                indice[position] = intermediateTableDesc.getRowKeyColumnIndexes()[i];
+                indice[position] = i;
                 position++;
             }
             mask = mask >> 1;
@@ -136,12 +142,22 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     }
 
     private void putRowKeyToHLL(List<String> row) {
+
+        //generate hash for each row key column
+        for (int i = 0; i < nRowKey; i++) {
+            Hasher hc = hf.newHasher();
+            if (row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]) != null) {
+                row_hashcodes[i].set(hc.putString(row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i])).hash().asBytes());
+            } else {
+                row_hashcodes[i].set(hc.putInt(0).hash().asBytes());
+            }
+        }
+
+        // user the row key column hash to get a consolidated hash for each cuboid
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {
             Hasher hc = hf.newHasher();
             for (int position = 0; position < allCuboidsBitSet[i].length; position++) {
-                if (row.get(allCuboidsBitSet[i][position]) != null)
-                    hc.putString(row.get(allCuboidsBitSet[i][position]));
-                hc.putString(",");
+                hc.putBytes(row_hashcodes[allCuboidsBitSet[i][position]].array());
             }
 
             allCuboidsHLL[i].add(hc.hash().asBytes());
