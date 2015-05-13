@@ -97,14 +97,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
             attachKylinPropsAndMetadata(cubeInstance, job.getConfiguration());
 
-            int result = waitForCompletion(job);
-
-            if(result == 0 && Boolean.parseBoolean(statistics_enabled)) {
-                putStatisticsToResourceStore(statistics_output, newSegment);
-            }
-
-            return result;
-
+            return waitForCompletion(job);
 
         } catch (Exception e) {
             logger.error("error in FactDistinctColumnsJob", e);
@@ -115,8 +108,6 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
     }
 
     private void setupMapper(String intermediateTable) throws IOException {
-//        FileInputFormat.setInputPaths(job, input);
-
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
         HCatInputFormat.setInput(job, dbTableNames[0],
                 dbTableNames[1]);
@@ -142,22 +133,6 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         deletePath(job.getConfiguration(), output);
     }
 
-    private void putStatisticsToResourceStore(String statisticsFolder, CubeSegment cubeSegment) throws IOException {
-        Path statisticsFilePath = new Path(statisticsFolder, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
-        FileSystem fs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
-        if (!fs.exists(statisticsFilePath))
-            throw new IOException("File " + statisticsFilePath + " does not exists;");
-
-        FSDataInputStream is = fs.open(statisticsFilePath);
-        try {
-            // put the statistics to metadata store
-            String statisticsFileName = cubeSegment.getStatisticsResourcePath();
-            ResourceStore rs = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-            rs.putResource(statisticsFileName, is, System.currentTimeMillis());
-        } finally {
-            IOUtils.closeStream(is);
-        }
-    }
 
     public static void main(String[] args) throws Exception {
         FactDistinctColumnsJob job = new FactDistinctColumnsJob();

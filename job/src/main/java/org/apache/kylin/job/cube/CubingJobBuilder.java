@@ -34,6 +34,7 @@ import org.apache.kylin.job.hadoop.cube.*;
 import org.apache.kylin.job.hadoop.cubev2.InMemCuboidJob;
 import org.apache.kylin.job.hadoop.cubev2.MergeCuboidFromHBaseJob;
 import org.apache.kylin.job.hadoop.cubev2.MergeStatisticsStep;
+import org.apache.kylin.job.hadoop.cubev2.SaveStatisticsStep;
 import org.apache.kylin.job.hadoop.dict.CreateDictionaryJob;
 import org.apache.kylin.job.hadoop.hbase.BulkLoadJob;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
@@ -214,9 +215,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
         result.addTask(intermediateHiveTableStep);
         result.addTask(createFactDistinctColumnsStep(seg, intermediateHiveTableName, jobId));
-        result.addTask(createBuildDictionaryStep(seg, factDistinctColumnsPath));
         MapReduceExecutable baseCuboidStep = null;
         if (!inMemoryCubing()) {
+            result.addTask(createBuildDictionaryStep(seg, factDistinctColumnsPath));
             // base cuboid step
             baseCuboidStep = createBaseCuboidStep(seg, intermediateHiveTableLocation, cuboidOutputTempPath);
             result.addTask(baseCuboidStep);
@@ -228,6 +229,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             }
         } else {
             // create htable step
+            result.addTask(createSaveStatisticsStep(seg, getStatisticsPath(seg, jobId)));
+            result.addTask(createBuildDictionaryStep(seg, factDistinctColumnsPath));
             result.addTask(createCreateHTableStep(seg));
             baseCuboidStep = createInMemCubingStep(seg, intermediateHiveTableLocation, intermediateHiveTableName, cuboidOutputTempPath, result.getId());
             result.addTask(baseCuboidStep);
@@ -513,6 +516,15 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         result.setSegmentId(seg.getUuid());
         result.setMergingSegmentIds(mergingSegmentIds);
         result.setMergedStatisticsPath(mergedStatisticsFolder);
+        return result;
+    }
+
+    private SaveStatisticsStep createSaveStatisticsStep(CubeSegment seg, String statisticsPath) {
+        SaveStatisticsStep result = new SaveStatisticsStep();
+        result.setName(ExecutableConstants.STEP_NAME_SAVE_STATISTICS);
+        result.setCubeName(seg.getCubeInstance().getName());
+        result.setSegmentId(seg.getUuid());
+        result.setStatisticsPath(statisticsPath);
         return result;
     }
 
