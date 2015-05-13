@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Created by qianzhou on 12/16/14.
  */
 public abstract class AbstractExecutable implements Executable, Idempotent {
 

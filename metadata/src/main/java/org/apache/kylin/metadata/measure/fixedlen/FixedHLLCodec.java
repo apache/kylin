@@ -6,7 +6,6 @@ import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.model.DataType;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 2/10/15.
  */
 public class FixedHLLCodec extends FixedLenMeasureCodec<HyperLogLogPlusCounter> {
 

@@ -34,7 +34,6 @@ import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 
 /**
- * Created by qianzhou on 12/26/14.
  */
 public class HadoopShellExecutable extends AbstractExecutable {
 

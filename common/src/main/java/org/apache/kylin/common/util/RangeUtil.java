@@ -7,7 +7,6 @@ import java.util.NavigableMap;
 import com.google.common.collect.*;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/14/15.
  */
 public class RangeUtil {
 

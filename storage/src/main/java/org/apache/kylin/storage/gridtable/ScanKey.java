@@ -5,7 +5,6 @@ import org.apache.kylin.common.util.ByteArray;
 import java.util.BitSet;
 
 /**
- * Created by qianzhou on 5/6/15.
  */
 public final class ScanKey {
 

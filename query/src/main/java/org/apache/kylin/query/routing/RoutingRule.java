@@ -31,7 +31,6 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/5/15.
  */
 public abstract class RoutingRule {
     private static final Logger logger = LoggerFactory.getLogger(QueryRouter.class);

@@ -32,7 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Created by qianzhou on 1/26/15.
  */
 public class RealizationRegistryTest extends LocalFileMetadataTestCase {
     @Before

@@ -80,7 +80,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 /**
- * Created by qianzhou on 3/9/15.
  */
 public class BuildIIWithStreamTest {
 

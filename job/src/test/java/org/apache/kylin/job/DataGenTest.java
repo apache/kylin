@@ -42,7 +42,6 @@ import java.util.Map;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Created by honma on 6/19/14.
  */
 public class DataGenTest extends LocalFileMetadataTestCase {
 

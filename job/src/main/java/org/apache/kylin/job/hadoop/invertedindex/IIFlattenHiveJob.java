@@ -37,7 +37,6 @@ import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/30/14.
  */
 public class IIFlattenHiveJob extends AbstractHadoopJob {
 

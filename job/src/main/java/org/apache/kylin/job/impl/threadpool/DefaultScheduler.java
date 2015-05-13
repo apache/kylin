@@ -54,7 +54,6 @@ import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.HadoopUtil;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public class DefaultScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
 

@@ -21,7 +21,6 @@ package org.apache.kylin.job.invertedindex;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 /**
- * Created by shaoshi on 1/15/15.
  */
 public class IIJob extends DefaultChainedExecutable {
 

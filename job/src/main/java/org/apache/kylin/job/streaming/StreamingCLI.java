@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by qianzhou on 3/26/15.
  */
 public class StreamingCLI {
 

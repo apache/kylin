@@ -57,7 +57,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by qianzhou on 3/3/15.
  */
 public class IIStreamBuilder extends StreamBuilder {
 

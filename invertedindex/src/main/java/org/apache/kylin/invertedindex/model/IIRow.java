@@ -43,7 +43,6 @@ import org.apache.kylin.common.util.BytesUtil;
 import java.util.List;
 
 /**
- * Created by qianzhou on 3/10/15.
  */
 public final class IIRow {
 

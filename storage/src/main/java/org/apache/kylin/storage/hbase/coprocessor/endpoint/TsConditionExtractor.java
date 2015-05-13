@@ -10,7 +10,6 @@ import org.apache.kylin.common.util.DateFormat;
 import com.google.common.collect.Range;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/8/15.
  */
 public class TsConditionExtractor {
 

@@ -6,7 +6,6 @@ import org.apache.kylin.common.util.ClassUtil;
 import java.io.*;
 
 /**
- * Created by qianzhou on 5/5/15.
  */
 public final class DictionarySerializer {
 

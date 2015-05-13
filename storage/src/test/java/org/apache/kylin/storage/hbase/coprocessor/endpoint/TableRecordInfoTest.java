@@ -32,7 +32,6 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/3/14.
  */
 public class TableRecordInfoTest extends LocalFileMetadataTestCase {
     IIInstance ii;

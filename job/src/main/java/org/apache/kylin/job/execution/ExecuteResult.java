@@ -21,7 +21,6 @@ package org.apache.kylin.job.execution;
 import com.google.common.base.Preconditions;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public final class ExecuteResult {
 

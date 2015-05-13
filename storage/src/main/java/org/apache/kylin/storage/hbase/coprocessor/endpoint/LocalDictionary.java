@@ -9,7 +9,6 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import java.util.Map;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 3/3/15.
  */
 public class LocalDictionary implements IDictionaryAware {
 

@@ -10,7 +10,6 @@ import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/14/15.
  */
 public class SQLDigestUtil {
 

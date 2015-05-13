@@ -21,7 +21,6 @@ package org.apache.kylin.metadata.model;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/30/14.
  */
 public interface IJoinedFlatTableDesc {
 

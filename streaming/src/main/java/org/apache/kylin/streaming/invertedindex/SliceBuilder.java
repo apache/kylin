@@ -52,7 +52,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * Created by qianzhou on 3/27/15.
  */
 public final class SliceBuilder {
 

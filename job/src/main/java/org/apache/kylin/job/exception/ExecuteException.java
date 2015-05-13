@@ -19,7 +19,6 @@
 package org.apache.kylin.job.exception;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public class ExecuteException extends Exception {
 

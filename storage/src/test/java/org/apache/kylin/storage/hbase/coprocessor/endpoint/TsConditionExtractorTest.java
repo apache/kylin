@@ -38,7 +38,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 /**
- * Created by Hongbin Ma(Binmahone) 
  *
  * ii test
  */

@@ -8,7 +8,6 @@ import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/13/15.
  *
  * A encapsulation of {@link SQLDigest},
  * This class makes {@link SQLDigest} being able to compare with other {@link SQLDigest}

@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
 public class EhcacheTest {
     @Test

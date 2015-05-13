@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/5/15.
  */
 public class PartialSorterTest {
     @Test

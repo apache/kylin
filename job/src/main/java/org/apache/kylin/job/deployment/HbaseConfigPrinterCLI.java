@@ -31,7 +31,6 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.job.tools.LZOSupportnessChecker;
 
 /**
- * Created by honma on 9/30/14.
  * <p/>
  * This class is assumed to be run by
  * "hbase org.apache.hadoop.util.RunJar kylin-job-0.5.7-SNAPSHOT-job.jar org.apache.kylin.job.deployment.HadoopConfigPrinter "

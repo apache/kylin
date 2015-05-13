@@ -21,7 +21,6 @@ package org.apache.kylin.common.restclient;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * Created by qianzhou on 1/15/15.
  */
 public class CaseInsensitiveStringCache<V> extends SingleValueCache<String, V>{
 

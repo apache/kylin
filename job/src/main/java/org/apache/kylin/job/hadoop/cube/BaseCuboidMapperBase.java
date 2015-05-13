@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 3/27/15.
  */
 public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, Text, Text> {
     protected static final Logger logger = LoggerFactory.getLogger(HiveToBaseCuboidMapper.class);

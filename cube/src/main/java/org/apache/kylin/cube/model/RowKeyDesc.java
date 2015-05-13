@@ -35,7 +35,6 @@ import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- * Created by lukhan on 1/2/14.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyDesc {

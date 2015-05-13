@@ -9,7 +9,6 @@ import com.ning.compress.lzf.LZFDecoder;
 import com.ning.compress.lzf.LZFEncoder;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 2/6/15.
  */
 public class LZFTest {
     @Test

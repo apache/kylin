@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/15/15.
  *
  * Like "tee" command in linux, it effectively duplicates the underlying
  * ITupleIterator's results

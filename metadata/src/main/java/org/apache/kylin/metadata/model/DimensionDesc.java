@@ -25,7 +25,6 @@ import org.apache.kylin.common.util.StringUtil;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/26/14.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class DimensionDesc {

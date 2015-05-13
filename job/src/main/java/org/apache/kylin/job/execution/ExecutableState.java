@@ -28,7 +28,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public enum ExecutableState {
 

@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * Created by honma on 7/2/14.
  */
 @RunWith(Parameterized.class)
 public class CombinationTest extends KylinQueryTest {

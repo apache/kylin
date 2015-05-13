@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
 public class EndpointAggregationCache extends AggregationCache {
 

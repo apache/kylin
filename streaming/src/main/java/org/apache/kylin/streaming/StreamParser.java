@@ -37,7 +37,6 @@ package org.apache.kylin.streaming;
 import java.util.List;
 
 /**
- * Created by qianzhou on 3/25/15.
  */
 public interface StreamParser {
 

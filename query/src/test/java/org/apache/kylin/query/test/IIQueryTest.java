@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 2/2/15.
  */
 @RunWith(Parameterized.class)
 public class IIQueryTest extends KylinQueryTest {

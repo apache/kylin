@@ -21,7 +21,6 @@ package org.apache.kylin.metadata.model;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/30/14.
  */
 public class IntermediateColumnDesc {
     private String id;

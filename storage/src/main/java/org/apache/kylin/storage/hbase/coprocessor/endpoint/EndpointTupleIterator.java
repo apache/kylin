@@ -58,7 +58,6 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/2/14.
  */
 public class EndpointTupleIterator implements ITupleIterator {
 

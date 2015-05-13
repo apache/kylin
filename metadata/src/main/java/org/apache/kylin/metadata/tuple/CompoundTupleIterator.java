@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/14/15.
  */
 public class CompoundTupleIterator implements ITupleIterator {
     private static final Logger logger = LoggerFactory.getLogger(CompoundTupleIterator.class);

@@ -39,7 +39,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 /**
- * Created by qianzhou on 3/25/15.
  */
 public final class StringStreamParser implements StreamParser {
 

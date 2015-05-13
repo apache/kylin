@@ -9,7 +9,6 @@ import org.apache.kylin.cube.kv.RowConstants;
 import com.google.common.collect.Lists;
 
 /**
- * Created by qianzhou on 4/20/15.
  */
 public class AggrKey implements Comparable<AggrKey> {
 

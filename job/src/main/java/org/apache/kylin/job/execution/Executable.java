@@ -23,7 +23,6 @@ import org.apache.kylin.job.exception.ExecuteException;
 import java.util.Map;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public interface Executable {
 

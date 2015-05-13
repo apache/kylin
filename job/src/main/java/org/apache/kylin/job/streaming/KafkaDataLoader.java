@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/5/15.
  */
 public class KafkaDataLoader {
     /**

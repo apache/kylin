@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by lukhan on 2/27/14.
  */
 public class TableMeta implements Serializable {
 

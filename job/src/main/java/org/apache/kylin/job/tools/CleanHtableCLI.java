@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 
 /**
- * Created by honma on 11/11/14.
  */
 public class CleanHtableCLI extends AbstractHadoopJob {
 

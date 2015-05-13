@@ -1,7 +1,6 @@
 package org.apache.kylin.metadata.realization;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 2/5/15.
  */
 public class IRealizationConstants {
 

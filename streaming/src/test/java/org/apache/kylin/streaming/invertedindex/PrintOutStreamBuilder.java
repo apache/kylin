@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Created by qianzhou on 3/25/15.
  */
 public class PrintOutStreamBuilder extends StreamBuilder {
 

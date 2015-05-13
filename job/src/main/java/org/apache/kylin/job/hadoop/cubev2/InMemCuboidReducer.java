@@ -25,7 +25,6 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * Created by shaoshi on 3/25/15.
  */
 public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Text, ImmutableBytesWritable, KeyValue> {
 

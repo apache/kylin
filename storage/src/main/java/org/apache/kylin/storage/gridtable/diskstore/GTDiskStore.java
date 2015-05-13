@@ -16,7 +16,6 @@ import java.util.BitSet;
 import java.util.UUID;
 
 /**
- * Created by qianzhou on 5/4/15.
  */
 public class GTDiskStore implements IGTStore {
 

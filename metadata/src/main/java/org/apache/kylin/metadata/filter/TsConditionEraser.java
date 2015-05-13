@@ -6,7 +6,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import java.util.IdentityHashMap;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
 public class TsConditionEraser implements TupleFilterSerializer.Decorator {
 

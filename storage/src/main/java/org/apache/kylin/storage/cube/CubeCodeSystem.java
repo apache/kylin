@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by shaoshi on 3/23/15.
  * This implementation uses Dictionary to encode and decode the table; If a column doesn't have dictionary, will check
  * its data type to serialize/deserialize it;
  */

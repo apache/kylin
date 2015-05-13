@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * Created by honma on 11/11/14.
  */
 @SuppressWarnings("static-access")
 public class HtableAlterMetadataCLI extends AbstractHadoopJob {

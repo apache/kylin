@@ -28,7 +28,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import com.google.common.collect.Lists;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/30/14.
  */
 public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 

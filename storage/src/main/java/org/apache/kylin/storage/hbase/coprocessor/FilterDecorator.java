@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 3/3/15.
  */
 @SuppressWarnings("unchecked")
 public class FilterDecorator implements TupleFilterSerializer.Decorator {

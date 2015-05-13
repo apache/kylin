@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/5/15.
  */
 public class StreamingDataGenerator {
     private static final Logger logger = LoggerFactory.getLogger(StreamingDataGenerator.class);

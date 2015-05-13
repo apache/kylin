@@ -64,7 +64,6 @@ import com.google.protobuf.Service;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
- * Created by honma on 11/7/14.
  */
 public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, CoprocessorService {
 

@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Created by shaoshi on 2/5/15.
  */
 public class IIInstanceTest extends LocalFileMetadataTestCase {
     @Before

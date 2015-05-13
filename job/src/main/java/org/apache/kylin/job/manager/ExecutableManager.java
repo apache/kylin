@@ -46,7 +46,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * Created by qianzhou on 12/16/14.
  */
 public class ExecutableManager {
 

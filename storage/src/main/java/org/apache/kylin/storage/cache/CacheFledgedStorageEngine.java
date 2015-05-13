@@ -42,7 +42,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
 public class CacheFledgedStorageEngine implements IStorageEngine {
 

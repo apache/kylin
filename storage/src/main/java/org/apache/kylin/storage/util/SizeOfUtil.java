@@ -3,7 +3,6 @@ package org.apache.kylin.storage.util;
 import net.sf.ehcache.pool.sizeof.ReflectionSizeOf;
 
 /**
- * Created by qianzhou on 5/11/15.
  */
 public final class SizeOfUtil {
 

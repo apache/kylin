@@ -21,7 +21,6 @@ package org.apache.kylin.rest.model;
 import java.io.Serializable;
 
 /**
- * Created by lukhan on 2/27/14.
  */
 public class ColumnMeta implements Serializable {
     private static final long serialVersionUID = 1L;

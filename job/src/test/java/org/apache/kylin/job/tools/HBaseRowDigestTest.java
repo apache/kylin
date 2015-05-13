@@ -19,7 +19,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 2/6/15.
  */
 @Ignore
 public class HBaseRowDigestTest extends HBaseMetadataTestCase {

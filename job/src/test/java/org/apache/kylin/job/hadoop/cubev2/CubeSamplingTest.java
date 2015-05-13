@@ -34,7 +34,6 @@ import java.util.BitSet;
 import java.util.List;
 
 /**
- * Created by shaoshi on 5/12/15.
  */
 public class CubeSamplingTest {
 

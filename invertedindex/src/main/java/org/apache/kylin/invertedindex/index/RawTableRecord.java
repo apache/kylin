@@ -28,7 +28,6 @@ import org.apache.hadoop.io.LongWritable;
 import java.util.Arrays;
 
 /**
- * Created by honma on 11/10/14.
  */
 public class RawTableRecord implements Cloneable {
     TableRecordInfoDigest digest;

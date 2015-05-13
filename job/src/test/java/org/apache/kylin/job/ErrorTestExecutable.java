@@ -23,7 +23,6 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
 /**
- * Created by qianzhou on 12/22/14.
  */
 public class ErrorTestExecutable extends BaseTestExecutable {
 

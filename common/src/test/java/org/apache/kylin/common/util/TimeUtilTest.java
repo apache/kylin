@@ -8,7 +8,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/4/15.
  */
 public class TimeUtilTest {
     public static long normalizeTime(long timeMillis, NormalizeUnit unit) {

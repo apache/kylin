@@ -5,7 +5,6 @@ import org.apache.kylin.common.util.DateFormat;
 import java.io.*;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/6/15.
  */
 public class TimeStrDictionary extends Dictionary<String> {
 

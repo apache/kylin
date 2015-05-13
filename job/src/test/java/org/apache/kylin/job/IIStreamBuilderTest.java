@@ -49,7 +49,6 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Created by qianzhou on 3/6/15.
  */
 public class IIStreamBuilderTest {
 

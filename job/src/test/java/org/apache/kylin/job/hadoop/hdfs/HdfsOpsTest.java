@@ -32,7 +32,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 
 /**
- * Created by honma on 8/20/14.
  */
 public class HdfsOpsTest extends LocalFileMetadataTestCase {
 

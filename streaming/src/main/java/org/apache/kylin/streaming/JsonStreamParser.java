@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by qianzhou on 3/25/15.
  */
 public final class JsonStreamParser implements StreamParser {
 

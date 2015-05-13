@@ -25,7 +25,6 @@ import org.apache.kylin.metadata.measure.MeasureAggregator;
 import com.google.common.collect.Maps;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 11/27/14.
  */
 @SuppressWarnings("rawtypes")
 public abstract class AggregationCache {

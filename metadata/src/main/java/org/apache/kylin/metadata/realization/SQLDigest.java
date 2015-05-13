@@ -26,7 +26,6 @@ import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/8/15.
  */
 public class SQLDigest {
     public String factTable;

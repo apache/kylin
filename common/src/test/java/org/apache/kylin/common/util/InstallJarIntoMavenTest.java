@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 import org.junit.Ignore;
 
 /**
- * Created by honma on 6/6/14.
  */
 public class InstallJarIntoMavenTest {
 

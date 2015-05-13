@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * Created by honma on 11/10/14.
  */
 public class HbaseServerKVIterator implements Iterable<IIRow>, Closeable {
 

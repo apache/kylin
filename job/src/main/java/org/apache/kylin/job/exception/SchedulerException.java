@@ -19,7 +19,6 @@
 package org.apache.kylin.job.exception;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public class SchedulerException extends Exception {
     private static final long serialVersionUID = 349041244824274861L;

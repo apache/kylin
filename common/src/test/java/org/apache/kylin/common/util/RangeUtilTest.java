@@ -9,7 +9,6 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/20/15.
  */
 public class RangeUtilTest {
     @Test

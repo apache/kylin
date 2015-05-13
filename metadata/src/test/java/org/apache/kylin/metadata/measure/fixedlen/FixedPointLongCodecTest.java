@@ -4,7 +4,6 @@ import org.apache.kylin.metadata.model.DataType;
 import org.junit.Test;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/4/15.
  */
 public class FixedPointLongCodecTest {
 

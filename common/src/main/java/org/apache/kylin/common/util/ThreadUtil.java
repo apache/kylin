@@ -25,7 +25,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/31/14.
  */
 public class ThreadUtil {
     @SuppressWarnings("unused")

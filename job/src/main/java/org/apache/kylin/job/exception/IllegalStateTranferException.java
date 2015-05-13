@@ -19,7 +19,6 @@
 package org.apache.kylin.job.exception;
 
 /**
- * Created by qianzhou on 12/26/14.
  */
 public class IllegalStateTranferException extends RuntimeException {
 

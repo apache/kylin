@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.kylin.common.util.JsonUtil;
 
 /**
- * Created by honma on 5/29/14.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class GenConfig {

@@ -26,7 +26,6 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 11/24/14.
  * <p/>
  * an adapter
  */

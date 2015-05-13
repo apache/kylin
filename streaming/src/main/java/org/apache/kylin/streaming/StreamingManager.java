@@ -44,7 +44,6 @@ import java.io.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by qianzhou on 3/25/15.
  */
 public class StreamingManager {
 

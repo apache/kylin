@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Created by qianzhou on 5/4/15.
  */
 interface FileSystem {
 

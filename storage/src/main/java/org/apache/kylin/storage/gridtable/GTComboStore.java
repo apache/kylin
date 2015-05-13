@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.BitSet;
 
 /**
- * Created by qianzhou on 5/6/15.
  */
 public class GTComboStore implements IGTStore {
 

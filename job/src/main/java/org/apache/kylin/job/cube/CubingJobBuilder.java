@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 /**
- * Created by qianzhou on 12/25/14.
  */
 public final class CubingJobBuilder extends AbstractJobBuilder {
 

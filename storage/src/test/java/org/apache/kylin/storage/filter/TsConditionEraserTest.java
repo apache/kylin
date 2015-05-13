@@ -20,7 +20,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
 public class TsConditionEraserTest extends LocalFileMetadataTestCase {
     IIInstance ii;

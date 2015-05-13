@@ -39,7 +39,6 @@ import org.apache.kylin.invertedindex.index.Slice;
 import java.util.Collection;
 
 /**
- * Created by qianzhou on 3/12/15.
  */
 public interface KeyValueCodec {
 

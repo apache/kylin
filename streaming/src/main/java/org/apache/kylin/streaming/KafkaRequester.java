@@ -54,7 +54,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Created by qianzhou on 2/15/15.
  */
 public final class KafkaRequester {
 

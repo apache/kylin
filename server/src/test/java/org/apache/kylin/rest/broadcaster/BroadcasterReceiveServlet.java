@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Created by qianzhou on 1/16/15.
  */
 public class BroadcasterReceiveServlet extends HttpServlet {
 

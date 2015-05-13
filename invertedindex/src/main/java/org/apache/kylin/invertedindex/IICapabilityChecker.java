@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/8/15.
  */
 public class IICapabilityChecker {
     private static final Logger logger = LoggerFactory.getLogger(IICapabilityChecker.class);
