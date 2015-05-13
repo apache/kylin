@@ -18,8 +18,7 @@
 
 package org.apache.kylin.storage.hbase;
 
-import java.util.ArrayList;
-
+import com.google.common.collect.Range;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.invertedindex.IIInstance;
@@ -33,6 +32,8 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+
 /**
  * @author yangli9
  */
@@ -41,6 +42,7 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
     private static Logger logger = LoggerFactory.getLogger(InvertedIndexStorageEngine.class);
 
     private IISegment seg;
+    private EndpointTupleIterator dataIterator;
 
     public InvertedIndexStorageEngine(IIInstance ii) {
         this.seg = ii.getFirstSegment();
@@ -54,10 +56,21 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
         @SuppressWarnings("deprecation")
         HConnection conn = HBaseConnection.get(context.getConnUrl());
         try {
-            return new EndpointTupleIterator(seg, sqlDigest.filter, sqlDigest.groupbyColumns, new ArrayList<>(sqlDigest.aggregations), context, conn, returnTupleInfo);
+            dataIterator = new EndpointTupleIterator(seg, sqlDigest.filter, sqlDigest.groupbyColumns, new ArrayList<>(sqlDigest.aggregations), context, conn, returnTupleInfo);
+            return dataIterator;
         } catch (Throwable e) {
             logger.error("Error when connecting to II htable " + tableName, e);
             throw new IllegalStateException("Error when connecting to II htable " + tableName, e);
         }
+    }
+
+    @Override
+    public Range<Long> getVolatilePeriod() {
+        return dataIterator.getCacheExcludedPeriod();
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return true;
     }
 }

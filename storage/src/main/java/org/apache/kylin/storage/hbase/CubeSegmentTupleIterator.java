@@ -18,23 +18,15 @@
 
 package org.apache.kylin.storage.hbase;
 
-import java.text.MessageFormat;
-import java.util.*;
-
 import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.common.persistence.StorageException;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowValueDecoder;
@@ -49,7 +41,8 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Range;
+import java.text.MessageFormat;
+import java.util.*;
 
 /**
  * @author xjiang
@@ -106,10 +99,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         }
     }
 
-    @Override
-    public Range<Long> getCacheExcludedPeriod() {
-        return null;
-    }
 
     @Override
     public boolean hasNext() {

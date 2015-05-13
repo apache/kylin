@@ -1,10 +1,8 @@
 package org.apache.kylin.metadata.tuple;
 
-import java.util.List;
-
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
+
+import java.util.List;
 
 /**
  *
@@ -13,29 +11,21 @@ import com.google.common.collect.Range;
  */
 public class TeeTupleIterator implements ITupleIterator {
 
-    private Function<List<ITuple>, Void> actionOnSeeingWholeData;
     private ITupleIterator underlying;
     private List<ITuple> duplicatedData;
+    private List<TeeTupleItrListener> listeners = Lists.newArrayList();
 
     public TeeTupleIterator(ITupleIterator underlying) {
         this.underlying = underlying;
         this.duplicatedData = Lists.newArrayList();
     }
 
-    public void setActionOnSeeingWholeData(Function<List<ITuple>, Void> actionOnSeeingWholeData) {
-        this.actionOnSeeingWholeData = actionOnSeeingWholeData;
-    }
-
     @Override
     public void close() {
         this.underlying.close();
-        //if(this.underlying.isDrained)
-        actionOnSeeingWholeData.apply(duplicatedData);
-    }
-
-    @Override
-    public Range<Long> getCacheExcludedPeriod() {
-        return this.underlying.getCacheExcludedPeriod();
+        for (TeeTupleItrListener listener : this.listeners) {
+            listener.notify(this.duplicatedData);
+        }
     }
 
     @Override
@@ -53,5 +43,9 @@ public class TeeTupleIterator implements ITupleIterator {
     @Override
     public void remove() {
         this.underlying.remove();
+    }
+
+    public void addCloseListener(TeeTupleItrListener listener) {
+        this.listeners.add(listener);
     }
 }

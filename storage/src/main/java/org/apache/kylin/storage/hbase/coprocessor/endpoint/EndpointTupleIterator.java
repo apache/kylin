@@ -19,10 +19,10 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.protobuf.ByteString;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -82,7 +82,7 @@ public class EndpointTupleIterator implements ITupleIterator {
     private HTableInterface table = null;
 
     private TblColRef partitionCol;
-    private long lastDataTime;
+    private long lastDataTime = -1;
     private int rowsInAllMetric = 0;
 
     public EndpointTupleIterator(IISegment segment, TupleFilter rootFilter, Collection<TblColRef> groupBy, List<FunctionDesc> measures, StorageContext context, HConnection conn, TupleInfo returnTupleInfo) throws Throwable {
@@ -139,8 +139,7 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         //decompress
         Collection<IIProtos.IIResponseInternal> shardResults = new ArrayList<>();
-        for(IIProtos.IIResponse input : compressedShardResults)
-        {
+        for (IIProtos.IIResponse input : compressedShardResults) {
             byte[] compressed = input.getBlob().toByteArray();
             try {
                 byte[] decompressed = CompressionUtils.decompress(compressed);
@@ -251,8 +250,14 @@ public class EndpointTupleIterator implements ITupleIterator {
         logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
     }
 
-    @Override
+    /**
+     * tells storage layer cache what time period of data should not be cached.
+     * for static storage like cube, it will return null
+     * for dynamic storage like ii, it will for example exclude the last two minutes for possible data latency
+     * @return
+     */
     public Range<Long> getCacheExcludedPeriod() {
+        Preconditions.checkArgument(lastDataTime != -1, "lastDataTime is not set yet");
         return Ranges.greaterThan(lastDataTime);
     }
 
@@ -333,7 +338,7 @@ public class EndpointTupleIterator implements ITupleIterator {
             }
 
             index++;
-            
+
             return tupleConverter.makeTuple(this.tableRecord, this.measureValues, this.tuple);
         }
 
@@ -346,9 +351,5 @@ public class EndpointTupleIterator implements ITupleIterator {
         public void close() {
         }
 
-        @Override
-        public Range<Long> getCacheExcludedPeriod() {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -1,11 +1,8 @@
 package org.apache.kylin.storage.cube;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -31,8 +28,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.util.*;
 
 public class CubeStorageEngine implements IStorageEngine {
 
@@ -95,6 +91,16 @@ public class CubeStorageEngine implements IStorageEngine {
         }
         
         return new SerializedCubeTupleIterator(scanners);
+    }
+
+    @Override
+    public Range<Long> getVolatilePeriod() {
+        return null;
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return false;
     }
 
     private void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {

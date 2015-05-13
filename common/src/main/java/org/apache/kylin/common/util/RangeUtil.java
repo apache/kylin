@@ -1,10 +1,10 @@
 package org.apache.kylin.common.util;
 
+import com.google.common.collect.*;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableMap;
-
-import com.google.common.collect.*;
 
 /**
  */
@@ -42,6 +42,16 @@ public class RangeUtil {
             throw new IllegalArgumentException(("This range does not have upper bound" + range));
         }
         return range.upperBoundType() == BoundType.CLOSED;
+    }
+
+    public static <C extends Comparable<?>> Range<C> merge(Range<C> a, Range<C> b) {
+        if (a == null && b == null) {
+            return null;
+        } else if (a == null || b == null) {
+            return a == null ? b : a;
+        } else {
+            return a.span(b);
+        }
     }
 
     /**
