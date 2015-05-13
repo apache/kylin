@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Map;
 
 /**
- * Created by qianzhou on 1/6/15.
  */
 public class DefaultOutput implements Output {
 

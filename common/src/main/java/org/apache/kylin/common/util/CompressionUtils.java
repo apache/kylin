@@ -9,7 +9,6 @@ import java.util.zip.Inflater;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/24/15.
  */
 public class CompressionUtils {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CompressionUtils.class);

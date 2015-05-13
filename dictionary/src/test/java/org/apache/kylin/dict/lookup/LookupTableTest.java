@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by shaoshi on 2/3/15.
  */
 public class LookupTableTest extends LocalFileMetadataTestCase {
 

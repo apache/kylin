@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public class ExecutableDao {
 

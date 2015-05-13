@@ -34,7 +34,6 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 
 /**
- * Created by qianzhou on 1/4/15.
  */
 public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 

@@ -12,7 +12,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 3/26/15.
  */
 public class IIKeyValueCodecWithState extends IIKeyValueCodec {
 

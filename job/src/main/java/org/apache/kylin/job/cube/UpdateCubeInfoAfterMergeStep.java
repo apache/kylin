@@ -38,7 +38,6 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
 /**
- * Created by qianzhou on 1/7/15.
  */
 public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
 

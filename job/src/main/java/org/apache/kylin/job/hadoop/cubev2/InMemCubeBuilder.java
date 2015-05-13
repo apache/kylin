@@ -64,7 +64,6 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Created by shaoshi on 3/12/2015.
  */
 @SuppressWarnings("rawtypes")
 public class InMemCubeBuilder implements Runnable {

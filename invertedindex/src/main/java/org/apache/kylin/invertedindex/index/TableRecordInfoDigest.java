@@ -29,7 +29,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * Created by honma on 11/10/14.
  */
 public class TableRecordInfoDigest {
 

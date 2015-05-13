@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 
 /**
- * Created by qianzhou on 5/4/15.
  */
 class LocalFileSystem implements FileSystem {
 

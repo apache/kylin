@@ -33,7 +33,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/8/15.
  */
 public class CubeCapabilityChecker {
     private static final Logger logger = LoggerFactory.getLogger(CubeCapabilityChecker.class);

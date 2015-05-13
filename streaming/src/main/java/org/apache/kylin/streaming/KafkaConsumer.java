@@ -49,7 +49,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by qianzhou on 2/15/15.
  */
 public class KafkaConsumer implements Runnable {
 

@@ -49,7 +49,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.Assert.*;
 
 /**
- * Created by qianzhou on 1/16/15.
  */
 
 public class CacheServiceTest extends LocalFileMetadataTestCase {

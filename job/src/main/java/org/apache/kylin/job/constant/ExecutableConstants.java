@@ -19,7 +19,6 @@
 package org.apache.kylin.job.constant;
 
 /**
- * Created by qianzhou on 1/5/15.
  */
 public final class ExecutableConstants {
 

@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * Created by qianzhou on 2/16/15.
  */
 public abstract class KafkaBaseTest {
 

@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.Queue;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 3/27/15.
  *
  * Normal iterators in Collections are fail-safe,
  * i.e. adding elements to a queue will break current iterator.

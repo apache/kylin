@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Created by shaoshi on 2/13/15.
  */
 public class HybridManagerTest extends LocalFileMetadataTestCase {
 

@@ -19,7 +19,6 @@
 package org.apache.kylin.job.exception;
 
 /**
- * Created by qianzhou on 12/17/14.
  */
 public class LockException extends Exception {
     private static final long serialVersionUID = 2072745879281754945L;

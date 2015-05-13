@@ -55,7 +55,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by honma on 9/3/14.
  * <p/>
  * This tool serves for the purpose of migrating cubes. e.g. upgrade cube from
  * dev env to test(prod) env, or vice versa.

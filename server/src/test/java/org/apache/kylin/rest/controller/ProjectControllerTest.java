@@ -35,7 +35,6 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
- * Created by honma on 8/7/14.
  */
 public class ProjectControllerTest extends ServiceTestBase {
 

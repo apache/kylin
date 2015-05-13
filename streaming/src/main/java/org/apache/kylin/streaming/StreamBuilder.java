@@ -43,7 +43,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by qianzhou on 2/17/15.
  */
 public abstract class StreamBuilder implements Runnable {
 

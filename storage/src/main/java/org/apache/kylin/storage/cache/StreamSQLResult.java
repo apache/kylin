@@ -19,7 +19,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
 
 public class StreamSQLResult {

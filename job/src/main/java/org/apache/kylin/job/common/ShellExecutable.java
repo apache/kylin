@@ -34,7 +34,6 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
 /**
- * Created by qianzhou on 12/26/14.
  */
 public class ShellExecutable extends AbstractExecutable {
 

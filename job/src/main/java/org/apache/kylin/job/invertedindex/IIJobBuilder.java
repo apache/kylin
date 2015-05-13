@@ -42,7 +42,6 @@ import org.apache.kylin.job.hadoop.invertedindex.InvertedIndexJob;
 import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 
 /**
- * Created by shaoshi on 1/15/15.
  */
 public final class IIJobBuilder extends AbstractJobBuilder {
 

@@ -37,7 +37,6 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- * Created by qianzhou on 12/16/14.
  */
 public class ExecutableManagerTest extends LocalFileMetadataTestCase {
 

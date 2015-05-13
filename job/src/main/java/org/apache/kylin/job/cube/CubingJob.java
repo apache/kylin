@@ -34,7 +34,6 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 
 /**
- * Created by qianzhou on 12/25/14.
  */
 public class CubingJob extends DefaultChainedExecutable {
 

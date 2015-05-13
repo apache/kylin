@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Created by shaoshi on 2/5/15.
  */
 public class JDBCDriverTest extends HBaseMetadataTestCase {
 

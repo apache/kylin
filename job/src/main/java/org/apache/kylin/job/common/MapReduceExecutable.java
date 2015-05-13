@@ -48,7 +48,6 @@ import org.apache.kylin.job.tools.HadoopStatusChecker;
 import com.google.common.base.Preconditions;
 
 /**
- * Created by qianzhou on 12/25/14.
  */
 public class MapReduceExecutable extends AbstractExecutable {
 

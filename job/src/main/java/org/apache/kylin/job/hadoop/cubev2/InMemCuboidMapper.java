@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 /**
- * Created by shaoshi on 3/24/15.
  */
 public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ImmutableBytesWritable, Text> {
 

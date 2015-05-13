@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by qianzhou on 12/3/14.
  */
 public class CaseInsensitiveStringMap<T> implements Map<String, T> {
 

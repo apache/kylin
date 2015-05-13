@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/8/15.
  *
  * the unified logic for defining a sql's dimension
  */

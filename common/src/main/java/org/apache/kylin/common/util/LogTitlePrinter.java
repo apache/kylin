@@ -19,7 +19,6 @@
 package org.apache.kylin.common.util;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/27/15.
  */
 public class LogTitlePrinter {
     public static void printTitle(String title) {

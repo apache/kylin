@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 /**
-* Created by honma on 10/17/14.
 * <p/>
 * Keep this test case to test basic java functionality
 * development concept proving use

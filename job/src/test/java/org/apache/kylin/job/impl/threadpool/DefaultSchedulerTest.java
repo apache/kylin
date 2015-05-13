@@ -31,7 +31,6 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 
 /**
- * Created by qianzhou on 12/19/14.
  */
 public class DefaultSchedulerTest extends BaseSchedulerTest {
 

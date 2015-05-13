@@ -28,7 +28,6 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.manager.ExecutableManager;
 
 /**
- * Created by qianzhou on 12/16/14.
  */
 public class DefaultChainedExecutable extends AbstractExecutable implements ChainedExecutable {
 

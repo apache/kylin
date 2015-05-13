@@ -18,7 +18,6 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import java.util.List;
 
 /**
- * Created by shaoshi on 2/13/15.
  */
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)

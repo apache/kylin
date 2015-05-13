@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/18/14.
  */
 public class RealizationRegistry {
 

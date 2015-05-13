@@ -32,7 +32,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 /**
- * Created by qianzhou on 12/26/14.
  */
 public abstract class BaseSchedulerTest extends HBaseMetadataTestCase {
 

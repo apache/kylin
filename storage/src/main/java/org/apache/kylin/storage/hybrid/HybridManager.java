@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by shaoshi on 2/13/15.
  */
 public class HybridManager implements IRealizationProvider {
     public static final Serializer<HybridInstance> HYBRID_SERIALIZER = new JsonSerializer<HybridInstance>(HybridInstance.class);

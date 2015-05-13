@@ -9,7 +9,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/7/15.
  */
 public class DateConditionModifierTest extends FilterBaseTest {
     @Test

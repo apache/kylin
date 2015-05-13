@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
- * Created by qianzhou on 12/5/14.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class RealizationEntry {

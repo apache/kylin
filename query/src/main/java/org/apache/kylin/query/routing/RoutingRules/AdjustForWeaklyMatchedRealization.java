@@ -37,7 +37,6 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/5/15.
  */
 public class AdjustForWeaklyMatchedRealization extends RoutingRule {
     private static final Logger logger = LoggerFactory.getLogger(AdjustForWeaklyMatchedRealization.class);

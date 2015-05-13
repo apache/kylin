@@ -76,7 +76,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * Created by qianzhou on 3/9/15.
  *
  * This class is going to be deleted
  */

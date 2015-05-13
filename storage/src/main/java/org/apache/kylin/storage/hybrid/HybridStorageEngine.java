@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ranges;
 
 /**
- * Created by shaoshi on 2/13/15.
  */
 public class HybridStorageEngine implements IStorageEngine {
 

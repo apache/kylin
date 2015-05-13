@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Created by qianzhou on 1/19/15.
  */
 @Component("cacheService")
 public class CacheService extends BasicService {

@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by qianzhou on 4/9/15.
  */
 public final class IIDictionaryBuilder {
 

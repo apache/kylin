@@ -23,7 +23,6 @@ import org.apache.hadoop.hbase.util.CompressionTest;
 import java.io.File;
 
 /**
- * Created by honma on 10/21/14.
  */
 public class LZOSupportnessChecker {
     public static boolean getSupportness() {

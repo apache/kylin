@@ -41,7 +41,6 @@ import java.util.*;
 import java.util.logging.LogManager;
 
 /**
- * Created by hongbin on 2/18/14.
  */
 public class KylinTestBase {
 

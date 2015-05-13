@@ -50,7 +50,6 @@ import java.util.concurrent.Executors;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Created by qianzhou on 2/16/15.
  */
 public class KafkaConsumerTest extends KafkaBaseTest {
 

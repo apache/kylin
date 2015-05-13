@@ -45,7 +45,6 @@ import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
- * Created by qianzhou on 3/25/15.
  */
 public class StreamingManagerTest extends LocalFileMetadataTestCase {
 

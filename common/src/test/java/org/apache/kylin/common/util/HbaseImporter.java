@@ -18,7 +18,6 @@ import org.apache.kylin.common.persistence.HBaseConnection;
 import com.google.common.base.Preconditions;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 2/6/15.
  */
 public class HbaseImporter {
 

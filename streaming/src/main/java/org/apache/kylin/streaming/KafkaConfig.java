@@ -48,7 +48,6 @@ import java.io.*;
 import java.util.List;
 
 /**
- * Created by qianzhou on 3/2/15.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class KafkaConfig extends RootPersistentEntity {

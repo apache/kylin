@@ -1,7 +1,6 @@
 package org.apache.kylin.common.util;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/4/15.
  */
 public class TimeUtil {
     private static int ONE_MINUTE_TS = 60 * 1000;

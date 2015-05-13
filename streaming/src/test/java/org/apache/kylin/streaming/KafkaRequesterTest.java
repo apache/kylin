@@ -43,7 +43,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Created by qianzhou on 2/16/15.
  */
 public class KafkaRequesterTest extends KafkaBaseTest {
 

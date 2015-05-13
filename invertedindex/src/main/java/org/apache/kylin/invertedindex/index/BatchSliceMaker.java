@@ -41,7 +41,6 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import java.util.List;
 
 /**
- * Created by qianzhou on 3/20/15.
  */
 public class BatchSliceMaker {
 

@@ -23,7 +23,6 @@ import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.Executable;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public interface Scheduler<T extends Executable> {
 

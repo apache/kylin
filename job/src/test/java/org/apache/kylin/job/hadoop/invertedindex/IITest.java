@@ -54,7 +54,6 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 3/26/15.
  */
 public class IITest extends LocalFileMetadataTestCase {
 

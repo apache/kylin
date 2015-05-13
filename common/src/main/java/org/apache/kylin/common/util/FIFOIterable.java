@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.Queue;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 3/27/15.
  */
 public class FIFOIterable<T> implements Iterable<T> {
     private Queue<T> q;

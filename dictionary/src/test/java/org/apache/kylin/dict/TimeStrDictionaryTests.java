@@ -8,7 +8,6 @@ import org.junit.Test;
 import java.util.Date;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/6/15.
  */
 public class TimeStrDictionaryTests {
     TimeStrDictionary dict;

@@ -8,7 +8,6 @@ import com.google.common.collect.Range;
 import com.google.common.collect.Ranges;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/14/15.
  */
 public class RangeTest {
 

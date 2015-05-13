@@ -35,7 +35,6 @@
 package org.apache.kylin.streaming;
 
 /**
- * Created by qianzhou on 2/15/15.
  */
 public class StreamMessage {
 

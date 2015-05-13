@@ -26,7 +26,6 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/5/15.
  */
 public class RemoveUncapableRealizationsRule extends RoutingRule {
     @Override

@@ -45,7 +45,6 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import java.util.Map;
 
 /**
- * Created by qianzhou on 3/17/15.
  */
 public class ClearTextDictionary implements IDictionaryAware {
 

@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.request;
 
 /**
- * Created by honma on 8/7/14.
  */
 public class CreateProjectRequest {
     private String name;

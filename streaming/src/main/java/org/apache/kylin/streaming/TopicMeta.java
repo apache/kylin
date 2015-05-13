@@ -40,7 +40,6 @@ import java.util.List;
 /**
  * The topic metadata should be invariant, otherwise will cause re-initialization of the Consumer
  *
- * Created by qianzhou on 2/15/15.
  */
 public class TopicMeta {
 

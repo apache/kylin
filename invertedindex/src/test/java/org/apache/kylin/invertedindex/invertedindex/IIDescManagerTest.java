@@ -30,7 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Created by shaoshi on 1/30/15.
  */
 public class IIDescManagerTest extends LocalFileMetadataTestCase {
 

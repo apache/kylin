@@ -32,7 +32,6 @@ import java.io.IOException;
 
 
 /**
- * Created by shaoshi on 1/30/15.
  */
 public class IIDescTest extends LocalFileMetadataTestCase {
 

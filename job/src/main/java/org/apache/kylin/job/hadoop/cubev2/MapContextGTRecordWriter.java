@@ -18,7 +18,6 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 /**
- * Created by shaoshi on 4/7/15.
  */
 public class MapContextGTRecordWriter implements IGTRecordWriter {
 

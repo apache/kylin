@@ -27,7 +27,6 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.kylin.common.util.Bytes;
 
 /**
- * Created by hongbin on 5/15/14.
  */
 public class TestHbaseClient {
 

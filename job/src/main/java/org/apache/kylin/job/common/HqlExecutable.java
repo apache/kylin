@@ -35,7 +35,6 @@ import org.apache.kylin.common.util.HiveClient;
 import org.apache.kylin.common.util.JsonUtil;
 
 /**
- * Created by qianzhou on 1/15/15.
  */
 public class HqlExecutable extends AbstractExecutable {
 

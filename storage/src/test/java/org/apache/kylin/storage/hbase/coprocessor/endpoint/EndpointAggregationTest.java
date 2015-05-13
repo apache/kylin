@@ -43,7 +43,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 11/27/14.
  *
  * ii test
  */

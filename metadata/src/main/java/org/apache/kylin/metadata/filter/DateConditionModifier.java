@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 4/13/15.
  */
 public class DateConditionModifier implements TupleFilterSerializer.Decorator {
 

@@ -36,7 +36,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * Created by hongbin on 5/20/14.
  */
 public class FactTableGenerator {
     CubeInstance cube = null;

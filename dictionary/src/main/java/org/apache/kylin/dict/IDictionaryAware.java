@@ -21,8 +21,7 @@ package org.apache.kylin.dict;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 12/17/14.
- * 
+ *
  * Class that implement this interface has the ability to help dictionary encoding and decoding
  */
 public interface IDictionaryAware {
