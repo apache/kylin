@@ -2,8 +2,6 @@ package org.apache.kylin.metadata.tuple;
 
 import java.util.Iterator;
 
-import com.google.common.collect.Range;
-
 /**
  *
  */
@@ -34,8 +32,4 @@ public class SimpleTupleIterator implements ITupleIterator {
     public void close() {
     }
 
-    @Override
-    public Range<Long> getCacheExcludedPeriod() {
-        return null;
-    }
 }

@@ -1,13 +1,13 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.google.common.collect.Ranges;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.common.util.DateFormat;
 
 import com.google.common.collect.Range;
+import com.google.common.collect.Ranges;
 
 /**
  */
@@ -23,6 +23,9 @@ public class TsConditionExtractor {
     }
 
     private static Range<Long> extractTsConditionInternal(TupleFilter filter, TblColRef colRef) {
+        if (filter == null) {
+            return Ranges.all();
+        }
 
         if (filter instanceof LogicalTupleFilter) {
             if (filter.getOperator() == TupleFilter.FilterOperatorEnum.AND) {
@@ -41,6 +44,8 @@ public class TsConditionExtractor {
                 }
                 return ret.isEmpty() ? null : ret;
             } else {
+                //for conditions like date > DATE'2000-11-11' OR date < DATE '1999-01-01'
+                //we will use Ranges.all() rather than two ranges to represent them
                 return Ranges.all();
             }
         }

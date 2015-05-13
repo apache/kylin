@@ -20,8 +20,6 @@ package org.apache.kylin.metadata.tuple;
 
 import java.util.Iterator;
 
-import com.google.common.collect.Range;
-
 /**
  * @author xjiang
  *
@@ -46,22 +44,10 @@ public interface ITupleIterator extends Iterator<ITuple> {
         @Override
         public void close() {
         }
-
-        @Override
-        public Range<Long> getCacheExcludedPeriod() {
-            return null;
-        }
     };
 
     void close();
 
-    /**
-     * tells storage layer cache what time period of data should not be cached.
-     * for static storage like cube, it will return null
-     * for dynamic storage like ii, it will for example exclude the last two minutes for possible data latency
-     * @return
-     */
-    Range<Long> getCacheExcludedPeriod();
 
     /**
      * if hasNext() returns false because there's no more data, return true

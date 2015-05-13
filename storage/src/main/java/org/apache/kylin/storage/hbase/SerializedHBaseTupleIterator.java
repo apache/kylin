@@ -149,8 +149,4 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
         }
     }
 
-    @Override
-    public Range<Long> getCacheExcludedPeriod() {
-        return null;
-    }
 }

@@ -62,6 +62,9 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+        Number xx =new Long(0L);
+        System.out.println(xx.getClass().getName());
+
         System.out.println(time(1367798400000L));
 
         System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1000L * Integer.MAX_VALUE));
