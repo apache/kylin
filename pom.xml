@@ -91,9 +91,6 @@
         <!-- Metrics Codahale Version -->
         <metrics.version>3.0.1</metrics.version>
 
-        <!-- Quartz Version -->
-        <quartz.version>2.2.1</quartz.version>
-
         <!-- Curator.version Version -->
         <curator.version>2.6.0</curator.version>
 
@@ -384,17 +381,6 @@
                 <groupId>com.n3twork.druid</groupId>
                 <artifactId>extendedset</artifactId>
                 <version>${extendedset.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz</artifactId>
-                <version>${quartz.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz-jobs</artifactId>
-                <version>${quartz.version}</version>
             </dependency>
 
             <dependency>
