@@ -41,7 +41,8 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
 
     @Override
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo) {
-        //if isDynamicStorage && query involves filter on partition column, the cache requires updating after query done.
+        //enable dynamic cache iff group by columns contains partition col
+        //because cache extraction requires partition col value as selection key
         boolean needUpdateCache = sqlDigest.groupbyColumns.contains(partitionColRef);
 
         streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
@@ -106,7 +107,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
             logger.info("decision: use cache");
         }
 
-        if (needUpdateCache || !queryCacheExists) {
+        if (needUpdateCache) {
             //use another nested ITupleIterator to deal with cache
             final TeeTupleIterator tee = new TeeTupleIterator(ret);
             tee.addCloseListener(this);

@@ -135,7 +135,9 @@ public class Tuple implements ITuple {
         return 1L * days * (1000 * 3600 * 24);
     }
 
-    public static int millisToEpicDays(long millis) {
+    public static int dateToEpicDays(String strValue) {
+        Date dateValue = DateFormat.stringToDate(strValue); // NOTE: forces GMT timezone
+        long millis = dateValue.getTime();
         return (int) (millis / (1000 * 3600 * 24));
     }
 
@@ -158,9 +160,7 @@ public class Tuple implements ITuple {
         // TODO use data type enum instead of string comparison
         if ("date".equals(dataTypeName)) {
             // convert epoch time
-            Date dateValue = DateFormat.stringToDate(strValue); // NOTE: forces GMT timezone
-            long millis = dateValue.getTime();
-            return millisToEpicDays(millis);// Optiq expects Integer instead of Long. by honma
+            return dateToEpicDays(strValue);// Optiq expects Integer instead of Long. by honma
         } else if ("timestamp".equals(dataTypeName) || "datetime".equals(dataTypeName)) {
             return Long.parseLong(strValue);
         } else if ("tinyint".equals(dataTypeName)) {
