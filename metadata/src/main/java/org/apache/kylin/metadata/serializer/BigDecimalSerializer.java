@@ -18,19 +18,23 @@
 
 package org.apache.kylin.metadata.serializer;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.DataType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 
 /**
  * @author yangli9
  * 
  */
 public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
+
+    private static final Logger logger = LoggerFactory.getLogger(BigDecimalSerializer.class);
     
     final DataType type;
     final int maxLength;
@@ -43,9 +47,14 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
 
     @Override
     public void serialize(BigDecimal value, ByteBuffer out) {
+        if (value.scale() > type.getScale()) {
+            logger.warn("value's scale has exceeded the " + type.getScale() +", cut it off, to ensure encoded value do not exceed maxLength " + maxLength);
+            value = value.setScale(type.getScale(), BigDecimal.ROUND_HALF_EVEN);
+        }
         byte[] bytes = value.unscaledValue().toByteArray();
-        if (bytes.length + 2 > maxLength)
+        if (bytes.length + 2 > maxLength) {
             throw new IllegalArgumentException("'" + value + "' exceeds the expected length for type " + type);
+        }
 
         BytesUtil.writeVInt(value.scale(), out);
         BytesUtil.writeVInt(bytes.length, out);
@@ -89,4 +98,5 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
         else
             return new BigDecimal(Bytes.toString(value));
     }
+
 }
