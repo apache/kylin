@@ -100,7 +100,7 @@ public class JobService extends BasicService {
 
         List<JobInstance> jobInstances = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobInstances) {
-            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING) {
+            if (jobInstance.getStatus() == JobStatusEnum.PENDING || jobInstance.getStatus() == JobStatusEnum.RUNNING || jobInstance.getStatus() == JobStatusEnum.ERROR) {
                 throw new JobException("The cube " + cube.getName() + " has running job(" + jobInstance.getUuid() + ") please discard it and try again.");
             }
         }
@@ -142,7 +142,7 @@ public class JobService extends BasicService {
         CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
         List<JobInstance> jobs = this.getJobManager().listJobs(cube.getName(), null);
         for (JobInstance jobInstance : jobs) {
-            if (jobInstance.getStatus() != JobStatusEnum.DISCARDED && jobInstance.getStatus() != JobStatusEnum.FINISHED) {
+            if (jobInstance.getStatus() != JobStatusEnum.DISCARDED && jobInstance.getStatus() != JobStatusEnum.FINISHED && jobInstance.getUuid().equals(job.getUuid())) {
                 this.getJobManager().discardJob(jobInstance.getUuid());
             }
         }
