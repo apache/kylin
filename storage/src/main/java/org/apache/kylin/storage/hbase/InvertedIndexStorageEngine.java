@@ -25,7 +25,7 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.ICachableStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.EndpointTupleIterator;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -37,15 +37,17 @@ import java.util.ArrayList;
 /**
  * @author yangli9
  */
-public class InvertedIndexStorageEngine implements IStorageEngine {
+public class InvertedIndexStorageEngine implements ICachableStorageEngine {
 
     private static Logger logger = LoggerFactory.getLogger(InvertedIndexStorageEngine.class);
 
     private IISegment seg;
+    private String uuid;
     private EndpointTupleIterator dataIterator;
 
     public InvertedIndexStorageEngine(IIInstance ii) {
         this.seg = ii.getFirstSegment();
+        this.uuid = ii.getUuid();
     }
 
     @Override
@@ -67,6 +69,11 @@ public class InvertedIndexStorageEngine implements IStorageEngine {
     @Override
     public Range<Long> getVolatilePeriod() {
         return dataIterator.getCacheExcludedPeriod();
+    }
+
+    @Override
+    public String getStorageUUID() {
+        return this.uuid;
     }
 
     @Override

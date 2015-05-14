@@ -1,13 +1,15 @@
 package org.apache.kylin.storage.cache;
 
-import com.google.common.collect.Range;
 import com.google.common.collect.Ranges;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
-import org.apache.kylin.metadata.tuple.*;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.tuple.SimpleTupleIterator;
+import org.apache.kylin.metadata.tuple.TeeTupleIterator;
+import org.apache.kylin.storage.ICachableStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
@@ -18,10 +20,10 @@ import java.util.List;
 /**
  * Created by Hongbin Ma(Binmahone) on 5/11/15.
  */
-public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorageEngine implements IStorageEngine, TeeTupleItrListener {
+public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorageEngine  {
     private static final Logger logger = LoggerFactory.getLogger(CacheFledgedStaticStorageEngine.class);
 
-    public CacheFledgedStaticStorageEngine(IStorageEngine underlyingStorage) {
+    public CacheFledgedStaticStorageEngine(ICachableStorageEngine underlyingStorage) {
         super(underlyingStorage);
     }
 
@@ -59,16 +61,6 @@ public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorage
         } else {
             return ret;
         }
-    }
-
-    @Override
-    public Range<Long> getVolatilePeriod() {
-        return underlyingStorage.getVolatilePeriod();
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return false;
     }
 
     @Override

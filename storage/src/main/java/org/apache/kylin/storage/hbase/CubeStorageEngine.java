@@ -47,7 +47,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.ICachableStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -59,7 +59,7 @@ import java.util.*;
 /**
  * @author xjiang, yangli9
  */
-public class CubeStorageEngine implements IStorageEngine {
+public class CubeStorageEngine implements ICachableStorageEngine {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeStorageEngine.class);
 
@@ -68,10 +68,12 @@ public class CubeStorageEngine implements IStorageEngine {
 
     private final CubeInstance cubeInstance;
     private final CubeDesc cubeDesc;
+    private final String uuid;
 
     public CubeStorageEngine(CubeInstance cube) {
         this.cubeInstance = cube;
         this.cubeDesc = cube.getDescriptor();
+        this.uuid = cube.getUuid();
     }
 
     @Override
@@ -136,6 +138,12 @@ public class CubeStorageEngine implements IStorageEngine {
     public Range<Long> getVolatilePeriod() {
         return null;
     }
+
+    @Override
+    public String getStorageUUID() {
+        return this.uuid;
+    }
+
 
     @Override
     public boolean isDynamic() {

@@ -2,10 +2,8 @@ package org.apache.kylin.storage.hybrid;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
 import com.google.common.collect.Ranges;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -64,15 +62,6 @@ public class HybridStorageEngine implements IStorageEngine {
         return new CompoundTupleIterator(Lists.newArrayList(historicalDataIterator, realtimeDataIterator));
     }
 
-    @Override
-    public Range<Long> getVolatilePeriod() {
-        return RangeUtil.merge(historicalStorageEngine.getVolatilePeriod(), realtimeStorageEngine.getVolatilePeriod());
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return true;
-    }
 
     private MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());

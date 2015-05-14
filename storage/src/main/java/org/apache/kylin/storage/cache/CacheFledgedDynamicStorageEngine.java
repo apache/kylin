@@ -12,7 +12,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigestUtil;
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
 import org.apache.kylin.metadata.tuple.*;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.ICachableStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.TsConditionExtractor;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -24,14 +24,14 @@ import java.util.List;
 /**
  * Created by Hongbin Ma(Binmahone) on 5/11/15.
  */
-public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorageEngine implements IStorageEngine, TeeTupleItrListener {
+public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorageEngine {
     private static final Logger logger = LoggerFactory.getLogger(CacheFledgedDynamicStorageEngine.class);
 
     private final TblColRef partitionColRef;
 
     private Range<Long> ts;
 
-    public CacheFledgedDynamicStorageEngine(IStorageEngine underlyingStorage, TblColRef partitionColRef) {
+    public CacheFledgedDynamicStorageEngine(ICachableStorageEngine underlyingStorage, TblColRef partitionColRef) {
         super(underlyingStorage);
         this.partitionColRef = partitionColRef;
 
@@ -117,17 +117,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
         }
     }
 
-    @Override
-    public Range<Long> getVolatilePeriod() {
-        return underlyingStorage.getVolatilePeriod();
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return true;
-    }
-
-    @Override
+   @Override
     public void notify(List<ITuple> duplicated) {
         Range<Long> cacheExclude = this.underlyingStorage.getVolatilePeriod();
         if (cacheExclude != null) {

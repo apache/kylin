@@ -12,7 +12,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.SimpleTupleIterator;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.ICachableStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.cache.CacheFledgedDynamicStorageEngine;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.TsConditionExtractor;
@@ -88,7 +88,7 @@ public class DynamicCacheTest {
         final AtomicInteger underlyingSEHitCount = new AtomicInteger(0);
         final List<Integer> returnedRowPerSearch = Lists.newArrayList();
 
-        CacheFledgedDynamicStorageEngine dynamicCache = new CacheFledgedDynamicStorageEngine(new IStorageEngine() {
+        CacheFledgedDynamicStorageEngine dynamicCache = new CacheFledgedDynamicStorageEngine(new ICachableStorageEngine() {
             @Override
             public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
                 Range<Long> tsRagneInQuery = TsConditionExtractor.extractTsCondition(partitionCol, sqlDigest.filter);
@@ -113,6 +113,11 @@ public class DynamicCacheTest {
             @Override
             public Range<Long> getVolatilePeriod() {
                 return Ranges.greaterThan(DateFormat.stringToMillis("2011-02-01"));
+            }
+
+            @Override
+            public String getStorageUUID() {
+                return "111ca32a-a33e-4b69-12aa-0bb8b1f8c191";
             }
         }, partitionCol);
 
