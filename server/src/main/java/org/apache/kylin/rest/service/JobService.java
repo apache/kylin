@@ -122,7 +122,7 @@ public class JobService extends BasicService {
 
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
         for (CubingJob job : cubingJobs) {
-            if (job.getStatus() == ExecutableState.READY || job.getStatus() == ExecutableState.RUNNING) {
+            if (job.getStatus() == ExecutableState.READY || job.getStatus() == ExecutableState.RUNNING || job.getStatus() == ExecutableState.ERROR) {
                 throw new JobException("The cube " + cube.getName() + " has running job(" + job.getId() + ") please discard it and try again.");
             }
         }
