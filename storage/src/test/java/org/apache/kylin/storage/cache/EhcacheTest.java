@@ -1,18 +1,13 @@
 package org.apache.kylin.storage.cache;
 
-import com.google.common.collect.Maps;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.MemoryUnit;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.HashSet;
 
 /**
  */

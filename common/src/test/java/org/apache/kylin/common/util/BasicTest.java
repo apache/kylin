@@ -19,8 +19,8 @@
 package org.apache.kylin.common.util;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Ranges;
 import org.apache.commons.configuration.ConfigurationException;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -31,6 +31,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.IdentityHashMap;
 
 /**
 * <p/>
@@ -60,16 +61,21 @@ public class BasicTest {
     }
 
     @Test
+    public void test0() throws Exception {
+
+        IdentityHashMap<String, Void> a = new IdentityHashMap<>();
+        IdentityHashMap<String, Void> b = new IdentityHashMap<>();
+        String s1 = new String("s1");
+        String s2 = new String("s1");
+        Assert.assertEquals(s1, s2);
+        Assert.assertTrue(s1 != s2);
+        a.put(s1, null);
+        b.put(s2, null);
+    }
+
+    @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
-        Number xx =new Long(0L);
-        System.out.println(xx.getClass().getName());
-
-        System.out.println(time(1367798400000L));
-
-        System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1000L * Integer.MAX_VALUE));
-
-        System.out.println(Ranges.open(3, 5).isConnected(Ranges.open(3, 10)));
 
         String bb = "\\x00\\x00\\x00\\x00\\x01\\x3F\\xD0\\x2D\\58\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/07/12 07:59:37
         String cc = "\\x00\\x00\\x00\\x00\\x01\\x41\\xBE\\x8F\\xD8\\x00\\x00\\x00\\x00\\x00\\x00\\x00";//2013/10/16 08:00:00

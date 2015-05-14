@@ -51,7 +51,7 @@ public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorage
             logger.info("decision: use cache");
         }
 
-        if (queryCacheExists) {
+        if (!queryCacheExists) {
             //use another nested ITupleIterator to deal with cache
             final TeeTupleIterator tee = new TeeTupleIterator(ret);
             tee.addCloseListener(this);

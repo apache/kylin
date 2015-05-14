@@ -39,6 +39,9 @@ public class StreamSQLResult {
                     }
                 }
             } else {
+                if (!this.sortedRows.containsKey(0L)) {
+                    this.sortedRows.put(0L, Lists.<ITuple> newArrayList());
+                }
                 this.sortedRows.get(0L).add(row);
             }
         }
