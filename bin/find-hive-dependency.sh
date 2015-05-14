@@ -22,6 +22,7 @@ done
 hdp_home=`echo $hive_exec_path | awk -F '/hive/lib/' '{print $1}'`
 
 hcatalog=`find $hdp_home -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
+hive_lib=`find "$hdp_home/hive/lib" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
 
 if [ -z "$hcatalog" ]
 then
@@ -29,6 +30,6 @@ then
     exit 1
 fi
 
-hive_dependency=${hive_conf_path}:${hdp_home}/hive/lib/*:${hcatalog}
+hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}
 echo "hive dependency: $hive_dependency"
 export hive_dependency
