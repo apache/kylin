@@ -10,7 +10,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.SimpleTupleIterator;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.ICachableStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.cache.CacheFledgedStaticStorageEngine;
 import org.apache.kylin.storage.tuple.Tuple;
@@ -45,7 +45,7 @@ public class StaticCacheTest {
 
         final AtomicInteger underlyingSEHitCount = new AtomicInteger(0);
 
-        CacheFledgedStaticStorageEngine cacheFledgedStaticStorageEngine = new CacheFledgedStaticStorageEngine(new IStorageEngine() {
+        CacheFledgedStaticStorageEngine cacheFledgedStaticStorageEngine = new CacheFledgedStaticStorageEngine(new ICachableStorageEngine() {
             @Override
             public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
                 underlyingSEHitCount.incrementAndGet();
@@ -60,6 +60,11 @@ public class StaticCacheTest {
             @Override
             public Range<Long> getVolatilePeriod() {
                 return null;
+            }
+
+            @Override
+            public String getStorageUUID() {
+                return "111ca32a-a33e-4b69-12aa-0bb8b1f8c092";
             }
         });
 

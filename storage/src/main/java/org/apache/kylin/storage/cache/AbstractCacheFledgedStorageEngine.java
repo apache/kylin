@@ -8,6 +8,8 @@ import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
+import org.apache.kylin.metadata.tuple.TeeTupleItrListener;
+import org.apache.kylin.storage.ICachableStorageEngine;
 import org.apache.kylin.storage.IStorageEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,15 +17,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by Hongbin Ma(Binmahone) on 5/13/15.
  */
-public abstract class AbstractCacheFledgedStorageEngine {
+public abstract class AbstractCacheFledgedStorageEngine implements IStorageEngine, TeeTupleItrListener {
     private static final Logger logger = LoggerFactory.getLogger(AbstractCacheFledgedStorageEngine.class);
     protected static CacheManager cacheManager = CacheManager.create();
 
-    protected final IStorageEngine underlyingStorage;
+    protected final ICachableStorageEngine underlyingStorage;
     protected StreamSQLDigest streamSQLDigest;
     protected boolean queryCacheExists;
 
-    public AbstractCacheFledgedStorageEngine(IStorageEngine underlyingStorage) {
+    public AbstractCacheFledgedStorageEngine(ICachableStorageEngine underlyingStorage) {
         this.underlyingStorage = underlyingStorage;
         this.queryCacheExists = false;
         this.makeCacheIfNecessary(underlyingStorage.getClass().getName());

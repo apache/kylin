@@ -45,14 +45,14 @@ public class StorageEngineFactory {
     public static IStorageEngine getStorageEngine(IRealization realization) {
 
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
-            IStorageEngine ret = new InvertedIndexStorageEngine((IIInstance) realization);
+            ICachableStorageEngine ret = new InvertedIndexStorageEngine((IIInstance) realization);
             if (allowStorageLayerCache) {
                 return wrapWithCache(ret, realization);
             } else {
                 return ret;
             }
         } else if (realization.getType() == RealizationType.CUBE) {
-            IStorageEngine ret = new CubeStorageEngine((CubeInstance) realization);
+            ICachableStorageEngine ret = new CubeStorageEngine((CubeInstance) realization);
             if (allowStorageLayerCache) {
                 return wrapWithCache(ret, realization);
             } else {
@@ -63,7 +63,7 @@ public class StorageEngineFactory {
         }
     }
 
-    private static IStorageEngine wrapWithCache(IStorageEngine underlyingStorageEngine, IRealization realization) {
+    private static IStorageEngine wrapWithCache(ICachableStorageEngine underlyingStorageEngine, IRealization realization) {
         if (underlyingStorageEngine.isDynamic()) {
             return new CacheFledgedDynamicStorageEngine(underlyingStorageEngine, getPartitionCol(realization));
         } else {
