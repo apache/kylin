@@ -36,7 +36,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
         this.partitionColRef = partitionColRef;
 
         Preconditions.checkArgument(this.partitionColRef != null, "For dynamic columns like " + //
-                this.underlyingStorage.getClass().getName() + ", partition column must be provided");
+                this.underlyingStorage.getStorageUUID()+ ", partition column must be provided");
     }
 
     @Override
@@ -47,7 +47,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
 
         streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
         StreamSQLResult cachedResult = null;
-        Cache cache = cacheManager.getCache(this.underlyingStorage.getClass().getName());
+        Cache cache = cacheManager.getCache(this.underlyingStorage.getStorageUUID());
         Element element = cache.get(streamSQLDigest);
         if (element != null) {
             this.queryCacheExists = true;
@@ -133,7 +133,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
         }
 
         StreamSQLResult newCacheEntry = new StreamSQLResult(duplicated, ts, partitionColRef);
-        cacheManager.getCache(this.underlyingStorage.getClass().getName()).put(new Element(streamSQLDigest, newCacheEntry));
+        cacheManager.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest, newCacheEntry));
         logger.info("cache after the query: " + newCacheEntry);
     }
 }
