@@ -17,7 +17,6 @@ import java.util.NavigableMap;
 
 /**
  */
-
 public class StreamSQLResult {
     private Range<Long> timeCovered;
     private NavigableMap<Long, List<ITuple>> sortedRows;

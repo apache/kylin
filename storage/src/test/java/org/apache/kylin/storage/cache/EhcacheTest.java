@@ -1,5 +1,6 @@
 package org.apache.kylin.storage.cache;
 
+import com.google.common.collect.Lists;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -7,8 +8,9 @@ import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
 import org.junit.Test;
+
+import java.util.List;
 
 /**
  */
@@ -35,6 +37,12 @@ public class EhcacheTest {
 
         System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
         byte[] blob = new byte[(1024 * 40 * 1024)];//400M
+
+        List<String> manyObjects = Lists.newArrayList();
+        for (int i = 0; i < 10000; i++) {
+            manyObjects.add(new String("" + i));
+        }
+        testCache.put(new Element("0", manyObjects));
 
         testCache.put(new Element("1", blob));
         System.out.println(testCache.get("1") == null);
