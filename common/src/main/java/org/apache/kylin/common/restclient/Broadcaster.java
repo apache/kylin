@@ -35,9 +35,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Broadcast kylin event out
- * 
- * @author jianliu
- * 
  */
 public class Broadcaster {
 
@@ -113,11 +110,11 @@ public class Broadcaster {
         return counter.getAndSet(0);
     }
 
-    public static enum EVENT {
+    public enum EVENT {
         CREATE("create"), UPDATE("update"), DROP("drop");
         private String text;
 
-        private EVENT(String text) {
+        EVENT(String text) {
             this.text = text;
         }
 
@@ -136,11 +133,11 @@ public class Broadcaster {
         }
     }
 
-    public static enum TYPE {
+    public enum TYPE {
         ALL("all"), CUBE("cube"), CUBE_DESC("cube_desc"), PROJECT("project"), INVERTED_INDEX("inverted_index"), INVERTED_INDEX_DESC("ii_desc"), TABLE("table"), DATA_MODEL("data_model"), HYBRID("hybrid");
         private String text;
 
-        private TYPE(String text) {
+        TYPE(String text) {
             this.text = text;
         }
 

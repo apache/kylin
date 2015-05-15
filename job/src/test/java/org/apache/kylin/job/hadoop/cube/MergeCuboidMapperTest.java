@@ -18,34 +18,29 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.dict.*;
+import org.apache.kylin.dict.lookup.TableSignature;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.dict.DictionaryGenerator;
-import org.apache.kylin.dict.DictionaryInfo;
-import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.TrieDictionary;
-import org.apache.kylin.dict.lookup.TableSignature;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.ProjectManager;
+import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
@@ -139,7 +134,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
             // cubeManager.saveResource(segment.getCubeInstance());
             // cubeManager.afterCubeUpdated(segment.getCubeInstance());
-            cubeManager.updateCube(cube);
+            cubeManager.updateCube(cube,true);
 
             isFirstSegment = false;
         }

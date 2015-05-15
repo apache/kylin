@@ -23,15 +23,15 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.cube.CubingJob;
-import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -41,7 +41,6 @@ import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.kylin.rest.controller.QueryController;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
@@ -49,7 +48,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -78,6 +76,7 @@ public abstract class BasicService {
     }
 
     public void removeOLAPDataSource(String project) {
+        logger.info("removeOLAPDataSource is called for project " + project);
         if (StringUtils.isEmpty(project))
             throw new IllegalArgumentException("removeOLAPDataSource: project name not given");
 
@@ -85,9 +84,9 @@ public abstract class BasicService {
         olapDataSources.remove(project);
     }
 
-    public static void resetOLAPDataSources() {
+    public static void removeAllOLAPDataSources() {
         // brutal, yet simplest way
-        logger.info("resetOLAPDataSources is called.");
+        logger.info("removeAllOLAPDataSources is called.");
         olapDataSources.clear();
     }
 
@@ -135,7 +134,7 @@ public abstract class BasicService {
     public void cleanDataCache() {
         CubeManager.clearCache();
         ProjectManager.clearCache();
-        BasicService.resetOLAPDataSources();
+        removeAllOLAPDataSources();
     }
 
     public final KylinConfig getKylinConfig() {
@@ -184,7 +183,7 @@ public abstract class BasicService {
                     if (cubeName == null) {
                         return true;
                     }
-                    return ((CubingJob) executable).getCubeName().equalsIgnoreCase(cubeName);                    
+                    return ((CubingJob) executable).getCubeName().equalsIgnoreCase(cubeName);
                 } else {
                     return false;
                 }

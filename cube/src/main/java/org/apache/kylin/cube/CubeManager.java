@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 /**
  * @author yangli9
  */
@@ -138,7 +137,7 @@ public class CubeManager implements IRealizationProvider {
         Iterator<CubeInstance> it = list.iterator();
         while (it.hasNext()) {
             CubeInstance ci = it.next();
-            if (descName.equals(ci.getDescName())) {
+            if (descName.equalsIgnoreCase(ci.getDescName())) {
                 result.add(ci);
             }
         }
@@ -154,7 +153,7 @@ public class CubeManager implements IRealizationProvider {
         DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
         cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
-        saveResource(cubeSeg.getCubeInstance());
+        updateCube(cubeSeg.getCubeInstance(), false);
 
         return dictInfo;
     }
@@ -192,7 +191,7 @@ public class CubeManager implements IRealizationProvider {
 
         cubeSeg.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
 
-        saveResource(cubeSeg.getCubeInstance());
+        updateCube(cubeSeg.getCubeInstance(), false);
 
         return snapshot;
     }
@@ -202,23 +201,24 @@ public class CubeManager implements IRealizationProvider {
         logger.info("Dropping cube '" + cubeName + "'");
         // load projects before remove cube from project
 
-        ResourceStore store = getStore();
-
         // delete cube instance and cube desc
         CubeInstance cube = getCube(cubeName);
 
-        if (deleteDesc && cube.getDescriptor() != null)
-            store.deleteResource(cube.getDescriptor().getResourcePath());
+        if (deleteDesc && cube.getDescriptor() != null) {
+            CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
+        }
 
-        store.deleteResource(cube.getResourcePath());
-
+        removeCube(cube);
         // delete cube from project
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
 
-        // clean cube cache
-        this.afterCubeDropped(cube);
-
         return cube;
+    }
+
+    private void removeCube(CubeInstance cube) throws IOException {
+        // remove cube and update cache
+        getStore().deleteResource(cube.getResourcePath());
+        cubeMap.remove(cube.getName());
     }
 
     // sync on update
@@ -228,16 +228,27 @@ public class CubeManager implements IRealizationProvider {
         // save cube resource
         CubeInstance cube = CubeInstance.create(cubeName, projectName, desc);
         cube.setOwner(owner);
-        saveResource(cube);
 
+        updateCube(cube, false);
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
         return cube;
     }
 
-    public CubeInstance updateCube(CubeInstance cube) throws IOException {
+    /**
+     * if not sure whether to enable updateProject, just use it
+     */
+    public CubeInstance updateCube(CubeInstance cube, boolean updateProject) throws IOException {
+
         logger.info("Updating cube instance '" + cube.getName());
-        saveResource(cube);
+        getStore().putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
+        cubeMap.put(cube.getName(), cube);
+
+        if (updateProject) {
+            logger.info("Updating project instance for cube:'" + cube.getName());
+            ProjectManager.getInstance(config).updateProject(RealizationType.CUBE, cube.getName());
+        }
+
         return cube;
     }
 
@@ -258,7 +269,7 @@ public class CubeManager implements IRealizationProvider {
         cube.getSegments().add(appendSegment);
         cube.getSegments().add(mergeSegment);
         Collections.sort(cube.getSegments());
-        updateCube(cube);
+        updateCube(cube, false);
 
         return new Pair<CubeSegment, CubeSegment>(appendSegment, mergeSegment);
     }
@@ -277,11 +288,10 @@ public class CubeManager implements IRealizationProvider {
         validateNewSegments(cube, newSegment);
         cube.getSegments().add(newSegment);
         Collections.sort(cube.getSegments());
-        updateCube(cube);
+        updateCube(cube, false);
 
         return newSegment;
     }
-
 
     public CubeSegment refreshSegment(CubeInstance cube, long startDate, long endDate) throws IOException {
         checkNoBuildingSegment(cube);
@@ -289,7 +299,7 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment newSegment = newSegment(cube, startDate, endDate);
         cube.getSegments().add(newSegment);
         Collections.sort(cube.getSegments());
-        updateCube(cube);
+        updateCube(cube, false);
 
         return newSegment;
     }
@@ -304,7 +314,7 @@ public class CubeManager implements IRealizationProvider {
         validateNewSegments(cube, newSegment);
         cube.getSegments().add(newSegment);
         Collections.sort(cube.getSegments());
-        updateCube(cube);
+        updateCube(cube, false);
 
         return newSegment;
     }
@@ -371,28 +381,17 @@ public class CubeManager implements IRealizationProvider {
      *
      * @param cubeName
      */
-    public void loadCubeCache(String cubeName) {
+    public void reloadCubeLocal(String cubeName) {
         try {
-            loadCubeInstance(CubeInstance.concatResourcePath(cubeName));
+            reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }
     }
 
-    /**
-     * After cube deletion, remove cube related cache
-     *
-     * @param cube
-     */
-    public void removeCubeCache(CubeInstance cube) {
-        final String cubeName = cube.getName().toUpperCase();
-        cubeMap.remove(cubeName);
-        usedStorageLocation.removeAll(cubeName);
-    }
-
-    public void removeCubeCacheLocal(String cubeName) {
+    public void removeCubeLocal(String cubeName) {
         cubeMap.removeLocal(cubeName);
-        usedStorageLocation.removeAll(cubeName);
+        usedStorageLocation.removeAll(cubeName.toUpperCase());
     }
 
     public LookupStringTable getLookupTable(CubeSegment cubeSegment, DimensionDesc dim) {
@@ -412,18 +411,41 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    private void saveResource(CubeInstance cube) throws IOException {
-        ResourceStore store = getStore();
-        store.putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
-        this.afterCubeUpdated(cube);
+    private CubeSegment newSegment(CubeInstance cubeInstance, long startDate, long endDate) {
+        if (startDate >= endDate)
+            throw new IllegalArgumentException("New segment range invalid, start date must be earlier than end date, " + startDate + " < " + endDate);
+
+        CubeSegment segment = new CubeSegment();
+        String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
+        segment.setUuid(UUID.randomUUID().toString());
+        segment.setName(incrementalSegName);
+        Date creatTime = new Date();
+        segment.setCreateTimeUTC(creatTime.getTime());
+        segment.setDateRangeStart(startDate);
+        segment.setDateRangeEnd(endDate);
+        segment.setStatus(SegmentStatusEnum.NEW);
+        segment.setStorageLocationIdentifier(generateStorageLocation());
+
+        segment.setCubeInstance(cubeInstance);
+
+        segment.validate();
+        return segment;
     }
 
-    private void afterCubeUpdated(CubeInstance updatedCube) {
-        cubeMap.put(updatedCube.getName(), updatedCube);
-    }
+    private String generateStorageLocation() {
+        String namePrefix = IRealizationConstants.CubeHbaseStorageLocationPrefix;
+        String tableName = "";
+        do {
+            StringBuffer sb = new StringBuffer();
+            sb.append(namePrefix);
+            Random ran = new Random();
+            for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
+                sb.append(ALPHA_NUM.charAt(ran.nextInt(ALPHA_NUM.length())));
+            }
+            tableName = sb.toString();
+        } while (this.usedStorageLocation.containsValue(tableName));
 
-    private void afterCubeDropped(CubeInstance droppedCube) {
-        removeCubeCache(droppedCube);
+        return tableName;
     }
 
     public CubeSegment autoMergeCubeSegments(CubeInstance cube) throws IOException {
@@ -480,43 +502,6 @@ public class CubeManager implements IRealizationProvider {
         return null;
     }
 
-    private CubeSegment newSegment(CubeInstance cubeInstance, long startDate, long endDate) {
-        if (startDate >= endDate)
-            throw new IllegalArgumentException("New segment range invalid, start date must be earlier than end date, " + startDate + " < " + endDate);
-
-        CubeSegment segment = new CubeSegment();
-        String incrementalSegName = CubeSegment.getSegmentName(startDate, endDate);
-        segment.setUuid(UUID.randomUUID().toString());
-        segment.setName(incrementalSegName);
-        Date creatTime = new Date();
-        segment.setCreateTimeUTC(creatTime.getTime());
-        segment.setDateRangeStart(startDate);
-        segment.setDateRangeEnd(endDate);
-        segment.setStatus(SegmentStatusEnum.NEW);
-        segment.setStorageLocationIdentifier(generateStorageLocation());
-
-        segment.setCubeInstance(cubeInstance);
-
-        segment.validate();
-        return segment;
-    }
-
-    private String generateStorageLocation() {
-        String namePrefix = IRealizationConstants.CubeHbaseStorageLocationPrefix;
-        String tableName = "";
-        do {
-            StringBuffer sb = new StringBuffer();
-            sb.append(namePrefix);
-            Random ran = new Random();
-            for (int i = 0; i < HBASE_TABLE_LENGTH; i++) {
-                sb.append(ALPHA_NUM.charAt(ran.nextInt(ALPHA_NUM.length())));
-            }
-            tableName = sb.toString();
-        } while (this.usedStorageLocation.containsValue(tableName));
-
-        return tableName;
-    }
-
     public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment... newSegments) throws IOException {
         List<CubeSegment> tobe = calculateToBeSegments(cube);
 
@@ -542,7 +527,7 @@ public class CubeManager implements IRealizationProvider {
         cube.setStatus(RealizationStatusEnum.READY);
 
         logger.info("Promoting cube " + cube + ", new segments " + newSegments);
-        saveResource(cube);
+        updateCube(cube, true);
     }
 
     private void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {
@@ -579,7 +564,7 @@ public class CubeManager implements IRealizationProvider {
         }
         firstSeg.validate();
 
-        for (int i = 0, j = 1; j < tobe.size(); ) {
+        for (int i = 0, j = 1; j < tobe.size();) {
             CubeSegment is = tobe.get(i);
             CubeSegment js = tobe.get(j);
             js.validate();
@@ -644,16 +629,16 @@ public class CubeManager implements IRealizationProvider {
         logger.debug("Loading Cube from folder " + store.getReadableResourcePath(ResourceStore.CUBE_RESOURCE_ROOT));
 
         for (String path : paths) {
-            loadCubeInstance(path);
+            reloadCubeLocalAt(path);
         }
 
         logger.debug("Loaded " + paths.size() + " Cube(s)");
     }
 
-    private synchronized CubeInstance loadCubeInstance(String path) throws IOException {
+    private synchronized CubeInstance reloadCubeLocalAt(String path) throws IOException {
         ResourceStore store = getStore();
 
-        CubeInstance cubeInstance = null;
+        CubeInstance cubeInstance;
         try {
             cubeInstance = store.getResource(path, CubeInstance.class, CUBE_SERIALIZER);
             cubeInstance.setConfig(config);
@@ -668,7 +653,7 @@ public class CubeManager implements IRealizationProvider {
             cubeMap.putLocal(cubeName, cubeInstance);
 
             for (CubeSegment segment : cubeInstance.getSegments()) {
-                usedStorageLocation.put(cubeName, segment.getStorageLocationIdentifier());
+                usedStorageLocation.put(cubeName.toUpperCase(), segment.getStorageLocationIdentifier());
             }
 
             return cubeInstance;

@@ -100,20 +100,20 @@ public class JobService extends BasicService {
 
     private ExecutableState parseToExecutableState(JobStatusEnum status) {
         switch (status) {
-            case DISCARDED:
-                return ExecutableState.DISCARDED;
-            case ERROR:
-                return ExecutableState.ERROR;
-            case FINISHED:
-                return ExecutableState.SUCCEED;
-            case NEW:
-                return ExecutableState.READY;
-            case PENDING:
-                return ExecutableState.READY;
-            case RUNNING:
-                return ExecutableState.RUNNING;
-            default:
-                throw new RuntimeException("illegal status:" + status);
+        case DISCARDED:
+            return ExecutableState.DISCARDED;
+        case ERROR:
+            return ExecutableState.ERROR;
+        case FINISHED:
+            return ExecutableState.SUCCEED;
+        case NEW:
+            return ExecutableState.READY;
+        case PENDING:
+            return ExecutableState.READY;
+        case RUNNING:
+            return ExecutableState.RUNNING;
+        default:
+            throw new RuntimeException("illegal status:" + status);
         }
     }
 
@@ -213,37 +213,37 @@ public class JobService extends BasicService {
 
     private JobStatusEnum parseToJobStatus(ExecutableState state) {
         switch (state) {
-            case READY:
-                return JobStatusEnum.PENDING;
-            case RUNNING:
-                return JobStatusEnum.RUNNING;
-            case ERROR:
-                return JobStatusEnum.ERROR;
-            case DISCARDED:
-                return JobStatusEnum.DISCARDED;
-            case SUCCEED:
-                return JobStatusEnum.FINISHED;
-            case STOPPED:
-            default:
-                throw new RuntimeException("invalid state:" + state);
+        case READY:
+            return JobStatusEnum.PENDING;
+        case RUNNING:
+            return JobStatusEnum.RUNNING;
+        case ERROR:
+            return JobStatusEnum.ERROR;
+        case DISCARDED:
+            return JobStatusEnum.DISCARDED;
+        case SUCCEED:
+            return JobStatusEnum.FINISHED;
+        case STOPPED:
+        default:
+            throw new RuntimeException("invalid state:" + state);
         }
     }
 
     private JobStepStatusEnum parseToJobStepStatus(ExecutableState state) {
         switch (state) {
-            case READY:
-                return JobStepStatusEnum.PENDING;
-            case RUNNING:
-                return JobStepStatusEnum.RUNNING;
-            case ERROR:
-                return JobStepStatusEnum.ERROR;
-            case DISCARDED:
-                return JobStepStatusEnum.DISCARDED;
-            case SUCCEED:
-                return JobStepStatusEnum.FINISHED;
-            case STOPPED:
-            default:
-                throw new RuntimeException("invalid state:" + state);
+        case READY:
+            return JobStepStatusEnum.PENDING;
+        case RUNNING:
+            return JobStepStatusEnum.RUNNING;
+        case ERROR:
+            return JobStepStatusEnum.ERROR;
+        case DISCARDED:
+            return JobStepStatusEnum.DISCARDED;
+        case SUCCEED:
+            return JobStepStatusEnum.FINISHED;
+        case STOPPED:
+        default:
+            throw new RuntimeException("invalid state:" + state);
         }
     }
 
@@ -264,7 +264,7 @@ public class JobService extends BasicService {
         final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
         if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
             cubeInstance.getSegments().remove(segment);
-            getCubeManager().updateCube(cubeInstance);
+            getCubeManager().updateCube(cubeInstance, true);
         }
         getExecutableManager().discardJob(jobId);
         return jobInstance;

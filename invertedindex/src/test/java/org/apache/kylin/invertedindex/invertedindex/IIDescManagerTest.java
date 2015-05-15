@@ -95,7 +95,7 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
         Assert.assertEquals(desc, newDesc);
 
         // reload the cache
-        mgr.reloadIIDesc(TEST_II_DESC_NAME);
+        mgr.reloadIIDescLocal(TEST_II_DESC_NAME);
 
         newDesc = mgr.getIIDesc(TEST_II_DESC_NAME);
 

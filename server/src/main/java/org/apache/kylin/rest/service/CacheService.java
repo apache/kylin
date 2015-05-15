@@ -24,16 +24,13 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.cube.CubingJobBuilder;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.QueryController;
 import org.slf4j.Logger;
@@ -44,7 +41,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  */
@@ -61,57 +57,47 @@ public class CacheService extends BasicService {
         final String log = "rebuild cache type: " + cacheType + " name:" + cacheKey;
         try {
             switch (cacheType) {
-                case CUBE:
-                    getCubeManager().loadCubeCache(cacheKey);
-                    cleanProjectCacheByRealization(RealizationType.CUBE, cacheKey);
-                    mergeCubeOnNewSegmentReady(cacheKey);
-                    break;
-                case CUBE_DESC:
-                    getCubeDescManager().reloadCubeDesc(cacheKey);
-                    break;
-                case PROJECT:
-                    getProjectManager().reloadProject(cacheKey);
-                    break;
-                case INVERTED_INDEX:
-                    getIIManager().loadIICache(cacheKey);
-                    cleanProjectCacheByRealization(RealizationType.INVERTED_INDEX, cacheKey);
-                    break;
-                case INVERTED_INDEX_DESC:
-                    getIIDescManager().reloadIIDesc(cacheKey);
-                    break;
-                case TABLE:
-                    getMetadataManager().reloadTableCache(cacheKey);
-                    IIDescManager.clearCache();
-                    CubeDescManager.clearCache();
-                    break;
-                case DATA_MODEL:
-                    getMetadataManager().reloadDataModelDesc(cacheKey);
-                    IIDescManager.clearCache();
-                    CubeDescManager.clearCache();
-                    break;
-                case ALL:
-                    getMetadataManager().reload();
-                    CubeDescManager.clearCache();
-                    CubeManager.clearCache();
-                    IIDescManager.clearCache();
-                    IIManager.clearCache();
-                    ProjectManager.clearCache();
-                    BasicService.resetOLAPDataSources();
-                    break;
-                default:
-                    throw new RuntimeException("invalid cacheType:" + cacheType);
+            case CUBE:
+                getCubeManager().reloadCubeLocal(cacheKey);
+                mergeCubeOnNewSegmentReady(cacheKey);
+                break;
+            case CUBE_DESC:
+                getCubeDescManager().reloadCubeDescLocal(cacheKey);
+                break;
+            case PROJECT:
+                ProjectInstance projectInstance = getProjectManager().reloadProjectLocal(cacheKey);
+                removeOLAPDataSource(projectInstance.getName());
+                break;
+            case INVERTED_INDEX:
+                getIIManager().reloadIILocal(cacheKey);
+                break;
+            case INVERTED_INDEX_DESC:
+                getIIDescManager().reloadIIDescLocal(cacheKey);
+                break;
+            case TABLE:
+                getMetadataManager().reloadTableCache(cacheKey);
+                IIDescManager.clearCache();
+                CubeDescManager.clearCache();
+                break;
+            case DATA_MODEL:
+                getMetadataManager().reloadDataModelDesc(cacheKey);
+                IIDescManager.clearCache();
+                CubeDescManager.clearCache();
+                break;
+            case ALL:
+                getMetadataManager().reload();
+                CubeDescManager.clearCache();
+                CubeManager.clearCache();
+                IIDescManager.clearCache();
+                IIManager.clearCache();
+                ProjectManager.clearCache();
+                removeAllOLAPDataSources();
+                break;
+            default:
+                throw new RuntimeException("invalid cacheType:" + cacheType);
             }
         } catch (IOException e) {
             throw new RuntimeException("error " + log, e);
-        }
-
-    }
-
-    private void cleanProjectCacheByRealization(RealizationType type, String realizationName) throws IOException {
-        List<ProjectInstance> projectInstances = getProjectManager().findProjects(type, realizationName);
-        for (ProjectInstance pi : projectInstances) {
-            getProjectManager().reloadProject(pi.getName());
-            removeOLAPDataSource(pi.getName());
         }
     }
 
@@ -120,27 +106,27 @@ public class CacheService extends BasicService {
         final String log = "remove cache type: " + cacheType + " name:" + cacheKey;
         try {
             switch (cacheType) {
-                case CUBE:
-                    getCubeManager().removeCubeCacheLocal(cacheKey);
-                    break;
-                case CUBE_DESC:
-                    getCubeDescManager().removeLocalCubeDesc(cacheKey);
-                    break;
-                case PROJECT:
-                    ProjectManager.clearCache();
-                    break;
-                case INVERTED_INDEX:
-                    getIIManager().removeIILocalCache(cacheKey);
-                    break;
-                case INVERTED_INDEX_DESC:
-                    getIIDescManager().removeIIDescLocal(cacheKey);
-                    break;
-                case TABLE:
-                    throw new UnsupportedOperationException(log);
-                case DATA_MODEL:
-                    throw new UnsupportedOperationException(log);
-                default:
-                    throw new RuntimeException("invalid cacheType:" + cacheType);
+            case CUBE:
+                getCubeManager().removeCubeLocal(cacheKey);
+                break;
+            case CUBE_DESC:
+                getCubeDescManager().removeLocalCubeDesc(cacheKey);
+                break;
+            case PROJECT:
+                ProjectManager.clearCache();
+                break;
+            case INVERTED_INDEX:
+                getIIManager().removeIILocal(cacheKey);
+                break;
+            case INVERTED_INDEX_DESC:
+                getIIDescManager().removeIIDescLocal(cacheKey);
+                break;
+            case TABLE:
+                throw new UnsupportedOperationException(log);
+            case DATA_MODEL:
+                throw new UnsupportedOperationException(log);
+            default:
+                throw new RuntimeException("invalid cacheType:" + cacheType);
             }
         } catch (IOException e) {
             throw new RuntimeException("error " + log, e);

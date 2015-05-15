@@ -18,11 +18,8 @@
 
 package org.apache.kylin.job.cube;
 
-import java.io.IOException;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -32,6 +29,8 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+
+import java.io.IOException;
 
 /**
  */
@@ -128,7 +127,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             if (segmentReady) {
                 cubeManager.promoteNewlyBuiltSegments(cube, segment);
             } else {
-                cubeManager.updateCube(cube);
+                cubeManager.updateCube(cube, true);
             }
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {

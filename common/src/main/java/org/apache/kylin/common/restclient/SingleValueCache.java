@@ -43,8 +43,10 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
     }
 
     public void put(K key, V value) {
-        final V result = innerCache.put(key, value);
-        if (result == null) {
+        //enforce all cache changes coming from REST
+        //final V result = innerCache.put(key, value);
+
+        if (!innerCache.containsKey(key)) {
             syncRemote(key, Broadcaster.EVENT.CREATE);
         } else {
             syncRemote(key, Broadcaster.EVENT.UPDATE);
@@ -57,7 +59,8 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     public void remove(K key) {
         if (innerCache.containsKey(key)) {
-            innerCache.remove(key);
+            //enforce all cache changes coming from REST
+            //innerCache.remove(key);
             syncRemote(key, Broadcaster.EVENT.DROP);
         }
     }
