@@ -102,20 +102,19 @@ public class ProjectManager {
         logger.debug("Loading Project from folder " + store.getReadableResourcePath(ResourceStore.PROJECT_RESOURCE_ROOT));
 
         for (String path : paths) {
-            reloadProjectAt(path);
+            reloadProjectLocalAt(path);
         }
         wireProjectAndRealizations(projectMap.values());
         logger.debug("Loaded " + projectMap.size() + " Project(s)");
     }
 
-    public ProjectInstance reloadProject(String project) throws IOException {
-        return reloadProjectAt(ProjectInstance.concatResourcePath(project));
+    public ProjectInstance reloadProjectLocal(String project) throws IOException {
+        return reloadProjectLocalAt(ProjectInstance.concatResourcePath(project));
     }
 
-    private ProjectInstance reloadProjectAt(String path) throws IOException {
-        ResourceStore store = getStore();
+    private ProjectInstance reloadProjectLocalAt(String path) throws IOException {
 
-        ProjectInstance projectInstance = store.getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
+        ProjectInstance projectInstance = getStore().getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         if (projectInstance == null) {
             logger.warn("reload project at path:" + path + " not found, this:" + this.toString());
             return null;
@@ -159,16 +158,16 @@ public class ProjectManager {
     }
 
     public ProjectInstance createProject(String projectName, String owner, String description) throws IOException {
-        logger.info("Creating project '" + projectName);
+        logger.info("Creating project " + projectName);
 
         ProjectInstance currentProject = getProject(projectName);
         if (currentProject == null) {
-            currentProject = ProjectInstance.create(projectName, owner, description, null,null);
+            currentProject = ProjectInstance.create(projectName, owner, description, null, null);
         } else {
             throw new IllegalStateException("The project named " + projectName + "already exists");
         }
 
-        saveResource(currentProject);
+        updateProject(currentProject);
 
         return currentProject;
     }
@@ -189,21 +188,30 @@ public class ProjectManager {
 
         logger.info("Dropping project '" + projectInstance.getName() + "'");
 
-        deleteResource(projectInstance);
+        removeProject(projectInstance);
 
         return projectInstance;
     }
 
+    //passive update due to underlying realization update
+    public void updateProject(RealizationType type, String realizationName) throws IOException {
+        for (ProjectInstance proj : findProjects(type, realizationName)) {
+            updateProject(proj);
+        }
+    }
+
+    //update project itself
     public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc) throws IOException {
         if (!project.getName().equals(newName)) {
             ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc);
-            // FIXME table lost??
+
             newProject.setCreateTimeUTC(project.getCreateTimeUTC());
             newProject.recordUpdateTime(System.currentTimeMillis());
             newProject.setRealizationEntries(project.getRealizationEntries());
+            newProject.setTables(project.getTables());
 
-            deleteResource(project);
-            saveResource(newProject);
+            removeProject(project);
+            updateProject(newProject);
 
             return newProject;
         } else {
@@ -213,10 +221,22 @@ public class ProjectManager {
             if (project.getUuid() == null)
                 project.updateRandomUuid();
 
-            saveResource(project);
+            updateProject(project);
 
             return project;
         }
+    }
+
+    private void updateProject(ProjectInstance prj) throws IOException {
+        getStore().putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
+        projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
+        clearL2Cache();
+    }
+
+    private void removeProject(ProjectInstance proj) throws IOException {
+        getStore().deleteResource(proj.getResourcePath());
+        projectMap.remove(norm(proj.getName()));
+        clearL2Cache();
     }
 
     public boolean isModelInProject(String projectName, String modelName) {
@@ -231,7 +251,7 @@ public class ProjectManager {
     public void removeModelFromProjects(String modelName) throws IOException {
         for (ProjectInstance projectInstance : findProjects(modelName)) {
             projectInstance.removeModel(modelName);
-            saveResource(projectInstance);
+            updateProject(projectInstance);
         }
     }
 
@@ -239,10 +259,10 @@ public class ProjectManager {
         String newProjectName = ProjectInstance.getNormalizedProjectName(project);
         ProjectInstance newProject = getProject(newProjectName);
         if (newProject == null) {
-            throw new IllegalArgumentException("Project "+newProjectName+" does not exist.");
+            throw new IllegalArgumentException("Project " + newProjectName + " does not exist.");
         }
         newProject.addModel(modelName);
-        saveResource(newProject);
+        updateProject(newProject);
 
         return newProject;
     }
@@ -252,7 +272,6 @@ public class ProjectManager {
         return addRealizationToProject(type, realizationName, newProjectName, owner);
     }
 
-
     private ProjectInstance addRealizationToProject(RealizationType type, String realizationName, String project, String user) throws IOException {
         String newProjectName = norm(project);
         ProjectInstance newProject = getProject(newProjectName);
@@ -260,7 +279,7 @@ public class ProjectManager {
             newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding realization " + realizationName + "(" + type + ")");
         }
         newProject.addRealizationEntry(type, realizationName);
-        saveResource(newProject);
+        updateProject(newProject);
 
         return newProject;
     }
@@ -268,7 +287,7 @@ public class ProjectManager {
     public void removeRealizationsFromProjects(RealizationType type, String realizationName) throws IOException {
         for (ProjectInstance projectInstance : findProjects(type, realizationName)) {
             projectInstance.removeRealization(type, realizationName);
-            saveResource(projectInstance);
+            updateProject(projectInstance);
         }
     }
 
@@ -283,24 +302,8 @@ public class ProjectManager {
             projectInstance.addTable(table.getIdentity());
         }
 
-        saveResource(projectInstance);
+        updateProject(projectInstance);
         return projectInstance;
-    }
-
-    private void saveResource(ProjectInstance prj) throws IOException {
-        ResourceStore store = getStore();
-        store.putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
-
-        prj = reloadProjectAt(prj.getResourcePath());
-        projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
-        clearL2Cache();
-    }
-
-    private void deleteResource(ProjectInstance proj) throws IOException {
-        ResourceStore store = getStore();
-        store.deleteResource(proj.getResourcePath());
-        projectMap.remove(norm(proj.getName()));
-        clearL2Cache();
     }
 
     public List<ProjectInstance> findProjects(RealizationType type, String realizationName) {

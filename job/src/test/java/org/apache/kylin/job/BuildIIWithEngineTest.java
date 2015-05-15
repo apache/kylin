@@ -61,7 +61,7 @@ public class BuildIIWithEngineTest {
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
 
-    protected static final String[] TEST_II_INSTANCES = new String[]{ "test_kylin_ii_inner_join", "test_kylin_ii_left_join"};
+    protected static final String[] TEST_II_INSTANCES = new String[] { "test_kylin_ii_inner_join", "test_kylin_ii_left_join" };
 
     private static final Log logger = LogFactory.getLog(BuildIIWithEngineTest.class);
 
@@ -104,7 +104,7 @@ public class BuildIIWithEngineTest {
         }
         jobEngineConfig = new JobEngineConfig(kylinConfig);
         for (String jobId : jobService.getAllJobIds()) {
-            if(jobService.getJob(jobId) instanceof IIJob){
+            if (jobService.getJob(jobId) instanceof IIJob) {
                 jobService.deleteJob(jobId);
             }
         }
@@ -115,7 +115,7 @@ public class BuildIIWithEngineTest {
             IIInstance ii = iiManager.getII(iiInstance);
             if (ii.getStatus() != RealizationStatusEnum.DISABLED) {
                 ii.setStatus(RealizationStatusEnum.DISABLED);
-                iiManager.updateII(ii);
+                iiManager.updateII(ii, true);
             }
         }
     }
@@ -127,7 +127,7 @@ public class BuildIIWithEngineTest {
             IIInstance ii = iiManager.getII(iiInstance);
             if (ii.getStatus() != RealizationStatusEnum.READY) {
                 ii.setStatus(RealizationStatusEnum.READY);
-                iiManager.updateII(ii);
+                iiManager.updateII(ii, true);
             }
         }
         backup();
@@ -137,7 +137,7 @@ public class BuildIIWithEngineTest {
     @Ignore
     public void testBuildII() throws Exception {
 
-        String[] testCase = new String[]{"buildIIInnerJoin", "buildIILeftJoin"};
+        String[] testCase = new String[] { "buildIIInnerJoin", "buildIILeftJoin" };
         ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
         final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
         List<Future<List<String>>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
@@ -183,9 +183,8 @@ public class BuildIIWithEngineTest {
     }
 
     protected List<String> buildIIInnerJoin() throws Exception {
-       return buildII(TEST_II_INSTANCES[0]);
+        return buildII(TEST_II_INSTANCES[0]);
     }
-
 
     protected List<String> buildIILeftJoin() throws Exception {
         return buildII(TEST_II_INSTANCES[1]);
@@ -208,14 +207,14 @@ public class BuildIIWithEngineTest {
     private void clearSegment(String iiName) throws Exception {
         IIInstance ii = iiManager.getII(iiName);
         ii.getSegments().clear();
-        iiManager.updateII(ii);
+        iiManager.updateII(ii,true);
     }
 
     private String buildSegment(String iiName, long startDate, long endDate) throws Exception {
         IIInstance iiInstance = iiManager.getII(iiName);
         IISegment segment = iiManager.buildSegment(iiInstance, startDate, endDate);
         iiInstance.getSegments().add(segment);
-        iiManager.updateII(iiInstance);
+        iiManager.updateII(iiInstance, true);
         IIJobBuilder iiJobBuilder = new IIJobBuilder(jobEngineConfig);
         IIJob job = iiJobBuilder.buildJob(segment);
         jobService.addJob(job);
@@ -224,7 +223,7 @@ public class BuildIIWithEngineTest {
     }
 
     private int cleanupOldStorage() throws Exception {
-        String[] args = {"--delete", "true"};
+        String[] args = { "--delete", "true" };
 
         int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
         return exitCode;

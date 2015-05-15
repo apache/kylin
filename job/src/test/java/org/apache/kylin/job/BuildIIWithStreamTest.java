@@ -34,17 +34,7 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
@@ -77,7 +67,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+
+import static org.junit.Assert.fail;
 
 /**
  */
@@ -109,7 +108,7 @@ public class BuildIIWithStreamTest {
             IIInstance ii = iiManager.getII(iiInstance);
             if (ii.getStatus() != RealizationStatusEnum.DISABLED) {
                 ii.setStatus(RealizationStatusEnum.DISABLED);
-                iiManager.updateII(ii);
+                iiManager.updateII(ii,true);
             }
         }
     }
@@ -169,7 +168,7 @@ public class BuildIIWithStreamTest {
     private void clearSegment(String iiName) throws Exception {
         IIInstance ii = iiManager.getII(iiName);
         ii.getSegments().clear();
-        iiManager.updateII(ii);
+        iiManager.updateII(ii,true);
     }
 
     private IISegment createSegment(String iiName) throws Exception {
@@ -186,7 +185,7 @@ public class BuildIIWithStreamTest {
         IIInstance iiInstance = iiManager.getII(iiName);
         IISegment segment = iiManager.buildSegment(iiInstance, startDate, endDate);
         iiInstance.getSegments().add(segment);
-        iiManager.updateII(iiInstance);
+        iiManager.updateII(iiInstance,true);
         return segment;
     }
 
@@ -243,7 +242,7 @@ public class BuildIIWithStreamTest {
             IIInstance ii = iiManager.getII(iiName);
             if (ii.getStatus() != RealizationStatusEnum.READY) {
                 ii.setStatus(RealizationStatusEnum.READY);
-                iiManager.updateII(ii);
+                iiManager.updateII(ii,true);
             }
         }
     }

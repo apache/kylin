@@ -18,17 +18,16 @@
 
 package org.apache.kylin.rest.service;
 
-import java.net.UnknownHostException;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.net.UnknownHostException;
+import java.util.List;
 
 /**
  * @author xduo
@@ -52,7 +51,6 @@ public class CubeServiceTest extends ServiceTestBase {
         Assert.assertNotNull(cubes);
         CubeInstance cube = cubes.get(0);
         cubeService.isCubeDescEditable(cube.getDescriptor());
-        cubeService.isCubeEditable(cube);
 
         cubes = cubeService.getCubes(null, null,null, 1, 0);
         Assert.assertTrue(cubes.size() == 1);

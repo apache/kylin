@@ -18,6 +18,8 @@
 
 package org.apache.kylin.invertedindex;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -31,6 +33,8 @@ import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
@@ -39,7 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -92,7 +99,7 @@ public class IIManager implements IRealizationProvider {
     private CaseInsensitiveStringCache<IIInstance> iiMap = new CaseInsensitiveStringCache<IIInstance>(Broadcaster.TYPE.INVERTED_INDEX);
 
     // for generation hbase table name of a new segment
-    private HashSet<String> usedStorageLocation = new HashSet<String>();
+    private Multimap<String, String> usedStorageLocation = HashMultimap.create();
 
     private IIManager(KylinConfig config) throws IOException {
         logger.info("Initializing IIManager with config " + config);
@@ -106,7 +113,6 @@ public class IIManager implements IRealizationProvider {
     }
 
     public IIInstance getII(String iiName) {
-        iiName = iiName.toUpperCase();
         return iiMap.get(iiName);
     }
 
@@ -137,7 +143,7 @@ public class IIManager implements IRealizationProvider {
             DictionaryInfo dict = dictMgr.buildDictionary(iiDesc.getModel(), "true", column, factColumnsPath);
             iiSeg.putDictResPath(column, dict.getResourcePath());
         }
-        saveResource(iiSeg.getIIInstance());
+        updateII(iiSeg.getIIInstance(), false);
     }
 
     /**
@@ -168,58 +174,55 @@ public class IIManager implements IRealizationProvider {
         if (this.getII(ii.getName()) != null)
             throw new IllegalArgumentException("The II name '" + ii.getName() + "' already exists.");
 
-        // other logic is the same as update.
-        return updateII(ii);
-    }
+        this.updateII(ii, false);
 
-    public void updateIIStreamingOffset(String iiName, int partition, long offset) throws IOException {
-
-    }
-
-
-    public IIInstance updateII(IIInstance ii) throws IOException {
-        logger.info("Updating II instance '" + ii.getName());
-
-        // save resource
-        saveResource(ii);
-
-        logger.info("II with " + ii.getSegments().size() + " segments is saved");
-
+        String projectName = (null == ii.getProjectName()) ? ProjectInstance.DEFAULT_PROJECT_NAME : ii.getProjectName();
+        ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.INVERTED_INDEX, ii.getName(), projectName, ii.getOwner());
         return ii;
     }
 
-    public void loadIICache(String iiName) {
+    public void reloadIILocal(String iiName) {
         try {
-            loadIIInstance(IIInstance.concatResourcePath(iiName));
+            reloadIILocalAt(IIInstance.concatResourcePath(iiName));
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }
     }
 
-    public void removeIICache(IIInstance ii) {
-        iiMap.remove(ii.getName());
+    public IIInstance dropII(String iiName, boolean deleteDesc) throws IOException {
+        logger.info("Dropping II '" + iiName + "'");
 
-        for (IISegment segment : ii.getSegments()) {
-            usedStorageLocation.remove(segment.getName());
+        IIInstance ii = getII(iiName);
+
+        if (deleteDesc && ii.getDescriptor() != null) {
+            IIDescManager.getInstance(config).removeIIDesc(ii.getDescriptor());
         }
+
+        removeII(ii);
+        ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.INVERTED_INDEX, iiName);
+
+        return ii;
     }
 
-    public void removeIILocalCache(String name) {
+    private void removeII(IIInstance ii) throws IOException {
+        getStore().deleteResource(ii.getResourcePath());
+        iiMap.remove(ii.getName());
+    }
+
+    public void removeIILocal(String name) {
         iiMap.removeLocal(name);
-        //TODO
-        //        for (IISegment segment : ii.getSegments()) {
-        //            usedStorageLocation.remove(segment.getName());
-        //        }
+        usedStorageLocation.removeAll(name.toUpperCase());
     }
 
-    private void saveResource(IIInstance ii) throws IOException {
-        ResourceStore store = getStore();
-        store.putResource(ii.getResourcePath(), ii, II_SERIALIZER);
-        this.afterIIUpdated(ii);
-    }
+    public void updateII(IIInstance ii, boolean updateProject) throws IOException {
+        logger.info("Updating II instance : " + ii.getName());
+        getStore().putResource(ii.getResourcePath(), ii, II_SERIALIZER);
+        iiMap.put(ii.getName(), ii);
 
-    private void afterIIUpdated(IIInstance updatedII) {
-        iiMap.put(updatedII.getName(), updatedII);
+        if (updateProject) {
+            logger.info("Updating project instance for ii: " + ii.getName());
+            ProjectManager.getInstance(config).updateProject(RealizationType.INVERTED_INDEX, ii.getName());
+        }
     }
 
     /**
@@ -251,7 +254,7 @@ public class IIManager implements IRealizationProvider {
                 int idx = (int) (Math.random() * ALPHA_NUM.length());
                 sb.append(ALPHA_NUM.charAt(idx));
             }
-            if (usedStorageLocation.contains(sb.toString())) {
+            if (usedStorageLocation.containsValue(sb.toString())) {
                 continue;
             } else {
                 return sb.toString();
@@ -266,31 +269,31 @@ public class IIManager implements IRealizationProvider {
         logger.debug("Loading II from folder " + store.getReadableResourcePath(ResourceStore.II_RESOURCE_ROOT));
 
         for (String path : paths) {
-            loadIIInstance(path);
+            reloadIILocalAt(path);
         }
 
         logger.debug("Loaded " + paths.size() + " II(s)");
     }
 
-    private synchronized IIInstance loadIIInstance(String path) throws IOException {
+    private synchronized IIInstance reloadIILocalAt(String path) throws IOException {
         ResourceStore store = getStore();
         logger.debug("Loading IIInstance " + store.getReadableResourcePath(path));
 
-        IIInstance IIInstance = null;
+        IIInstance ii = null;
         try {
-            IIInstance = store.getResource(path, IIInstance.class, II_SERIALIZER);
-            IIInstance.setConfig(config);
+            ii = store.getResource(path, IIInstance.class, II_SERIALIZER);
+            ii.setConfig(config);
 
-            if (StringUtils.isBlank(IIInstance.getName()))
+            if (StringUtils.isBlank(ii.getName()))
                 throw new IllegalStateException("IIInstance name must not be blank");
 
-            iiMap.putLocal(IIInstance.getName(), IIInstance);
+            iiMap.putLocal(ii.getName(), ii);
 
-            for (IISegment segment : IIInstance.getSegments()) {
-                usedStorageLocation.add(segment.getName());
+            for (IISegment segment : ii.getSegments()) {
+                usedStorageLocation.put(ii.getName().toUpperCase(), segment.getStorageLocationIdentifier());
             }
 
-            return IIInstance;
+            return ii;
         } catch (Exception e) {
             logger.error("Error during load ii instance " + path, e);
             return null;

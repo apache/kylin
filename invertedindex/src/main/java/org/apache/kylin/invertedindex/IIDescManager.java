@@ -18,6 +18,7 @@
 
 package org.apache.kylin.invertedindex;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -27,7 +28,6 @@ import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +90,7 @@ public class IIDescManager {
         reloadAllIIDesc();
     }
 
-    public List<IIDesc> listAllDesc(){
+    public List<IIDesc> listAllDesc() {
         return new ArrayList<IIDesc>(iiDescMap.values());
     }
 
@@ -105,7 +105,7 @@ public class IIDescManager {
      * @param name
      * @throws IOException
      */
-    public IIDesc reloadIIDesc(String name) throws IOException {
+    public IIDesc reloadIIDescLocal(String name) throws IOException {
 
         // Save Source
         String path = IIDesc.getIIDescResourcePath(name);
@@ -170,7 +170,7 @@ public class IIDescManager {
     }
 
     public void removeIIDescLocal(String name) throws IOException {
-        iiDescMap.remove(name);
+        iiDescMap.removeLocal(name);
     }
 
     private void reloadAllIIDesc() throws IOException {

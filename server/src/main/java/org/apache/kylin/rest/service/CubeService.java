@@ -63,7 +63,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -81,7 +80,7 @@ public class CubeService extends BasicService {
     private AccessService accessService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<CubeInstance> listAllCubes(final String cubeName, final String projectName,final String modelName) {
+    public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName) {
         List<CubeInstance> cubeInstances = null;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -93,14 +92,14 @@ public class CubeService extends BasicService {
 
         List<CubeInstance> filterModelCubes = new ArrayList<CubeInstance>();
 
-        if(modelName!=null){
+        if (modelName != null) {
             for (CubeInstance cubeInstance : cubeInstances) {
                 boolean isCubeMatch = cubeInstance.getDescriptor().getModelName().toLowerCase().equals(modelName.toLowerCase());
                 if (isCubeMatch) {
                     filterModelCubes.add(cubeInstance);
                 }
             }
-        }else{
+        } else {
             filterModelCubes = cubeInstances;
         }
 
@@ -116,12 +115,12 @@ public class CubeService extends BasicService {
         return filterCubes;
     }
 
-    public List<CubeInstance> getCubes(final String cubeName, final String projectName,final String modelName ,final Integer limit, final Integer offset) {
+    public List<CubeInstance> getCubes(final String cubeName, final String projectName, final String modelName, final Integer limit, final Integer offset) {
 
         List<CubeInstance> cubes;
-        cubes = listAllCubes(cubeName, projectName,modelName);
+        cubes = listAllCubes(cubeName, projectName, modelName);
 
-        if(limit==null||offset==null){
+        if (limit == null || offset == null) {
             return cubes;
         }
 
@@ -154,7 +153,7 @@ public class CubeService extends BasicService {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         cube.setOwner(owner);
 
-        return getCubeManager().updateCube(cube);
+        return getCubeManager().updateCube(cube, true);
     }
 
     public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc) throws IOException {
@@ -173,7 +172,6 @@ public class CubeService extends BasicService {
         } else {
             createdDesc = getCubeDescManager().updateCubeDesc(desc);
         }
-
 
         if (!createdDesc.getError().isEmpty()) {
             if (isNew) {
@@ -235,7 +233,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws  IOException, JobException {
+    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws IOException, JobException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new JobException("Cube schema shouldn't be changed with running job.");
@@ -276,20 +274,14 @@ public class CubeService extends BasicService {
         accessService.clean(cube, true);
     }
 
-    public boolean isCubeEditable(CubeInstance ci) {
-        return ci.getStatus() == RealizationStatusEnum.DISABLED;
-    }
-
     public boolean isCubeDescEditable(CubeDesc cd) {
-        List<CubeInstance> list = getCubeManager().getCubesByDesc(cd.getName());
-        if (list.isEmpty()) {
+        String cubeName = getCubeNameFromDesc(cd.getName());
+        CubeInstance cube = getCubeManager().getCube(cubeName);
+        if (cube == null) {
             return true;
         }
-        Iterator<CubeInstance> it = list.iterator();
-        while (it.hasNext()) {
-            if (!isCubeEditable(it.next())) {
-                return false;
-            }
+        if (cube.getSegments().size() != 0) {
+            return false;
         }
         return true;
     }
@@ -306,14 +298,6 @@ public class CubeService extends BasicService {
         }
     }
 
-    public void reloadCubeCache(String cubeName) {
-        CubeManager.getInstance(this.getConfig()).loadCubeCache(cubeName);
-    }
-
-    public void removeCubeCache(String cubeName) {
-        CubeManager.getInstance(this.getConfig()).removeCubeCacheLocal(cubeName);
-    }
-
     /**
      * Stop all jobs belonging to this cube and clean out all segments
      *
@@ -323,7 +307,7 @@ public class CubeService extends BasicService {
      * @throws JobException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    @Caching(evict = {@CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true)})
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public CubeInstance purgeCube(CubeInstance cube) throws IOException, JobException {
         String cubeName = cube.getName();
 
@@ -349,7 +333,7 @@ public class CubeService extends BasicService {
      * @throws JobException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    @Caching(evict = {@CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true)})
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public CubeInstance disableCube(CubeInstance cube) throws IOException, JobException {
         String cubeName = cube.getName();
 
@@ -361,7 +345,7 @@ public class CubeService extends BasicService {
         cube.setStatus(RealizationStatusEnum.DISABLED);
 
         try {
-            return getCubeManager().updateCube(cube);
+            return getCubeManager().updateCube(cube, true);
         } catch (IOException e) {
             cube.setStatus(ostatus);
             throw e;
@@ -398,7 +382,7 @@ public class CubeService extends BasicService {
 
         cube.setStatus(RealizationStatusEnum.READY);
         try {
-            return getCubeManager().updateCube(cube);
+            return getCubeManager().updateCube(cube, true);
         } catch (IOException e) {
             cube.setStatus(ostatus);
             throw e;
@@ -511,7 +495,6 @@ public class CubeService extends BasicService {
         getExecutableManager().addJob(job);
     }
 
-
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {
         CubeDesc desc = cube.getDescriptor();
@@ -543,7 +526,7 @@ public class CubeService extends BasicService {
             }
         }
         cube.getSegments().clear();
-        CubeManager.getInstance(getConfig()).updateCube(cube);
+        CubeManager.getInstance(getConfig()).updateCube(cube, true);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -557,7 +540,6 @@ public class CubeService extends BasicService {
         getProjectManager().addTableDescToProject(tables, project);
     }
 
-
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws IOException {
         MetadataManager metaMgr = getMetadataManager();
@@ -568,6 +550,5 @@ public class CubeService extends BasicService {
             }
         }
     }
-
 
 }

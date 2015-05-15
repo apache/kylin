@@ -18,26 +18,25 @@
 
 package org.apache.kylin.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
-import org.apache.kylin.cube.model.validation.ValidateContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
+import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
+import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manager class for CubeDesc; extracted from #CubeManager
@@ -108,7 +107,7 @@ public class CubeDescManager {
      * @param name
      * @throws IOException
      */
-    public CubeDesc reloadCubeDesc(String name) throws IOException {
+    public CubeDesc reloadCubeDescLocal(String name) throws IOException {
 
         // Save Source
         String path = CubeDesc.getCubeDescResourcePath(name);
