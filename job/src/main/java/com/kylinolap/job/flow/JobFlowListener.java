@@ -244,9 +244,10 @@ public class JobFlowListener implements JobListener {
             if (null != convertToHFileStep) {
                 String cubeSizeString = convertToHFileStep.getInfo(JobInstance.HDFS_BYTES_WRITTEN);
                 if (cubeSizeString == null || cubeSizeString.equals("")) {
-                    throw new RuntimeException("Can't get cube segment size.");
+                    log.warn("Can't get cube segment size from job " + jobInstance.getUuid());
+                } else {
+                    cubeSize = Long.parseLong(cubeSizeString) / 1024;
                 }
-                cubeSize = Long.parseLong(cubeSizeString) / 1024;
             } else {
                 log.info("No step with name '" + JobConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE + "' is found");
             }
@@ -263,9 +264,10 @@ public class JobFlowListener implements JobListener {
                 if (null != baseCuboidStep) {
                     String sourceRecordsCount = baseCuboidStep.getInfo(JobInstance.SOURCE_RECORDS_COUNT);
                     if (sourceRecordsCount == null || sourceRecordsCount.equals("")) {
-                        throw new RuntimeException("Can't get cube source record count.");
+                        log.warn("Can't get cube source record count from job " + jobInstance.getUuid());
+                    } else {
+                        sourceCount = Long.parseLong(sourceRecordsCount);
                     }
-                    sourceCount = Long.parseLong(sourceRecordsCount);
                 } else {
                     log.info("No step with name '" + JobConstants.STEP_NAME_BUILD_BASE_CUBOID + "' is found");
                 }
@@ -274,9 +276,10 @@ public class JobFlowListener implements JobListener {
                 if (null != createFlatTableStep) {
                     String sourceRecordsSize = createFlatTableStep.getInfo(JobInstance.SOURCE_RECORDS_SIZE);
                     if (sourceRecordsSize == null || sourceRecordsSize.equals("")) {
-                        throw new RuntimeException("Can't get cube source record size.");
+                        log.warn("Can't get cube source record from job " + jobInstance.getUuid());
+                    } else {
+                        sourceSize = Long.parseLong(sourceRecordsSize);
                     }
-                    sourceSize = Long.parseLong(sourceRecordsSize);
                 } else {
                     log.info("No step with name '" + JobConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE + "' is found");
                 }
