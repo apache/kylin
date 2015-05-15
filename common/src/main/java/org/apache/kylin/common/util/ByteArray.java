@@ -29,6 +29,8 @@ import org.apache.kylin.common.util.Bytes;
 public class ByteArray implements Comparable<ByteArray>, Serializable {
 
     private static final long serialVersionUID = 1L;
+    
+    public static final ByteArray EMPTY = new ImmutableByteArray();
 
     public static ByteArray allocate(int length) {
         return new ByteArray(new byte[length]);
@@ -47,19 +49,21 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
     private int length;
 
     public ByteArray() {
-        set(null, 0, 0);
+        this(null, 0, 0);
     }
 
     public ByteArray(int capacity) {
-        set(new byte[capacity], 0, capacity);
+        this(new byte[capacity], 0, capacity);
     }
 
     public ByteArray(byte[] data) {
-        set(data, 0, data == null ? 0 : data.length);
+        this(data, 0, data == null ? 0 : data.length);
     }
 
     public ByteArray(byte[] data, int offset, int length) {
-        set(data, offset, length);
+        this.data = data;
+        this.offset = offset;
+        this.length = length;
     }
 
     public byte[] array() {
@@ -155,6 +159,50 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
             return null;
         else
             return Bytes.toStringBinary(data, offset, length);
+    }
+    
+    // ============================================================================
+    
+    public static class ImmutableByteArray extends ByteArray {
+
+        private static final long serialVersionUID = 1L;
+        
+        public ImmutableByteArray() {
+            super();
+        }
+
+        public ImmutableByteArray(byte[] data, int offset, int length) {
+            super(data, offset, length);
+        }
+
+        public ImmutableByteArray(byte[] data) {
+            super(data);
+        }
+
+        @Override
+        public void set(byte[] array) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void set(byte[] array, int offset, int length) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void set(ByteArray o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setLength(int length) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void copyFrom(ByteArray other) {
+            throw new UnsupportedOperationException();
+        }
     }
 
 }

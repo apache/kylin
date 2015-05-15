@@ -30,6 +30,7 @@ public class CubeScanner implements IGTScanner {
 
     private static final int MAX_SCAN_RANGES = 200;
 
+    final CubeSegment cubeSeg;
     final GTInfo info;
     final CubeHBaseReadonlyStore store;
     final List<GTScanRequest> scanRequests;
@@ -37,8 +38,9 @@ public class CubeScanner implements IGTScanner {
 
     public CubeScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
             Collection<FunctionDesc> metrics, TupleFilter filter) {
-        info = CubeGridTable.newGTInfo(cubeSeg, cuboid.getId());
-        store = new CubeHBaseReadonlyStore(info, cubeSeg, cuboid);
+        this.cubeSeg = cubeSeg;
+        this.info = CubeGridTable.newGTInfo(cubeSeg, cuboid.getId());
+        this.store = new CubeHBaseReadonlyStore(info, cubeSeg, cuboid);
 
         TupleFilter gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, cuboid.getColumns(), groups);
         BitSet gtDimensions = makeGridTableColumns(cuboid, dimensions);

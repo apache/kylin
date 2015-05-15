@@ -1,8 +1,16 @@
 package org.apache.kylin.storage.gridtable.diskstore;
 
-import com.google.common.base.Preconditions;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.BitSet;
+import java.util.UUID;
+
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
@@ -10,10 +18,7 @@ import org.apache.kylin.storage.gridtable.IGTStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.BitSet;
-import java.util.UUID;
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -33,6 +38,11 @@ public class GTDiskStore implements IGTStore {
         logger.info("disk store created, identifier:" + identifier);
         this.writer = new DiskStoreWriter(fileSystem.getWriter(getRowBlockFile(identifier)));
         deleteTmpFilesOnExit();
+    }
+
+    @Override
+    public GTInfo getInfo() {
+        return gtInfo;
     }
 
     private String generateIdentifier(FileSystem fs) {
@@ -75,7 +85,6 @@ public class GTDiskStore implements IGTStore {
         }
     }
 
-    @Override
     public long memoryUsage() {
         return 0;
     }
@@ -146,7 +155,6 @@ public class GTDiskStore implements IGTStore {
         return new DiskStoreScanner(fileSystem.getReader(getRowBlockFile(identifier)));
     }
 
-    @Override
     public void drop() throws IOException {
         try {
             writer.close();

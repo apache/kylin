@@ -1,8 +1,11 @@
 package org.apache.kylin.storage.cube;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -17,20 +20,22 @@ import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.storage.ICachableStorageEngine;
+import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.DerivedFilterTranslator;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-public class CubeStorageEngine implements ICachableStorageEngine {
+public class CubeStorageEngine implements IStorageEngine {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeStorageEngine.class);
 
@@ -38,12 +43,10 @@ public class CubeStorageEngine implements ICachableStorageEngine {
 
     private final CubeInstance cubeInstance;
     private final CubeDesc cubeDesc;
-    private final String uuid;
 
     public CubeStorageEngine(CubeInstance cube) {
         this.cubeInstance = cube;
         this.cubeDesc = cube.getDescriptor();
-        this.uuid = cube.getUuid();
     }
 
     @Override
@@ -52,8 +55,8 @@ public class CubeStorageEngine implements ICachableStorageEngine {
         TupleFilter filter = sqlDigest.filter;
 
         // build dimension & metrics
-        Collection<TblColRef> dimensions = new HashSet<TblColRef>();
-        Collection<FunctionDesc> metrics = new HashSet<FunctionDesc>();
+        Set<TblColRef> dimensions = new LinkedHashSet<TblColRef>();
+        Set<FunctionDesc> metrics = new LinkedHashSet<FunctionDesc>();
         buildDimensionsAndMetrics(sqlDigest, dimensions, metrics);
 
         // all dimensions = groups + filter dimensions
@@ -68,7 +71,7 @@ public class CubeStorageEngine implements ICachableStorageEngine {
         derivedPostAggregation.removeAll(groups);
 
         // identify cuboid
-        Set<TblColRef> dimensionsD = Sets.newHashSet();
+        Set<TblColRef> dimensionsD = new LinkedHashSet<TblColRef>();
         dimensionsD.addAll(groupsD);
         dimensionsD.addAll(filterDimsD);
         Cuboid cuboid = identifyCuboid(dimensionsD);
@@ -78,6 +81,10 @@ public class CubeStorageEngine implements ICachableStorageEngine {
         Set<TblColRef> singleValuesD = findSingleValueColumns(filter);
         boolean isExactAggregation = isExactAggregation(cuboid, groups, filterDimsD, singleValuesD, derivedPostAggregation);
         context.setExactAggregation(isExactAggregation);
+        
+        if (isExactAggregation) {
+            metrics = replaceHolisticCountDistinct(metrics);
+        }
 
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
         TupleFilter filterD = translateDerived(filter, groupsD);
@@ -92,28 +99,17 @@ public class CubeStorageEngine implements ICachableStorageEngine {
             scanners.add(new CubeScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD));
         }
         
-        return new SerializedCubeTupleIterator(scanners);
-    }
-
-    @Override
-    public Range<Long> getVolatilePeriod() {
-        return null;
-    }
-
-    @Override
-    public String getStorageUUID() {
-        return this.uuid;
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return false;
+        if (scanners.isEmpty())
+            return ITupleIterator.EMPTY_TUPLE_ITERATOR;
+        
+        return new SequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo);
     }
 
     private void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
         for (FunctionDesc func : sqlDigest.aggregations) {
             if (!func.isDimensionAsMetric()) {
-                metrics.add(func);
+                // use the FunctionDesc from cube desc as much as possible, that has more info such as HLLC precision
+                metrics.add(findAggrFuncFromCubeDesc(func));
             }
         }
 
@@ -124,6 +120,14 @@ public class CubeStorageEngine implements ICachableStorageEngine {
             }
             dimensions.add(column);
         }
+    }
+    
+    private FunctionDesc findAggrFuncFromCubeDesc(FunctionDesc aggrFunc) {
+        for (MeasureDesc measure : cubeDesc.getMeasures()) {
+            if (measure.getFunction().equals(aggrFunc))
+                return measure.getFunction();
+        }
+        return aggrFunc;
     }
 
     private Set<TblColRef> expandDerived(Collection<TblColRef> cols, Set<TblColRef> derivedPostAggregation) {
@@ -217,6 +221,27 @@ public class CubeStorageEngine implements ICachableStorageEngine {
             logger.info("exactAggregation is true");
         }
         return exact;
+    }
+
+    private Set<FunctionDesc> replaceHolisticCountDistinct(Set<FunctionDesc> metrics) {
+        // for count distinct, try use its holistic version if possible
+        Set<FunctionDesc> result = new LinkedHashSet<FunctionDesc>();
+        for (FunctionDesc metric : metrics) {
+            if (metric.isCountDistinct() == false) {
+                result.add(metric);
+                continue;
+            }
+            
+            FunctionDesc holisticVersion = null;
+            for (MeasureDesc measure : cubeDesc.getMeasures()) {
+                FunctionDesc measureFunc = measure.getFunction();
+                if (measureFunc.equals(metric) && measureFunc.isHolisticCountDistinct()) {
+                    holisticVersion = measureFunc;
+                }
+            }
+            result.add(holisticVersion == null ? metric : holisticVersion);
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")

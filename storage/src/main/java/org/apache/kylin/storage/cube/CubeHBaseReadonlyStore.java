@@ -12,8 +12,8 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.Pair;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.Pair;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeSegment;
@@ -49,8 +49,8 @@ public class CubeHBaseReadonlyStore implements IGTStore {
     }
 
     @Override
-    public long memoryUsage() {
-        return 0;
+    public GTInfo getInfo() {
+        return info;
     }
 
     @Override
@@ -122,11 +122,6 @@ public class CubeHBaseReadonlyStore implements IGTStore {
         };
     }
 
-    @Override
-    public void drop() throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
     private Scan buildScan(ByteArray pkStart, ByteArray pkEnd, List<Pair<byte[], byte[]>> selectedColumns) {
         Scan scan = new Scan();
         scan.setCaching(SCAN_CACHE);
@@ -141,6 +136,7 @@ public class CubeHBaseReadonlyStore implements IGTStore {
 
         scan.setStartRow(makeRowKeyToScan(pkStart, (byte) 0x00));
         scan.setStopRow(makeRowKeyToScan(pkEnd, (byte) 0xff));
+        //TODO fuzzy match
         return scan;
     }
 

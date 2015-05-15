@@ -6,9 +6,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.kylin.common.util.Bytes;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.Dictionary;
@@ -21,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Created by shaoshi on 3/23/15.
  * This implementation uses Dictionary to encode and decode the table; If a column doesn't have dictionary, will check
  * its data type to serialize/deserialize it;
  */
@@ -146,7 +146,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
 
     @Override
     public Object decodeColumnValue(int col, ByteBuffer buf) {
-        return serializers[col].deserialize(buf);
+       return serializers[col].deserialize(buf);
     }
 
     @Override

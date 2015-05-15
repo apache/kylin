@@ -40,12 +40,25 @@ public class GTComboStore implements IGTStore {
             this.gtDiskStore = new GTDiskStore(gtInfo);
         }
     }
+    
+    @Override
+    public GTInfo getInfo() {
+        return gtInfo;
+    }
 
     private IGTStore getCurrent() {
         if (gtSimpleMemStore != null) {
             return gtSimpleMemStore;
         } else {
             return gtDiskStore;
+        }
+    }
+    
+    public long memoryUsage() {
+        if (gtSimpleMemStore != null) {
+            return gtSimpleMemStore.memoryUsage();
+        } else {
+            return gtDiskStore.memoryUsage();
         }
     }
 
@@ -78,11 +91,6 @@ public class GTComboStore implements IGTStore {
     }
 
     @Override
-    public long memoryUsage() {
-        return getCurrent().memoryUsage();
-    }
-
-    @Override
     public IGTStoreWriter rebuild(int shard) throws IOException {
         return getCurrent().rebuild(shard);
     }
@@ -97,7 +105,6 @@ public class GTComboStore implements IGTStore {
         return getCurrent().scan(pkStart, pkEnd, selectedColBlocks, additionalPushDown);
     }
 
-    @Override
     public void drop() throws IOException {
         if (gtSimpleMemStore != null) {
             gtSimpleMemStore.drop();

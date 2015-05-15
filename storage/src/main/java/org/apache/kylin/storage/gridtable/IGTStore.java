@@ -9,7 +9,7 @@ import org.apache.kylin.common.util.ByteArray;
 
 public interface IGTStore {
 
-    long memoryUsage();
+    GTInfo getInfo();
     
     IGTStoreWriter rebuild(int shard) throws IOException;
     
@@ -17,8 +17,6 @@ public interface IGTStore {
     
     IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException;
 
-    void drop() throws IOException;
-    
     interface IGTStoreWriter extends Closeable {
         void write(GTRowBlock block) throws IOException;
     }
