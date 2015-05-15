@@ -269,8 +269,8 @@ public class GTScanRangePlanner {
 
     private class ColumnRange {
         private TblColRef column;
-        private ByteArray begin = new ByteArray();
-        private ByteArray end = new ByteArray();
+        private ByteArray begin = ByteArray.EMPTY;
+        private ByteArray end = ByteArray.EMPTY;
         private Set<ByteArray> equals;
 
         public ColumnRange(TblColRef column, Set<ByteArray> values, FilterOperatorEnum op) {
@@ -309,8 +309,13 @@ public class GTScanRangePlanner {
         }
 
         private void refreshBeginEndFromEquals() {
-            this.begin = byteUnknownIsSmaller.min(this.equals);
-            this.end = byteUnknownIsBigger.max(this.equals);
+            if (equals.isEmpty()) {
+                begin = ByteArray.EMPTY;
+                end = ByteArray.EMPTY;
+            } else {
+                begin = byteUnknownIsSmaller.min(equals);
+                end = byteUnknownIsBigger.max(equals);
+            }
         }
 
         public boolean satisfyAll() {
@@ -383,7 +388,7 @@ public class GTScanRangePlanner {
     public static abstract class ComparatorEx<T> implements Comparator<T> {
 
         public T min(Collection<T> v) {
-            if (v.size() < 0) {
+            if (v.size() <= 0) {
                 return null;
             }
 
@@ -396,7 +401,7 @@ public class GTScanRangePlanner {
         }
 
         public T max(Collection<T> v) {
-            if (v.size() < 0) {
+            if (v.size() <= 0) {
                 return null;
             }
 

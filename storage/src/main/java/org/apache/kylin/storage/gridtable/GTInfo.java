@@ -17,6 +17,7 @@ public class GTInfo {
     IGTCodeSystem codeSystem;
 
     // column schema
+    int nColumns;
     DataType[] colTypes;
     BitSet colAll;
     BitSet colPreferIndex;
@@ -34,9 +35,13 @@ public class GTInfo {
     // must create from builder
     private GTInfo() {
     }
+    
+    public IGTCodeSystem getCodeSystem() {
+        return codeSystem;
+    }
 
     public int getColumnCount() {
-        return colTypes.length;
+        return nColumns;
     }
     
     public DataType getColumnType(int i) {
@@ -73,7 +78,7 @@ public class GTInfo {
     
     public int getMaxColumnLength() {
         int max = 0;
-        for (int i = 0; i < colTypes.length; i++)
+        for (int i = 0; i < nColumns; i++)
             max = Math.max(max, codeSystem.maxCodeLength(i));
         return max;
     }
@@ -94,7 +99,7 @@ public class GTInfo {
 
     public TblColRef colRef(int i) {
         if (colRefs == null) {
-            colRefs = new TblColRef[colTypes.length];
+            colRefs = new TblColRef[nColumns];
         }
         if (colRefs[i] == null) {
             colRefs[i] = GTUtil.tblColRef(i, colTypes[i].toString());
@@ -104,7 +109,7 @@ public class GTInfo {
 
     public void validateColRef(TblColRef ref) {
         TblColRef expected = colRef(ref.getColumnDesc().getZeroBasedIndex());
-        if (expected != ref)
+        if (expected.equals(ref) == false)
             throw new IllegalArgumentException();
     }
 
@@ -123,7 +128,7 @@ public class GTInfo {
 
     private void validateColumnBlocks() {
         colAll = new BitSet();
-        colAll.flip(0, colTypes.length);
+        colAll.flip(0, nColumns);
         
         if (colBlocks == null) {
             colBlocks = new BitSet[2];
@@ -184,6 +189,7 @@ public class GTInfo {
 
         /** required */
         public Builder setColumns(DataType... colTypes) {
+            info.nColumns = colTypes.length;
             info.colTypes = colTypes;
             return this;
         }

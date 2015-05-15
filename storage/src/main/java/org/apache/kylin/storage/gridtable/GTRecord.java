@@ -70,6 +70,18 @@ public class GTRecord implements Comparable<GTRecord> {
         return result;
     }
 
+    public Object[] getValues(int[] selectedColumns, Object[] result) {
+        assert selectedColumns.length <= result.length;
+        for (int i = 0; i < selectedColumns.length; i++) {
+            int c = selectedColumns[i];
+            if (cols[c].array() == null)
+                result[i] = null;
+            else
+                result[i] = info.codeSystem.decodeColumnValue(c, cols[c].asBuffer());
+        }
+        return result;
+    }
+
     public GTRecord copy() {
         return copy(info.colAll);
     }

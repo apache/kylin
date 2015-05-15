@@ -1,29 +1,35 @@
 package org.apache.kylin.storage.gridtable.memstore;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.IGTStore;
 
-import java.io.IOException;
-import java.util.BitSet;
-import java.util.Iterator;
-import java.util.List;
-
 public class GTSimpleMemStore implements IGTStore {
 
+    final GTInfo info;
     final List<GTRowBlock> rowBlockList;
 
     public GTSimpleMemStore(GTInfo info) {
-        this.rowBlockList = Lists.newLinkedList();
+        this.info = info;
+        this.rowBlockList = new ArrayList<GTRowBlock>();
 
         if (info.isShardingEnabled())
             throw new UnsupportedOperationException();
     }
 
     @Override
+    public GTInfo getInfo() {
+        return info;
+    }
+
     public long memoryUsage() {
         if (rowBlockList.size() == 0) {
             return 0;
@@ -98,7 +104,6 @@ public class GTSimpleMemStore implements IGTStore {
         };
     }
 
-    @Override
     public void drop() throws IOException {
         //will there be any concurrent issue? If yes, ArrayList should be replaced
         rowBlockList.clear();

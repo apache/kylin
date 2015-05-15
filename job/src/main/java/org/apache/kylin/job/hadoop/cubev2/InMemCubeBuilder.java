@@ -33,15 +33,24 @@
  */
 package org.apache.kylin.job.hadoop.cubev2;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.Pair;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
@@ -53,19 +62,23 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.cube.CubeGridTable;
-import org.apache.kylin.storage.gridtable.*;
+import org.apache.kylin.storage.gridtable.GTAggregateScanner;
+import org.apache.kylin.storage.gridtable.GTBuilder;
+import org.apache.kylin.storage.gridtable.GTComboStore;
+import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.storage.gridtable.GTScanRequest;
+import org.apache.kylin.storage.gridtable.GridTable;
+import org.apache.kylin.storage.gridtable.IGTScanner;
 import org.apache.kylin.storage.util.SizeOfUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  */
-@SuppressWarnings("rawtypes")
 public class InMemCubeBuilder implements Runnable {
 
     //estimation of (size of aggregation cache) / (size of mem store)
@@ -361,7 +374,7 @@ public class InMemCubeBuilder implements Runnable {
                     createNDCuboidGT(tree, baseCuboidId, childId);
                 }
             }
-            baseCuboidGT.getStore().drop();
+            dropStore(baseCuboidGT);
 
         } catch (IOException e) {
             logger.error("Fail to build cube", e);
@@ -396,8 +409,7 @@ public class InMemCubeBuilder implements Runnable {
                 return true;
             } else {
                 logger.info("memory is low, try to select one node to flush to disk from:" + StringUtils.join(",", gridTables));
-                final IGTStore store = gridTable.data.getStore();
-                assert store instanceof GTComboStore;
+                final GTComboStore store = (GTComboStore) gridTable.data.getStore();
                 if (store.memoryUsage() > 0) {
                     final long storeSize = SizeOfUtil.deepSizeOf(store);
                     memoryLeft += storeSize;
@@ -420,10 +432,11 @@ public class InMemCubeBuilder implements Runnable {
     private void createNDCuboidGT(SimpleGridTableTree parentNode, long parentCuboidId, long cuboidId) throws IOException {
 
         long startTime = System.currentTimeMillis();
-        assert parentNode.data.getStore() instanceof GTComboStore;
-        if (parentNode.data.getStore().memoryUsage() <= 0) {
+        
+        GTComboStore parentStore = (GTComboStore) parentNode.data.getStore();
+        if (parentStore.memoryUsage() <= 0) {
             long t = System.currentTimeMillis();
-            ((GTComboStore) parentNode.data.getStore()).switchToMemStore();
+            parentStore.switchToMemStore();
             logger.info("node " + parentNode.id + " switch to mem store cost:" + (System.currentTimeMillis() - t) + "ms");
         }
 
@@ -448,11 +461,16 @@ public class InMemCubeBuilder implements Runnable {
         startTime = System.currentTimeMillis();
         //output the grid table
         outputGT(cuboidId, currentCuboid);
-        currentCuboid.getStore().drop();
+        dropStore(currentCuboid);
         parentNode.children.remove(node);
         logger.info("Cuboid" + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
 
     }
+
+    private void dropStore(GridTable gt) throws IOException {
+        ((GTComboStore) gt.getStore()).drop();
+    }
+
 
     private void outputGT(Long cuboidId, GridTable gridTable) throws IOException {
         GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, null);
