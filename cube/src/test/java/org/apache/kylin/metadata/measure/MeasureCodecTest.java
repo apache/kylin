@@ -18,20 +18,19 @@
 
 package org.apache.kylin.metadata.measure;
 
-import static org.junit.Assert.*;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.junit.Test;
-
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.FunctionDesc;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author yangli9
@@ -46,7 +45,7 @@ public class MeasureCodecTest {
 
         DoubleWritable d = new DoubleWritable(1.0);
         LongWritable l = new LongWritable(2);
-        BigDecimal b = new BigDecimal("333.1234567");
+        BigDecimal b = new BigDecimal("333.1234");
         HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(16);
         hllc.add("1234567");
         hllc.add("abcdefg");
@@ -62,6 +61,7 @@ public class MeasureCodecTest {
         System.out.println("size: " + buf.limit());
 
         Object copy[] = new Object[values.length];
+
         codec.decode(buf, copy);
 
         assertTrue(Arrays.equals(values, copy));

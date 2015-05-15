@@ -18,12 +18,6 @@
 
 package org.apache.kylin.cube.kv;
 
-import static org.junit.Assert.*;
-
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
@@ -36,6 +30,12 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author George Song (ysong1)
@@ -80,7 +80,22 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
         rowValueDecoder.decode(valueBytes);
         Object[] measureValues = rowValueDecoder.getValues();
-        assertEquals("[333.1234567, 333.1111111, 333.1999999, 2]", Arrays.toString(measureValues));
+        //BigDecimal.ROUND_HALF_EVEN in BigDecimalSerializer
+        assertEquals("[333.1235, 333.1111, 333.2000, 2]", Arrays.toString(measureValues));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testError() throws Exception {
+        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
+        HBaseColumnDesc hbaseCol = cubeDesc.getHBaseMapping().getColumnFamily()[0].getColumns()[0];
+
+        MeasureCodec codec = new MeasureCodec(hbaseCol.getMeasures());
+        BigDecimal sum = new BigDecimal("11111111111111111111333.1234567");
+        BigDecimal min = new BigDecimal("333.1111111");
+        BigDecimal max = new BigDecimal("333.1999999");
+        LongWritable count = new LongWritable(2);
+        ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+        codec.encode(new Object[] { sum, min, max, count }, buf);
+
+    }
 }
