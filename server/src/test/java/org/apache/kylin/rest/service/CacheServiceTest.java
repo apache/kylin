@@ -113,7 +113,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         counter.set(0L);
-        createTestMetadata();
     }
 
     @After
@@ -304,9 +303,9 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
         dataModelDesc.setName(dataModelName);
         metadataManager.createDataModelDesc(dataModelDesc,"default","ADMIN");
-        //only one for data model update
-        assertEquals(1, broadcaster.getCounterAndClear());
-        waitForCounterAndClear(1);
+        //one for data model creation, one for project meta update
+        assertEquals(2, broadcaster.getCounterAndClear());
+        waitForCounterAndClear(2);
         assertEquals(dataModelDesc.getName(), metadataManagerB.getDataModelDesc(dataModelName).getName());
 
         final LookupDesc[] lookups = dataModelDesc.getLookups();
