@@ -18,14 +18,19 @@
 
 package org.apache.kylin.storage.tuple;
 
-import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
-
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
+
+import org.apache.hadoop.hive.serde2.io.DoubleWritable;
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * @author xjiang
@@ -102,6 +107,8 @@ public class Tuple implements ITuple {
     }
 
     public void setMeasureValue(int idx, Object fieldValue) {
+        fieldValue = convertWritableToJava(fieldValue);
+
         String dataType = getDataTypeName(idx);
         // special handling for BigDecimal, allow double be aggregated as
         // BigDecimal during cube build for best precision
@@ -113,6 +120,18 @@ public class Tuple implements ITuple {
             fieldValue = ((BigDecimal) fieldValue).floatValue();
         }
         values[idx] = fieldValue;
+    }
+
+    private Object convertWritableToJava(Object o) {
+        if (o instanceof LongWritable)
+            o = ((LongWritable) o).get();
+        else if (o instanceof IntWritable)
+            o = ((IntWritable) o).get();
+        else if (o instanceof DoubleWritable)
+            o = ((DoubleWritable) o).get();
+        else if (o instanceof FloatWritable)
+            o = ((FloatWritable) o).get();
+        return o;
     }
 
     public boolean hasColumn(TblColRef column) {
