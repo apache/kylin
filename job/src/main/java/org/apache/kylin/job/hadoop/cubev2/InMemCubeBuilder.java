@@ -33,17 +33,8 @@
  */
 package org.apache.kylin.job.hadoop.cubev2;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
@@ -56,26 +47,23 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.cube.CubeGridTable;
-import org.apache.kylin.storage.gridtable.GTAggregateScanner;
-import org.apache.kylin.storage.gridtable.GTBuilder;
-import org.apache.kylin.storage.gridtable.GTComboStore;
-import org.apache.kylin.storage.gridtable.GTInfo;
-import org.apache.kylin.storage.gridtable.GTRecord;
-import org.apache.kylin.storage.gridtable.GTScanRequest;
-import org.apache.kylin.storage.gridtable.GridTable;
-import org.apache.kylin.storage.gridtable.IGTScanner;
+import org.apache.kylin.storage.gridtable.*;
 import org.apache.kylin.storage.util.SizeOfUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
 
 /**
  */
@@ -95,6 +83,9 @@ public class InMemCubeBuilder implements Runnable {
     private String[] metricsAggrFuncs = null;
     private Map<Integer, Integer> dependentMeasures = null; // key: index of Measure which depends on another measure; value: index of Measure which is depended on;
     public static final LongWritable ONE = new LongWritable(1l);
+    private int[] hbaseMeasureRefIndex;
+    private MeasureDesc[] measureDescs;
+    private int measureCount;
 
     protected IGTRecordWriter gtRecordWriter;
 
@@ -120,24 +111,43 @@ public class InMemCubeBuilder implements Runnable {
 
         Map<String, Integer> measureIndexMap = Maps.newHashMap();
         List<String> metricsAggrFuncsList = Lists.newArrayList();
-        final int measureCount = desc.getMeasures().size();
-        for (int i = 0; i < measureCount; i++) {
-            MeasureDesc measureDesc = desc.getMeasures().get(i);
-            metricsAggrFuncsList.add(measureDesc.getFunction().getExpression());
+        measureCount = desc.getMeasures().size();
 
-            measureIndexMap.put(desc.getMeasures().get(i).getName(), i);
+        List<MeasureDesc> measureDescsList = Lists.newArrayList();
+        hbaseMeasureRefIndex = new int[measureCount];
+        int measureRef = 0;
+        for (HBaseColumnFamilyDesc familyDesc : desc.getHbaseMapping().getColumnFamily()) {
+            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
+                for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
+                    for (int j = 0; j < measureCount; j++) {
+                        if (desc.getMeasures().get(j).equals(measure)) {
+                            measureDescsList.add(measure);
+                            hbaseMeasureRefIndex[measureRef] = j;
+                            break;
+                        }
+                    }
+                    measureRef++;
+                }
+            }
+        }
+
+        for (int i = 0; i < measureCount; i++) {
+            MeasureDesc measureDesc = measureDescsList.get(i);
+            metricsAggrFuncsList.add(measureDesc.getFunction().getExpression());
+            measureIndexMap.put(measureDesc.getName(), i);
         }
         this.metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
 
         this.dependentMeasures = Maps.newHashMap();
         for (int i = 0; i < measureCount; i++) {
-            String depMsrRef = desc.getMeasures().get(i).getDependentMeasureRef();
+            String depMsrRef = measureDescsList.get(i).getDependentMeasureRef();
             if (depMsrRef != null) {
                 int index = measureIndexMap.get(depMsrRef);
                 dependentMeasures.put(i, index);
             }
         }
 
+        measureDescs = desc.getMeasures().toArray(new MeasureDesc[measureCount]);
     }
 
 
@@ -191,7 +201,7 @@ public class InMemCubeBuilder implements Runnable {
         try {
             BitSet dependentMetrics = new BitSet(allNeededColumns.cardinality());
             for (Integer i : dependentMeasures.keySet()) {
-                dependentMetrics.set((allNeededColumns.cardinality() - desc.getMeasures().size() + dependentMeasures.get(i)));
+                dependentMetrics.set((allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)));
             }
 
             Object[] hllObjects = new Object[dependentMeasures.keySet().size()];
@@ -207,13 +217,13 @@ public class InMemCubeBuilder implements Runnable {
 
                 for (Integer i : dependentMeasures.keySet()) {
                     for (int index = 0, c = dependentMetrics.nextSetBit(0); c >= 0; index++, c = dependentMetrics.nextSetBit(c + 1)) {
-                        if (c == allNeededColumns.cardinality() - desc.getMeasures().size() + dependentMeasures.get(i)) {
+                        if (c == allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)) {
                             assert hllObjects[index] instanceof HyperLogLogPlusCounter; // currently only HLL is allowed
 
                             byteBuffer.clear();
                             BytesUtil.writeVLong(((HyperLogLogPlusCounter) hllObjects[index]).getCountEstimate(), byteBuffer);
                             byteArray.set(byteBuffer.array(), 0, byteBuffer.position());
-                            newRecord.set(allNeededColumns.cardinality() - desc.getMeasures().size() + i, byteArray);
+                            newRecord.set(allNeededColumns.cardinality() - measureCount + i, byteArray);
                         }
                     }
 
@@ -234,7 +244,7 @@ public class InMemCubeBuilder implements Runnable {
         BitSet dimension = new BitSet();
         dimension.set(0, bitSet.cardinality());
         BitSet metrics = new BitSet();
-        metrics.set(bitSet.cardinality(), bitSet.cardinality() + this.desc.getMeasures().size());
+        metrics.set(bitSet.cardinality(), bitSet.cardinality() + this.measureCount);
         return new Pair<BitSet, BitSet>(dimension, metrics);
     }
 
@@ -251,10 +261,13 @@ public class InMemCubeBuilder implements Runnable {
 
     private Object[] buildValue(List<String> row) {
 
-        Object[] values = new Object[desc.getMeasures().size()];
+        Object[] values = new Object[measureCount];
         MeasureDesc measureDesc = null;
-        for (int i = 0, n = desc.getMeasures().size(); i < n; i++) {
-            measureDesc = desc.getMeasures().get(i);
+
+        for (int position = 0; position < hbaseMeasureRefIndex.length; position++) {
+            int i = hbaseMeasureRefIndex[position];
+            measureDesc = measureDescs[i];
+
             Object value = null;
             int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[i];
             FunctionDesc function = desc.getMeasures().get(i).getFunction();
@@ -281,7 +294,7 @@ public class InMemCubeBuilder implements Runnable {
                 }
                 value = measureCodec.getSerializer(i).valueOf(result);
             }
-            values[i] = value;
+            values[position] = value;
         }
         return values;
     }
@@ -432,7 +445,7 @@ public class InMemCubeBuilder implements Runnable {
     private void createNDCuboidGT(SimpleGridTableTree parentNode, long parentCuboidId, long cuboidId) throws IOException {
 
         long startTime = System.currentTimeMillis();
-        
+
         GTComboStore parentStore = (GTComboStore) parentNode.data.getStore();
         if (parentStore.memoryUsage() <= 0) {
             long t = System.currentTimeMillis();
@@ -502,7 +515,8 @@ public class InMemCubeBuilder implements Runnable {
         }
     }
 
-    private static class SimpleGridTableTree extends TreeNode<GridTable> {}
+    private static class SimpleGridTableTree extends TreeNode<GridTable> {
+    }
 
 
 }
