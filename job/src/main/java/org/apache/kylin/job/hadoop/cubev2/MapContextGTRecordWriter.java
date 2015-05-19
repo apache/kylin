@@ -1,21 +1,26 @@
 package org.apache.kylin.job.hadoop.cubev2;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
+import java.util.List;
 
 /**
  */
@@ -29,17 +34,39 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
 
     private int bytesLength;
     private int dimensions;
+    private int measureCount;
     private byte[] keyBuf;
     private int[] measureColumnsIndex;
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
     private ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
     private Text outputValue = new Text();
-    long cuboidRowCount = 0;
+    private long cuboidRowCount = 0;
+    private int[] hbaseMeasureRefIndex;
 
     public MapContextGTRecordWriter(MapContext<?, ?, ImmutableBytesWritable, Text> mapContext, CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.mapContext = mapContext;
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
+        this.measureCount = cubeDesc.getMeasures().size();
+        hbaseMeasureRefIndex = new int[measureCount];
+
+        List<MeasureDesc> hbaseMeasureList = Lists.newArrayList();
+        for (HBaseColumnFamilyDesc familyDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
+            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
+                for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
+                    hbaseMeasureList.add(measure);
+                }
+            }
+        }
+
+        for (int i = 0; i < measureCount; i++) {
+            for (int j = 0; j < measureCount; j++) {
+                if (cubeDesc.getMeasures().get(i).equals(hbaseMeasureList.get(j))) {
+                    hbaseMeasureRefIndex[i] = j;
+                    break;
+                }
+            }
+        }
 
     }
 
@@ -49,7 +76,7 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
         if (lastCuboidId == null || !lastCuboidId.equals(cuboidId)) {
             // output another cuboid
             initVariables(cuboidId);
-            if(lastCuboidId != null) {
+            if (lastCuboidId != null) {
                 logger.info("Cuboid " + lastCuboidId + " has " + cuboidRowCount + " rows");
                 cuboidRowCount = 0;
             }
@@ -84,9 +111,9 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
 
         keyBuf = new byte[bytesLength];
         dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
-        measureColumnsIndex = new int[cubeDesc.getMeasures().size()];
-        for(int i =0; i< cubeDesc.getMeasures().size(); i++) {
-            measureColumnsIndex[i] = dimensions + i;
+        measureColumnsIndex = new int[measureCount];
+        for (int i = 0; i < measureCount; i++) {
+            measureColumnsIndex[i] = dimensions + hbaseMeasureRefIndex[i];
         }
 
         System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
