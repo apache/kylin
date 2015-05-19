@@ -86,6 +86,7 @@ public class InMemCubeBuilder implements Runnable {
     private int[] hbaseMeasureRefIndex;
     private MeasureDesc[] measureDescs;
     private int measureCount;
+    private boolean hasDependentMeasure = false;
 
     protected IGTRecordWriter gtRecordWriter;
 
@@ -147,7 +148,9 @@ public class InMemCubeBuilder implements Runnable {
             }
         }
 
-        measureDescs = desc.getMeasures().toArray(new MeasureDesc[measureCount]);
+        this.hasDependentMeasure = dependentMeasures.size() > 0;
+
+        this.measureDescs = desc.getMeasures().toArray(new MeasureDesc[measureCount]);
     }
 
 
@@ -212,21 +215,23 @@ public class InMemCubeBuilder implements Runnable {
                     newRecord.set(index, record.get(i));
                 }
 
-                // update measures which have 'dependent_measure_ref'
-                newRecord.getValues(dependentMetrics, hllObjects);
+                if(hasDependentMeasure) {
+                    // update measures which have 'dependent_measure_ref'
+                    newRecord.getValues(dependentMetrics, hllObjects);
 
-                for (Integer i : dependentMeasures.keySet()) {
-                    for (int index = 0, c = dependentMetrics.nextSetBit(0); c >= 0; index++, c = dependentMetrics.nextSetBit(c + 1)) {
-                        if (c == allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)) {
-                            assert hllObjects[index] instanceof HyperLogLogPlusCounter; // currently only HLL is allowed
+                    for (Integer i : dependentMeasures.keySet()) {
+                        for (int index = 0, c = dependentMetrics.nextSetBit(0); c >= 0; index++, c = dependentMetrics.nextSetBit(c + 1)) {
+                            if (c == allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)) {
+                                assert hllObjects[index] instanceof HyperLogLogPlusCounter; // currently only HLL is allowed
 
-                            byteBuffer.clear();
-                            BytesUtil.writeVLong(((HyperLogLogPlusCounter) hllObjects[index]).getCountEstimate(), byteBuffer);
-                            byteArray.set(byteBuffer.array(), 0, byteBuffer.position());
-                            newRecord.set(allNeededColumns.cardinality() - measureCount + i, byteArray);
+                                byteBuffer.clear();
+                                BytesUtil.writeVLong(((HyperLogLogPlusCounter) hllObjects[index]).getCountEstimate(), byteBuffer);
+                                byteArray.set(byteBuffer.array(), 0, byteBuffer.position());
+                                newRecord.set(allNeededColumns.cardinality() - measureCount + i, byteArray);
+                            }
                         }
-                    }
 
+                    }
                 }
 
                 builder.write(newRecord);
