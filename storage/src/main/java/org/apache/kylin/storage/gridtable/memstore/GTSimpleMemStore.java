@@ -11,6 +11,7 @@ import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.IGTStore;
+import org.apache.kylin.storage.gridtable.*;
 
 public class GTSimpleMemStore implements IGTStore {
 
@@ -73,6 +74,7 @@ public class GTSimpleMemStore implements IGTStore {
             } else {
                 assert id == rowBlockList.size();
                 rowBlockList.add(copy);
+                MemoryChecker.checkMemory();
             }
         }
     }
