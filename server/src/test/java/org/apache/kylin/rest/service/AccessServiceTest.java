@@ -108,7 +108,7 @@ public class AccessServiceTest extends ServiceTestBase {
 
         // test revoke
         acl = accessService.revoke(ae, modelerEntryId);
-        Assert.assertTrue(accessService.generateAceResponses(acl).size() == 1);
+        Assert.assertEquals(1,accessService.generateAceResponses(acl).size() );
 
         // test clean
         accessService.clean(ae, true);

@@ -18,18 +18,17 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.util.List;
-
+import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.apache.kylin.rest.request.AccessRequest;
-import org.apache.kylin.rest.service.ServiceTestBase;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * @author xduo
@@ -83,6 +82,6 @@ public class AccessControllerTest extends ServiceTestBase {
         accessRequest.setAccessEntryId(aeId);
         accessRequest.setPermission("READ");
         aes = accessController.revoke("CubeInstance", "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
-        Assert.assertTrue(aes.size() == 0);
+        Assert.assertEquals(0, aes.size());
     }
 }

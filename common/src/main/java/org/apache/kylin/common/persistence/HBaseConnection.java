@@ -100,6 +100,10 @@ public class HBaseConnection {
         createHTableIfNeeded(HBaseConnection.get(hbaseUrl), tableName, families);
     }
 
+    public static void deleteTable(String hbaseUrl, String tableName) throws IOException {
+        deleteTable(HBaseConnection.get(hbaseUrl), tableName);
+    }
+
     public static void createHTableIfNeeded(HConnection conn, String tableName, String... families) throws IOException {
         HBaseAdmin hbase = new HBaseAdmin(conn);
 
@@ -127,4 +131,27 @@ public class HBaseConnection {
             hbase.close();
         }
     }
+
+    public static void deleteTable(HConnection conn, String tableName) throws IOException {
+        HBaseAdmin hbase = new HBaseAdmin(conn);
+
+        try {
+            if (!tableExists(conn, tableName)) {
+                logger.debug("HTable '" + tableName + "' does not exists");
+                return;
+            }
+
+            logger.debug("delete HTable '" + tableName + "'");
+
+            if (hbase.isTableEnabled(tableName)) {
+                hbase.disableTable(tableName);
+            }
+            hbase.deleteTable(tableName);
+
+            logger.debug("HTable '" + tableName + "' deleted");
+        } finally {
+            hbase.close();
+        }
+    }
+
 }

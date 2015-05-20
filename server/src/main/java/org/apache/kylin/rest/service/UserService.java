@@ -18,33 +18,27 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.security.UserManager;
+import org.apache.kylin.rest.util.AclHBaseStorage;
+import org.apache.kylin.rest.util.Serializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.HBaseConnection;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.rest.util.Serializer;
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author xduo
@@ -55,37 +49,29 @@ public class UserService implements UserManager {
 
     private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
-    public static final String USER_AUTHORITY_FAMILY = "a";
-    private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
-    private static final String USER_TABLE_NAME = "_user";
-    private static final String USER_AUTHORITY_COLUMN = "c";
-    private String hbaseUrl = null;
-    private String tableNameBase = null;
     private String userTableName = null;
 
-    public UserService() throws IOException {
-        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
-        // split TABLE@HBASE_URL
-        int cut = metadataUrl.indexOf('@');
-        tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
-        hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
-        userTableName = tableNameBase + USER_TABLE_NAME;
-        HBaseConnection.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
+    @Autowired
+    protected AclHBaseStorage aclHBaseStorage;
+
+    @PostConstruct
+    public void init() throws IOException {
+        userTableName = aclHBaseStorage.prepareHBaseTable(UserService.class);
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         HTableInterface htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = aclHBaseStorage.getTable(userTableName);
 
             Get get = new Get(Bytes.toBytes(username));
-            get.addFamily(Bytes.toBytes(USER_AUTHORITY_FAMILY));
+            get.addFamily(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY));
             Result result = htable.get(get);
 
             Collection<? extends GrantedAuthority> authorities = null;
             if (null != result && !result.isEmpty()) {
-                byte[] gaBytes = result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
+                byte[] gaBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
                 authorities = Arrays.asList(ugaSerializer.deserialize(gaBytes));
             } else {
                 throw new UsernameNotFoundException("User " + username + " not found.");
@@ -109,9 +95,10 @@ public class UserService implements UserManager {
         HTableInterface htable = null;
         try {
             byte[] userAuthorities = serialize(user.getAuthorities());
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = aclHBaseStorage.getTable(userTableName);
+
             Put put = new Put(Bytes.toBytes(user.getUsername()));
-            put.add(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN), userAuthorities);
+            put.add(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), userAuthorities);
 
             htable.put(put);
             htable.flushCommits();
@@ -126,7 +113,8 @@ public class UserService implements UserManager {
     public void deleteUser(String username) {
         HTableInterface htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = aclHBaseStorage.getTable(userTableName);
+
             Delete delete = new Delete(Bytes.toBytes(username));
 
             htable.delete(delete);
@@ -147,7 +135,8 @@ public class UserService implements UserManager {
     public boolean userExists(String username) {
         HTableInterface htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = aclHBaseStorage.getTable(userTableName);
+
             Result result = htable.get(new Get(Bytes.toBytes(username)));
 
             return null != result && !result.isEmpty();
@@ -161,17 +150,17 @@ public class UserService implements UserManager {
     @Override
     public List<String> getUserAuthorities() {
         Scan s = new Scan();
-        s.addColumn(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
+        s.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
 
         List<String> authorities = new ArrayList<String>();
         HTableInterface htable = null;
         ResultScanner scanner = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = aclHBaseStorage.getTable(userTableName);
             scanner = htable.getScanner(s);
 
             for (Result result = scanner.next(); result != null; result = scanner.next()) {
-                byte[] uaBytes = result.getValue(Bytes.toBytes(USER_AUTHORITY_FAMILY), Bytes.toBytes(USER_AUTHORITY_COLUMN));
+                byte[] uaBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
                 Collection<? extends GrantedAuthority> authCollection = Arrays.asList(ugaSerializer.deserialize(uaBytes));
 
                 for (GrantedAuthority auth : authCollection) {

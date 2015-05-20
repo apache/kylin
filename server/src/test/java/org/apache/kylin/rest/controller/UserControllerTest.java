@@ -18,10 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,6 +30,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author xduo
  */
@@ -43,6 +43,7 @@ public class UserControllerTest extends ServiceTestBase {
 
     @BeforeClass
     public static void setupResource() {
+        staticCreateTestMetadata(LOCALMETA_TEST_DATA);
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
         User user = new User("ADMIN", "ADMIN", authorities);
         Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", "ROLE_ADMIN");
