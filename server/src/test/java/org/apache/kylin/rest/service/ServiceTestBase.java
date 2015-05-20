@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.invertedindex.IIManager;
@@ -37,13 +37,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author xduo
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {"classpath:applicationContext.xml", "classpath:kylinSecurity.xml"})
+@ContextConfiguration(locations = { "classpath:applicationContext.xml", "classpath:kylinSecurity.xml" })
 @ActiveProfiles("testing")
-public class ServiceTestBase extends HBaseMetadataTestCase {
+public class ServiceTestBase extends LocalFileMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {
-        staticCreateTestMetadata();
+        staticCreateTestMetadata(LOCALMETA_TEST_DATA);
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }

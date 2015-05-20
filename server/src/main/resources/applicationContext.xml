@@ -60,6 +60,8 @@
 		<property name="ignoreResourceNotFound" value="true" />
 	</bean>
 
+	<bean id="aclHBaseStorage" class="org.apache.kylin.rest.util.MockAclHBaseStorage"/>
+
 	<!-- Rest service binding -->
 	<bean
 		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />

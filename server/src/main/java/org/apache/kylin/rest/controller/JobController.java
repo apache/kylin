@@ -18,15 +18,15 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.request.JobListRequest;
+import org.apache.kylin.rest.service.JobService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -37,14 +37,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.constant.JobStatusEnum;
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.request.JobListRequest;
-import org.apache.kylin.rest.service.JobService;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author ysong1
@@ -84,9 +78,9 @@ public class JobController extends BasicController implements InitializingBean {
                     try {
                         DefaultScheduler scheduler = DefaultScheduler.getInstance();
                         scheduler.init(new JobEngineConfig(kylinConfig));
-                        if (!scheduler.hasStarted()) {
+                        while (!scheduler.hasStarted()) {
                             logger.error("scheduler has not been started");
-                            System.exit(1);
+                            Thread.sleep(1000);
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
