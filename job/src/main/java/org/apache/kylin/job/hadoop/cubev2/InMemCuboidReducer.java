@@ -7,13 +7,11 @@ import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinReducer;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.job.hadoop.cube.KeyValueCreator;
 import org.apache.kylin.metadata.measure.MeasureAggregators;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -21,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -37,12 +34,8 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
     private Object[] input;
     private Object[] result;
 
-    private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-
-    List<KeyValueCreator> keyValueCreators;
-    private boolean simpleFullCopy = false;
+    List<InMemKeyValueCreator> keyValueCreators;
     private int nColumns = 0;
-//    private Text keyText = new Text();
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -52,7 +45,15 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         CubeDesc cubeDesc = CubeManager.getInstance(config).getCube(cubeName).getDescriptor();
-        List<MeasureDesc> measuresDescs = cubeDesc.getMeasures();
+
+        List<MeasureDesc> measuresDescs = Lists.newArrayList();
+        for (HBaseColumnFamilyDesc familyDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
+            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
+                for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
+                    measuresDescs.add(measure);
+                }
+            }
+        }
 
         codec = new MeasureCodec(measuresDescs);
         aggs = new MeasureAggregators(measuresDescs);
@@ -62,20 +63,20 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
 
         keyValueCreators = Lists.newArrayList();
 
+        int startPosition = 0;
         for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
+                keyValueCreators.add(new InMemKeyValueCreator(colDesc, startPosition));
+                startPosition += colDesc.getMeasures().length;
             }
         }
 
-        simpleFullCopy = (keyValueCreators.size() == 1 && keyValueCreators.get(0).isFullCopy);
         nColumns = keyValueCreators.size();
     }
 
     @Override
     public void reduce(ImmutableBytesWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
-//        keyText.set(key.get());
         aggs.reset();
 
         for (Text value : values) {
@@ -86,21 +87,9 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
 
         KeyValue outputValue;
 
-        if (simpleFullCopy) { // shortcut for
-            // simple full copy
-
-            valueBuf.clear();
-            codec.encode(result, valueBuf);
-            outputValue = keyValueCreators.get(0).create(key.get(), 0, key.getLength(), valueBuf.array(), 0, valueBuf.position());
+        for (int i = 0; i < nColumns; i++) {
+            outputValue = keyValueCreators.get(i).create(key.get(), 0, key.getLength(), result);
             context.write(key, outputValue);
-
-        } else { // normal (complex) case that distributes measures to multiple
-            // HBase columns
-
-            for (int i = 0; i < nColumns; i++) {
-                outputValue = keyValueCreators.get(i).create(key.get(), 0, key.getLength(), result);
-                context.write(key, outputValue);
-            }
         }
         counter++;
         if (counter % BatchConstants.COUNTER_MAX == 0) {
