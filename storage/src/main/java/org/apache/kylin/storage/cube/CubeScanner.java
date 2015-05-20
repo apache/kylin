@@ -10,10 +10,8 @@ import java.util.Set;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRawScanner;
@@ -42,10 +40,11 @@ public class CubeScanner implements IGTScanner {
         this.info = CubeGridTable.newGTInfo(cubeSeg, cuboid.getId());
         this.store = new CubeHBaseReadonlyStore(info, cubeSeg, cuboid);
 
-        TupleFilter gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, cuboid.getColumns(), groups);
-        BitSet gtDimensions = makeGridTableColumns(cuboid, dimensions);
-        BitSet gtAggrGroups = makeGridTableColumns(cuboid, groups);
-        BitSet gtAggrMetrics = makeGridTableColumns(cubeSeg.getCubeDesc(), cuboid, metrics);
+        CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(cuboid);
+        TupleFilter gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, mapping.getCuboidDimensionsInGTOrder(), groups);
+        BitSet gtDimensions = makeGridTableColumns(mapping, dimensions);
+        BitSet gtAggrGroups = makeGridTableColumns(mapping, groups);
+        BitSet gtAggrMetrics = makeGridTableColumns(mapping, metrics);
         String[] gtAggrFuncs = makeAggrFuncs(metrics);
 
         GTScanRangePlanner scanRangePlanner = new GTScanRangePlanner(info);
@@ -59,32 +58,24 @@ public class CubeScanner implements IGTScanner {
         scanner = new Scanner();
     }
 
-    private BitSet makeGridTableColumns(Cuboid cuboid, Set<TblColRef> dimensions) {
+    private BitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Set<TblColRef> dimensions) {
         BitSet result = new BitSet();
-        List<TblColRef> dimCols = cuboid.getColumns();
-        for (int i = 0; i < dimCols.size(); i++) {
-            if (dimensions.contains(dimCols.get(i))) {
-                result.set(i);
-            }
+        for (TblColRef dim : dimensions) {
+            int idx = mapping.getIndexOf(dim);
+            if (idx < 0)
+                throw new IllegalStateException(dim + " not found in " + mapping);
+            result.set(idx);
         }
         return result;
     }
 
-    private BitSet makeGridTableColumns(CubeDesc cubeDesc, Cuboid cuboid, Collection<FunctionDesc> metrics) {
+    private BitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Collection<FunctionDesc> metrics) {
         BitSet result = new BitSet();
-        int metricsIndexStart = cuboid.getColumns().size();
         for (FunctionDesc metric : metrics) {
-            int index = 0;
-            for (MeasureDesc measure : cubeDesc.getMeasures()) {
-                if (metric.equals(measure.getFunction())) {
-                    break;
-                }
-                index++;
-            }
-            if (index == cubeDesc.getMeasures().size())
-                throw new IllegalStateException(metric + " not found in " + cubeDesc);
-
-            result.set(metricsIndexStart + index);
+            int idx = mapping.getIndexOf(metric);
+            if (idx < 0)
+                throw new IllegalStateException(metric + " not found in " + mapping);
+            result.set(idx);
         }
         return result;
     }
