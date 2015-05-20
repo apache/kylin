@@ -62,9 +62,8 @@ public class CubeScanner implements IGTScanner {
         BitSet result = new BitSet();
         for (TblColRef dim : dimensions) {
             int idx = mapping.getIndexOf(dim);
-            if (idx < 0)
-                throw new IllegalStateException(dim + " not found in " + mapping);
-            result.set(idx);
+            if (idx >= 0)
+                result.set(idx);
         }
         return result;
     }

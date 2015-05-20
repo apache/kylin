@@ -41,32 +41,12 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
     private ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
     private Text outputValue = new Text();
     private long cuboidRowCount = 0;
-    private int[] hbaseMeasureRefIndex;
 
     public MapContextGTRecordWriter(MapContext<?, ?, ImmutableBytesWritable, Text> mapContext, CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.mapContext = mapContext;
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
         this.measureCount = cubeDesc.getMeasures().size();
-        hbaseMeasureRefIndex = new int[measureCount];
-
-        List<MeasureDesc> hbaseMeasureList = Lists.newArrayList();
-        for (HBaseColumnFamilyDesc familyDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
-                for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
-                    hbaseMeasureList.add(measure);
-                }
-            }
-        }
-
-        for (int i = 0; i < measureCount; i++) {
-            for (int j = 0; j < measureCount; j++) {
-                if (cubeDesc.getMeasures().get(i).equals(hbaseMeasureList.get(j))) {
-                    hbaseMeasureRefIndex[i] = j;
-                    break;
-                }
-            }
-        }
 
     }
 
@@ -113,7 +93,7 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
         dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
         measureColumnsIndex = new int[measureCount];
         for (int i = 0; i < measureCount; i++) {
-            measureColumnsIndex[i] = dimensions + hbaseMeasureRefIndex[i];
+            measureColumnsIndex[i] = dimensions + i;
         }
 
         System.arraycopy(Bytes.toBytes(cuboidId), 0, keyBuf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);

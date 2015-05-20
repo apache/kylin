@@ -62,10 +62,10 @@ public class CuboidToGridTableMapping {
                 BitSet colBlock = new BitSet();
                 for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
                     // count distinct & holistic count distinct are equals() but different
-                    // assert the holistic version if exists always comes later
+                    // assert the holistic version if exists always comes earlier
                     FunctionDesc func = measure.getFunction();
                     if (func.isHolisticCountDistinct()) {
-                        if (metrics2gt.get(func).size() != 1)
+                        if (metrics2gt.get(func).size() > 0 )
                             throw new IllegalStateException();
                     }
                     gtDataTypes.add(func.getReturnDataType());
@@ -118,7 +118,7 @@ public class CuboidToGridTableMapping {
         // count distinct & its holistic version
         else if (list.size() == 2) {
             assert metric.isCountDistinct();
-            return metric.isHolisticCountDistinct() ? list.get(1) : list.get(0);
+            return metric.isHolisticCountDistinct() ? list.get(0) : list.get(1);
         }
         // unexpected
         else
