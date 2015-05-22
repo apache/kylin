@@ -24,6 +24,8 @@ Advanced Topics
 
 2.[Kylin ODBC Driver Tutorial](docs/Tutorial/Kylin ODBC Driver Tutorial.md) 
 
+3.[SQL Reference](https://github.com/apache/incubator-calcite/blob/master/doc/reference.md)
+
 ####REST
 
 1.[Kylin Restful API List](docs/REST/Kylin Restful API List.md)
