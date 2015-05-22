@@ -1,4 +1,4 @@
-package org.apache.kylin.job.hadoop.cubev2;
+package org.apache.kylin.streaming.cube;
 
 import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
@@ -13,7 +13,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  */
-@Ignore
 public class InMemCubeBuilderBenchmarkTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCubeBuilderBenchmarkTest.class);

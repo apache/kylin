@@ -48,16 +48,14 @@ public abstract class StreamBuilder implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
 
-    private static final int BATCH_BUILD_INTERVAL_THRESHOLD = 2 * 60 * 1000;
-    private final int sliceSize;
+
     private StreamParser streamParser = StringStreamParser.instance;
 
     private BlockingQueue<StreamMessage> streamMessageQueue;
     private long lastBuildTime = System.currentTimeMillis();
 
-    public StreamBuilder(BlockingQueue<StreamMessage> streamMessageQueue, int sliceSize) {
+    public StreamBuilder(BlockingQueue<StreamMessage> streamMessageQueue) {
         this.streamMessageQueue = streamMessageQueue;
-        this.sliceSize = sliceSize;
     }
 
     protected abstract void build(List<StreamMessage> streamsToBuild) throws Exception;
@@ -81,10 +79,11 @@ public abstract class StreamBuilder implements Runnable {
                     logger.warn("stream queue interrupted", e);
                     continue;
                 }
-                if (streamMessage == null) {
-
-                    logger.info("The stream queue is drained, current available stream count: " + streamMessageToBuild.size());
-                    if ((System.currentTimeMillis() - lastBuildTime) > BATCH_BUILD_INTERVAL_THRESHOLD) {
+                if (streamMessage == null || getStreamParser().parse(streamMessage) == null) {
+                    if (streamMessage == null) {
+                        logger.info("The stream queue is drained, current available stream count: " + streamMessageToBuild.size());
+                    }
+                    if ((System.currentTimeMillis() - lastBuildTime) > batchInterval()) {
                         build(streamMessageToBuild);
                         clearCounter();
                         streamMessageToBuild.clear();
@@ -98,7 +97,7 @@ public abstract class StreamBuilder implements Runnable {
                     }
                 }
                 streamMessageToBuild.add(streamMessage);
-                if (streamMessageToBuild.size() >= this.sliceSize) {
+                if (streamMessageToBuild.size() >= batchSize()) {
                     build(streamMessageToBuild);
                     clearCounter();
                     streamMessageToBuild.clear();
@@ -117,4 +116,7 @@ public abstract class StreamBuilder implements Runnable {
     public final void setStreamParser(StreamParser streamParser) {
         this.streamParser = streamParser;
     }
+
+    protected abstract int batchInterval();
+    protected abstract int batchSize();
 }
