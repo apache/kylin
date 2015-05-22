@@ -187,10 +187,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;
-              MessageService.sendMsg($scope.cubeResultTmpl({
-                'text': 'Updated the cube successfully.',
-                type: 'success'
-              }), 'success', {}, true, 'top_center');
+
+              SweetAlert.swal('', 'Updated the cube successfully.', 'success');
+
+              $location.path("/cubes");
 
               if (design_form) {
                 design_form.$invalid = true;
@@ -233,11 +233,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;
+              
+              SweetAlert.swal('', 'Created the cube successfully.', 'success');
 
-              MessageService.sendMsg($scope.cubeResultTmpl({
-                'text': 'Created the cube successfully.',
-                type: 'success'
-              }), 'success', {}, true, 'top_center');
+              $location.path("/cubes");
+
             } else {
               $scope.saveCubeRollBack();
               $scope.cubeMetaFrame.project = $scope.state.project;
