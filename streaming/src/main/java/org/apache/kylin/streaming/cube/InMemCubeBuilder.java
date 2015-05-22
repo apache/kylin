@@ -31,7 +31,7 @@
  *
  * /
  */
-package org.apache.kylin.job.hadoop.cubev2;
+package org.apache.kylin.streaming.cube;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -96,7 +96,7 @@ public class InMemCubeBuilder implements Runnable {
      */
     public InMemCubeBuilder(BlockingQueue<List<String>> queue, CubeInstance cube, Map<TblColRef, Dictionary<?>> dictionaryMap, IGTRecordWriter gtRecordWriter) {
         if (dictionaryMap == null || dictionaryMap.isEmpty()) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("dictionary cannot be empty");
         }
         this.queue = queue;
         this.desc = cube.getDescriptor();

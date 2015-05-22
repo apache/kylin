@@ -20,6 +20,7 @@ import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.streaming.cube.InMemCubeBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;

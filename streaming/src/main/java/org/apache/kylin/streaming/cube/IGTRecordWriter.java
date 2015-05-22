@@ -1,4 +1,4 @@
-package org.apache.kylin.job.hadoop.cubev2;
+package org.apache.kylin.streaming.cube;
 
 import org.apache.kylin.storage.gridtable.GTRecord;
 

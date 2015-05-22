@@ -75,6 +75,9 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("iiName")
     private String iiName;
 
+    @JsonProperty("cubeName")
+    private String cubeName;
+
     @JsonProperty("parserName")
     private String parserName;
 
@@ -85,7 +88,6 @@ public class KafkaConfig extends RootPersistentEntity {
     public void setParserName(String parserName) {
         this.parserName = parserName;
     }
-
 
     public int getTimeout() {
         return timeout;
@@ -131,6 +133,14 @@ public class KafkaConfig extends RootPersistentEntity {
                 return new Broker(input.getId(), input.getHost(), input.getPort());
             }
         });
+    }
+
+    public String getCubeName() {
+        return cubeName;
+    }
+
+    public void setCubeName(String cubeName) {
+        this.cubeName = cubeName;
     }
 
     public String getIiName() {

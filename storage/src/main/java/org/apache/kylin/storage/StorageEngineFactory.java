@@ -29,6 +29,7 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.cache.CacheFledgedDynamicStorageEngine;
 import org.apache.kylin.storage.cache.CacheFledgedStaticStorageEngine;
+import org.apache.kylin.storage.hbase.CubeStorageEngine;
 import org.apache.kylin.storage.hbase.InvertedIndexStorageEngine;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridStorageEngine;
@@ -51,7 +52,7 @@ public class StorageEngineFactory {
                 return ret;
             }
         } else if (realization.getType() == RealizationType.CUBE) {
-            ICachableStorageEngine ret = new org.apache.kylin.storage.cube.CubeStorageEngine((CubeInstance) realization);
+            ICachableStorageEngine ret = new CubeStorageEngine((CubeInstance) realization);
             if (allowStorageLayerCache) {
                 return wrapWithCache(ret, realization);
             } else {

@@ -35,6 +35,7 @@
 package org.apache.kylin.job.streaming;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
@@ -42,20 +43,22 @@ import kafka.javaapi.PartitionMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.streaming.*;
 import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  */
@@ -65,14 +68,12 @@ public class StreamingBootstrap {
 
     private KylinConfig kylinConfig;
     private StreamingManager streamingManager;
-    private IIManager iiManager;
 
     private Map<String, KafkaConsumer> kafkaConsumers = Maps.newConcurrentMap();
 
     private StreamingBootstrap(KylinConfig kylinConfig) {
         this.kylinConfig = kylinConfig;
         this.streamingManager = StreamingManager.getInstance(kylinConfig);
-        this.iiManager = IIManager.getInstance(kylinConfig);
     }
 
     public static StreamingBootstrap getInstance(KylinConfig kylinConfig) {
@@ -115,10 +116,73 @@ public class StreamingBootstrap {
     public void start(String streaming, int partitionId) throws Exception {
         final KafkaConfig kafkaConfig = streamingManager.getKafkaConfig(streaming);
         Preconditions.checkArgument(kafkaConfig != null, "cannot find kafka config:" + streaming);
-        final IIInstance ii = iiManager.getII(kafkaConfig.getIiName());
-        Preconditions.checkNotNull(ii, "cannot find ii name:" + kafkaConfig.getIiName());
+
         final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaConfig).getPartitionIds().size();
         Preconditions.checkArgument(partitionId >= 0 && partitionId < partitionCount, "invalid partition id:" + partitionId);
+
+        if (!StringUtils.isEmpty(kafkaConfig.getIiName())) {
+            startIIStreaming(kafkaConfig, partitionId, partitionCount);
+        } else if (!StringUtils.isEmpty(kafkaConfig.getCubeName())) {
+            startCubeStreaming(kafkaConfig, partitionId, partitionCount);
+        } else {
+            throw new IllegalArgumentException("no cube or ii in kafka config");
+        }
+    }
+
+    private List<BlockingQueue<StreamMessage>> consume(KafkaConfig kafkaConfig, final int partitionCount) {
+        List<BlockingQueue<StreamMessage>> result = Lists.newArrayList();
+        for (int partitionId = 0 ; partitionId < partitionCount && partitionId < 10; ++partitionId) {
+            final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
+            long streamingOffset = getEarliestStreamingOffset(kafkaConfig.getName(), 0, 0);
+            final long latestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.LatestTime(), leadBroker, kafkaConfig);
+            streamingOffset = Math.max(streamingOffset, latestOffset);
+            KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId,
+                    streamingOffset, kafkaConfig.getBrokers(), kafkaConfig, 1);
+            Executors.newSingleThreadExecutor().submit(consumer);
+            result.add(consumer.getStreamQueue(0));
+        }
+        return result;
+    }
+
+    private void startCubeStreaming(KafkaConfig kafkaConfig, final int partitionId, final int partitionCount) throws Exception {
+        final String cubeName = kafkaConfig.getCubeName();
+        final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
+
+        final List<BlockingQueue<StreamMessage>> queues = consume(kafkaConfig, partitionCount);
+        final LinkedBlockingDeque<StreamMessage> streamQueue = new LinkedBlockingDeque<>();
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    for (BlockingQueue<StreamMessage> queue : queues) {
+                        try {
+                            streamQueue.put(queue.take());
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }
+        });
+        CubeStreamBuilder cubeStreamBuilder = new CubeStreamBuilder(streamQueue, cubeName);
+        cubeStreamBuilder.setStreamParser(getStreamParser(kafkaConfig, cubeInstance.getAllColumns()));
+        final Future<?> future = Executors.newSingleThreadExecutor().submit(cubeStreamBuilder);
+        future.get();
+    }
+
+    private StreamParser getStreamParser(KafkaConfig kafkaConfig, List<TblColRef> columns) throws Exception {
+        if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
+            Class clazz = Class.forName(kafkaConfig.getParserName());
+            Constructor constructor = clazz.getConstructor(List.class);
+            return (StreamParser) constructor.newInstance(columns);
+        } else {
+            return new JsonStreamParser(columns);
+        }
+    }
+
+    private void startIIStreaming(KafkaConfig kafkaConfig, final int partitionId, final int partitionCount) throws Exception {
+        final IIInstance ii = IIManager.getInstance(this.kylinConfig).getII(kafkaConfig.getIiName());
+        Preconditions.checkNotNull(ii, "cannot find ii name:" + kafkaConfig.getIiName());
         Preconditions.checkArgument(ii.getSegments().size() > 0);
         final IISegment iiSegment = ii.getSegments().get(0);
 
@@ -129,7 +193,8 @@ public class StreamingBootstrap {
         final int parallelism = shard / partitionCount;
         final int startShard = partitionId * parallelism;
         final int endShard = startShard + parallelism;
-        long streamingOffset = getEarliestStreamingOffset(streaming, startShard, endShard);
+
+        long streamingOffset = getEarliestStreamingOffset(kafkaConfig.getName(), startShard, endShard);
         streamingOffset = streamingOffset - (streamingOffset % parallelism);
         logger.info("offset from ii desc is " + streamingOffset);
         final long earliestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaConfig);
@@ -143,21 +208,14 @@ public class StreamingBootstrap {
         }
 
         KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId, streamingOffset, kafkaConfig.getBrokers(), kafkaConfig, parallelism);
-        kafkaConsumers.put(getKey(streaming, partitionId), consumer);
+        kafkaConsumers.put(getKey(kafkaConfig.getName(), partitionId), consumer);
 
-        StreamParser parser;
-        if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
-            Class clazz = Class.forName(kafkaConfig.getParserName());
-            Constructor constructor = clazz.getConstructor(List.class);
-            parser = (StreamParser) constructor.newInstance(ii.getDescriptor().listAllColumns());
-        } else {
-            parser = new JsonStreamParser(ii.getDescriptor().listAllColumns());
-        }
+
         Executors.newSingleThreadExecutor().submit(consumer);
         final ExecutorService streamingBuilderPool = Executors.newFixedThreadPool(parallelism);
         for (int i = startShard; i < endShard; ++i) {
-            final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(i % parallelism), streaming, iiSegment.getStorageLocationIdentifier(), iiSegment.getIIDesc(), i);
-            task.setStreamParser(parser);
+            final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(i % parallelism), kafkaConfig.getName(), iiSegment.getStorageLocationIdentifier(), iiSegment.getIIDesc(), i);
+            task.setStreamParser(getStreamParser(kafkaConfig, ii.getDescriptor().listAllColumns()));
             if (i == endShard - 1) {
                 streamingBuilderPool.submit(task).get();
             } else {

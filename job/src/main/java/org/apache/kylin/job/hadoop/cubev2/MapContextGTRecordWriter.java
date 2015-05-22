@@ -16,6 +16,7 @@ import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.streaming.cube.IGTRecordWriter;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

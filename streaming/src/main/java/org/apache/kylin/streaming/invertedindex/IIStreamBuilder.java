@@ -61,16 +61,19 @@ import java.util.concurrent.TimeUnit;
 public class IIStreamBuilder extends StreamBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(IIStreamBuilder.class);
+    private static final int BATCH_BUILD_INTERVAL_THRESHOLD = 2 * 60 * 1000;
 
     private final IIDesc desc;
     private final HTableInterface hTable;
     private final SliceBuilder sliceBuilder;
     private final int shardId;
     private final String streaming;
+    private final int batchSize;
     private StreamingManager streamingManager;
 
     public IIStreamBuilder(BlockingQueue<StreamMessage> queue, String streaming, String hTableName, IIDesc iiDesc, int shard) {
-        super(queue, iiDesc.getSliceSize());
+        super(queue);
+        this.batchSize = iiDesc.getSliceSize();
         this.streaming = streaming;
         this.desc = iiDesc;
         this.shardId = shard;
@@ -115,6 +118,16 @@ public class IIStreamBuilder extends StreamBuilder {
         } catch (IOException e) {
             logger.error("onStop throw exception", e);
         }
+    }
+
+    @Override
+    protected int batchInterval() {
+        return BATCH_BUILD_INTERVAL_THRESHOLD;
+    }
+
+    @Override
+    protected int batchSize() {
+        return batchSize;
     }
 
     private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {

@@ -34,19 +34,19 @@
 
 package org.apache.kylin.job;
 
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.streaming.StreamingBootstrap;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  */
@@ -61,30 +61,6 @@ public class ITKafkaBasedIIStreamBuilderTest {
     public static void beforeClass() throws Exception {
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-//        backup();
-    }
-
-    private static void backup() throws Exception {
-        int exitCode = cleanupOldStorage();
-        if (exitCode == 0) {
-            exportHBaseData();
-        }
-    }
-
-    private static int cleanupOldStorage() throws Exception {
-        String[] args = {"--delete", "true"};
-
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        return exitCode;
-    }
-
-    private static void exportHBaseData() throws IOException {
-        ExportHBaseData export = new ExportHBaseData();
-        export.exportTables();
     }
 
     @Before
