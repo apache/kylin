@@ -80,6 +80,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
+    @JsonProperty("auto_merge_time_ranges")
+    private long[] autoMergeTimeRanges;
+
     private String projectName;
 
     private static final int COST_WEIGHT_DIMENSION = 1;
@@ -400,5 +403,19 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     @Override
     public List<TblColRef> getAllDimensions() {
         return Lists.newArrayList(getDescriptor().listDimensionColumnsIncludingDerived());
+    }
+
+    public long[] getAutoMergeTimeRanges() {
+        return autoMergeTimeRanges;
+    }
+
+    public boolean needAutoMerge() {
+        if (!this.getDescriptor().getModel().getPartitionDesc().isPartitioned())
+            return false;
+
+        if (this.getDescriptor().hasHolisticCountDistinctMeasures())
+            return false;
+
+        return autoMergeTimeRanges != null && autoMergeTimeRanges.length > 0;
     }
 }

@@ -39,7 +39,7 @@
   "filter_condition" : null,
   "partition_desc" : {
     "partition_date_column" : "DEFAULT.KYLIN_SALES.PART_DT",
-    "partition_date_start" : 0,
+    "partition_date_start" : 1325376000000,
     "partition_type" : "APPEND"
   }
 }

@@ -83,6 +83,15 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertNull(CubeManager.getInstance(getTestConfig()).getCube("a_whole_new_cube"));
     }
 
+    @Test
+    public void testAutoMerge() throws Exception {
+        CubeManager cubeManager = CubeManager.getInstance(getTestConfig());
+        CubeInstance cube = cubeManager.getCube("test_kylin_cube_with_slr_ready_2_segments");
+        CubeSegment newSeg = cubeManager.autoMergeCubeSegments(cube);
+
+        assertNotNull(newSeg);
+    }
+
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getTestConfig());
     }

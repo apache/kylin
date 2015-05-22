@@ -57,7 +57,7 @@ import java.util.*;
 public class JobService extends BasicService {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
+    private static final Logger logger = LoggerFactory.getLogger(JobService.class);
 
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue) throws IOException, JobException {
         Integer limit = (null == limitValue) ? 30 : limitValue;
@@ -262,7 +262,7 @@ public class JobService extends BasicService {
         final String segmentId = jobInstance.getRelatedSegment();
         CubeInstance cubeInstance = getCubeManager().getCube(jobInstance.getRelatedCube());
         final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-        if (segment.getStatus() == SegmentStatusEnum.NEW) {
+        if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
             cubeInstance.getSegments().remove(segment);
             getCubeManager().updateCube(cubeInstance);
         }
