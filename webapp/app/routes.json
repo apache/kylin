@@ -48,14 +48,6 @@
         }
     },
     {
-        "url": "/cubes/:projectName/:cubeName",
-        "params": {
-            "templateUrl": "partials/cubes/cubes.html",
-            "tab": "models",
-            "controller": "CubesCtrl"
-        }
-    },
-    {
         "url": "/sourceMeta",
         "params": {
             "templateUrl": "partials/tables/source_metadata.html",
