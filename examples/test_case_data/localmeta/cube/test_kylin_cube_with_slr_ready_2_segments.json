@@ -69,5 +69,6 @@
   } ],
   "status" : "READY",
   "create_time" : null,
-  "notify_list" : null
+  "notify_list" : null,
+  "auto_merge_time_ranges" : [2595000000]
 }

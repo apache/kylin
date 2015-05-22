@@ -22,13 +22,13 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
@@ -366,16 +366,6 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    public void updateSegmentOnJobDiscard(CubeInstance cubeInstance, String segmentName) throws IOException {
-        for (int i = 0; i < cubeInstance.getSegments().size(); i++) {
-            CubeSegment segment = cubeInstance.getSegments().get(i);
-            if (segment.getName().equals(segmentName) && segment.getStatus() != SegmentStatusEnum.READY) {
-                cubeInstance.getSegments().remove(segment);
-            }
-        }
-        updateCube(cubeInstance);
-    }
-
     /**
      * After cube update, reload cube related cache
      *
@@ -434,6 +424,60 @@ public class CubeManager implements IRealizationProvider {
 
     private void afterCubeDropped(CubeInstance droppedCube) {
         removeCubeCache(droppedCube);
+    }
+
+    public CubeSegment autoMergeCubeSegments(CubeInstance cube) throws IOException {
+        if (!cube.needAutoMerge()) {
+            logger.debug("Cube " + cube.getName() + " doesn't need auto merge");
+            return null;
+        }
+
+        if (cube.getBuildingSegments().size() > 0) {
+            logger.debug("Cube " + cube.getName() + " has bulding segment, will not trigger merge at this moment");
+            return null;
+        }
+
+        List<CubeSegment> readySegments = Lists.newArrayList(cube.getSegment(SegmentStatusEnum.READY));
+
+        if (readySegments.size() == 0) {
+            logger.debug("Cube " + cube.getName() + " has no ready segment to merge");
+            return null;
+        }
+
+        long[] timeRanges = cube.getAutoMergeTimeRanges();
+        Arrays.sort(timeRanges);
+
+        CubeSegment newSeg = null;
+        for (int i = timeRanges.length - 1; i >= 0; i--) {
+            long toMergeRange = timeRanges[i];
+            long currentRange = 0;
+            List<CubeSegment> toMergeSegments = Lists.newArrayList();
+            for (CubeSegment segment : readySegments) {
+                long thisSegmentRange = segment.getDateRangeEnd() - segment.getDateRangeStart();
+
+                if (thisSegmentRange >= toMergeRange) {
+                    // this segment and its previous segments will not be merged
+                    toMergeSegments.clear();
+                    currentRange = 0;
+                    continue;
+                }
+
+                currentRange += thisSegmentRange;
+                if (currentRange < toMergeRange) {
+                    toMergeSegments.add(segment);
+                } else {
+                    // merge
+                    toMergeSegments.add(segment);
+
+                    newSeg = newSegment(cube, toMergeSegments.get(0).getDateRangeStart(), segment.getDateRangeEnd());
+                    // only one merge job be created here
+                    return newSeg;
+                }
+            }
+
+        }
+
+        return null;
     }
 
     private CubeSegment newSegment(CubeInstance cubeInstance, long startDate, long endDate) {

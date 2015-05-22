@@ -18,15 +18,27 @@
 
 package org.apache.kylin.rest.service;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.job.cube.CubingJob;
+import org.apache.kylin.job.cube.CubingJobBuilder;
+import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.QueryController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
@@ -39,6 +51,11 @@ import java.util.List;
 @Component("cacheService")
 public class CacheService extends BasicService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
+
+    @Autowired
+    private JobService jobService;
+
     @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void rebuildCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "rebuild cache type: " + cacheType + " name:" + cacheKey;
@@ -47,6 +64,7 @@ public class CacheService extends BasicService {
                 case CUBE:
                     getCubeManager().loadCubeCache(cacheKey);
                     cleanProjectCacheByRealization(RealizationType.CUBE, cacheKey);
+                    mergeCubeOnNewSegmentReady(cacheKey);
                     break;
                 case CUBE_DESC:
                     getCubeDescManager().reloadCubeDesc(cacheKey);
@@ -126,6 +144,36 @@ public class CacheService extends BasicService {
             }
         } catch (IOException e) {
             throw new RuntimeException("error " + log, e);
+        }
+    }
+
+    private void mergeCubeOnNewSegmentReady(String cubeName) {
+
+        logger.debug("on mergeCubeOnNewSegmentReady: " + cubeName);
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String serverMode = kylinConfig.getServerMode();
+
+        logger.debug("server mode: " + serverMode);
+        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
+            logger.debug("This is the job engine node, will check whether auto merge is needed on cube " + cubeName);
+            CubeInstance cube = getCubeManager().getCube(cubeName);
+            CubeSegment newSeg = null;
+            try {
+                newSeg = getCubeManager().autoMergeCubeSegments(cube);
+                if (newSeg != null) {
+                    logger.debug("Will submit merge job on " + newSeg);
+                    CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
+                    builder.setSubmitter("SYSTEM");
+                    newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd());
+                    CubingJob job = builder.mergeJob(newSeg);
+                    getExecutableManager().addJob(job);
+                } else {
+                    logger.debug("Not ready for merge on cube " + cubeName);
+                }
+
+            } catch (IOException e) {
+                logger.error("Failed to auto merge cube " + cubeName, e);
+            }
         }
     }
 }
