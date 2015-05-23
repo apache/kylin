@@ -233,4 +233,29 @@ public class GTRecord implements Comparable<GTRecord> {
         }
     }
 
+    /* similar to export(primaryKey) but will stop at the first null value */
+    public static ByteArray exportScanKey(GTRecord rec) {
+        if (rec == null)
+            return null;
+        
+        GTInfo info = rec.getInfo();
+        
+        BitSet selectedColumns = new BitSet();
+        int len = 0;
+        for (int i = info.primaryKey.nextSetBit(0); i >= 0; i = info.primaryKey.nextSetBit(i + 1)) {
+            if (rec.cols[i].array() == null) {
+                break;
+            }
+            selectedColumns.set(i);
+            len += rec.cols[i].length();
+        }
+        
+        if (selectedColumns.cardinality() == 0)
+            return null;
+
+        ByteArray buf = ByteArray.allocate(len);
+        rec.exportColumns(selectedColumns, buf);
+        return buf;
+    }
+    
 }

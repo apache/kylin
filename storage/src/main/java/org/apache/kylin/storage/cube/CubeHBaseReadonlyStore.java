@@ -23,6 +23,7 @@ import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTRowBlock.Writer;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
@@ -64,7 +65,7 @@ public class CubeHBaseReadonlyStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColumnBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColumnBlocks, GTScanRequest additionalPushDown) throws IOException {
         // TODO enable coprocessor
 
         // primary key (also the 0th column block) is always selected
@@ -122,7 +123,7 @@ public class CubeHBaseReadonlyStore implements IGTStore {
         };
     }
 
-    private Scan buildScan(ByteArray pkStart, ByteArray pkEnd, List<Pair<byte[], byte[]>> selectedColumns) {
+    private Scan buildScan(GTRecord pkStart, GTRecord pkEnd, List<Pair<byte[], byte[]>> selectedColumns) {
         Scan scan = new Scan();
         scan.setCaching(SCAN_CACHE);
         scan.setCacheBlocks(true);
@@ -140,8 +141,10 @@ public class CubeHBaseReadonlyStore implements IGTStore {
         return scan;
     }
 
-    private byte[] makeRowKeyToScan(ByteArray pk, byte fill) {
+    private byte[] makeRowKeyToScan(GTRecord pkRec, byte fill) {
+        ByteArray pk = GTRecord.exportScanKey(pkRec);
         int pkMaxLen = info.getMaxColumnLength(info.getPrimaryKey());
+        
         byte[] buf = new byte[pkMaxLen + RowConstants.ROWKEY_CUBOIDID_LEN];
         Arrays.fill(buf, fill);
         

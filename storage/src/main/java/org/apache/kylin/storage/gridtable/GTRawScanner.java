@@ -5,7 +5,6 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.storage.gridtable.IGTStore.IGTStoreScanner;
 
 public class GTRawScanner implements IGTScanner {
@@ -23,12 +22,8 @@ public class GTRawScanner implements IGTScanner {
 
     public GTRawScanner(GTInfo info, IGTStore store, GTScanRequest req) throws IOException {
         this.info = info;
-
-        ByteArray start = ScanKey.makeScanKey(info, req.getPkStart());
-        ByteArray end = ScanKey.makeScanKey(info, req.getPkEnd());
         this.selectedColBlocks = info.selectColumnBlocks(req.getColumns());
-
-        this.storeScanner = store.scan(start, end, selectedColBlocks, req);
+        this.storeScanner = store.scan(req.getPkStart(), req.getPkEnd(), selectedColBlocks, req);
         this.oneRecord = new GTRecord(info);
     }
 
