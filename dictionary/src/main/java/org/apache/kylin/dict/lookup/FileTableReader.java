@@ -60,6 +60,10 @@ public class FileTableReader implements TableReader {
     private String[] curColumns;
     private int expectedColumnNumber = -1; // helps delimiter detection
 
+    public FileTableReader(String filePath, int expectedColumnNumber) throws IOException {
+        this(filePath, ReadableTable.DELIM_AUTO, expectedColumnNumber);
+    }
+    
     public FileTableReader(String filePath, String delim, int expectedColumnNumber) throws IOException {
         this.filePath = filePath;
         this.delim = delim;
