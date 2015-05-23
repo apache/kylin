@@ -6,8 +6,8 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.IGTStore;
@@ -78,7 +78,7 @@ public class GTSimpleMemStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) {
+    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) {
 
         return new IGTStoreScanner() {
             Iterator<GTRowBlock> it = rowBlockList.iterator();

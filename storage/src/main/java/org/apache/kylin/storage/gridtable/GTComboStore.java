@@ -1,13 +1,12 @@
 package org.apache.kylin.storage.gridtable;
 
-import org.apache.kylin.common.util.ByteArray;
+import java.io.IOException;
+import java.util.BitSet;
+
 import org.apache.kylin.storage.gridtable.diskstore.GTDiskStore;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.BitSet;
 
 /**
  */
@@ -18,7 +17,7 @@ public class GTComboStore implements IGTStore {
     private final GTInfo gtInfo;
 
     private void convert(IGTStore input, IGTStore output) throws IOException {
-        final IGTStoreScanner scanner = input.scan(ScanKey.makeScanKey(gtInfo, new GTRecord(gtInfo)), ScanKey.makeScanKey(gtInfo, new GTRecord(gtInfo)), null, null);
+        final IGTStoreScanner scanner = input.scan(null, null, null, null);
         final IGTStoreWriter writer = output.rebuild(-1);
         while (scanner.hasNext()) {
             writer.write(scanner.next());
@@ -101,7 +100,7 @@ public class GTComboStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
         return getCurrent().scan(pkStart, pkEnd, selectedColBlocks, additionalPushDown);
     }
 

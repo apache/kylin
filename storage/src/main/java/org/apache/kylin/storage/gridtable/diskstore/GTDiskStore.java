@@ -10,8 +10,8 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.UUID;
 
-import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.IGTStore;
@@ -151,7 +151,7 @@ public class GTDiskStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
         return new DiskStoreScanner(fileSystem.getReader(getRowBlockFile(identifier)));
     }
 

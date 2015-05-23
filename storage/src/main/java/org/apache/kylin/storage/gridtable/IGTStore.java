@@ -15,7 +15,7 @@ public interface IGTStore {
     
     IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast) throws IOException;
     
-    IGTStoreScanner scan(ByteArray pkStart, ByteArray pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException;
+    IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException;
 
     interface IGTStoreWriter extends Closeable {
         void write(GTRowBlock block) throws IOException;

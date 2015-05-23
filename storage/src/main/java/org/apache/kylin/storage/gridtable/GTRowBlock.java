@@ -192,7 +192,7 @@ public class GTRowBlock {
         }
     }
 
-    public void export(DataOutputStream dataOutputStream, ByteArray array) throws IOException {
+    private void export(DataOutputStream dataOutputStream, ByteArray array) throws IOException {
         dataOutputStream.writeInt(array.length());
         dataOutputStream.write(array.array(), array.offset(), array.length());
     }
