@@ -14,7 +14,7 @@ import java.util.Properties;
 
 /**
  */
-public class JDBCDriverTest extends HBaseMetadataTestCase {
+public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     private static Server server = null;
 

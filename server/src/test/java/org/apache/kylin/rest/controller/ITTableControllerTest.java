@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  * @author shaoshi
  */
-public class TableControllerTest extends ServiceTestBase {
+public class ITTableControllerTest extends ServiceTestBase {
 
     private TableController tableController;
     private CubeDescController cubeDescController;

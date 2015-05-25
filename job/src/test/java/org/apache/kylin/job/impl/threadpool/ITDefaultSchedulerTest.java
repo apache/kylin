@@ -18,21 +18,16 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import static org.junit.Assert.*;
-
-import org.apache.kylin.job.SelfStopExecutable;
-import org.junit.Test;
-
-import org.apache.kylin.job.BaseTestExecutable;
-import org.apache.kylin.job.ErrorTestExecutable;
-import org.apache.kylin.job.FailedTestExecutable;
-import org.apache.kylin.job.SucceedTestExecutable;
+import org.apache.kylin.job.*;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  */
-public class DefaultSchedulerTest extends BaseSchedulerTest {
+public class ITDefaultSchedulerTest extends BaseSchedulerTest {
 
     @Test
     public void testSingleTaskJob() throws Exception {

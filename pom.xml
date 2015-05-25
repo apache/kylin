@@ -562,19 +562,13 @@
                         <configuration>
                             <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
+                                <exclude>**/IT*.java</exclude>
                                 <!--Build cube/II need to be run separately-->
-                                <exclude>**/BuildCubeWithEngineTest.java</exclude>
-                                <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/BuildIIWithStreamTest.java</exclude>
-                                <exclude>**/IIStreamBuilderTest.java</exclude>
 
                                 <!--minicluster does not have hive-->
-                                <exclude>**/SnapshotManagerTest.java</exclude>
-                                <exclude>**/HiveTableReaderTest.java</exclude>
-                                <exclude>**/TableControllerTest.java</exclude>
-
-                                <exclude>**/Kafka*Test.java</exclude>
-				                <exclude>**/RequesterTest.java</exclude>
+                                <exclude>**/ITSnapshotManagerTest.java</exclude>
+                                <exclude>**/ITHiveTableReaderTest.java</exclude>
+                                <exclude>**/ITTableControllerTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>
@@ -608,15 +602,7 @@
                         <configuration>
                             <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
-                                <!--Build cube/II need to be run separately-->
-                                <exclude>**/BuildCubeWithEngineTest.java</exclude>
-                                <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/BuildIIWithStreamTest.java</exclude>
-                                <exclude>**/IIStreamBuilderTest.java</exclude>
-
-                                <exclude>**/Kafka*Test.java</exclude>
-                                <exclude>**/RequesterTest.java</exclude>
-                                <exclude>**/InMemCubeBuilderBenchmarkTest.java</exclude>
+                                <exclude>**/IT*.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>

@@ -18,25 +18,25 @@
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.*;
-
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.dict.lookup.HiveTable;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.dict.lookup.TableReader;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.TableDesc;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author yangli9
  * 
  */
-public class SnapshotManagerTest extends HBaseMetadataTestCase {
+public class ITSnapshotManagerTest extends HBaseMetadataTestCase {
 
     SnapshotManager snapshotMgr;
 

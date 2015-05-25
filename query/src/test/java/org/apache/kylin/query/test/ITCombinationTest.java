@@ -31,11 +31,11 @@ import java.util.Collection;
 /**
  */
 @RunWith(Parameterized.class)
-public class CombinationTest extends KylinQueryTest {
+public class ITCombinationTest extends ITKylinQueryTest {
 
     @BeforeClass
     public static void setUp() throws SQLException {
-        System.out.println("setUp in CombinationTest");
+        System.out.println("setUp in ITCombinationTest");
     }
 
     @AfterClass
@@ -54,12 +54,12 @@ public class CombinationTest extends KylinQueryTest {
         return Arrays.asList(new Object[][]{{"inner", "on"}, {"left", "on"}});
     }
 
-    public CombinationTest(String joinType, String coprocessorToggle) throws Exception {
+    public ITCombinationTest(String joinType, String coprocessorToggle) throws Exception {
 
-        KylinQueryTest.clean();
+        ITKylinQueryTest.clean();
 
-        KylinQueryTest.joinType = joinType;
-        KylinQueryTest.setupAll();
+        ITKylinQueryTest.joinType = joinType;
+        ITKylinQueryTest.setupAll();
 
         if (coprocessorToggle.equals("on")) {
             ObserverEnabler.forceCoprocessorOn();

@@ -8,7 +8,7 @@ mvn test -P sandbox
 
 * 	Startup a HBase minicluster and update KylinConfig with the dynamic HBase configurations;
 * 	Create Kylin metadata tables and import six example cube tables;
-* 	Import the hbase data from a tar ball from local: examples/test_case_data/minicluster/hbase-export.tar.gz (the hbase-export.tar.gz will be updated on complete of running BuildCubeWithEngineTest）
+* 	Import the hbase data from a tar ball from local: examples/test_case_data/minicluster/hbase-export.tar.gz (the hbase-export.tar.gz will be updated on complete of running ITBuildCubeWithEngineTest）
 * 	After all test cases be completed, shutdown minicluster and cleanup KylinConfig cache;
 
 ### To ensure Mini cluster can run successfully, you need:

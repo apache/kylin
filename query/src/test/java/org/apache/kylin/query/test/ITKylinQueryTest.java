@@ -40,8 +40,8 @@ import java.util.Properties;
 
 import static org.junit.Assert.assertTrue;
 
-@Ignore("KylinQueryTest is contained by CombinationTest")
-public class KylinQueryTest extends KylinTestBase {
+@Ignore("KylinQueryTest is contained by ITCombinationTest")
+public class ITKylinQueryTest extends KylinTestBase {
 
     @BeforeClass
     public static void setUp() throws Exception {

@@ -129,6 +129,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     @After
     public void after() throws Exception {
+        cleanupTestMetadata();
     }
 
     private void waitForCounterAndClear(long count) {
@@ -143,16 +144,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
                 e.printStackTrace();
             }
         }
-    }
-
-    @BeforeClass
-    public static void startServer() throws Exception {
-
-    }
-
-    @AfterClass
-    public static void stopServer() throws Exception {
-
     }
 
     private static CubeManager getCubeManager(KylinConfig config) throws Exception {

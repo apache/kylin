@@ -27,7 +27,7 @@ My Cluster is running on Cloudera Distribution CDH 5.2.0.
 #### Unable to load a big cube as HTable, with java.lang.OutOfMemoryError: unable to create new native thread
 HBase (as of writing) allocates one thread per region when bulk loading a HTable. Try reduce the number of regions of your cube by setting its "capacity" to "MEDIUM" or "LARGE". Also tweaks OS & JVM can allow more threads, for example see [this article](http://blog.egilh.com/2006/06/2811aspx.html).
 
-#### Failed to run BuildCubeWithEngineTest, saying failed to connect to hbase while hbase is active
+#### Failed to run ITBuildCubeWithEngineTest, saying failed to connect to hbase while hbase is active
 User may get this error when first time run hbase client, please check the error trace to see whether there is an error saying couldn't access a folder like "/hadoop/hbase/local/jars"; If that folder doesn't exist, create it.
 
 #### SUM(field) returns a negtive result while all the numbers in this field are > 0

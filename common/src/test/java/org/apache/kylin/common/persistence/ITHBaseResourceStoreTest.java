@@ -18,13 +18,6 @@
 
 package org.apache.kylin.common.persistence;
 
-import static org.junit.Assert.*;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -37,7 +30,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import static org.junit.Assert.*;
+
+public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
 
     @Before
     public void setup() throws Exception {

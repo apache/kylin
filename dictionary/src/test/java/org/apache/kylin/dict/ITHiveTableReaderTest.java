@@ -16,44 +16,36 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.tool;
+package org.apache.kylin.dict;
 
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Set;
-
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.metadata.util.HiveSourceTableLoader;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.kylin.dict.lookup.HiveTableReader;
+import org.junit.Assert;
 import org.junit.Test;
 
-public class HiveSourceTableLoaderTest extends HBaseMetadataTestCase {
+import java.io.IOException;
 
-    @Before
-    public void setup() throws Exception {
-        super.createTestMetadata();
-    }
+/**
+ * This test case need the hive runtime; Please run it with sandbox;
+ * @author shaoshi
+ *
+ * It is in the exclude list of default profile in pom.xml
+ */
+public class ITHiveTableReaderTest extends HBaseMetadataTestCase {
 
-    @After
-    public  void after() throws Exception {
-        super.cleanupTestMetadata();
-    }
 
     @Test
     public void test() throws IOException {
-        if (!useSandbox())
-            return;
+        HiveTableReader reader = new HiveTableReader("default", "test_kylin_fact");
+        int rowNumber = 0;
+        while (reader.next()) {
+            String[] row = reader.getRow();
+            Assert.assertEquals(9, row.length);
+            //System.out.println(ArrayUtils.toString(row));
+            rowNumber++;
+        }
 
-        KylinConfig config = getTestConfig();
-        String[] toLoad = new String[] { "DEFAULT.TEST_KYLIN_FACT", "EDW.TEST_CAL_DT" };
-        Set<String> loaded = HiveSourceTableLoader.reloadHiveTables(toLoad, config);
-
-        assertTrue(loaded.size() == toLoad.length);
-        for (String str : toLoad)
-            assertTrue(loaded.contains(str));
+        reader.close();
+        Assert.assertEquals(10000, rowNumber);
     }
-
 }
