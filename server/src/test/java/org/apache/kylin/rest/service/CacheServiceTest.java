@@ -125,6 +125,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     @Before
     public void setUp() throws Exception {
         counter.set(0L);
+        createTestMetadata();
     }
 
     @After

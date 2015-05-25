@@ -43,10 +43,12 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
     }
 
     public void put(K key, V value) {
-        //enforce all cache changes coming from REST
-        //final V result = innerCache.put(key, value);
+        boolean exists = innerCache.containsKey(key);
+        //The put operation will be duplicated when REST request is received.
+        //It is intended so because many test cases does not have REST env
+        innerCache.put(key, value);
 
-        if (!innerCache.containsKey(key)) {
+        if (!exists) {
             syncRemote(key, Broadcaster.EVENT.CREATE);
         } else {
             syncRemote(key, Broadcaster.EVENT.UPDATE);
@@ -59,8 +61,9 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     public void remove(K key) {
         if (innerCache.containsKey(key)) {
-            //enforce all cache changes coming from REST
-            //innerCache.remove(key);
+            //The remove operation will be duplicated when REST request is received.
+            //It is intended so because many test cases does not have REST env
+            innerCache.remove(key);
             syncRemote(key, Broadcaster.EVENT.DROP);
         }
     }
