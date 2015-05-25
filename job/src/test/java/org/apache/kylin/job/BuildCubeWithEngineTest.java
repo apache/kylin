@@ -49,7 +49,7 @@ import java.util.concurrent.*;
 
 import static org.junit.Assert.assertEquals;
 
-public class ITBuildCubeWithEngineTest {
+public class BuildCubeWithEngineTest {
 
     private JobEngineConfig jobEngineConfig;
 
@@ -59,7 +59,7 @@ public class ITBuildCubeWithEngineTest {
 
     protected ExecutableManager jobService;
 
-    private static final Log logger = LogFactory.getLog(ITBuildCubeWithEngineTest.class);
+    private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
 
     protected void waitForJob(String jobId) {
         while (true) {
@@ -178,9 +178,9 @@ public class ITBuildCubeWithEngineTest {
         @Override
         public List<String> call() throws Exception {
             try {
-                final Method method = ITBuildCubeWithEngineTest.class.getDeclaredMethod(methodName);
+                final Method method = BuildCubeWithEngineTest.class.getDeclaredMethod(methodName);
                 method.setAccessible(true);
-                return (List<String>) method.invoke(ITBuildCubeWithEngineTest.this);
+                return (List<String>) method.invoke(BuildCubeWithEngineTest.this);
             } finally {
                 countDownLatch.countDown();
             }

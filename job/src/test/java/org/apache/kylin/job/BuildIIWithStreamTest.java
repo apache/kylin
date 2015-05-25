@@ -80,9 +80,9 @@ import static org.junit.Assert.fail;
 
 /**
  */
-public class ITBuildIIWithStreamTest {
+public class BuildIIWithStreamTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(ITBuildIIWithStreamTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(BuildIIWithStreamTest.class);
 
     private static final String[] II_NAME = new String[] { "test_kylin_ii_left_join", "test_kylin_ii_inner_join" };
     private IIManager iiManager;

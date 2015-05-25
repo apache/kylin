@@ -53,7 +53,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author shaoshi
  */
-public class ITBuildIIWithEngineTest {
+public class BuildIIWithEngineTest {
 
     private JobEngineConfig jobEngineConfig;
     private IIManager iiManager;
@@ -63,7 +63,7 @@ public class ITBuildIIWithEngineTest {
 
     protected static final String[] TEST_II_INSTANCES = new String[] { "test_kylin_ii_inner_join", "test_kylin_ii_left_join" };
 
-    private static final Log logger = LogFactory.getLog(ITBuildIIWithEngineTest.class);
+    private static final Log logger = LogFactory.getLog(BuildIIWithEngineTest.class);
 
     protected void waitForJob(String jobId) {
         while (true) {
@@ -173,9 +173,9 @@ public class ITBuildIIWithEngineTest {
         @Override
         public List<String> call() throws Exception {
             try {
-                final Method method = ITBuildIIWithEngineTest.class.getDeclaredMethod(methodName);
+                final Method method = BuildIIWithEngineTest.class.getDeclaredMethod(methodName);
                 method.setAccessible(true);
-                return (List<String>) method.invoke(ITBuildIIWithEngineTest.this);
+                return (List<String>) method.invoke(BuildIIWithEngineTest.this);
             } finally {
                 countDownLatch.countDown();
             }
@@ -242,9 +242,9 @@ public class ITBuildIIWithEngineTest {
     }
 
     public static void main(String[] args) throws Exception {
-        ITBuildIIWithEngineTest instance = new ITBuildIIWithEngineTest();
+        BuildIIWithEngineTest instance = new BuildIIWithEngineTest();
 
-        ITBuildIIWithEngineTest.beforeClass();
+        BuildIIWithEngineTest.beforeClass();
         instance.before();
         instance.testBuildII();
         instance.after();
