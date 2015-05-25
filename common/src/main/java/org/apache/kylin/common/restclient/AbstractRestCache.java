@@ -24,6 +24,7 @@ package org.apache.kylin.common.restclient;
  */
 public abstract class AbstractRestCache<K, V> {
 
+
     protected final Broadcaster.TYPE syncType;
 
     protected AbstractRestCache(Broadcaster.TYPE syncType) {
