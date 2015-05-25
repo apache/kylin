@@ -86,7 +86,6 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
     private boolean simpleFullCopy = false;
     private Object[] result;
     private MeasureCodec codec;
-    private int[][] hbaseColumnToMeasureMapping;
 
     private Boolean checkNeedMerging(TblColRef col) throws IOException {
         Boolean ret = dictsNeedMerging.get(col);
@@ -143,35 +142,25 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
         this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
 
         List<RowValueDecoder> valueDecoderList = Lists.newArrayList();
-        List<KeyValueCreator> keyValueCreators = Lists.newArrayList();
+        List<InMemKeyValueCreator> keyValueCreators = Lists.newArrayList();
+        List<MeasureDesc> measuresDescs = Lists.newArrayList();
+        int startPosition = 0;
         for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
                 valueDecoderList.add(new RowValueDecoder(colDesc));
-                keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
+                keyValueCreators.add(new InMemKeyValueCreator(colDesc, startPosition));
+                startPosition += colDesc.getMeasures().length;
+                for (MeasureDesc measure : colDesc.getMeasures()) {
+                    measuresDescs.add(measure);
+                }
             }
         }
 
         rowValueDecoders = valueDecoderList.toArray(new RowValueDecoder[valueDecoderList.size()]);
 
-        simpleFullCopy = (keyValueCreators.size() == 1 && keyValueCreators.get(0).isFullCopy);
-        result = new Object[cubeDesc.getMeasures().size()];
-        codec = new MeasureCodec(cubeDesc.getMeasures());
-
-        hbaseColumnToMeasureMapping = new int[rowValueDecoders.length][];
-
-        for (int i = 0; i < rowValueDecoders.length; i++) {
-            hbaseColumnToMeasureMapping[i] = new int[rowValueDecoders[i].getMeasures().length];
-            for (int j = 0; j < rowValueDecoders[i].getMeasures().length; j++) {
-                int positionInCubeMeasures = 0;
-                for (MeasureDesc m : cubeDesc.getMeasures()) {
-                    if (m.equals(rowValueDecoders[i].getMeasures()[j])) {
-                        hbaseColumnToMeasureMapping[i][j] = positionInCubeMeasures;
-                        break;
-                    }
-                    positionInCubeMeasures++;
-                }
-            }
-        }
+        simpleFullCopy = (keyValueCreators.size() == 1);
+        result = new Object[measuresDescs.size()];
+        codec = new MeasureCodec(measuresDescs);
     }
 
     @Override
@@ -222,18 +211,18 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
 
         valueBuf.clear();
         if (simpleFullCopy) {
-            // simple case, should only 1 hbase column and the bytes sequence is same
+            // simple case, should only 1 hbase column
             for (Cell cell : value.rawCells()) {
                 valueBuf.put(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
             }
         } else {
-            // complex case, need re-arrange the bytes sequence
+            int position = 0;
             for (int i = 0; i < rowValueDecoders.length; i++) {
                 rowValueDecoders[i].decode(value, false);
                 Object[] measureValues = rowValueDecoders[i].getValues();
 
                 for (int j = 0; j < measureValues.length; j++) {
-                    result[hbaseColumnToMeasureMapping[i][j]] = measureValues[j];
+                    result[position++] = measureValues[j];
                 }
             }
             codec.encode(result, valueBuf);
