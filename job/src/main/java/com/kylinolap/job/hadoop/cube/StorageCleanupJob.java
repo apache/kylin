@@ -387,7 +387,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     private void cleanUnusedIntermediateHiveTable(Configuration conf) throws IOException {
         StringBuilder cmd = new StringBuilder();
         cmd.append("hive -e \"");
-        cmd.append("use " + KylinConfig.getInstanceFromEnv().getHiveWorkingDB() + "; ");
+        //cmd.append("use " + KylinConfig.getInstanceFromEnv().getHiveWorkingDB() + "; ");
         cmd.append("show tables " + "\'kylin_intermediate_*\'" + "; ");
         cmd.append("\"");
         
@@ -441,7 +441,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         StringBuilder cmd = new StringBuilder();
         
         cmd.append("hive -e \"");
-        cmd.append("use " + KylinConfig.getInstanceFromEnv().getHiveWorkingDB() + "; ");
+        //cmd.append("use " + KylinConfig.getInstanceFromEnv().getHiveWorkingDB() + "; ");
         cmd.append("show tables " + "\'kylin_intermediate_*\'" + "; ");
         cmd.append("\"");
         
