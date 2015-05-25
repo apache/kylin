@@ -47,9 +47,15 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
         CubeDesc cubeDesc = CubeManager.getInstance(config).getCube(cubeName).getDescriptor();
 
         List<MeasureDesc> measuresDescs = Lists.newArrayList();
-        for (HBaseColumnFamilyDesc familyDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
-                for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
+
+        keyValueCreators = Lists.newArrayList();
+
+        int startPosition = 0;
+        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
+            for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
+                keyValueCreators.add(new InMemKeyValueCreator(colDesc, startPosition));
+                startPosition += colDesc.getMeasures().length;
+                for (MeasureDesc measure : colDesc.getMeasures()) {
                     measuresDescs.add(measure);
                 }
             }
@@ -60,17 +66,6 @@ public class InMemCuboidReducer extends KylinReducer<ImmutableBytesWritable, Tex
 
         input = new Object[measuresDescs.size()];
         result = new Object[measuresDescs.size()];
-
-        keyValueCreators = Lists.newArrayList();
-
-        int startPosition = 0;
-        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                keyValueCreators.add(new InMemKeyValueCreator(colDesc, startPosition));
-                startPosition += colDesc.getMeasures().length;
-            }
-        }
-
         nColumns = keyValueCreators.size();
     }
 
