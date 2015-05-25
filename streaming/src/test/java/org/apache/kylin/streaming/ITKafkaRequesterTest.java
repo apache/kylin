@@ -44,7 +44,7 @@ import static org.junit.Assert.*;
 
 /**
  */
-public class KafkaRequesterTest extends KafkaBaseTest {
+public class ITKafkaRequesterTest extends KafkaBaseTest {
 
     private static final String NON_EXISTED_TOPIC = "non_existent_topic";
     private KafkaConfig kafkaConfig;

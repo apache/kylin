@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * @author yangli9
  */
-public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
+public class ITInvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
     IIInstance ii;
     IISegment seg;

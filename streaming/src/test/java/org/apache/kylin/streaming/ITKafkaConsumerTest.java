@@ -51,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  */
-public class KafkaConsumerTest extends KafkaBaseTest {
+public class ITKafkaConsumerTest extends KafkaBaseTest {
 
     private OneOffStreamProducer producer;
 

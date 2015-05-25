@@ -80,9 +80,9 @@ import java.util.concurrent.Future;
  * This class is going to be deleted
  */
 @Ignore("For dev testing")
-public class BuildCubeWithStreamTest {
+public class ITBuildCubeWithStreamTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStreamTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ITBuildCubeWithStreamTest.class);
 
     private KylinConfig kylinConfig;
     private CubeManager cubeManager;

@@ -53,7 +53,7 @@ An alternative to the host replacement is updating your `hosts` file to resolve 
 
 Run a end-to-end cube building test
  
-	mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false
+	mvn test -Dtest=org.apache.kylin.job.ITBuildCubeWithEngineTest -DfailIfNoTests=false
 	
 Run other tests, the end-to-end cube building test is exclueded
 

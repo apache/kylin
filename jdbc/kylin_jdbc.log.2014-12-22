@@ -1,0 +1,18 @@
+[main]:[2014-12-22 11:47:05,477][DEBUG][com.kylinolap.jdbc.KylinConnectionImpl.<init>(KylinConnectionImpl.java:68)] - Kylin base url test_url, project name test_db
+[main]:[2014-12-22 11:47:05,486][DEBUG][com.kylinolap.jdbc.Driver$1.onConnectionInit(Driver.java:111)] - Connection inited.
+[main]:[2014-12-22 11:47:05,487][DEBUG][com.kylinolap.jdbc.KylinMetaImpl.getTables(KylinMetaImpl.java:108)] - Get tables with conn KylinConnectionImpl [baseUrl=test_url, project=test_db, metaProject=com.kylinolap.jdbc.KylinMetaImpl$MetaProject@21300853]
+[main]:[2014-12-22 11:47:05,487][DEBUG][com.kylinolap.jdbc.KylinMetaImpl$MetaProject.getMetaTables(KylinMetaImpl.java:489)] - getMetaTables with catalog:null, schema:null, table:null
+[main]:[2014-12-22 11:47:05,534][DEBUG][com.kylinolap.jdbc.KylinConnectionImpl.<init>(KylinConnectionImpl.java:68)] - Kylin base url test_url, project name test_db
+[main]:[2014-12-22 11:47:05,534][DEBUG][com.kylinolap.jdbc.Driver$1.onConnectionInit(Driver.java:111)] - Connection inited.
+[main]:[2014-12-22 15:57:49,077][DEBUG][com.kylinolap.jdbc.KylinConnectionImpl.<init>(KylinConnectionImpl.java:68)] - Kylin base url test_url, project name test_db
+[main]:[2014-12-22 15:57:49,086][DEBUG][com.kylinolap.jdbc.Driver$1.onConnectionInit(Driver.java:111)] - Connection inited.
+[main]:[2014-12-22 15:57:49,087][DEBUG][com.kylinolap.jdbc.KylinMetaImpl.getTables(KylinMetaImpl.java:108)] - Get tables with conn KylinConnectionImpl [baseUrl=test_url, project=test_db, metaProject=com.kylinolap.jdbc.KylinMetaImpl$MetaProject@3add750e]
+[main]:[2014-12-22 15:57:49,087][DEBUG][com.kylinolap.jdbc.KylinMetaImpl$MetaProject.getMetaTables(KylinMetaImpl.java:489)] - getMetaTables with catalog:null, schema:null, table:null
+[main]:[2014-12-22 15:57:49,134][DEBUG][com.kylinolap.jdbc.KylinConnectionImpl.<init>(KylinConnectionImpl.java:68)] - Kylin base url test_url, project name test_db
+[main]:[2014-12-22 15:57:49,135][DEBUG][com.kylinolap.jdbc.Driver$1.onConnectionInit(Driver.java:111)] - Connection inited.
+[main]:[2014-12-22 17:13:45,081][DEBUG][com.kylinolap.jdbc.KylinConnectionImpl.<init>(KylinConnectionImpl.java:68)] - Kylin base url test_url, project name test_db
+[main]:[2014-12-22 17:13:45,090][DEBUG][com.kylinolap.jdbc.Driver$1.onConnectionInit(Driver.java:111)] - Connection inited.
+[main]:[2014-12-22 17:13:45,091][DEBUG][com.kylinolap.jdbc.KylinMetaImpl.getTables(KylinMetaImpl.java:108)] - Get tables with conn KylinConnectionImpl [baseUrl=test_url, project=test_db, metaProject=com.kylinolap.jdbc.KylinMetaImpl$MetaProject@21300853]
+[main]:[2014-12-22 17:13:45,091][DEBUG][com.kylinolap.jdbc.KylinMetaImpl$MetaProject.getMetaTables(KylinMetaImpl.java:489)] - getMetaTables with catalog:null, schema:null, table:null
+[main]:[2014-12-22 17:13:45,141][DEBUG][com.kylinolap.jdbc.KylinConnectionImpl.<init>(KylinConnectionImpl.java:68)] - Kylin base url test_url, project name test_db
+[main]:[2014-12-22 17:13:45,141][DEBUG][com.kylinolap.jdbc.Driver$1.onConnectionInit(Driver.java:111)] - Connection inited.

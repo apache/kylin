@@ -24,7 +24,7 @@ import static org.hamcrest.Matchers.is;
  * compare to real HTable.
  */
 
-public class MockHTableTest extends HBaseMetadataTestCase {
+public class ITMockHTableTest extends HBaseMetadataTestCase {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static HTableInterface mock;

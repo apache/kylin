@@ -39,7 +39,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
-public class StorageTest extends HBaseMetadataTestCase {
+public class ITStorageTest extends HBaseMetadataTestCase {
 
     private IStorageEngine storageEngine;
     private CubeInstance cube;

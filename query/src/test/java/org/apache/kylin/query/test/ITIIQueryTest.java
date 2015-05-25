@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  */
 @RunWith(Parameterized.class)
-public class IIQueryTest extends KylinQueryTest {
+public class ITIIQueryTest extends ITKylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
 
@@ -49,7 +49,7 @@ public class IIQueryTest extends KylinQueryTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        KylinQueryTest.tearDown();//invoke super class
+        ITKylinQueryTest.tearDown();//invoke super class
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 1);
@@ -63,12 +63,12 @@ public class IIQueryTest extends KylinQueryTest {
         return Arrays.asList(new Object[][] { { "inner" }, { "left" } });
     }
 
-    public IIQueryTest(String joinType) throws Exception {
+    public ITIIQueryTest(String joinType) throws Exception {
 
-        KylinQueryTest.clean();
+        ITKylinQueryTest.clean();
 
-        KylinQueryTest.joinType = joinType;
-        KylinQueryTest.setupAll();
+        ITKylinQueryTest.joinType = joinType;
+        ITKylinQueryTest.setupAll();
 
     }
 
