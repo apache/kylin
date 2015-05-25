@@ -102,6 +102,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         cube = cubeMgr.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
         segmentName = getOptionValue(OPTION_SEGMENT_NAME);
+        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
         HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
@@ -137,7 +138,18 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
             byte[][] splitKeys;
             if (statistics_enabled) {
-                splitKeys = getSplitsFromCuboidStatistics(conf);
+
+                List<Integer> rowkeyColumnSize = Lists.newArrayList();
+                long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+                Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+                List<TblColRef> columnList = baseCuboid.getColumns();
+
+                for (int i = 0; i < columnList.size(); i++) {
+                    logger.info("Rowkey column " + i + " length " + cubeSegment.getColumnLength(columnList.get(i)));
+                    rowkeyColumnSize.add(cubeSegment.getColumnLength(columnList.get(i)));
+                }
+
+                splitKeys = getSplitsFromCuboidStatistics(conf, kylinConfig, rowkeyColumnSize, cubeSegment);
             } else {
                 splitKeys = getSplits(conf, partitionFilePath);
             }
@@ -200,19 +212,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
 
     @SuppressWarnings("deprecation")
-    protected byte[][] getSplitsFromCuboidStatistics(Configuration conf) throws IOException {
+    public static byte[][] getSplitsFromCuboidStatistics(Configuration conf, KylinConfig kylinConfig,  List<Integer> rowkeyColumnSize, CubeSegment cubeSegment) throws IOException {
 
-        List<Integer> rowkeyColumnSize = Lists.newArrayList();
-        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-        List<TblColRef> columnList = baseCuboid.getColumns();
-
-        for (int i = 0; i < columnList.size(); i++) {
-            logger.info("Rowkey column " + i + " length " + cubeSegment.getColumnLength(columnList.get(i)));
-            rowkeyColumnSize.add(cubeSegment.getColumnLength(columnList.get(i)));
-        }
-
+        CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
         int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.toString());
 
@@ -265,8 +267,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
         allCuboids.addAll(cuboidSizeMap.keySet());
         Collections.sort(allCuboids);
 
+        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         for (long cuboidId : allCuboids) {
-            long cuboidSize = estimateCuboidStorageSize(cuboidId, cuboidSizeMap.get(cuboidId), baseCuboidId, rowkeyColumnSize);
+            long cuboidSize = estimateCuboidStorageSize(cubeDesc, cuboidId, cuboidSizeMap.get(cuboidId), baseCuboidId, rowkeyColumnSize);
             cuboidSizeMap.put(cuboidId, cuboidSize);
             totalSizeInM += cuboidSize;
         }
@@ -314,11 +317,12 @@ public class CreateHTableJob extends AbstractHadoopJob {
     /**
      * Estimate the cuboid's size
      *
+     * @param cubeDesc
      * @param cuboidId
      * @param rowCount
      * @return the cuboid size in M bytes
      */
-    private long estimateCuboidStorageSize(long cuboidId, long rowCount, long baseCuboidId, List<Integer> rowKeyColumnLength) {
+    private static long estimateCuboidStorageSize(CubeDesc cubeDesc, long cuboidId, long rowCount, long baseCuboidId, List<Integer> rowKeyColumnLength) {
 
         int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
 
