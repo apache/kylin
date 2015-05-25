@@ -516,7 +516,11 @@ public class MockHTable implements HTableInterface {
                 continue;
             }
             for (KeyValue kv : delete.getFamilyMap().get(family)) {
-                data.get(row).get(kv.getFamily()).remove(kv.getQualifier());
+                if (kv.isDeleteFamily()) {
+                    data.get(row).get(kv.getFamily()).clear();
+                } else {
+                    data.get(row).get(kv.getFamily()).remove(kv.getQualifier());
+                }
             }
             if (data.get(row).get(family).isEmpty()) {
                 data.get(row).remove(family);
@@ -675,7 +679,6 @@ public class MockHTable implements HTableInterface {
     @Override
     public <R extends Message> void batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor, Message request, byte[] startKey, byte[] endKey, R responsePrototype, Batch.Callback<R> callback) throws ServiceException, Throwable {
         throw new NotImplementedException();
-
 
     }
 
