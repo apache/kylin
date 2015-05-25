@@ -680,7 +680,6 @@ public class MockHTable implements HTableInterface {
     public <R extends Message> void batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor, Message request, byte[] startKey, byte[] endKey, R responsePrototype, Batch.Callback<R> callback) throws ServiceException, Throwable {
         throw new NotImplementedException();
 
-
     }
 
     @Override
