@@ -50,6 +50,7 @@ import java.io.IOException;
 
 /**
  */
+@Ignore("this test case will break existing metadata store")
 public class ITKafkaBasedIIStreamBuilderTest {
 
     private static final Logger logger = LoggerFactory.getLogger(ITKafkaBasedIIStreamBuilderTest.class);
