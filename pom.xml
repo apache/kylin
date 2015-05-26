@@ -495,19 +495,19 @@
                         <includePom>true</includePom>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.6</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>integration-test</goal>
-                                <goal>verify</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
+                <!--<plugin>-->
+                    <!--<groupId>org.apache.maven.plugins</groupId>-->
+                    <!--<artifactId>maven-failsafe-plugin</artifactId>-->
+                    <!--<version>2.6</version>-->
+                    <!--<executions>-->
+                        <!--<execution>-->
+                            <!--<goals>-->
+                                <!--<goal>integration-test</goal>-->
+                                <!--<goal>verify</goal>-->
+                            <!--</goals>-->
+                        <!--</execution>-->
+                    <!--</executions>-->
+                <!--</plugin>-->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
@@ -617,16 +617,13 @@
                                     <name>hdp.version</name>
                                     <value>2.2.0.0-2041</value>
                                 </property>
-                                <property>
-                                    <name>buildCubeUsingProvidedData</name>
-                                    <value>false</value>
-                                </property>
                             </systemProperties>
                         </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.6</version>
                         <executions>
                             <execution>
                                 <id>integration-tests</id>
