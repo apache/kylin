@@ -615,7 +615,7 @@
                                 </property>
                                 <property>
                                     <name>hdp.version</name>
-                                    <value>2.2.0.0-2041</value>
+                                    <value>2.2.4.2-2</value>
                                 </property>
                             </systemProperties>
                         </configuration>
