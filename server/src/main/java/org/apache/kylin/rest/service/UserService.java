@@ -24,7 +24,7 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.security.UserManager;
-import org.apache.kylin.rest.util.AclHBaseStorage;
+import org.apache.kylin.rest.security.AclHBaseStorage;
 import org.apache.kylin.rest.util.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;

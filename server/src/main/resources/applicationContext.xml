@@ -1,14 +1,13 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:mvc="http://www.springframework.org/schema/mvc" 
-	xmlns:task="http://www.springframework.org/schema/task"
-	xmlns:metrics="http://www.ryantenney.com/schema/metrics" 
-	xmlns:aop="http://www.springframework.org/schema/aop"
-	xmlns:cache="http://www.springframework.org/schema/cache" 
-	xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:metrics="http://www.ryantenney.com/schema/metrics"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
     http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
     http://www.springframework.org/schema/context
     http://www.springframework.org/schema/context/spring-context-3.1.xsd
@@ -21,114 +20,119 @@
     http://www.springframework.org/schema/aop
     http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
     http://www.springframework.org/schema/cache
-    http://www.springframework.org/schema/cache/spring-cache.xsd
-    http://www.springframework.org/schema/jdbc  
-    http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd">
+    http://www.springframework.org/schema/cache/spring-cache.xsd">
 
-	<description>Kylin Rest Service</description>
-	<context:annotation-config />
-	<mvc:annotation-driven />
-	<aop:aspectj-autoproxy />
+    <description>Kylin Rest Service</description>
+    <context:annotation-config/>
+    <mvc:annotation-driven/>
+    <aop:aspectj-autoproxy/>
 
-	<context:component-scan base-package="org.apache.kylin.rest" />
+    <context:component-scan base-package="org.apache.kylin.rest"/>
 
-	<!-- Matric Spring -->
-	<!-- Registry should be defined in only one context XML file -->
-	<metrics:metric-registry id="metrics" />
+    <!-- Matric Spring -->
+    <!-- Registry should be defined in only one context XML file -->
+    <metrics:metric-registry id="metrics"/>
 
-	<!-- annotation-driven must be included in all context files -->
-	<metrics:annotation-driven metric-registry="metrics" />
+    <!-- annotation-driven must be included in all context files -->
+    <metrics:annotation-driven metric-registry="metrics"/>
 
-	<!--&lt;!&ndash; (Optional) Registry should be defined in only one context XML file &ndash;&gt;-->
-	<!--<metrics:reporter type="ganglia" metric-registry="metrics"-->
-		<!--group="${ganglia.group}" port="${ganglia.port}" udp-mode="MULTICAST"-->
-		<!--ttl="100" period="1m" />-->
+    <!--&lt;!&ndash; (Optional) Registry should be defined in only one context XML file &ndash;&gt;-->
+    <!--<metrics:reporter type="ganglia" metric-registry="metrics"-->
+    <!--group="${ganglia.group}" port="${ganglia.port}" udp-mode="MULTICAST"-->
+    <!--ttl="100" period="1m" />-->
 
-	<!-- (Optional) The metrics in this example require the metrics-jvm jar -->
-	<metrics:register metric-registry="metrics">
-		<bean metrics:name="jvm.gc"
-			class="com.codahale.metrics.jvm.GarbageCollectorMetricSet" />
-		<bean metrics:name="jvm.memory" class="com.codahale.metrics.jvm.MemoryUsageGaugeSet" />
-		<bean metrics:name="jvm.thread-states"
-			class="com.codahale.metrics.jvm.ThreadStatesGaugeSet" />
-		<!--<bean metrics:name="jvm.fd.usage" class="com.codahale.metrics.jvm.FileDescriptorRatioGauge" 
-			/> -->
-	</metrics:register>
-	<!-- Matric Spring -->
+    <!-- (Optional) The metrics in this example require the metrics-jvm jar -->
+    <metrics:register metric-registry="metrics">
+        <bean metrics:name="jvm.gc"
+              class="com.codahale.metrics.jvm.GarbageCollectorMetricSet"/>
+        <bean metrics:name="jvm.memory" class="com.codahale.metrics.jvm.MemoryUsageGaugeSet"/>
+        <bean metrics:name="jvm.thread-states"
+              class="com.codahale.metrics.jvm.ThreadStatesGaugeSet"/>
+        <!--<bean metrics:name="jvm.fd.usage" class="com.codahale.metrics.jvm.FileDescriptorRatioGauge"
+            /> -->
+    </metrics:register>
+    <!-- Matric Spring -->
 
-	<bean class="org.apache.kylin.rest.security.PasswordPlaceholderConfigurer">
-		<property name="ignoreResourceNotFound" value="true" />
-	</bean>
+    <bean class="org.apache.kylin.rest.security.PasswordPlaceholderConfigurer">
+        <property name="ignoreResourceNotFound" value="true"/>
+    </bean>
 
-	<bean id="aclHBaseStorage" class="org.apache.kylin.rest.util.MockAclHBaseStorage"/>
 
-	<!-- Rest service binding -->
-	<bean
-		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />
+    <!-- Rest service binding -->
+    <bean
+            class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
 
-	<bean id="mappingJacksonHttpMessageConverter"
-		class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter" />
-	<bean id="stringHttpMessageConverter"
-		class="org.springframework.http.converter.StringHttpMessageConverter" />
-	<bean id="formHttpMessageConverter"
-		class="org.springframework.http.converter.FormHttpMessageConverter" />
+    <bean id="mappingJacksonHttpMessageConverter"
+          class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
+    <bean id="stringHttpMessageConverter"
+          class="org.springframework.http.converter.StringHttpMessageConverter"/>
+    <bean id="formHttpMessageConverter"
+          class="org.springframework.http.converter.FormHttpMessageConverter"/>
 
-	<bean
-		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
-		<property name="messageConverters">
-			<list>
-				<ref bean="mappingJacksonHttpMessageConverter" />
-				<ref bean="stringHttpMessageConverter" />
-				<ref bean="formHttpMessageConverter" />
-			</list>
-		</property>
-	</bean>
+    <bean
+            class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+        <property name="messageConverters">
+            <list>
+                <ref bean="mappingJacksonHttpMessageConverter"/>
+                <ref bean="stringHttpMessageConverter"/>
+                <ref bean="formHttpMessageConverter"/>
+            </list>
+        </property>
+    </bean>
 
-	<bean
-		class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
-		<property name="mediaTypes">
-			<map>
-				<entry key="html" value="text/html" />
-				<entry key="json" value="application/json" />
-			</map>
-		</property>
-		<property name="viewResolvers">
-			<list>
-				<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
-				<bean
-					class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-					<!-- <property name="prefix" value="/WEB-INF/jsp/"/> -->
-					<property name="suffix" value=".jsp" />
-				</bean>
-			</list>
-		</property>
-		<property name="defaultViews">
-			<list>
-				<bean
-					class="org.springframework.web.servlet.view.json.MappingJackson2JsonView" />
-			</list>
-		</property>
-	</bean>
-	<!-- Rest service binding -->
+    <bean
+            class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="mediaTypes">
+            <map>
+                <entry key="html" value="text/html"/>
+                <entry key="json" value="application/json"/>
+            </map>
+        </property>
+        <property name="viewResolvers">
+            <list>
+                <bean class="org.springframework.web.servlet.view.BeanNameViewResolver"/>
+                <bean
+                        class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                    <!-- <property name="prefix" value="/WEB-INF/jsp/"/> -->
+                    <property name="suffix" value=".jsp"/>
+                </bean>
+            </list>
+        </property>
+        <property name="defaultViews">
+            <list>
+                <bean
+                        class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
+            </list>
+        </property>
+    </bean>
+    <!-- Rest service binding -->
+    <task:annotation-driven/>
+    <bean id="performanceMonitorTask" class="org.apache.kylin.rest.util.PerformanceMonitorTask"></bean>
 
-	<task:annotation-driven />
-	<bean id="performanceMonitorTask" class="org.apache.kylin.rest.util.PerformanceMonitorTask"></bean>
+    <!-- Cache Config -->
+    <cache:annotation-driven/>
 
-	<!-- Cache Config -->
-	<cache:annotation-driven />
-	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
-		p:cacheManager-ref="ehcache" />
-	<!-- Cache Config -->
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+          p:cacheManager-ref="ehcache"/>
+    <beans profile="default">
+        <bean id="ehcache"
+              class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+              p:configLocation="classpath:ehcache.xml" p:shared="true"/>
+    </beans>
+    <beans profile="sandbox,testing">
+        <bean id="ehcache"
+              class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+              p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
+    </beans>
 
-	<beans profile="default">
-		<bean id="ehcache"
-			class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
-			p:configLocation="classpath:ehcache.xml" p:shared="true" />
-	</beans>
+    <!-- hbase storage/global lock Config -->
+    <beans profile="default,sandbox">
+        <bean id="aclHBaseStorage" class="org.apache.kylin.rest.security.RealAclHBaseStorage"/>
+        <bean id="jobLock" class="org.apache.kylin.common.lock.ZookeeperJobLock"/>
+    </beans>
+    <beans profile="testing">
+        <bean id="aclHBaseStorage" class="org.apache.kylin.rest.security.MockAclHBaseStorage"/>
+        <bean id="jobLock" class="org.apache.kylin.common.lock.MockJobLock"/>
+    </beans>
 
-	<beans profile="sandbox,testing">
-		<bean id="ehcache"
-			class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
-			p:configLocation="classpath:ehcache-test.xml" p:shared="true" />
-	</beans>
 </beans>

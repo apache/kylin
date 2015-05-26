@@ -18,16 +18,6 @@
 
 package org.apache.kylin.metadata;
 
-import java.util.List;
-
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -36,6 +26,11 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.junit.*;
+
+import java.util.List;
 
 /**
  * Test the data model upgrade
@@ -47,7 +42,7 @@ public class MetadataUpgradeTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
-        createTestMetadata(LOCALMETA_TEST_DATA_V1);
+        staticCreateTestMetadata(LOCALMETA_TEST_DATA_V1);
     }
 
     @After

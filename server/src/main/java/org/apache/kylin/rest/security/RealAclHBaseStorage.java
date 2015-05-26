@@ -1,4 +1,4 @@
-package org.apache.kylin.rest.util;
+package org.apache.kylin.rest.security;
 
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.kylin.common.KylinConfig;

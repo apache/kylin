@@ -25,7 +25,7 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.rest.util.AclHBaseStorage;
+import org.apache.kylin.rest.security.AclHBaseStorage;
 import org.apache.kylin.rest.util.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

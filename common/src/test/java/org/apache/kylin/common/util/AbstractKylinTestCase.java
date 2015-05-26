@@ -18,9 +18,9 @@
 
 package org.apache.kylin.common.util;
 
-import java.lang.reflect.Method;
-
 import org.apache.kylin.common.KylinConfig;
+
+import java.lang.reflect.Method;
 
 /**
  * @author ysong1
@@ -46,14 +46,7 @@ public abstract class AbstractKylinTestCase {
         return KylinConfig.getInstanceFromEnv();
     }
 
-    public static void staticCreateTestMetadata(String kylinConfigFolder) {
 
-        KylinConfig.destoryInstance();
-
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
-
-    }
 
     public static void staticCleanupTestMetadata() {
         cleanupCache();

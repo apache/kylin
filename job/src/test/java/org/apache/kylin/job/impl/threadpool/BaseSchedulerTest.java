@@ -19,6 +19,7 @@
 package org.apache.kylin.job.impl.threadpool;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -86,7 +87,7 @@ public abstract class BaseSchedulerTest extends HBaseMetadataTestCase {
         setFinalStatic(ExecutableConstants.class.getField("DEFAULT_SCHEDULER_INTERVAL_SECONDS"), 10);
         jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         scheduler = DefaultScheduler.getInstance();
-        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }

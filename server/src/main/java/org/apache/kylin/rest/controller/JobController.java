@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.controller;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.JobLock;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -53,6 +54,9 @@ public class JobController extends BasicController implements InitializingBean {
     @Autowired
     private JobService jobService;
 
+    @Autowired
+    private JobLock jobLock;
+
     /*
      * (non-Javadoc)
      * 
@@ -77,7 +81,7 @@ public class JobController extends BasicController implements InitializingBean {
                 public void run() {
                     try {
                         DefaultScheduler scheduler = DefaultScheduler.getInstance();
-                        scheduler.init(new JobEngineConfig(kylinConfig));
+                        scheduler.init(new JobEngineConfig(kylinConfig), jobLock);
                         while (!scheduler.hasStarted()) {
                             logger.error("scheduler has not been started");
                             Thread.sleep(1000);
