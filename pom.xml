@@ -564,13 +564,18 @@
                         <configuration>
                             <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
-                                <exclude>**/IT*.java</exclude>
                                 <!--Build cube/II need to be run separately-->
+                                <exclude>**/BuildCube*.java</exclude>
+                                <exclude>**/BuildII*.java</exclude>
+
+                                <!--minicluster does not have kafka-->
+                                <exclude>**/ITKafka*.java</exclude>
 
                                 <!--minicluster does not have hive-->
                                 <exclude>**/ITSnapshotManagerTest.java</exclude>
                                 <exclude>**/ITHiveTableReaderTest.java</exclude>
                                 <exclude>**/ITTableControllerTest.java</exclude>
+
                             </excludes>
                             <systemProperties>
                                 <property>
@@ -605,6 +610,8 @@
                             <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
                                 <exclude>**/IT*.java</exclude>
+
+                                <!--Build cube/II need to be run separately-->
                                 <exclude>**/BuildCube*.java</exclude>
                                 <exclude>**/BuildII*.java</exclude>
                             </excludes>
