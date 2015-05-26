@@ -91,7 +91,7 @@ public class BuildCubeWithStreamTest {
     public static void beforeClass() throws Exception {
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
-        System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
+        System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
     }
 
     @Before

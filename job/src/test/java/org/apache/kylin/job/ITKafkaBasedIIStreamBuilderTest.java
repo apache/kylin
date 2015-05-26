@@ -60,7 +60,7 @@ public class ITKafkaBasedIIStreamBuilderTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
-        System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
+        System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
     }
 
     @AfterClass

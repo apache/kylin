@@ -18,19 +18,18 @@
 
 package org.apache.kylin.rest;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
 import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.hadoop.util.Shell;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.util.ClasspathUtil;
+
+import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 public class DebugTomcat {
 
@@ -39,7 +38,7 @@ public class DebugTomcat {
             // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
             ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
             System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
-            System.setProperty("hdp.version", "2.2.0.0-2041"); // mapred-site.xml ref this
+            System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
             System.setProperty("spring.profiles.active", "testing");
 
             // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052
