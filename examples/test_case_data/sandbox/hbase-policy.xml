@@ -1,19 +1,19 @@
-<!--Mon Jan 19 07:29:07 2015-->
-    <configuration>
-    
+<!--Mon May 25 01:30:31 2015-->
+<configuration>
+
     <property>
-      <name>security.admin.protocol.acl</name>
-      <value>*</value>
+        <name>security.admin.protocol.acl</name>
+        <value>*</value>
     </property>
-    
+
     <property>
-      <name>security.client.protocol.acl</name>
-      <value>*</value>
+        <name>security.client.protocol.acl</name>
+        <value>*</value>
     </property>
-    
+
     <property>
-      <name>security.masterregion.protocol.acl</name>
-      <value>*</value>
+        <name>security.masterregion.protocol.acl</name>
+        <value>*</value>
     </property>
-    
-  </configuration>
+
+</configuration>
