@@ -41,6 +41,8 @@
                 expand-level      = "2"
                 initial-selection = "">
             </abn-tree>
-        <div no-result ng-if="modelsManager.modelTreeData.length==0"></div>
+        <div ng-if="modelsManager.loading==true||tableModel.loading==true"><i class="fa fa-2x fa-spinner fa-spin"></i> Loading..</div>
+        <div no-result ng-if="modelsManager.loading==false&&tableModel.loading==false&&modelsManager.modelTreeData.length==0"></div>
+
     </div>
 </div>

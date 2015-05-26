@@ -20,6 +20,9 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
 
 
     var _this = this;
+
+    //tracking loading status
+    var loading = false;
    //for tables in cubeDesigner
     this.selectProjectTables = [];
 
@@ -47,6 +50,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
 
     this.aceSrcTbLoaded = function (forceLoad) {
         _this.selectedSrcDb = [];
+        _this.loading = true;
 
         _this.selectedSrcTable = {};
         var defer = $q.defer();

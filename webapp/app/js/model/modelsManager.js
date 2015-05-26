@@ -19,8 +19,12 @@
 KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessService,ProjectModel,$log,CubeDescService,SweetAlert,cubesManager){
     var _this = this;
     this.models=[];
+
+    //tracking models loading status
+    this.loading = false;
     this.modelTreeData = [];
     this.selectedModel={};
+
     this.cubeModel={};
     this.cubeSelected = false;
 
@@ -31,6 +35,8 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
         var cubeDetail = [];
         var modelPermission = [];
         ModelService.list(queryParam, function (_models) {
+            _this.removeAll();
+            _this.loading = true;
 
             angular.forEach(_models, function (model, index) {
                 $log.info("Add model permission info");
@@ -159,6 +165,7 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
 
     this.removeAll = function(){
         _this.models = [];
+        _this.modelTreeData = [];
     };
 
     this.listAccess = function (entity, type) {

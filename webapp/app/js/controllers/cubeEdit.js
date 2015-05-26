@@ -208,8 +208,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                     CubeService.update({}, {cubeDescData: $scope.state.cubeSchema, cubeName: $routeParams.cubeName, project: $scope.state.project}, function (request) {
                         if (request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':'Updated the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
-
+                            SweetAlert.swal('', 'Updated the cube successfully.', 'success');
+                            $location.path("/models");
                         } else {
                             $scope.saveCubeRollBack();
                             cubesManager.cubeMetaFrame.project = $scope.state.project;
@@ -236,7 +236,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                         if(request.successful) {
                             $scope.state.cubeSchema = request.cubeDescData;
 
-                            MessageService.sendMsg($scope.cubeResultTmpl({'text':'Created the cube successfully.',type:'success'}), 'success', {}, true, 'top_center');
+                            SweetAlert.swal('', 'Created the cube successfully.', 'success');
+                            $location.path("/models");
+                            //location.reload();
+
                         } else {
                             $scope.saveCubeRollBack();
                             cubesManager.cubeMetaFrame.project = $scope.state.project;
