@@ -65,9 +65,7 @@ public class ITTableControllerTest extends ServiceTestBase {
                 break;
             }
         }
-
         Assert.assertNotNull(factTable);
-
 
         Map<String, String[]> loadResult = tableController.loadHiveTable("test_kylin_fact,TEST_CATEGORY_GROUPINGS", "default");
         Assert.assertNotNull(loadResult);
