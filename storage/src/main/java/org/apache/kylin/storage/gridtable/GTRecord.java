@@ -1,11 +1,11 @@
 package org.apache.kylin.storage.gridtable;
 
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.metadata.filter.IFilterCodeSystem;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
+
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 
 public class GTRecord implements Comparable<GTRecord> {
 
@@ -14,19 +14,12 @@ public class GTRecord implements Comparable<GTRecord> {
 
     private BitSet maskForEqualHashComp;
 
-    public GTRecord(GTInfo info, BitSet maskForEqualHashComp) {
+    public GTRecord(GTInfo info) {
         this.info = info;
         this.cols = new ByteArray[info.getColumnCount()];
-        for (int i = 0; i < cols.length; i++) {
-            if (maskForEqualHashComp.get(i)) {
-                this.cols[i] = new ByteArray();
-            }
-        }
-        this.maskForEqualHashComp = maskForEqualHashComp;
-    }
-
-    public GTRecord(GTInfo info) {
-        this(info, info.colAll);
+        for (int i = 0; i < cols.length; i++)
+            this.cols[i] = new ByteArray();
+        this.maskForEqualHashComp = info.colAll;
     }
 
     public GTInfo getInfo() {
@@ -69,11 +62,10 @@ public class GTRecord implements Comparable<GTRecord> {
     public Object[] getValues(BitSet selectedColumns, Object[] result) {
         assert selectedColumns.cardinality() <= result.length;
         for (int i = 0, c = selectedColumns.nextSetBit(0); c >= 0; i++, c = selectedColumns.nextSetBit(c + 1)) {
-            if (cols[c] == null || cols[c].array() == null) {
+            if (cols[c].array() == null)
                 result[i] = null;
-            } else {
+            else
                 result[i] = info.codeSystem.decodeColumnValue(c, cols[c].asBuffer());
-            }
         }
         return result;
     }
@@ -82,11 +74,10 @@ public class GTRecord implements Comparable<GTRecord> {
         assert selectedColumns.length <= result.length;
         for (int i = 0; i < selectedColumns.length; i++) {
             int c = selectedColumns[i];
-            if (cols[c].array() == null) {
+            if (cols[c].array() == null)
                 result[i] = null;
-            } else {
+            else
                 result[i] = info.codeSystem.decodeColumnValue(c, cols[c].asBuffer());
-            }
         }
         return result;
     }
@@ -103,7 +94,8 @@ public class GTRecord implements Comparable<GTRecord> {
 
         byte[] space = new byte[len];
 
-        GTRecord copy = new GTRecord(info, this.maskForEqualHashComp);
+        GTRecord copy = new GTRecord(info);
+        copy.maskForEqualHashComp = this.maskForEqualHashComp;
         int pos = 0;
         for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
             System.arraycopy(cols[i].array(), cols[i].offset(), space, pos, cols[i].length());
@@ -137,9 +129,8 @@ public class GTRecord implements Comparable<GTRecord> {
         if (this.maskForEqualHashComp != o.maskForEqualHashComp)
             return false;
         for (int i = maskForEqualHashComp.nextSetBit(0); i >= 0; i = maskForEqualHashComp.nextSetBit(i + 1)) {
-            if (this.cols[i].equals(o.cols[i]) == false) {
+            if (this.cols[i].equals(o.cols[i]) == false)
                 return false;
-            }
         }
         return true;
     }
@@ -170,7 +161,7 @@ public class GTRecord implements Comparable<GTRecord> {
 
     @Override
     public String toString() {
-        return toString(maskForEqualHashComp);
+        return toString(info.colAll);
     }
     
     public String toString(BitSet selectedColumns) {
