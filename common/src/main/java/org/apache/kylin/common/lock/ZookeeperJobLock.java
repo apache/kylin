@@ -23,11 +23,14 @@ public class ZookeeperJobLock implements JobLock {
     private Logger logger = LoggerFactory.getLogger(ZookeeperJobLock.class);
 
     private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
+
+    private String scheduleID;
     private InterProcessMutex sharedLock;
     private CuratorFramework zkClient;
 
     @Override
     public boolean lock() {
+        this.scheduleID = schedulerId();
         String ZKConnectString = getZKConnectString();
         if (StringUtils.isEmpty(ZKConnectString)) {
             throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
@@ -36,7 +39,7 @@ public class ZookeeperJobLock implements JobLock {
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         this.zkClient = CuratorFrameworkFactory.newClient(ZKConnectString, retryPolicy);
         this.zkClient.start();
-        this.sharedLock = new InterProcessMutex(zkClient, schedulerId());
+        this.sharedLock = new InterProcessMutex(zkClient, this.scheduleID);
         boolean hasLock = false;
         try {
             hasLock = sharedLock.acquire(3, TimeUnit.SECONDS);
@@ -65,12 +68,12 @@ public class ZookeeperJobLock implements JobLock {
         try {
             if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
                 // client.setData().forPath(ZOOKEEPER_LOCK_PATH, null);
-                if (zkClient.checkExists().forPath(schedulerId()) != null) {
-                    zkClient.delete().guaranteed().deletingChildrenIfNeeded().forPath(schedulerId());
+                if (zkClient.checkExists().forPath(scheduleID) != null) {
+                    zkClient.delete().guaranteed().deletingChildrenIfNeeded().forPath(scheduleID);
                 }
             }
         } catch (Exception e) {
-            logger.error("error release lock:" + schedulerId());
+            logger.error("error release lock:" + scheduleID);
             throw new RuntimeException(e);
         }
     }
