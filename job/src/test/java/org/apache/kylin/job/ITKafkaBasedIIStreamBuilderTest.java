@@ -50,9 +50,9 @@ import java.io.IOException;
 
 /**
  */
-public class ITIIStreamBuilderTest {
+public class ITKafkaBasedIIStreamBuilderTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(ITIIStreamBuilderTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ITKafkaBasedIIStreamBuilderTest.class);
 
     private KylinConfig kylinConfig;
 
