@@ -639,6 +639,7 @@
                         </executions>
                         <configuration>
                             <excludes>
+                                <exclude>**/*$*</exclude>
                                 <exclude>**/ITKafka*.java</exclude>
                             </excludes>
                             <systemProperties>
