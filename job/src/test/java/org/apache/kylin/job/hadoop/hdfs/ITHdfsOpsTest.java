@@ -18,22 +18,21 @@
 
 package org.apache.kylin.job.hadoop.hdfs;
 
-import java.io.IOException;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import java.io.IOException;
 
 /**
  */
-public class HdfsOpsTest extends LocalFileMetadataTestCase {
+public class ITHdfsOpsTest extends HBaseMetadataTestCase {
 
     FileSystem fileSystem;
 
