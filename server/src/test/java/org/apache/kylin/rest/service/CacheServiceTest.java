@@ -64,7 +64,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        createTestMetadata(LOCALMETA_TEST_DATA);
+        staticCreateTestMetadata(LOCALMETA_TEST_DATA);
         configA = KylinConfig.getInstanceFromEnv();
         configB = KylinConfig.getKylinConfigFromInputStream(KylinConfig.getKylinPropertiesAsInputSteam());
         configB.setMetadataUrl("../examples/test_metadata");

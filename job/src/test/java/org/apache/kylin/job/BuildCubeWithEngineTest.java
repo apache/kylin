@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -92,18 +93,17 @@ public class BuildCubeWithEngineTest {
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
 
-
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.getInstance();
-        scheduler.init(new JobEngineConfig(kylinConfig));
+        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
         cubeManager = CubeManager.getInstance(kylinConfig);
         jobEngineConfig = new JobEngineConfig(kylinConfig);
         for (String jobId : jobService.getAllJobIds()) {
-            if(jobService.getJob(jobId) instanceof CubingJob){
+            if (jobService.getJob(jobId) instanceof CubingJob) {
                 jobService.deleteJob(jobId);
             }
         }
@@ -123,18 +123,12 @@ public class BuildCubeWithEngineTest {
     }
 
     private void testInner() throws Exception {
-        String[] testCase = new String[]{
-                "testInnerJoinCube",
-                "testInnerJoinCube2",
-        };
+        String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", };
         runTestAndAssertSucceed(testCase);
     }
 
     private void testLeft() throws Exception {
-        String[] testCase = new String[]{
-                "testLeftJoinCube",
-                "testLeftJoinCube2",
-        };
+        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2", };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -187,7 +181,8 @@ public class BuildCubeWithEngineTest {
         }
     }
 
-    @SuppressWarnings("unused") // called by reflection
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testInnerJoinCube2() throws Exception {
         clearSegment("test_kylin_cube_with_slr_empty");
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -201,10 +196,10 @@ public class BuildCubeWithEngineTest {
         return result;
     }
 
-    @SuppressWarnings("unused") // called by reflection
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testInnerJoinCube() throws Exception {
         clearSegment("test_kylin_cube_without_slr_empty");
-
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -213,7 +208,6 @@ public class BuildCubeWithEngineTest {
         long date1 = 0;
         long date2 = f.parse("2013-01-01").getTime();
 
-
         // this cube doesn't support incremental build, always do full build
 
         List<String> result = Lists.newArrayList();
@@ -221,7 +215,8 @@ public class BuildCubeWithEngineTest {
         return result;
     }
 
-    @SuppressWarnings("unused") // called by reflection
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testLeftJoinCube2() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -243,7 +238,8 @@ public class BuildCubeWithEngineTest {
 
     }
 
-    @SuppressWarnings("unused") // called by reflection
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testLeftJoinCube() throws Exception {
         String cubeName = "test_kylin_cube_with_slr_left_join_empty";
         clearSegment(cubeName);
@@ -263,9 +259,8 @@ public class BuildCubeWithEngineTest {
     private void clearSegment(String cubeName) throws Exception {
         CubeInstance cube = cubeManager.getCube(cubeName);
         cube.getSegments().clear();
-        cubeManager.updateCube(cube,true);
+        cubeManager.updateCube(cube, true);
     }
-
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {
         CubeSegment segment = cubeManager.appendSegments(cubeManager.getCube(cubeName), endDate);

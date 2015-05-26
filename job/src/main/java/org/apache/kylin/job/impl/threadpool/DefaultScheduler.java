@@ -18,31 +18,17 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.commons.lang.StringUtils;
-import org.apache.curator.RetryPolicy;
+import com.google.common.collect.Maps;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.imps.CuratorFrameworkState;
-import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
-import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HConstants;
+import org.apache.kylin.common.lock.JobLock;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.exception.SchedulerException;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
@@ -50,14 +36,13 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-import org.apache.kylin.common.util.HadoopUtil;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  */
 public class DefaultScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
 
-    private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
 
     private ExecutableManager executableManager;
     private ScheduledExecutorService fetcherPool;
@@ -67,9 +52,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private Logger logger = LoggerFactory.getLogger(DefaultScheduler.class);
     private volatile boolean initialized = false;
     private volatile boolean hasStarted = false;
-    private CuratorFramework zkClient;
     private JobEngineConfig jobEngineConfig;
-    private InterProcessMutex sharedLock;
 
     private static final DefaultScheduler INSTANCE = new DefaultScheduler();
 
@@ -139,29 +122,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
     }
 
-    private void releaseLock() {
-        try {
-            if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
-                // client.setData().forPath(ZOOKEEPER_LOCK_PATH, null);
-                if (zkClient.checkExists().forPath(schedulerId()) != null) {
-                    zkClient.delete().guaranteed().deletingChildrenIfNeeded().forPath(schedulerId());
-                }
-            }
-        } catch (Exception e) {
-            logger.error("error release lock:" + schedulerId());
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String schedulerId() {
-        return ZOOKEEPER_LOCK_PATH + "/" + jobEngineConfig.getConfig().getMetadataUrlPrefix();
-    }
-
-    private String getZKConnectString(JobEngineConfig context) {
-        Configuration conf = HadoopUtil.newHBaseConfiguration(context.getConfig().getStorageUrl());
-        return conf.get(HConstants.ZOOKEEPER_QUORUM) + ":" + conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-    }
-
     public static DefaultScheduler getInstance() {
         return INSTANCE;
     }
@@ -178,33 +138,17 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     }
 
     @Override
-    public synchronized void init(JobEngineConfig jobEngineConfig) throws SchedulerException {
+    public synchronized void init(JobEngineConfig jobEngineConfig, final JobLock jobLock) throws SchedulerException {
         if (!initialized) {
             initialized = true;
         } else {
             return;
         }
-        String ZKConnectString = getZKConnectString(jobEngineConfig);
-        if (StringUtils.isEmpty(ZKConnectString)) {
-            throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
-        }
 
         this.jobEngineConfig = jobEngineConfig;
-        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        this.zkClient = CuratorFrameworkFactory.newClient(ZKConnectString, retryPolicy);
-        this.zkClient.start();
-        this.sharedLock = new InterProcessMutex(zkClient, schedulerId());
-        boolean hasLock = false;
-        try {
-            hasLock = sharedLock.acquire(3, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            logger.warn("error acquire lock", e);
-        }
-        if (!hasLock) {
-            logger.warn("fail to acquire lock, scheduler has not been started");
-            zkClient.close();
-            return;
-        }
+
+        jobLock.lock();
+
         executableManager = ExecutableManager.getInstance(jobEngineConfig.getConfig());
         //load all executable, set them to a consistent status
         fetcherPool = Executors.newScheduledThreadPool(1);
@@ -224,6 +168,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                 logger.debug("Closing zk connection");
                 try {
                     shutdown();
+                    jobLock.unlock();
                 } catch (SchedulerException e) {
                     logger.error("error shutdown scheduler", e);
                 }
@@ -238,7 +183,6 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     public void shutdown() throws SchedulerException {
         fetcherPool.shutdown();
         jobPool.shutdown();
-        releaseLock();
     }
 
     @Override

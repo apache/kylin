@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common.util;
 
+import org.apache.kylin.common.KylinConfig;
+
 import java.io.File;
 
 /**
@@ -52,6 +54,14 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
             staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
             HBaseMiniclusterHelper.startupMinicluster();
         }
+
+    }
+    public static void staticCreateTestMetadata(String kylinConfigFolder) {
+
+        KylinConfig.destoryInstance();
+
+        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
+            System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
 
     }
 
