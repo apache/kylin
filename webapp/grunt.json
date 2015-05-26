@@ -47,7 +47,7 @@
         "css": {
             "src": [
                 "app/components/bootstrap/dist/css/bootstrap.min.css",
-                "app/components/font-awesome/css/font-awesome.min.css",
+                "app/components/components-font-awesome/css/font-awesome.css",
                 "app/css/AdminLTE-fonts.css",
                 "app/components/ng-grid/ng-grid.css",
                 "app/components/angular-tree-control/css/tree-control.css",
@@ -61,7 +61,8 @@
                 "app/css/AdminLTE.css",
                 "app/css/skins/_all-skins.min.css",
                 "app/components/bootstrap-sweetalert/lib/sweet-alert.css",
-                "tmp/css/styles.css"
+                "app/components/angular-bootstrap-nav-tree/dist/abn_tree.css"
+                "tmp/css/styles.css",
             ],
             "dest": "tmp/css/styles.min.css"
         }
