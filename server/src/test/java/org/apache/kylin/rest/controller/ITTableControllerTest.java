@@ -23,6 +23,7 @@ import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,6 +34,8 @@ import java.util.Map;
 /**
  * @author shaoshi
  */
+//TODO: break this into unit tests
+@Ignore("ServiceTestBase has been changed to local meta tests, thus not suitable for hive related tests")
 public class ITTableControllerTest extends ServiceTestBase {
 
     private TableController tableController;
