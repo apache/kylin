@@ -645,6 +645,7 @@
                             <excludes>
                                 <exclude>**/*$*</exclude>
                                 <exclude>**/ITKafka*.java</exclude>
+
                             </excludes>
                             <systemProperties>
                                 <property>
