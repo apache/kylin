@@ -1,6 +1,6 @@
 {
-  "name": "base",
-  "version": "0.0.1",
+  "name": "ApacheKylinWebApp",
+  "version": "0.7.1",
   "dependencies": {
     "angular-bootstrap": "0.10.0",
     "angular": "1.2.15",
