@@ -1,11 +1,11 @@
 {
-    "name": "base",
-    "version": "0.0.1",
-    "description": "Client Base Applicaion",
-    "author": "DataHub",
+    "name": "ApacheKylinWebApp",
+    "version": "0.7.1",
+    "description": "Apache Kylin Web Application",
+    "author": "ApacheKylin",
     "repository": {
         "type:": "git",
-        "url": "https://github.com/KylinOLAP/Kylin.git"
+        "url": "https://github.com/apache/incubator-kylin.git"
     },
     "devDependencies": {
         "grunt": "~0.4.x",
