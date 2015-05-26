@@ -156,7 +156,9 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                     ModelService.update({}, {modelDescData:$scope.state.modelSchema, modelName: $routeParams.modelName, project: $scope.state.project}, function (request) {
                         if (request.successful) {
                             $scope.state.modelSchema = request.modelSchema;
-                            MessageService.sendMsg($scope.modelResultTmpl({'text':'Updated the model successfully.',type:'success'}), 'success', {}, true, 'top_center');
+                            SweetAlert.swal('', 'Updated the model successfully.', 'success');
+                            $location.path("/models");
+                            //location.reload();
                         } else {
                                $scope.saveModelRollBack();
                                 var message =request.message;
@@ -181,9 +183,11 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                 } else {
                     ModelService.save({}, {modelDescData:$scope.state.modelSchema, project: $scope.state.project}, function (request) {
                         if(request.successful) {
-                            $scope.state.modelSchema = request.modelSchema;
 
-                            MessageService.sendMsg($scope.modelResultTmpl({'text':'Created the model successfully.',type:'success'}), 'success', {}, true, 'top_center');
+                          $scope.state.modelSchema = request.modelSchema;
+                          SweetAlert.swal('', 'Created the model successfully.', 'success');
+                          $location.path("/models");
+                          location.reload();
                         } else {
                             $scope.saveModelRollBack();
                             var message =request.message;

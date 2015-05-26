@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,modelsManager,cubesManager) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,modelsManager,cubesManager,TableModel) {
 
         //tree data
 
@@ -26,6 +26,9 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         $scope.cube = {};
 
         $scope.showModels=true;
+
+        //tracking data loading status in /models page
+        $scope.tableModel = TableModel;
 
         $scope.toggleTab = function(showModel){
             $scope.showModels = showModel;
@@ -43,42 +46,6 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
             projectName: $routeParams.projectName
         };
 
-
-        //  TODO offset&limit
-        $scope.list = function () {
-            var defer = $q.defer();
-            if(!$scope.projectModel.projects.length){
-                defer.resolve([]);
-                return defer.promise;
-            }
-
-            var queryParam = {};
-            if ($scope.listParams.modelName) {
-                queryParam.modelName = $scope.listParams.modelName;
-            }
-            queryParam.projectName = $scope.projectModel.selectedProject;
-
-            $scope.loading = true;
-
-             modelsManager.list(queryParam).then(function(resp){
-                $scope.loading = false;
-                defer.resolve(resp);
-            },function(resp){
-                $scope.loading = false;
-                defer.resolve([]);
-            });
-
-            return  defer.promise;
-        };
-
-        //add ref for selectedModel
-//        $scope.model = modelsManager.selectedModel;
-//        $scope.cubeSelected = modelsManager.cubeSelected;
-//        $scope.cube = modelsManager.selectedCube;
-//        $scope.cubeMetaFrame =modelsManager.cubeDetail;
-//        $scope.cube={detail: modelsManager.cubeDetail};
-//        $scope.metaModel = {model:modelsManager.curModel};
-
         $scope.init = function(){
 
             var queryParam = {};
@@ -88,7 +55,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
             queryParam.projectName = $scope.projectModel.selectedProject;
 
             modelsManager.generatorTreeData(queryParam).then(function(resp){
-//                $scope.models_treedata = resp;
+              modelsManager.loading = false;
             });
 
         };
@@ -96,8 +63,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
                 modelsManager.removeAll();
                 //init selected model
-//                $scope.model = {};
-                modelsManager.selectedModel;
+                modelsManager.selectedModel = {};
                 $scope.init();
 
         });
