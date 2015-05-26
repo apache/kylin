@@ -68,8 +68,6 @@
         <commons-configuration.version>1.9</commons-configuration.version>
         <commons-daemon.version>1.0.15</commons-daemon.version>
         <commons-httpclient.version>3.1</commons-httpclient.version>
-        <commons-collections4.version>4.0</commons-collections4.version>
-
 
         <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>
@@ -340,11 +338,6 @@
                 <groupId>commons-httpclient</groupId>
                 <artifactId>commons-httpclient</artifactId>
                 <version>${commons-httpclient.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-collections4</artifactId>
-                <version>${commons-collections4.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
