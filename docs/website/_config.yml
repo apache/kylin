@@ -28,6 +28,8 @@ encoding: UTF-8
 
 # Build settings
 markdown: kramdown
+# Code highlight
+highlighter: pygments
 # Permalinks, default is pretty
 permalink: pretty
 
