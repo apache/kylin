@@ -33,7 +33,6 @@ KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel,mo
 
     // Dump available columns plus column table name, whether is from lookup table.
     $scope.initColumns = function () {
-        var factTable = modelsManager.selectedModel.fact_table;
 
         $scope.availableTables.push(modelsManager.selectedModel.fact_table);
         var lookups = modelsManager.selectedModel.lookups;
@@ -41,23 +40,16 @@ KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel,mo
             $scope.availableTables.push(lookups[j].table);
         }
 
-//        init dimension only when dimen
-//        if(!modelsManager.selectedModel.dimensions.length){
+        for(var i = 0;i<$scope.availableTables.length;i++){
+            var tableInUse = _.some(modelsManager.selectedModel.dimensions,function(item){
+                return item.table == $scope.availableTables[i];
+            });
 
-            for(var i = 0;i<$scope.availableTables.length;i++){
-                var tableInUse = _.some(modelsManager.selectedModel.dimensions,function(item){
-                    return item.table == $scope.availableTables[i];
-                });
-
-                if(!tableInUse){
-                    modelsManager.selectedModel.dimensions.push(new Dimension($scope.availableTables[i]));
-                }
+            if(!tableInUse){
+                modelsManager.selectedModel.dimensions = modelsManager.selectedModel.dimensions==null?[]:modelsManager.selectedModel.dimensions;
+                modelsManager.selectedModel.dimensions.push(new Dimension($scope.availableTables[i]));
             }
-//        }
-
-        // At first dump the columns of fact table.
-//        var cols = $scope.getColumnsByTable(factTable);
-
+        }
 
     };
 

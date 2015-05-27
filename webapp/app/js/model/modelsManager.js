@@ -36,7 +36,6 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
         var modelPermission = [];
         ModelService.list(queryParam, function (_models) {
             _this.removeAll();
-            _this.loading = true;
 
             angular.forEach(_models, function (model, index) {
                 $log.info("Add model permission info");
@@ -47,7 +46,6 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
                 )
                 $log.info("Add cube info to model ,not detail info");
                 cubeDetail.push(
-//                    CubeService.list({offset: 0, limit: 70,modelName:model.name}, function (_cubes) {
                     CubeService.list({modelName:model.name}, function (_cubes) {
                     model.cubes = _cubes;
                     }).$promise
@@ -58,7 +56,7 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
             $q.all(cubeDetail,modelPermission).then(
                 function(result){
                     _models = _.filter(_models,function(models){return models.name!=undefined});
-                    _this.models = _this.models.concat(_models);
+                    _this.models = _models;
                     defer.resolve(_this.models);
                 }
             );
@@ -71,6 +69,7 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
 
     //generator tree data info
     this.generatorTreeData = function(queryParam){
+      _this.loading = true;
         var defer = $q.defer();
         _this.list(queryParam).then(function(resp){
             _this.modelTreeData = [];
@@ -94,18 +93,11 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
                             onSelect:function(branch){
                                 $log.info("cube selected:"+branch.data.name);
                                 _this.cubeSelected = true;
-//                                    $scope.cubeMetaFrame = branch.data;
-//                                _this.selectedCube = branch.data;
                                 cubesManager.currentCube = branch.data;
                                 _this.listAccess(cubesManager.currentCube, 'CubeInstance');
 
                                 CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
                                     if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
-                                        //cubeMetaFrame for cube view and edit
-//                                        $scope.cubeMetaFrame = detail[0];
-                                        //for show detail info
-//                                        $scope.cube.detail = detail[0];
-                                        //add model info
                                         cubesManager.currentCube.detail = detail[0];
                                         cubesManager.cubeMetaFrame = detail[0];
                                         _this.cubeModel = _this.getModelByCube(cubesManager.currentCube.name);
@@ -165,6 +157,7 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
 
     this.removeAll = function(){
         _this.models = [];
+        _this.selectedModel = {};
         _this.modelTreeData = [];
     };
 

@@ -24,14 +24,6 @@
         }
     },
     {
-        "url": "/cubes/add/json",
-        "params": {
-            "templateUrl": "partials/cubes/cube_json_edit.html",
-            "tab": "models",
-            "controller": "CubeEditCtrl"
-        }
-    },
-    {
         "url": "/cubes/edit/:cubeName/json",
         "params": {
             "templateUrl": "partials/cubes/cube_json_edit.html",
