@@ -1,5 +1,6 @@
 package org.apache.kylin.storage.gridtable;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -40,36 +41,36 @@ public class GTRowBlock {
             this.cellBlocks[i] = new ByteArray();
         }
     }
-    
+
     public int getSequenceId() {
         return seqId;
     }
-    
+
     public ByteArray getPrimaryKey() {
         return primaryKey;
     }
-    
+
     public ByteArray getCellBlock(int i) {
         return cellBlocks[i];
     }
-    
+
     public Writer getWriter() {
         return new Writer();
     }
 
     public class Writer {
         ByteBuffer[] cellBlockBuffers;
-        
+
         Writer() {
             cellBlockBuffers = new ByteBuffer[info.colBlocks.length];
             for (int i = 0; i < cellBlockBuffers.length; i++) {
                 cellBlockBuffers[i] = cellBlocks[i].asBuffer();
             }
         }
-        
+
         public void copyFrom(GTRowBlock other) {
             assert info == other.info;
-            
+
             seqId = other.seqId;
             nRows = other.nRows;
             primaryKey.copyFrom(other.primaryKey);
@@ -89,7 +90,7 @@ public class GTRowBlock {
             }
             nRows++;
         }
-        
+
         public void readyForFlush() {
             for (int i = 0; i < cellBlocks.length; i++) {
                 cellBlocks[i].setLength(cellBlockBuffers[i].position());
@@ -104,21 +105,21 @@ public class GTRowBlock {
             }
         }
     }
-    
+
     public Reader getReader() {
         return new Reader(info.colBlocksAll);
     }
-    
+
     public Reader getReader(BitSet selectedColBlocks) {
         return new Reader(selectedColBlocks);
     }
-    
+
     public class Reader {
         int cur;
         ByteBuffer primaryKeyBuffer;
         ByteBuffer[] cellBlockBuffers;
         BitSet selectedColBlocks;
-        
+
         Reader(BitSet selectedColBlocks) {
             primaryKeyBuffer = primaryKey.asBuffer();
             cellBlockBuffers = new ByteBuffer[info.colBlocks.length];
@@ -127,15 +128,15 @@ public class GTRowBlock {
             }
             this.selectedColBlocks = selectedColBlocks;
         }
-        
+
         public boolean hasNext() {
             return cur < nRows;
         }
-        
+
         public void fetchNext(GTRecord result) {
             if (hasNext() == false)
                 throw new IllegalArgumentException();
-            
+
             for (int c = selectedColBlocks.nextSetBit(0); c >= 0; c = selectedColBlocks.nextSetBit(c + 1)) {
                 result.loadCellBlock(c, cellBlockBuffers[c]);
             }
@@ -153,7 +154,7 @@ public class GTRowBlock {
 
         return copy;
     }
-    
+
     public boolean isEmpty() {
         return nRows == 0;
     }
@@ -164,7 +165,7 @@ public class GTRowBlock {
         else
             return nRows > 0;
     }
-    
+
     public int getNumberOfRows() {
         return nRows;
     }
@@ -172,36 +173,41 @@ public class GTRowBlock {
     public void setNumberOfRows(int nRows) {
         this.nRows = nRows;
     }
-
-    // TODO export / load should optimize for disabled row block
     
+    // ============================================================================
+
     public int exportLength() {
-        int len = 4 + 4 + (4 + primaryKey.length());
+        int len = 4; // seq Id
+        if (info.isRowBlockEnabled())
+            len += 4; // nRows
+        len += 4 + primaryKey.length(); // PK byte array
         for (ByteArray array : cellBlocks) {
-            len += 4 + array.length();
+            len += 4 + array.length(); // cell block byte array
         }
         return len;
     }
 
-    public void export(DataOutputStream dataOutputStream) throws IOException {
-        dataOutputStream.writeInt(seqId);
-        dataOutputStream.writeInt(nRows);
-        export(dataOutputStream, primaryKey);
+    /** write data to given output stream, like serialize */
+    public void export(DataOutputStream out) throws IOException {
+        out.writeInt(seqId);
+        if (info.isRowBlockEnabled())
+            out.writeInt(nRows);
+        export(out, primaryKey);
         for (ByteArray cb : cellBlocks) {
-            export(dataOutputStream, cb);
+            export(out, cb);
         }
     }
 
-    private void export(DataOutputStream dataOutputStream, ByteArray array) throws IOException {
-        dataOutputStream.writeInt(array.length());
-        dataOutputStream.write(array.array(), array.offset(), array.length());
+    private void export(DataOutputStream out, ByteArray array) throws IOException {
+        out.writeInt(array.length());
+        out.write(array.array(), array.offset(), array.length());
     }
-
 
     /** write data to given buffer, like serialize */
     public void export(ByteBuffer buf) {
         buf.putInt(seqId);
-        buf.putInt(nRows);
+        if (info.isRowBlockEnabled())
+            buf.putInt(nRows);
         export(primaryKey, buf);
         for (ByteArray cb : cellBlocks) {
             export(cb, buf);
@@ -212,11 +218,29 @@ public class GTRowBlock {
         buf.putInt(array.length());
         buf.put(array.array(), array.offset(), array.length());
     }
+    
+    /** read data from given input stream, like deserialize */
+    public void importFrom(DataInputStream in) throws IOException {
+        seqId = in.readInt();
+        nRows = info.isRowBlockEnabled() ? in.readInt() : 1;
+        importFrom(in, primaryKey);
+        for (int i = 0; i < info.colBlocks.length; i++) {
+            ByteArray cb = cellBlocks[i];
+            importFrom(in, cb);
+        }
+    }
+
+    private void importFrom(DataInputStream in, ByteArray result) throws IOException {
+        byte[] data = result.array();
+        int len = in.readInt();
+        in.read(data, 0, len);
+        result.set(data, 0, len);
+    }
 
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
     public void load(ByteBuffer buf) {
         seqId = buf.getInt();
-        nRows = buf.getInt();
+        nRows = info.isRowBlockEnabled() ? buf.getInt() : 1;
         load(primaryKey, buf);
         for (int i = 0; i < info.colBlocks.length; i++) {
             ByteArray cb = cellBlocks[i];
