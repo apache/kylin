@@ -20,7 +20,7 @@ package org.apache.kylin.dict;
 
 import java.io.File;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dict.lookup.FileTable;
 import org.apache.kylin.dict.lookup.LookupBytesTable;
 import org.junit.After;

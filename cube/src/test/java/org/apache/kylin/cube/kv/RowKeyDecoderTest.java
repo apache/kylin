@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

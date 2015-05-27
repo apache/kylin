@@ -18,7 +18,7 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 
 /**
  * @author yangli9

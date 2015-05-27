@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;

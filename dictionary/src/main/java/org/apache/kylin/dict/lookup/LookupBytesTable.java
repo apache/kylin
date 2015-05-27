@@ -20,7 +20,7 @@ package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.metadata.model.TableDesc;

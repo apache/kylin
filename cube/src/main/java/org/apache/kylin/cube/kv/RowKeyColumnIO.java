@@ -21,7 +21,7 @@ package org.apache.kylin.cube.kv;
 import java.util.Arrays;
 
 import org.apache.kylin.dict.ISegment;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

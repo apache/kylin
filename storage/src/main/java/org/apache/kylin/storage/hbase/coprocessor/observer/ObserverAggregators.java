@@ -27,7 +27,7 @@ import java.util.List;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
 
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;

@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.junit.Assert;
 import org.junit.Test;

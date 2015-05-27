@@ -21,7 +21,7 @@ package org.apache.kylin.storage.hbase.coprocessor;
 import java.util.Collection;
 import java.util.Set;
 
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 
 import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.BytesUtil;

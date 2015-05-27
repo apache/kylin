@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
