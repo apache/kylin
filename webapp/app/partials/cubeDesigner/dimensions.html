@@ -37,10 +37,7 @@
                     <i class="fa fa-building-o"></i> Auto Generator
                 </button>
             </div>
-            <div class="col-xs-6" ng-if="state.mode!='edit'">
-            </div>
-            <div class="col-xs-6">
-                <b>Dimensions</b>
+            <div ng-class="(state.mode=='edit')?'col-xs-6':'col-xs-12'">
                 <span class="pull-right input-icon input-icon-right nav-search" style="margin-left: 22px;">
                     <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="dimState.filter"/>
                     <i class="ace-icon fa fa-search nav-search-icon"></i>

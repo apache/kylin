@@ -41,17 +41,12 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         $scope.loading = false;
         $scope.action = {};
         $scope.window = 0.68 * $window.innerHeight;
-        $scope.listParams={
-            cubeName: $routeParams.cubeName,
-            projectName: $routeParams.projectName
-        };
+
 
         $scope.init = function(){
 
             var queryParam = {};
-            if ($scope.listParams.modelName) {
-                queryParam.modelName = $scope.listParams.modelName;
-            }
+
             queryParam.projectName = $scope.projectModel.selectedProject;
 
             modelsManager.generatorTreeData(queryParam).then(function(resp){
@@ -62,8 +57,6 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
                 modelsManager.removeAll();
-                //init selected model
-                modelsManager.selectedModel = {};
                 $scope.init();
 
         });
