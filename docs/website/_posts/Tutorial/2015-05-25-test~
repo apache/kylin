@@ -1,0 +1,28 @@
+---
+layout: post
+title:  "test"
+date:   2015-05-25
+author: clw
+categories: test
+---
+
+3. There are different types of dimensions that might be added to a cube. Here we list some of them for your reference.
+
+    * Dimensions from fact table.
+
+          https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tutorial/8%20dim-typeA.png
+ssadfs
+
+dddd gdg
+
+   Dimensions from look up table.
+         ![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tutorial/8%20dim-typeB-1.png)
+
+          ![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tutorial/8%20dim-typeB-2.png)     
+   
+    * Dimensions from look up table with hierarchy.
+          ![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tutorial/8%20dim-typeC.png)
+
+    * Dimensions from look up table with derived dimensions.
+          ![](https://github.com/KylinOLAP/kylinolap.github.io/blob/master/docs/tutorial/8%20dim-typeD.png)
+
