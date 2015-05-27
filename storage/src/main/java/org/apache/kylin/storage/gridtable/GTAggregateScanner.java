@@ -1,24 +1,30 @@
 package org.apache.kylin.storage.gridtable;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
-import org.apache.kylin.metadata.measure.MeasureAggregator;
-
-import com.google.common.collect.Maps;
-
 public class GTAggregateScanner implements IGTScanner {
 
+    private static final Logger logger = LoggerFactory.getLogger(GTAggregateScanner.class);
     final GTInfo info;
     final BitSet dimensions; // dimensions to return, can be more than group by
     final BitSet groupBy;
     final BitSet metrics;
     final String[] metricsAggrFuncs;
     final IGTScanner inputScanner;
+
 
     public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
         if (req.hasAggregation() == false)
@@ -55,13 +61,119 @@ public class GTAggregateScanner implements IGTScanner {
 
     @Override
     public Iterator<GTRecord> iterator() {
-        AggregationCache aggrCache = new AggregationCache();
+        AggregationCacheWithBytesKey aggregationCacheWithBytesKey = new AggregationCacheWithBytesKey();
         for (GTRecord r : inputScanner) {
-            aggrCache.aggregate(r);
+            aggregationCacheWithBytesKey.aggregate(r);
+            MemoryChecker.checkMemory();
         }
-        return aggrCache.iterator();
+        return aggregationCacheWithBytesKey.iterator();
     }
 
+    class AggregationCacheWithBytesKey {
+        final SortedMap<byte[], MeasureAggregator[]> aggBufMap;
+
+        public AggregationCacheWithBytesKey() {
+            aggBufMap = Maps.newTreeMap(new Comparator<byte[]>() {
+                @Override
+                public int compare(byte[] o1, byte[] o2) {
+                    int result = 0;
+                    Preconditions.checkArgument(o1.length == o2.length);
+                    final int length = o1.length;
+                    for (int i = 0; i < length; ++i) {
+                        result = o1[i] - o2[i];
+                        if (result == 0) {
+                            continue;
+                        } else {
+                            return result;
+                        }
+                    }
+                    return result;
+                }
+            });
+        }
+
+        private byte[] createKey(GTRecord record) {
+            byte[] result = new byte[info.getMaxColumnLength(groupBy)];
+            int offset = 0;
+            for (int i = groupBy.nextSetBit(0); i >= 0; i = groupBy.nextSetBit(i + 1)) {
+                final ByteArray byteArray = record.cols[i];
+                final int columnLength = info.codeSystem.maxCodeLength(i);
+                System.arraycopy(byteArray.array(), byteArray.offset(), result, offset, columnLength);
+                offset += columnLength;
+            }
+            assert offset == result.length;
+            return result;
+        }
+
+        void aggregate(GTRecord r) {
+            final byte[] key = createKey(r);
+            MeasureAggregator[] aggrs = aggBufMap.get(key);
+            if (aggrs == null) {
+                aggrs = new MeasureAggregator[metricsAggrFuncs.length];
+                for (int i = 0, col = -1; i < aggrs.length; i++) {
+                    col = metrics.nextSetBit(col + 1);
+                    aggrs[i] = info.codeSystem.newMetricsAggregator(metricsAggrFuncs[i], col);
+                }
+                aggBufMap.put(key, aggrs);
+            }
+            for (int i = 0, col = -1; i < aggrs.length; i++) {
+                col = metrics.nextSetBit(col + 1);
+                Object metrics = info.codeSystem.decodeColumnValue(col, r.cols[col].asBuffer());
+                aggrs[i].aggregate(metrics);
+            }
+        }
+
+        public Iterator<GTRecord> iterator() {
+            return new Iterator<GTRecord>() {
+
+                final Iterator<Entry<byte[], MeasureAggregator[]>> it = aggBufMap.entrySet().iterator();
+
+                final ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
+                final GTRecord secondRecord;
+
+                {
+                    BitSet dimensionsAndMetrics = (BitSet) groupBy.clone();
+                    dimensionsAndMetrics.or(metrics);
+                    secondRecord = new GTRecord(info, dimensionsAndMetrics);
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return it.hasNext();
+                }
+
+                @Override
+                public GTRecord next() {
+                    Entry<byte[], MeasureAggregator[]> entry = it.next();
+                    create(entry.getKey(), entry.getValue());
+                    return secondRecord;
+                }
+
+                private void create(byte[] key, MeasureAggregator[] value) {
+                    int offset = 0;
+                    for (int i = groupBy.nextSetBit(0); i >= 0; i = groupBy.nextSetBit(i + 1)) {
+                        final int columnLength = info.codeSystem.maxCodeLength(i);
+                        secondRecord.set(i, new ByteArray(key, offset, columnLength));
+                        offset += columnLength;
+                    }
+                    metricsBuf.clear();
+                    for (int i = 0, col = -1; i < value.length; i++) {
+                        col = metrics.nextSetBit(col + 1);
+                        int pos = metricsBuf.position();
+                        info.codeSystem.encodeColumnValue(col, value[i].getState(), metricsBuf);
+                        secondRecord.cols[col].set(metricsBuf.array(), pos, metricsBuf.position() - pos);
+                    }
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+    }
+
+    /*
     @SuppressWarnings({ "rawtypes", "unchecked" })
     class AggregationCache {
         final SortedMap<GTRecord, MeasureAggregator[]> aggBufMap;
@@ -92,9 +204,16 @@ public class GTAggregateScanner implements IGTScanner {
         public Iterator<GTRecord> iterator() {
             return new Iterator<GTRecord>() {
                 
-                Iterator<Entry<GTRecord, MeasureAggregator[]>> it = aggBufMap.entrySet().iterator();
-                ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
-                GTRecord oneRecord = new GTRecord(info); // avoid instance creation
+                final Iterator<Entry<GTRecord, MeasureAggregator[]>> it = aggBufMap.entrySet().iterator();
+
+                final ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
+                final GTRecord oneRecord;  // avoid instance creation
+
+                {
+                    BitSet dimensionsAndMetrics = (BitSet) groupBy.clone();
+                    dimensionsAndMetrics.or(metrics);
+                    oneRecord = new GTRecord(info, dimensionsAndMetrics);
+                }
 
                 @Override
                 public boolean hasNext() {
@@ -104,7 +223,7 @@ public class GTAggregateScanner implements IGTScanner {
                 @Override
                 public GTRecord next() {
                     Entry<GTRecord, MeasureAggregator[]> entry = it.next();
-                    
+
                     GTRecord dims = entry.getKey();
                     for (int i = dimensions.nextSetBit(0); i >= 0; i = dimensions.nextSetBit(i + 1)) {
                         oneRecord.cols[i].set(dims.cols[i]);
@@ -118,7 +237,6 @@ public class GTAggregateScanner implements IGTScanner {
                         info.codeSystem.encodeColumnValue(col, aggrs[i].getState(), metricsBuf);
                         oneRecord.cols[col].set(metricsBuf.array(), pos, metricsBuf.position() - pos);
                     }
-                    
                     return oneRecord;
                 }
 
@@ -129,12 +247,6 @@ public class GTAggregateScanner implements IGTScanner {
             };
         }
 
-        public long getSize() {
-            return aggBufMap.size();
-        }
-
-        // ============================================================================
-        
         transient int rowMemBytes;
         static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
 
@@ -157,5 +269,7 @@ public class GTAggregateScanner implements IGTScanner {
             }
         }
     }
+
+    */
 
 }
