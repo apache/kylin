@@ -1,24 +1,14 @@
 package org.apache.kylin.storage.gridtable.diskstore;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.BitSet;
-import java.util.UUID;
-
-import org.apache.kylin.storage.gridtable.GTInfo;
-import org.apache.kylin.storage.gridtable.GTRecord;
-import org.apache.kylin.storage.gridtable.GTRowBlock;
-import org.apache.kylin.storage.gridtable.GTScanRequest;
-import org.apache.kylin.storage.gridtable.IGTStore;
+import com.google.common.base.Preconditions;
+import org.apache.kylin.storage.gridtable.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.util.BitSet;
+import java.util.UUID;
 
 /**
  */
@@ -46,17 +36,22 @@ public class GTDiskStore implements IGTStore {
     }
 
     private String generateIdentifier(FileSystem fs) {
+        int tryCount = 0;
         while (true) {
+            //uuid may conflict
             String identifier = UUID.randomUUID().toString();
             final String path = getRootDirectory(identifier);
             if (fs.createDirectory(path)) {
                 return identifier;
             }
+            if (++tryCount > 5) {
+                throw new RuntimeException("failed to generateIdentifier");
+            }
         }
     }
 
     private String getRootDirectory(String identifier) {
-        return "/tmp/kylin/gtdiskstore/" + identifier;
+        return "/tmp/kylin_gtdiskstore/" + identifier;
     }
 
     private String getRowBlockFile(String identifier) {
