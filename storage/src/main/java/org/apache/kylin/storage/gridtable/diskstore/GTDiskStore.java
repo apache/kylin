@@ -53,7 +53,7 @@ public class GTDiskStore implements IGTStore {
     }
 
     private String getRootDirectory(String identifier) {
-        return "/tmp/kylin_gtdiskstore/" + identifier;
+        return "/tmp/kylin_gtdiskstore_" + identifier;
     }
 
     private String getRowBlockFile(String identifier) {
