@@ -98,7 +98,7 @@ public class GTAggregateScanner implements IGTScanner {
             for (int i = groupBy.nextSetBit(0); i >= 0; i = groupBy.nextSetBit(i + 1)) {
                 final ByteArray byteArray = record.cols[i];
                 final int columnLength = info.codeSystem.maxCodeLength(i);
-                System.arraycopy(byteArray.array(), byteArray.offset(), result, offset, columnLength);
+                System.arraycopy(byteArray.array(), byteArray.offset(), result, offset, byteArray.length());
                 offset += columnLength;
             }
             assert offset == result.length;
