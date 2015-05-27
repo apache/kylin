@@ -69,7 +69,7 @@ public class DictGridTableTest {
             List<GTScanRange> r = planner.planScanRanges(filter);
             assertEquals(1, r.size());
             assertEquals("[1421193600000, 10]-[null, null]", r.get(0).toString());
-            assertEquals("[[null, 10, null, null, null], [null, 20, null, null, null]]", r.get(0).hbaseFuzzyKeys.toString());
+            assertEquals("[[10], [20]]", r.get(0).hbaseFuzzyKeys.toString());
         }
         
         // pre-evaluate ever false

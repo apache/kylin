@@ -65,6 +65,7 @@ public class FileTableReader implements TableReader {
     }
     
     public FileTableReader(String filePath, String delim, int expectedColumnNumber) throws IOException {
+        filePath = HadoopUtil.fixWindowsPath(filePath);
         this.filePath = filePath;
         this.delim = delim;
         this.expectedColumnNumber = expectedColumnNumber;

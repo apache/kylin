@@ -57,10 +57,19 @@ public class HadoopUtil {
 
     public static URI makeURI(String filePath) {
         try {
-            return new URI(filePath);
+            return new URI(fixWindowsPath(filePath));
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create FileSystem from URI: " + filePath, e);
         }
+    }
+    
+    public static String fixWindowsPath(String path) {
+        // fix windows path
+        if (path.startsWith("file://") && !path.startsWith("file:///") && path.contains(":\\")) {
+            path = path.replace("file://", "file:///");
+            path = path.replace('\\', '/');
+        }
+        return path;
     }
 
     public static Configuration newHadoopJobConfiguration() {
