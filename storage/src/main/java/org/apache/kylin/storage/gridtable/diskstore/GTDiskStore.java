@@ -43,9 +43,11 @@ public class GTDiskStore implements IGTStore {
             final String path = getRootDirectory(identifier);
             if (fs.createDirectory(path)) {
                 return identifier;
-            }
-            if (++tryCount > 5) {
-                throw new RuntimeException("failed to generateIdentifier");
+            } else {
+                logger.warn("failed to create dir " + path);
+                if (++tryCount > 5) {
+                    throw new RuntimeException("failed to generateIdentifier");
+                }
             }
         }
     }
