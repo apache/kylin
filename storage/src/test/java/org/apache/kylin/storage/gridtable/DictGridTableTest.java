@@ -302,7 +302,7 @@ public class DictGridTableTest {
         builder.setColumns( //
                 DataType.getInstance("timestamp"), //
                 DataType.getInstance("integer"), //
-                DataType.getInstance("varchar"), //
+                DataType.getInstance("varchar(10)"), //
                 DataType.getInstance("bigint"), //
                 DataType.getInstance("decimal") //
         );
