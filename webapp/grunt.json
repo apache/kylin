@@ -61,8 +61,8 @@
                 "app/css/AdminLTE.css",
                 "app/css/skins/_all-skins.min.css",
                 "app/components/bootstrap-sweetalert/lib/sweet-alert.css",
-                "app/components/angular-bootstrap-nav-tree/dist/abn_tree.css"
-                "tmp/css/styles.css",
+                "app/components/angular-bootstrap-nav-tree/dist/abn_tree.css",
+                "tmp/css/styles.css"
             ],
             "dest": "tmp/css/styles.min.css"
         }
