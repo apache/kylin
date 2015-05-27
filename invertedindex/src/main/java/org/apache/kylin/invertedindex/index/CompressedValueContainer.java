@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.kylin.common.util.Bytes;
 
 import org.apache.kylin.common.util.BytesUtil;
 import com.ning.compress.lzf.LZFDecoder;

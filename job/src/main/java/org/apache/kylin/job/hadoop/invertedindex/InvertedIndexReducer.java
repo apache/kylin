@@ -22,7 +22,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinReducer;

@@ -29,7 +29,7 @@ import org.apache.kylin.invertedindex.index.*;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

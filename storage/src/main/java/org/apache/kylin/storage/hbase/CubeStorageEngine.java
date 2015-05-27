@@ -28,8 +28,8 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -21,7 +21,7 @@ package org.apache.kylin.storage.hbase;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

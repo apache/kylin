@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import org.apache.hadoop.hbase.util.Pair;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.junit.After;
