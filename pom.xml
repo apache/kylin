@@ -557,6 +557,7 @@
         <module>query</module>
         <module>server</module>
         <module>jdbc</module>
+        <module>monitor</module>
         <module>invertedindex</module>
     </modules>
 

@@ -1,5 +1,12 @@
 [
     {
+      "url": "/dashboard",
+      "params": {
+        "templateUrl": "partials/dashboard.html",
+        "controller": "DashBoardCtrl"
+      }
+    },
+    {
         "url": "/cubes",
         "params": {
             "templateUrl": "partials/cubes/cubes.html",

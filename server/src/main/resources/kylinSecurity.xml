@@ -34,6 +34,7 @@
 		<scr:intercept-url pattern="/api/cubes/src/tables" access="hasAnyRole('ROLE_ANALYST')" />
 		<scr:intercept-url pattern="/api/cubes*/**" access="isAuthenticated()" />
 		<scr:intercept-url pattern="/api/job*/**" access="isAuthenticated()" />
+		<scr:intercept-url pattern="/api/performance*/**" access="isAuthenticated()" />
 		<scr:intercept-url pattern="/api/admin/config" access="permitAll" />
 		<scr:intercept-url pattern="/api/projects" access="permitAll" />
 		<scr:intercept-url pattern="/api/admin*/**" access="hasRole('ROLE_ADMIN')" />
