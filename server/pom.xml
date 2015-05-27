@@ -444,6 +444,11 @@
             <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.isrsal</groupId>
+            <artifactId>spring-mvc-logger</artifactId>
+            <version>0.2</version>
+        </dependency>
     </dependencies>
 
     <build>

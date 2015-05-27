@@ -49,9 +49,16 @@ KylinApp.service('UserService', function ($http, $q) {
     var homePage = "/login";
 
     if (curUser.userDetails && curUser.userDetails.authorities) {
-      angular.forEach(curUser.userDetails.authorities, function (authority, index) {
-        homePage = (!!roles[authority.authority]) ? roles[authority.authority] : homePage;
-      });
+       var authorities = curUser.userDetails.authorities;
+       for(var i=0;i<authorities.length;i++){
+           if(authorities[i].authority==="ROLE_ADMIN"){
+               homePage = roles[authorities[i].authority];
+               break;
+           }else{
+               homePage = roles[authorities[i].authority]
+           }
+       }
+
     }
 
     return homePage;

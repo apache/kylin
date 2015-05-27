@@ -19,7 +19,7 @@
     "moment": "2.5.1",
     "d3": "3.4.4",
     "nvd3": "1.1.15-beta",
-    "angularjs-nvd3-directives": "0.0.5-beta",
+    "angularjs-nvd3-directives": "0.0.7",
     "angular-sweetalert": "~1.0.3",
     "bootstrap-sweetalert": "~0.4.3",
     "angular-underscore": "~0.5.0",
@@ -27,8 +27,8 @@
     "underscore": "~1.7.0",
     "fuelux": "~3.5.1",
     "angular-animate": "1.2",
-    "angular-cookies":"1.2"
-
+    "angular-cookies": "1.2",
+    "angular-busy": "~4.0"
   },
   "devDependencies": {
     "less.js": "~1.4.0",
@@ -39,9 +39,9 @@
     "nvd3": "1.1.15-beta",
     "d3": "3.4.4",
     "moment": "2.4.0",
+    "angular-busy": "~4.0",
     "angular-resource": "1.2.15",
-    "angularLocalStorage": "0.1.7",
     "angular-cookies": "~1.2.0-rc.2",
-    "angular-animate": "1.2"
+    "angular-animate": "~1.2"
   }
 }
