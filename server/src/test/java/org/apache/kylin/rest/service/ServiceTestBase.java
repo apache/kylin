@@ -19,8 +19,10 @@
 package org.apache.kylin.rest.service;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -63,6 +65,7 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
         IIDescManager.clearCache();
         IIManager.clearCache();
         ProjectManager.clearCache();
+
     }
 
     @After
