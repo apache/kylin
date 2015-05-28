@@ -1,4 +1,4 @@
-<!--Mon May 25 01:23:17 2015-->
+<!--Fri Apr 24 13:44:42 2015-->
 <configuration>
 
     <property>
@@ -23,16 +23,11 @@
 
     <property>
         <name>hive.auto.convert.join.noconditionaltask.size</name>
-        <value>1251999744</value>
+        <value>1000000000</value>
     </property>
 
     <property>
         <name>hive.auto.convert.sortmerge.join</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>hive.auto.convert.sortmerge.join.noconditionaltask</name>
         <value>true</value>
     </property>
 
@@ -73,7 +68,7 @@
 
     <property>
         <name>hive.compactor.check.interval</name>
-        <value>300L</value>
+        <value>300s</value>
     </property>
 
     <property>
@@ -88,7 +83,7 @@
 
     <property>
         <name>hive.compactor.initiator.on</name>
-        <value>false</value>
+        <value>true</value>
     </property>
 
     <property>
@@ -98,7 +93,7 @@
 
     <property>
         <name>hive.compactor.worker.timeout</name>
-        <value>86400L</value>
+        <value>86400s</value>
     </property>
 
     <property>
@@ -233,7 +228,7 @@
 
     <property>
         <name>hive.execution.engine</name>
-        <value>mr</value>
+        <value>tez</value>
     </property>
 
     <property>
@@ -253,7 +248,7 @@
 
     <property>
         <name>hive.heapsize</name>
-        <value>1024</value>
+        <value>250</value>
     </property>
 
     <property>
@@ -427,11 +422,6 @@
     </property>
 
     <property>
-        <name>hive.optimize.mapjoin.mapreduce</name>
-        <value>true</value>
-    </property>
-
-    <property>
         <name>hive.optimize.metadataonly</name>
         <value>true</value>
     </property>
@@ -528,7 +518,7 @@
 
     <property>
         <name>hive.server2.enable.doAs</name>
-        <value>true</value>
+        <value>false</value>
     </property>
 
     <property>
@@ -638,7 +628,7 @@
 
     <property>
         <name>hive.support.concurrency</name>
-        <value>false</value>
+        <value>true</value>
     </property>
 
     <property>
@@ -648,7 +638,7 @@
 
     <property>
         <name>hive.tez.container.size</name>
-        <value>3584</value>
+        <value>250</value>
     </property>
 
     <property>
@@ -678,7 +668,7 @@
 
     <property>
         <name>hive.tez.java.opts</name>
-        <value>-server -Xmx2868m -Djava.net.preferIPv4Stack=true -XX:NewRatio=8 -XX:+UseNUMA -XX:+UseParallelGC -XX:+PrintGCDetails -verbose:gc -XX:+PrintGCTimeStamps</value>
+        <value>-server -Xmx200m -Djava.net.preferIPv4Stack=true</value>
     </property>
 
     <property>
@@ -703,7 +693,7 @@
 
     <property>
         <name>hive.txn.manager</name>
-        <value>org.apache.hadoop.hive.ql.lockmgr.DummyTxnManager</value>
+        <value>org.apache.hadoop.hive.ql.lockmgr.DbTxnManager</value>
     </property>
 
     <property>
@@ -719,6 +709,11 @@
     <property>
         <name>hive.user.install.directory</name>
         <value>/user/</value>
+    </property>
+
+    <property>
+        <name>hive.users.in.admin.role</name>
+        <value>hue,hive</value>
     </property>
 
     <property>
@@ -759,6 +754,11 @@
     <property>
         <name>hive.zookeeper.quorum</name>
         <value>sandbox.hortonworks.com:2181</value>
+    </property>
+
+    <property>
+        <name>hive_metastore_user_passwd</name>
+        <value>hive</value>
     </property>
 
     <property>

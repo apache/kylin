@@ -1,4 +1,4 @@
-<!--Mon May 25 01:30:55 2015-->
+<!--Wed May 27 08:09:06 2015-->
 <configuration>
 
     <property>
@@ -8,7 +8,7 @@
 
     <property>
         <name>yarn.scheduler.capacity.maximum-am-resource-percent</name>
-        <value>0.2</value>
+        <value>0.5</value>
     </property>
 
     <property>
@@ -53,7 +53,7 @@
 
     <property>
         <name>yarn.scheduler.capacity.root.default-node-label-expression</name>
-        <value> </value>
+        <value></value>
     </property>
 
     <property>
@@ -69,6 +69,11 @@
     <property>
         <name>yarn.scheduler.capacity.root.default.capacity</name>
         <value>100</value>
+    </property>
+
+    <property>
+        <name>yarn.scheduler.capacity.root.default.maximum-am-resource-percent</name>
+        <value>0.5</value>
     </property>
 
     <property>
