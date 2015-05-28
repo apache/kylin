@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Build Cube with Restful API"
-date:   2014-12-31
-author: liyang-gmt8
 categories: api
 ---
 

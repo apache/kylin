@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "On Hadoop CLI installation"
-date:   2015-03-13
-author: Luke Han
 categories: installation
 ---
 

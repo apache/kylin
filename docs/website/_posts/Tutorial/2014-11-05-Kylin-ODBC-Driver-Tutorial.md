@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Kylin ODBC Driver Tutorial"
-date:   2014-11-05
-author: lukehan
 categories: tutorial
 ---
 

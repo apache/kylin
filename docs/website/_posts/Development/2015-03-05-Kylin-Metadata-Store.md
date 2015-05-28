@@ -1,9 +1,7 @@
 ---
 layout: post
 title:  "Kylin Metadata Store"
-date:   2015-03-05
-author: hongbin ma
-categories: howto
+categories: development
 ---
 
 Kylin organizes all of its metadata(including cube descriptions and instances, projects, inverted index description and instances, jobs, tables and dictionaries) as a hierarchy file system. However, Kylin uses hbase to store it, rather than normal file system. If you check your kylin configuration file(kylin.properties) you will find such a line:

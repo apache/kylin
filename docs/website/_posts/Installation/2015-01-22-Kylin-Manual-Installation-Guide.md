@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Kylin Manual Installation Guide"
-date:   2015-01-22
-author: hongbin ma
 categories: installation
 ---
 

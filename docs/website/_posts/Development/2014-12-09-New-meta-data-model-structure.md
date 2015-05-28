@@ -1,9 +1,7 @@
 ---
 layout: post
 title:  "New meta data model structure"
-date:   2014-12-09
-author: shaofengshi
-categories: howto
+categories: development
 ---
 
 Kylin is doing a round code refactor which will introduce the following two changes on meta data:
