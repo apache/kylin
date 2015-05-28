@@ -9,7 +9,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -393,7 +392,7 @@ public class CubeStreamBuilder extends StreamBuilder {
 
     @Override
     protected int batchInterval() {
-        return 30 * 60 * 1000;//30 min
+        return 5 * 60 * 1000;//30 min
     }
 
     @Override

@@ -55,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -131,13 +130,14 @@ public class StreamingBootstrap {
 
     private List<BlockingQueue<StreamMessage>> consume(KafkaConfig kafkaConfig, final int partitionCount) {
         List<BlockingQueue<StreamMessage>> result = Lists.newArrayList();
-        for (int partitionId = 0 ; partitionId < partitionCount && partitionId < 10; ++partitionId) {
+        for (int partitionId = 0; partitionId < partitionCount && partitionId < 3; ++partitionId) {
             final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
-            long streamingOffset = getEarliestStreamingOffset(kafkaConfig.getName(), 0, 0);
+
             final long latestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.LatestTime(), leadBroker, kafkaConfig);
-            streamingOffset = Math.max(streamingOffset, latestOffset);
-            KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId,
-                    streamingOffset, kafkaConfig.getBrokers(), kafkaConfig, 1);
+            long streamingOffset = latestOffset;
+            logger.info("submitting offset:" + streamingOffset);
+
+            KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId, streamingOffset, kafkaConfig.getBrokers(), kafkaConfig, 1);
             Executors.newSingleThreadExecutor().submit(consumer);
             result.add(consumer.getStreamQueue(0));
         }
@@ -209,7 +209,6 @@ public class StreamingBootstrap {
 
         KafkaConsumer consumer = new KafkaConsumer(kafkaConfig.getTopic(), partitionId, streamingOffset, kafkaConfig.getBrokers(), kafkaConfig, parallelism);
         kafkaConsumers.put(getKey(kafkaConfig.getName(), partitionId), consumer);
-
 
         Executors.newSingleThreadExecutor().submit(consumer);
         final ExecutorService streamingBuilderPool = Executors.newFixedThreadPool(parallelism);

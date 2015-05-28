@@ -19,7 +19,6 @@
 package org.apache.kylin.common;
 
 import com.google.common.collect.Sets;
-import jodd.util.StringUtil;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
@@ -496,7 +495,7 @@ public class KylinConfig {
 
     private String[] getOptionalStringArray(String prop) {
         final String property = System.getProperty(prop);
-        if (!StringUtil.isBlank(property))
+        if (!StringUtils.isBlank(property))
             return property.split("\\s*,\\s*");
 
         return kylinConfig.getStringArray(prop);
