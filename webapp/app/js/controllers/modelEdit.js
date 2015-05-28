@@ -35,7 +35,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
     $scope.getPartitonColumns = function(tableName){
         var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
-            return column.datatype==="date"||column.datatype==="string";
+            return column.datatype==="date"||column.datatype==="string"||column.datatype==="timestamp";
         });
         return columns;
     };
