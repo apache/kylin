@@ -1,9 +1,6 @@
 ---
 layout: post
 title:  "How to Contribute"
-date:   2014-10-24
-author: liyang-gmt8
-categories: howto
 ---
 
 #### Setup Dev Env
@@ -25,6 +22,12 @@ categories: howto
 * Committer will review in terms of correctness, performance, design, coding style, test coverage
 * Discuss and revise if necessary
 * Finally committer merge code into main branch
+
+#### How to Verify a Release
+* Download source code package from release 
+* 
+
+
 
 
 #### Wish List

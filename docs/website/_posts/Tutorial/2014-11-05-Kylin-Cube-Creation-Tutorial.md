@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Kylin Cube Creation Tutorial"
-date:   2014-11-15
-author: Kejia-Wang
 categories: tutorial
 ---
 

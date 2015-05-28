@@ -1,9 +1,7 @@
 ---
 layout: post
 title:  "Kylin web front end summary"
-date:   2014-10-23
-author: xduo
-categories: howto
+categories: development
 ---
 
 ### Project Dependencies

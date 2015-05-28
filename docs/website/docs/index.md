@@ -1,25 +1,17 @@
 ---
-layout: default
+layout: docs
 title: Docs
 ---
 
-<!--
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
--->
+<main id="main" >
+  <div class="container" >
+    <div id="zero" class=" main" >
+      <header style=" padding:2em 0 4em 0">
+        <div class="container" >
+
+         
+     <div id="content-container" class="animated fadeIn">
+       
 
 <p class="content-header" style="margin-top:0.25em">What should I use Kylin for?</p>
 <p class="content-p">
@@ -67,6 +59,32 @@ HBase is used to store data cube and answer the query. HBase coprocessor is also
 </p>
 <hr/>
 
+<!-- Migrate wiki to here 
 <p class="content-header">Where can I find the technical details about Kylin?</p>
-<p class="content-p"><a href="http://www.slideshare.net/XuJiang2/kylin-hadoop-olap-engine" target="_blank">Kylin OLAP</a></p>
+<p class="content-p"><a href="http://www.slideshare.net/XuJiang2/kylin-hadoop-olap-engine" target="_blank">Kylin Wiki</a></p>
 
+-->
+
+     </div>
+         
+         </div><!--end of rightcontent-->
+         
+         </div><!--end of row-->
+        </div>
+        <!-- /container --> 
+        
+        
+        
+      </header>
+    </div>
+    <!-- / section --> 
+  </div>
+  <!-- /container -->
+ 
+
+  
+
+      
+    </header>
+  </section>
+</main>
