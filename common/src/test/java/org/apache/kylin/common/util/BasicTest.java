@@ -62,6 +62,7 @@ public class BasicTest {
 
     @Test
     public void test0() throws Exception {
+        System.out.println(Long.MAX_VALUE);
 
         IdentityHashMap<String, Void> a = new IdentityHashMap<>();
         IdentityHashMap<String, Void> b = new IdentityHashMap<>();
