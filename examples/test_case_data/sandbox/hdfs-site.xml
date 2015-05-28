@@ -1,9 +1,14 @@
-<!--Mon May 25 01:30:31 2015-->
+<!--Wed May 27 06:14:02 2015-->
 <configuration>
 
     <property>
         <name>dfs.block.access.token.enable</name>
-        <value>true</value>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>dfs.block.size</name>
+        <value>34217472</value>
     </property>
 
     <property>
@@ -28,7 +33,7 @@
 
     <property>
         <name>dfs.cluster.administrators</name>
-        <value> hdfs</value>
+        <value>hdfs</value>
     </property>
 
     <property>
@@ -44,6 +49,7 @@
     <property>
         <name>dfs.datanode.data.dir</name>
         <value>/hadoop/hdfs/data</value>
+        <final>true</final>
     </property>
 
     <property>
@@ -59,6 +65,7 @@
     <property>
         <name>dfs.datanode.failed.volumes.tolerated</name>
         <value>0</value>
+        <final>true</final>
     </property>
 
     <property>
@@ -78,7 +85,12 @@
 
     <property>
         <name>dfs.datanode.max.transfer.threads</name>
-        <value>16384</value>
+        <value>1024</value>
+    </property>
+
+    <property>
+        <name>dfs.datanode.max.xcievers</name>
+        <value>1024</value>
     </property>
 
     <property>
@@ -117,8 +129,13 @@
     </property>
 
     <property>
+        <name>dfs.journalnode.https-address</name>
+        <value>0.0.0.0:8481</value>
+    </property>
+
+    <property>
         <name>dfs.namenode.accesstime.precision</name>
-        <value>0</value>
+        <value>3600000</value>
     </property>
 
     <property>
@@ -153,7 +170,7 @@
 
     <property>
         <name>dfs.namenode.handler.count</name>
-        <value>40</value>
+        <value>100</value>
     </property>
 
     <property>
@@ -170,6 +187,7 @@
     <property>
         <name>dfs.namenode.name.dir</name>
         <value>/hadoop/hdfs/namenode</value>
+        <final>true</final>
     </property>
 
     <property>
@@ -203,6 +221,16 @@
     </property>
 
     <property>
+        <name>dfs.nfs.exports.allowed.hosts</name>
+        <value>* rw</value>
+    </property>
+
+    <property>
+        <name>dfs.nfs3.dump.dir</name>
+        <value>/tmp/.hdfs-nfs</value>
+    </property>
+
+    <property>
         <name>dfs.permissions.enabled</name>
         <value>true</value>
     </property>
@@ -214,7 +242,7 @@
 
     <property>
         <name>dfs.replication</name>
-        <value>3</value>
+        <value>1</value>
     </property>
 
     <property>
@@ -231,6 +259,7 @@
     <property>
         <name>dfs.webhdfs.enabled</name>
         <value>true</value>
+        <final>true</final>
     </property>
 
     <property>
