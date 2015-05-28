@@ -1,5 +1,25 @@
-<!--Mon May 25 01:30:55 2015-->
+<!--Wed May 27 08:09:05 2015-->
 <configuration>
+
+    <property>
+        <name>io.sort.mb</name>
+        <value>64</value>
+    </property>
+
+    <property>
+        <name>mapred.child.java.opts</name>
+        <value>-Xmx200m</value>
+    </property>
+
+    <property>
+        <name>mapred.job.map.memory.mb</name>
+        <value>250</value>
+    </property>
+
+    <property>
+        <name>mapred.job.reduce.memory.mb</name>
+        <value>250</value>
+    </property>
 
     <property>
         <name>mapreduce.admin.map.child.java.opts</name>
@@ -33,7 +53,7 @@
 
     <property>
         <name>mapreduce.cluster.administrators</name>
-        <value> hadoop</value>
+        <value>hadoop</value>
     </property>
 
     <property>
@@ -78,7 +98,7 @@
 
     <property>
         <name>mapreduce.map.java.opts</name>
-        <value>-Xmx2867m</value>
+        <value>-Xmx200m</value>
     </property>
 
     <property>
@@ -88,7 +108,7 @@
 
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>3584</value>
+        <value>250</value>
     </property>
 
     <property>
@@ -123,7 +143,7 @@
 
     <property>
         <name>mapreduce.reduce.java.opts</name>
-        <value>-Xmx2867m</value>
+        <value>-Xmx200m</value>
     </property>
 
     <property>
@@ -133,7 +153,7 @@
 
     <property>
         <name>mapreduce.reduce.memory.mb</name>
-        <value>3584</value>
+        <value>250</value>
     </property>
 
     <property>
@@ -183,7 +203,7 @@
 
     <property>
         <name>mapreduce.task.io.sort.mb</name>
-        <value>1024</value>
+        <value>64</value>
     </property>
 
     <property>
@@ -198,7 +218,7 @@
 
     <property>
         <name>yarn.app.mapreduce.am.command-opts</name>
-        <value>-Xmx2867m -Dhdp.version=${hdp.version}</value>
+        <value>-Xmx200m</value>
     </property>
 
     <property>
@@ -208,7 +228,7 @@
 
     <property>
         <name>yarn.app.mapreduce.am.resource.mb</name>
-        <value>3584</value>
+        <value>250</value>
     </property>
 
     <property>
