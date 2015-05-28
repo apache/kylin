@@ -1,4 +1,4 @@
-<!--Mon May 25 01:30:31 2015-->
+<!--Wed May 27 06:14:00 2015-->
 <configuration>
 
     <property>
@@ -23,12 +23,12 @@
 
     <property>
         <name>hbase.coprocessor.master.classes</name>
-        <value></value>
+        <value>com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor</value>
     </property>
 
     <property>
         <name>hbase.coprocessor.region.classes</name>
-        <value></value>
+        <value>com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor</value>
     </property>
 
     <property>
@@ -122,13 +122,18 @@
     </property>
 
     <property>
+        <name>hbase.rpc.protection</name>
+        <value>PRIVACY</value>
+    </property>
+
+    <property>
         <name>hbase.security.authentication</name>
         <value>simple</value>
     </property>
 
     <property>
         <name>hbase.security.authorization</name>
-        <value>false</value>
+        <value>true</value>
     </property>
 
     <property>
