@@ -228,7 +228,7 @@
 
     <property>
         <name>hive.execution.engine</name>
-        <value>tez</value>
+        <value>mr</value>
     </property>
 
     <property>
