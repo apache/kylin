@@ -42,8 +42,9 @@ then
         then spring_profile="sandbox"
     fi
 
-    #retrive $hive_dependency
+    #retrive $hive_dependency and $hbase_dependency
     source ${dir}/find-hive-dependency.sh
+    source ${dir}/find-hbase-dependency.sh
     #retrive $KYLIN_EXTRA_START_OPTS
     if [ -f "${dir}/setenv.sh" ]
         then source ${dir}/setenv.sh
@@ -63,6 +64,7 @@ then
     -Dcatalina.home=${tomcat_root} \
     -Djava.io.tmpdir=${tomcat_root}/temp  \
     -Dkylin.hive.dependency=${hive_dependency} \
+    -Dkylin.hbase.dependency=${hbase_dependency} \
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
