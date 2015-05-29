@@ -161,21 +161,31 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
-        logger.info("append kylin.hive.dependency: " + kylinHiveDependency + " to " + MAP_REDUCE_CLASSPATH);
+        String kylinHBaseDependency = System.getProperty("kylin.hbase.dependency");
+        logger.info("append kylin.hive.dependency: " + kylinHiveDependency + " and kylin.hive.dependency: " + kylinHBaseDependency + " to " + MAP_REDUCE_CLASSPATH);
+
+        Configuration jobConf = job.getConfiguration();
+        String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
+        if (classpath == null || classpath.length() == 0) {
+            logger.info("Didn't find " + MAP_REDUCE_CLASSPATH + " in job configuration, will run 'mapred classpath' to get the default value.");
+            classpath = getDefaultMapRedClasspath();
+            logger.info("The default mapred classpath is: " + classpath);
+        }
+
+
+        if (kylinHBaseDependency != null) {
+            // yarn classpath is comma separated
+            kylinHBaseDependency = kylinHBaseDependency.replace(":", ",");
+            classpath = classpath + "," + kylinHBaseDependency;
+        }
+
         if (kylinHiveDependency != null) {
             // yarn classpath is comma separated
             kylinHiveDependency = kylinHiveDependency.replace(":", ",");
-            Configuration jobConf = job.getConfiguration();
-            String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
-            if (classpath == null || classpath.length() == 0) {
-                logger.info("Didn't find " + MAP_REDUCE_CLASSPATH + " in job configuration, will run 'mapred classpath' to get the default value.");
-                classpath = getDefaultMapRedClasspath();
-                logger.info("The default mapred classpath is: " + classpath);
-            }
-
-            jobConf.set(MAP_REDUCE_CLASSPATH, classpath + "," + kylinHiveDependency);
-
+            classpath = classpath + "," + kylinHiveDependency;
         }
+
+        jobConf.set(MAP_REDUCE_CLASSPATH, classpath + "," + kylinHiveDependency);
         logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
     }
 
