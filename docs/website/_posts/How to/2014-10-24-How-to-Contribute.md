@@ -23,12 +23,21 @@ title:  "How to Contribute"
 * Discuss and revise if necessary
 * Finally committer merge code into main branch
 
-#### How to Verify a Release
-* Download source code package from release 
+
+#### How to Release 
+
+__Get Ready for Release__
+
+__Generate Release Package__
+
+*  
 * 
 
+__Vote in Mailing List__
 
+__How to Verify a Release__
 
+__Perform a Release__
 
 #### Wish List
 
