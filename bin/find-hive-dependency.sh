@@ -25,21 +25,21 @@ hive_conf_path=
 hive_exec_path=
 for data in ${arr[@]}
 do
-    result=`echo $data | grep -e 'hive-exec[0-9\.-]*jar'`
+    result=`echo $data | grep -e 'hive-exec-.*jar'`
     if [ $result ]
     then
         hive_exec_path=$data
     fi
-    result=`echo $data | grep 'hive/conf'`
+    result=`echo $data | grep -e 'hive[^/]*/conf'`
     if [ $result ]
     then
         hive_conf_path=$data
     fi
 done
-hdp_home=`echo $hive_exec_path | awk -F '/hive/lib/' '{print $1}'`
+hdp_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
 
 hcatalog=`find $hdp_home -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
-hive_lib=`find "$hdp_home/hive/lib" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
+hive_lib=`find "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
 
 if [ -z "$hcatalog" ]
 then
