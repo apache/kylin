@@ -49,7 +49,7 @@
                             ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonColumns(modelsManager.selectedModel.fact_table)" >
                         <option value="">--Select Partition Column--</option>
                     </select>
-                    <small class="help-block text-red" ng-show="state.mode=='edit'">(data format in column should be 'YYYY-MM-DD')</small>
+                    <small class="help-block text-red" ng-show="state.mode=='edit'">(Column Type should be DATE or TIMESTAMP Type)</small>
 
                     <span ng-if="state.mode=='view'">
                         {{!!(modelsManager.selectedModel.partition_desc.partition_date_column)?modelsManager.selectedModel.partition_desc.partition_date_column: ''}}</span>
