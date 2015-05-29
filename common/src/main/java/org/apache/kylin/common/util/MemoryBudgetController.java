@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 public class MemoryBudgetController {
 
+    public static final MemoryBudgetController ZERO_BUDGET = new MemoryBudgetController(0);
+
     public static interface MemoryConsumer {
         // return number MB released
         int freeUp(int mb);
@@ -36,11 +38,10 @@ public class MemoryBudgetController {
     private final AtomicInteger totalReservedMB;
     private final ConcurrentHashMap<MemoryConsumer, ConsumerEntry> booking = new ConcurrentHashMap<MemoryConsumer, ConsumerEntry>();
 
-
     public MemoryBudgetController(int totalBudgetMB) {
         if (totalBudgetMB < 0)
             throw new IllegalArgumentException();
-        if (checkSystemAvailMB(totalBudgetMB) == false)
+        if (totalBudgetMB > 0 && checkSystemAvailMB(totalBudgetMB) == false)
             throw new IllegalStateException();
 
         this.totalBudgetMB = totalBudgetMB;
@@ -62,7 +63,7 @@ public class MemoryBudgetController {
     public void reserve(MemoryConsumer consumer, int requestMB) {
         if (totalBudgetMB == 0 && requestMB > 0)
             throw new NotEnoughBudgetException();
-        
+
         ConsumerEntry entry = booking.get(consumer);
         if (entry == null) {
             booking.putIfAbsent(consumer, new ConsumerEntry(consumer));
@@ -87,7 +88,9 @@ public class MemoryBudgetController {
         if (delta < 0) {
             this.notify();
         }
-        logger.debug(entry.consumer + " reserved " + entry.reservedMB + " MB, total reserved " + totalReservedMB + " MB, remaining budget " + getRemainingBudgetMB() + " MB");
+        if (delta != 0) {
+            logger.debug(entry.consumer + " reserved " + entry.reservedMB + " MB, total reserved " + totalReservedMB + " MB, remaining budget " + getRemainingBudgetMB() + " MB");
+        }
     }
 
     private void checkFreeMemoryAndUpdateBooking(ConsumerEntry consumer, int delta) {
@@ -110,8 +113,10 @@ public class MemoryBudgetController {
                 break;
 
             try {
-                logger.debug("Remaining budget is " + getRemainingBudgetMB() + " MB free, but system only has " + getSystemAvailMB() + " MB free. If this persists, some memory calculation must be wrong.");
-                this.wait(200);
+                synchronized (this) {
+                    logger.debug("Remaining budget is " + getRemainingBudgetMB() + " MB free, but system only has " + getSystemAvailMB() + " MB free. If this persists, some memory calculation must be wrong.");
+                    this.wait(200);
+                }
             } catch (InterruptedException e) {
                 logger.error("Interrupted while wait free memory", e);
             }
@@ -133,13 +138,13 @@ public class MemoryBudgetController {
         long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
         return availableMemory;
     }
-    
+
     public static int getSystemAvailMB() {
         return (int) (getSystemAvailBytes() / ONE_MB);
     }
 
     public static int getMaxPossibleBudget() {
-        return getSystemAvailMB() - SYSTEM_RESERVED - 1; // -1 for some extra buffer
+        return getSystemAvailMB() - SYSTEM_RESERVED;
     }
 
 }

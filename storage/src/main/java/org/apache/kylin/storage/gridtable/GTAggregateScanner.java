@@ -67,7 +67,6 @@ public class GTAggregateScanner implements IGTScanner {
         AggregationCache aggregationCacheWithBytesKey = new AggregationCache();
         for (GTRecord r : inputScanner) {
             aggregationCacheWithBytesKey.aggregate(r);
-            MemoryChecker.checkMemory();
         }
         return aggregationCacheWithBytesKey.iterator();
     }
