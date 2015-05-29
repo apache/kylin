@@ -71,6 +71,8 @@ public class HadoopStatusGetter {
             }
 
             HttpMethod get = new GetMethod(url);
+            get.addRequestHeader("accept", "application/json");
+
             try {
                 client.executeMethod(get);
 
