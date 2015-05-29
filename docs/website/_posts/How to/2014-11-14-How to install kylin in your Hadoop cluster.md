@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "How to install kylin in your Hadoop cluster"
-date:   2014-11-14
-author: xfhap
 categories: howto
 ---
 

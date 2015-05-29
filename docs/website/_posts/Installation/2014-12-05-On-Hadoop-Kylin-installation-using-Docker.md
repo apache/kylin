@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "On Hadoop Kylin installation using Docker"
-date:   2014-12-05
-author: abansal
 categories: installation
 ---
 

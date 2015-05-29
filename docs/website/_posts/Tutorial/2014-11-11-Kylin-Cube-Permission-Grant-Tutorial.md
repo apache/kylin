@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Kylin Cube Permission Grant Tutorial"
-date:   2014-11-11
-author: Kejia-Wang
 categories: tutorial
 ---
 

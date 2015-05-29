@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Export Kylin HBase data"
-date:   2015-05-18
-author: SHAOFENG SHI
 categories: howto
 ---
 

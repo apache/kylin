@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Advance settings of Kylin environment"
-date:   2015-01-22
-author: hongbin ma
 categories: installation
 ---
 

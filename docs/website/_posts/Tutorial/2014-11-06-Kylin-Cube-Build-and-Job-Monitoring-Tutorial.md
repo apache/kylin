@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Kylin Cube Build and Job Monitoring Tutorial"
-date:   2014-11-06
-author: Kejia-Wang
 categories: tutorial
 ---
 
