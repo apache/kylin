@@ -42,7 +42,7 @@ jQuery(document).ready(function ($) {
 	
 	
 	//document page 
-	$( "#content-container" ).load("docs/intro-content.html");
+	$( "#content-container" ).load("docs/What-should-I-use-Kylin-for.md");
 	$( "#left-menu li" ).eq(0).css("background-color", "#efefef");
 
     $( "#left-menu li" ).click(function(){

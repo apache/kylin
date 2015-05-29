@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Kylin and Tableau Tutorial"
-date:   2015-04-17
-author: Luwei
 categories: tutorial
 ---
 

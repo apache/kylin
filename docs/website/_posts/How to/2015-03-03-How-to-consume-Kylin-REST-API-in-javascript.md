@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "How to consume Kylin REST API in javascript"
-date:   2015-03-03
-author: liyang-gmt8
 categories: howto
 ---
 Kypin securicty authorization is based on basic access authorization, so when you want to use API in your javascript,you need to involve the authorization info in http headers.

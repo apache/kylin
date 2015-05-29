@@ -1,9 +1,7 @@
 ---
 layout: post
 title:  "Run Kylin test case with HBase Mini Cluster"
-date:   2015-01-04
-author: shaofengshi
-categories: howto
+categories: development
 ---
 
 ## Run test case with HBase Mini Cluster

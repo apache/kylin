@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "Off Hadoop CLI Installation (Dev Env Setup)"
-date:   2015-02-15
-author: SHAOFENG SHI
 categories: installation
 ---
 

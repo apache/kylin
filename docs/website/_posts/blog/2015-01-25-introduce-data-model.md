@@ -29,7 +29,7 @@ Now (after v0.6.4), to create a cube will follow below steps:
 
 
 ### What's Next
-After this refactor, Kylin is now be able to introduce more powerful features, the major idea is to using different storages to serve same data model:
+After this refactor, Kylin is now be able to introduce more powerful features, the major idea is to using different storage to serve same data model:
 
 * __Logical Model__: A Data Model presents logical data structure like Star Schema beyond data tables with more business meaning
 * __Physical Model__: define how the underlying data to be stored in persistent system, like HBase. There are already two of them: MOLAP (current Kylin version) and InvertedIndex (coming with 0.7.x release). And it also easy to extend to support others without change the Logical Model.

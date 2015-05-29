@@ -1,8 +1,6 @@
 ---
 layout: post
 title:  "How to use kylin remote jdbc driver"
-date:   2015-03-18
-author: SHAOFENG SHI
 categories: howto
 ---
 
