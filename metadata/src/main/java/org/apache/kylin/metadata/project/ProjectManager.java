@@ -19,7 +19,6 @@
 package org.apache.kylin.metadata.project;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -225,9 +224,11 @@ public class ProjectManager {
     }
 
     private void updateProject(ProjectInstance prj) throws IOException {
-        getStore().putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
-        projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
-        clearL2Cache();
+        synchronized (prj) {
+            getStore().putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
+            projectMap.put(norm(prj.getName()), prj); // triggers update broadcast
+            clearL2Cache();
+        }
     }
 
     private void removeProject(ProjectInstance proj) throws IOException {
