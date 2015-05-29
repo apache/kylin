@@ -144,7 +144,7 @@ module.exports = function (grunt) {
         },
         htmlrefs: {
             dist: {
-                src: 'tmp/index.md',
+                src: 'tmp/index.html',
                 dest: 'tmp/'
             },
             options: {
@@ -194,7 +194,7 @@ module.exports = function (grunt) {
                 ]
             },
             manifest: {
-                src: ['tmp/index.md'],
+                src: ['tmp/index.html'],
                 actions: [
                     {
                         name: 'manifest',
