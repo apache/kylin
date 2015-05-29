@@ -19,8 +19,8 @@
 <div class="col-md-3 col-lg-3 col-xs-4 aside1 visible-md visible-lg" id="nside1" style=" padding-top: 2em">
     <ul class="nav nav-pills nav-stacked">
         {% for category in site.categories %}     <!-- categories -->
-        {% if category[0] == 'gettingstarted' %}
-        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">Getting Started</a></li>
+        {% if category[0] == '入门' %}
+        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">入门</a></li>
         <div class="collapse in" id="{{ category[0] }}">
             <div class="list-group" id="list1">
                 <ul style="list-style-type:disc">
@@ -34,8 +34,8 @@
         {% endfor %}
 
         {% for category in site.categories %}
-        {% if category[0] == 'installation' %}
-        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">Installation</a></li>
+        {% if category[0] == '安装' %}
+        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">安装</a></li>
         <div class="collapse in" id="{{ category[0] }}">
             <div class="list-group" id="list2">
                 <ul style="list-style-type:disc">
@@ -49,8 +49,8 @@
         {% endfor %}
 
         {% for category in site.categories %}
-        {% if category[0] == 'tutorial' %}
-        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">Tutorial</a></li>
+        {% if category[0] == '教程' %}
+        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">教程</a></li>
         <div class="collapse in" id="{{ category[0] }}">
             <div class="list-group" id="list3">
                 <ul style="list-style-type:disc">
@@ -64,8 +64,8 @@
         {% endfor %}
 
         {% for category in site.categories %}
-        {% if category[0] == 'development' %}
-        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">Development</a></li>
+        {% if category[0] == '开发' %}
+        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">开发</a></li>
         <div class="collapse in" id="{{ category[0] }}">
             <div class="list-group" id="list4">
                 <ul style="list-style-type:disc">
@@ -79,8 +79,8 @@
         {% endfor %}
 
         {% for category in site.categories %}
-        {% if category[0] == 'howto' %}
-        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">How to</a></li>
+        {% if category[0] == '如何' %}
+        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">如何</a></li>
         <div class="collapse in" id="{{ category[0] }}">
             <div class="list-group" id="list5">
                 <ul style="list-style-type:disc">
@@ -95,8 +95,8 @@
 
 
         {% for category in site.categories %}
-        {% if category[0] == 'api' %}
-        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">API</a></li>
+        {% if category[0] == '系统api' %}
+        <li><a href="#{{ category | first }}" data-toggle="collapse" id="navtitle">系统API</a></li>
         <div class="collapse in" id="{{ category[0] }}">
             <div class="list-group" id="list6">
                 <ul style="list-style-type:disc">
