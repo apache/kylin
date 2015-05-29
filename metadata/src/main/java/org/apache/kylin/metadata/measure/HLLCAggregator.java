@@ -26,7 +26,12 @@ import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
  */
 public class HLLCAggregator extends MeasureAggregator<HyperLogLogPlusCounter> {
 
+    final int precision;
     HyperLogLogPlusCounter sum = null;
+
+    public HLLCAggregator(int precision) {
+        this.precision = precision;
+    }
 
     @Override
     public void reset() {
@@ -47,11 +52,13 @@ public class HLLCAggregator extends MeasureAggregator<HyperLogLogPlusCounter> {
     }
 
     @Override
-    public int getMemBytes() {
-        if (sum == null)
-            return Integer.MIN_VALUE;
-        else
-            return 4 + sum.getMemBytes();
+    public int getMemBytesEstimate() {
+        // 1024 + 60 returned by AggregationCacheMemSizeTest
+        return 8 // aggregator obj shell
+                + 4 // precision
+                + 8 // ref to HLLC
+                + 8 // HLLC obj shell
+                + 32 + (1 >> precision); // HLLC internal
     }
 
 }

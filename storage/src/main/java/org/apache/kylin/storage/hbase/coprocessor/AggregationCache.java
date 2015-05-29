@@ -68,7 +68,7 @@ public abstract class AggregationCache {
                 rowMemBytes = 0;
                 MeasureAggregator[] measureAggregators = aggBufMap.get(firstKey);
                 for (MeasureAggregator agg : measureAggregators) {
-                    rowMemBytes += agg.getMemBytes();
+                    rowMemBytes += agg.getMemBytesEstimate();
                 }
             }
         }

@@ -64,7 +64,7 @@ public class GTAggregateScanner implements IGTScanner {
 
     @Override
     public Iterator<GTRecord> iterator() {
-        AggregationCacheWithBytesKey aggregationCacheWithBytesKey = new AggregationCacheWithBytesKey();
+        AggregationCache aggregationCacheWithBytesKey = new AggregationCache();
         for (GTRecord r : inputScanner) {
             aggregationCacheWithBytesKey.aggregate(r);
             MemoryChecker.checkMemory();
@@ -72,12 +72,12 @@ public class GTAggregateScanner implements IGTScanner {
         return aggregationCacheWithBytesKey.iterator();
     }
 
-    class AggregationCacheWithBytesKey {
+    class AggregationCache {
         final SortedMap<byte[], MeasureAggregator[]> aggBufMap;
         final int keyLength;
         final boolean[] compareMask;
 
-        public AggregationCacheWithBytesKey() {
+        public AggregationCache() {
             compareMask = createCompareMask();
             keyLength = compareMask.length;
             aggBufMap = Maps.newTreeMap(new Comparator<byte[]>() {
@@ -194,4 +194,27 @@ public class GTAggregateScanner implements IGTScanner {
         }
     }
 
+    public static long estimateSizeOfAggrCache(byte[] keySample, MeasureAggregator<?>[] aggrSample, int size) {
+        // Aggregation cache is basically a tree map. The tree map entry overhead is
+        // - 40 according to http://java-performance.info/memory-consumption-of-java-data-types-2/
+        // - 41~52 according to AggregationCacheMemSizeTest
+        return (estimateSizeOf(keySample) + estimateSizeOf(aggrSample) + 64) * size;
+    }
+
+    public static long estimateSizeOf(MeasureAggregator[] aggrs) {
+        // size of array, AggregationCacheMemSizeTest reports 4 for [0], 12 for [1], 12 for [2], 20 for [3] etc..
+        // Memory alignment to 8 bytes
+        long est = (aggrs.length + 1) / 2 * 8 + 4 + (4 /* extra */);
+        for (MeasureAggregator aggr : aggrs) {
+            if (aggr != null)
+                est += aggr.getMemBytesEstimate();
+        }
+        return est;
+    }
+
+    public static long estimateSizeOf(byte[] bytes) {
+        // AggregationCacheMemSizeTest reports 20 for byte[10] and 20 again for byte[16]
+        // Memory alignment to 8 bytes
+        return (bytes.length + 7) / 8 * 8 + 4 + (4 /* extra */);
+    }
 }
