@@ -36,8 +36,9 @@ abstract public class MeasureAggregator<V> {
             else if (isDouble(returnType))
                 return new DoubleSumAggregator();
         } else if (FunctionDesc.FUNC_COUNT_DISTINCT.equalsIgnoreCase(funcName)) {
-            if (DataType.getInstance(returnType).isHLLC())
-                return new HLLCAggregator();
+            DataType hllcType = DataType.getInstance(returnType);
+            if (hllcType.isHLLC())
+                return new HLLCAggregator(hllcType.getPrecision());
             else
                 return new LDCAggregator();
         } else if (FunctionDesc.FUNC_MAX.equalsIgnoreCase(funcName)) {
@@ -71,18 +72,33 @@ abstract public class MeasureAggregator<V> {
     }
 
     public static int guessBigDecimalMemBytes() {
-        return 4 // ref
-        + 20; // guess of BigDecimal
+        // 116 returned by AggregationCacheMemSizeTest
+        return 8 // aggregator obj shell
+        + 8 // ref to BigDecimal
+        + 8 // BigDecimal obj shell
+        + 100; // guess of BigDecimal internal
     }
 
     public static int guessDoubleMemBytes() {
-        return 4 // ref
-        + 8;
+        // 29 to 44 returned by AggregationCacheMemSizeTest
+        return 44;
+        /*
+        return 8 // aggregator obj shell
+        + 8 // ref to DoubleWritable
+        + 8 // DoubleWritable obj shell
+        + 8; // size of double
+        */
     }
 
     public static int guessLongMemBytes() {
-        return 4 // ref
-        + 8;
+        // 29 to 44 returned by AggregationCacheMemSizeTest
+        return 44;
+        /*
+        return 8 // aggregator obj shell
+        + 8 // ref to LongWritable
+        + 8 // LongWritable obj shell
+        + 8; // size of long
+        */
     }
 
     // ============================================================================
@@ -97,6 +113,6 @@ abstract public class MeasureAggregator<V> {
 
     abstract public V getState();
 
-    // get an estimate of memory consumption
-    abstract public int getMemBytes();
+    // get an estimate of memory consumption UPPER BOUND
+    abstract public int getMemBytesEstimate();
 }

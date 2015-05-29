@@ -47,7 +47,7 @@ public class LongMinAggregator extends MeasureAggregator<LongWritable> {
     }
 
     @Override
-    public int getMemBytes() {
+    public int getMemBytesEstimate() {
         return guessLongMemBytes();
     }
 

@@ -108,10 +108,6 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         return new HLLCSnapshot(this).getCountEstimate();
     }
 
-    public int getMemBytes() {
-        return 12 + m;
-    }
-
     public double getErrorRate() {
         return 1.04 / Math.sqrt(m);
     }

@@ -47,7 +47,7 @@ public class DoubleMinAggregator extends MeasureAggregator<DoubleWritable> {
     }
 
     @Override
-    public int getMemBytes() {
+    public int getMemBytesEstimate() {
         return guessDoubleMemBytes();
     }
 

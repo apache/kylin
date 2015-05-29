@@ -124,15 +124,18 @@ public class MemoryBudgetController {
         return getSystemAvailMB() - SYSTEM_RESERVED >= mb;
     }
 
-    public static int getSystemAvailMB() {
+    public static long getSystemAvailBytes() {
         Runtime runtime = Runtime.getRuntime();
         long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
         long freeMemory = runtime.freeMemory(); // out of the current heap, how much is free
         long maxMemory = runtime.maxMemory(); // Max heap VM can use e.g. Xmx setting
         long usedMemory = totalMemory - freeMemory; // how much of the current heap the VM is using
         long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
-        int availMB = (int) (availableMemory / ONE_MB);
-        return availMB;
+        return availableMemory;
+    }
+    
+    public static int getSystemAvailMB() {
+        return (int) (getSystemAvailBytes() / ONE_MB);
     }
 
     public static int getMaxPossibleBudget() {

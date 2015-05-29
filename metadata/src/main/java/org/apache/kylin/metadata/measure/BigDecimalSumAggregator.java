@@ -44,7 +44,7 @@ public class BigDecimalSumAggregator extends MeasureAggregator<BigDecimal> {
     }
 
     @Override
-    public int getMemBytes() {
+    public int getMemBytesEstimate() {
         return guessBigDecimalMemBytes();
     }
 }
