@@ -15,13 +15,15 @@
  *  limitations under the License.
  */
 
-package org.apache.kylin.job;
+package org.apache.kylin.job.inmemcubing;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,8 +42,6 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.lookup.FileTableReader;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
-import org.apache.kylin.streaming.cube.IGTRecordWriter;
-import org.apache.kylin.streaming.cube.InMemCubeBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
     @Before
     public void before() {
         createTestMetadata();
-        
+
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cubeManager = CubeManager.getInstance(kylinConfig);
     }
@@ -72,29 +72,20 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
     public void after() throws Exception {
         cleanupTestMetadata();
     }
-    
+
     @Test
     public void test() throws Exception {
         final CubeInstance cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         final String flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
 
         Map<TblColRef, Dictionary<?>> dictionaryMap = getDictionaryMap(cube, flatTable);
-        ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(10000);
+        ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
 
         InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube, dictionaryMap, new ConsoleGTRecordWriter());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<?> future = executorService.submit(cubeBuilder);
 
-        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
-        int nColumns = flatTableDesc.getColumnList().size();
-        FileTableReader reader = new FileTableReader(flatTable, nColumns);
-        
-        while (reader.next()) {
-            String[] row = reader.getRow();
-            queue.put(Arrays.asList(row));
-        }
-        queue.put(new ArrayList<String>(0));
-        reader.close();
+        feedData(cube, flatTable, queue, 70000);
 
         try {
             future.get();
@@ -104,6 +95,42 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         }
 
         logger.info("stream build finished");
+    }
+
+    private void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count) throws IOException, InterruptedException {
+        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
+        int nColumns = flatTableDesc.getColumnList().size();
+
+        @SuppressWarnings("unchecked")
+        Set<String>[] distinctSets = new Set[nColumns];
+        for (int i = 0; i < nColumns; i++)
+            distinctSets[i] = new TreeSet<String>();
+        
+        // get distinct values on each column
+        FileTableReader reader = new FileTableReader(flatTable, nColumns);
+        while (count > 0 && reader.next()) {
+            String[] row = reader.getRow();
+            for (int i = 0; i < nColumns; i++)
+                distinctSets[i].add(row[i]);
+        }
+        reader.close();
+        
+        List<String[]> distincts = new ArrayList<String[]>();
+        for (int i = 0; i < nColumns; i++) {
+            distincts.add((String[]) distinctSets[i].toArray(new String[distinctSets[i].size()]));
+        }
+        
+        // output with random data
+        Random rand = new Random();
+        for (; count > 0; count--) {
+            ArrayList<String> row = new ArrayList<String>(nColumns);
+            for (int i = 0; i < nColumns; i++) {
+                String[] candidates = distincts.get(i);
+                row.add(candidates[rand.nextInt(candidates.length)]);
+            }
+            queue.put(row);
+        }
+        queue.put(new ArrayList<String>(0));
     }
 
     private Map<TblColRef, Dictionary<?>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {
@@ -138,7 +165,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         return result;
     }
 
-    class ConsoleGTRecordWriter implements IGTRecordWriter {
+    class ConsoleGTRecordWriter implements ICuboidWriter {
 
         boolean verbose = false;
 

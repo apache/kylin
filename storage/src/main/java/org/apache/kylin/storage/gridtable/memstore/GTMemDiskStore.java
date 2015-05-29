@@ -31,12 +31,15 @@ import org.slf4j.LoggerFactory;
 public class GTMemDiskStore implements IGTStore, Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(GTMemDiskStore.class);
+    private static final boolean debug = false;
+
     private static final int STREAM_BUFFER_SIZE = 8192;
     private static final int MEM_CHUNK_SIZE_MB = 1;
 
     final GTInfo info;
     final MemPart memPart;
     final DiskPart diskPart;
+    final boolean delOnClose;
 
     public GTMemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl) throws IOException {
         this(info, budgetCtrl, File.createTempFile("GTMemDiskStore", ""), true);
@@ -46,12 +49,14 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         this(info, budgetCtrl, diskFile, false);
     }
 
-    private GTMemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile, boolean delOnExit) throws IOException {
+    private GTMemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile, boolean delOnClose) throws IOException {
         this.info = info;
         this.memPart = new MemPart(budgetCtrl);
         this.diskPart = new DiskPart(diskFile);
+        this.delOnClose = delOnClose;
 
-        if (delOnExit)
+        // in case user forget to call close()
+        if (delOnClose)
             diskFile.deleteOnExit();
     }
 
@@ -99,7 +104,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
         Reader() throws IOException {
             diskPart.openRead();
-            logger.debug(GTMemDiskStore.this + " read start @ " + diskOffset);
+            if (debug)
+                logger.debug(GTMemDiskStore.this + " read start @ " + diskOffset);
 
             InputStream in = new InputStream() {
                 byte[] tmp = new byte[1];
@@ -201,7 +207,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         public void close() throws IOException {
             din.close();
             diskPart.closeRead();
-            logger.debug(GTMemDiskStore.this + " read end @ " + diskOffset + ", " + (memRead) + " from mem, " + (diskRead) + " from disk, " + nReadCalls + " read() calls");
+            if (debug)
+                logger.debug(GTMemDiskStore.this + " read end @ " + diskOffset + ", " + (memRead) + " from mem, " + (diskRead) + " from disk, " + nReadCalls + " read() calls");
         }
 
     }
@@ -219,7 +226,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
             memPart.clear();
             diskPart.clear();
             diskPart.openWrite(false);
-            logger.debug(GTMemDiskStore.this + " write start @ " + diskOffset);
+            if (debug)
+                logger.debug(GTMemDiskStore.this + " write start @ " + diskOffset);
 
             memPart.activateMemWrite();
 
@@ -268,7 +276,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
             memPart.finishAsyncFlush();
             diskPart.closeWrite();
             assert diskOffset == diskPart.tailOffset;
-            logger.debug(GTMemDiskStore.this + " write end @ " + diskOffset + ", " + (memWrite) + " to mem, " + (diskWrite) + " to disk, " + nWriteCalls + " write() calls");
+            if (debug)
+                logger.debug(GTMemDiskStore.this + " write end @ " + diskOffset + ", " + (memWrite) + " to mem, " + (diskWrite) + " to disk, " + nWriteCalls + " write() calls");
         }
     }
 
@@ -370,7 +379,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                     }
                     chunkCount++;
                 }
-                
+
                 int n = Math.min(lastChunk.freeSpace(), length);
                 System.arraycopy(bytes, offset, lastChunk.data, lastChunk.length, n);
                 lastChunk.length += n;
@@ -392,7 +401,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                 asyncFlusher = new Thread() {
                     public void run() {
                         asyncFlushException = null;
-                        logger.debug(GTMemDiskStore.this + " async flush started @ " + asyncFlushDiskOffset);
+                        if (debug)
+                            logger.debug(GTMemDiskStore.this + " async flush started @ " + asyncFlushDiskOffset);
                         try {
                             while (writeActivated) {
                                 flushToDisk();
@@ -402,7 +412,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                         } catch (Throwable ex) {
                             asyncFlushException = ex;
                         }
-                        logger.debug(GTMemDiskStore.this + " async flush ended @ " + asyncFlushDiskOffset);
+                        if (debug)
+                            logger.debug(GTMemDiskStore.this + " async flush ended @ " + asyncFlushDiskOffset);
                     }
                 };
                 asyncFlusher.start();
@@ -419,7 +430,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                 data = null;
                 synchronized (memPart) {
                     asyncFlushDiskOffset += flushedLen; // bytes written in last loop
-                    // logger.debug(GTMemDiskStore.this + " async flush @ " + asyncFlushDiskOffset);
+                    if (debug)
+                        logger.debug(GTMemDiskStore.this + " async flush @ " + asyncFlushDiskOffset);
                     if (asyncFlushChunk != null && asyncFlushChunk.tailOffset() == asyncFlushDiskOffset) {
                         asyncFlushChunk = asyncFlushChunk.next;
                     }
@@ -479,12 +491,14 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
         public void activateMemWrite() {
             writeActivated = true;
-            logger.debug(GTMemDiskStore.this + " mem write activated");
+            if (debug)
+                logger.debug(GTMemDiskStore.this + " mem write activated");
         }
 
         public void deactivateMemWrite() {
             writeActivated = false;
-            logger.debug(GTMemDiskStore.this + " mem write de-activated");
+            if (debug)
+                logger.debug(GTMemDiskStore.this + " mem write de-activated");
         }
 
         synchronized public void clear() {
@@ -515,7 +529,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         DiskPart(File diskFile) throws IOException {
             this.diskFile = diskFile;
             this.tailOffset = diskFile.length();
-            logger.debug(GTMemDiskStore.this + " disk file " + diskFile.getAbsolutePath());
+            if (debug)
+                logger.debug(GTMemDiskStore.this + " disk file " + diskFile.getAbsolutePath());
         }
 
         public void openRead() throws IOException {
@@ -567,6 +582,9 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         public void close() throws IOException {
             closeWrite();
             closeRead();
+            if (delOnClose) {
+                diskFile.delete();
+            }
         }
     }
 
