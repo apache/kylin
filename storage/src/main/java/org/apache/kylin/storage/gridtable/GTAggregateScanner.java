@@ -28,6 +28,8 @@ public class GTAggregateScanner implements IGTScanner {
     final BitSet metrics;
     final String[] metricsAggrFuncs;
     final IGTScanner inputScanner;
+    
+    long estimateSizeOfAggrCache;
 
     public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
         if (req.hasAggregation() == false)
@@ -64,11 +66,19 @@ public class GTAggregateScanner implements IGTScanner {
 
     @Override
     public Iterator<GTRecord> iterator() {
-        AggregationCache aggregationCacheWithBytesKey = new AggregationCache();
+        AggregationCache aggrCache = new AggregationCache();
         for (GTRecord r : inputScanner) {
-            aggregationCacheWithBytesKey.aggregate(r);
+            aggrCache.aggregate(r);
         }
-        return aggregationCacheWithBytesKey.iterator();
+        
+        estimateSizeOfAggrCache = aggrCache.esitmateMemSize();
+        
+        return aggrCache.iterator();
+    }
+    
+    /** for last call to iterator(), return the estimate memory size of its aggregation cache */
+    public long getEstimateSizeOfAggrCache() {
+        return estimateSizeOfAggrCache;
     }
 
     class AggregationCache {
@@ -147,6 +157,15 @@ public class GTAggregateScanner implements IGTScanner {
                 Object metrics = info.codeSystem.decodeColumnValue(col, r.cols[col].asBuffer());
                 aggrs[i].aggregate(metrics);
             }
+        }
+        
+        public long esitmateMemSize() {
+            if (aggBufMap.isEmpty())
+                return 0;
+            
+            byte[] sampleKey = aggBufMap.firstKey();
+            MeasureAggregator<?>[] sampleValue = aggBufMap.get(sampleKey);
+            return estimateSizeOfAggrCache(sampleKey, sampleValue, aggBufMap.size());
         }
 
         public Iterator<GTRecord> iterator() {

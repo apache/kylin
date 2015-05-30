@@ -58,7 +58,7 @@ public class HLLCAggregator extends MeasureAggregator<HyperLogLogPlusCounter> {
                 + 4 // precision
                 + 8 // ref to HLLC
                 + 8 // HLLC obj shell
-                + 32 + (1 >> precision); // HLLC internal
+                + 32 + (1 << precision); // HLLC internal
     }
 
 }

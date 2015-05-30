@@ -1,13 +1,21 @@
 package org.apache.kylin.job.streaming;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -42,6 +50,8 @@ import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.cube.FactDistinctColumnsReducer;
 import org.apache.kylin.job.hadoop.cubev2.InMemKeyValueCreator;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
+import org.apache.kylin.job.inmemcubing.ICuboidWriter;
+import org.apache.kylin.job.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.cube.CuboidToGridTableMapping;
@@ -49,19 +59,17 @@ import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.streaming.SEOJsonStreamParser;
 import org.apache.kylin.streaming.StreamBuilder;
 import org.apache.kylin.streaming.StreamMessage;
-import org.apache.kylin.streaming.cube.IGTRecordWriter;
-import org.apache.kylin.streaming.cube.InMemCubeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 /**
  */
@@ -111,7 +119,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         final HTableInterface hTable = createHTable(cubeSegment);
 
         final CubeStreamRecordWriter gtRecordWriter = new CubeStreamRecordWriter(cubeDesc, hTable);
-        InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(blockingQueue, cubeInstance,
+        InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(blockingQueue, cubeInstance.getDescriptor(),
                 dictionaryMap, gtRecordWriter);
 
         executorService.submit(inMemCubeBuilder).get();
@@ -144,7 +152,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         }
     }
 
-    private class CubeStreamRecordWriter implements IGTRecordWriter {
+    private class CubeStreamRecordWriter implements ICuboidWriter {
         final List<InMemKeyValueCreator> keyValueCreators;
         final int nColumns;
         final HTableInterface hTable;
@@ -185,7 +193,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         }
 
         @Override
-        public void write(Long cuboidId, GTRecord record) throws IOException {
+        public void write(long cuboidId, GTRecord record) throws IOException {
             final ByteBuffer key = createKey(cuboidId, record);
             final CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(Cuboid.findById(cubeDesc, cuboidId));
             final BitSet bitSet = new BitSet();
@@ -378,11 +386,6 @@ public class CubeStreamBuilder extends StreamBuilder {
         final HTableInterface hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
         logger.info("hTable:" + hTableName + " for segment:" + cubeSegment.getName() + " created!");
         return hTable;
-    }
-
-    private void loadToHTable(String hTableName) throws IOException {
-        final HTableInterface table = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
-
     }
 
     @Override

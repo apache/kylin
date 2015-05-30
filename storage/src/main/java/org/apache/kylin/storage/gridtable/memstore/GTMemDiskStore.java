@@ -34,12 +34,15 @@ public class GTMemDiskStore implements IGTStore, Closeable {
     private static final boolean debug = false;
 
     private static final int STREAM_BUFFER_SIZE = 8192;
-    private static final int MEM_CHUNK_SIZE_MB = 1;
+    private static final int MEM_CHUNK_SIZE_MB = 2;
 
-    final GTInfo info;
-    final MemPart memPart;
-    final DiskPart diskPart;
-    final boolean delOnClose;
+    private final GTInfo info;
+    private final Object lock; // all public methods that read/write object states are synchronized on this lock
+    private final MemPart memPart;
+    private final DiskPart diskPart;
+    private final boolean delOnClose;
+
+    private Writer ongoingWriter;
 
     public GTMemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl) throws IOException {
         this(info, budgetCtrl, File.createTempFile("GTMemDiskStore", ""), true);
@@ -51,6 +54,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
     private GTMemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile, boolean delOnClose) throws IOException {
         this.info = info;
+        this.lock = this;
         this.memPart = new MemPart(budgetCtrl);
         this.diskPart = new DiskPart(diskFile);
         this.delOnClose = delOnClose;
@@ -67,23 +71,42 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
     @Override
     public IGTStoreWriter rebuild(int shard) throws IOException {
-        return new Writer(0);
+        return newWriter(0);
     }
 
     @Override
     public IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast) throws IOException {
-        return new Writer(diskPart.tailOffset);
+        return newWriter(length());
+    }
+
+    private Writer newWriter(long startOffset) throws IOException {
+        synchronized (lock) {
+            if (ongoingWriter != null)
+                throw new IllegalStateException();
+
+            ongoingWriter = new Writer(startOffset);
+            return ongoingWriter;
+        }
     }
 
     @Override
     public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
-        return new Reader();
+        synchronized (lock) {
+            return new Reader();
+        }
     }
 
     @Override
     public void close() throws IOException {
+        // synchronized inside the parts close()
         memPart.close();
         diskPart.close();
+    }
+
+    public long length() {
+        synchronized (lock) {
+            return Math.max(memPart.tailOffset(), diskPart.tailOffset);
+        }
     }
 
     @Override
@@ -94,7 +117,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
     private class Reader implements IGTStoreScanner {
 
         final DataInputStream din;
-        long diskOffset = 0;
+        long readOffset = 0;
         long memRead = 0;
         long diskRead = 0;
         int nReadCalls = 0;
@@ -105,7 +128,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         Reader() throws IOException {
             diskPart.openRead();
             if (debug)
-                logger.debug(GTMemDiskStore.this + " read start @ " + diskOffset);
+                logger.debug(GTMemDiskStore.this + " read start @ " + readOffset);
 
             InputStream in = new InputStream() {
                 byte[] tmp = new byte[1];
@@ -122,47 +145,51 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
                 @Override
                 public int read(byte[] b, int off, int len) throws IOException {
-                    nReadCalls++;
-                    if (available() <= 0)
-                        return -1;
+                    synchronized (lock) {
+                        nReadCalls++;
+                        if (available() <= 0)
+                            return -1;
 
-                    if (memChunk == null && memPart.headOffset() <= diskOffset && diskOffset < memPart.tailOffset()) {
-                        memChunk = memPart.seekMemChunk(diskOffset);
-                    }
-
-                    int lenToGo = Math.min(available(), len);
-
-                    int nRead = 0;
-                    while (lenToGo > 0) {
-                        int n;
-                        if (memChunk != null) {
-                            if (memChunk.headOffset() > diskOffset) {
-                                memChunk = null;
-                                continue;
-                            }
-                            if (diskOffset >= memChunk.tailOffset()) {
-                                memChunk = memChunk.next;
-                                continue;
-                            }
-                            int chunkOffset = (int) (diskOffset - memChunk.headOffset());
-                            n = Math.min((int) (memChunk.tailOffset() - diskOffset), lenToGo);
-                            System.arraycopy(memChunk.data, chunkOffset, b, off, n);
-                            memRead += n;
-                        } else {
-                            n = diskPart.read(diskOffset, b, off, lenToGo);
-                            diskRead += n;
+                        if (memChunk == null && memPart.headOffset() <= readOffset && readOffset < memPart.tailOffset()) {
+                            memChunk = memPart.seekMemChunk(readOffset);
                         }
-                        lenToGo -= n;
-                        nRead += n;
-                        off += n;
-                        diskOffset += n;
+
+                        int lenToGo = Math.min(available(), len);
+
+                        int nRead = 0;
+                        while (lenToGo > 0) {
+                            int n;
+                            if (memChunk != null) {
+                                if (memChunk.headOffset() > readOffset) {
+                                    memChunk = null;
+                                    continue;
+                                }
+                                if (readOffset >= memChunk.tailOffset()) {
+                                    memChunk = memChunk.next;
+                                    continue;
+                                }
+                                int chunkOffset = (int) (readOffset - memChunk.headOffset());
+                                n = Math.min((int) (memChunk.tailOffset() - readOffset), lenToGo);
+                                System.arraycopy(memChunk.data, chunkOffset, b, off, n);
+                                memRead += n;
+                            } else {
+                                n = diskPart.read(readOffset, b, off, lenToGo);
+                                diskRead += n;
+                            }
+                            lenToGo -= n;
+                            nRead += n;
+                            off += n;
+                            readOffset += n;
+                        }
+                        return nRead;
                     }
-                    return nRead;
                 }
 
                 @Override
                 public int available() throws IOException {
-                    return (int) (diskPart.tailOffset - diskOffset);
+                    synchronized (lock) {
+                        return (int) (length() - readOffset);
+                    }
                 }
             };
 
@@ -205,10 +232,12 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
         @Override
         public void close() throws IOException {
-            din.close();
-            diskPart.closeRead();
-            if (debug)
-                logger.debug(GTMemDiskStore.this + " read end @ " + diskOffset + ", " + (memRead) + " from mem, " + (diskRead) + " from disk, " + nReadCalls + " read() calls");
+            synchronized (lock) {
+                din.close();
+                diskPart.closeRead();
+                if (debug)
+                    logger.debug(GTMemDiskStore.this + " read end @ " + readOffset + ", " + (memRead) + " from mem, " + (diskRead) + " from disk, " + nReadCalls + " read() calls");
+            }
         }
 
     }
@@ -216,18 +245,19 @@ public class GTMemDiskStore implements IGTStore, Closeable {
     private class Writer implements IGTStoreWriter {
 
         final DataOutputStream dout;
-        long diskOffset;
+        long writeOffset;
         long memWrite = 0;
         long diskWrite = 0;
         int nWriteCalls;
+        boolean closed = false;
 
         Writer(long startOffset) throws IOException {
-            diskOffset = 0; // TODO does not support append yet
+            writeOffset = 0; // TODO does not support append yet
             memPart.clear();
             diskPart.clear();
             diskPart.openWrite(false);
             if (debug)
-                logger.debug(GTMemDiskStore.this + " write start @ " + diskOffset);
+                logger.debug(GTMemDiskStore.this + " write start @ " + writeOffset);
 
             memPart.activateMemWrite();
 
@@ -243,22 +273,23 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
                 @Override
                 public void write(byte[] bytes, int offset, int length) throws IOException {
+                    // lock inside memPart.write() and diskPartm.write()
                     nWriteCalls++;
                     while (length > 0) {
                         int n;
                         if (memPartActivated) {
-                            n = memPart.write(bytes, offset, length, diskOffset);
+                            n = memPart.write(bytes, offset, length, writeOffset);
                             memWrite += n;
                             if (n == 0) {
                                 memPartActivated = false;
                             }
                         } else {
-                            n = diskPart.write(diskOffset, bytes, offset, length);
+                            n = diskPart.write(writeOffset, bytes, offset, length);
                             diskWrite += n;
                         }
                         offset += n;
                         length -= n;
-                        diskOffset += n;
+                        writeOffset += n;
                     }
                 }
             };
@@ -272,12 +303,23 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
         @Override
         public void close() throws IOException {
-            dout.close();
-            memPart.finishAsyncFlush();
-            diskPart.closeWrite();
-            assert diskOffset == diskPart.tailOffset;
-            if (debug)
-                logger.debug(GTMemDiskStore.this + " write end @ " + diskOffset + ", " + (memWrite) + " to mem, " + (diskWrite) + " to disk, " + nWriteCalls + " write() calls");
+            synchronized (lock) {
+                if (!closed) {
+                    dout.close();
+                    memPart.deactivateMemWrite();
+                }
+
+                if (memPart.asyncFlusher == null) {
+                    assert writeOffset == diskPart.tailOffset;
+                    diskPart.closeWrite();
+                    ongoingWriter = null;
+                    if (debug)
+                        logger.debug(GTMemDiskStore.this + " write end @ " + writeOffset + ", " + (memWrite) + " to mem, " + (diskWrite) + " to disk, " + nWriteCalls + " write() calls");
+                } else {
+                    // the asyncFlusher will call this close() again later
+                }
+                closed = true;
+            }
         }
     }
 
@@ -308,7 +350,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
         final MemoryBudgetController budgetCtrl;
 
-        // read & write won't go together, but write() / asyncDiskWrite() / freeUp() can happen at the same time
+        // async flush thread checks this flag out of sync block
         volatile boolean writeActivated;
         MemChunk firstChunk;
         MemChunk lastChunk;
@@ -331,7 +373,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
             return lastChunk == null ? 0 : lastChunk.tailOffset();
         }
 
-        synchronized public MemChunk seekMemChunk(long diskOffset) {
+        public MemChunk seekMemChunk(long diskOffset) {
             MemChunk c = firstChunk;
             while (c != null && c.headOffset() <= diskOffset) {
                 if (diskOffset < c.tailOffset())
@@ -344,7 +386,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         public int write(byte[] bytes, int offset, int length, long diskOffset) {
             int needMoreMem = 0;
 
-            synchronized (this) {
+            synchronized (lock) {
                 if (writeActivated == false)
                     return 0;
 
@@ -356,7 +398,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                     needMoreMem = (chunkCount + 1) * MEM_CHUNK_SIZE_MB;
             }
 
-            // call to budgetCtrl.reserve() out of synchronized block, or deadlock may happen between MemoryConsumers
+            // call to budgetCtrl.reserve() must be out of synchronized block, or deadlock may happen between MemoryConsumers
             if (needMoreMem > 0) {
                 try {
                     budgetCtrl.reserve(this, needMoreMem);
@@ -366,8 +408,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                 }
             }
 
-            synchronized (this) {
-                if (needMoreMem > 0) {
+            synchronized (lock) {
+                if (needMoreMem > 0 && (chunkCount == 0 || lastChunk.isFull())) {
                     MemChunk chunk = new MemChunk();
                     chunk.diskOffset = diskOffset;
                     chunk.data = new byte[ONE_MB * MEM_CHUNK_SIZE_MB - 48]; // -48 for MemChunk overhead
@@ -409,11 +451,20 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                                 Thread.sleep(10);
                             }
                             flushToDisk();
+
+                            if (debug)
+                                logger.debug(GTMemDiskStore.this + " async flush ended @ " + asyncFlushDiskOffset);
+
+                            synchronized (lock) {
+                                asyncFlusher = null;
+                                asyncFlushChunk = null;
+                                if (ongoingWriter.closed) {
+                                    ongoingWriter.close(); // call writer.close() again to clean up
+                                }
+                            }
                         } catch (Throwable ex) {
                             asyncFlushException = ex;
                         }
-                        if (debug)
-                            logger.debug(GTMemDiskStore.this + " async flush ended @ " + asyncFlushDiskOffset);
                     }
                 };
                 asyncFlusher.start();
@@ -428,7 +479,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
             while (true) {
                 data = null;
-                synchronized (memPart) {
+                synchronized (lock) {
                     asyncFlushDiskOffset += flushedLen; // bytes written in last loop
                     if (debug)
                         logger.debug(GTMemDiskStore.this + " async flush @ " + asyncFlushDiskOffset);
@@ -449,44 +500,26 @@ public class GTMemDiskStore implements IGTStore, Closeable {
             }
         }
 
-        public void finishAsyncFlush() throws IOException {
-            deactivateMemWrite();
-            if (asyncFlusher != null) {
-                try {
-                    asyncFlusher.join();
-                } catch (InterruptedException e) {
-                    logger.warn("", e);
-                }
-                asyncFlusher = null;
-                asyncFlushChunk = null;
-
-                if (asyncFlushException != null) {
-                    if (asyncFlushException instanceof IOException)
-                        throw (IOException) asyncFlushException;
-                    else
-                        throw new IOException(asyncFlushException);
-                }
-            }
-        }
-
         @Override
-        synchronized public int freeUp(int mb) {
-            int mbReleased = 0;
-            while (chunkCount > 0 && mbReleased < mb) {
-                if (firstChunk == asyncFlushChunk)
-                    break;
+        public int freeUp(int mb) {
+            synchronized (lock) {
+                int mbReleased = 0;
+                while (chunkCount > 0 && mbReleased < mb) {
+                    if (firstChunk == asyncFlushChunk)
+                        break;
 
-                mbReleased += MEM_CHUNK_SIZE_MB;
-                chunkCount--;
-                if (chunkCount == 0) {
-                    firstChunk = lastChunk = null;
-                } else {
-                    MemChunk next = firstChunk.next;
-                    firstChunk.next = null;
-                    firstChunk = next;
+                    mbReleased += MEM_CHUNK_SIZE_MB;
+                    chunkCount--;
+                    if (chunkCount == 0) {
+                        firstChunk = lastChunk = null;
+                    } else {
+                        MemChunk next = firstChunk.next;
+                        firstChunk.next = null;
+                        firstChunk = next;
+                    }
                 }
+                return mbReleased;
             }
-            return mbReleased;
         }
 
         public void activateMemWrite() {
@@ -501,16 +534,38 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                 logger.debug(GTMemDiskStore.this + " mem write de-activated");
         }
 
-        synchronized public void clear() {
-            budgetCtrl.reserve(this, 0);
+        public void clear() {
             chunkCount = 0;
             firstChunk = lastChunk = null;
+            budgetCtrl.reserve(this, 0);
         }
 
         @Override
         public void close() throws IOException {
-            finishAsyncFlush();
-            clear();
+            synchronized (lock) {
+                if (asyncFlushException != null)
+                    throwAsyncException(asyncFlushException);
+            }
+            try {
+                asyncFlusher.join();
+            } catch (NullPointerException npe) {
+                // that's fine, async flusher may not present
+            } catch (InterruptedException e) {
+                logger.warn("async join interrupted", e);
+            }
+            synchronized (lock) {
+                if (asyncFlushException != null)
+                    throwAsyncException(asyncFlushException);
+                
+                clear();
+            }
+        }
+
+        private void throwAsyncException(Throwable ex) throws IOException {
+            if (ex instanceof IOException)
+                throw (IOException) ex;
+            else
+                throw new IOException(ex);
         }
 
         @Override
@@ -524,6 +579,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         final File diskFile;
         FileChannel writeChannel;
         FileChannel readChannel;
+        int readerCount = 0; // allow parallel readers
         long tailOffset;
 
         DiskPart(File diskFile) throws IOException {
@@ -534,8 +590,10 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         }
 
         public void openRead() throws IOException {
-            readChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.READ);
-            tailOffset = diskFile.length();
+            if (readChannel == null) {
+                readChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.READ);
+            }
+            readerCount++;
         }
 
         public int read(long diskOffset, byte[] bytes, int offset, int length) throws IOException {
@@ -543,9 +601,16 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         }
 
         public void closeRead() throws IOException {
-            if (readChannel != null) {
-                readChannel.close();
-                readChannel = null;
+            closeRead(false);
+        }
+
+        private void closeRead(boolean force) throws IOException {
+            readerCount--;
+            if (readerCount == 0 || force) {
+                if (readChannel != null) {
+                    readChannel.close();
+                    readChannel = null;
+                }
             }
         }
 
@@ -561,9 +626,11 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         }
 
         public int write(long diskOffset, byte[] bytes, int offset, int length) throws IOException {
-            int n = writeChannel.write(ByteBuffer.wrap(bytes, offset, length), diskOffset);
-            tailOffset = Math.max(diskOffset + n, tailOffset);
-            return n;
+            synchronized (lock) {
+                int n = writeChannel.write(ByteBuffer.wrap(bytes, offset, length), diskOffset);
+                tailOffset = Math.max(diskOffset + n, tailOffset);
+                return n;
+            }
         }
 
         public void closeWrite() throws IOException {
@@ -580,10 +647,12 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
         @Override
         public void close() throws IOException {
-            closeWrite();
-            closeRead();
-            if (delOnClose) {
-                diskFile.delete();
+            synchronized (lock) {
+                closeWrite();
+                closeRead(true);
+                if (delOnClose) {
+                    diskFile.delete();
+                }
             }
         }
     }

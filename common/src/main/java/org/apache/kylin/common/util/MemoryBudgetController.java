@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 
 public class MemoryBudgetController {
 
-    public static final MemoryBudgetController ZERO_BUDGET = new MemoryBudgetController(0);
-
     public static interface MemoryConsumer {
         // return number MB released
         int freeUp(int mb);
@@ -28,8 +26,8 @@ public class MemoryBudgetController {
         }
     }
 
+    public static final MemoryBudgetController ZERO_BUDGET = new MemoryBudgetController(0);
     public static final int ONE_MB = 1024 * 1024;
-    public static final int SYSTEM_RESERVED = 200;
 
     private static final Logger logger = LoggerFactory.getLogger(MemoryBudgetController.class);
 
@@ -126,7 +124,7 @@ public class MemoryBudgetController {
     }
 
     private boolean checkSystemAvailMB(int mb) {
-        return getSystemAvailMB() - SYSTEM_RESERVED >= mb;
+        return getSystemAvailMB() >= mb;
     }
 
     public static long getSystemAvailBytes() {
@@ -141,10 +139,6 @@ public class MemoryBudgetController {
 
     public static int getSystemAvailMB() {
         return (int) (getSystemAvailBytes() / ONE_MB);
-    }
-
-    public static int getMaxPossibleBudget() {
-        return getSystemAvailMB() - SYSTEM_RESERVED;
     }
 
 }

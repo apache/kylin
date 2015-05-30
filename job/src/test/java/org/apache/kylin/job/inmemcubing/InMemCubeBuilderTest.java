@@ -81,11 +81,11 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         Map<TblColRef, Dictionary<?>> dictionaryMap = getDictionaryMap(cube, flatTable);
         ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
 
-        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube, dictionaryMap, new ConsoleGTRecordWriter());
+        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube.getDescriptor(), dictionaryMap, new ConsoleGTRecordWriter());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<?> future = executorService.submit(cubeBuilder);
 
-        feedData(cube, flatTable, queue, 70000);
+        feedData(cube, flatTable, queue, 60000);
 
         try {
             future.get();
@@ -93,8 +93,6 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             logger.error("stream build failed", e);
             throw new IOException("Failed to build cube ", e);
         }
-
-        logger.info("stream build finished");
     }
 
     private void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count) throws IOException, InterruptedException {
@@ -170,7 +168,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         boolean verbose = false;
 
         @Override
-        public void write(Long cuboidId, GTRecord record) throws IOException {
+        public void write(long cuboidId, GTRecord record) throws IOException {
             if (verbose)
                 System.out.println(record.toString());
         }

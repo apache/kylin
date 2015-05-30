@@ -1,6 +1,9 @@
 package org.apache.kylin.job.hadoop.cubev2;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.BitSet;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -11,21 +14,13 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.job.inmemcubing.ICuboidWriter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
-import org.apache.kylin.streaming.cube.IGTRecordWriter;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.BitSet;
-import java.util.List;
 
 /**
  */
-public class MapContextGTRecordWriter implements IGTRecordWriter {
+public class MapContextGTRecordWriter implements ICuboidWriter {
 
     private static final Log logger = LogFactory.getLog(MapContextGTRecordWriter.class);
     protected MapContext<?, ?, ImmutableBytesWritable, Text> mapContext;
@@ -52,7 +47,7 @@ public class MapContextGTRecordWriter implements IGTRecordWriter {
     }
 
     @Override
-    public void write(Long cuboidId, GTRecord record) throws IOException {
+    public void write(long cuboidId, GTRecord record) throws IOException {
 
         if (lastCuboidId == null || !lastCuboidId.equals(cuboidId)) {
             // output another cuboid
