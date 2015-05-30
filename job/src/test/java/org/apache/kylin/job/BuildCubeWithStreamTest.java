@@ -34,11 +34,18 @@
 
 package org.apache.kylin.job;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
@@ -55,25 +62,24 @@ import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.lookup.HiveTableReader;
+import org.apache.kylin.job.inmemcubing.ICuboidWriter;
+import org.apache.kylin.job.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
-import org.apache.kylin.streaming.cube.IGTRecordWriter;
-import org.apache.kylin.streaming.cube.InMemCubeBuilder;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
 
 /**
  *
@@ -145,7 +151,7 @@ public class BuildCubeWithStreamTest {
 
         ArrayBlockingQueue queue = new ArrayBlockingQueue<List<String>>(10000);
 
-        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube, dictionaryMap, new ConsoleGTRecordWriter());
+        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube.getDescriptor(), dictionaryMap, new ConsoleGTRecordWriter());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<?> future = executorService.submit(cubeBuilder);
 
@@ -211,12 +217,12 @@ public class BuildCubeWithStreamTest {
     }
 
 
-    class ConsoleGTRecordWriter implements IGTRecordWriter {
+    class ConsoleGTRecordWriter implements ICuboidWriter {
 
         boolean verbose = false;
 
         @Override
-        public void write(Long cuboidId, GTRecord record) throws IOException {
+        public void write(long cuboidId, GTRecord record) throws IOException {
             if (verbose)
                 System.out.println(record.toString());
         }

@@ -1,6 +1,15 @@
 package org.apache.kylin.job.hadoop.cubev2;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -18,15 +27,11 @@ import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.HiveTableReader;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.job.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.streaming.cube.InMemCubeBuilder;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -70,7 +75,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
             }
         }
 
-        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube, dictionaryMap, new MapContextGTRecordWriter(context, cubeDesc, cubeSegment));
+        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube.getDescriptor(), dictionaryMap, new MapContextGTRecordWriter(context, cubeDesc, cubeSegment));
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         future = executorService.submit(cubeBuilder);
 

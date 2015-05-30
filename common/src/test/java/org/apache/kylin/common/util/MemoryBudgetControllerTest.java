@@ -11,7 +11,7 @@ public class MemoryBudgetControllerTest {
 
     @Test
     public void test() {
-        int n = MemoryBudgetController.getMaxPossibleBudget() / 2;
+        int n = MemoryBudgetController.getSystemAvailMB() / 2;
         MemoryBudgetController mbc = new MemoryBudgetController(n);
 
         ArrayList<OneMB> mbList = new ArrayList<OneMB>();
