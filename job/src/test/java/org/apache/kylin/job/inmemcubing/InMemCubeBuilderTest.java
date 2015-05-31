@@ -75,6 +75,9 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void test() throws Exception {
+        final int inputRows = 70000;
+        final int threads = 4;
+        
         final CubeInstance cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         final String flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
 
@@ -82,10 +85,11 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
 
         InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube.getDescriptor(), dictionaryMap, new ConsoleGTRecordWriter());
+        cubeBuilder.setConcurrentThreads(threads);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<?> future = executorService.submit(cubeBuilder);
 
-        feedData(cube, flatTable, queue, 60000);
+        feedData(cube, flatTable, queue, inputRows);
 
         try {
             future.get();
