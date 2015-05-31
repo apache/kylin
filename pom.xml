@@ -29,7 +29,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.7.2-incubating-SNAPSHOT</version>
+    <version>0.7.1-incubating-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
@@ -780,6 +780,27 @@
                             <failOnError>false</failOnError>
                         </configuration>
                     </plugin>
+                     <!-- Override the parent assembly execution to customize the assembly
+               descriptor and final name. -->
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>source-release-assembly</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <configuration>
+                  <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                  <appendAssemblyId>false</appendAssemblyId>
+                  <descriptor>src/main/config/assemblies/source-assembly.xml</descriptor>
+                  <finalName>apache-kylin-${project.version}-src</finalName>
+                  <tarLongFileMode>gnu</tarLongFileMode>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
                 </plugins>
             </build>
         </profile>
