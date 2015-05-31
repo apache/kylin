@@ -16,18 +16,23 @@ limitations under the License.
 -->
 
 # Apache Kylin Release Notes
-----------------------------
 
-## v0.7.1 (First Apache Release)
+## v0.7.1 (First Apache Release) - 2015-05-29
+_Tag:_ [kylin-0.7.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-0.7.1-incubating)
+
 This is first Apache Kylin release, including many changes after migrated to Apache.
 
-Main Changes:
-* Rename package from com.kylinolap to org.apache.kylin
+__Main Changes:__
+
+* Package renamed from com.kylinolap to org.apache.kylin
+* Binary pacakge avaliable download from: [http://kylin.incubator.apache.org/download](http://kylin.incubator.apache.org/download/)
 
 
-New Features:
-* ...
+__New Features:__
 
-Bug Fixes:
+* [] Extracted Data Model in Cube Designer
+* [] 
+
+__Bug Fixes:__
 * ...
 
