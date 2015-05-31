@@ -10,12 +10,12 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.metadata.measure.BigDecimalSumAggregator;
 import org.apache.kylin.metadata.measure.DoubleSumAggregator;
 import org.apache.kylin.metadata.measure.HLLCAggregator;
 import org.apache.kylin.metadata.measure.LongSumAggregator;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController;
 import org.junit.Test;
 
 /** Note: Execute each test alone to get accurate size estimate. */

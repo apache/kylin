@@ -1,6 +1,6 @@
 package org.apache.kylin.storage.gridtable.memstore;
 
-import static org.apache.kylin.common.util.MemoryBudgetController.*;
+import static org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController.*;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -17,24 +17,23 @@ import java.nio.file.StandardOpenOption;
 import java.util.BitSet;
 import java.util.NoSuchElementException;
 
-import org.apache.kylin.common.util.MemoryBudgetController;
-import org.apache.kylin.common.util.MemoryBudgetController.MemoryConsumer;
-import org.apache.kylin.common.util.MemoryBudgetController.NotEnoughBudgetException;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.IGTStore;
+import org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController.MemoryConsumer;
+import org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController.NotEnoughBudgetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GTMemDiskStore implements IGTStore, Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(GTMemDiskStore.class);
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     private static final int STREAM_BUFFER_SIZE = 8192;
-    private static final int MEM_CHUNK_SIZE_MB = 2;
+    private static final int MEM_CHUNK_SIZE_MB = 5;
 
     private final GTInfo info;
     private final Object lock; // all public methods that read/write object states are synchronized on this lock
@@ -111,7 +110,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
     @Override
     public String toString() {
-        return "MemDiskStore@" + this.hashCode();
+        return "MemDiskStore@" + (info.getTableName() == null ? this.hashCode() : info.getTableName());
     }
 
     private class Reader implements IGTStoreScanner {
@@ -481,8 +480,8 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                 data = null;
                 synchronized (lock) {
                     asyncFlushDiskOffset += flushedLen; // bytes written in last loop
-                    if (debug)
-                        logger.debug(GTMemDiskStore.this + " async flush @ " + asyncFlushDiskOffset);
+                    //                    if (debug)
+                    //                        logger.debug(GTMemDiskStore.this + " async flush @ " + asyncFlushDiskOffset);
                     if (asyncFlushChunk != null && asyncFlushChunk.tailOffset() == asyncFlushDiskOffset) {
                         asyncFlushChunk = asyncFlushChunk.next;
                     }
@@ -556,7 +555,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
             synchronized (lock) {
                 if (asyncFlushException != null)
                     throwAsyncException(asyncFlushException);
-                
+
                 clear();
             }
         }

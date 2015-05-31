@@ -14,6 +14,7 @@ public class GTInfo {
         return new Builder();
     }
 
+    String tableName;
     IGTCodeSystem codeSystem;
 
     // column schema
@@ -34,6 +35,10 @@ public class GTInfo {
 
     // must create from builder
     private GTInfo() {
+    }
+    
+    public String getTableName() {
+        return tableName;
     }
     
     public IGTCodeSystem getCodeSystem() {
@@ -181,6 +186,12 @@ public class GTInfo {
             this.info = new GTInfo();
         }
 
+        /** optional */
+        public Builder setTableName(String name) {
+            info.tableName = name;
+            return this;
+        }
+        
         /** required */
         public Builder setCodeSystem(IGTCodeSystem cs) {
             info.codeSystem = cs;

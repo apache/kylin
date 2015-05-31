@@ -5,8 +5,8 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.storage.gridtable.memstore.GTMemDiskStore;
+import org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController;
 import org.junit.Test;
 
 public class GTMemDiskStoreTest {
