@@ -700,6 +700,9 @@
                         <configuration>
                             <numUnapprovedLicenses>0</numUnapprovedLicenses>
                             <excludes>
+                                <exclude>.idea/**</exclude>
+                                <exclude>.git/**</exclude>
+                                <exclude>.settings/**</exclude>
                                 <!-- text files without comments -->
                                 <exclude>**/*.csv</exclude>
                                 <exclude>**/*.json</exclude>
@@ -716,7 +719,9 @@
                                 <exclude>lib/**</exclude>
                                 <!-- Kylin's website content -->
                                 <exclude>**/.sass-cache/**</exclude>
+
                                 <exclude>docs/website/**</exclude>
+
                                 <!-- tomcat package -->
                                 <exclude>tomcat/**</exclude>
                                 <!-- front end libary and generated files -->
