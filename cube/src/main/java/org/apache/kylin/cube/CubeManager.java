@@ -273,10 +273,10 @@ public class CubeManager implements IRealizationProvider {
 
 
     public CubeSegment appendSegments(CubeInstance cube, long endDate) throws IOException {
-        return appendSegments(cube, endDate, true);
+        return appendSegments(cube, endDate, true, true);
     }
 
-    public CubeSegment appendSegments(CubeInstance cube, long endDate, boolean checkNoBuilding) throws IOException {
+    public CubeSegment appendSegments(CubeInstance cube, long endDate, boolean checkNoBuilding, boolean saveChange) throws IOException {
         if (checkNoBuilding)
             checkNoBuildingSegment(cube);
 
@@ -289,7 +289,9 @@ public class CubeManager implements IRealizationProvider {
         }
 
         validateNewSegments(cube, newSegment);
-        saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
+
+        if (saveChange)
+            saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
 
         return newSegment;
     }
@@ -317,8 +319,6 @@ public class CubeManager implements IRealizationProvider {
     }
 
     protected void saveCubeSegmentChange(CubeInstance cube, List<CubeSegment> toAdd, List<CubeSegment> toRemove) throws IOException {
-//        cube = this.reloadCubeLocal(cube.getName());
-
         if (toAdd != null && toAdd.size() > 0)
             cube.getSegments().addAll(toAdd);
 
@@ -543,7 +543,7 @@ public class CubeManager implements IRealizationProvider {
         updateCube(cube, true);
     }
 
-    private void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {
+    public void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {
         List<CubeSegment> tobe = calculateToBeSegments(cube, newSegments);
         List<CubeSegment> newList = Arrays.asList(newSegments);
         if (tobe.containsAll(newList) == false) {

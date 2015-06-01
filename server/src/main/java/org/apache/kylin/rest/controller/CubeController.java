@@ -39,6 +39,7 @@ import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
+import org.apache.kylin.rest.request.CubeSegmentRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
@@ -404,6 +405,54 @@ public class CubeController extends BasicController {
 
         return hbase;
     }
+
+
+    @RequestMapping(value = "/{cubeName}/segments", method = {RequestMethod.POST})
+    @ResponseBody
+    @Metered(name = "appendSegment")
+    public CubeSegmentRequest appendSegment(@PathVariable String cubeName, @RequestBody CubeSegmentRequest cubeSegmentRequest) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (null == cube) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+
+        CubeSegment segment = deserializeCubeSegment(cubeSegmentRequest);
+
+        cubeService.getCubeManager().validateNewSegments(cube, segment);
+        cube.getSegments().add(segment);
+        Collections.sort(cube.getSegments());
+        try {
+            cubeService.getCubeManager().updateCube(cube, true);
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+        }
+
+        cubeSegmentRequest.setSuccessful(true);
+        cubeSegmentRequest.setMessage("Successfully append cube segment " + segment.getName());
+        return cubeSegmentRequest;
+    }
+
+    private CubeSegment deserializeCubeSegment(CubeSegmentRequest cubeSegmentRequest) {
+        CubeSegment segment = null;
+        try {
+            logger.debug("Saving cube segment " + cubeSegmentRequest.getCubeSegmentData());
+            segment = JsonUtil.readValue(cubeSegmentRequest.getCubeSegmentData(), CubeSegment.class);
+        } catch (JsonParseException e) {
+            logger.error("The cube definition is not valid.", e);
+            cubeSegmentRequest.setSuccessful(false);
+            cubeSegmentRequest.setMessage(e.getMessage());
+        } catch (JsonMappingException e) {
+            logger.error("The cube definition is not valid.", e);
+            cubeSegmentRequest.setSuccessful(false);
+            cubeSegmentRequest.setMessage(e.getMessage());
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
+        }
+        return segment;
+    }
+
 
     private CubeDesc deserializeCubeDesc(CubeRequest cubeRequest) {
         CubeDesc desc = null;
