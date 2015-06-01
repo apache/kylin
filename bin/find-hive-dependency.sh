@@ -8,7 +8,7 @@ hive_conf_path=
 hive_exec_path=
 for data in ${arr[@]}
 do
-    result=`echo $data | grep -e 'hive-exec[0-9\.-]*jar'`
+    result=`echo $data | grep -e 'hive-exec[a-z0-9A-Z\.-]*jar'`
     if [ $result ]
     then
         hive_exec_path=$data
