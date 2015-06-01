@@ -1,3 +1,20 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements. See the NOTICE file distributed with
+ *  this work for additional information regarding copyright ownership.
+ *  The ASF licenses this file to You under the Apache License, Version 2.0
+ *  (the "License"); you may not use this file except in compliance with
+ *  the License. You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package org.apache.kylin.storage.gridtable;
 
 import java.math.BigDecimal;
@@ -15,10 +32,8 @@ import org.apache.kylin.metadata.measure.DoubleSumAggregator;
 import org.apache.kylin.metadata.measure.HLLCAggregator;
 import org.apache.kylin.metadata.measure.LongSumAggregator;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController;
 import org.junit.Test;
 
-/** Note: Execute each test alone to get accurate size estimate. */
 public class AggregationCacheMemSizeTest {
 
     public static final int NUM_OF_OBJS = 1000000 / 2;
@@ -182,7 +197,17 @@ public class AggregationCacheMemSizeTest {
     private long memLeft() throws InterruptedException {
         Runtime.getRuntime().gc();
         Thread.sleep(500);
-        return MemoryBudgetController.getSystemAvailBytes();
+        return getSystemAvailBytes();
+    }
+
+    private long getSystemAvailBytes() {
+        Runtime runtime = Runtime.getRuntime();
+        long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
+        long freeMemory = runtime.freeMemory(); // out of the current heap, how much is free
+        long maxMemory = runtime.maxMemory(); // Max heap VM can use e.g. Xmx setting
+        long usedMemory = totalMemory - freeMemory; // how much of the current heap the VM is using
+        long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
+        return availableMemory;
     }
 
 }

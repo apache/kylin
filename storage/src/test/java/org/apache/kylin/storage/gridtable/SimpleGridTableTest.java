@@ -1,3 +1,20 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements. See the NOTICE file distributed with
+ *  this work for additional information regarding copyright ownership.
+ *  The ASF licenses this file to You under the Apache License, Version 2.0
+ *  (the "License"); you may not use this file except in compliance with
+ *  the License. You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package org.apache.kylin.storage.gridtable;
 
 import static org.junit.Assert.*;
@@ -130,7 +147,7 @@ public class SimpleGridTableTest {
         return builder;
     }
     
-    static List<GTRecord> mockupData(GTInfo info, int nRows) {
+    public static List<GTRecord> mockupData(GTInfo info, int nRows) {
         List<GTRecord> result = new ArrayList<GTRecord>(nRows);
         int round = nRows / 10;
         for (int i = 0; i < round; i++) {
@@ -199,13 +216,13 @@ public class SimpleGridTableTest {
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
     }
 
-    static GTInfo basicInfo() {
+    public static GTInfo basicInfo() {
         Builder builder = infoBuilder();
         GTInfo info = builder.build();
         return info;
     }
 
-    static GTInfo advancedInfo() {
+    public static GTInfo advancedInfo() {
         Builder builder = infoBuilder();
         builder.enableColumnBlock(new ImmutableBitSet[] { setOf(0), setOf(1, 2), setOf(3, 4) });
         builder.enableRowBlock(4);

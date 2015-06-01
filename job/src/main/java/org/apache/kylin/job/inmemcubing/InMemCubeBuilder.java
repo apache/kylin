@@ -55,8 +55,6 @@ import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.GridTable;
 import org.apache.kylin.storage.gridtable.IGTScanner;
-import org.apache.kylin.storage.gridtable.memstore.GTMemDiskStore;
-import org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,7 +158,7 @@ public class InMemCubeBuilder implements Runnable {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
         // could use a real budget controller, but experiment shows write directly to disk is the same fast
         // GTMemDiskStore store = new GTMemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
-        GTMemDiskStore store = new GTMemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
+        MemDiskStore store = new MemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
     }
@@ -568,7 +566,7 @@ public class InMemCubeBuilder implements Runnable {
     }
 
     private void closeStore(GridTable gt) throws IOException {
-        ((GTMemDiskStore) gt.getStore()).close();
+        ((MemDiskStore) gt.getStore()).close();
     }
 
     // ===========================================================================
