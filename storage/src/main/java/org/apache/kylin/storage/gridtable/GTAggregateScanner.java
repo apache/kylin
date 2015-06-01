@@ -96,7 +96,9 @@ public class GTAggregateScanner implements IGTScanner {
                     Preconditions.checkArgument(keyLength == o1.length && keyLength == o2.length);
                     for (int i = 0; i < keyLength; ++i) {
                         if (compareMask[i]) {
-                            result = o1[i] - o2[i];
+                            int a = (o1[i] & 0xff);
+                            int b = (o2[i] & 0xff);
+                            result = a - b;
                             if (result == 0) {
                                 continue;
                             } else {
