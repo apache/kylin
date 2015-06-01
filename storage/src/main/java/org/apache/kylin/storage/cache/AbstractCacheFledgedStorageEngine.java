@@ -67,7 +67,11 @@ public abstract class AbstractCacheFledgedStorageEngine implements IStorageEngin
             //Create a Cache specifying its configuration.
             CacheConfiguration templateConf = CACHE_MANAGER.getCache(storageCacheTemplate).getCacheConfiguration();
             PersistenceConfiguration pconf = templateConf.getPersistenceConfiguration();
-            logger.info("PersistenceConfiguration strategy: " + pconf.getStrategy());
+            if (pconf != null) {
+                logger.info("PersistenceConfiguration strategy: " + pconf.getStrategy());
+            } else {
+                logger.warn("PersistenceConfiguration is null");
+            }
 
             Cache storageCache = new Cache(new CacheConfiguration(storageUUID, (int) templateConf.getMaxEntriesLocalHeap()).//
                     memoryStoreEvictionPolicy(templateConf.getMemoryStoreEvictionPolicy()).//
