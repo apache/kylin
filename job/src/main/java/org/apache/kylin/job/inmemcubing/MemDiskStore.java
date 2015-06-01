@@ -1,6 +1,23 @@
-package org.apache.kylin.storage.gridtable.memstore;
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements. See the NOTICE file distributed with
+ *  this work for additional information regarding copyright ownership.
+ *  The ASF licenses this file to You under the Apache License, Version 2.0
+ *  (the "License"); you may not use this file except in compliance with
+ *  the License. You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 
-import static org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController.*;
+package org.apache.kylin.job.inmemcubing;
+
+import static org.apache.kylin.job.inmemcubing.MemoryBudgetController.*;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -17,19 +34,19 @@ import java.nio.file.StandardOpenOption;
 import java.util.NoSuchElementException;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.job.inmemcubing.MemoryBudgetController.MemoryConsumer;
+import org.apache.kylin.job.inmemcubing.MemoryBudgetController.NotEnoughBudgetException;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.IGTStore;
-import org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController.MemoryConsumer;
-import org.apache.kylin.storage.gridtable.memstore.MemoryBudgetController.NotEnoughBudgetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GTMemDiskStore implements IGTStore, Closeable {
+public class MemDiskStore implements IGTStore, Closeable {
 
-    private static final Logger logger = LoggerFactory.getLogger(GTMemDiskStore.class);
+    private static final Logger logger = LoggerFactory.getLogger(MemDiskStore.class);
     private static final boolean debug = true;
 
     private static final int STREAM_BUFFER_SIZE = 8192;
@@ -43,15 +60,15 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
     private Writer ongoingWriter;
 
-    public GTMemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl) throws IOException {
+    public MemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl) throws IOException {
         this(info, budgetCtrl, File.createTempFile("GTMemDiskStore", ""), true);
     }
 
-    public GTMemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile) throws IOException {
+    public MemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile) throws IOException {
         this(info, budgetCtrl, diskFile, false);
     }
 
-    private GTMemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile, boolean delOnClose) throws IOException {
+    private MemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile, boolean delOnClose) throws IOException {
         this.info = info;
         this.lock = this;
         this.memPart = new MemPart(budgetCtrl);
@@ -127,7 +144,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         Reader() throws IOException {
             diskPart.openRead();
             if (debug)
-                logger.debug(GTMemDiskStore.this + " read start @ " + readOffset);
+                logger.debug(MemDiskStore.this + " read start @ " + readOffset);
 
             InputStream in = new InputStream() {
                 byte[] tmp = new byte[1];
@@ -235,7 +252,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                 din.close();
                 diskPart.closeRead();
                 if (debug)
-                    logger.debug(GTMemDiskStore.this + " read end @ " + readOffset + ", " + (memRead) + " from mem, " + (diskRead) + " from disk, " + nReadCalls + " read() calls");
+                    logger.debug(MemDiskStore.this + " read end @ " + readOffset + ", " + (memRead) + " from mem, " + (diskRead) + " from disk, " + nReadCalls + " read() calls");
             }
         }
 
@@ -256,7 +273,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
             diskPart.clear();
             diskPart.openWrite(false);
             if (debug)
-                logger.debug(GTMemDiskStore.this + " write start @ " + writeOffset);
+                logger.debug(MemDiskStore.this + " write start @ " + writeOffset);
 
             memPart.activateMemWrite();
 
@@ -313,7 +330,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                     diskPart.closeWrite();
                     ongoingWriter = null;
                     if (debug)
-                        logger.debug(GTMemDiskStore.this + " write end @ " + writeOffset + ", " + (memWrite) + " to mem, " + (diskWrite) + " to disk, " + nWriteCalls + " write() calls");
+                        logger.debug(MemDiskStore.this + " write end @ " + writeOffset + ", " + (memWrite) + " to mem, " + (diskWrite) + " to disk, " + nWriteCalls + " write() calls");
                 } else {
                     // the asyncFlusher will call this close() again later
                 }
@@ -443,7 +460,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                     public void run() {
                         asyncFlushException = null;
                         if (debug)
-                            logger.debug(GTMemDiskStore.this + " async flush started @ " + asyncFlushDiskOffset);
+                            logger.debug(MemDiskStore.this + " async flush started @ " + asyncFlushDiskOffset);
                         try {
                             while (writeActivated) {
                                 flushToDisk();
@@ -452,7 +469,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
                             flushToDisk();
 
                             if (debug)
-                                logger.debug(GTMemDiskStore.this + " async flush ended @ " + asyncFlushDiskOffset);
+                                logger.debug(MemDiskStore.this + " async flush ended @ " + asyncFlushDiskOffset);
 
                             synchronized (lock) {
                                 asyncFlusher = null;
@@ -525,14 +542,14 @@ public class GTMemDiskStore implements IGTStore, Closeable {
             if (budgetCtrl.getTotalBudgetMB() > 0) {
                 writeActivated = true;
                 if (debug)
-                    logger.debug(GTMemDiskStore.this + " mem write activated");
+                    logger.debug(MemDiskStore.this + " mem write activated");
             }
         }
 
         public void deactivateMemWrite() {
             writeActivated = false;
             if (debug)
-                logger.debug(GTMemDiskStore.this + " mem write de-activated");
+                logger.debug(MemDiskStore.this + " mem write de-activated");
         }
 
         public void clear() {
@@ -571,7 +588,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
 
         @Override
         public String toString() {
-            return GTMemDiskStore.this.toString();
+            return MemDiskStore.this.toString();
         }
 
     }
@@ -587,7 +604,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
             this.diskFile = diskFile;
             this.tailOffset = diskFile.length();
             if (debug)
-                logger.debug(GTMemDiskStore.this + " disk file " + diskFile.getAbsolutePath());
+                logger.debug(MemDiskStore.this + " disk file " + diskFile.getAbsolutePath());
         }
 
         public void openRead() throws IOException {
