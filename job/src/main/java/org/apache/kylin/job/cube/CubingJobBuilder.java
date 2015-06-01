@@ -131,6 +131,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(mergeSegment, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
 
+        result.addTask(createDropUnusedHTableStep(mergeSegment, mergingHTables));
+
         return result;
     }
 
@@ -169,6 +171,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(seg, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
+
+        result.addTask(createDropUnusedHTableStep(seg, mergingHTables));
 
         return result;
     }
@@ -572,6 +576,14 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         result.setMergingSegmentIds(mergingSegmentIds);
         result.setConvertToHFileStepId(convertToHFileStepId);
         result.setCubingJobId(jobId);
+        return result;
+    }
+
+
+    private DropOldHTableStep createDropUnusedHTableStep(CubeSegment seg, List<String> oldHtables) {
+        DropOldHTableStep result = new DropOldHTableStep();
+        result.setName(ExecutableConstants.STEP_NAME_DROP_OLD_HBASE_TABLE);
+        result.setOldHTables(oldHtables);
         return result;
     }
 
