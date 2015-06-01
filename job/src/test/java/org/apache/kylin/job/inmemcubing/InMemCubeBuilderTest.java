@@ -78,9 +78,6 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         final int inputRows = 70000;
         final int threads = 4;
         
-        System.out.println("Hit enter to start");
-        System.in.read();
-
         final CubeInstance cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         final String flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
 
