@@ -20,7 +20,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.util.ToolRunner;
@@ -51,6 +55,7 @@ import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.cube.FactDistinctColumnsReducer;
 import org.apache.kylin.job.hadoop.cubev2.InMemKeyValueCreator;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
+import org.apache.kylin.job.hadoop.hbase.CubeHTableUtil;
 import org.apache.kylin.job.inmemcubing.ICuboidWriter;
 import org.apache.kylin.job.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -104,9 +109,9 @@ public class CubeStreamBuilder extends StreamBuilder {
         LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue<List<String>>(parsedStreamMessages);
         blockingQueue.put(Collections.<String>emptyList());
 
-        final CubeInstance cubeInstance = cubeManager.getCube(cubeName);
+        final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
-        final CubeSegment cubeSegment = cubeManager.appendSegments(cubeManager.getCube(cubeName), System.currentTimeMillis(), false);
+        final CubeSegment cubeSegment = cubeManager.appendSegments(cubeManager.getCube(cubeName), System.currentTimeMillis(), false, false);
         final Map<Long, HyperLogLogPlusCounter> samplingResult = sampling(cubeInstance.getDescriptor(), parsedStreamMessages);
 
         final Configuration conf = HadoopUtil.getCurrentConfiguration();
@@ -346,7 +351,11 @@ public class CubeStreamBuilder extends StreamBuilder {
 
     private void commitSegment(CubeSegment cubeSegment) throws IOException {
         cubeSegment.setStatus(SegmentStatusEnum.READY);
-        CubeManager.getInstance(kylinConfig).updateCube(cubeSegment.getCubeInstance(), true);
+
+        CubeInstance cube = CubeManager.getInstance(kylinConfig).reloadCubeLocal(cubeSegment.getCubeInstance().getName());
+        cube.getSegments().add(cubeSegment);
+        Collections.sort(cube.getSegments());
+        CubeManager.getInstance(kylinConfig).updateCube(cube, true);
     }
 
     private List<Long> getAllCuboidIds(CubeDesc cubeDesc) {
@@ -377,12 +386,7 @@ public class CubeStreamBuilder extends StreamBuilder {
 
     private HTableInterface createHTable(final CubeSegment cubeSegment) throws Exception {
         final String hTableName = cubeSegment.getStorageLocationIdentifier();
-        String[] args = new String[]{"-cubename", cubeName,
-                "-segmentname", cubeSegment.getName(),
-                "-input", "/empty",
-                "-htablename", hTableName,
-                "-statisticsenabled", "true"};
-        ToolRunner.run(new CreateHTableJob(), args);
+        CubeHTableUtil.createHTable(cubeSegment.getCubeDesc(), hTableName, null);
         final HTableInterface hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
         logger.info("hTable:" + hTableName + " for segment:" + cubeSegment.getName() + " created!");
         return hTable;

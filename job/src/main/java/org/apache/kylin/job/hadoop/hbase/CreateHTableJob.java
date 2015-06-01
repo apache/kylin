@@ -105,40 +105,12 @@ public class CreateHTableJob extends AbstractHadoopJob {
         CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
-        HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
-        // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
-        tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
-        tableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
-
         Configuration conf = HBaseConfiguration.create(getConf());
-        HBaseAdmin admin = new HBaseAdmin(conf);
 
         try {
-            if (User.isHBaseSecurityEnabled(conf)) {
-                // add coprocessor for bulk load
-                tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
-            }
-
-            for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
-                HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
-                cf.setMaxVersions(1);
-
-                if (LZOSupportnessChecker.getSupportness()) {
-                    logger.info("hbase will use lzo to compress cube data");
-                    cf.setCompressionType(Algorithm.LZO);
-                } else {
-                    logger.info("hbase will not use lzo to compress cube data");
-                }
-
-                cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
-                cf.setInMemory(false);
-                cf.setBlocksize(4 * 1024 * 1024); // set to 4MB
-                tableDesc.addFamily(cf);
-            }
 
             byte[][] splitKeys;
             if (statistics_enabled) {
-
                 List<Integer> rowkeyColumnSize = Lists.newArrayList();
                 long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
                 Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
@@ -154,25 +126,13 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 splitKeys = getSplits(conf, partitionFilePath);
             }
 
-            if (admin.tableExists(tableName)) {
-                // admin.disableTable(tableName);
-                // admin.deleteTable(tableName);
-                throw new RuntimeException("HBase table " + tableName + " exists!");
-            }
-
-            DeployCoprocessorCLI.deployCoprocessor(tableDesc);
-
-            admin.createTable(tableDesc, splitKeys);
-            logger.info("create hbase table " + tableName + " done.");
-
+            CubeHTableUtil.createHTable(cubeDesc, tableName, splitKeys);
             return 0;
         } catch (Exception e) {
             printUsage(options);
             e.printStackTrace(System.err);
             logger.error(e.getLocalizedMessage(), e);
             return 2;
-        } finally {
-            admin.close();
         }
     }
 
