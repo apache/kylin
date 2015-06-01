@@ -26,7 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by Hongbin Ma(Binmahone) on 5/14/15.
  */
-public class StaticCacheTest {
+public class StaticCacheTest  {
+
 
     @Test
     public void basicTest() {
@@ -76,18 +77,16 @@ public class StaticCacheTest {
         firstIterator.close();
 
         ITupleIterator secondIterator = cacheFledgedStaticStorageEngine.search(context, sqlDigest, tupleInfo);
-        IdentityHashMap<ITuple,Void> secondResults = new IdentityHashMap<>();
-        while(secondIterator.hasNext())
-        {
-            secondResults.put(secondIterator.next(),null);
+        IdentityHashMap<ITuple, Void> secondResults = new IdentityHashMap<>();
+        while (secondIterator.hasNext()) {
+            secondResults.put(secondIterator.next(), null);
         }
         secondIterator.close();
 
         ITupleIterator thirdIterator = cacheFledgedStaticStorageEngine.search(context, sqlDigest, tupleInfo);
-        IdentityHashMap<ITuple,Void> thirdResults = new IdentityHashMap<>();
-        while(thirdIterator.hasNext())
-        {
-            thirdResults.put(thirdIterator.next(),null);
+        IdentityHashMap<ITuple, Void> thirdResults = new IdentityHashMap<>();
+        while (thirdIterator.hasNext()) {
+            thirdResults.put(thirdIterator.next(), null);
         }
         thirdIterator.close();
 

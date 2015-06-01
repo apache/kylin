@@ -18,50 +18,47 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
+import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Preconditions;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.model.Query;
+import org.apache.kylin.rest.model.SelectedColumnMeta;
+import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.MetaRequest;
+import org.apache.kylin.rest.request.PrepareSqlRequest;
+import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.util.QueryUtil;
+import org.apache.kylin.storage.cache.AbstractCacheFledgedStorageEngine;
+import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import com.codahale.metrics.annotation.Timed;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.model.Query;
-import org.apache.kylin.rest.model.SelectedColumnMeta;
-import org.apache.kylin.rest.model.TableMeta;
-import org.apache.kylin.rest.request.PrepareSqlRequest;
-import org.apache.kylin.rest.request.SQLRequest;
-import org.apache.kylin.rest.request.SaveSqlRequest;
-import org.apache.kylin.rest.service.QueryService;
-import org.apache.kylin.rest.util.QueryUtil;
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Handle query requests.
@@ -73,7 +70,6 @@ public class QueryController extends BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryController.class);
 
-    public static final String SUCCESS_QUERY_CACHE = "SuccessQueryCache";
     public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
 
     @Autowired
@@ -81,6 +77,12 @@ public class QueryController extends BasicController {
 
     @Autowired
     private CacheManager cacheManager;
+
+    @PostConstruct
+    public void init() throws IOException {
+        Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
+        AbstractCacheFledgedStorageEngine.setCacheManager(cacheManager);
+    }
 
     @RequestMapping(value = "/query", method = RequestMethod.POST)
     @ResponseBody
@@ -202,29 +204,26 @@ public class QueryController extends BasicController {
         SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
         try {
             if (null == sqlResponse) {
-                long startTimestamp = System.currentTimeMillis();
                 sqlResponse = queryService.query(sqlRequest);
-                long queryRealExecutionTime = System.currentTimeMillis() - startTimestamp;
-
-                long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
-                long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
-                if (!sqlResponse.getIsException() && (queryRealExecutionTime > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
-                    cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
-                }
             }
 
             checkQueryAuth(sqlResponse);
-
             return sqlResponse;
         } catch (AccessDeniedException ade) {
             // Access exception is bind with each user, it will not be cached
             logger.error("Exception when execute sql", ade);
             throw new ForbiddenException(ade.getLocalizedMessage());
-        } catch (Throwable e) { // calcite may throw AssertError
+        } catch (ScanOutOfLimitException e) {
+
+            //for exception queries, only cache ScanOutOfLimitException
             SQLResponse exceptionRes = new SQLResponse(null, null, 0, true, e.getMessage());
             Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
             exceptionCache.put(new Element(sqlRequest, exceptionRes));
 
+            logger.error("Exception when execute sql", e);
+            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
+
+        } catch (Throwable e) { // calcite may throw AssertError
             logger.error("Exception when execute sql", e);
             throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
         }
@@ -233,14 +232,9 @@ public class QueryController extends BasicController {
     private SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
         SQLResponse response = null;
         Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-        Cache queryCache = cacheManager.getCache(SUCCESS_QUERY_CACHE);
 
         if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && null != exceptionCache.get(sqlRequest)) {
             Element element = exceptionCache.get(sqlRequest);
-            response = (SQLResponse) element.getObjectValue();
-            response.setHitCache(true);
-        } else if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && null != queryCache.get(sqlRequest)) {
-            Element element = queryCache.get(sqlRequest);
             response = (SQLResponse) element.getObjectValue();
             response.setHitCache(true);
         }

@@ -1,23 +1,23 @@
-<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd">
-<cache name="SuccessQueryCache" 
-    eternal="false" 
-    overflowToDisk="false" 
-    timeToIdleSeconds="86400"
-    memoryStoreEvictionPolicy="LRU"
-    maxBytesLocalHeap="1M"
-/>
-<cache name="ExceptionQueryCache" 
-    eternal="false" 
-    overflowToDisk="false" 
-    timeToIdleSeconds="86400"
-    memoryStoreEvictionPolicy="LRU"
-    maxBytesLocalHeap="1M"
-/>
-<cache name="UserCache" 
-    eternal="false" 
-    overflowToDisk="false" 
-    timeToLiveSeconds="10800"
-    memoryStoreEvictionPolicy="LRU"
-    maxBytesLocalHeap="1M"
-/>
+<ehcache maxBytesLocalHeap="10M">>
+    <cache name="StorageCache"
+           eternal="false"
+           overflowToDisk="false"
+           timeToIdleSeconds="86400"
+           memoryStoreEvictionPolicy="LRU"
+           maxBytesLocalHeap="1M"
+            />
+    <cache name="ExceptionQueryCache"
+           eternal="false"
+           overflowToDisk="false"
+           timeToIdleSeconds="86400"
+           memoryStoreEvictionPolicy="LRU"
+           maxBytesLocalHeap="1M"
+            />
+    <cache name="UserCache"
+           eternal="false"
+           overflowToDisk="false"
+           timeToLiveSeconds="10800"
+           memoryStoreEvictionPolicy="LRU"
+           maxBytesLocalHeap="1M"
+            />
 </ehcache>

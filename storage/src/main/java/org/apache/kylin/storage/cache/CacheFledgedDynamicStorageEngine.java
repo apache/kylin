@@ -36,7 +36,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
         this.partitionColRef = partitionColRef;
 
         Preconditions.checkArgument(this.partitionColRef != null, "For dynamic columns like " + //
-                this.underlyingStorage.getStorageUUID()+ ", partition column must be provided");
+                this.underlyingStorage.getStorageUUID() + ", partition column must be provided");
     }
 
     @Override
@@ -47,7 +47,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
 
         streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
         StreamSQLResult cachedResult = null;
-        Cache cache = cacheManager.getCache(this.underlyingStorage.getStorageUUID());
+        Cache cache = CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID());
         Element element = cache.get(streamSQLDigest);
         if (element != null) {
             this.queryCacheExists = true;
@@ -117,8 +117,9 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
         }
     }
 
-   @Override
-    public void notify(List<ITuple> duplicated) {
+    @Override
+    public void notify(List<ITuple> duplicated,long createTime) {
+
         Range<Long> cacheExclude = this.underlyingStorage.getVolatilePeriod();
         if (cacheExclude != null) {
             List<Range<Long>> cachablePeriods = RangeUtil.remove(ts, cacheExclude);
@@ -133,7 +134,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
         }
 
         StreamSQLResult newCacheEntry = new StreamSQLResult(duplicated, ts, partitionColRef);
-        cacheManager.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest, newCacheEntry));
+        CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest, newCacheEntry));
         logger.info("cache after the query: " + newCacheEntry);
     }
 }

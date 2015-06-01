@@ -112,17 +112,21 @@
     <!-- Cache Config -->
     <cache:annotation-driven/>
 
+
+
     <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
           p:cacheManager-ref="ehcache"/>
     <beans profile="default">
         <bean id="ehcache"
               class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
               p:configLocation="classpath:ehcache.xml" p:shared="true"/>
+        <bean id="cacheUpdater" class="org.apache.kylin.common.cache.RemoteCacheUpdater"/>
     </beans>
     <beans profile="sandbox,testing">
         <bean id="ehcache"
               class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
               p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
+        <bean id="cacheUpdater" class="org.apache.kylin.common.cache.LocalCacheUpdater"/>
     </beans>
 
     <!-- hbase storage/global lock Config -->
@@ -134,5 +138,7 @@
         <bean id="aclHBaseStorage" class="org.apache.kylin.rest.security.MockAclHBaseStorage"/>
         <bean id="jobLock" class="org.apache.kylin.common.lock.MockJobLock"/>
     </beans>
+
+
 
 </beans>

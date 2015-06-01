@@ -23,6 +23,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
@@ -40,11 +41,9 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
-import org.apache.kylin.rest.controller.QueryController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
@@ -68,11 +67,20 @@ public abstract class BasicService {
 
     private static ConcurrentMap<String, DataSource> olapDataSources = new ConcurrentHashMap<String, DataSource>();
 
+    @Autowired
+    private CacheManager cacheManager;
+
     //    @Autowired
     //    protected JdbcTemplate jdbcTemplate;
 
     public KylinConfig getConfig() {
         return KylinConfig.getInstanceFromEnv();
+    }
+
+    protected void cleanDataCache(String storageUUID) {
+        if (cacheManager != null && cacheManager.getCache(storageUUID) != null) {
+            cacheManager.getCache(storageUUID).removeAll();
+        }
     }
 
     public void removeOLAPDataSource(String project) {
@@ -123,18 +131,6 @@ public abstract class BasicService {
             }
         }
         return ret;
-    }
-
-    /**
-     * Reload changed cube into cache
-     * 
-     * @throws IOException
-     */
-    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
-    public void cleanDataCache() {
-        CubeManager.clearCache();
-        ProjectManager.clearCache();
-        removeAllOLAPDataSources();
     }
 
     public final KylinConfig getKylinConfig() {

@@ -24,19 +24,15 @@ package org.apache.kylin.rest.constant;
  */
 public class Constant {
 
-    // @hardcode
     public final static String FakeSchemaName = "defaultSchema";
-
-    // @hardcode
     public final static String FakeCatalogName = "defaultCatalog";
 
     public final static String IDENTITY_USER = "user";
-
     public final static String IDENTITY_ROLE = "role";
 
     public final static String ROLE_ADMIN = "ROLE_ADMIN";
-    public static final String ROLE_MODELER = "ROLE_MODELER";
-    public static final String ROLE_ANALYST = "ROLE_ANALYST";
+    public final static String ROLE_MODELER = "ROLE_MODELER";
+    public final static String ROLE_ANALYST = "ROLE_ANALYST";
 
     public final static String ACCESS_HAS_ROLE_ADMIN = "hasRole('ROLE_ADMIN')";
     public final static String ACCESS_HAS_ROLE_MODELER = "hasRole('ROLE_MODELER')";
