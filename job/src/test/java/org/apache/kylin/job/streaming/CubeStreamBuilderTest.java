@@ -74,5 +74,4 @@ public class CubeStreamBuilderTest {
         }
         queue.put(StreamMessage.EOF);
     }
-
 }

@@ -125,9 +125,9 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
         try {
             if (segmentReady) {
-                cubeManager.promoteNewlyBuiltSegments(cube, segment);
+                cubeManager.promoteNewlyBuiltSegments(cube, cube.getSegments().size() == 1, segment);
             } else {
-                cubeManager.updateCube(cube, true);
+                cubeManager.updateCube(cube, false);
             }
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {

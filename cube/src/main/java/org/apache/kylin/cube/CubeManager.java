@@ -208,17 +208,14 @@ public class CubeManager implements IRealizationProvider {
             CubeDescManager.getInstance(config).removeCubeDesc(cube.getDescriptor());
         }
 
-        removeCube(cube);
+        // remove cube and update cache
+        getStore().deleteResource(cube.getResourcePath());
+        cubeMap.remove(cube.getName());
+
         // delete cube from project
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
 
         return cube;
-    }
-
-    private void removeCube(CubeInstance cube) throws IOException {
-        // remove cube and update cache
-        getStore().deleteResource(cube.getResourcePath());
-        cubeMap.remove(cube.getName());
     }
 
     // sync on update
@@ -236,7 +233,15 @@ public class CubeManager implements IRealizationProvider {
     }
 
     /**
-     * if not sure whether to enable updateProject, just use it
+     *
+     * @param cube
+     * @param updateProject Updating project is necessary when you want the project's JDBC connection
+     *                      reflect the content in the cube. So basically you only set it to true when
+     *                      a cube first turns into READY, or when the cube's status changed from READY
+     *                      to un ready.
+     *                      if not sure whether to enable updateProject, just use it
+     * @return
+     * @throws IOException
      */
     public CubeInstance updateCube(CubeInstance cube, boolean updateProject) throws IOException {
 
@@ -396,15 +401,13 @@ public class CubeManager implements IRealizationProvider {
         try {
             return reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
         } catch (IOException e) {
-            logger.error(e.getLocalizedMessage(), e);
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
 
     public void removeCubeLocal(String cubeName) {
-        cubeMap.removeLocal(cubeName);
         usedStorageLocation.removeAll(cubeName.toUpperCase());
+        cubeMap.removeLocal(cubeName);
     }
 
     public LookupStringTable getLookupTable(CubeSegment cubeSegment, DimensionDesc dim) {
@@ -515,7 +518,7 @@ public class CubeManager implements IRealizationProvider {
         return null;
     }
 
-    public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment... newSegments) throws IOException {
+    public void promoteNewlyBuiltSegments(CubeInstance cube, boolean updateProj, CubeSegment... newSegments) throws IOException {
         List<CubeSegment> tobe = calculateToBeSegments(cube);
 
         for (CubeSegment seg : newSegments) {
@@ -540,7 +543,7 @@ public class CubeManager implements IRealizationProvider {
         cube.setStatus(RealizationStatusEnum.READY);
 
         logger.info("Promoting cube " + cube + ", new segments " + newSegments);
-        updateCube(cube, true);
+        updateCube(cube, updateProj);
     }
 
     public void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {

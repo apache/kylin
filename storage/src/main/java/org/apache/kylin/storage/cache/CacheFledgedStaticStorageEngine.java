@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * Created by Hongbin Ma(Binmahone) on 5/11/15.
  */
-public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorageEngine  {
+public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorageEngine {
     private static final Logger logger = LoggerFactory.getLogger(CacheFledgedStaticStorageEngine.class);
 
     public CacheFledgedStaticStorageEngine(ICachableStorageEngine underlyingStorage) {
@@ -32,7 +32,7 @@ public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorage
 
         streamSQLDigest = new StreamSQLDigest(sqlDigest, null);
         StreamSQLResult cachedResult = null;
-        Cache cache = cacheManager.getCache(this.underlyingStorage.getStorageUUID());
+        Cache cache = CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID());
         Element element = cache.get(streamSQLDigest);
         if (element != null) {
             this.queryCacheExists = true;
@@ -64,9 +64,26 @@ public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorage
     }
 
     @Override
-    public void notify(List<ITuple> duplicated) {
-        StreamSQLResult newCacheEntry = new StreamSQLResult(duplicated, Ranges.<Long> all(), null);
-        cacheManager.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest, newCacheEntry));
-        logger.info("cache after the query: " + newCacheEntry);
+    public void notify(List<ITuple> duplicated, long createTime) {
+        boolean cacheIt = true;
+        //        long storageQueryTime = System.currentTimeMillis() - createTime;
+        //        long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
+        //        long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
+        //
+        //        if (storageQueryTime < durationThreshold) {
+        //            logger.info("Skip storage caching for storage cache because storage query time {} less than {}", storageQueryTime, durationThreshold);
+        //            cacheIt = false;
+        //        }
+        //
+        //        if (duplicated.size() < scancountThreshold) {
+        //            logger.info("Skip storage caching for storage cache because scan count {} less than {}", duplicated.size(), scancountThreshold);
+        //            cacheIt = false;
+        //        }
+
+        if (cacheIt) {
+            StreamSQLResult newCacheEntry = new StreamSQLResult(duplicated, Ranges.<Long> all(), null);
+            CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest, newCacheEntry));
+            logger.info("cache after the query: " + newCacheEntry);
+        }
     }
 }

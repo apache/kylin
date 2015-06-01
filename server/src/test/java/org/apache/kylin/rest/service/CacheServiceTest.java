@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.cache.RemoteCacheUpdater;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
@@ -74,21 +75,26 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         context.setContextPath("/");
         server.setHandler(context);
 
+        final CacheService serviceA = new CacheService() {
+            @Override
+            public KylinConfig getConfig() {
+                return configA;
+            }
+        };
+        final CacheService serviceB = new CacheService() {
+            @Override
+            public KylinConfig getConfig() {
+                return configB;
+            }
+        };
+
+        serviceA.initCacheUpdater(new RemoteCacheUpdater());
+        serviceB.initCacheUpdater(new RemoteCacheUpdater());
+
         context.addServlet(new ServletHolder(new BroadcasterReceiveServlet(new BroadcasterReceiveServlet.BroadcasterHandler() {
             @Override
             public void handle(String type, String name, String event) {
-                final CacheService serviceA = new CacheService() {
-                    @Override
-                    public KylinConfig getConfig() {
-                        return configA;
-                    }
-                };
-                final CacheService serviceB = new CacheService() {
-                    @Override
-                    public KylinConfig getConfig() {
-                        return configB;
-                    }
-                };
+
                 Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
                 Broadcaster.EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
                 final String log = "wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name;

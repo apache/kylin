@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
  * @author xjiang
  */
 public class StorageEngineFactory {
-    private static boolean allowStorageLayerCache = false;
+    private static boolean allowStorageLayerCache = true;
 
     public static IStorageEngine getStorageEngine(IRealization realization) {
 

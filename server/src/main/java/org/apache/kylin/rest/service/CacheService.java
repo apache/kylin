@@ -18,28 +18,27 @@
 
 package org.apache.kylin.rest.service;
 
+import com.google.common.base.Preconditions;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.cache.CacheUpdater;
+import org.apache.kylin.common.restclient.AbstractRestCache;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.invertedindex.IIDescManager;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.cube.CubingJobBuilder;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.controller.QueryController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 
 /**
@@ -47,18 +46,30 @@ import java.io.IOException;
 @Component("cacheService")
 public class CacheService extends BasicService {
 
+    @Autowired
+    private CacheUpdater cacheUpdater;
+
+    @PostConstruct
+    public void init() throws IOException {
+        initCacheUpdater(cacheUpdater);
+    }
+
+    public void initCacheUpdater(CacheUpdater cacheUpdater) {
+        Preconditions.checkNotNull(cacheUpdater, "cacheManager is not injected yet");
+        AbstractRestCache.setCacheUpdater(cacheUpdater);
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
 
-    @Autowired
-    private JobService jobService;
-
-    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void rebuildCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "rebuild cache type: " + cacheType + " name:" + cacheKey;
         try {
             switch (cacheType) {
             case CUBE:
-                getCubeManager().reloadCubeLocal(cacheKey);
+                CubeInstance newCube = getCubeManager().reloadCubeLocal(cacheKey);
+                //clean query related cache first
+                super.cleanDataCache(newCube.getUuid());
+                //move this logic to other place
                 mergeCubeOnNewSegmentReady(cacheKey);
                 break;
             case CUBE_DESC:
@@ -69,6 +80,7 @@ public class CacheService extends BasicService {
                 removeOLAPDataSource(projectInstance.getName());
                 break;
             case INVERTED_INDEX:
+                //II update does not need to update storage cache because it is dynamic already
                 getIIManager().reloadIILocal(cacheKey);
                 break;
             case INVERTED_INDEX_DESC:
@@ -84,15 +96,6 @@ public class CacheService extends BasicService {
                 IIDescManager.clearCache();
                 CubeDescManager.clearCache();
                 break;
-            case ALL:
-                getMetadataManager().reload();
-                CubeDescManager.clearCache();
-                CubeManager.clearCache();
-                IIDescManager.clearCache();
-                IIManager.clearCache();
-                ProjectManager.clearCache();
-                removeAllOLAPDataSources();
-                break;
             default:
                 throw new RuntimeException("invalid cacheType:" + cacheType);
             }
@@ -101,13 +104,14 @@ public class CacheService extends BasicService {
         }
     }
 
-    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void removeCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "remove cache type: " + cacheType + " name:" + cacheKey;
         try {
             switch (cacheType) {
             case CUBE:
+                String storageUUID = getCubeManager().getCube(cacheKey).getUuid();
                 getCubeManager().removeCubeLocal(cacheKey);
+                super.cleanDataCache(storageUUID);
                 break;
             case CUBE_DESC:
                 getCubeDescManager().removeLocalCubeDesc(cacheKey);
