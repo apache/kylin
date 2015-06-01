@@ -61,7 +61,7 @@ public class MemDiskStore implements IGTStore, Closeable {
     private Writer ongoingWriter;
 
     public MemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl) throws IOException {
-        this(info, budgetCtrl, File.createTempFile("GTMemDiskStore", ""), true);
+        this(info, budgetCtrl, File.createTempFile("MemDiskStore", ""), true);
     }
 
     public MemDiskStore(GTInfo info, MemoryBudgetController budgetCtrl, File diskFile) throws IOException {

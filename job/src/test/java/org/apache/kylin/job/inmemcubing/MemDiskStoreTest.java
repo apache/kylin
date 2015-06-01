@@ -17,19 +17,25 @@
 
 package org.apache.kylin.job.inmemcubing;
 
-import org.apache.kylin.storage.gridtable.*;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.kylin.storage.gridtable.GTBuilder;
+import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.storage.gridtable.GTScanRequest;
+import org.apache.kylin.storage.gridtable.GridTable;
+import org.apache.kylin.storage.gridtable.IGTScanner;
+import org.apache.kylin.storage.gridtable.UnitTestSupport;
+import org.junit.Test;
 
-public class GTMemDiskStoreTest {
+public class MemDiskStoreTest {
 
     final MemoryBudgetController budgetCtrl = new MemoryBudgetController(20);
-    final GTInfo info = SimpleGridTableTest.advancedInfo();
-    final List<GTRecord> data = SimpleGridTableTest.mockupData(info, 1000000); // converts to about 34 MB data
+    final GTInfo info = UnitTestSupport.advancedInfo();
+    final List<GTRecord> data = UnitTestSupport.mockupData(info, 1000000); // converts to about 34 MB data
 
     @Test
     public void testSingleThreadWriteRead() throws IOException {
