@@ -2,12 +2,12 @@ package org.apache.kylin.storage.gridtable;
 
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -23,8 +23,8 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 public class GTInvertedIndex {
 
     private final GTInfo info;
-    private final BitSet colPreferIndex;
-    private final BitSet colBlocks;
+    private final ImmutableBitSet colPreferIndex;
+    private final ImmutableBitSet colBlocks;
     private final GTInvertedIndexOfColumn[] index; // for each column
 
     private volatile int nIndexedBlocks;
@@ -35,8 +35,9 @@ public class GTInvertedIndex {
         this.colBlocks = info.selectColumnBlocks(colPreferIndex);
 
         index = new GTInvertedIndexOfColumn[info.getColumnCount()];
-        for (int i = colPreferIndex.nextSetBit(0); i >= 0; i = colPreferIndex.nextSetBit(i + 1)) {
-            index[i] = new GTInvertedIndexOfColumn(info.codeSystem.getFilterCodeSystem());
+        for (int i = 0; i < colPreferIndex.trueBitCount(); i++) {
+            int c = colPreferIndex.trueBitAt(i);
+            index[c] = new GTInvertedIndexOfColumn(info.codeSystem.getFilterCodeSystem());
         }
     }
 
@@ -44,21 +45,24 @@ public class GTInvertedIndex {
 
         @SuppressWarnings("unchecked")
         Set<ByteArray>[] distinctValues = new Set[info.getColumnCount()];
-        for (int i = colPreferIndex.nextSetBit(0); i >= 0; i = colPreferIndex.nextSetBit(i + 1)) {
-            distinctValues[i] = new HashSet<ByteArray>();
+        for (int i = 0; i < colPreferIndex.trueBitCount(); i++) {
+            int c = colPreferIndex.trueBitAt(i);
+            distinctValues[c] = new HashSet<ByteArray>();
         }
 
         GTRowBlock.Reader reader = block.getReader(colBlocks);
         GTRecord record = new GTRecord(info);
         while (reader.hasNext()) {
             reader.fetchNext(record);
-            for (int i = colPreferIndex.nextSetBit(0); i >= 0; i = colPreferIndex.nextSetBit(i + 1)) {
-                distinctValues[i].add(record.get(i));
+            for (int i = 0; i < colPreferIndex.trueBitCount(); i++) {
+                int c = colPreferIndex.trueBitAt(i);
+                distinctValues[c].add(record.get(c));
             }
         }
 
-        for (int i = colPreferIndex.nextSetBit(0); i >= 0; i = colPreferIndex.nextSetBit(i + 1)) {
-            index[i].add(distinctValues[i], block.getSequenceId());
+        for (int i = 0; i < colPreferIndex.trueBitCount(); i++) {
+            int c = colPreferIndex.trueBitAt(i);
+            index[c].add(distinctValues[c], block.getSequenceId());
         }
 
         nIndexedBlocks = Math.max(nIndexedBlocks, block.seqId + 1);
@@ -67,7 +71,7 @@ public class GTInvertedIndex {
     public ConciseSet filter(TupleFilter filter) {
         return filter(filter, nIndexedBlocks);
     }
-    
+
     public ConciseSet filter(TupleFilter filter, int totalBlocks) {
         // number of indexed blocks may increase as we do evaluation
         int indexedBlocks = nIndexedBlocks;
@@ -110,7 +114,7 @@ public class GTInvertedIndex {
             int col = col(filter);
             if (index[col] == null)
                 return all();
-            
+
             switch (filter.getOperator()) {
             case ISNULL:
                 return index[col].getNull();
@@ -185,7 +189,7 @@ public class GTInvertedIndex {
         private ConciseSet all() {
             return not(new ConciseSet());
         }
-        
+
         private ConciseSet not(ConciseSet set) {
             set.add(indexedBlocks);
             set.complement();

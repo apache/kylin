@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -42,9 +43,9 @@ public class CubeScanner implements IGTScanner {
 
         CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(cuboid);
         TupleFilter gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, mapping.getCuboidDimensionsInGTOrder(), groups);
-        BitSet gtDimensions = makeGridTableColumns(mapping, dimensions);
-        BitSet gtAggrGroups = makeGridTableColumns(mapping, groups);
-        BitSet gtAggrMetrics = makeGridTableColumns(mapping, metrics);
+        ImmutableBitSet gtDimensions = makeGridTableColumns(mapping, dimensions);
+        ImmutableBitSet gtAggrGroups = makeGridTableColumns(mapping, groups);
+        ImmutableBitSet gtAggrMetrics = makeGridTableColumns(mapping, metrics);
         String[] gtAggrFuncs = makeAggrFuncs(metrics);
 
         GTScanRangePlanner scanRangePlanner = new GTScanRangePlanner(info);
@@ -58,17 +59,17 @@ public class CubeScanner implements IGTScanner {
         scanner = new Scanner();
     }
 
-    private BitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Set<TblColRef> dimensions) {
+    private ImmutableBitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Set<TblColRef> dimensions) {
         BitSet result = new BitSet();
         for (TblColRef dim : dimensions) {
             int idx = mapping.getIndexOf(dim);
             if (idx >= 0)
                 result.set(idx);
         }
-        return result;
+        return new ImmutableBitSet(result);
     }
 
-    private BitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Collection<FunctionDesc> metrics) {
+    private ImmutableBitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Collection<FunctionDesc> metrics) {
         BitSet result = new BitSet();
         for (FunctionDesc metric : metrics) {
             int idx = mapping.getIndexOf(metric);
@@ -76,7 +77,7 @@ public class CubeScanner implements IGTScanner {
                 throw new IllegalStateException(metric + " not found in " + mapping);
             result.set(idx);
         }
-        return result;
+        return new ImmutableBitSet(result);
     }
 
     private String[] makeAggrFuncs(Collection<FunctionDesc> metrics) {

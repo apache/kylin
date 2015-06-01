@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.NumberDictionaryBuilder;
 import org.apache.kylin.dict.StringBytesConverter;
@@ -308,7 +309,7 @@ public class DictGridTableTest {
         );
         builder.setPrimaryKey(setOf(0, 1));
         builder.setColumnPreferIndex(setOf(0));
-        builder.enableColumnBlock(new BitSet[] { setOf(0, 1), setOf(2), setOf(3, 4) });
+        builder.enableColumnBlock(new ImmutableBitSet[] { setOf(0, 1), setOf(2), setOf(3, 4) });
         builder.enableRowBlock(4);
         GTInfo info = builder.build();
         return info;
@@ -354,10 +355,10 @@ public class DictGridTableTest {
         return builder.build(0);
     }
 
-    private static BitSet setOf(int... values) {
+    private static ImmutableBitSet setOf(int... values) {
         BitSet set = new BitSet();
         for (int i : values)
             set.set(i);
-        return set;
+        return new ImmutableBitSet(set);
     }
 }

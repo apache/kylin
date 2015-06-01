@@ -4,9 +4,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.BitSet;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 
 public class GTRowBlock {
 
@@ -110,7 +110,7 @@ public class GTRowBlock {
         return new Reader(info.colBlocksAll);
     }
 
-    public Reader getReader(BitSet selectedColBlocks) {
+    public Reader getReader(ImmutableBitSet selectedColBlocks) {
         return new Reader(selectedColBlocks);
     }
 
@@ -118,9 +118,9 @@ public class GTRowBlock {
         int cur;
         ByteBuffer primaryKeyBuffer;
         ByteBuffer[] cellBlockBuffers;
-        BitSet selectedColBlocks;
+        ImmutableBitSet selectedColBlocks;
 
-        Reader(BitSet selectedColBlocks) {
+        Reader(ImmutableBitSet selectedColBlocks) {
             primaryKeyBuffer = primaryKey.asBuffer();
             cellBlockBuffers = new ByteBuffer[info.colBlocks.length];
             for (int i = 0; i < cellBlockBuffers.length; i++) {
@@ -137,7 +137,8 @@ public class GTRowBlock {
             if (hasNext() == false)
                 throw new IllegalArgumentException();
 
-            for (int c = selectedColBlocks.nextSetBit(0); c >= 0; c = selectedColBlocks.nextSetBit(c + 1)) {
+            for (int i = 0; i < selectedColBlocks.trueBitCount(); i++) {
+                int c = selectedColBlocks.trueBitAt(i);
                 result.loadCellBlock(c, cellBlockBuffers[c]);
             }
             cur++;

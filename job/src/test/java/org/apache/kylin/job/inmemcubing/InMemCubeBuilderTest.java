@@ -78,6 +78,9 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         final int inputRows = 70000;
         final int threads = 4;
         
+        System.out.println("Hit enter to start");
+        System.in.read();
+
         final CubeInstance cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         final String flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
 
@@ -107,7 +110,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         Set<String>[] distinctSets = new Set[nColumns];
         for (int i = 0; i < nColumns; i++)
             distinctSets[i] = new TreeSet<String>();
-        
+
         // get distinct values on each column
         FileTableReader reader = new FileTableReader(flatTable, nColumns);
         while (count > 0 && reader.next()) {
@@ -116,12 +119,12 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
                 distinctSets[i].add(row[i]);
         }
         reader.close();
-        
+
         List<String[]> distincts = new ArrayList<String[]>();
         for (int i = 0; i < nColumns; i++) {
             distincts.add((String[]) distinctSets[i].toArray(new String[distinctSets[i].size()]));
         }
-        
+
         // output with random data
         Random rand = new Random();
         for (; count > 0; count--) {

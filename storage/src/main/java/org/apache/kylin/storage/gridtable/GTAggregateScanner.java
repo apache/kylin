@@ -1,20 +1,19 @@
 package org.apache.kylin.storage.gridtable;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.SortedMap;
+
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Maps;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class GTAggregateScanner implements IGTScanner {
@@ -23,9 +22,9 @@ public class GTAggregateScanner implements IGTScanner {
     private static final Logger logger = LoggerFactory.getLogger(GTAggregateScanner.class);
 
     final GTInfo info;
-    final BitSet dimensions; // dimensions to return, can be more than group by
-    final BitSet groupBy;
-    final BitSet metrics;
+    final ImmutableBitSet dimensions; // dimensions to return, can be more than group by
+    final ImmutableBitSet groupBy;
+    final ImmutableBitSet metrics;
     final String[] metricsAggrFuncs;
     final IGTScanner inputScanner;
     
@@ -36,8 +35,7 @@ public class GTAggregateScanner implements IGTScanner {
             throw new IllegalStateException();
 
         this.info = inputScanner.getInfo();
-        this.dimensions = (BitSet) req.getColumns().clone();
-        this.dimensions.andNot(req.getAggrMetrics());
+        this.dimensions = req.getColumns().andNot(req.getAggrMetrics());
         this.groupBy = req.getAggrGroupBy();
         this.metrics = req.getAggrMetrics();
         this.metricsAggrFuncs = req.getAggrMetricsFuncs();
@@ -93,7 +91,8 @@ public class GTAggregateScanner implements IGTScanner {
                 @Override
                 public int compare(byte[] o1, byte[] o2) {
                     int result = 0;
-                    Preconditions.checkArgument(keyLength == o1.length && keyLength == o2.length);
+                    // profiler shows this check is slow
+                    // Preconditions.checkArgument(keyLength == o1.length && keyLength == o2.length);
                     for (int i = 0; i < keyLength; ++i) {
                         if (compareMask[i]) {
                             int a = (o1[i] & 0xff);
@@ -113,16 +112,18 @@ public class GTAggregateScanner implements IGTScanner {
 
         private boolean[] createCompareMask() {
             int keyLength = 0;
-            for (int i = dimensions.nextSetBit(0); i >= 0; i = dimensions.nextSetBit(i + 1)) {
-                int l = info.codeSystem.maxCodeLength(i);
+            for (int i = 0; i < dimensions.trueBitCount(); i++) {
+                int c = dimensions.trueBitAt(i);
+                int l = info.codeSystem.maxCodeLength(c);
                 keyLength += l;
             }
 
             boolean[] mask = new boolean[keyLength];
             int p = 0;
-            for (int i = dimensions.nextSetBit(0); i >= 0; i = dimensions.nextSetBit(i + 1)) {
-                int l = info.codeSystem.maxCodeLength(i);
-                boolean m = groupBy.get(i) ? true : false;
+            for (int i = 0; i < dimensions.trueBitCount(); i++) {
+                int c = dimensions.trueBitAt(i);
+                int l = info.codeSystem.maxCodeLength(c);
+                boolean m = groupBy.get(c) ? true : false;
                 for (int j = 0; j < l; j++) {
                     mask[p++] = m;
                 }
@@ -133,9 +134,10 @@ public class GTAggregateScanner implements IGTScanner {
         private byte[] createKey(GTRecord record) {
             byte[] result = new byte[keyLength];
             int offset = 0;
-            for (int i = dimensions.nextSetBit(0); i >= 0; i = dimensions.nextSetBit(i + 1)) {
-                final ByteArray byteArray = record.cols[i];
-                final int columnLength = info.codeSystem.maxCodeLength(i);
+            for (int i = 0; i < dimensions.trueBitCount(); i++) {
+                int c = dimensions.trueBitAt(i);
+                final ByteArray byteArray = record.cols[c];
+                final int columnLength = info.codeSystem.maxCodeLength(c);
                 System.arraycopy(byteArray.array(), byteArray.offset(), result, offset, byteArray.length());
                 offset += columnLength;
             }
@@ -148,14 +150,14 @@ public class GTAggregateScanner implements IGTScanner {
             MeasureAggregator[] aggrs = aggBufMap.get(key);
             if (aggrs == null) {
                 aggrs = new MeasureAggregator[metricsAggrFuncs.length];
-                for (int i = 0, col = -1; i < aggrs.length; i++) {
-                    col = metrics.nextSetBit(col + 1);
+                for (int i = 0; i < aggrs.length; i++) {
+                    int col = metrics.trueBitAt(i);
                     aggrs[i] = info.codeSystem.newMetricsAggregator(metricsAggrFuncs[i], col);
                 }
                 aggBufMap.put(key, aggrs);
             }
-            for (int i = 0, col = -1; i < aggrs.length; i++) {
-                col = metrics.nextSetBit(col + 1);
+            for (int i = 0; i < aggrs.length; i++) {
+                int col = metrics.trueBitAt(i);
                 Object metrics = info.codeSystem.decodeColumnValue(col, r.cols[col].asBuffer());
                 aggrs[i].aggregate(metrics);
             }
@@ -192,14 +194,15 @@ public class GTAggregateScanner implements IGTScanner {
 
                 private void create(byte[] key, MeasureAggregator[] value) {
                     int offset = 0;
-                    for (int i = dimensions.nextSetBit(0); i >= 0; i = dimensions.nextSetBit(i + 1)) {
-                        final int columnLength = info.codeSystem.maxCodeLength(i);
-                        secondRecord.set(i, new ByteArray(key, offset, columnLength));
+                    for (int i = 0; i < dimensions.trueBitCount(); i++) {
+                        int c = dimensions.trueBitAt(i);
+                        final int columnLength = info.codeSystem.maxCodeLength(c);
+                        secondRecord.set(c, new ByteArray(key, offset, columnLength));
                         offset += columnLength;
                     }
                     metricsBuf.clear();
-                    for (int i = 0, col = -1; i < value.length; i++) {
-                        col = metrics.nextSetBit(col + 1);
+                    for (int i = 0; i < value.length; i++) {
+                        int col = metrics.trueBitAt(i);
                         int pos = metricsBuf.position();
                         info.codeSystem.encodeColumnValue(col, value[i].getState(), metricsBuf);
                         secondRecord.cols[col].set(metricsBuf.array(), pos, metricsBuf.position() - pos);

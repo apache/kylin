@@ -2,7 +2,6 @@ package org.apache.kylin.storage.cube;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,10 +11,11 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
@@ -65,12 +65,11 @@ public class CubeHBaseReadonlyStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColumnBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, ImmutableBitSet selectedColumnBlocks, GTScanRequest additionalPushDown) throws IOException {
         // TODO enable coprocessor
 
         // primary key (also the 0th column block) is always selected
-        final BitSet selectedColBlocks = (BitSet) selectedColumnBlocks.clone();
-        selectedColBlocks.set(0);
+        final ImmutableBitSet selectedColBlocks = selectedColumnBlocks.set(0);
 
         // globally shared connection, does not require close
         HConnection hbaseConn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
@@ -102,7 +101,8 @@ public class CubeHBaseReadonlyStore implements IGTStore {
 
                 // metrics
                 int hbaseColIdx = 0;
-                for (int colBlockIdx = selectedColBlocks.nextSetBit(1); colBlockIdx >= 0; colBlockIdx = selectedColBlocks.nextSetBit(colBlockIdx + 1)) {
+                for (int i = 0; i < selectedColBlocks.trueBitCount(); i++) {
+                    int colBlockIdx = selectedColBlocks.trueBitAt(i);
                     Pair<byte[], byte[]> hbaseColumn = hbaseColumns.get(hbaseColIdx++);
                     Cell cell = result.getColumnLatestCell(hbaseColumn.getFirst(), hbaseColumn.getSecond());
                     oneBlock.getCellBlock(colBlockIdx).set(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
@@ -155,7 +155,7 @@ public class CubeHBaseReadonlyStore implements IGTStore {
         return buf;
     }
 
-    private List<Pair<byte[], byte[]>> makeHBaseColumns(BitSet selectedColBlocks) {
+    private List<Pair<byte[], byte[]>> makeHBaseColumns(ImmutableBitSet selectedColBlocks) {
         List<Pair<byte[], byte[]>> result = Lists.newArrayList();
 
         int colBlockIdx = 1; // start from 1; the 0th column block is primary key which maps to rowkey

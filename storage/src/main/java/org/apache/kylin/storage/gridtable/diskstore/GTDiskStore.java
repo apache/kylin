@@ -1,14 +1,24 @@
 package org.apache.kylin.storage.gridtable.diskstore;
 
-import com.google.common.base.Preconditions;
-import org.apache.kylin.storage.gridtable.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.UUID;
+
+import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.storage.gridtable.GTRowBlock;
+import org.apache.kylin.storage.gridtable.GTScanRequest;
+import org.apache.kylin.storage.gridtable.IGTStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.BitSet;
-import java.util.UUID;
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -148,7 +158,7 @@ public class GTDiskStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, ImmutableBitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
         return new DiskStoreScanner(fileSystem.getReader(getRowBlockFile(identifier)));
     }
 

@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.storage.gridtable.GTInfo.Builder;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
@@ -206,7 +207,7 @@ public class SimpleGridTableTest {
 
     static GTInfo advancedInfo() {
         Builder builder = infoBuilder();
-        builder.enableColumnBlock(new BitSet[] { setOf(0), setOf(1, 2), setOf(3, 4) });
+        builder.enableColumnBlock(new ImmutableBitSet[] { setOf(0), setOf(1, 2), setOf(3, 4) });
         builder.enableRowBlock(4);
         GTInfo info = builder.build();
         return info;
@@ -227,10 +228,10 @@ public class SimpleGridTableTest {
         return builder;
     }
 
-    private static BitSet setOf(int... values) {
+    private static ImmutableBitSet setOf(int... values) {
         BitSet set = new BitSet();
         for (int i : values)
             set.set(i);
-        return set;
+        return new ImmutableBitSet(set);
     }
 }

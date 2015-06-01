@@ -1,7 +1,6 @@
 package org.apache.kylin.storage.gridtable;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
@@ -81,8 +81,7 @@ public class GTScanRangePlanner {
             pkEnd.set(col, range.end);
 
             if (range.equals != null) {
-                BitSet fuzzyMask = new BitSet();
-                fuzzyMask.set(col);
+                ImmutableBitSet fuzzyMask = new ImmutableBitSet(col);
                 for (ByteArray v : range.equals) {
                     GTRecord fuzzy = new GTRecord(info);
                     fuzzy.set(col, v);
@@ -473,11 +472,12 @@ public class GTScanRangePlanner {
         public int compare(GTRecord a, GTRecord b) {
             assert a.info == b.info;
             assert a.maskForEqualHashComp() == b.maskForEqualHashComp();
-            BitSet mask = a.maskForEqualHashComp();
+            ImmutableBitSet mask = a.maskForEqualHashComp();
 
             int comp = 0;
-            for (int i = mask.nextSetBit(0); i >= 0; i = mask.nextSetBit(i + 1)) {
-                comp = comparator.compare(a.cols[i], b.cols[i]);
+            for (int i = 0; i < mask.trueBitCount(); i++) {
+                int c = mask.trueBitAt(i);
+                comp = comparator.compare(a.cols[c], b.cols[c]);
                 if (comp != 0)
                     return comp;
             }

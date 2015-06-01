@@ -4,6 +4,7 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
@@ -22,11 +23,11 @@ public class CuboidToGridTableMapping {
     final private Cuboid cuboid;
     
     private List<DataType> gtDataTypes;
-    private List<BitSet> gtColBlocks;
+    private List<ImmutableBitSet> gtColBlocks;
 
     private int nDimensions;
     private Map<TblColRef, Integer> dim2gt;
-    private BitSet gtPrimaryKey;
+    private ImmutableBitSet gtPrimaryKey;
 
     private int nMetrics;
     private ListMultimap<FunctionDesc, Integer> metrics2gt; // because count distinct may have a holistic version
@@ -43,13 +44,14 @@ public class CuboidToGridTableMapping {
 
         // dimensions
         dim2gt = Maps.newHashMap();
-        gtPrimaryKey = new BitSet();
+        BitSet pk = new BitSet();
         for (TblColRef dimension : cuboid.getColumns()) {
             gtDataTypes.add(dimension.getType());
             dim2gt.put(dimension, gtColIdx);
-            gtPrimaryKey.set(gtColIdx);
+            pk.set(gtColIdx);
             gtColIdx++;
         }
+        gtPrimaryKey = new ImmutableBitSet(pk);
         gtColBlocks.add(gtPrimaryKey);
 
         nDimensions = gtColIdx;
@@ -73,7 +75,7 @@ public class CuboidToGridTableMapping {
                     colBlock.set(gtColIdx);
                     gtColIdx++;
                 }
-                gtColBlocks.add(colBlock);
+                gtColBlocks.add(new ImmutableBitSet(colBlock));
             }
         }
         nMetrics = gtColIdx - nDimensions;
@@ -96,12 +98,12 @@ public class CuboidToGridTableMapping {
         return (DataType[]) gtDataTypes.toArray(new DataType[gtDataTypes.size()]);
     }
 
-    public BitSet getPrimaryKey() {
+    public ImmutableBitSet getPrimaryKey() {
         return gtPrimaryKey;
     }
 
-    public BitSet[] getColumnBlocks() {
-        return (BitSet[]) gtColBlocks.toArray(new BitSet[gtColBlocks.size()]);
+    public ImmutableBitSet[] getColumnBlocks() {
+        return (ImmutableBitSet[]) gtColBlocks.toArray(new ImmutableBitSet[gtColBlocks.size()]);
     }
 
     public int getIndexOf(TblColRef dimension) {

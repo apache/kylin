@@ -31,6 +31,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -196,8 +197,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         public void write(long cuboidId, GTRecord record) throws IOException {
             final ByteBuffer key = createKey(cuboidId, record);
             final CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(Cuboid.findById(cubeDesc, cuboidId));
-            final BitSet bitSet = new BitSet();
-            bitSet.set(mapping.getDimensionCount(), mapping.getColumnCount());
+            final ImmutableBitSet bitSet = new ImmutableBitSet(mapping.getDimensionCount(), mapping.getColumnCount());
             for (int i = 0; i < nColumns; i++) {
                 final KeyValue keyValue = keyValueCreators.get(i).create(key.array(), 0, key.position(), record.getValues(bitSet, new Object[bitSet.cardinality()]));
                 final Put put = new Put(copy(key.array(), 0, key.position()));

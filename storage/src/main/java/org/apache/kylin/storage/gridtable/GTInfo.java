@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -20,14 +21,14 @@ public class GTInfo {
     // column schema
     int nColumns;
     DataType[] colTypes;
-    BitSet colAll;
-    BitSet colPreferIndex;
+    ImmutableBitSet colAll;
+    ImmutableBitSet colPreferIndex;
     transient TblColRef[] colRefs;
 
     // grid info
-    BitSet primaryKey; // order by, uniqueness is not required
-    BitSet[] colBlocks; // primary key must be the first column block
-    BitSet colBlocksAll;
+    ImmutableBitSet primaryKey; // order by, uniqueness is not required
+    ImmutableBitSet[] colBlocks; // primary key must be the first column block
+    ImmutableBitSet colBlocksAll;
     int rowBlockSize; // 0: disable row block
 
     // sharding & rowkey
@@ -53,7 +54,7 @@ public class GTInfo {
         return colTypes[i];
     }
 
-    public BitSet getPrimaryKey() {
+    public ImmutableBitSet getPrimaryKey() {
         return primaryKey;
     }
     
@@ -73,10 +74,11 @@ public class GTInfo {
         return getMaxColumnLength(colAll);
     }
     
-    public int getMaxColumnLength(BitSet selectedCols) {
+    public int getMaxColumnLength(ImmutableBitSet selectedCols) {
         int result = 0;
-        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
-            result += codeSystem.maxCodeLength(i);
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            result += codeSystem.maxCodeLength(c);
         }
         return result;
     }
@@ -88,18 +90,18 @@ public class GTInfo {
         return max;
     }
 
-    public BitSet selectColumnBlocks(BitSet columns) {
+    public ImmutableBitSet selectColumnBlocks(ImmutableBitSet columns) {
         if (columns == null)
             columns = colAll;
 
         BitSet result = new BitSet();
         for (int i = 0; i < colBlocks.length; i++) {
-            BitSet cb = colBlocks[i];
+            ImmutableBitSet cb = colBlocks[i];
             if (cb.intersects(columns)) {
                 result.set(i);
             }
         }
-        return result;
+        return new ImmutableBitSet(result);
     }
 
     public TblColRef colRef(int i) {
@@ -132,21 +134,18 @@ public class GTInfo {
     }
 
     private void validateColumnBlocks() {
-        colAll = new BitSet();
-        colAll.flip(0, nColumns);
+        colAll = new ImmutableBitSet(0, nColumns);
         
         if (colBlocks == null) {
-            colBlocks = new BitSet[2];
+            colBlocks = new ImmutableBitSet[2];
             colBlocks[0] = primaryKey;
-            colBlocks[1] = (BitSet) colAll.clone();
-            colBlocks[1].andNot(primaryKey);
+            colBlocks[1] = colAll.andNot(primaryKey);
         }
         
-        colBlocksAll = new BitSet();
-        colBlocksAll.flip(0, colBlocks.length);
+        colBlocksAll = new ImmutableBitSet(0, colBlocks.length);
 
         if (colPreferIndex == null)
-            colPreferIndex = new BitSet();
+            colPreferIndex = ImmutableBitSet.EMPTY;
 
         // column blocks must not overlap
         for (int i = 0; i < colBlocks.length; i++) {
@@ -157,9 +156,9 @@ public class GTInfo {
         }
 
         // column block must cover all columns
-        BitSet merge = new BitSet();
+        ImmutableBitSet merge = ImmutableBitSet.EMPTY;
         for (int i = 0; i < colBlocks.length; i++) {
-            merge.or(colBlocks[i]);
+            merge = merge.or(colBlocks[i]);
         }
         if (merge.equals(colAll) == false)
             throw new IllegalStateException();
@@ -169,14 +168,14 @@ public class GTInfo {
             throw new IllegalStateException();
 
         // drop empty column block
-        LinkedList<BitSet> tmp = new LinkedList<BitSet>(Arrays.asList(colBlocks));
-        Iterator<BitSet> it = tmp.iterator();
+        LinkedList<ImmutableBitSet> list = new LinkedList<ImmutableBitSet>(Arrays.asList(colBlocks));
+        Iterator<ImmutableBitSet> it = list.iterator();
         while (it.hasNext()) {
-            BitSet cb = it.next();
+            ImmutableBitSet cb = it.next();
             if (cb.isEmpty())
                 it.remove();
         }
-        colBlocks = (BitSet[]) tmp.toArray(new BitSet[tmp.size()]);
+        colBlocks = (ImmutableBitSet[]) list.toArray(new ImmutableBitSet[list.size()]);
     }
 
     public static class Builder {
@@ -206,16 +205,16 @@ public class GTInfo {
         }
 
         /** required */
-        public Builder setPrimaryKey(BitSet primaryKey) {
-            info.primaryKey = (BitSet) primaryKey.clone();
+        public Builder setPrimaryKey(ImmutableBitSet primaryKey) {
+            info.primaryKey = primaryKey;
             return this;
         }
 
         /** optional */
-        public Builder enableColumnBlock(BitSet[] columnBlocks) {
-            info.colBlocks = new BitSet[columnBlocks.length];
+        public Builder enableColumnBlock(ImmutableBitSet[] columnBlocks) {
+            info.colBlocks = new ImmutableBitSet[columnBlocks.length];
             for (int i = 0; i < columnBlocks.length; i++) {
-                info.colBlocks[i] = (BitSet) columnBlocks[i].clone();
+                info.colBlocks[i] = columnBlocks[i];
             }
             return this;
         }
@@ -233,7 +232,7 @@ public class GTInfo {
         }
 
         /** optional */
-        public Builder setColumnPreferIndex(BitSet colPreferIndex) {
+        public Builder setColumnPreferIndex(ImmutableBitSet colPreferIndex) {
             info.colPreferIndex = colPreferIndex;
             return this;
         }
