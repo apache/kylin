@@ -17,21 +17,13 @@
 
 package org.apache.kylin.job.inmemcubing;
 
-import static org.junit.Assert.*;
+import org.apache.kylin.storage.gridtable.*;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.job.inmemcubing.MemDiskStore;
-import org.apache.kylin.job.inmemcubing.MemoryBudgetController;
-import org.apache.kylin.storage.gridtable.GTBuilder;
-import org.apache.kylin.storage.gridtable.GTInfo;
-import org.apache.kylin.storage.gridtable.GTRecord;
-import org.apache.kylin.storage.gridtable.GTScanRequest;
-import org.apache.kylin.storage.gridtable.GridTable;
-import org.apache.kylin.storage.gridtable.IGTScanner;
-import org.apache.kylin.storage.gridtable.SimpleGridTableTest;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class GTMemDiskStoreTest {
 
