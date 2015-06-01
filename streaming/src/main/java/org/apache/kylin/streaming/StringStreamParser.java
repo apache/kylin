@@ -34,8 +34,6 @@
 
 package org.apache.kylin.streaming;
 
-import java.util.List;
-
 import com.google.common.collect.Lists;
 
 /**
@@ -46,7 +44,7 @@ public final class StringStreamParser implements StreamParser {
 
     private StringStreamParser(){}
     @Override
-    public List<String> parse(StreamMessage streamMessage) {
-        return Lists.newArrayList(new String(streamMessage.getRawData()).split(","));
+    public ParsedStreamMessage parse(StreamMessage streamMessage) {
+        return new ParsedStreamMessage(Lists.newArrayList(new String(streamMessage.getRawData()).split(",")), streamMessage.getOffset(), streamMessage.getOffset());
     }
 }

@@ -34,11 +34,9 @@
 
 package org.apache.kylin.streaming;
 
-import java.util.List;
-
 /**
  */
 public interface StreamParser {
 
-    List<String> parse(StreamMessage streamMessage);
+    ParsedStreamMessage parse(StreamMessage streamMessage);
 }
