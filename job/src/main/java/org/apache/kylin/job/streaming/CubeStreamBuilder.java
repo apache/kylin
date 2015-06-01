@@ -355,7 +355,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         CubeInstance cube = CubeManager.getInstance(kylinConfig).reloadCubeLocal(cubeSegment.getCubeInstance().getName());
         cube.getSegments().add(cubeSegment);
         Collections.sort(cube.getSegments());
-        CubeManager.getInstance(kylinConfig).updateCube(cube, true);
+        CubeManager.getInstance(kylinConfig).updateCube(cube, false);
     }
 
     private List<Long> getAllCuboidIds(CubeDesc cubeDesc) {
