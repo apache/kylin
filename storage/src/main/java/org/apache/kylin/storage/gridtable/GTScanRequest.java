@@ -1,9 +1,9 @@
 package org.apache.kylin.storage.gridtable;
 
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Set;
 
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -14,21 +14,21 @@ public class GTScanRequest {
     // basic
     private GTInfo info;
     private GTScanRange range;
-    private BitSet columns;
+    private ImmutableBitSet columns;
 
     // optional filtering
     private TupleFilter filterPushDown;
 
     // optional aggregation
-    private BitSet aggrGroupBy;
-    private BitSet aggrMetrics;
+    private ImmutableBitSet aggrGroupBy;
+    private ImmutableBitSet aggrMetrics;
     private String[] aggrMetricsFuncs;
 
     public GTScanRequest(GTInfo info) {
         this(info, null, null, null);
     }
 
-    public GTScanRequest(GTInfo info, GTScanRange range, BitSet columns, TupleFilter filterPushDown) {
+    public GTScanRequest(GTInfo info, GTScanRange range, ImmutableBitSet columns, TupleFilter filterPushDown) {
         this.info = info;
         this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
         this.columns = columns;
@@ -36,13 +36,13 @@ public class GTScanRequest {
         validate();
     }
 
-    public GTScanRequest(GTInfo info, GTScanRange range, BitSet aggrGroupBy, BitSet aggrMetrics, //
+    public GTScanRequest(GTInfo info, GTScanRange range, ImmutableBitSet aggrGroupBy, ImmutableBitSet aggrMetrics, //
             String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
         this(info, range, null, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown);
     }
 
-    public GTScanRequest(GTInfo info, GTScanRange range, BitSet dimensions, BitSet aggrGroupBy, BitSet aggrMetrics, //
-            String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
+    public GTScanRequest(GTInfo info, GTScanRange range, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
+            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
         this.info = info;
         this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
         this.columns = dimensions;
@@ -65,15 +65,14 @@ public class GTScanRequest {
             if (aggrMetrics.cardinality() != aggrMetricsFuncs.length)
                 throw new IllegalStateException();
 
-            if (columns == null) {
-                columns = new BitSet();
-            }
-            columns.or(aggrGroupBy);
-            columns.or(aggrMetrics);
+            if (columns == null)
+                columns = ImmutableBitSet.EMPTY;
+            columns = columns.or(aggrGroupBy);
+            columns = columns.or(aggrMetrics);
         }
 
         if (columns == null)
-            columns = (BitSet) info.colAll.clone();
+            columns = info.colAll;
 
         if (hasFilterPushDown()) {
             validateFilterPushDown();
@@ -91,7 +90,7 @@ public class GTScanRequest {
             // filter columns must belong to the table
             info.validateColRef(col);
             // filter columns must be returned to satisfy upper layer evaluation (calcite)
-            columns.set(col.getColumnDesc().getZeroBasedIndex());
+            columns = columns.set(col.getColumnDesc().getZeroBasedIndex());
         }
 
         // un-evaluatable filter must be removed
@@ -102,7 +101,7 @@ public class GTScanRequest {
             // columns in un-evaluatable filter must be returned without loss so upper layer can do final evaluation
             if (hasAggregation()) {
                 for (TblColRef col : unevaluableColumns) {
-                    aggrGroupBy.set(col.getColumnDesc().getZeroBasedIndex());
+                    aggrGroupBy = aggrGroupBy.set(col.getColumnDesc().getZeroBasedIndex());
                 }
             }
         }
@@ -128,7 +127,7 @@ public class GTScanRequest {
         return range.pkEnd;
     }
 
-    public BitSet getColumns() {
+    public ImmutableBitSet getColumns() {
         return columns;
     }
 
@@ -136,11 +135,11 @@ public class GTScanRequest {
         return filterPushDown;
     }
 
-    public BitSet getAggrGroupBy() {
+    public ImmutableBitSet getAggrGroupBy() {
         return aggrGroupBy;
     }
 
-    public BitSet getAggrMetrics() {
+    public ImmutableBitSet getAggrMetrics() {
         return aggrMetrics;
     }
 

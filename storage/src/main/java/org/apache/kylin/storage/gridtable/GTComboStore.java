@@ -1,8 +1,8 @@
 package org.apache.kylin.storage.gridtable;
 
 import java.io.IOException;
-import java.util.BitSet;
 
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.storage.gridtable.diskstore.GTDiskStore;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
 import org.slf4j.Logger;
@@ -100,7 +100,7 @@ public class GTComboStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, ImmutableBitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
         return getCurrent().scan(pkStart, pkEnd, selectedColBlocks, additionalPushDown);
     }
 

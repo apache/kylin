@@ -14,9 +14,9 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
-import java.util.BitSet;
 import java.util.NoSuchElementException;
 
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
@@ -89,7 +89,7 @@ public class GTMemDiskStore implements IGTStore, Closeable {
     }
 
     @Override
-    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, BitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, ImmutableBitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
         synchronized (lock) {
             return new Reader();
         }
@@ -522,9 +522,11 @@ public class GTMemDiskStore implements IGTStore, Closeable {
         }
 
         public void activateMemWrite() {
-            writeActivated = true;
-            if (debug)
-                logger.debug(GTMemDiskStore.this + " mem write activated");
+            if (budgetCtrl.getTotalBudgetMB() > 0) {
+                writeActivated = true;
+                if (debug)
+                    logger.debug(GTMemDiskStore.this + " mem write activated");
+            }
         }
 
         public void deactivateMemWrite() {

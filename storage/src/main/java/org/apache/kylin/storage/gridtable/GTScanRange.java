@@ -28,11 +28,12 @@ public class GTScanRange {
     private void validateRangeKey(GTRecord pk) {
         pk.maskForEqualHashComp(pk.info.primaryKey);
         boolean afterNull = false;
-        for (int i = pk.info.primaryKey.nextSetBit(0); i >= 0; i = pk.info.primaryKey.nextSetBit(i + 1)) {
+        for (int i = 0; i < pk.info.primaryKey.trueBitCount(); i++) {
+            int c = pk.info.primaryKey.trueBitAt(i);
             if (afterNull) {
-                pk.cols[i].set(null, 0, 0);
+                pk.cols[c].set(null, 0, 0);
             } else {
-                afterNull = pk.cols[i].array() == null;
+                afterNull = pk.cols[c].array() == null;
             }
         }
     }

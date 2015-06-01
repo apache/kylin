@@ -34,6 +34,7 @@ import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
@@ -157,19 +158,20 @@ public class InMemCubeBuilder implements Runnable {
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
-        // could use a real budget controller, but experiment shows write directly to disk is a few ms faster
+        // could use a real budget controller, but experiment shows write directly to disk is the same fast
+        // GTMemDiskStore store = new GTMemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
         GTMemDiskStore store = new GTMemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
     }
 
-    private Pair<BitSet, BitSet> getDimensionAndMetricColumnBitSet(long cuboidId) {
+    private Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(long cuboidId) {
         BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
         BitSet dimension = new BitSet();
         dimension.set(0, bitSet.cardinality());
         BitSet metrics = new BitSet();
         metrics.set(bitSet.cardinality(), bitSet.cardinality() + this.measureCount);
-        return new Pair<BitSet, BitSet>(dimension, metrics);
+        return new Pair<ImmutableBitSet, ImmutableBitSet>(new ImmutableBitSet(dimension), new ImmutableBitSet(metrics));
     }
 
     @Override
@@ -396,7 +398,7 @@ public class InMemCubeBuilder implements Runnable {
         int mbBefore = getSystemAvailMB();
         int mbAfter = 0;
 
-        Pair<BitSet, BitSet> dimensionMetricsBitSet = getDimensionAndMetricColumnBitSet(baseCuboidId);
+        Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = getDimensionAndMetricColumnBitSet(baseCuboidId);
         GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req);
 
@@ -465,10 +467,10 @@ public class InMemCubeBuilder implements Runnable {
     }
 
     private CuboidResult aggregateCuboid(CuboidResult parent, long cuboidId) throws IOException {
-        Pair<BitSet, BitSet> columnBitSets = getDimensionAndMetricColumnBitSet(parent.cuboidId);
-        BitSet parentDimensions = columnBitSets.getFirst();
-        BitSet measureColumns = columnBitSets.getSecond();
-        BitSet childDimensions = (BitSet) parentDimensions.clone();
+        Pair<ImmutableBitSet, ImmutableBitSet> columnBitSets = getDimensionAndMetricColumnBitSet(parent.cuboidId);
+        ImmutableBitSet parentDimensions = columnBitSets.getFirst();
+        ImmutableBitSet measureColumns = columnBitSets.getSecond();
+        ImmutableBitSet childDimensions = parentDimensions;
 
         long mask = Long.highestOneBit(parent.cuboidId);
         long childCuboidId = cuboidId;
@@ -478,7 +480,7 @@ public class InMemCubeBuilder implements Runnable {
             if ((mask & parent.cuboidId) > 0) {
                 if ((mask & childCuboidId) == 0) {
                     // this dim will be aggregated
-                    childDimensions.set(index, false);
+                    childDimensions = childDimensions.set(index, false);
                 }
                 index++;
             }
@@ -488,7 +490,7 @@ public class InMemCubeBuilder implements Runnable {
         return scanAndAggregateGridTable(parent.table, cuboidId, childDimensions, measureColumns);
     }
 
-    private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long cuboidId, BitSet aggregationColumns, BitSet measureColumns) throws IOException {
+    private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid " + cuboidId);
 
@@ -497,26 +499,26 @@ public class InMemCubeBuilder implements Runnable {
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = newGridTable.rebuild();
 
-        BitSet allNeededColumns = new BitSet();
-        allNeededColumns.or(aggregationColumns);
-        allNeededColumns.or(measureColumns);
+        ImmutableBitSet allNeededColumns = aggregationColumns.or(measureColumns);
 
         GTRecord newRecord = new GTRecord(newGridTable.getInfo());
         int count = 0;
         ByteArray byteArray = new ByteArray(8);
         ByteBuffer byteBuffer = ByteBuffer.allocate(8);
         try {
-            BitSet dependentMetrics = new BitSet(allNeededColumns.cardinality());
+            BitSet dependentMetricsBS = new BitSet(allNeededColumns.cardinality());
             for (Integer i : dependentMeasures.keySet()) {
-                dependentMetrics.set((allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)));
+                dependentMetricsBS.set((allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)));
             }
+            ImmutableBitSet dependentMetrics = new ImmutableBitSet(dependentMetricsBS);
 
             Object[] hllObjects = new Object[dependentMeasures.keySet().size()];
 
             for (GTRecord record : scanner) {
                 count++;
-                for (int i = allNeededColumns.nextSetBit(0), index = 0; i >= 0; i = allNeededColumns.nextSetBit(i + 1), index++) {
-                    newRecord.set(index, record.get(i));
+                for (int i = 0; i < allNeededColumns.trueBitCount(); i++) {
+                    int c = allNeededColumns.trueBitAt(i);
+                    newRecord.set(i, record.get(c));
                 }
 
                 if (dependentMeasures.size() > 0) {
@@ -524,7 +526,8 @@ public class InMemCubeBuilder implements Runnable {
                     newRecord.getValues(dependentMetrics, hllObjects);
 
                     for (Integer i : dependentMeasures.keySet()) {
-                        for (int index = 0, c = dependentMetrics.nextSetBit(0); c >= 0; index++, c = dependentMetrics.nextSetBit(c + 1)) {
+                        for (int index = 0; index < dependentMetrics.trueBitCount(); index++) {
+                            int c = dependentMetrics.trueBitAt(index);
                             if (c == allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)) {
                                 assert hllObjects[index] instanceof HyperLogLogPlusCounter; // currently only HLL is allowed
 

@@ -1,6 +1,7 @@
 package org.apache.kylin.storage.gridtable;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 
 import java.nio.ByteBuffer;
@@ -12,9 +13,9 @@ public class GTRecord implements Comparable<GTRecord> {
     final GTInfo info;
     final ByteArray[] cols;
 
-    private BitSet maskForEqualHashComp;
+    private ImmutableBitSet maskForEqualHashComp;
 
-    public GTRecord(GTInfo info, BitSet maskForEqualHashComp) {
+    public GTRecord(GTInfo info, ImmutableBitSet maskForEqualHashComp) {
         this.info = info;
         this.cols = new ByteArray[info.getColumnCount()];
         for (int i = 0; i < cols.length; i++) {
@@ -48,10 +49,13 @@ public class GTRecord implements Comparable<GTRecord> {
     }
 
     /** set record to the codes of specified values, reuse given space to hold the codes */
-    public GTRecord setValues(BitSet selectedColumns, ByteArray space, Object... values) {
+    public GTRecord setValues(ImmutableBitSet selectedCols, ByteArray space, Object... values) {
+        assert selectedCols.cardinality() == values.length;
+        
         ByteBuffer buf = space.asBuffer();
         int pos = buf.position();
-        for (int i = 0, c = selectedColumns.nextSetBit(0); c >= 0; i++, c = selectedColumns.nextSetBit(c + 1)) {
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
             info.codeSystem.encodeColumnValue(c, values[i], buf);
             int newPos = buf.position();
             cols[c].set(buf.array(), buf.arrayOffset() + pos, newPos - pos);
@@ -66,9 +70,11 @@ public class GTRecord implements Comparable<GTRecord> {
     }
 
     /** decode and return the values of this record */
-    public Object[] getValues(BitSet selectedColumns, Object[] result) {
-        assert selectedColumns.cardinality() <= result.length;
-        for (int i = 0, c = selectedColumns.nextSetBit(0); c >= 0; i++, c = selectedColumns.nextSetBit(c + 1)) {
+    public Object[] getValues(ImmutableBitSet selectedCols, Object[] result) {
+        assert selectedCols.cardinality() == result.length;
+        
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
             if (cols[c] == null || cols[c].array() == null) {
                 result[i] = null;
             } else {
@@ -95,30 +101,32 @@ public class GTRecord implements Comparable<GTRecord> {
         return copy(info.colAll);
     }
 
-    public GTRecord copy(BitSet selectedCols) {
+    public GTRecord copy(ImmutableBitSet selectedCols) {
         int len = 0;
-        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
-            len += cols[i].length();
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            len += cols[c].length();
         }
 
         byte[] space = new byte[len];
 
         GTRecord copy = new GTRecord(info, this.maskForEqualHashComp);
         int pos = 0;
-        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
-            System.arraycopy(cols[i].array(), cols[i].offset(), space, pos, cols[i].length());
-            copy.cols[i].set(space, pos, cols[i].length());
-            pos += cols[i].length();
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            System.arraycopy(cols[c].array(), cols[c].offset(), space, pos, cols[c].length());
+            copy.cols[c].set(space, pos, cols[c].length());
+            pos += cols[c].length();
         }
 
         return copy;
     }
 
-    public BitSet maskForEqualHashComp() {
+    public ImmutableBitSet maskForEqualHashComp() {
         return maskForEqualHashComp;
     }
 
-    public void maskForEqualHashComp(BitSet set) {
+    public void maskForEqualHashComp(ImmutableBitSet set) {
         this.maskForEqualHashComp = set;
     }
 
@@ -136,8 +144,9 @@ public class GTRecord implements Comparable<GTRecord> {
             return false;
         if (this.maskForEqualHashComp != o.maskForEqualHashComp)
             return false;
-        for (int i = maskForEqualHashComp.nextSetBit(0); i >= 0; i = maskForEqualHashComp.nextSetBit(i + 1)) {
-            if (this.cols[i].equals(o.cols[i]) == false) {
+        for (int i = 0; i < maskForEqualHashComp.trueBitCount(); i++) {
+            int c = maskForEqualHashComp.trueBitAt(i);
+            if (this.cols[c].equals(o.cols[c]) == false) {
                 return false;
             }
         }
@@ -147,8 +156,9 @@ public class GTRecord implements Comparable<GTRecord> {
     @Override
     public int hashCode() {
         int hash = 1;
-        for (int i = maskForEqualHashComp.nextSetBit(0); i >= 0; i = maskForEqualHashComp.nextSetBit(i + 1)) {
-            hash = (31 * hash) + cols[i].hashCode();
+        for (int i = 0; i < maskForEqualHashComp.trueBitCount(); i++) {
+            int c = maskForEqualHashComp.trueBitAt(i);
+            hash = (31 * hash) + cols[c].hashCode();
         }
         return hash;
     }
@@ -160,8 +170,9 @@ public class GTRecord implements Comparable<GTRecord> {
         IFilterCodeSystem<ByteArray> cs = info.codeSystem.getFilterCodeSystem();
 
         int comp = 0;
-        for (int i = maskForEqualHashComp.nextSetBit(0); i >= 0; i = maskForEqualHashComp.nextSetBit(i + 1)) {
-            comp = cs.compare(cols[i], o.cols[i]);
+        for (int i = 0; i < maskForEqualHashComp.trueBitCount(); i++) {
+            int c = maskForEqualHashComp.trueBitAt(i);
+            comp = cs.compare(cols[c], o.cols[c]);
             if (comp != 0)
                 return comp;
         }
@@ -173,7 +184,7 @@ public class GTRecord implements Comparable<GTRecord> {
         return toString(maskForEqualHashComp);
     }
     
-    public String toString(BitSet selectedColumns) {
+    public String toString(ImmutableBitSet selectedColumns) {
         Object[] values = new Object[selectedColumns.cardinality()];
         getValues(selectedColumns, values);
         return Arrays.toString(values);
@@ -181,10 +192,11 @@ public class GTRecord implements Comparable<GTRecord> {
 
     // ============================================================================
 
-    public ByteArray exportColumns(BitSet selectedCols) {
+    public ByteArray exportColumns(ImmutableBitSet selectedCols) {
         int len = 0;
-        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
-            len += cols[i].length();
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            len += cols[c].length();
         }
 
         ByteArray buf = ByteArray.allocate(len);
@@ -193,19 +205,21 @@ public class GTRecord implements Comparable<GTRecord> {
     }
 
     /** write data to given buffer, like serialize */
-    public void exportColumns(BitSet selectedCols, ByteArray buf) {
+    public void exportColumns(ImmutableBitSet selectedCols, ByteArray buf) {
         int pos = 0;
-        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
-            System.arraycopy(cols[i].array(), cols[i].offset(), buf.array(), buf.offset() + pos, cols[i].length());
-            pos += cols[i].length();
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            System.arraycopy(cols[c].array(), cols[c].offset(), buf.array(), buf.offset() + pos, cols[c].length());
+            pos += cols[c].length();
         }
         buf.setLength(pos);
     }
 
     /** write data to given buffer, like serialize */
-    public void exportColumns(BitSet selectedCols, ByteBuffer buf) {
-        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
-            buf.put(cols[i].array(), cols[i].offset(), cols[i].length());
+    public void exportColumns(ImmutableBitSet selectedCols, ByteBuffer buf) {
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            buf.put(cols[c].array(), cols[c].offset(), cols[c].length());
         }
     }
 
@@ -232,17 +246,18 @@ public class GTRecord implements Comparable<GTRecord> {
     }
 
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
-    public void loadColumns(BitSet selectedCols, ByteBuffer buf) {
+    public void loadColumns(ImmutableBitSet selectedCols, ByteBuffer buf) {
         int pos = buf.position();
-        for (int i = selectedCols.nextSetBit(0); i >= 0; i = selectedCols.nextSetBit(i + 1)) {
-            int len = info.codeSystem.codeLength(i, buf);
-            cols[i].set(buf.array(), buf.arrayOffset() + pos, len);
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            int len = info.codeSystem.codeLength(c, buf);
+            cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
             pos += len;
             buf.position(pos);
         }
     }
 
-    /* similar to export(primaryKey) but will stop at the first null value */
+    /** similar to export(primaryKey) but will stop at the first null value */
     public static ByteArray exportScanKey(GTRecord rec) {
         if (rec == null)
             return null;
@@ -251,19 +266,20 @@ public class GTRecord implements Comparable<GTRecord> {
         
         BitSet selectedColumns = new BitSet();
         int len = 0;
-        for (int i = info.primaryKey.nextSetBit(0); i >= 0; i = info.primaryKey.nextSetBit(i + 1)) {
-            if (rec.cols[i].array() == null) {
+        for (int i = 0; i < info.primaryKey.trueBitCount(); i++) {
+            int c = info.primaryKey.trueBitAt(i);
+            if (rec.cols[c].array() == null) {
                 break;
             }
-            selectedColumns.set(i);
-            len += rec.cols[i].length();
+            selectedColumns.set(c);
+            len += rec.cols[c].length();
         }
         
         if (selectedColumns.cardinality() == 0)
             return null;
 
         ByteArray buf = ByteArray.allocate(len);
-        rec.exportColumns(selectedColumns, buf);
+        rec.exportColumns(new ImmutableBitSet(selectedColumns), buf);
         return buf;
     }
     
