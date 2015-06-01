@@ -16,6 +16,7 @@
  */
 package org.apache.kylin.job.inmemcubing;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTScanRequest;
 import org.apache.kylin.storage.gridtable.GridTable;
 import org.apache.kylin.storage.gridtable.IGTScanner;
+import org.apache.kylin.storage.gridtable.IGTStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,9 +158,12 @@ public class InMemCubeBuilder implements Runnable {
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
-        // could use a real budget controller, but experiment shows write directly to disk is the same fast
-        // GTMemDiskStore store = new GTMemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
-        MemDiskStore store = new MemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
+        
+        // Before several store implementation are very similar in performance. The ConcurrentDiskStore is the simplest.
+        // MemDiskStore store = new MemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
+        // MemDiskStore store = new MemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
+        ConcurrentDiskStore store = new ConcurrentDiskStore(info);
+        
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
     }
@@ -566,7 +571,10 @@ public class InMemCubeBuilder implements Runnable {
     }
 
     private void closeStore(GridTable gt) throws IOException {
-        ((MemDiskStore) gt.getStore()).close();
+        IGTStore store = gt.getStore();
+        if (store instanceof Closeable) {
+            ((Closeable) store).close();
+        }
     }
 
     // ===========================================================================

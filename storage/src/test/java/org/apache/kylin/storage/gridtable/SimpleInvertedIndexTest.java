@@ -48,7 +48,7 @@ public class SimpleInvertedIndexTest {
 
     public SimpleInvertedIndexTest() {
         
-        info = SimpleGridTableTest.advancedInfo();
+        info = UnitTestSupport.advancedInfo();
         TblColRef colA = info.colRef(0);
         
         // block i contains value "i", the last is NULL
