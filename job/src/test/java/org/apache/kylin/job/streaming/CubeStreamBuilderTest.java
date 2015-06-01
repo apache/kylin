@@ -11,6 +11,7 @@ import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.streaming.StreamMessage;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  */
+@Ignore
 public class CubeStreamBuilderTest {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeStreamBuilderTest.class);
