@@ -69,7 +69,8 @@ public class DropOldHTableStep extends AbstractExecutable {
 
         } catch (IOException e) {
             logger.error("Failed to drop old htables;", e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            // This should not block the merge job; Orphans should be cleaned up in StorageCleanupJob
+            return new ExecuteResult(ExecuteResult.State.SUCCEED, e.getLocalizedMessage());
         }
 
         return new ExecuteResult(ExecuteResult.State.SUCCEED);
