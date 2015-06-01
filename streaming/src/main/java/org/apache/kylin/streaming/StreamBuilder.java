@@ -35,6 +35,8 @@
 package org.apache.kylin.streaming;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,57 +53,87 @@ public abstract class StreamBuilder implements Runnable {
 
     private StreamParser streamParser = StringStreamParser.instance;
 
+    private StreamFilter streamFilter = DefaultStreamFilter.instance;
+
     private BlockingQueue<StreamMessage> streamMessageQueue;
     private long lastBuildTime = System.currentTimeMillis();
+
+    private long startOffset;
+    private long endOffset;
+
+    private long startTimestamp;
+    private long endTimestamp;
 
     public StreamBuilder(BlockingQueue<StreamMessage> streamMessageQueue) {
         this.streamMessageQueue = streamMessageQueue;
     }
 
-    protected abstract void build(List<StreamMessage> streamsToBuild) throws Exception;
+    protected abstract void build(MicroStreamBatch microStreamBatch) throws Exception;
 
     protected abstract void onStop();
 
     private void clearCounter() {
         lastBuildTime = System.currentTimeMillis();
+        startOffset = Long.MAX_VALUE;
+        endOffset = Long.MIN_VALUE;
+        startTimestamp = Long.MAX_VALUE;
+        endTimestamp = Long.MIN_VALUE;
     }
 
     @Override
     public void run() {
         try {
-            List<StreamMessage> streamMessageToBuild = Lists.newArrayList();
-            clearCounter();
+            List<List<String>> parsedStreamMessages = null;
             while (true) {
+                if (parsedStreamMessages == null) {
+                    parsedStreamMessages = Lists.newLinkedList();
+                    clearCounter();
+                }
                 StreamMessage streamMessage;
                 try {
                     streamMessage = streamMessageQueue.poll(30, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
-                    logger.warn("stream queue interrupted", e);
+                    logger.warn("stream queue should not be interrupted", e);
                     continue;
                 }
-                if (streamMessage == null || getStreamParser().parse(streamMessage) == null) {
-                    if (streamMessage == null) {
-                        logger.info("The stream queue is drained, current available stream count: " + streamMessageToBuild.size());
-                    }
-                    if ((System.currentTimeMillis() - lastBuildTime) > batchInterval()) {
-                        build(streamMessageToBuild);
-                        clearCounter();
-                        streamMessageToBuild.clear();
+                if (streamMessage == null) {
+                    logger.info("The stream queue is drained, current available stream count: " + parsedStreamMessages.size());
+                    if ((System.currentTimeMillis() - lastBuildTime) > batchInterval() && !parsedStreamMessages.isEmpty()) {
+                        build(new MicroStreamBatch(parsedStreamMessages, Pair.newPair(startTimestamp, endTimestamp), Pair.newPair(startOffset, endOffset)));
+                        parsedStreamMessages = null;
                     }
                     continue;
+                }
+                if (streamMessage.getOffset() < 0) {
+                    onStop();
+                    logger.warn("streaming encountered EOF, stop building");
+                    break;
+                }
+
+                final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
+
+                if (getStreamFilter().filter(parsedStreamMessage)) {
+                    if (startOffset > parsedStreamMessage.getOffset()) {
+                        startOffset = parsedStreamMessage.getOffset();
+                    }
+                    if (endOffset < parsedStreamMessage.getOffset()) {
+                        endOffset = parsedStreamMessage.getOffset();
+                    }
+                    if (startTimestamp > parsedStreamMessage.getTimestamp()) {
+                        startTimestamp = parsedStreamMessage.getTimestamp();
+                    }
+                    if (endTimestamp < parsedStreamMessage.getTimestamp()) {
+                        endTimestamp = parsedStreamMessage.getTimestamp();
+                    }
+                    parsedStreamMessages.add(parsedStreamMessage.getStreamMessage());
+                    if (parsedStreamMessages.size() >= batchSize()) {
+                        build(new MicroStreamBatch(parsedStreamMessages, Pair.newPair(startTimestamp, endTimestamp), Pair.newPair(startOffset, endOffset)));
+                        parsedStreamMessages = null;
+                    }
                 } else {
-                    if (streamMessage.getOffset() < 0) {
-                        onStop();
-                        logger.warn("streaming encountered EOF, stop building");
-                        break;
-                    }
+                    //ignore unfiltered stream message
                 }
-                streamMessageToBuild.add(streamMessage);
-                if (streamMessageToBuild.size() >= batchSize()) {
-                    build(streamMessageToBuild);
-                    clearCounter();
-                    streamMessageToBuild.clear();
-                }
+
             }
         } catch (Exception e) {
             logger.error("build stream error, stop building", e);
@@ -115,6 +147,14 @@ public abstract class StreamBuilder implements Runnable {
 
     public final void setStreamParser(StreamParser streamParser) {
         this.streamParser = streamParser;
+    }
+
+    public final StreamFilter getStreamFilter() {
+        return streamFilter;
+    }
+
+    public final void setStreamFilter(StreamFilter streamFilter) {
+        this.streamFilter = streamFilter;
     }
 
     protected abstract int batchInterval();

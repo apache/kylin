@@ -45,6 +45,7 @@ import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
+import org.apache.kylin.streaming.MicroStreamBatch;
 import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.StreamBuilder;
 import org.apache.kylin.streaming.StreamingManager;
@@ -89,23 +90,23 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     @Override
-    protected void build(List<StreamMessage> streamsToBuild) throws IOException {
-        if (streamsToBuild.size() > 0) {
-            long offset = streamsToBuild.get(0).getOffset();
+    protected void build(MicroStreamBatch microStreamBatch) throws IOException {
+        if (microStreamBatch.size() > 0) {
+            long offset = microStreamBatch.getOffset().getFirst();
             if (offset < streamingManager.getOffset(streaming, shardId)) {
                 logger.info("this batch has already been built, skip building");
                 return;
             }
-            logger.info("stream build start, size:" + streamsToBuild.size());
+            logger.info("stream build start, size:" + microStreamBatch.size());
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.start();
-            final Slice slice = sliceBuilder.buildSlice(streamsToBuild, getStreamParser());
+            final Slice slice = sliceBuilder.buildSlice(microStreamBatch);
             logger.info("slice info, shard:" + slice.getShard() + " timestamp:" + slice.getTimestamp() + " record count:" + slice.getRecordCount());
 
             loadToHBase(hTable, slice, new IIKeyValueCodec(slice.getInfo()));
             submitOffset(offset);
             stopwatch.stop();
-            logger.info("stream build finished, size:" + streamsToBuild.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
+            logger.info("stream build finished, size:" + microStreamBatch.size() + " elapsed time:" + stopwatch.elapsedTime(TimeUnit.MILLISECONDS) + " " + TimeUnit.MILLISECONDS);
         } else {
             logger.info("nothing to build, skip building");
         }

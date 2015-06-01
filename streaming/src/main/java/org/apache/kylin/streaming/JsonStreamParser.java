@@ -64,7 +64,7 @@ public final class JsonStreamParser implements StreamParser {
     }
 
     @Override
-    public List<String> parse(StreamMessage streamMessage) {
+    public ParsedStreamMessage parse(StreamMessage streamMessage) {
         try {
             Map<String, String> json = objectMapper.readValue(streamMessage.getRawData(), javaType);
             ArrayList<String> result = Lists.newArrayList();
@@ -75,7 +75,7 @@ public final class JsonStreamParser implements StreamParser {
                     }
                 }
             }
-            return result;
+            return new ParsedStreamMessage(result, streamMessage.getOffset(), streamMessage.getOffset());
         } catch (IOException e) {
             logger.error("error parsing stream", e);
             throw new RuntimeException(e);

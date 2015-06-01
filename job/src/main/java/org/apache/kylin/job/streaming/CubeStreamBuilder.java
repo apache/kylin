@@ -20,14 +20,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.persistence.HBaseConnection;
@@ -54,7 +49,6 @@ import org.apache.kylin.dict.lookup.TableSignature;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.cube.FactDistinctColumnsReducer;
 import org.apache.kylin.job.hadoop.cubev2.InMemKeyValueCreator;
-import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
 import org.apache.kylin.job.hadoop.hbase.CubeHTableUtil;
 import org.apache.kylin.job.inmemcubing.ICuboidWriter;
 import org.apache.kylin.job.inmemcubing.InMemCubeBuilder;
@@ -62,7 +56,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.cube.CuboidToGridTableMapping;
 import org.apache.kylin.storage.gridtable.GTRecord;
-import org.apache.kylin.streaming.SEOJsonStreamParser;
+import org.apache.kylin.streaming.MicroStreamBatch;
 import org.apache.kylin.streaming.StreamBuilder;
 import org.apache.kylin.streaming.StreamMessage;
 import org.slf4j.Logger;
@@ -94,18 +88,17 @@ public class CubeStreamBuilder extends StreamBuilder {
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
         this.cubeManager = CubeManager.getInstance(kylinConfig);
         this.cubeName = cubeName;
-        setStreamParser(new SEOJsonStreamParser(cubeManager.getCube(cubeName).getAllColumns()));
     }
 
     @Override
-    protected void build(List<StreamMessage> streamMessages) throws Exception {
-        if (CollectionUtils.isEmpty(streamMessages)) {
+    protected void build(MicroStreamBatch microStreamBatch) throws Exception {
+        if (microStreamBatch.size() == 0) {
             logger.info("nothing to build, skip to next iteration");
             return;
         }
-        final List<List<String>> parsedStreamMessages = parseStream(streamMessages);
-        long startOffset = streamMessages.get(0).getOffset();
-        long endOffset = streamMessages.get(streamMessages.size() - 1).getOffset();
+        final List<List<String>> parsedStreamMessages = microStreamBatch.getStreams();
+        long startOffset = microStreamBatch.getOffset().getFirst();
+        long endOffset = microStreamBatch.getOffset().getSecond();
         LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue<List<String>>(parsedStreamMessages);
         blockingQueue.put(Collections.<String>emptyList());
 
@@ -373,16 +366,6 @@ public class CubeStreamBuilder extends StreamBuilder {
         }
     }
 
-
-    private List<List<String>> parseStream(List<StreamMessage> streamMessages) {
-        return Lists.transform(streamMessages, new Function<StreamMessage, List<String>>() {
-            @Nullable
-            @Override
-            public List<String> apply(StreamMessage input) {
-                return getStreamParser().parse(input);
-            }
-        });
-    }
 
     private HTableInterface createHTable(final CubeSegment cubeSegment) throws Exception {
         final String hTableName = cubeSegment.getStorageLocationIdentifier();
