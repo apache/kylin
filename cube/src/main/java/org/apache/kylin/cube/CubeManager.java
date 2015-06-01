@@ -266,16 +266,19 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment mergeSegment = newSegment(cube, startDate, endDate);
 
         validateNewSegments(cube, mergeSegment);
-        cube.getSegments().add(appendSegment);
-        cube.getSegments().add(mergeSegment);
-        Collections.sort(cube.getSegments());
-        updateCube(cube, false);
+        saveCubeSegmentChange(cube, Lists.newArrayList(appendSegment, mergeSegment), null);
 
         return new Pair<CubeSegment, CubeSegment>(appendSegment, mergeSegment);
     }
 
+
     public CubeSegment appendSegments(CubeInstance cube, long endDate) throws IOException {
-        checkNoBuildingSegment(cube);
+        return appendSegments(cube, endDate, true);
+    }
+
+    public CubeSegment appendSegments(CubeInstance cube, long endDate, boolean checkNoBuilding) throws IOException {
+        if (checkNoBuilding)
+            checkNoBuildingSegment(cube);
 
         CubeSegment newSegment;
         if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
@@ -286,9 +289,8 @@ public class CubeManager implements IRealizationProvider {
         }
 
         validateNewSegments(cube, newSegment);
-        cube.getSegments().add(newSegment);
-        Collections.sort(cube.getSegments());
-        updateCube(cube, false);
+        saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
+
 
         return newSegment;
     }
@@ -297,9 +299,7 @@ public class CubeManager implements IRealizationProvider {
         checkNoBuildingSegment(cube);
 
         CubeSegment newSegment = newSegment(cube, startDate, endDate);
-        cube.getSegments().add(newSegment);
-        Collections.sort(cube.getSegments());
-        updateCube(cube, false);
+        saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
 
         return newSegment;
     }
@@ -312,11 +312,23 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment newSegment = newSegment(cube, range.getFirst(), range.getSecond());
 
         validateNewSegments(cube, newSegment);
-        cube.getSegments().add(newSegment);
+        saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
+
+        return newSegment;
+    }
+
+    protected void saveCubeSegmentChange(CubeInstance cube, List<CubeSegment> toAdd, List<CubeSegment> toRemove) throws IOException {
+        cube = this.reloadCubeLocal(cube.getName());
+
+        if (toAdd != null && toAdd.size() > 0)
+            cube.getSegments().addAll(toAdd);
+
+        if (toRemove != null && toRemove.size() > 0)
+            cube.getSegments().removeAll(toRemove);
+
         Collections.sort(cube.getSegments());
         updateCube(cube, false);
 
-        return newSegment;
     }
 
     private Pair<Long, Long> alignMergeRange(CubeInstance cube, long startDate, long endDate) {
@@ -381,12 +393,14 @@ public class CubeManager implements IRealizationProvider {
      *
      * @param cubeName
      */
-    public void reloadCubeLocal(String cubeName) {
+    public CubeInstance reloadCubeLocal(String cubeName) {
         try {
-            reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
+            return reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
         }
+
+        return null;
     }
 
     public void removeCubeLocal(String cubeName) {

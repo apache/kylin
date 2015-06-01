@@ -105,7 +105,7 @@ public class CubeStreamBuilder extends StreamBuilder {
 
         final CubeInstance cubeInstance = cubeManager.getCube(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
-        final CubeSegment cubeSegment = cubeManager.appendSegments(cubeManager.getCube(cubeName), System.currentTimeMillis());
+        final CubeSegment cubeSegment = cubeManager.appendSegments(cubeManager.getCube(cubeName), System.currentTimeMillis(), false);
         final Map<Long, HyperLogLogPlusCounter> samplingResult = sampling(cubeInstance.getDescriptor(), parsedStreamMessages);
 
         final Configuration conf = HadoopUtil.getCurrentConfiguration();
