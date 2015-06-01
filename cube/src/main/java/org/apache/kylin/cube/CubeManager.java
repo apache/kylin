@@ -291,7 +291,6 @@ public class CubeManager implements IRealizationProvider {
         validateNewSegments(cube, newSegment);
         saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
 
-
         return newSegment;
     }
 
@@ -318,7 +317,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     protected void saveCubeSegmentChange(CubeInstance cube, List<CubeSegment> toAdd, List<CubeSegment> toRemove) throws IOException {
-        cube = this.reloadCubeLocal(cube.getName());
+//        cube = this.reloadCubeLocal(cube.getName());
 
         if (toAdd != null && toAdd.size() > 0)
             cube.getSegments().addAll(toAdd);
