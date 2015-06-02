@@ -41,9 +41,7 @@ import org.apache.kylin.storage.hbase.coprocessor.endpoint.ClearTextDictionary;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.EndpointAggregators;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
-import org.apache.kylin.streaming.MicroStreamBatch;
-import org.apache.kylin.streaming.StreamMessage;
-import org.apache.kylin.streaming.StringStreamParser;
+import org.apache.kylin.streaming.*;
 import org.apache.kylin.streaming.invertedindex.SliceBuilder;
 import org.junit.After;
 import org.junit.Assert;
@@ -76,16 +74,48 @@ public class IITest extends LocalFileMetadataTestCase {
         this.ii = IIManager.getInstance(getTestConfig()).getII(iiName);
         this.iiDesc = ii.getDescriptor();
 
-        List<List<String>> streamMessages = Lists.transform(Arrays.asList(inputData), new Function<String, List<String>>() {
+        List<StreamMessage> streamMessages = Lists.transform(Arrays.asList(inputData), new Function<String, StreamMessage>() {
             @Nullable
             @Override
-            public List<String> apply(@Nullable String input) {
-                return StringStreamParser.instance.parse(new StreamMessage(System.currentTimeMillis(), input.getBytes())).getStreamMessage();
+            public StreamMessage apply(String input) {
+                return new StreamMessage(System.currentTimeMillis(), input.getBytes());
             }
         });
 
+        List<List<String>> parsedStreamMessages = Lists.newArrayList();
+        StreamParser parser = StringStreamParser.instance;
+        StreamFilter filter = DefaultStreamFilter.instance;
+        long startOffset = Long.MAX_VALUE;
+        long endOffset = Long.MIN_VALUE;
+        long startTimestamp = Long.MAX_VALUE;
+        long endTimestamp = Long.MIN_VALUE;
+
+        for(StreamMessage message: streamMessages)
+        {
+            ParsedStreamMessage parsedStreamMessage = parser.parse(message);
+            if(filter.filter(parsedStreamMessage))
+            {
+                if (startOffset > parsedStreamMessage.getOffset()) {
+                    startOffset = parsedStreamMessage.getOffset();
+                }
+                if (endOffset < parsedStreamMessage.getOffset()) {
+                    endOffset = parsedStreamMessage.getOffset();
+                }
+                if (startTimestamp > parsedStreamMessage.getTimestamp()) {
+                    startTimestamp = parsedStreamMessage.getTimestamp();
+                }
+                if (endTimestamp < parsedStreamMessage.getTimestamp()) {
+                    endTimestamp = parsedStreamMessage.getTimestamp();
+                }
+                parsedStreamMessages.add(parsedStreamMessage.getStreamMessage());
+            }
+        }
+
+        MicroStreamBatch batch = new MicroStreamBatch(parsedStreamMessages, org.apache.kylin.common.util.Pair.newPair(startTimestamp, endTimestamp), org.apache.kylin.common.util.Pair.newPair(startOffset, endOffset));
+
+
         iiRows = Lists.newArrayList();
-        final Slice slice = new SliceBuilder(iiDesc, (short) 0, true).buildSlice(new MicroStreamBatch(streamMessages, org.apache.kylin.common.util.Pair.newPair(System.currentTimeMillis(), System.currentTimeMillis()), org.apache.kylin.common.util.Pair.newPair(System.currentTimeMillis(), System.currentTimeMillis())));
+        final Slice slice = new SliceBuilder(iiDesc, (short) 0, true).buildSlice((batch));
         IIKeyValueCodec codec = new IIKeyValueCodec(slice.getInfo());
         for (IIRow iiRow : codec.encodeKeyValue(slice)) {
             iiRows.add(iiRow);
