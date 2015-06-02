@@ -130,7 +130,7 @@ public class StreamingBootstrap {
 
     private List<BlockingQueue<StreamMessage>> consume(KafkaConfig kafkaConfig, final int partitionCount) {
         List<BlockingQueue<StreamMessage>> result = Lists.newArrayList();
-        for (int partitionId = 0; partitionId < partitionCount && partitionId < 3; ++partitionId) {
+        for (int partitionId = 0; partitionId < partitionCount; ++partitionId) {
             final Broker leadBroker = getLeadBroker(kafkaConfig, partitionId);
 
             final long latestOffset = KafkaRequester.getLastOffset(kafkaConfig.getTopic(), partitionId, OffsetRequest.LatestTime(), leadBroker, kafkaConfig);
@@ -153,10 +153,14 @@ public class StreamingBootstrap {
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
             public void run() {
+                int totalMessage = 0;
                 while (true) {
                     for (BlockingQueue<StreamMessage> queue : queues) {
                         try {
                             streamQueue.put(queue.take());
+                            if (totalMessage++ % 10000 == 1) {
+                                logger.info("Total stream message count: " + totalMessage);
+                            }
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }

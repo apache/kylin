@@ -370,11 +370,11 @@ public class CubeStreamBuilder extends StreamBuilder {
 
     @Override
     protected int batchInterval() {
-        return 5 * 60 * 1000;//30 min
+        return 5 * 60 * 1000;//5 min
     }
 
     @Override
     protected int batchSize() {
-        return 1000;
+        return 10000;
     }
 }
