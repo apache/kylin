@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
@@ -140,7 +139,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         }
 
 
-        cube = cubeManager.updateCube(cube, null, null, cube.getSegments(), null, true);
+        cube = cubeManager.updateCube(cube, null, null, cube.getSegments(), null);
 
     }
 

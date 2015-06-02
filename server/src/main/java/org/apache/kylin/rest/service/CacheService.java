@@ -67,6 +67,8 @@ public class CacheService extends BasicService {
             switch (cacheType) {
             case CUBE:
                 CubeInstance newCube = getCubeManager().reloadCubeLocal(cacheKey);
+                getProjectManager().clearL2Cache();
+
                 //clean query related cache first
                 super.cleanDataCache(newCube.getUuid());
                 //move this logic to other place
@@ -82,6 +84,7 @@ public class CacheService extends BasicService {
             case INVERTED_INDEX:
                 //II update does not need to update storage cache because it is dynamic already
                 getIIManager().reloadIILocal(cacheKey);
+                getProjectManager().clearL2Cache();
                 break;
             case INVERTED_INDEX_DESC:
                 getIIDescManager().reloadIIDescLocal(cacheKey);

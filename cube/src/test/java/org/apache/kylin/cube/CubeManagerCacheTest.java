@@ -67,7 +67,7 @@ public class CubeManagerCacheTest extends LocalFileMetadataTestCase {
         assertEquals(RealizationStatusEnum.DISABLED, createdCube.getStatus());
         createdCube.setStatus(RealizationStatusEnum.DESCBROKEN);
 
-        cubeManager.updateCube(createdCube, null, null, null, null, true);
+        cubeManager.updateCube(createdCube, null, null, null, null);
         assertEquals(RealizationStatusEnum.DESCBROKEN, cubeManager.getCube("a_whole_new_cube").getStatus());
     }
 

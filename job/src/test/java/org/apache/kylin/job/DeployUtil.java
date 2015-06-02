@@ -60,7 +60,7 @@ public class DeployUtil {
         // update cube desc signature.
         for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
             cube.getDescriptor().setSignature(cube.getDescriptor().calculateSignature());
-            CubeManager.getInstance(config()).updateCube(cube, null, null, null, null, true);
+            CubeManager.getInstance(config()).updateCube(cube, null, null, null, null);
         }
     }
 

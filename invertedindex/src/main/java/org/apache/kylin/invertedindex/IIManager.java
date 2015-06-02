@@ -143,7 +143,7 @@ public class IIManager implements IRealizationProvider {
             DictionaryInfo dict = dictMgr.buildDictionary(iiDesc.getModel(), "true", column, factColumnsPath);
             iiSeg.putDictResPath(column, dict.getResourcePath());
         }
-        updateII(iiSeg.getIIInstance(), false);
+        updateII(iiSeg.getIIInstance());
     }
 
     /**
@@ -174,7 +174,7 @@ public class IIManager implements IRealizationProvider {
         if (this.getII(ii.getName()) != null)
             throw new IllegalArgumentException("The II name '" + ii.getName() + "' already exists.");
 
-        this.updateII(ii, false);
+        this.updateII(ii);
 
         String projectName = (null == ii.getProjectName()) ? ProjectInstance.DEFAULT_PROJECT_NAME : ii.getProjectName();
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.INVERTED_INDEX, ii.getName(), projectName, ii.getOwner());
@@ -214,15 +214,13 @@ public class IIManager implements IRealizationProvider {
         usedStorageLocation.removeAll(name.toUpperCase());
     }
 
-    public void updateII(IIInstance ii, boolean updateProject) throws IOException {
+    public void updateII(IIInstance ii) throws IOException {
         logger.info("Updating II instance : " + ii.getName());
         getStore().putResource(ii.getResourcePath(), ii, II_SERIALIZER);
         iiMap.put(ii.getName(), ii);
 
-        if (updateProject) {
-            logger.info("Updating project instance for ii: " + ii.getName());
-            ProjectManager.getInstance(config).updateProject(RealizationType.INVERTED_INDEX, ii.getName());
-        }
+        //this is a duplicate call to take care of scenarios where REST cache service unavailable
+        ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).clearL2Cache();
     }
 
     /**

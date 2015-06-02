@@ -64,7 +64,7 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
             IISegment seg = ii.getFirstSegment();
             seg.setStorageLocationIdentifier(tableName);
             seg.setStatus(SegmentStatusEnum.READY);
-            mgr.updateII(ii,true);
+            mgr.updateII(ii);
 
             return hbaseExitCode;
 

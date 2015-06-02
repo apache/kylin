@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -341,7 +340,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         CubeInstance cube = CubeManager.getInstance(kylinConfig).reloadCubeLocal(cubeSegment.getCubeInstance().getName());
         cube.getSegments().add(cubeSegment);
         Collections.sort(cube.getSegments());
-        CubeManager.getInstance(kylinConfig).updateCube(cube, Lists.newArrayList(cubeSegment), null, null, null, false);
+        CubeManager.getInstance(kylinConfig).updateCube(cube, Lists.newArrayList(cubeSegment), null, null, null);
     }
 
     private List<Long> getAllCuboidIds(CubeDesc cubeDesc) {

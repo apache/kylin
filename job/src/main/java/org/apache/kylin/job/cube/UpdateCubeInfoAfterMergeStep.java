@@ -30,7 +30,6 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -86,7 +85,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         mergedSegment.setLastBuildTime(System.currentTimeMillis());
 
         try {
-            cubeManager.promoteNewlyBuiltSegments(cube, false, mergedSegment);
+            cubeManager.promoteNewlyBuiltSegments(cube, mergedSegment);
             return new ExecuteResult(ExecuteResult.State.SUCCEED);
         } catch (IOException e) {
             logger.error("fail to update cube after merge", e);

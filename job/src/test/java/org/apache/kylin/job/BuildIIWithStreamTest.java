@@ -108,7 +108,7 @@ public class BuildIIWithStreamTest {
             IIInstance ii = iiManager.getII(iiInstance);
             if (ii.getStatus() != RealizationStatusEnum.DISABLED) {
                 ii.setStatus(RealizationStatusEnum.DISABLED);
-                iiManager.updateII(ii,true);
+                iiManager.updateII(ii);
             }
         }
     }
@@ -168,7 +168,7 @@ public class BuildIIWithStreamTest {
     private void clearSegment(String iiName) throws Exception {
         IIInstance ii = iiManager.getII(iiName);
         ii.getSegments().clear();
-        iiManager.updateII(ii,true);
+        iiManager.updateII(ii);
     }
 
     private IISegment createSegment(String iiName) throws Exception {
@@ -185,7 +185,7 @@ public class BuildIIWithStreamTest {
         IIInstance iiInstance = iiManager.getII(iiName);
         IISegment segment = iiManager.buildSegment(iiInstance, startDate, endDate);
         iiInstance.getSegments().add(segment);
-        iiManager.updateII(iiInstance,true);
+        iiManager.updateII(iiInstance);
         return segment;
     }
 
@@ -242,7 +242,7 @@ public class BuildIIWithStreamTest {
             IIInstance ii = iiManager.getII(iiName);
             if (ii.getStatus() != RealizationStatusEnum.READY) {
                 ii.setStatus(RealizationStatusEnum.READY);
-                iiManager.updateII(ii,true);
+                iiManager.updateII(ii);
             }
         }
     }

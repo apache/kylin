@@ -116,7 +116,7 @@ public class BuildIIWithEngineTest {
             IIInstance ii = iiManager.getII(iiInstance);
             if (ii.getStatus() != RealizationStatusEnum.DISABLED) {
                 ii.setStatus(RealizationStatusEnum.DISABLED);
-                iiManager.updateII(ii, true);
+                iiManager.updateII(ii);
             }
         }
     }
@@ -128,7 +128,7 @@ public class BuildIIWithEngineTest {
             IIInstance ii = iiManager.getII(iiInstance);
             if (ii.getStatus() != RealizationStatusEnum.READY) {
                 ii.setStatus(RealizationStatusEnum.READY);
-                iiManager.updateII(ii, true);
+                iiManager.updateII(ii);
             }
         }
         backup();
@@ -208,14 +208,14 @@ public class BuildIIWithEngineTest {
     private void clearSegment(String iiName) throws Exception {
         IIInstance ii = iiManager.getII(iiName);
         ii.getSegments().clear();
-        iiManager.updateII(ii,true);
+        iiManager.updateII(ii);
     }
 
     private String buildSegment(String iiName, long startDate, long endDate) throws Exception {
         IIInstance iiInstance = iiManager.getII(iiName);
         IISegment segment = iiManager.buildSegment(iiInstance, startDate, endDate);
         iiInstance.getSegments().add(segment);
-        iiManager.updateII(iiInstance, true);
+        iiManager.updateII(iiInstance);
         IIJobBuilder iiJobBuilder = new IIJobBuilder(jobEngineConfig);
         IIJob job = iiJobBuilder.buildJob(segment);
         jobService.addJob(job);

@@ -421,7 +421,7 @@ public class CubeController extends BasicController {
 
         cubeService.getCubeManager().validateNewSegments(cube, segment);
         try {
-            cubeService.getCubeManager().updateCube(cube, Lists.newArrayList(segment), null, null, null, true);
+            cubeService.getCubeManager().updateCube(cube, Lists.newArrayList(segment), null, null, null);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
