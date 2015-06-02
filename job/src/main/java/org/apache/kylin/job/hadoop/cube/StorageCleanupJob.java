@@ -142,7 +142,10 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             for (String htableName : allTablesNeedToBeDropped) {
                 log.info("Deleting HBase table " + htableName);
                 if (hbaseAdmin.tableExists(htableName)) {
-                    hbaseAdmin.disableTable(htableName);
+                    if (hbaseAdmin.isTableEnabled(htableName)) {
+                        hbaseAdmin.disableTable(htableName);
+                    }
+
                     hbaseAdmin.deleteTable(htableName);
                     log.info("Deleted HBase table " + htableName);
                 } else {
