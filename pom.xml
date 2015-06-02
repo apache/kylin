@@ -775,7 +775,7 @@
                                 <exclude>examples/test_case_data/**/*.xml</exclude>
 
                                 <!-- MIT-Like License -->
-                                <exclude>dictionary/src/test/resources/dict/english-words.80 (scowl-2015.05.18).txt</exclude>
+                                <exclude>dictionary/src/test/resources/dict/english-words*.txt</exclude>
 
 
                             </excludes>
