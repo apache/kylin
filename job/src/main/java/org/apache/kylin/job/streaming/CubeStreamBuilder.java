@@ -99,9 +99,12 @@ public class CubeStreamBuilder extends StreamBuilder {
         final Map<Long, HyperLogLogPlusCounter> samplingResult = sampling(cubeInstance.getDescriptor(), parsedStreamMessages);
 
         final Configuration conf = HadoopUtil.getCurrentConfiguration();
-        final String outputPath = "/tmp/kylin/cuboidstatistics/" + UUID.randomUUID().toString();
+        final Path outputPath = new Path("file:///tmp/kylin/cuboidstatistics/" + UUID.randomUUID().toString());
+        if (!FileSystem.getLocal(conf).exists(outputPath)) {
+            FileSystem.getLocal(conf).create(outputPath);
+        }
         FactDistinctColumnsReducer.writeCuboidStatistics(conf, outputPath, samplingResult, 100);
-        ResourceStore.getStore(kylinConfig).putResource(cubeSegment.getStatisticsResourcePath(), FileSystem.get(conf).open(new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION)), 0);
+        ResourceStore.getStore(kylinConfig).putResource(cubeSegment.getStatisticsResourcePath(), FileSystem.getLocal(conf).open(new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION)), 0);
 
         final Map<TblColRef, Dictionary<?>> dictionaryMap = buildDictionary(getTblColRefMap(cubeInstance), parsedStreamMessages);
         writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);
@@ -336,11 +339,7 @@ public class CubeStreamBuilder extends StreamBuilder {
     //TODO: should we use cubeManager.promoteNewlyBuiltSegments?
     private void commitSegment(CubeSegment cubeSegment) throws IOException {
         cubeSegment.setStatus(SegmentStatusEnum.READY);
-
-        CubeInstance cube = CubeManager.getInstance(kylinConfig).reloadCubeLocal(cubeSegment.getCubeInstance().getName());
-        cube.getSegments().add(cubeSegment);
-        Collections.sort(cube.getSegments());
-        CubeManager.getInstance(kylinConfig).updateCube(cube, Lists.newArrayList(cubeSegment), null, null, null);
+        CubeManager.getInstance(kylinConfig).updateCube(cubeSegment.getCubeInstance(), Lists.newArrayList(cubeSegment), null, null, null);
     }
 
     private List<Long> getAllCuboidIds(CubeDesc cubeDesc) {
