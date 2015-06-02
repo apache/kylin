@@ -1,23 +1,26 @@
 <ehcache maxBytesLocalHeap="10M">>
     <cache name="StorageCache"
            eternal="false"
-           overflowToDisk="false"
            timeToIdleSeconds="86400"
            memoryStoreEvictionPolicy="LRU"
            maxBytesLocalHeap="1M"
-            />
+            >
+        <persistence strategy="none"/>
+    </cache>
     <cache name="ExceptionQueryCache"
            eternal="false"
-           overflowToDisk="false"
            timeToIdleSeconds="86400"
            memoryStoreEvictionPolicy="LRU"
            maxBytesLocalHeap="1M"
-            />
+            >
+        <persistence strategy="none"/>
+    </cache>
     <cache name="UserCache"
            eternal="false"
-           overflowToDisk="false"
            timeToLiveSeconds="10800"
            memoryStoreEvictionPolicy="LRU"
            maxBytesLocalHeap="1M"
-            />
+            >
+        <persistence strategy="none"/>
+    </cache>
 </ehcache>
