@@ -774,9 +774,6 @@
                                 <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
                                 <exclude>examples/test_case_data/**/*.xml</exclude>
 
-                                <exclude>dictionary/src/test/resources/dict/*.txt</exclude>
-
-
                             </excludes>
                         </configuration>
                         <executions>
