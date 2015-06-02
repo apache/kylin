@@ -19,7 +19,6 @@
 package org.apache.kylin.job.cube;
 
 import com.google.common.collect.Lists;
-import jodd.util.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -59,7 +58,7 @@ public class GarbageCollectionStep extends AbstractExecutable {
         StringBuffer output = new StringBuffer();
 
         final String hiveTable = this.getOldHiveTable();
-        if (StringUtil.isNotEmpty(hiveTable)) {
+        if (StringUtils.isNotEmpty(hiveTable)) {
             final String dropHiveCMD = "hive -e \"DROP TABLE IF EXISTS  " + hiveTable + ";\"";
             ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
             try {
