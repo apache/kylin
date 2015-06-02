@@ -240,7 +240,7 @@ public class CubeManager implements IRealizationProvider {
         if (cube == null)
             throw new IllegalStateException();
 
-        logger.info("Updating cube instance '" + cube.getName());
+        logger.info("Updating cube instance '" + cube.getName() + "'");
 
         if (toAddSegs != null && toAddSegs.size() > 0)
             cube.getSegments().addAll(toAddSegs);
