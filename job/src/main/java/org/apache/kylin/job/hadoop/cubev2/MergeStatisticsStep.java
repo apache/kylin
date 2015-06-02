@@ -124,7 +124,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
                 }
             }
             averageSamplingPercentage = averageSamplingPercentage / this.getMergingSegmentIds().size();
-            FactDistinctColumnsReducer.writeCuboidStatistics(conf, getMergedStatisticsPath(), cuboidHLLMap, averageSamplingPercentage);
+            FactDistinctColumnsReducer.writeCuboidStatistics(conf, new Path(getMergedStatisticsPath()), cuboidHLLMap, averageSamplingPercentage);
             Path statisticsFilePath = new Path(getMergedStatisticsPath(), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
             FileSystem fs = statisticsFilePath.getFileSystem(conf);
             FSDataInputStream is = fs.open(statisticsFilePath);
