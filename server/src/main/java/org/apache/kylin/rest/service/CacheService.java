@@ -70,7 +70,6 @@ public class CacheService extends BasicService {
             case CUBE:
                 CubeInstance newCube = getCubeManager().reloadCubeLocal(cacheKey);
                 getProjectManager().clearL2Cache();
-
                 //clean query related cache first
                 super.cleanDataCache(newCube.getUuid());
                 //move this logic to other place
