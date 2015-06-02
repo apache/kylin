@@ -264,7 +264,7 @@ public class JobService extends BasicService {
         final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
         if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
             // Remove all existing segments
-            getCubeManager().updateCube(cubeInstance, null, cubeInstance.getSegments(), null, null, false);
+            getCubeManager().updateCube(cubeInstance, null, cubeInstance.getSegments(), null, null);
         }
         getExecutableManager().discardJob(jobId);
         return jobInstance;

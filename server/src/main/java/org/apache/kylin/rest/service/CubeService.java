@@ -150,7 +150,7 @@ public class CubeService extends BasicService {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         cube.setOwner(owner);
 
-        return getCubeManager().updateCube(cube, null, null, null, null, true);
+        return getCubeManager().updateCube(cube, null, null, null, null);
     }
 
     public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc) throws IOException {
@@ -348,7 +348,7 @@ public class CubeService extends BasicService {
         cube.setStatus(RealizationStatusEnum.DISABLED);
 
         try {
-            return getCubeManager().updateCube(cube, null, null, null, RealizationStatusEnum.DISABLED, true);
+            return getCubeManager().updateCube(cube, null, null, null, RealizationStatusEnum.DISABLED);
         } catch (IOException e) {
             cube.setStatus(ostatus);
             throw e;
@@ -384,7 +384,7 @@ public class CubeService extends BasicService {
         }
 
         try {
-            return getCubeManager().updateCube(cube, null, null, null, RealizationStatusEnum.READY, true);
+            return getCubeManager().updateCube(cube, null, null, null, RealizationStatusEnum.READY);
         } catch (IOException e) {
             cube.setStatus(ostatus);
             throw e;
@@ -527,7 +527,7 @@ public class CubeService extends BasicService {
                 getExecutableManager().discardJob(cubingJob.getId());
             }
         }
-        return CubeManager.getInstance(getConfig()).updateCube(cube, null, null, cube.getSegments(), null, true);
+        return CubeManager.getInstance(getConfig()).updateCube(cube, null, null, cube.getSegments(), null);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)

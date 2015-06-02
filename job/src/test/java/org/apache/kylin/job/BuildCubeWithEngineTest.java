@@ -259,7 +259,7 @@ public class BuildCubeWithEngineTest {
     private void clearSegment(String cubeName) throws Exception {
         CubeInstance cube = cubeManager.getCube(cubeName);
         // remove all existing segments
-        cubeManager.updateCube(cube, null, cube.getSegments(), null, null, true);
+        cubeManager.updateCube(cube, null, cube.getSegments(), null, null);
     }
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {

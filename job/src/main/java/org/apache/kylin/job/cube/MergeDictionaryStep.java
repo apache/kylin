@@ -63,7 +63,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
             makeDictForNewSegment(conf, cube, newSegment, mergingSegments);
             makeSnapshotForNewSegment(cube, newSegment, mergingSegments);
 
-            mgr.updateCube(cube, null, null, Lists.newArrayList(newSegment), null, false);
+            mgr.updateCube(cube, null, null, Lists.newArrayList(newSegment), null);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to merge dictionary or lookup snapshots", e);
