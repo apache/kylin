@@ -48,9 +48,10 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.streaming.*;
-import org.apache.kylin.streaming.invertedindex.IIStreamBuilder;
+import org.apache.kylin.streaming.invertedindex.IIStreamConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,7 +145,7 @@ public class StreamingBootstrap {
     private void startCubeStreaming(StreamingConfig streamingConfig, final int partitionId) throws Exception {
         List<KafkaClusterConfig> kafkaClusterConfigs = streamingConfig.getKafkaClusterConfigs();
 
-        final List<List<BlockingQueue<StreamMessage>>> allClustersData = Lists.newArrayList();
+        final List<BlockingQueue<StreamMessage>> allClustersData = Lists.newArrayList();
 
         for (KafkaClusterConfig kafkaClusterConfig : kafkaClusterConfigs) {
             final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
@@ -152,35 +153,13 @@ public class StreamingBootstrap {
 
             final List<BlockingQueue<StreamMessage>> oneClusterData = consume(kafkaClusterConfig, partitionCount);
             logger.info("Cluster {} with {} partitions", allClustersData.size(), oneClusterData.size());
-            allClustersData.add(oneClusterData);
+            allClustersData.addAll(oneClusterData);
         }
-
-        final LinkedBlockingDeque<StreamMessage> alldata = new LinkedBlockingDeque<>();
-        Executors.newSingleThreadExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                int totalMessage = 0;
-                while (true) {
-                    for (List<BlockingQueue<StreamMessage>> oneCluster : allClustersData) {
-                        for (BlockingQueue<StreamMessage> onePartition : oneCluster) {
-                            try {
-                                alldata.put(onePartition.take());
-                                if (totalMessage++ % 10000 == 0) {
-                                    logger.info("Total stream message count: " + totalMessage);
-                                }
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }
-                }
-            }
-        });
 
         final String cubeName = streamingConfig.getCubeName();
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
 
-        CubeStreamBuilder cubeStreamBuilder = new CubeStreamBuilder(alldata, cubeName);
+        StreamBuilder cubeStreamBuilder = new StreamBuilder(allClustersData, new MicroBatchCondition(Integer.MAX_VALUE, 5 * 60 * 1000), new CubeStreamConsumer(cubeName));
         cubeStreamBuilder.setStreamParser(getStreamParser(streamingConfig, cubeInstance.getAllColumns()));
         cubeStreamBuilder.setStreamFilter(getStreamFilter(streamingConfig));
         final Future<?> future = Executors.newSingleThreadExecutor().submit(cubeStreamBuilder);
@@ -246,10 +225,14 @@ public class StreamingBootstrap {
         KafkaConsumer consumer = new KafkaConsumer(kafkaClusterConfig.getTopic(), partitionId, streamingOffset, kafkaClusterConfig.getBrokers(), kafkaClusterConfig, parallelism);
         kafkaConsumers.put(getKey(streamingConfig.getName(), partitionId), consumer);
 
+        final IIDesc iiDesc = iiSegment.getIIDesc();
+
         Executors.newSingleThreadExecutor().submit(consumer);
         final ExecutorService streamingBuilderPool = Executors.newFixedThreadPool(parallelism);
         for (int i = startShard; i < endShard; ++i) {
-            final IIStreamBuilder task = new IIStreamBuilder(consumer.getStreamQueue(i % parallelism), streamingConfig.getName(), iiSegment.getStorageLocationIdentifier(), iiSegment.getIIDesc(), i);
+            final StreamBuilder task = new StreamBuilder(consumer.getStreamQueue(i % parallelism),
+                    new MicroBatchCondition(iiDesc.getSliceSize(), Integer.MAX_VALUE),
+                    new IIStreamConsumer(streamingConfig.getName(), iiSegment.getStorageLocationIdentifier(), iiDesc, i));
             task.setStreamParser(getStreamParser(streamingConfig, ii.getDescriptor().listAllColumns()));
             if (i == endShard - 1) {
                 streamingBuilderPool.submit(task).get();

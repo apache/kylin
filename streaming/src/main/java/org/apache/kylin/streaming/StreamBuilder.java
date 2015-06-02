@@ -34,18 +34,18 @@
 
 package org.apache.kylin.streaming;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  */
-public abstract class StreamBuilder implements Runnable {
+public class StreamBuilder implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
 
@@ -53,97 +53,159 @@ public abstract class StreamBuilder implements Runnable {
 
     private StreamFilter streamFilter = DefaultStreamFilter.instance;
 
-    private BlockingQueue<StreamMessage> streamMessageQueue;
-    private long lastBuildTime = System.currentTimeMillis();
+    private final List<BlockingQueue<StreamMessage>> streamMessageQueues;
 
-    private long startOffset;
-    private long endOffset;
+    private final MicroStreamBatchConsumer consumer;
 
-    private long startTimestamp;
-    private long endTimestamp;
+    private final MicroBatchCondition condition;
 
-    public StreamBuilder(BlockingQueue<StreamMessage> streamMessageQueue) {
-        this.streamMessageQueue = streamMessageQueue;
+    public StreamBuilder(List<BlockingQueue<StreamMessage>> inputs, MicroBatchCondition condition, MicroStreamBatchConsumer consumer) {
+        Preconditions.checkArgument(inputs.size() > 0);
+        this.streamMessageQueues = Lists.newArrayList();
+        this.consumer = Preconditions.checkNotNull(consumer);
+        this.condition = condition;
+        init(inputs);
     }
 
-    protected abstract void build(MicroStreamBatch microStreamBatch) throws Exception;
+    public StreamBuilder(BlockingQueue<StreamMessage> input, MicroBatchCondition condition, MicroStreamBatchConsumer consumer) {
+        this.streamMessageQueues = Lists.newArrayList();
+        this.consumer = Preconditions.checkNotNull(consumer);
+        this.condition = condition;
+        init(Preconditions.checkNotNull(input));
+    }
 
-    protected abstract void onStop();
+    private void init(BlockingQueue<StreamMessage> input) {
+        this.streamMessageQueues.add(input);
+    }
 
-    private void clearCounter() {
-        lastBuildTime = System.currentTimeMillis();
-        startOffset = Long.MAX_VALUE;
-        endOffset = Long.MIN_VALUE;
-        startTimestamp = Long.MAX_VALUE;
-        endTimestamp = Long.MIN_VALUE;
+    private void init(List<BlockingQueue<StreamMessage>> inputs) {
+        this.streamMessageQueues.addAll(inputs);
     }
 
     @Override
     public void run() {
         try {
-            List<List<String>> parsedStreamMessages = null;
-            int filteredMsgCount = 0;
+            final int inputCount = streamMessageQueues.size();
+            final ExecutorService executorService = Executors.newFixedThreadPool(inputCount);
             while (true) {
-                if (parsedStreamMessages == null) {
-                    parsedStreamMessages = Lists.newLinkedList();
-                    clearCounter();
+                CountDownLatch countDownLatch = new CountDownLatch(inputCount);
+                ArrayList<Future<MicroStreamBatch>> futures = Lists.newArrayListWithExpectedSize(inputCount);
+                for (BlockingQueue<StreamMessage> streamMessageQueue : streamMessageQueues) {
+                    futures.add(executorService.submit(new StreamFetcher(streamMessageQueue, countDownLatch)));
                 }
-                StreamMessage streamMessage;
-                try {
-                    streamMessage = streamMessageQueue.poll(30, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    logger.warn("stream queue should not be interrupted", e);
-                    continue;
+                countDownLatch.await();
+                ArrayList<MicroStreamBatch> batches = Lists.newArrayListWithExpectedSize(inputCount);
+                for (Future<MicroStreamBatch> future : futures) {
+                    if (future.get() != null) {
+                        batches.add(future.get());
+                    } else {
+                        //EOF occurs, stop consumer
+                        consumer.stop();
+                        return;
+                    }
                 }
-                if (streamMessage == null) {
-                    logger.info("The stream queue is drained, current available stream count: " + parsedStreamMessages.size());
-                    if ((System.currentTimeMillis() - lastBuildTime) > batchInterval() && !parsedStreamMessages.isEmpty()) {
-                        logger.info("Building batch due to time threshold, batch size: " + parsedStreamMessages.size());
-                        build(new MicroStreamBatch(parsedStreamMessages, Pair.newPair(startTimestamp, endTimestamp), Pair.newPair(startOffset, endOffset)));
-                        parsedStreamMessages = null;
+                MicroStreamBatch batch = batches.get(0);
+                if (batches.size() > 1) {
+                    for (int i = 1; i < inputCount; i++) {
+                        batch = MicroStreamBatch.union(batch, batches.get(i));
                     }
-                    continue;
                 }
-                if (streamMessage.getOffset() < 0) {
-                    onStop();
-                    logger.warn("streaming encountered EOF, stop building. The remaining {} filtered messages will be discarded", filteredMsgCount);
-                    break;
-                }
-
-                final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
-
-                if (getStreamFilter().filter(parsedStreamMessage)) {
-
-                    if (filteredMsgCount++ % 10000 == 0) {
-                        logger.info("Total filtered stream message count: " + filteredMsgCount);
-                    }
-
-                    if (startOffset > parsedStreamMessage.getOffset()) {
-                        startOffset = parsedStreamMessage.getOffset();
-                    }
-                    if (endOffset < parsedStreamMessage.getOffset()) {
-                        endOffset = parsedStreamMessage.getOffset();
-                    }
-                    if (startTimestamp > parsedStreamMessage.getTimestamp()) {
-                        startTimestamp = parsedStreamMessage.getTimestamp();
-                    }
-                    if (endTimestamp < parsedStreamMessage.getTimestamp()) {
-                        endTimestamp = parsedStreamMessage.getTimestamp();
-                    }
-                    parsedStreamMessages.add(parsedStreamMessage.getStreamMessage());
-                    if (parsedStreamMessages.size() >= batchSize()) {
-                        logger.info("Building batch due to size threshold, batch size: " + parsedStreamMessages.size());
-                        build(new MicroStreamBatch(parsedStreamMessages, Pair.newPair(startTimestamp, endTimestamp), Pair.newPair(startOffset, endOffset)));
-                        parsedStreamMessages = null;
-                    }
-                } else {
-                    //ignore unfiltered stream message
-                }
-
+                consumer.consume(batches.get(0));
             }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("stream fetcher thread should not be interrupted", e);
+        } catch (ExecutionException e) {
+            logger.error("stream fetch thread encountered exception", e);
+            throw new RuntimeException("stream fetch thread encountered exception", e);
         } catch (Exception e) {
-            logger.error("build stream error, stop building", e);
-            throw new RuntimeException("build stream error, stop building", e);
+            logger.error("consumer encountered exception", e);
+            throw new RuntimeException("consumer encountered exception", e);
+        }
+    }
+
+    private class StreamFetcher implements Callable<MicroStreamBatch> {
+
+        private final BlockingQueue<StreamMessage> streamMessageQueue;
+        private final CountDownLatch countDownLatch;
+        private long lastBuildTime = System.currentTimeMillis();
+        private long lastBatchTimestamp = -1;
+
+        public StreamFetcher(BlockingQueue<StreamMessage> streamMessageQueue, CountDownLatch countDownLatch) {
+            this.streamMessageQueue = streamMessageQueue;
+            this.countDownLatch = countDownLatch;
+        }
+
+        private void clearCounter() {
+            lastBuildTime = System.currentTimeMillis();
+        }
+
+        private StreamMessage peek(BlockingQueue<StreamMessage> queue, long timeout) {
+            long t = System.currentTimeMillis();
+            while (true) {
+                final StreamMessage peek = queue.peek();
+                if (peek != null) {
+                    return peek;
+                } else {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        logger.warn("stream queue should not be interrupted", e);
+                        return null;
+                    }
+                    if (System.currentTimeMillis() - t <= timeout) {
+                        break;
+                    }
+                }
+            }
+            return queue.peek();
+        }
+
+        @Override
+        public MicroStreamBatch call() throws Exception {
+            try {
+                MicroStreamBatch microStreamBatch = null;
+                while (true) {
+                    if (microStreamBatch == null) {
+                        microStreamBatch = new MicroStreamBatch();
+                        clearCounter();
+                    }
+                    StreamMessage streamMessage = peek(streamMessageQueue, 30000);
+                    if (streamMessage == null) {
+                        logger.info("The stream queue is drained, current available stream count: " + microStreamBatch.size());
+                        if (!microStreamBatch.isEmpty()) {
+                            return microStreamBatch;
+                        } else {
+                            continue;
+                        }
+                    }
+                    if (streamMessage.getOffset() < 0) {
+                        consumer.stop();
+                        logger.warn("streaming encountered EOF, stop building");
+                        return null;
+                    }
+
+                    final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
+                    if (parsedStreamMessage.getTimestamp() - microStreamBatch.getTimestamp().getFirst() > condition.getBatchInterval()) {
+                        streamMessageQueue.take();
+                        if (getStreamFilter().filter(parsedStreamMessage)) {
+                            if (microStreamBatch.size() >= condition.getBatchSize()) {
+                                return microStreamBatch;
+                            } else {
+                                microStreamBatch.add(parsedStreamMessage);
+                            }
+                        } else {
+                            //ignore unfiltered stream message
+                        }
+                    } else {
+                        return microStreamBatch;
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("build stream error, stop building", e);
+                throw new RuntimeException("build stream error, stop building", e);
+            } finally {
+                countDownLatch.countDown();
+            }
         }
     }
 
@@ -163,7 +225,4 @@ public abstract class StreamBuilder implements Runnable {
         this.streamFilter = streamFilter;
     }
 
-    protected abstract int batchInterval();
-
-    protected abstract int batchSize();
 }

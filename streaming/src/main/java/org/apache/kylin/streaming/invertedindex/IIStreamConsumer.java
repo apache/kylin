@@ -46,35 +46,29 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
 import org.apache.kylin.streaming.MicroStreamBatch;
-import org.apache.kylin.streaming.StreamMessage;
-import org.apache.kylin.streaming.StreamBuilder;
+import org.apache.kylin.streaming.MicroStreamBatchConsumer;
 import org.apache.kylin.streaming.StreamingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
  */
-public class IIStreamBuilder extends StreamBuilder {
+public class IIStreamConsumer implements MicroStreamBatchConsumer {
 
-    private static Logger logger = LoggerFactory.getLogger(IIStreamBuilder.class);
-    private static final int BATCH_BUILD_INTERVAL_THRESHOLD = 2 * 60 * 1000;
+    private static Logger logger = LoggerFactory.getLogger(IIStreamConsumer.class);
 
     private final IIDesc desc;
     private final HTableInterface hTable;
     private final SliceBuilder sliceBuilder;
     private final int shardId;
     private final String streaming;
-    private final int batchSize;
     private StreamingManager streamingManager;
 
-    public IIStreamBuilder(BlockingQueue<StreamMessage> queue, String streaming, String hTableName, IIDesc iiDesc, int shard) {
-        super(queue);
-        this.batchSize = iiDesc.getSliceSize();
+    public IIStreamConsumer(String streaming, String hTableName, IIDesc iiDesc, int shard) {
         this.streaming = streaming;
         this.desc = iiDesc;
         this.shardId = shard;
@@ -90,7 +84,7 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     @Override
-    protected void build(MicroStreamBatch microStreamBatch) throws IOException {
+    public void consume(MicroStreamBatch microStreamBatch) throws IOException {
         if (microStreamBatch.size() > 0) {
             long offset = microStreamBatch.getOffset().getFirst();
             if (offset < streamingManager.getOffset(streaming, shardId)) {
@@ -113,22 +107,12 @@ public class IIStreamBuilder extends StreamBuilder {
     }
 
     @Override
-    protected void onStop() {
+    public void stop() {
         try {
             this.hTable.close();
         } catch (IOException e) {
             logger.error("onStop throw exception", e);
         }
-    }
-
-    @Override
-    protected int batchInterval() {
-        return BATCH_BUILD_INTERVAL_THRESHOLD;
-    }
-
-    @Override
-    protected int batchSize() {
-        return batchSize;
     }
 
     private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
