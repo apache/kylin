@@ -80,6 +80,11 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, convertCuboidToHfileStep.getId(), jobId));
         }
 
+
+        final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(seg.getCubeDesc(), seg);
+        final String hiveIntermediateTable = this.getIntermediateHiveTableName(intermediateTableDesc, jobId);
+        result.addTask(createGarbageCollectionStep(seg, null, hiveIntermediateTable));
+
         return result;
     }
 
@@ -131,7 +136,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(mergeSegment, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
 
-        result.addTask(createDropUnusedHTableStep(mergeSegment, mergingHTables));
+        result.addTask(createGarbageCollectionStep(mergeSegment, mergingHTables, null));
 
         return result;
     }
@@ -172,7 +177,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(seg, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
 
-        result.addTask(createDropUnusedHTableStep(seg, mergingHTables));
+        result.addTask(createGarbageCollectionStep(seg, mergingHTables, null));
 
         return result;
     }
@@ -580,10 +585,11 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
     }
 
 
-    private DropOldHTableStep createDropUnusedHTableStep(CubeSegment seg, List<String> oldHtables) {
-        DropOldHTableStep result = new DropOldHTableStep();
-        result.setName(ExecutableConstants.STEP_NAME_DROP_OLD_HBASE_TABLE);
+    private GarbageCollectionStep createGarbageCollectionStep(CubeSegment seg, List<String> oldHtables, String hiveIntermediateTable) {
+        GarbageCollectionStep result = new GarbageCollectionStep();
+        result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
         result.setOldHTables(oldHtables);
+        result.setOldHiveTable(hiveIntermediateTable);
         return result;
     }
 
