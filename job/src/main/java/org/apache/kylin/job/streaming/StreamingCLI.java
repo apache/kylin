@@ -36,6 +36,8 @@ package org.apache.kylin.job.streaming;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.cache.RemoteCacheUpdater;
+import org.apache.kylin.common.restclient.AbstractRestCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,9 @@ public class StreamingCLI {
                 printArgsError(args);
                 return;
             }
+
+            AbstractRestCache.setCacheUpdater(new RemoteCacheUpdater());
+
             if (args[0].equals("start")) {
                 String kafkaConfName = args[1];
                 int partition = Integer.parseInt(args[2]);

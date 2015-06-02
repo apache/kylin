@@ -98,6 +98,7 @@ public abstract class StreamBuilder implements Runnable {
                 if (streamMessage == null) {
                     logger.info("The stream queue is drained, current available stream count: " + parsedStreamMessages.size());
                     if ((System.currentTimeMillis() - lastBuildTime) > batchInterval() && !parsedStreamMessages.isEmpty()) {
+                        logger.info("Building batch due to time threshold, batch size: " + parsedStreamMessages.size());
                         build(new MicroStreamBatch(parsedStreamMessages, Pair.newPair(startTimestamp, endTimestamp), Pair.newPair(startOffset, endOffset)));
                         parsedStreamMessages = null;
                     }
@@ -131,6 +132,7 @@ public abstract class StreamBuilder implements Runnable {
                     }
                     parsedStreamMessages.add(parsedStreamMessage.getStreamMessage());
                     if (parsedStreamMessages.size() >= batchSize()) {
+                        logger.info("Building batch due to size threshold, batch size: " + parsedStreamMessages.size());
                         build(new MicroStreamBatch(parsedStreamMessages, Pair.newPair(startTimestamp, endTimestamp), Pair.newPair(startOffset, endOffset)));
                         parsedStreamMessages = null;
                     }
