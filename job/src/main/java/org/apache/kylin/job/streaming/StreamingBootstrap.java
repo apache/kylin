@@ -166,6 +166,7 @@ public class StreamingBootstrap {
         });
         CubeStreamBuilder cubeStreamBuilder = new CubeStreamBuilder(streamQueue, cubeName);
         cubeStreamBuilder.setStreamParser(getStreamParser(kafkaConfig, cubeInstance.getAllColumns()));
+        cubeStreamBuilder.setStreamFilter(getStreamFilter(kafkaConfig));
         final Future<?> future = Executors.newSingleThreadExecutor().submit(cubeStreamBuilder);
         future.get();
     }
@@ -177,6 +178,15 @@ public class StreamingBootstrap {
             return (StreamParser) constructor.newInstance(columns);
         } else {
             return new JsonStreamParser(columns);
+        }
+    }
+
+    private StreamFilter getStreamFilter(KafkaConfig kafkaConfig) throws Exception {
+        if (!StringUtils.isEmpty(kafkaConfig.getFilterName())) {
+            Class clazz = Class.forName(kafkaConfig.getFilterName());
+            return (StreamFilter) clazz.newInstance();
+        } else {
+            return DefaultStreamFilter.instance;
         }
     }
 
