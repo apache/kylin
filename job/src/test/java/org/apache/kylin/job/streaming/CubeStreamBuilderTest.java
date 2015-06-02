@@ -50,8 +50,8 @@ public class CubeStreamBuilderTest {
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
         final CubeInstance cube = CubeManager.getInstance(kylinConfig).getCube(CUBE_NAME);
-        cube.getSegments().clear();
-        CubeManager.getInstance(kylinConfig).updateCube(cube, true);
+        // remove all existing segments
+        CubeManager.getInstance(kylinConfig).updateCube(cube, null, cube.getSegments(), null, null, true);
 
     }
 

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.*;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -419,10 +420,8 @@ public class CubeController extends BasicController {
         CubeSegment segment = deserializeCubeSegment(cubeSegmentRequest);
 
         cubeService.getCubeManager().validateNewSegments(cube, segment);
-        cube.getSegments().add(segment);
-        Collections.sort(cube.getSegments());
         try {
-            cubeService.getCubeManager().updateCube(cube, true);
+            cubeService.getCubeManager().updateCube(cube, Lists.newArrayList(segment), null, null, null, true);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());

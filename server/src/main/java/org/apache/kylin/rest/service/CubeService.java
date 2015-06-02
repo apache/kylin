@@ -150,7 +150,7 @@ public class CubeService extends BasicService {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         cube.setOwner(owner);
 
-        return getCubeManager().updateCube(cube, true);
+        return getCubeManager().updateCube(cube, null, null, null, null, true);
     }
 
     public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc) throws IOException {
@@ -348,7 +348,7 @@ public class CubeService extends BasicService {
         cube.setStatus(RealizationStatusEnum.DISABLED);
 
         try {
-            return getCubeManager().updateCube(cube, true);
+            return getCubeManager().updateCube(cube, null, null, null, RealizationStatusEnum.DISABLED, true);
         } catch (IOException e) {
             cube.setStatus(ostatus);
             throw e;
@@ -380,12 +380,11 @@ public class CubeService extends BasicService {
             throw new JobException("Enable is not allowed with a running job.");
         }
         if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
-            this.releaseAllSegments(cube);
+            cube = this.releaseAllSegments(cube);
         }
 
-        cube.setStatus(RealizationStatusEnum.READY);
         try {
-            return getCubeManager().updateCube(cube, true);
+            return getCubeManager().updateCube(cube, null, null, null, RealizationStatusEnum.READY, true);
         } catch (IOException e) {
             cube.setStatus(ostatus);
             throw e;
@@ -520,7 +519,7 @@ public class CubeService extends BasicService {
      * @throws IOException
      * @throws JobException
      */
-    private void releaseAllSegments(CubeInstance cube) throws IOException, JobException {
+    private CubeInstance releaseAllSegments(CubeInstance cube) throws IOException, JobException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
             final ExecutableState status = cubingJob.getStatus();
@@ -528,8 +527,7 @@ public class CubeService extends BasicService {
                 getExecutableManager().discardJob(cubingJob.getId());
             }
         }
-        cube.getSegments().clear();
-        CubeManager.getInstance(getConfig()).updateCube(cube, true);
+        return CubeManager.getInstance(getConfig()).updateCube(cube, null, null, cube.getSegments(), null, true);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)

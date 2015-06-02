@@ -153,7 +153,7 @@ public class CubeManager implements IRealizationProvider {
         DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
         cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
-        updateCube(cubeSeg.getCubeInstance(), false);
+        updateCube(cubeSeg.getCubeInstance(), null, null, Lists.newArrayList(cubeSeg), null, false);
 
         return dictInfo;
     }
@@ -191,7 +191,7 @@ public class CubeManager implements IRealizationProvider {
 
         cubeSeg.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
 
-        updateCube(cubeSeg.getCubeInstance(), false);
+        updateCube(cubeSeg.getCubeInstance(), null, null, Lists.newArrayList(cubeSeg), null, false);
 
         return snapshot;
     }
@@ -226,7 +226,7 @@ public class CubeManager implements IRealizationProvider {
         CubeInstance cube = CubeInstance.create(cubeName, projectName, desc);
         cube.setOwner(owner);
 
-        updateCube(cube, false);
+        updateCube(cube, null, null, null, null, false);
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
         return cube;
@@ -243,10 +243,53 @@ public class CubeManager implements IRealizationProvider {
      * @return
      * @throws IOException
      */
-    public CubeInstance updateCube(CubeInstance cube, boolean updateProject) throws IOException {
+    public CubeInstance updateCube(CubeInstance cube, final List<CubeSegment> toAddSegs, final List<CubeSegment> toRemoveSegs, final List<CubeSegment> toUpdateSegs, RealizationStatusEnum newStatus, boolean updateProject) throws IOException {
+       return updateCube(cube, toAddSegs, toRemoveSegs, toUpdateSegs, newStatus, updateProject, 0);
+    }
+
+    private CubeInstance updateCube(CubeInstance cube, final List<CubeSegment> toAddSegs, final List<CubeSegment> toRemoveSegs, final List<CubeSegment> toUpdateSegs, RealizationStatusEnum newStatus, boolean updateProject, int retry) throws IOException {
+        if (cube == null)
+            throw new IllegalStateException();
 
         logger.info("Updating cube instance '" + cube.getName());
-        getStore().putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
+
+        if (toAddSegs != null && toAddSegs.size() > 0)
+            cube.getSegments().addAll(toAddSegs);
+
+        if (toRemoveSegs != null && toRemoveSegs.size() > 0)
+            cube.getSegments().removeAll(toRemoveSegs);
+
+        if (toUpdateSegs != null && toUpdateSegs.size() > 0) {
+            for (CubeSegment segment : toUpdateSegs) {
+                for (int i = 0; i < cube.getSegments().size(); i++) {
+                    if (cube.getSegments().get(i).getName().equals(segment.getName())) {
+                        cube.getSegments().set(i, segment);
+                    }
+                }
+
+            }
+        }
+
+        Collections.sort(cube.getSegments());
+
+        if (newStatus != null) {
+            cube.setStatus(newStatus);
+        }
+
+        try {
+            getStore().putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
+        } catch (IllegalStateException ise) {
+            logger.error("Get error when update cube " + cube.getName(), ise);
+
+            if (retry >= 3) {
+                logger.error("Retried 3 times till got error, abandoning...");
+                throw ise;
+            }
+
+            retry++;
+            cube = updateCube(reloadCubeLocal(cube.getName()), toAddSegs, toRemoveSegs, toUpdateSegs, newStatus, updateProject, retry);
+        }
+
         cubeMap.put(cube.getName(), cube);
 
         if (updateProject) {
@@ -271,7 +314,7 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment mergeSegment = newSegment(cube, startDate, endDate);
 
         validateNewSegments(cube, mergeSegment);
-        saveCubeSegmentChange(cube, Lists.newArrayList(appendSegment, mergeSegment), null);
+        updateCube(cube, Lists.newArrayList(appendSegment, mergeSegment), null, null, null, false);
 
         return new Pair<CubeSegment, CubeSegment>(appendSegment, mergeSegment);
     }
@@ -296,7 +339,7 @@ public class CubeManager implements IRealizationProvider {
         validateNewSegments(cube, newSegment);
 
         if (saveChange)
-            saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
+            updateCube(cube, Lists.newArrayList(newSegment), null, null, null, false);
 
         return newSegment;
     }
@@ -305,7 +348,7 @@ public class CubeManager implements IRealizationProvider {
         checkNoBuildingSegment(cube);
 
         CubeSegment newSegment = newSegment(cube, startDate, endDate);
-        saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
+        updateCube(cube, Lists.newArrayList(newSegment), null, null, null, false);
 
         return newSegment;
     }
@@ -318,21 +361,9 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment newSegment = newSegment(cube, range.getFirst(), range.getSecond());
 
         validateNewSegments(cube, newSegment);
-        saveCubeSegmentChange(cube, Lists.newArrayList(newSegment), null);
+        updateCube(cube, Lists.newArrayList(newSegment), null, null, null, false);
 
         return newSegment;
-    }
-
-    protected void saveCubeSegmentChange(CubeInstance cube, List<CubeSegment> toAdd, List<CubeSegment> toRemove) throws IOException {
-        if (toAdd != null && toAdd.size() > 0)
-            cube.getSegments().addAll(toAdd);
-
-        if (toRemove != null && toRemove.size() > 0)
-            cube.getSegments().removeAll(toRemove);
-
-        Collections.sort(cube.getSegments());
-        updateCube(cube, false);
-
     }
 
     private Pair<Long, Long> alignMergeRange(CubeInstance cube, long startDate, long endDate) {
@@ -539,11 +570,14 @@ public class CubeManager implements IRealizationProvider {
                 throw new IllegalStateException("For cube " + cube + ", segment " + seg + " should be READY but is not");
         }
 
-        cube.setSegments(tobe);
-        cube.setStatus(RealizationStatusEnum.READY);
+        List<CubeSegment> toRemoveSegs = Lists.newArrayList();
+        for (CubeSegment segment : cube.getSegments()) {
+            if (!tobe.contains(segment))
+                toRemoveSegs.add(segment);
+        }
 
         logger.info("Promoting cube " + cube + ", new segments " + newSegments);
-        updateCube(cube, updateProj);
+        updateCube(cube, Lists.newArrayList(newSegments), toRemoveSegs, null, RealizationStatusEnum.READY, updateProj);
     }
 
     public void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {

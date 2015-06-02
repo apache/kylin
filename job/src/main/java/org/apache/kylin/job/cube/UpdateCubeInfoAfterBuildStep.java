@@ -19,6 +19,7 @@
 package org.apache.kylin.job.cube;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -127,7 +128,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             if (segmentReady) {
                 cubeManager.promoteNewlyBuiltSegments(cube, cube.getSegments().size() == 1, segment);
             } else {
-                cubeManager.updateCube(cube, false);
+                cubeManager.updateCube(cube, null, null, Lists.newArrayList(segment), null, false);
             }
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
