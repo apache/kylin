@@ -767,8 +767,11 @@
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
 
                                 <!-- jdbc log -->
-                                <exclude>jdbc/kylin_jdbc.log.*</exclude>
-                                <exclude>jdbc/kylin_jdbc.*</exclude>
+                                <exclude>jdbc/kylin_jdbc.log*</exclude>
+
+
+                                <!-- HBase MiniCluster Testing Data, for testing only -->
+                                <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
 
                             </excludes>
                         </configuration>
