@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.cache.RemoteCacheUpdater;
 import org.apache.kylin.common.restclient.Broadcaster;
@@ -228,8 +229,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertEquals(0, cubeManagerB.getCube(cubeName).getSegments().size());
         CubeSegment segment = new CubeSegment();
         segment.setName("test_segment");
-        cube.getSegments().add(segment);
-        cubeManager.updateCube(cube, true);
+        cube = cubeManager.updateCube(cube, Lists.newArrayList(segment), null, null, null, true);
         //one for cube update, one for project update
         assertEquals(2, broadcaster.getCounterAndClear());
         waitForCounterAndClear(2);
