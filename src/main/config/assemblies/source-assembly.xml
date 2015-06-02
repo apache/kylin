@@ -72,20 +72,19 @@ limitations under the License.
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?\.gitignore(/.*)?]
                 </exclude>
 
-                <exclude>**/.buildpath</exclude>
-                <exclude>**/sandbox/**</exclude>
-
-                <!-- misc -->
-                <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?cobertura\.ser]
+                <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?docs/website(/.*)?]
                 </exclude>
 
                 <!-- release-plugin temp files -->
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?pom\.xml\.releaseBackup]
                 </exclude>
+                <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?pom\.xml\.next]
+                </exclude>
+                <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?pom\.xml\.tag]
+                </exclude>
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?release\.properties]
                 </exclude>
 
-                <exclude>**/website/**</exclude>
             </excludes>
         </fileSet>
         <!-- LICENSE, NOTICE, DEPENDENCIES, git.properties, etc. calculated at build time -->
