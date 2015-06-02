@@ -35,7 +35,6 @@
 package org.apache.kylin.streaming;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +48,6 @@ import java.util.concurrent.TimeUnit;
 public abstract class StreamBuilder implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
-
 
     private StreamParser streamParser = StringStreamParser.instance;
 
@@ -84,6 +82,7 @@ public abstract class StreamBuilder implements Runnable {
     public void run() {
         try {
             List<List<String>> parsedStreamMessages = null;
+            int filteredMsgCount = 0;
             while (true) {
                 if (parsedStreamMessages == null) {
                     parsedStreamMessages = Lists.newLinkedList();
@@ -113,6 +112,11 @@ public abstract class StreamBuilder implements Runnable {
                 final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
 
                 if (getStreamFilter().filter(parsedStreamMessage)) {
+
+                    if (filteredMsgCount++ % 10000 == 1) {
+                        logger.info("Total stream message count: " + filteredMsgCount);
+                    }
+
                     if (startOffset > parsedStreamMessage.getOffset()) {
                         startOffset = parsedStreamMessage.getOffset();
                     }
@@ -158,5 +162,6 @@ public abstract class StreamBuilder implements Runnable {
     }
 
     protected abstract int batchInterval();
+
     protected abstract int batchSize();
 }
