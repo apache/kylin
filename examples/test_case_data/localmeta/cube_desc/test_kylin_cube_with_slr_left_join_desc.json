@@ -150,7 +150,6 @@
     } ],
     "aggregation_groups" : [ [ "leaf_categ_id", "meta_categ_name", "categ_lvl2_name", "categ_lvl3_name", "cal_dt" ] ]
   },
-  "signature" : "ljba0vaTnt00lU4rdhG9Xw==",
   "last_modified" : 1422435345352,
   "model_name" : "test_kylin_left_join_model_desc",
   "null_string" : null,
