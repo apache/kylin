@@ -72,8 +72,10 @@ public final class JsonStreamParser implements StreamParser {
                 for (Map.Entry<String, String> entry : json.entrySet()) {
                     if (entry.getKey().equalsIgnoreCase(column.getName())) {
                         result.add(entry.getValue());
+                        continue;
                     }
                 }
+                result.add(null);
             }
             return new ParsedStreamMessage(result, streamMessage.getOffset(), streamMessage.getOffset());
         } catch (IOException e) {

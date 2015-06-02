@@ -1,6 +1,7 @@
 package org.apache.kylin.job.streaming;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -22,8 +23,8 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -49,8 +50,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.cube.CuboidToGridTableMapping;
 import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.streaming.MicroStreamBatch;
-import org.apache.kylin.streaming.StreamBuilder;
-import org.apache.kylin.streaming.StreamMessage;
+import org.apache.kylin.streaming.MicroStreamBatchConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,32 +58,32 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  */
-public class CubeStreamBuilder extends StreamBuilder {
+public class CubeStreamConsumer implements MicroStreamBatchConsumer {
 
-    private static final Logger logger = LoggerFactory.getLogger(CubeStreamBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeStreamConsumer.class);
 
     private final CubeManager cubeManager;
     private final String cubeName;
     private final KylinConfig kylinConfig;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+    private static final int BATCH_PUT_THRESHOLD = 10000;
 
-    public CubeStreamBuilder(BlockingQueue<StreamMessage> streamMessageQueue, String cubeName) {
-        super(streamMessageQueue);
+
+    public CubeStreamConsumer(String cubeName) {
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
         this.cubeManager = CubeManager.getInstance(kylinConfig);
         this.cubeName = cubeName;
     }
 
     @Override
-    protected void build(MicroStreamBatch microStreamBatch) throws Exception {
+    public void consume(MicroStreamBatch microStreamBatch) throws Exception {
         if (microStreamBatch.size() == 0) {
             logger.info("nothing to build, skip to next iteration");
             return;
@@ -104,7 +104,7 @@ public class CubeStreamBuilder extends StreamBuilder {
         FactDistinctColumnsReducer.writeCuboidStatistics(conf, outputPath, samplingResult, 100);
         ResourceStore.getStore(kylinConfig).putResource(cubeSegment.getStatisticsResourcePath(), FileSystem.getLocal(conf).open(new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION)), 0);
 
-        final Map<TblColRef, Dictionary<?>> dictionaryMap = buildDictionary(getTblColRefMap(cubeInstance), parsedStreamMessages);
+        final Map<TblColRef, Dictionary<?>> dictionaryMap = buildDictionary(cubeInstance, parsedStreamMessages);
         writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);
 
         final HTableInterface hTable = createHTable(cubeSegment);
@@ -197,7 +197,7 @@ public class CubeStreamBuilder extends StreamBuilder {
                 put.add(family, qualifier, value);
                 puts.add(put);
             }
-            if (puts.size() >= batchSize()) {
+            if (puts.size() >= BATCH_PUT_THRESHOLD) {
                 flush();
             }
         }
@@ -219,20 +219,16 @@ public class CubeStreamBuilder extends StreamBuilder {
         }
     }
 
-    private Map<Integer, TblColRef> getTblColRefMap(CubeInstance cubeInstance) {
-        final List<TblColRef> columns = cubeInstance.getAllColumns();
+    private Map<TblColRef, Dictionary<?>> buildDictionary(final CubeInstance cubeInstance, List<List<String>> recordList) throws IOException {
+        final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor().listDimensionColumnsExcludingDerived();
         final List<TblColRef> allDimensions = cubeInstance.getAllDimensions();
-        final HashMap<Integer, TblColRef> result = Maps.newHashMap();
-        for (int i = 0; i < columns.size(); i++) {
-            final TblColRef tblColRef = columns.get(i);
-            if (allDimensions.contains(tblColRef)) {
-                result.put(i, tblColRef);
-            }
+        final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
+        for (TblColRef column: columnsNeedToBuildDictionary) {
+            final int index = allDimensions.indexOf(column);
+            Preconditions.checkArgument(index >= 0);
+            tblColRefMap.put(index, column);
         }
-        return result;
-    }
 
-    private Map<TblColRef, Dictionary<?>> buildDictionary(final Map<Integer, TblColRef> tblColRefMap, List<List<String>> recordList) throws IOException {
         HashMap<TblColRef, Dictionary<?>> result = Maps.newHashMap();
 
         HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
@@ -367,17 +363,8 @@ public class CubeStreamBuilder extends StreamBuilder {
     }
 
     @Override
-    protected void onStop() {
+    public void stop() {
 
     }
 
-    @Override
-    protected int batchInterval() {
-        return 5 * 60 * 1000;//5 min
-    }
-
-    @Override
-    protected int batchSize() {
-        return 1000;
-    }
 }

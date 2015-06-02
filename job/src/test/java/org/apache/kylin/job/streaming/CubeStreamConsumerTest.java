@@ -10,6 +10,8 @@ import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.DeployUtil;
+import org.apache.kylin.streaming.MicroBatchCondition;
+import org.apache.kylin.streaming.StreamBuilder;
 import org.apache.kylin.streaming.StreamMessage;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -29,9 +31,9 @@ import java.util.concurrent.LinkedBlockingDeque;
 /**
  */
 @Ignore
-public class CubeStreamBuilderTest {
+public class CubeStreamConsumerTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(CubeStreamBuilderTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeStreamConsumerTest.class);
 
     private KylinConfig kylinConfig;
 
@@ -62,7 +64,7 @@ public class CubeStreamBuilderTest {
     @Test
     public void test() throws Exception {
         LinkedBlockingDeque<StreamMessage> queue = new LinkedBlockingDeque<>();
-        CubeStreamBuilder cubeStreamBuilder = new CubeStreamBuilder(queue, CUBE_NAME);
+        StreamBuilder cubeStreamBuilder = new StreamBuilder(queue, new MicroBatchCondition(Integer.MAX_VALUE, 30 * 1000), new CubeStreamConsumer(CUBE_NAME));
         final Future<?> future = Executors.newSingleThreadExecutor().submit(cubeStreamBuilder);
         loadDataFromLocalFile(queue, 100000);
         future.get();
