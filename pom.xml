@@ -772,6 +772,8 @@
 
                                 <!-- HBase MiniCluster Testing Data, for testing only -->
                                 <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
+                                <exclude>examples/test_case_data/**/*.xml</exclude>
+
 
                             </excludes>
                         </configuration>
