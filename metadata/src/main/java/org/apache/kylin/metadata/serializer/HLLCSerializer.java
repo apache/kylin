@@ -30,10 +30,13 @@ import org.apache.kylin.metadata.model.DataType;
  */
 public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
 
-    HyperLogLogPlusCounter current;
+    // be thread-safe and avoid repeated obj creation
+    private static ThreadLocal<HyperLogLogPlusCounter> current = new ThreadLocal<HyperLogLogPlusCounter>();
+    
+    private int precision;
 
     public HLLCSerializer(DataType type) {
-        current = new HyperLogLogPlusCounter(type.getPrecision());
+        this.precision = type.getPrecision();
     }
 
     @Override
@@ -45,34 +48,45 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
         }
     }
 
+    private HyperLogLogPlusCounter current() {
+        HyperLogLogPlusCounter hllc = current.get();
+        if (hllc == null) {
+            hllc = new HyperLogLogPlusCounter(precision);
+            current.set(hllc);
+        }
+        return hllc;
+    }
+    
     @Override
     public HyperLogLogPlusCounter deserialize(ByteBuffer in) {
+        HyperLogLogPlusCounter hllc = current();
         try {
-            current.readRegisters(in);
+            hllc.readRegisters(in);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return current;
+        return hllc;
     }
 
     @Override
     public int peekLength(ByteBuffer in) {
-        return current.peekLength(in);
+        return current().peekLength(in);
     }
     
     @Override
     public int maxLength() {
-        return current.maxLength();
+        return current().maxLength();
     }
 
     @Override
     public HyperLogLogPlusCounter valueOf(byte[] value) {
-        current.clear();
+        HyperLogLogPlusCounter hllc = current();
+        hllc.clear();
         if (value == null)
-            current.add("__nUlL__");
+            hllc.add("__nUlL__");
         else
-            current.add(value);
-        return current;
+            hllc.add(value);
+        return hllc;
     }
 
 }

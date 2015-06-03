@@ -22,14 +22,17 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
@@ -93,10 +96,12 @@ public class InMemCubeBuilder implements Runnable {
     private AtomicInteger taskCuboidCompleted;
     private CuboidResult baseResult;
 
-    private TreeMap<Long, CuboidResult> outputPending;
+    private SortedMap<Long, CuboidResult> outputPending;
     private Thread outputThread;
     private Throwable outputThreadException;
     private int outputCuboidExpected;
+
+    private Object[] totalSumForSanityCheck;
 
     public InMemCubeBuilder(BlockingQueue<List<String>> queue, CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap, ICuboidWriter gtRecordWriter) {
         if (dictionaryMap == null || dictionaryMap.isEmpty()) {
@@ -158,12 +163,12 @@ public class InMemCubeBuilder implements Runnable {
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
-        
+
         // Before several store implementation are very similar in performance. The ConcurrentDiskStore is the simplest.
         // MemDiskStore store = new MemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
         // MemDiskStore store = new MemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
         ConcurrentDiskStore store = new ConcurrentDiskStore(info);
-        
+
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
     }
@@ -289,12 +294,16 @@ public class InMemCubeBuilder implements Runnable {
                 while (taskCuboidCompleted.get() < outputCuboidExpected) {
                     CuboidTask task = null;
                     synchronized (taskPending) {
-                        while (task == null) {
+                        while (task == null && taskHasNoException()) {
                             task = taskPending.pollFirst();
                             if (task == null)
-                                taskPending.wait();
+                                taskPending.wait(60000);
                         }
                     }
+
+                    // if task error occurs
+                    if (task == null)
+                        break;
 
                     CuboidResult newCuboid = buildCuboid(task.parent, task.childCuboidId);
                     addChildTasks(newCuboid);
@@ -308,10 +317,19 @@ public class InMemCubeBuilder implements Runnable {
                     }
                 }
             } catch (Throwable ex) {
-                if (taskCuboidCompleted.get() < outputCuboidExpected)
+                if (taskCuboidCompleted.get() < outputCuboidExpected) {
+                    logger.error("task thread exception", ex);
                     taskThreadExceptions[id] = ex;
+                }
             }
         }
+    }
+
+    private boolean taskHasNoException() {
+        for (int i = 0; i < taskThreadExceptions.length; i++)
+            if (taskThreadExceptions[i] != null)
+                return false;
+        return true;
     }
 
     private void addChildTasks(CuboidResult parent) {
@@ -326,10 +344,10 @@ public class InMemCubeBuilder implements Runnable {
         }
     }
 
-    private TreeMap<Long, CuboidResult> prepareOutputPending() {
+    private SortedMap<Long, CuboidResult> prepareOutputPending() {
         TreeMap<Long, CuboidResult> result = new TreeMap<Long, CuboidResult>();
         prepareOutputPendingRecursive(Cuboid.getBaseCuboidId(cubeDesc), result);
-        return result;
+        return Collections.synchronizedSortedMap(result);
     }
 
     private void prepareOutputPendingRecursive(Long cuboidId, TreeMap<Long, CuboidResult> result) {
@@ -344,20 +362,26 @@ public class InMemCubeBuilder implements Runnable {
             public void run() {
                 try {
                     while (!outputPending.isEmpty()) {
-                        CuboidResult result = outputPending.firstEntry().getValue();
+                        CuboidResult result = outputPending.get(outputPending.firstKey());
                         synchronized (result) {
-                            while (result.table == null) {
+                            while (result.table == null && taskHasNoException()) {
                                 try {
-                                    result.wait();
+                                    result.wait(60000);
                                 } catch (InterruptedException e) {
                                     logger.error("interrupted", e);
                                 }
                             }
                         }
+
+                        // if task error occurs
+                        if (result.table == null)
+                            break;
+
                         outputCuboid(result.cuboidId, result.table);
                         outputPending.remove(result.cuboidId);
                     }
                 } catch (Throwable ex) {
+                    logger.error("output thread exception", ex);
                     outputThreadException = ex;
                 }
             }
@@ -498,7 +522,7 @@ public class InMemCubeBuilder implements Runnable {
         logger.info("Calculating cuboid " + cuboidId);
 
         GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
-        IGTScanner scanner = gridTable.scan(req);
+        GTAggregateScanner scanner = (GTAggregateScanner) gridTable.scan(req);
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = newGridTable.rebuild();
 
@@ -546,6 +570,8 @@ public class InMemCubeBuilder implements Runnable {
 
                 builder.write(newRecord);
             }
+
+            sanityCheck(scanner.getTotalSumForSanityCheck());
         } finally {
             scanner.close();
             builder.close();
@@ -555,6 +581,24 @@ public class InMemCubeBuilder implements Runnable {
         logger.info("Cuboid " + cuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
 
         return updateCuboidResult(cuboidId, newGridTable, count, timeSpent, 0);
+    }
+
+    private void sanityCheck(Object[] totalSum) {
+        // double sum introduces error and causes result not exactly equal
+        for (int i = 0; i < totalSum.length; i++) {
+            if (totalSum[i] instanceof DoubleWritable) {
+                totalSum[i] = Math.round(((DoubleWritable) totalSum[i]).get());
+            }
+        }
+        logger.info(Arrays.toString(totalSum));
+
+        if (totalSumForSanityCheck == null) {
+            totalSumForSanityCheck = totalSum;
+            return;
+        }
+        if (Arrays.equals(totalSumForSanityCheck, totalSum) == false) {
+            throw new IllegalStateException();
+        }
     }
 
     private void outputCuboid(long cuboidId, GridTable gridTable) throws IOException {

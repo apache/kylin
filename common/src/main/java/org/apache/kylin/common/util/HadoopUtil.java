@@ -62,11 +62,13 @@ public class HadoopUtil {
             throw new IllegalArgumentException("Cannot create FileSystem from URI: " + filePath, e);
         }
     }
-    
+
     public static String fixWindowsPath(String path) {
         // fix windows path
         if (path.startsWith("file://") && !path.startsWith("file:///") && path.contains(":\\")) {
             path = path.replace("file://", "file:///");
+        }
+        if (path.startsWith("file:///")) {
             path = path.replace('\\', '/');
         }
         return path;
@@ -134,8 +136,6 @@ public class HadoopUtil {
         String znodePath = m.group(3);
         conf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, znodePath);
 
-
-
         return conf;
     }
 
@@ -148,7 +148,7 @@ public class HadoopUtil {
         int cut = table.indexOf('.');
         String database = cut >= 0 ? table.substring(0, cut).trim() : "DEFAULT";
         String tableName = cut >= 0 ? table.substring(cut + 1).trim() : table.trim();
-        
-        return new String[] {database, tableName};
+
+        return new String[] { database, tableName };
     }
 }

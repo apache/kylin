@@ -20,8 +20,8 @@ package org.apache.kylin.metadata.serializer;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.DataType;
 
@@ -31,8 +31,8 @@ import org.apache.kylin.metadata.model.DataType;
  */
 public class LongSerializer extends DataTypeSerializer<LongWritable> {
 
-    // avoid mass object creation
-    LongWritable current = new LongWritable();
+    // be thread-safe and avoid repeated obj creation
+    private static ThreadLocal<LongWritable> current = new ThreadLocal<LongWritable>();
 
     public LongSerializer(DataType type) {
     }
@@ -42,10 +42,20 @@ public class LongSerializer extends DataTypeSerializer<LongWritable> {
         BytesUtil.writeVLong(value.get(), out);
     }
 
+    private LongWritable current() {
+        LongWritable l = current.get();
+        if (l == null) {
+            l = new LongWritable();
+            current.set(l);
+        }
+        return l;
+    }
+    
     @Override
     public LongWritable deserialize(ByteBuffer in) {
-        current.set(BytesUtil.readVLong(in));
-        return current;
+        LongWritable l = current();
+        l.set(BytesUtil.readVLong(in));
+        return l;
     }
 
     @Override
@@ -66,11 +76,12 @@ public class LongSerializer extends DataTypeSerializer<LongWritable> {
 
     @Override
     public LongWritable valueOf(byte[] value) {
+        LongWritable l = current();
         if (value == null)
-            current.set(0L);
+            l.set(0L);
         else
-            current.set(Long.parseLong(Bytes.toString(value)));
-        return current;
+            l.set(Long.parseLong(Bytes.toString(value)));
+        return l;
     }
 
 }
