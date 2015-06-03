@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -421,7 +422,11 @@ public class CubeController extends BasicController {
 
         cubeService.getCubeManager().validateNewSegments(cube, segment);
         try {
-            cubeService.getCubeManager().updateCube(cube, Lists.newArrayList(segment), null, null, null);
+
+            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            cubeBuilder.setToAddSegs(segment);
+
+            cubeService.getCubeManager().updateCube(cubeBuilder);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());

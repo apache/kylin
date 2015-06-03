@@ -23,6 +23,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -336,7 +337,9 @@ public class CubeStreamBuilder extends StreamBuilder {
     //TODO: should we use cubeManager.promoteNewlyBuiltSegments?
     private void commitSegment(CubeSegment cubeSegment) throws IOException {
         cubeSegment.setStatus(SegmentStatusEnum.READY);
-        CubeManager.getInstance(kylinConfig).updateCube(cubeSegment.getCubeInstance(), Lists.newArrayList(cubeSegment), null, null, null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cubeSegment.getCubeInstance());
+        cubeBuilder.setToAddSegs(cubeSegment);
+        CubeManager.getInstance(kylinConfig).updateCube(cubeBuilder);
     }
 
     private List<Long> getAllCuboidIds(CubeDesc cubeDesc) {
