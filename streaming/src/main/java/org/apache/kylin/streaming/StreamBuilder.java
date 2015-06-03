@@ -106,7 +106,7 @@ public abstract class StreamBuilder implements Runnable {
                 }
                 if (streamMessage.getOffset() < 0) {
                     onStop();
-                    logger.warn("streaming encountered EOF, stop building");
+                    logger.warn("streaming encountered EOF, stop building. The remaining {} filtered messages will be discarded", filteredMsgCount);
                     break;
                 }
 
@@ -114,7 +114,7 @@ public abstract class StreamBuilder implements Runnable {
 
                 if (getStreamFilter().filter(parsedStreamMessage)) {
 
-                    if (filteredMsgCount++ % 10000 == 1) {
+                    if (filteredMsgCount++ % 10000 == 0) {
                         logger.info("Total filtered stream message count: " + filteredMsgCount);
                     }
 
