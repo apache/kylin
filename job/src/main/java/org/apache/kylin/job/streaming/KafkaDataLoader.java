@@ -5,7 +5,7 @@ import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.streaming.KafkaConfig;
+import org.apache.kylin.streaming.StreamingConfig;
 import org.apache.kylin.streaming.StreamingManager;
 
 import java.io.File;
@@ -23,7 +23,7 @@ public class KafkaDataLoader {
      */
     public static void main(String[] args) throws IOException {
         StreamingManager streamingManager = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv());
-        KafkaConfig kafkaConfig = streamingManager.getKafkaConfig(args[1]);
+        StreamingConfig streamingConfig = streamingManager.getKafkaConfig(args[1]);
 
         List<String> alldata = FileUtils.readLines(new File(args[0]));
 
@@ -37,7 +37,7 @@ public class KafkaDataLoader {
         Producer<String, String> producer = new Producer<String, String>(config);
 
         for (int i = 0; i < alldata.size(); ++i) {
-            KeyedMessage<String, String> data = new KeyedMessage<String, String>(kafkaConfig.getTopic(), String.valueOf(i), alldata.get(i));
+            KeyedMessage<String, String> data = new KeyedMessage<String, String>(streamingConfig.getTopic(), String.valueOf(i), alldata.get(i));
             producer.send(data);
         }
         producer.close();

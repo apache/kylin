@@ -47,12 +47,13 @@ import static org.junit.Assert.*;
 public class ITKafkaRequesterTest extends KafkaBaseTest {
 
     private static final String NON_EXISTED_TOPIC = "non_existent_topic";
-    private KafkaConfig kafkaConfig;
-
+    private StreamingConfig streamingConfig;
+    private KafkaClusterConfig kafkaClusterConfig;
 
     @Before
     public void before() {
-        kafkaConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+        streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+        kafkaClusterConfig = streamingConfig.getKafkaClusterConfigs().get(0);
     }
 
     @AfterClass
@@ -62,15 +63,16 @@ public class ITKafkaRequesterTest extends KafkaBaseTest {
     @Test
     @Ignore("since ci does not enable kafka")
     public void testTopicMeta() throws Exception {
-        TopicMeta kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(kafkaConfig);
+        TopicMeta kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig);
         assertNotNull(kafkaTopicMeta);
         assertEquals(2, kafkaTopicMeta.getPartitionIds().size());
-        assertEquals(kafkaConfig.getTopic(), kafkaTopicMeta.getName());
+        assertEquals(streamingConfig.getTopic(), kafkaTopicMeta.getName());
 
-        KafkaConfig anotherTopicConfig = kafkaConfig.clone();
+        StreamingConfig anotherTopicConfig = streamingConfig.clone();
+        KafkaClusterConfig anotherClusterConfig = anotherTopicConfig.getKafkaClusterConfigs().get(0);
         anotherTopicConfig.setTopic(NON_EXISTED_TOPIC);
 
-        kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(anotherTopicConfig);
+        kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(anotherClusterConfig);
         assertTrue(kafkaTopicMeta == null);
     }
 }

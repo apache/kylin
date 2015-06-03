@@ -10,11 +10,15 @@
   "parserName": "org.apache.kylin.streaming.JsonStreamParser",
   "partition": 1,
   "last_modified": 0,
-  "brokers": [
+  "clusters": [
     {
-      "id": 0,
-      "host": "sandbox",
-      "port": 6667
+      "brokers": [
+        {
+          "id": 0,
+          "host": "sandbox",
+          "port": 6667
+        }
+      ]
     }
   ]
 }

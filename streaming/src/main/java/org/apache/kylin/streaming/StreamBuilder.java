@@ -115,7 +115,7 @@ public abstract class StreamBuilder implements Runnable {
                 if (getStreamFilter().filter(parsedStreamMessage)) {
 
                     if (filteredMsgCount++ % 10000 == 1) {
-                        logger.info("Total stream message count: " + filteredMsgCount);
+                        logger.info("Total filtered stream message count: " + filteredMsgCount);
                     }
 
                     if (startOffset > parsedStreamMessage.getOffset()) {

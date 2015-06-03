@@ -54,7 +54,7 @@ public class KafkaConsumer implements Runnable {
 
     private final String topic;
     private final int partitionId;
-    private final KafkaConfig kafkaConfig;
+    private final KafkaClusterConfig streamingConfig;
     private final transient int parallelism;
     private final LinkedBlockingQueue<StreamMessage>[] streamQueue;
 
@@ -65,22 +65,22 @@ public class KafkaConsumer implements Runnable {
 
     private volatile boolean isRunning = true;
 
-    public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaConfig kafkaConfig) {
-        this(topic, partitionId, startOffset, initialBrokers, kafkaConfig, 1);
+    public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaClusterConfig kafkaClusterConfig) {
+        this(topic, partitionId, startOffset, initialBrokers, kafkaClusterConfig, 1);
     }
 
-    public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaConfig kafkaConfig, int parallelism) {
+    public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaClusterConfig kafkaClusterConfig, int parallelism) {
         Preconditions.checkArgument(parallelism > 0);
         this.topic = topic;
         this.partitionId = partitionId;
-        this.kafkaConfig = kafkaConfig;
+        this.streamingConfig = kafkaClusterConfig;
         this.offset = startOffset;
         this.replicaBrokers = initialBrokers;
         this.logger = LoggerFactory.getLogger("KafkaConsumer_" + topic + "_" + partitionId);
         this.parallelism = parallelism;
         this.streamQueue = new LinkedBlockingQueue[parallelism];
         for (int i = 0; i < parallelism; ++i) {
-            streamQueue[i] = new LinkedBlockingQueue<StreamMessage>(kafkaConfig.getMaxReadCount());
+            streamQueue[i] = new LinkedBlockingQueue<StreamMessage>(kafkaClusterConfig.getMaxReadCount());
         }
     }
 
@@ -89,7 +89,7 @@ public class KafkaConsumer implements Runnable {
     }
 
     private Broker getLeadBroker() {
-        final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(topic, partitionId, replicaBrokers, kafkaConfig);
+        final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(topic, partitionId, replicaBrokers, streamingConfig);
         if (partitionMetadata != null && partitionMetadata.errorCode() == 0) {
             replicaBrokers = partitionMetadata.replicas();
             return partitionMetadata.leader();
@@ -124,7 +124,7 @@ public class KafkaConsumer implements Runnable {
 
                 logger.info("fetching topic {} partition id {} offset {} leader {}", new String[] { topic, String.valueOf(partitionId), String.valueOf(offset), leadBroker.toString() });
 
-                final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, kafkaConfig);
+                final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, streamingConfig);
                 if (fetchResponse.errorCode(topic, partitionId) != 0) {
                     logger.warn("fetch response offset:" + offset + " errorCode:" + fetchResponse.errorCode(topic, partitionId));
                     Thread.sleep(30000);
