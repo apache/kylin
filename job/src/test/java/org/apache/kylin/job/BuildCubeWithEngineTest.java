@@ -27,6 +27,7 @@ import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.cube.CubingJob;
@@ -259,7 +260,9 @@ public class BuildCubeWithEngineTest {
     private void clearSegment(String cubeName) throws Exception {
         CubeInstance cube = cubeManager.getCube(cubeName);
         // remove all existing segments
-        cubeManager.updateCube(cube, null, cube.getSegments(), null, null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        cubeBuilder.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
+        cubeManager.updateCube(cubeBuilder);
     }
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {

@@ -28,6 +28,7 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HiveClient;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.kylin.job.hadoop.hive.SqlHiveDataTypeMapping;
@@ -60,7 +61,8 @@ public class DeployUtil {
         // update cube desc signature.
         for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
             cube.getDescriptor().setSignature(cube.getDescriptor().calculateSignature());
-            CubeManager.getInstance(config()).updateCube(cube, null, null, null, null);
+            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            CubeManager.getInstance(config()).updateCube(cubeBuilder);
         }
     }
 

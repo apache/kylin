@@ -24,6 +24,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
@@ -150,7 +151,9 @@ public class CubeService extends BasicService {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         cube.setOwner(owner);
 
-        return getCubeManager().updateCube(cube, null, null, null, null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cube).setOwner(owner).setCost(cost);
+
+        return getCubeManager().updateCube(cubeBuilder);
     }
 
     public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc) throws IOException {
@@ -348,7 +351,9 @@ public class CubeService extends BasicService {
         cube.setStatus(RealizationStatusEnum.DISABLED);
 
         try {
-            return getCubeManager().updateCube(cube, null, null, null, RealizationStatusEnum.DISABLED);
+            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            cubeBuilder.setStatus(RealizationStatusEnum.DISABLED);
+            return getCubeManager().updateCube(cubeBuilder);
         } catch (IOException e) {
             cube.setStatus(ostatus);
             throw e;
@@ -384,7 +389,10 @@ public class CubeService extends BasicService {
         }
 
         try {
-            return getCubeManager().updateCube(cube, null, null, null, RealizationStatusEnum.READY);
+
+            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            cubeBuilder.setStatus(RealizationStatusEnum.READY);
+            return getCubeManager().updateCube(cubeBuilder);
         } catch (IOException e) {
             cube.setStatus(ostatus);
             throw e;
@@ -527,7 +535,9 @@ public class CubeService extends BasicService {
                 getExecutableManager().discardJob(cubingJob.getId());
             }
         }
-        return CubeManager.getInstance(getConfig()).updateCube(cube, null, null, cube.getSegments(), null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        cubeBuilder.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
+        return CubeManager.getInstance(getConfig()).updateCube(cubeBuilder);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)

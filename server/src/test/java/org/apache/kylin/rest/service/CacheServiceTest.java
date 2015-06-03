@@ -23,10 +23,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.cache.RemoteCacheUpdater;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.cube.CubeDescManager;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.*;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -229,7 +226,9 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertEquals(0, cubeManagerB.getCube(cubeName).getSegments().size());
         CubeSegment segment = new CubeSegment();
         segment.setName("test_segment");
-        cube = cubeManager.updateCube(cube, Lists.newArrayList(segment), null, null, null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        cubeBuilder.setToAddSegs(segment);
+        cube = cubeManager.updateCube(cubeBuilder);
         //one for cube update, one for project update
         assertEquals(1, broadcaster.getCounterAndClear());
         waitForCounterAndClear(1);

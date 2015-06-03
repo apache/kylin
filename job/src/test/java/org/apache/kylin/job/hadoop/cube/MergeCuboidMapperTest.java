@@ -23,6 +23,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.dict.*;
@@ -139,7 +140,9 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         }
 
 
-        cube = cubeManager.updateCube(cube, null, null, cube.getSegments(), null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        cubeBuilder.setToUpdateSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
+        cube = cubeManager.updateCube(cubeBuilder);
 
     }
 

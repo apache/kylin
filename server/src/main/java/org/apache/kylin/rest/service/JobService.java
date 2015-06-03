@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.job.JobInstance;
@@ -264,7 +265,10 @@ public class JobService extends BasicService {
         final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
         if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
             // Remove all existing segments
-            getCubeManager().updateCube(cubeInstance, null, cubeInstance.getSegments(), null, null);
+
+            CubeBuilder cubeBuilder = new CubeBuilder(cubeInstance);
+            cubeBuilder.setToRemoveSegs(cubeInstance.getSegments().toArray(new CubeSegment[cubeInstance.getSegments().size()]));
+            getCubeManager().updateCube(cubeBuilder);
         }
         getExecutableManager().discardJob(jobId);
         return jobInstance;

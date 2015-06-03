@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -128,7 +129,9 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             if (segmentReady) {
                 cubeManager.promoteNewlyBuiltSegments(cube, segment);
             } else {
-                cubeManager.updateCube(cube, null, null, Lists.newArrayList(segment), null);
+                CubeBuilder cubeBuilder = new CubeBuilder(cube);
+                cubeBuilder.setToUpdateSegs(segment);
+                cubeManager.updateCube(cubeBuilder);
             }
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {

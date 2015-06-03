@@ -153,7 +153,9 @@ public class CubeManager implements IRealizationProvider {
         DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
         cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
-        updateCube(cubeSeg.getCubeInstance(), null, null, Lists.newArrayList(cubeSeg), null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cubeSeg.getCubeInstance());
+        cubeBuilder.setToUpdateSegs(cubeSeg);
+        updateCube(cubeBuilder);
 
         return dictInfo;
     }
@@ -190,8 +192,9 @@ public class CubeManager implements IRealizationProvider {
         SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 
         cubeSeg.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
-
-        updateCube(cubeSeg.getCubeInstance(), null, null, Lists.newArrayList(cubeSeg), null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cubeSeg.getCubeInstance());
+        cubeBuilder.setToUpdateSegs(cubeSeg);
+        updateCube(cubeBuilder);
 
         return snapshot;
     }
@@ -226,30 +229,31 @@ public class CubeManager implements IRealizationProvider {
         CubeInstance cube = CubeInstance.create(cubeName, projectName, desc);
         cube.setOwner(owner);
 
-        updateCube(cube, null, null, null, null);
+        updateCube(new CubeBuilder(cube));
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
         return cube;
     }
 
-    public CubeInstance updateCube(CubeInstance cube, final List<CubeSegment> toAddSegs, final List<CubeSegment> toRemoveSegs, final List<CubeSegment> toUpdateSegs, RealizationStatusEnum newStatus) throws IOException {
-        return updateCube(cube, toAddSegs, toRemoveSegs, toUpdateSegs, newStatus, 0);
+    public CubeInstance updateCube(CubeBuilder cubeBuilder) throws IOException {
+        return updateCube(cubeBuilder, 0);
     }
 
-    private CubeInstance updateCube(CubeInstance cube, final List<CubeSegment> toAddSegs, final List<CubeSegment> toRemoveSegs, final List<CubeSegment> toUpdateSegs, RealizationStatusEnum newStatus, int retry) throws IOException {
-        if (cube == null)
+    private CubeInstance updateCube(CubeBuilder cubeBuilder, int retry) throws IOException {
+        if (cubeBuilder == null || cubeBuilder.getCubeInstance() == null)
             throw new IllegalStateException();
 
+        CubeInstance cube = cubeBuilder.getCubeInstance();
         logger.info("Updating cube instance '" + cube.getName() + "'");
 
-        if (toAddSegs != null && toAddSegs.size() > 0)
-            cube.getSegments().addAll(toAddSegs);
+        if (cubeBuilder.getToAddSegs() != null)
+            cube.getSegments().addAll(Arrays.asList(cubeBuilder.getToAddSegs()));
 
-        if (toRemoveSegs != null && toRemoveSegs.size() > 0)
-            cube.getSegments().removeAll(toRemoveSegs);
+        if (cubeBuilder.getToRemoveSegs() != null)
+            cube.getSegments().removeAll(Arrays.asList(cubeBuilder.getToRemoveSegs()));
 
-        if (toUpdateSegs != null && toUpdateSegs.size() > 0) {
-            for (CubeSegment segment : toUpdateSegs) {
+        if (cubeBuilder.getToUpdateSegs() != null) {
+            for (CubeSegment segment : cubeBuilder.getToUpdateSegs()) {
                 for (int i = 0; i < cube.getSegments().size(); i++) {
                     if (cube.getSegments().get(i).getName().equals(segment.getName())) {
                         cube.getSegments().set(i, segment);
@@ -261,8 +265,16 @@ public class CubeManager implements IRealizationProvider {
 
         Collections.sort(cube.getSegments());
 
-        if (newStatus != null) {
-            cube.setStatus(newStatus);
+        if (cubeBuilder.getStatus() != null) {
+            cube.setStatus(cubeBuilder.getStatus());
+        }
+
+        if (cubeBuilder.getOwner() != null) {
+            cube.setOwner(cubeBuilder.getOwner());
+        }
+
+        if (cubeBuilder.getCost() > 0) {
+            cube.setCost(cubeBuilder.getCost());
         }
 
         try {
@@ -275,8 +287,10 @@ public class CubeManager implements IRealizationProvider {
                 throw ise;
             }
 
+            cube = reloadCubeLocal(cube.getName());
+            cubeBuilder.setCubeInstance(cube);
             retry++;
-            cube = updateCube(reloadCubeLocal(cube.getName()), toAddSegs, toRemoveSegs, toUpdateSegs, newStatus, retry);
+            cube = updateCube(cubeBuilder, retry);
         }
 
         cubeMap.put(cube.getName(), cube);
@@ -301,7 +315,9 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment mergeSegment = newSegment(cube, startDate, endDate);
 
         validateNewSegments(cube, mergeSegment);
-        updateCube(cube, Lists.newArrayList(appendSegment, mergeSegment), null, null, null);
+
+        CubeBuilder cubeBuilder = new CubeBuilder(cube).setToAddSegs(appendSegment, mergeSegment);
+        updateCube(cubeBuilder);
 
         return new Pair<CubeSegment, CubeSegment>(appendSegment, mergeSegment);
     }
@@ -324,9 +340,12 @@ public class CubeManager implements IRealizationProvider {
 
         validateNewSegments(cube, newSegment);
 
-        if (saveChange)
-            updateCube(cube, Lists.newArrayList(newSegment), null, null, null);
+        if (saveChange) {
 
+            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            cubeBuilder.setToAddSegs(newSegment);
+            updateCube(cubeBuilder);
+        }
         return newSegment;
     }
 
@@ -334,7 +353,9 @@ public class CubeManager implements IRealizationProvider {
         checkNoBuildingSegment(cube);
 
         CubeSegment newSegment = newSegment(cube, startDate, endDate);
-        updateCube(cube, Lists.newArrayList(newSegment), null, null, null);
+        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        cubeBuilder.setToAddSegs(newSegment);
+        updateCube(cubeBuilder);
 
         return newSegment;
     }
@@ -347,7 +368,10 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment newSegment = newSegment(cube, range.getFirst(), range.getSecond());
 
         validateNewSegments(cube, newSegment);
-        updateCube(cube, Lists.newArrayList(newSegment), null, null, null);
+
+        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        cubeBuilder.setToAddSegs(newSegment);
+        updateCube(cubeBuilder);
 
         return newSegment;
     }
@@ -563,7 +587,10 @@ public class CubeManager implements IRealizationProvider {
         }
 
         logger.info("Promoting cube " + cube + ", new segments " + newSegments);
-        updateCube(cube, Lists.newArrayList(newSegments), toRemoveSegs, null, RealizationStatusEnum.READY);
+
+        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()])).setToUpdateSegs(newSegments).setStatus(RealizationStatusEnum.READY);
+        updateCube(cubeBuilder);
     }
 
     public void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {
