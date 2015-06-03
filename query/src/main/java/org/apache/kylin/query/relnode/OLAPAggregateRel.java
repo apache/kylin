@@ -49,6 +49,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlSumEmptyIsZeroAggFunction;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.InferTypes;
@@ -59,6 +60,7 @@ import org.eigenbase.sql.validate.SqlUserDefinedAggFunction;
 import org.eigenbase.util.Util;
 
 import com.google.common.base.Preconditions;
+
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -304,7 +306,8 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
         if (func.isCountDistinct()) {
             newAgg = createHyperLogLogAggFunction(fieldType);
         } else if (func.isCount()) {
-            newAgg = new SqlSumEmptyIsZeroAggFunction(fieldType);
+            //newAgg = new SqlSumEmptyIsZeroAggFunction(fieldType);
+            newAgg = SqlStdOperatorTable.SUM0;
         }
 
         // rebuild aggregate call
