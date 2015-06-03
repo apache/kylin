@@ -41,7 +41,13 @@ KylinApp.service('ProjectModel',function(){
     }
 
     this.removeProject = function(project){
-        var index =this.projects.indexOf(project);
+        var index = -1;
+        for(var i=0;i<this.projects.length;i++){
+          if(this.projects[i].name==project){
+            index = i;
+            break;
+          }
+        }
         if(index>-1){
             this.projects.splice(index,1);
         }

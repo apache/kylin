@@ -341,7 +341,7 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
                 controller: jobSubmitCtrl,
                 resolve: {
                     cube: function () {
-                        return cube.detail;
+                        return cube;
                     },
                     metaModel:function(){
                         return $scope.metaModel;
