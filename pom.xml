@@ -86,7 +86,7 @@
         <spring.framework.version>3.1.2.RELEASE</spring.framework.version>
 
         <!-- Optiq Version -->
-        <optiq.version>0.9.1-incubating</optiq.version>
+        <optiq.version>0.9.2-incubating</optiq.version>
         <linq4j.version>0.4</linq4j.version>
 
         <!-- Metrics Codahale Version -->
