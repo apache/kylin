@@ -69,10 +69,11 @@ public class OneOffStreamProducer {
     public void start() throws IOException {
         final Properties properties = new Properties();
         properties.load(ClassLoader.getSystemResourceAsStream("kafka_streaming_test/kafka.properties"));
-        final KafkaConfig kafkaConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+        final StreamingConfig streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+        final KafkaClusterConfig kafkaClusterConfig = streamingConfig.getKafkaClusterConfigs().get(0);
 
         Properties props = new Properties();
-        props.put("metadata.broker.list", StringUtils.join(Iterators.transform(kafkaConfig.getBrokers().iterator(), new Function<Broker, String>() {
+        props.put("metadata.broker.list", StringUtils.join(Iterators.transform(kafkaClusterConfig.getBrokers().iterator(), new Function<Broker, String>() {
             @Nullable
             @Override
             public String apply(@Nullable Broker broker) {
@@ -89,7 +90,7 @@ public class OneOffStreamProducer {
             public void run() {
                 int count = 0;
                 while (!stopped && count < sendCount) {
-                    final KeyedMessage<String, String> message = new KeyedMessage<String, String>(kafkaConfig.getTopic(), "current time is:" + System.currentTimeMillis());
+                    final KeyedMessage<String, String> message = new KeyedMessage<String, String>(streamingConfig.getTopic(), "current time is:" + System.currentTimeMillis());
                     producer.send(message);
                     count++;
                     try {

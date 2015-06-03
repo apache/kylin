@@ -96,9 +96,9 @@ public class StreamingManager {
     }
 
 
-    public boolean createOrUpdateKafkaConfig(String name, KafkaConfig config) {
+    public boolean createOrUpdateKafkaConfig(String name, StreamingConfig config) {
         try {
-            getStore().putResource(formatStreamingConfigPath(name), config, KafkaConfig.SERIALIZER);
+            getStore().putResource(formatStreamingConfigPath(name), config, StreamingConfig.SERIALIZER);
             return true;
         } catch (IOException e) {
             logger.error("error save resource name:" + name, e);
@@ -106,9 +106,9 @@ public class StreamingManager {
         }
     }
 
-    public KafkaConfig getKafkaConfig(String name) {
+    public StreamingConfig getKafkaConfig(String name) {
         try {
-            return getStore().getResource(formatStreamingConfigPath(name), KafkaConfig.class, KafkaConfig.SERIALIZER);
+            return getStore().getResource(formatStreamingConfigPath(name), StreamingConfig.class, StreamingConfig.SERIALIZER);
         } catch (IOException e) {
             logger.error("error get resource name:" + name, e);
             throw new RuntimeException("error get resource name:" + name, e);

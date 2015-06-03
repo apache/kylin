@@ -35,30 +35,28 @@
 package org.apache.kylin.streaming;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import kafka.cluster.Broker;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.util.List;
 
 /**
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class KafkaConfig extends RootPersistentEntity {
+public class StreamingConfig extends RootPersistentEntity {
 
-    public static Serializer<KafkaConfig> SERIALIZER = new JsonSerializer<KafkaConfig>(KafkaConfig.class);
+    public static Serializer<StreamingConfig> SERIALIZER = new JsonSerializer<StreamingConfig>(StreamingConfig.class);
 
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("brokers")
-    private List<BrokerConfig> brokerConfigs;
+    @JsonManagedReference
+    @JsonProperty("clusters")
+    private List<KafkaClusterConfig> kafkaClusterConfigs;
 
     @JsonProperty("topic")
     private String topic;
@@ -84,6 +82,10 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("filterName")
     private String filterName;
 
+    public List<KafkaClusterConfig> getKafkaClusterConfigs() {
+        return kafkaClusterConfigs;
+    }
+
     public String getFilterName() {
         return filterName;
     }
@@ -91,7 +93,6 @@ public class KafkaConfig extends RootPersistentEntity {
     public void setFilterName(String filterName) {
         this.filterName = filterName;
     }
-
 
     public String getParserName() {
         return parserName;
@@ -133,20 +134,6 @@ public class KafkaConfig extends RootPersistentEntity {
         this.topic = topic;
     }
 
-    public void setBrokerConfigs(List<BrokerConfig> brokerConfigs) {
-        this.brokerConfigs = brokerConfigs;
-    }
-
-    public List<Broker> getBrokers() {
-        return Lists.transform(brokerConfigs, new Function<BrokerConfig, Broker>() {
-            @Nullable
-            @Override
-            public Broker apply(BrokerConfig input) {
-                return new Broker(input.getId(), input.getHost(), input.getPort());
-            }
-        });
-    }
-
     public String getCubeName() {
         return cubeName;
     }
@@ -172,7 +159,7 @@ public class KafkaConfig extends RootPersistentEntity {
     }
 
     @Override
-    public KafkaConfig clone() {
+    public StreamingConfig clone() {
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             SERIALIZER.serialize(this, new DataOutputStream(baos));

@@ -84,11 +84,11 @@ public final class KafkaRequester {
         return broker.getConnectionString() + "_" + timeout + "_" + bufferSize + "_" + clientId;
     }
 
-    public static TopicMeta getKafkaTopicMeta(KafkaConfig kafkaConfig) {
+    public static TopicMeta getKafkaTopicMeta(KafkaClusterConfig kafkaClusterConfig) {
         SimpleConsumer consumer;
-        for (Broker broker : kafkaConfig.getBrokers()) {
-            consumer = getSimpleConsumer(broker, kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), "topic_meta_lookup");
-            List<String> topics = Collections.singletonList(kafkaConfig.getTopic());
+        for (Broker broker : kafkaClusterConfig.getBrokers()) {
+            consumer = getSimpleConsumer(broker, kafkaClusterConfig.getTimeout(), kafkaClusterConfig.getBufferSize(), "topic_meta_lookup");
+            List<String> topics = Collections.singletonList(kafkaClusterConfig.getTopic());
             TopicMetadataRequest req = new TopicMetadataRequest(topics);
             TopicMetadataResponse resp = consumer.send(req);
             final List<TopicMetadata> topicMetadatas = resp.topicsMetadata();
@@ -106,16 +106,16 @@ public final class KafkaRequester {
                     return partitionMetadata.partitionId();
                 }
             });
-            return new TopicMeta(kafkaConfig.getTopic(), partitionIds);
+            return new TopicMeta(kafkaClusterConfig.getTopic(), partitionIds);
         }
-        logger.debug("cannot find topic:" + kafkaConfig.getTopic());
+        logger.debug("cannot find topic:" + kafkaClusterConfig.getTopic());
         return null;
     }
 
-    public static PartitionMetadata getPartitionMetadata(String topic, int partitionId, List<Broker> brokers, KafkaConfig kafkaConfig) {
+    public static PartitionMetadata getPartitionMetadata(String topic, int partitionId, List<Broker> brokers, KafkaClusterConfig kafkaClusterConfig) {
         SimpleConsumer consumer;
         for (Broker broker : brokers) {
-            consumer = getSimpleConsumer(broker, kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), "topic_meta_lookup");
+            consumer = getSimpleConsumer(broker, kafkaClusterConfig.getTimeout(), kafkaClusterConfig.getBufferSize(), "topic_meta_lookup");
             List<String> topics = Collections.singletonList(topic);
             TopicMetadataRequest req = new TopicMetadataRequest(topics);
             TopicMetadataResponse resp = consumer.send(req);
@@ -139,25 +139,21 @@ public final class KafkaRequester {
         return null;
     }
 
-    public static FetchResponse fetchResponse(String topic, int partitionId, long offset, Broker broker, KafkaConfig kafkaConfig) {
+    public static FetchResponse fetchResponse(String topic, int partitionId, long offset, Broker broker, KafkaClusterConfig kafkaClusterConfig) {
         final String clientName = "client_" + topic + "_" + partitionId;
-        SimpleConsumer consumer = getSimpleConsumer(broker, kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), clientName);
-        kafka.api.FetchRequest req = new FetchRequestBuilder()
-                .clientId(clientName)
-                .addFetch(topic, partitionId, offset, 1048576) // Note: this fetchSize of 100000 might need to be increased if large batches are written to Kafka, 1048576 is the default value on shell
+        SimpleConsumer consumer = getSimpleConsumer(broker, kafkaClusterConfig.getTimeout(), kafkaClusterConfig.getBufferSize(), clientName);
+        kafka.api.FetchRequest req = new FetchRequestBuilder().clientId(clientName).addFetch(topic, partitionId, offset, 1048576) // Note: this fetchSize of 100000 might need to be increased if large batches are written to Kafka, 1048576 is the default value on shell
                 .build();
         return consumer.fetch(req);
     }
 
-    public static long getLastOffset(String topic, int partitionId,
-                                     long whichTime, Broker broker, KafkaConfig kafkaConfig) {
+    public static long getLastOffset(String topic, int partitionId, long whichTime, Broker broker, KafkaClusterConfig kafkaClusterConfig) {
         String clientName = "client_" + topic + "_" + partitionId;
-        SimpleConsumer consumer = getSimpleConsumer(broker, kafkaConfig.getTimeout(), kafkaConfig.getBufferSize(), clientName);
+        SimpleConsumer consumer = getSimpleConsumer(broker, kafkaClusterConfig.getTimeout(), kafkaClusterConfig.getBufferSize(), clientName);
         TopicAndPartition topicAndPartition = new TopicAndPartition(topic, partitionId);
         Map<TopicAndPartition, PartitionOffsetRequestInfo> requestInfo = new HashMap<TopicAndPartition, PartitionOffsetRequestInfo>();
         requestInfo.put(topicAndPartition, new PartitionOffsetRequestInfo(whichTime, 1));
-        kafka.javaapi.OffsetRequest request = new kafka.javaapi.OffsetRequest(
-                requestInfo, kafka.api.OffsetRequest.CurrentVersion(), clientName);
+        kafka.javaapi.OffsetRequest request = new kafka.javaapi.OffsetRequest(requestInfo, kafka.api.OffsetRequest.CurrentVersion(), clientName);
         OffsetResponse response = consumer.getOffsetsBefore(request);
 
         if (response.hasError()) {
@@ -173,6 +169,5 @@ public final class KafkaRequester {
             simpleConsumer.close();
         }
     }
-
 
 }
