@@ -47,7 +47,7 @@ public class ConcurrentDiskStoreTest {
     @Test
     public void testMultiThreadRead() throws IOException, InterruptedException {
         long start = System.currentTimeMillis();
-        verifyOneTableWriteAndRead(5);
+        verifyOneTableWriteAndRead(20);
         long end = System.currentTimeMillis();
         System.out.println("Cost " + (end - start) + " millis");
     }

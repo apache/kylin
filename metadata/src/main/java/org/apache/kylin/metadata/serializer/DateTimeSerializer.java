@@ -9,8 +9,8 @@ import org.apache.kylin.common.util.DateFormat;
 
 public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
     
-    // avoid mass object creation
-    LongWritable current = new LongWritable();
+    // be thread-safe and avoid repeated obj creation
+    private static ThreadLocal<LongWritable> current = new ThreadLocal<LongWritable>();
 
     public DateTimeSerializer(DataType type) {
     }
@@ -20,10 +20,20 @@ public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
         out.putLong(value.get());
     }
 
+    private LongWritable current() {
+        LongWritable l = current.get();
+        if (l == null) {
+            l = new LongWritable();
+            current.set(l);
+        }
+        return l;
+    }
+    
     @Override
     public LongWritable deserialize(ByteBuffer in) {
-        current.set(in.getLong());
-        return current;
+        LongWritable l = current();
+        l.set(in.getLong());
+        return l;
     }
 
     @Override
@@ -38,11 +48,12 @@ public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
 
     @Override
     public LongWritable valueOf(byte[] value) {
+        LongWritable l = current();
         if (value == null)
-            current.set(0L);
+            l.set(0L);
         else
-            current.set(DateFormat.stringToMillis(Bytes.toString(value)));
-        return current;
+            l.set(DateFormat.stringToMillis(Bytes.toString(value)));
+        return l;
     }
 
 }

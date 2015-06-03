@@ -9,6 +9,8 @@ import java.util.SortedMap;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.metadata.measure.HLLCAggregator;
+import org.apache.kylin.metadata.measure.LDCAggregator;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +29,7 @@ public class GTAggregateScanner implements IGTScanner {
     final ImmutableBitSet metrics;
     final String[] metricsAggrFuncs;
     final IGTScanner inputScanner;
-    
-    long estimateSizeOfAggrCache;
+    final AggregationCache aggrCache;
 
     public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
         if (req.hasAggregation() == false)
@@ -40,6 +41,7 @@ public class GTAggregateScanner implements IGTScanner {
         this.metrics = req.getAggrMetrics();
         this.metricsAggrFuncs = req.getAggrMetricsFuncs();
         this.inputScanner = inputScanner;
+        this.aggrCache = new AggregationCache();
     }
 
     @Override
@@ -64,19 +66,19 @@ public class GTAggregateScanner implements IGTScanner {
 
     @Override
     public Iterator<GTRecord> iterator() {
-        AggregationCache aggrCache = new AggregationCache();
         for (GTRecord r : inputScanner) {
             aggrCache.aggregate(r);
         }
-        
-        estimateSizeOfAggrCache = aggrCache.esitmateMemSize();
-        
         return aggrCache.iterator();
     }
-    
-    /** for last call to iterator(), return the estimate memory size of its aggregation cache */
+
+    /** return the estimate memory size of aggregation cache */
     public long getEstimateSizeOfAggrCache() {
-        return estimateSizeOfAggrCache;
+        return aggrCache.esitmateMemSize();
+    }
+
+    public Object[] getTotalSumForSanityCheck() {
+        return aggrCache.calculateTotalSumSanityCheck();
     }
 
     class AggregationCache {
@@ -149,11 +151,7 @@ public class GTAggregateScanner implements IGTScanner {
             final byte[] key = createKey(r);
             MeasureAggregator[] aggrs = aggBufMap.get(key);
             if (aggrs == null) {
-                aggrs = new MeasureAggregator[metricsAggrFuncs.length];
-                for (int i = 0; i < aggrs.length; i++) {
-                    int col = metrics.trueBitAt(i);
-                    aggrs[i] = info.codeSystem.newMetricsAggregator(metricsAggrFuncs[i], col);
-                }
+                aggrs = newAggregators();
                 aggBufMap.put(key, aggrs);
             }
             for (int i = 0; i < aggrs.length; i++) {
@@ -162,11 +160,44 @@ public class GTAggregateScanner implements IGTScanner {
                 aggrs[i].aggregate(metrics);
             }
         }
-        
+
+        private MeasureAggregator[] newAggregators() {
+            MeasureAggregator[] aggrs;
+            aggrs = new MeasureAggregator[metricsAggrFuncs.length];
+            for (int i = 0; i < aggrs.length; i++) {
+                int col = metrics.trueBitAt(i);
+                aggrs[i] = info.codeSystem.newMetricsAggregator(metricsAggrFuncs[i], col);
+            }
+            return aggrs;
+        }
+
+        public Object[] calculateTotalSumSanityCheck() {
+            MeasureAggregator[] totalSum = newAggregators();
+
+            // skip expensive aggregation
+            for (int i = 0; i < totalSum.length; i++) {
+                if (totalSum[i] instanceof HLLCAggregator || totalSum[i] instanceof LDCAggregator)
+                    totalSum[i] = null;
+            }
+
+            for (MeasureAggregator[] entry : aggBufMap.values()) {
+                for (int i = 0; i < totalSum.length; i++) {
+                    if (totalSum[i] != null)
+                        totalSum[i].aggregate(entry[i].getState());
+                }
+            }
+            Object[] result = new Object[totalSum.length];
+            for (int i = 0; i < totalSum.length; i++) {
+                if (totalSum[i] != null)
+                    result[i] = totalSum[i].getState();
+            }
+            return result;
+        }
+
         public long esitmateMemSize() {
             if (aggBufMap.isEmpty())
                 return 0;
-            
+
             byte[] sampleKey = aggBufMap.firstKey();
             MeasureAggregator<?>[] sampleValue = aggBufMap.get(sampleKey);
             return estimateSizeOfAggrCache(sampleKey, sampleValue, aggBufMap.size());

@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.Dictionary;
@@ -196,16 +196,27 @@ public class CubeCodeSystem implements IGTCodeSystem {
 
     static class FixLenSerializer extends DataTypeSerializer {
 
+        // be thread-safe and avoid repeated obj creation
+        private static ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
+
         private int fixLen;
-        private byte[] buf;
 
         FixLenSerializer(int fixLen) {
             this.fixLen = fixLen;
-            this.buf = new byte[fixLen];
+        }
+        
+        private byte[] currentBuf() {
+            byte[] buf = current.get();
+            if (buf == null) {
+                buf = new byte[fixLen];
+                current.set(buf);
+            }
+            return buf;
         }
 
         @Override
         public void serialize(Object value, ByteBuffer out) {
+            byte[] buf = currentBuf();
             if (value == null) {
                 Arrays.fill(buf, Dictionary.NULL);
                 out.put(buf);
@@ -223,6 +234,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
 
         @Override
         public Object deserialize(ByteBuffer in) {
+            byte[] buf = currentBuf();
             in.get(buf);
 
             int tail = fixLen;

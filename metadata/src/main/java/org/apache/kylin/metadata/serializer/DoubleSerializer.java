@@ -20,8 +20,8 @@ package org.apache.kylin.metadata.serializer;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.metadata.model.DataType;
 
 /**
@@ -30,8 +30,8 @@ import org.apache.kylin.metadata.model.DataType;
  */
 public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
 
-    // avoid mass object creation
-    DoubleWritable current = new DoubleWritable();
+    // be thread-safe and avoid repeated obj creation
+    private static ThreadLocal<DoubleWritable> current = new ThreadLocal<DoubleWritable>();
 
     public DoubleSerializer(DataType type) {
     }
@@ -41,10 +41,20 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
         out.putDouble(value.get());
     }
 
+    private DoubleWritable current() {
+        DoubleWritable d = current.get();
+        if (d == null) {
+            d = new DoubleWritable();
+            current.set(d);
+        }
+        return d;
+    }
+    
     @Override
     public DoubleWritable deserialize(ByteBuffer in) {
-        current.set(in.getDouble());
-        return current;
+        DoubleWritable d = current();
+        d.set(in.getDouble());
+        return d;
     }
 
     @Override
@@ -59,11 +69,12 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
     
     @Override
     public DoubleWritable valueOf(byte[] value) {
+        DoubleWritable d = current();
         if (value == null)
-            current.set(0d);
+            d.set(0d);
         else
-            current.set(Double.parseDouble(Bytes.toString(value)));
-        return current;
+            d.set(Double.parseDouble(Bytes.toString(value)));
+        return d;
     }
 
 }

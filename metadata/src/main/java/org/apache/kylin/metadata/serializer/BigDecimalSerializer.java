@@ -38,7 +38,8 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     
     final DataType type;
     final int maxLength;
-    int counter = 0;
+    
+    int avoidVerbose = 0;
     
     public BigDecimalSerializer(DataType type) {
         this.type = type;
@@ -49,8 +50,8 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     @Override
     public void serialize(BigDecimal value, ByteBuffer out) {
         if (value.scale() > type.getScale()) {
-            if (counter % 10000 == 0) {
-                logger.warn("value's scale has exceeded the " + type.getScale() + ", cut it off, to ensure encoded value do not exceed maxLength " + maxLength + " times:" + (counter++));
+            if (avoidVerbose % 10000 == 0) {
+                logger.warn("value's scale has exceeded the " + type.getScale() + ", cut it off, to ensure encoded value do not exceed maxLength " + maxLength + " times:" + (avoidVerbose++));
             }
             value = value.setScale(type.getScale(), BigDecimal.ROUND_HALF_EVEN);
         }
