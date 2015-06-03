@@ -52,7 +52,7 @@ public class ITKafkaRequesterTest extends KafkaBaseTest {
 
     @Before
     public void before() {
-        streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+        streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig("kafka_test");
         kafkaClusterConfig = streamingConfig.getKafkaClusterConfigs().get(0);
     }
 

@@ -64,7 +64,7 @@ public class ITKafkaConsumerTest extends KafkaBaseTest {
     public void before() throws IOException {
         producer = new OneOffStreamProducer(TOTAL_SEND_COUNT);
         producer.start();
-        streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig("kafka_test");
+        streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig("kafka_test");
         kafkaClusterConfig = streamingConfig.getKafkaClusterConfigs().get(0);
     }
 

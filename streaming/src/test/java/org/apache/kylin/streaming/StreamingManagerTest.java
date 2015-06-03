@@ -65,7 +65,7 @@ public class StreamingManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void test() {
-        assertNotNull(streamingManager.getKafkaConfig("kafka_test"));
+        assertNotNull(streamingManager.getStreamingConfig("kafka_test"));
     }
 
     @Test
