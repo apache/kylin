@@ -165,7 +165,7 @@ public class StreamingBootstrap {
                         for (BlockingQueue<StreamMessage> onePartition : oneCluster) {
                             try {
                                 alldata.put(onePartition.take());
-                                if (totalMessage++ % 10000 == 1) {
+                                if (totalMessage++ % 10000 == 0) {
                                     logger.info("Total stream message count: " + totalMessage);
                                 }
                             } catch (InterruptedException e) {

@@ -378,6 +378,6 @@ public class CubeStreamBuilder extends StreamBuilder {
 
     @Override
     protected int batchSize() {
-        return 10000;
+        return 1000;
     }
 }
