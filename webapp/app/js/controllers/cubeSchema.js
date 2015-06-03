@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager) {
 
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
@@ -38,7 +38,14 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.curStep = $scope.wizardSteps[0];
 
 
-    // ~ init
+  if(!$scope.metaModel){
+    $scope.metaModel = {
+      model:modelsManager.getModel(cubesManager.cubeMetaFrame.model_name)
+    }
+  }
+
+
+  // ~ init
     if (!$scope.state) {
         $scope.state = {mode: "view"};
     }
