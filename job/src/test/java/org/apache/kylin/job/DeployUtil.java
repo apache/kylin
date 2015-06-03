@@ -18,6 +18,7 @@
 
 package org.apache.kylin.job;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -27,8 +28,8 @@ import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HiveClient;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.kylin.job.hadoop.hive.SqlHiveDataTypeMapping;
@@ -37,8 +38,6 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.tools.ant.filters.StringInputStream;
-import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,7 +169,7 @@ public class DeployUtil {
         // Write to resource store
         ResourceStore store = ResourceStore.getStore(config());
 
-        InputStream in = new StringInputStream(factTableContent);
+        InputStream in = new ByteArrayInputStream(factTableContent.getBytes("UTF-8"));
         String factTablePath = "/data/" + factTableName + ".csv";
         store.deleteResource(factTablePath);
         store.putResource(factTablePath, in, System.currentTimeMillis());

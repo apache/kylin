@@ -23,7 +23,7 @@ public class KafkaDataLoader {
      */
     public static void main(String[] args) throws IOException {
         StreamingManager streamingManager = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv());
-        StreamingConfig streamingConfig = streamingManager.getKafkaConfig(args[1]);
+        StreamingConfig streamingConfig = streamingManager.getStreamingConfig(args[1]);
 
         List<String> alldata = FileUtils.readLines(new File(args[0]));
 

@@ -106,7 +106,7 @@ public class StreamingManager {
         }
     }
 
-    public StreamingConfig getKafkaConfig(String name) {
+    public StreamingConfig getStreamingConfig(String name) {
         try {
             return getStore().getResource(formatStreamingConfigPath(name), StreamingConfig.class, StreamingConfig.SERIALIZER);
         } catch (IOException e) {
