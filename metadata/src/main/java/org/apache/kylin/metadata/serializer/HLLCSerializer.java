@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.model.DataType;
 public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
 
     // be thread-safe and avoid repeated obj creation
-    private static ThreadLocal<HyperLogLogPlusCounter> current = new ThreadLocal<HyperLogLogPlusCounter>();
+    private ThreadLocal<HyperLogLogPlusCounter> current = new ThreadLocal<HyperLogLogPlusCounter>();
     
     private int precision;
 

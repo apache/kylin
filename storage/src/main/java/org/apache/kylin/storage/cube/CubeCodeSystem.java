@@ -197,7 +197,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
     static class FixLenSerializer extends DataTypeSerializer {
 
         // be thread-safe and avoid repeated obj creation
-        private static ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
+        private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
 
         private int fixLen;
 
