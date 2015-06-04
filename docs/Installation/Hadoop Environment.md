@@ -19,3 +19,8 @@ Use ambari helps to launch hadoop:
 With both command successfully run you can go to ambari homepage at <http://your_sandbox_ip:8080> (user:admin,password:admin) to check everything's status. **By default hortonworks ambari disables Hbase, you'll need manually start the `Hbase` service at ambari homepage.**
 
 ![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
+
+**Additonal Info for setting up HortonWorks Sandbox on Virtual Box**
+
+	Please make sure Hbase Master port [Default 60000] and Zookeeper [Default 2181] is forwarded to Host OS.
+ 
