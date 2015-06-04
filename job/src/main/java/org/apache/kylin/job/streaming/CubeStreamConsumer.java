@@ -82,13 +82,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
 
     @Override
     public void consume(MicroStreamBatch microStreamBatch) throws Exception {
-        if (microStreamBatch.size() == 0) {
-            logger.info("nothing to build, skip to next iteration after sleeping 10s");
-            Thread.sleep(10000);
-            return;
-        } else {
-            logger.info("Consuming {} messages, covering from {} to {}", new String[] { String.valueOf(microStreamBatch.size()), DateFormat.formatToTimeStr(microStreamBatch.getTimestamp().getFirst()), DateFormat.formatToTimeStr(microStreamBatch.getTimestamp().getSecond()) });
-        }
+
 
         totalConsumedMessageCount += microStreamBatch.size();
         totalRawMessageCount += microStreamBatch.getRawMessageCount();

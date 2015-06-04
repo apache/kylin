@@ -148,6 +148,7 @@ public class DictionaryGenerator {
         }
 
         //FIXME: except for date type, all other date time family types are treated as TimeStrDictionary
+        logger.info("Using TimeStrDictionary");
         return new TimeStrDictionary();
     }
 
