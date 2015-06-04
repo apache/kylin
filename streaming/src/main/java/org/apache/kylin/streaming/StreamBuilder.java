@@ -110,7 +110,7 @@ public class StreamBuilder implements Runnable {
                         batch = MicroStreamBatch.union(batch, batches.get(i));
                     }
                 }
-                consumer.consume(batches.get(0));
+                consumer.consume(batch);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("stream fetcher thread should not be interrupted", e);
@@ -187,6 +187,7 @@ public class StreamBuilder implements Runnable {
                     final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
                     if (parsedStreamMessage.getTimestamp() - microStreamBatch.getTimestamp().getFirst() > condition.getBatchInterval()) {
                         streamMessageQueue.take();
+                        microStreamBatch.incRawMessageCount();
                         if (getStreamFilter().filter(parsedStreamMessage)) {
                             if (microStreamBatch.size() >= condition.getBatchSize()) {
                                 return microStreamBatch;

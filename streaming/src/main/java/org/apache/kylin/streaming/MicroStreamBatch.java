@@ -15,6 +15,8 @@ public final class MicroStreamBatch {
 
     private final Pair<Long, Long> offset;
 
+    private int rawMessageCount;
+
     public MicroStreamBatch() {
         this.streams = Lists.newLinkedList();
         this.timestamp = Pair.newPair(Long.MAX_VALUE, Long.MIN_VALUE);
@@ -43,6 +45,15 @@ public final class MicroStreamBatch {
         return streams.size();
     }
 
+    public final void incRawMessageCount() {
+        this.rawMessageCount++;
+    }
+
+    public final int getRawMessageCount()
+    {
+        return this.rawMessageCount;
+    }
+
     public final void add(ParsedStreamMessage parsedStreamMessage) {
         if (offset.getFirst() > parsedStreamMessage.getOffset()) {
             offset.setFirst(parsedStreamMessage.getOffset());
@@ -66,6 +77,7 @@ public final class MicroStreamBatch {
         result.offset.setSecond(Math.min(result.offset.getSecond(), another.offset.getSecond()));
         result.timestamp.setFirst(Math.min(result.timestamp.getFirst(), another.timestamp.getFirst()));
         result.timestamp.setSecond(Math.min(result.timestamp.getSecond(), another.timestamp.getSecond()));
+        result.rawMessageCount = one.rawMessageCount + another.rawMessageCount;
         return result;
     }
 

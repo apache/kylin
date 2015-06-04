@@ -74,7 +74,8 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private static final int BATCH_PUT_THRESHOLD = 10000;
-
+    private int totalConsumedMessageCount = 0;
+    private int totalRawMessageCount = 0;
 
     public CubeStreamConsumer(String cubeName) {
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -88,11 +89,15 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
             logger.info("nothing to build, skip to next iteration");
             return;
         }
+
+        totalConsumedMessageCount += microStreamBatch.size();
+        totalRawMessageCount += microStreamBatch.getRawMessageCount();
+
         final List<List<String>> parsedStreamMessages = microStreamBatch.getStreams();
         long startOffset = microStreamBatch.getOffset().getFirst();
         long endOffset = microStreamBatch.getOffset().getSecond();
         LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue<List<String>>(parsedStreamMessages);
-        blockingQueue.put(Collections.<String>emptyList());
+        blockingQueue.put(Collections.<String> emptyList());
 
         final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
@@ -110,12 +115,13 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         final HTableInterface hTable = createHTable(cubeSegment);
 
         final CubeStreamRecordWriter gtRecordWriter = new CubeStreamRecordWriter(cubeDesc, hTable);
-        InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(blockingQueue, cubeInstance.getDescriptor(),
-                dictionaryMap, gtRecordWriter);
+        InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(blockingQueue, cubeInstance.getDescriptor(), dictionaryMap, gtRecordWriter);
 
         executorService.submit(inMemCubeBuilder).get();
         gtRecordWriter.flush();
         commitSegment(cubeSegment);
+
+        logger.info("Consumed {} messages out of {} raw messages", totalConsumedMessageCount, totalRawMessageCount);
     }
 
     private void writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<?>> dictionaryMap, long startOffset, long endOffset) {
@@ -126,12 +132,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
             signature.setLastModifiedTime(System.currentTimeMillis());
             signature.setPath(String.format("streaming_%s_%s", startOffset, endOffset));
             signature.setSize(endOffset - startOffset);
-            DictionaryInfo dictInfo = new DictionaryInfo(tblColRef.getTable(),
-                    tblColRef.getName(),
-                    tblColRef.getColumnDesc().getZeroBasedIndex(),
-                    tblColRef.getDatatype(),
-                    signature,
-                    ReadableTable.DELIM_AUTO);
+            DictionaryInfo dictInfo = new DictionaryInfo(tblColRef.getTable(), tblColRef.getName(), tblColRef.getColumnDesc().getZeroBasedIndex(), tblColRef.getDatatype(), signature, ReadableTable.DELIM_AUTO);
             logger.info("writing dictionary for TblColRef:" + tblColRef.toString());
             DictionaryManager dictionaryManager = DictionaryManager.getInstance(kylinConfig);
             try {
@@ -163,7 +164,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
             }
             this.nColumns = keyValueCreators.size();
             this.hTable = hTable;
-            this.byteBuffer = ByteBuffer.allocate(1<<20);
+            this.byteBuffer = ByteBuffer.allocate(1 << 20);
         }
 
         private byte[] copy(byte[] array, int offset, int length) {
@@ -175,7 +176,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         private ByteBuffer createKey(Long cuboidId, GTRecord record) {
             byteBuffer.clear();
             byteBuffer.put(Bytes.toBytes(cuboidId));
-            final int cardinality = BitSet.valueOf(new long[]{cuboidId}).cardinality();
+            final int cardinality = BitSet.valueOf(new long[] { cuboidId }).cardinality();
             for (int i = 0; i < cardinality; i++) {
                 final ByteArray byteArray = record.get(i);
                 byteBuffer.put(byteArray.array(), byteArray.offset(), byteArray.length());
@@ -223,7 +224,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor().listDimensionColumnsExcludingDerived();
         final List<TblColRef> allDimensions = cubeInstance.getAllDimensions();
         final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
-        for (TblColRef column: columnsNeedToBuildDictionary) {
+        for (TblColRef column : columnsNeedToBuildDictionary) {
             final int index = allDimensions.indexOf(column);
             Preconditions.checkArgument(index >= 0);
             tblColRefMap.put(index, column);
@@ -261,12 +262,11 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         final Map<Long, Integer[]> allCuboidsBitSet = Maps.newHashMap();
 
-
         Lists.transform(allCuboidIds, new Function<Long, Integer[]>() {
             @Nullable
             @Override
             public Integer[] apply(@Nullable Long cuboidId) {
-                BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
+                BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
                 Integer[] result = new Integer[bitSet.cardinality()];
 
                 long mask = Long.highestOneBit(baseCuboidId);
@@ -284,7 +284,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         final Map<Long, HyperLogLogPlusCounter> result = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
         for (Long cuboidId : allCuboidIds) {
             result.put(cuboidId, new HyperLogLogPlusCounter(14));
-            BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
+            BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
             Integer[] cuboidBitSet = new Integer[bitSet.cardinality()];
 
             long mask = Long.highestOneBit(baseCuboidId);
@@ -348,11 +348,10 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
 
     private void getSubCuboidIds(CuboidScheduler cuboidScheduler, long parentCuboidId, List<Long> result) {
         result.add(parentCuboidId);
-        for (Long cuboidId: cuboidScheduler.getSpanningCuboid(parentCuboidId)) {
+        for (Long cuboidId : cuboidScheduler.getSpanningCuboid(parentCuboidId)) {
             getSubCuboidIds(cuboidScheduler, cuboidId, result);
         }
     }
-
 
     private HTableInterface createHTable(final CubeSegment cubeSegment) throws Exception {
         final String hTableName = cubeSegment.getStorageLocationIdentifier();
