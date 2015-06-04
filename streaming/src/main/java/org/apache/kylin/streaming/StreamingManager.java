@@ -34,13 +34,23 @@
 
 package org.apache.kylin.streaming;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.SimpleType;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -95,6 +105,10 @@ public class StreamingManager {
         return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + partition + ".json";
     }
 
+    private String formatStreamingOutputPath(String streaming, List<Integer> partitions) {
+        return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + StringUtils.join(partitions, "_") + ".json";
+    }
+
 
     public boolean createOrUpdateKafkaConfig(String name, StreamingConfig config) {
         try {
@@ -141,5 +155,39 @@ public class StreamingManager {
             throw new RuntimeException("error update offset, path:" + resPath, e);
         }
     }
+
+    public Map<Integer, Long> getOffset(String streaming, List<Integer> partitions) {
+        Collections.sort(partitions);
+        final String resPath = formatStreamingOutputPath(streaming, partitions);
+        try {
+            final InputStream inputStream = getStore().getResource(resPath);
+            if (inputStream == null) {
+                return Collections.emptyMap();
+            }
+            final HashMap<Integer, Long> result = mapper.readValue(inputStream, mapType);
+            return result;
+        } catch (IOException e) {
+            logger.error("error get offset, path:" + resPath, e);
+            throw new RuntimeException("error get offset, path:" + resPath, e);
+        }
+    }
+
+    public void updateOffset(String streaming, HashMap<Integer, Long> offset) {
+        List<Integer> partitions = Lists.newLinkedList(offset.keySet());
+        Collections.sort(partitions);
+        final String resPath = formatStreamingOutputPath(streaming, partitions);
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            mapper.writeValue(baos, offset);
+            getStore().putResource(resPath, new ByteArrayInputStream(baos.toByteArray()), getStore().getResourceTimestamp(resPath));
+        } catch (IOException e) {
+            logger.error("error update offset, path:" + resPath, e);
+            throw new RuntimeException("error update offset, path:" + resPath, e);
+        }
+    }
+
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(Integer.class), SimpleType.construct(Long.class));
+
 
 }

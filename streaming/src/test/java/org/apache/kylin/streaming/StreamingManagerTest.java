@@ -34,11 +34,19 @@
 
 package org.apache.kylin.streaming;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import junit.framework.TestCase;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -82,11 +90,40 @@ public class StreamingManagerTest extends LocalFileMetadataTestCase {
         updateOffsetAndCompare(streaming, partition, 1000);
         updateOffsetAndCompare(streaming, partition, 800);
         updateOffsetAndCompare(streaming, partition, 2000);
+    }
 
+    @Test
+    public void testMultiOffset() {
+        final String streaming = "kafka_multi_test";
+        List<Integer> partitions = Lists.newArrayList(Lists.asList(0, 1, new Integer[]{2, 3}));
+        assertEquals(0, streamingManager.getOffset("kafka_multi_test", partitions).size());
+
+        for (int i = 0; i < 10; i++) {
+            updateOffsetAndCompare(streaming, generateRandomOffset(partitions));
+        }
+    }
+
+    private HashMap<Integer, Long> generateRandomOffset(List<Integer> partitions) {
+        final HashMap<Integer, Long> result = Maps.newHashMap();
+        final Random random = new Random();
+        for (Integer partition : partitions) {
+            result.put(partition, random.nextLong());
+        }
+        return result;
     }
 
     private void updateOffsetAndCompare(String streaming, int partition, long offset) {
         streamingManager.updateOffset(streaming, partition, offset);
         assertEquals(offset, streamingManager.getOffset(streaming, partition));
+    }
+
+    private void updateOffsetAndCompare(String streaming, HashMap<Integer, Long> offset) {
+        streamingManager.updateOffset(streaming, offset);
+        final Map<Integer, Long> result = streamingManager.getOffset(streaming, Lists.newLinkedList(offset.keySet()));
+        System.out.println(result);
+        assertEquals(offset.size(), result.size());
+        for (Integer partition : result.keySet()) {
+            assertEquals(offset.get(partition), result.get(partition));
+        }
     }
 }
