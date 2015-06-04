@@ -117,7 +117,7 @@ public class DictionaryGenerator {
     }
 
     private static Dictionary buildDateTimeDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
-        final int BAD_THRESHOLD = 2;
+        final int BAD_THRESHOLD = 0;
         String matchPattern = null;
 
         for (String ptn : DATE_PATTERNS) {
