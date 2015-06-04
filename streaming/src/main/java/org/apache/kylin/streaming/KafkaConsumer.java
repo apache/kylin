@@ -65,18 +65,18 @@ public class KafkaConsumer implements Runnable {
 
     private volatile boolean isRunning = true;
 
-    public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaClusterConfig kafkaClusterConfig) {
-        this(topic, partitionId, startOffset, initialBrokers, kafkaClusterConfig, 1);
+    public KafkaConsumer(int clusterID, String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaClusterConfig kafkaClusterConfig) {
+        this(clusterID, topic, partitionId, startOffset, initialBrokers, kafkaClusterConfig, 1);
     }
 
-    public KafkaConsumer(String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaClusterConfig kafkaClusterConfig, int parallelism) {
+    public KafkaConsumer(int clusterID, String topic, int partitionId, long startOffset, List<Broker> initialBrokers, KafkaClusterConfig kafkaClusterConfig, int parallelism) {
         Preconditions.checkArgument(parallelism > 0);
         this.topic = topic;
         this.partitionId = partitionId;
         this.streamingConfig = kafkaClusterConfig;
         this.offset = startOffset;
         this.replicaBrokers = initialBrokers;
-        this.logger = LoggerFactory.getLogger("KafkaConsumer_" + topic + "_" + partitionId);
+        this.logger = LoggerFactory.getLogger(topic + "_cluster_" + clusterID + "_" + partitionId);
         this.parallelism = parallelism;
         this.streamQueue = new LinkedBlockingQueue[parallelism];
         for (int i = 0; i < parallelism; ++i) {
