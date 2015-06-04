@@ -45,6 +45,6 @@ public final class StringStreamParser implements StreamParser {
     private StringStreamParser(){}
     @Override
     public ParsedStreamMessage parse(StreamMessage streamMessage) {
-        return new ParsedStreamMessage(Lists.newArrayList(new String(streamMessage.getRawData()).split(",")), streamMessage.getOffset(), streamMessage.getOffset());
+        return new ParsedStreamMessage(Lists.newArrayList(new String(streamMessage.getRawData()).split(",")), streamMessage.getOffset(), streamMessage.getOffset(),true);
     }
 }

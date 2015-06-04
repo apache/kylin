@@ -77,7 +77,7 @@ public class BasicTest {
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
-        System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1430438400000L));
+        System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1433418963000L));
         System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1433250517000L));
         System.out.println(org.apache.kylin.common.util.DateFormat.stringToMillis("2015-06-01 00:00:00"));
         System.out.println(org.apache.kylin.common.util.DateFormat.stringToMillis("2015-05-15 17:00:00"));

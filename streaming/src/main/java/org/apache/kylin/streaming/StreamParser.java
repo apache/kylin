@@ -38,5 +38,9 @@ package org.apache.kylin.streaming;
  */
 public interface StreamParser {
 
+    /**
+     * @param streamMessage
+     * @return ParsedStreamMessage must not be NULL
+     */
     ParsedStreamMessage parse(StreamMessage streamMessage);
 }

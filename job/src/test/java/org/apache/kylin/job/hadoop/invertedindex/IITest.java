@@ -63,10 +63,10 @@ public class IITest extends LocalFileMetadataTestCase {
 
     List<IIRow> iiRows;
 
-    final String[] inputData = new String[]{ //
-            "FP-non GTC,0,15,145970,0,28,Toys,2008-10-08 07:18:40,USER_Y,Toys & Hobbies,Models & Kits,Automotive,0,Ebay,USER_S,15,Professional-Other,2012-08-16,2012-08-11,0,2012-08-16,145970,10000329,26.8551,0", //
+    final String[] inputData = new String[] { //
+    "FP-non GTC,0,15,145970,0,28,Toys,2008-10-08 07:18:40,USER_Y,Toys & Hobbies,Models & Kits,Automotive,0,Ebay,USER_S,15,Professional-Other,2012-08-16,2012-08-11,0,2012-08-16,145970,10000329,26.8551,0", //
             "ABIN,0,-99,43479,0,21,Photo,2012-09-11 20:26:04,USER_Y,Cameras & Photo,Film Photography,Other,0,Ebay,USER_S,-99,Not Applicable,2012-08-16,2012-08-11,0,2012-08-16,43479,10000807,26.2474,0", //
-            "ABIN,0,16,80053,0,12,Computers,2012-06-19 21:15:09,USER_Y,Computers/Tablets & Networking,MonitorProjectors & Accs,Monitors,0,Ebay,USER_S,16,Consumer-Other,2012-08-16,2012-08-11,0,2012-08-16,80053,10000261,94.2273,0"};
+            "ABIN,0,16,80053,0,12,Computers,2012-06-19 21:15:09,USER_Y,Computers/Tablets & Networking,MonitorProjectors & Accs,Monitors,0,Ebay,USER_S,16,Consumer-Other,2012-08-16,2012-08-11,0,2012-08-16,80053,10000261,94.2273,0" };
 
     @Before
     public void setUp() throws Exception {
@@ -84,16 +84,14 @@ public class IITest extends LocalFileMetadataTestCase {
 
         List<List<String>> parsedStreamMessages = Lists.newArrayList();
         StreamParser parser = StringStreamParser.instance;
-        StreamFilter filter = DefaultStreamFilter.instance;
 
         MicroStreamBatch batch = new MicroStreamBatch();
         for (StreamMessage message : streamMessages) {
             ParsedStreamMessage parsedStreamMessage = parser.parse(message);
-            if (filter.filter(parsedStreamMessage)) {
+            if ((parsedStreamMessage.isAccepted())) {
                 batch.add(parsedStreamMessage);
             }
         }
-
 
         iiRows = Lists.newArrayList();
         final Slice slice = new SliceBuilder(iiDesc, (short) 0, true).buildSlice((batch));
@@ -248,7 +246,7 @@ public class IITest extends LocalFileMetadataTestCase {
             @Nullable
             @Override
             public Pair<ImmutableBytesWritable, Result> apply(@Nullable IIRow input) {
-                return new Pair<ImmutableBytesWritable, Result>(new ImmutableBytesWritable(new byte[]{1}), Result.create(input.makeCells()));
+                return new Pair<ImmutableBytesWritable, Result>(new ImmutableBytesWritable(new byte[] { 1 }), Result.create(input.makeCells()));
             }
         })));
 

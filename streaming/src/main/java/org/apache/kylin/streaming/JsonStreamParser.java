@@ -77,7 +77,7 @@ public final class JsonStreamParser implements StreamParser {
                 }
                 result.add(null);
             }
-            return new ParsedStreamMessage(result, streamMessage.getOffset(), streamMessage.getOffset());
+            return new ParsedStreamMessage(result, streamMessage.getOffset(), streamMessage.getOffset(), true);
         } catch (IOException e) {
             logger.error("error parsing stream", e);
             throw new RuntimeException(e);

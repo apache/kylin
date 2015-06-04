@@ -44,6 +44,7 @@ import kafka.javaapi.PartitionMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -172,6 +173,7 @@ public class StreamingBootstrap {
         int batchInterval = 5 * 60 * 1000;
         MicroBatchCondition condition = new MicroBatchCondition(Integer.MAX_VALUE, batchInterval);
         long startTimestamp = cubeInstance.getDateRangeEnd() == 0 ? TimeUtil.getNextPeriodStart(System.currentTimeMillis(), (long) batchInterval) : cubeInstance.getDateRangeEnd();
+        logger.info("batch time interval is {} to {}", DateFormat.formatToTimeStr(startTimestamp), DateFormat.formatToTimeStr(startTimestamp + batchInterval));
         StreamBuilder cubeStreamBuilder = new StreamBuilder(allClustersData, condition, new CubeStreamConsumer(cubeName), startTimestamp);
         cubeStreamBuilder.setStreamParser(getStreamParser(streamingConfig, Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(), new Function<IntermediateColumnDesc, TblColRef>() {
             @Nullable
@@ -180,7 +182,6 @@ public class StreamingBootstrap {
                 return input.getColRef();
             }
         })));
-        cubeStreamBuilder.setStreamFilter(getStreamFilter(streamingConfig));
         final Future<?> future = Executors.newSingleThreadExecutor().submit(cubeStreamBuilder);
         future.get();
     }
@@ -192,15 +193,6 @@ public class StreamingBootstrap {
             return (StreamParser) constructor.newInstance(columns);
         } else {
             return new JsonStreamParser(columns);
-        }
-    }
-
-    private StreamFilter getStreamFilter(StreamingConfig streamingConfig) throws Exception {
-        if (!StringUtils.isEmpty(streamingConfig.getFilterName())) {
-            Class clazz = Class.forName(streamingConfig.getFilterName());
-            return (StreamFilter) clazz.newInstance();
-        } else {
-            return DefaultStreamFilter.instance;
         }
     }
 
