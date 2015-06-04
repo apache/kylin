@@ -198,7 +198,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             ShellCmdOutput output = new ShellCmdOutput();
             executor.execute("mapred classpath", output);
 
-            classpath = output.getOutput();
+            classpath = output.getOutput().trim().replace(':', ',');
         } catch (IOException e) {
             logger.error("Failed to run: 'mapred classpath'.", e);
         }
