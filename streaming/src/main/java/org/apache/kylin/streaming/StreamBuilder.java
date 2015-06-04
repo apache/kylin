@@ -48,6 +48,7 @@ import java.util.concurrent.*;
 public class StreamBuilder implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
+    private final long startTimestamp;
 
     private StreamParser streamParser = StringStreamParser.instance;
 
@@ -59,18 +60,20 @@ public class StreamBuilder implements Runnable {
 
     private final MicroBatchCondition condition;
 
-    public StreamBuilder(List<BlockingQueue<StreamMessage>> inputs, MicroBatchCondition condition, MicroStreamBatchConsumer consumer) {
+    public StreamBuilder(List<BlockingQueue<StreamMessage>> inputs, MicroBatchCondition condition, MicroStreamBatchConsumer consumer, long startTimestamp) {
         Preconditions.checkArgument(inputs.size() > 0);
         this.streamMessageQueues = Lists.newArrayList();
         this.consumer = Preconditions.checkNotNull(consumer);
         this.condition = condition;
+        this.startTimestamp = startTimestamp;
         init(inputs);
     }
 
-    public StreamBuilder(BlockingQueue<StreamMessage> input, MicroBatchCondition condition, MicroStreamBatchConsumer consumer) {
+    public StreamBuilder(BlockingQueue<StreamMessage> input, MicroBatchCondition condition, MicroStreamBatchConsumer consumer, long startTimestamp) {
         this.streamMessageQueues = Lists.newArrayList();
         this.consumer = Preconditions.checkNotNull(consumer);
         this.condition = condition;
+        this.startTimestamp = startTimestamp;
         init(Preconditions.checkNotNull(input));
     }
 
@@ -87,11 +90,12 @@ public class StreamBuilder implements Runnable {
         try {
             final int inputCount = streamMessageQueues.size();
             final ExecutorService executorService = Executors.newFixedThreadPool(inputCount);
+            long start = startTimestamp;
             while (true) {
                 CountDownLatch countDownLatch = new CountDownLatch(inputCount);
                 ArrayList<Future<MicroStreamBatch>> futures = Lists.newArrayListWithExpectedSize(inputCount);
                 for (BlockingQueue<StreamMessage> streamMessageQueue : streamMessageQueues) {
-                    futures.add(executorService.submit(new StreamFetcher(streamMessageQueue, countDownLatch)));
+                    futures.add(executorService.submit(new StreamFetcher(streamMessageQueue, countDownLatch, start, start + condition.getBatchInterval())));
                 }
                 countDownLatch.await();
                 ArrayList<MicroStreamBatch> batches = Lists.newArrayListWithExpectedSize(inputCount);
@@ -110,6 +114,9 @@ public class StreamBuilder implements Runnable {
                         batch = MicroStreamBatch.union(batch, batches.get(i));
                     }
                 }
+                batch.getTimestamp().setFirst(start);
+                batch.getTimestamp().setSecond(start + condition.getBatchInterval());
+                start += condition.getBatchInterval();
                 consumer.consume(batch);
             }
         } catch (InterruptedException e) {
@@ -127,16 +134,17 @@ public class StreamBuilder implements Runnable {
 
         private final BlockingQueue<StreamMessage> streamMessageQueue;
         private final CountDownLatch countDownLatch;
-        private long lastBuildTime = System.currentTimeMillis();
-        private long lastBatchTimestamp = -1;
+        private long startTimestamp;
+        private long endTimestamp;
 
-        public StreamFetcher(BlockingQueue<StreamMessage> streamMessageQueue, CountDownLatch countDownLatch) {
+        public StreamFetcher(BlockingQueue<StreamMessage> streamMessageQueue, CountDownLatch countDownLatch, long startTimestamp, long endTimestamp) {
             this.streamMessageQueue = streamMessageQueue;
             this.countDownLatch = countDownLatch;
+            this.startTimestamp = startTimestamp;
+            this.endTimestamp = endTimestamp;
         }
 
         private void clearCounter() {
-            lastBuildTime = System.currentTimeMillis();
         }
 
         private StreamMessage peek(BlockingQueue<StreamMessage> queue, long timeout) {
@@ -185,7 +193,10 @@ public class StreamBuilder implements Runnable {
                     }
 
                     final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
-                    if (parsedStreamMessage.getTimestamp() - microStreamBatch.getTimestamp().getFirst() > condition.getBatchInterval()) {
+                    final long timestamp = parsedStreamMessage.getTimestamp();
+                    if (timestamp < startTimestamp) {
+                        streamMessageQueue.take();
+                    } else if (timestamp < endTimestamp) {
                         streamMessageQueue.take();
                         microStreamBatch.incRawMessageCount();
                         if (getStreamFilter().filter(parsedStreamMessage)) {

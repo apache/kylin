@@ -64,7 +64,7 @@ public class CubeStreamConsumerTest {
     @Test
     public void test() throws Exception {
         LinkedBlockingDeque<StreamMessage> queue = new LinkedBlockingDeque<>();
-        StreamBuilder cubeStreamBuilder = new StreamBuilder(queue, new MicroBatchCondition(Integer.MAX_VALUE, 30 * 1000), new CubeStreamConsumer(CUBE_NAME));
+        StreamBuilder cubeStreamBuilder = new StreamBuilder(queue, new MicroBatchCondition(Integer.MAX_VALUE, 30 * 1000), new CubeStreamConsumer(CUBE_NAME), System.currentTimeMillis());
         final Future<?> future = Executors.newSingleThreadExecutor().submit(cubeStreamBuilder);
         loadDataFromLocalFile(queue, 100000);
         future.get();
