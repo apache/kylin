@@ -9,6 +9,8 @@ import java.util.List;
  */
 public final class MicroStreamBatch {
 
+    private final int partitionId;
+
     private final List<List<String>> streams;
 
     private final Pair<Long, Long> timestamp;
@@ -17,16 +19,22 @@ public final class MicroStreamBatch {
 
     private int rawMessageCount;
 
-    public MicroStreamBatch() {
+    public MicroStreamBatch(int partitionId) {
+        this.partitionId = partitionId;
         this.streams = Lists.newLinkedList();
         this.timestamp = Pair.newPair(Long.MAX_VALUE, Long.MIN_VALUE);
         this.offset = Pair.newPair(Long.MAX_VALUE, Long.MIN_VALUE);
     }
 
     private MicroStreamBatch(MicroStreamBatch batch) {
+        this.partitionId = batch.partitionId;
         this.streams = Lists.newLinkedList(batch.streams);
         this.timestamp = Pair.newPair(batch.timestamp.getFirst(), batch.timestamp.getSecond());
         this.offset = Pair.newPair(batch.offset.getFirst(), batch.offset.getSecond());
+    }
+
+    public int getPartitionId() {
+        return partitionId;
     }
 
     public final List<List<String>> getStreams() {
