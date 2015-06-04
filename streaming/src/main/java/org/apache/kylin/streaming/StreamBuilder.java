@@ -160,7 +160,7 @@ public class StreamBuilder implements Runnable {
                         logger.warn("stream queue should not be interrupted", e);
                         return null;
                     }
-                    if (System.currentTimeMillis() - t <= timeout) {
+                    if (System.currentTimeMillis() - t > timeout) {
                         break;
                     }
                 }
@@ -192,24 +192,26 @@ public class StreamBuilder implements Runnable {
                         return null;
                     }
 
+                    microStreamBatch.incRawMessageCount();
                     final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
-                    final long timestamp = parsedStreamMessage.getTimestamp();
-                    if (timestamp < startTimestamp) {
-                        streamMessageQueue.take();
-                    } else if (timestamp < endTimestamp) {
-                        streamMessageQueue.take();
-                        microStreamBatch.incRawMessageCount();
-                        if (getStreamFilter().filter(parsedStreamMessage)) {
+                    if (getStreamFilter().filter(parsedStreamMessage)) {
+                        final long timestamp = parsedStreamMessage.getTimestamp();
+                        if (timestamp < startTimestamp) {
+                            //TODO properly handle late megs
+                            streamMessageQueue.take();
+                        } else if (timestamp < endTimestamp) {
+                            streamMessageQueue.take();
                             if (microStreamBatch.size() >= condition.getBatchSize()) {
                                 return microStreamBatch;
                             } else {
                                 microStreamBatch.add(parsedStreamMessage);
                             }
                         } else {
-                            //ignore unfiltered stream message
+                            return microStreamBatch;
                         }
                     } else {
-                        return microStreamBatch;
+                        //ignore unfiltered stream message
+                        streamMessageQueue.take();
                     }
                 }
             } catch (Exception e) {

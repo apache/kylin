@@ -22,4 +22,8 @@ public class TimeUtil {
     public static long getDayStart(long ts) {
         return ts / ONE_DAY_TS * ONE_DAY_TS;
     }
+
+    public static long getNextPeriodStart(long ts, long period) {
+        return ((ts + period - 1) / period) * period;
+    }
 }
