@@ -264,12 +264,12 @@ public class JobService extends BasicService {
         CubeInstance cubeInstance = getCubeManager().getCube(jobInstance.getRelatedCube());
         final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
         if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
-            // Remove all existing segments
-
+            // Remove this segments
             CubeBuilder cubeBuilder = new CubeBuilder(cubeInstance);
-            cubeBuilder.setToRemoveSegs(cubeInstance.getSegments().toArray(new CubeSegment[cubeInstance.getSegments().size()]));
+            cubeBuilder.setToRemoveSegs(segment);
             getCubeManager().updateCube(cubeBuilder);
         }
+
         getExecutableManager().discardJob(jobId);
         return jobInstance;
     }
