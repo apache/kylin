@@ -125,6 +125,8 @@
                 <ul>
                     <li>Region Count: <span class="red">{{table.regionCount}}</span></li>
                     <li>Size: <span class="red">{{table.tableSize | bytes:2}}</span></li>
+                    <li>Start Time <span class="red">{{table.dateRangeStart | reverseToGMT0}}</span></li>
+                    <li>End Time: <span class="red">{{table.dateRangeEnd | reverseToGMT0}}</span></li>
                 </ul>
             </div>
             <div ng-if="cubesManager.currentCube.hbase">
