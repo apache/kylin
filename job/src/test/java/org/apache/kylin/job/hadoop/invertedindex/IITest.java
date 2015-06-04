@@ -85,7 +85,7 @@ public class IITest extends LocalFileMetadataTestCase {
         List<List<String>> parsedStreamMessages = Lists.newArrayList();
         StreamParser parser = StringStreamParser.instance;
 
-        MicroStreamBatch batch = new MicroStreamBatch();
+        MicroStreamBatch batch = new MicroStreamBatch(0);
         for (StreamMessage message : streamMessages) {
             ParsedStreamMessage parsedStreamMessage = parser.parse(message);
             if ((parsedStreamMessage.isAccepted())) {

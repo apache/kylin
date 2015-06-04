@@ -214,7 +214,8 @@ public class BuildIIWithStreamTest {
         ToolRunner.run(new IICreateHTableJob(), args);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final StreamBuilder streamBuilder = new StreamBuilder(queue,
+        final StreamBuilder streamBuilder = new StreamBuilder(iiName,
+                queue,
                 new MicroBatchCondition(segment.getIIDesc().getSliceSize(), Integer.MAX_VALUE),
                 new IIStreamConsumer(iiName, segment.getStorageLocationIdentifier(), segment.getIIDesc(), 0),
                 0);

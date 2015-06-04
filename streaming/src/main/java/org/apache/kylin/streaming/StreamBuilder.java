@@ -36,11 +36,14 @@ package org.apache.kylin.streaming;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -59,8 +62,11 @@ public class StreamBuilder implements Runnable {
 
     private final MicroBatchCondition condition;
 
-    public StreamBuilder(List<BlockingQueue<StreamMessage>> inputs, MicroBatchCondition condition, MicroStreamBatchConsumer consumer, long startTimestamp) {
+    private final String streaming;
+
+    public StreamBuilder(String streaming, List<BlockingQueue<StreamMessage>> inputs, MicroBatchCondition condition, MicroStreamBatchConsumer consumer, long startTimestamp) {
         Preconditions.checkArgument(inputs.size() > 0);
+        this.streaming = streaming;
         this.streamMessageQueues = Lists.newArrayList();
         this.consumer = Preconditions.checkNotNull(consumer);
         this.condition = condition;
@@ -68,7 +74,8 @@ public class StreamBuilder implements Runnable {
         init(inputs);
     }
 
-    public StreamBuilder(BlockingQueue<StreamMessage> input, MicroBatchCondition condition, MicroStreamBatchConsumer consumer, long startTimestamp) {
+    public StreamBuilder(String streaming, BlockingQueue<StreamMessage> input, MicroBatchCondition condition, MicroStreamBatchConsumer consumer, long startTimestamp) {
+        this.streaming = streaming;
         this.streamMessageQueues = Lists.newArrayList();
         this.consumer = Preconditions.checkNotNull(consumer);
         this.condition = condition;
@@ -90,11 +97,16 @@ public class StreamBuilder implements Runnable {
             final int inputCount = streamMessageQueues.size();
             final ExecutorService executorService = Executors.newFixedThreadPool(inputCount);
             long start = startTimestamp;
+            List<Integer> partitions = Lists.newArrayList();
+            for (int i = 0, partitionCount = streamMessageQueues.size(); i < partitionCount; i++) {
+                partitions.add(i);
+            }
             while (true) {
                 CountDownLatch countDownLatch = new CountDownLatch(inputCount);
                 ArrayList<Future<MicroStreamBatch>> futures = Lists.newArrayListWithExpectedSize(inputCount);
+                int partitionId = 0;
                 for (BlockingQueue<StreamMessage> streamMessageQueue : streamMessageQueues) {
-                    futures.add(executorService.submit(new StreamFetcher(streamMessageQueue, countDownLatch, start, start + condition.getBatchInterval())));
+                    futures.add(executorService.submit(new StreamFetcher(partitionId++, streamMessageQueue, countDownLatch, start, start + condition.getBatchInterval())));
                 }
                 countDownLatch.await();
                 ArrayList<MicroStreamBatch> batches = Lists.newArrayListWithExpectedSize(inputCount);
@@ -126,6 +138,13 @@ public class StreamBuilder implements Runnable {
                     long startTime = System.currentTimeMillis();
                     consumer.consume(batch);
                     logger.info("Batch build costs {} milliseconds", System.currentTimeMillis() - startTime);
+                    if (batches.size() > 1) {
+                        final HashMap<Integer, Long> offset = Maps.newHashMap();
+                        for (MicroStreamBatch microStreamBatch : batches) {
+                            offset.put(microStreamBatch.getPartitionId(), microStreamBatch.getOffset().getSecond());
+                        }
+                        StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).updateOffset(streaming, offset);
+                    }
                 }
             }
         } catch (InterruptedException e) {
@@ -143,10 +162,12 @@ public class StreamBuilder implements Runnable {
 
         private final BlockingQueue<StreamMessage> streamMessageQueue;
         private final CountDownLatch countDownLatch;
+        private final int partitionId;
         private long startTimestamp;
         private long endTimestamp;
 
-        public StreamFetcher(BlockingQueue<StreamMessage> streamMessageQueue, CountDownLatch countDownLatch, long startTimestamp, long endTimestamp) {
+        public StreamFetcher(int partitionId, BlockingQueue<StreamMessage> streamMessageQueue, CountDownLatch countDownLatch, long startTimestamp, long endTimestamp) {
+            this.partitionId = partitionId;
             this.streamMessageQueue = streamMessageQueue;
             this.countDownLatch = countDownLatch;
             this.startTimestamp = startTimestamp;
@@ -183,7 +204,7 @@ public class StreamBuilder implements Runnable {
                 MicroStreamBatch microStreamBatch = null;
                 while (true) {
                     if (microStreamBatch == null) {
-                        microStreamBatch = new MicroStreamBatch();
+                        microStreamBatch = new MicroStreamBatch(partitionId);
                         clearCounter();
                     }
                     StreamMessage streamMessage = peek(streamMessageQueue, 30000);
