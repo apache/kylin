@@ -216,12 +216,10 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
 
     private Map<TblColRef, Dictionary<?>> buildDictionary(final CubeInstance cubeInstance, List<List<String>> recordList) throws IOException {
         final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor().listDimensionColumnsExcludingDerived();
-        final List<TblColRef> allDimensions = cubeInstance.getAllDimensions();
         final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
+        int index = 0;
         for (TblColRef column : columnsNeedToBuildDictionary) {
-            final int index = allDimensions.indexOf(column);
-            Preconditions.checkArgument(index >= 0);
-            tblColRefMap.put(index, column);
+            tblColRefMap.put(index++, column);
         }
 
         HashMap<TblColRef, Dictionary<?>> result = Maps.newHashMap();
