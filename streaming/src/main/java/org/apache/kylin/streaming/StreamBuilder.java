@@ -36,6 +36,7 @@ package org.apache.kylin.streaming;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.apache.kylin.common.util.DateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +118,15 @@ public class StreamBuilder implements Runnable {
                 batch.getTimestamp().setFirst(start);
                 batch.getTimestamp().setSecond(start + condition.getBatchInterval());
                 start += condition.getBatchInterval();
-                consumer.consume(batch);
+
+                if (batch.size() == 0) {
+                    logger.info("nothing to build, skip to next iteration after sleeping 10s");
+                    Thread.sleep(10000);
+                    return;
+                } else {
+                    logger.info("Consuming {} messages, covering from {} to {}", new String[] { String.valueOf(batch.size()), DateFormat.formatToTimeStr(batch.getTimestamp().getFirst()), DateFormat.formatToTimeStr(batch.getTimestamp().getSecond()) });
+                    consumer.consume(batch);
+                }
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("stream fetcher thread should not be interrupted", e);
