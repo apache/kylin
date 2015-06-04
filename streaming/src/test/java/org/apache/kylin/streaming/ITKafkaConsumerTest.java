@@ -90,7 +90,7 @@ public class ITKafkaConsumerTest extends KafkaBaseTest {
         final ExecutorService executorService = Executors.newFixedThreadPool(kafkaTopicMeta.getPartitionIds().size());
         List<BlockingQueue<StreamMessage>> queues = Lists.newArrayList();
         for (Integer partitionId : kafkaTopicMeta.getPartitionIds()) {
-            KafkaConsumer consumer = new KafkaConsumer(kafkaTopicMeta.getName(), partitionId, 0, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
+            KafkaConsumer consumer = new KafkaConsumer(0, kafkaTopicMeta.getName(), partitionId, 0, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
             queues.add(consumer.getStreamQueue(0));
             executorService.execute(consumer);
         }

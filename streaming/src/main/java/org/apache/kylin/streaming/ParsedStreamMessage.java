@@ -12,10 +12,16 @@ public class ParsedStreamMessage {
 
     private long timestamp;
 
-    public ParsedStreamMessage(List<String> streamMessage, long offset, long timestamp) {
+    /**
+     * false for pruned messages
+     */
+    private boolean accepted;
+
+    public ParsedStreamMessage(List<String> streamMessage, long offset, long timestamp, boolean accepted) {
         this.streamMessage = streamMessage;
         this.offset = offset;
         this.timestamp = timestamp;
+        this.accepted = accepted;
     }
 
     public final List<String> getStreamMessage() {
@@ -28,5 +34,9 @@ public class ParsedStreamMessage {
 
     public final long getTimestamp() {
         return timestamp;
+    }
+
+    public final boolean isAccepted() {
+        return accepted;
     }
 }

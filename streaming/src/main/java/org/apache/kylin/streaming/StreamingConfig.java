@@ -79,20 +79,11 @@ public class StreamingConfig extends RootPersistentEntity {
     @JsonProperty("parserName")
     private String parserName;
 
-    @JsonProperty("filterName")
-    private String filterName;
 
     public List<KafkaClusterConfig> getKafkaClusterConfigs() {
         return kafkaClusterConfigs;
     }
 
-    public String getFilterName() {
-        return filterName;
-    }
-
-    public void setFilterName(String filterName) {
-        this.filterName = filterName;
-    }
 
     public String getParserName() {
         return parserName;

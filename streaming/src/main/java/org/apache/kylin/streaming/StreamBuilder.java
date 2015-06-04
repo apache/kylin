@@ -53,8 +53,6 @@ public class StreamBuilder implements Runnable {
 
     private StreamParser streamParser = StringStreamParser.instance;
 
-    private StreamFilter streamFilter = DefaultStreamFilter.instance;
-
     private final List<BlockingQueue<StreamMessage>> streamMessageQueues;
 
     private final MicroStreamBatchConsumer consumer;
@@ -203,30 +201,33 @@ public class StreamBuilder implements Runnable {
 
                     microStreamBatch.incRawMessageCount();
                     final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
-                    if (getStreamFilter().filter(parsedStreamMessage)) {
-                        final long timestamp = parsedStreamMessage.getTimestamp();
-                        if (timestamp < startTimestamp) {
-                            //TODO properly handle late megs
-                            streamMessageQueue.take();
-                        } else if (timestamp < endTimestamp) {
-                            streamMessageQueue.take();
+                    if (parsedStreamMessage == null) {
+                        throw new RuntimeException("parsedStreamMessage of " + new String(streamMessage.getRawData()) + " is null");
+                    }
+
+                    final long timestamp = parsedStreamMessage.getTimestamp();
+                    if (timestamp < startTimestamp) {
+                        //TODO properly handle late megs
+                        streamMessageQueue.take();
+                    } else if (timestamp < endTimestamp) {
+                        streamMessageQueue.take();
+                        if (parsedStreamMessage.isAccepted()) {
+                            microStreamBatch.add(parsedStreamMessage);
                             if (microStreamBatch.size() >= condition.getBatchSize()) {
                                 return microStreamBatch;
-                            } else {
-                                microStreamBatch.add(parsedStreamMessage);
                             }
                         } else {
-                            return microStreamBatch;
+                            //ignore pruned stream message
                         }
                     } else {
-                        //ignore unfiltered stream message
-                        streamMessageQueue.take();
+                        return microStreamBatch;
                     }
                 }
             } catch (Exception e) {
                 logger.error("build stream error, stop building", e);
                 throw new RuntimeException("build stream error, stop building", e);
             } finally {
+                logger.info("one partition sign off");
                 countDownLatch.countDown();
             }
         }
@@ -238,14 +239,6 @@ public class StreamBuilder implements Runnable {
 
     public final void setStreamParser(StreamParser streamParser) {
         this.streamParser = streamParser;
-    }
-
-    public final StreamFilter getStreamFilter() {
-        return streamFilter;
-    }
-
-    public final void setStreamFilter(StreamFilter streamFilter) {
-        this.streamFilter = streamFilter;
     }
 
 }
