@@ -122,7 +122,7 @@ public class StreamBuilder implements Runnable {
                 if (batch.size() == 0) {
                     logger.info("nothing to build, skip to next iteration after sleeping 10s");
                     Thread.sleep(10000);
-                    return;
+                    continue;
                 } else {
                     logger.info("Consuming {} messages, covering from {} to {}", new String[] { String.valueOf(batch.size()), DateFormat.formatToTimeStr(batch.getTimestamp().getFirst()), DateFormat.formatToTimeStr(batch.getTimestamp().getSecond()) });
                     consumer.consume(batch);
