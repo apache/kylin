@@ -32,7 +32,7 @@ import org.apache.kylin.metadata.model.DataType;
 public class LongSerializer extends DataTypeSerializer<LongWritable> {
 
     // be thread-safe and avoid repeated obj creation
-    private static ThreadLocal<LongWritable> current = new ThreadLocal<LongWritable>();
+    private ThreadLocal<LongWritable> current = new ThreadLocal<LongWritable>();
 
     public LongSerializer(DataType type) {
     }

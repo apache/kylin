@@ -10,7 +10,7 @@ import org.apache.kylin.common.util.DateFormat;
 public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
     
     // be thread-safe and avoid repeated obj creation
-    private static ThreadLocal<LongWritable> current = new ThreadLocal<LongWritable>();
+    private ThreadLocal<LongWritable> current = new ThreadLocal<LongWritable>();
 
     public DateTimeSerializer(DataType type) {
     }

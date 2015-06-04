@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.model.DataType;
 public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
 
     // be thread-safe and avoid repeated obj creation
-    private static ThreadLocal<DoubleWritable> current = new ThreadLocal<DoubleWritable>();
+    private ThreadLocal<DoubleWritable> current = new ThreadLocal<DoubleWritable>();
 
     public DoubleSerializer(DataType type) {
     }
