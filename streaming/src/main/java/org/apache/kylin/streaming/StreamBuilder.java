@@ -123,7 +123,9 @@ public class StreamBuilder implements Runnable {
                     continue;
                 } else {
                     logger.info("Consuming {} messages, covering from {} to {}", new String[] { String.valueOf(batch.size()), DateFormat.formatToTimeStr(batch.getTimestamp().getFirst()), DateFormat.formatToTimeStr(batch.getTimestamp().getSecond()) });
+                    long startTime = System.currentTimeMillis();
                     consumer.consume(batch);
+                    logger.info("Batch build costs {} milliseconds", System.currentTimeMillis() - startTime);
                 }
             }
         } catch (InterruptedException e) {
