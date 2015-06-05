@@ -12,5 +12,4 @@ public interface BatchCondition {
 
     Result apply(ParsedStreamMessage message);
 
-    BatchCondition copy();
 }

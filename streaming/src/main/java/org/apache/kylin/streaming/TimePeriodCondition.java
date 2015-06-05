@@ -23,8 +23,4 @@ public class TimePeriodCondition implements BatchCondition {
         }
     }
 
-    @Override
-    public BatchCondition copy() {
-        return this;
-    }
 }
