@@ -456,7 +456,7 @@ public class CubeDesc extends RootPersistentEntity {
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived();
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
-            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "). ");
+            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "); rowkeys are " + Arrays.toString(rowkey.getRowKeyColumns()) + ", dimension columns are " + dimCols.toString());
         }
     }
 
@@ -467,7 +467,7 @@ public class CubeDesc extends RootPersistentEntity {
             // init dimension columns
             ArrayList<TblColRef> dimCols = Lists.newArrayList();
             String[] colStrs = dim.getColumn();
-            
+
             // when column is omitted, special case
             if (colStrs == null && dim.isDerived() || ArrayUtils.contains(colStrs, "{FK}")) {
                 for (TblColRef col : join.getForeignKeyColumns()) {
@@ -478,18 +478,18 @@ public class CubeDesc extends RootPersistentEntity {
             else {
                 if (colStrs == null || colStrs.length == 0)
                     throw new IllegalStateException("Dimension column must not be blank " + dim);
-                
+
                 for (String colStr : colStrs) {
                     dimCols.add(initDimensionColRef(dim, colStr));
                 }
-                
+
                 // fill back column ref in hierarchy
                 if (dim.isHierarchy()) {
                     for (int i = 0; i < dimCols.size(); i++)
                         dim.getHierarchy()[i].setColumnRef(dimCols.get(i));
                 }
             }
-            
+
             TblColRef[] dimColArray = (TblColRef[]) dimCols.toArray(new TblColRef[dimCols.size()]);
             dim.setColumnRefs(dimColArray);
 
@@ -518,11 +518,47 @@ public class CubeDesc extends RootPersistentEntity {
                         initDerivedMap(hostCols[find], DeriveType.PK_FK, dim, derivedCol);
                     }
                 }
+
+                /** disable this code as we don't need fk be derived from pk
                 for (int i = 0; i < pk.length; i++) {
                     int find = ArrayUtils.indexOf(hostCols, pk[i]);
                     if (find >= 0) {
                         TblColRef derivedCol = initDimensionColRef(fk[i]);
                         initDerivedMap(hostCols[find], DeriveType.PK_FK, dim, derivedCol);
+                    }
+                }
+                 */
+            }
+        }
+
+
+        {
+            // drop those columns (like lookup table's PK but used as a dimension) that can be derived
+            List<TblColRef> derivedCols = Lists.newArrayList();
+            for (TblColRef col : dimensionColumns) {
+                if (isDerived(col) == true)
+                    derivedCols.add(col);
+            }
+
+            if (derivedCols.size() > 0) {
+                dimensionColumns.removeAll(derivedCols);
+            }
+        }
+
+        {
+            // for hierarchy columns, if a column can be derived, use the host col to replace
+            for (DimensionDesc dim : dimensions) {
+                if (dim.isHierarchy()) {
+                    for (int i = 0; i < dim.getColumnRefs().length; i++) {
+                        TblColRef colRef = dim.getColumnRefs()[i];
+                        if (isDerived(colRef)) {
+                            TblColRef[] hostCols = derivedToHostMap.get(colRef).columns;
+                            if (hostCols.length == 1) {
+                               dim.getHierarchy()[i].setColumnRef(hostCols[0]);
+                            } else {
+                                throw new IllegalStateException();
+                            }
+                        }
                     }
                 }
             }
