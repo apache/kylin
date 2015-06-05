@@ -83,6 +83,11 @@ public abstract class BasicService {
         }
     }
 
+    protected void cleanAllDataCache() {
+        if (cacheManager != null)
+            cacheManager.clearAll();
+    }
+
     public void removeOLAPDataSource(String project) {
         logger.info("removeOLAPDataSource is called for project " + project);
         if (StringUtils.isEmpty(project))
