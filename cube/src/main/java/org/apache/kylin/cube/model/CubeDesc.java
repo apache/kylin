@@ -467,7 +467,7 @@ public class CubeDesc extends RootPersistentEntity {
             // init dimension columns
             ArrayList<TblColRef> dimCols = Lists.newArrayList();
             String[] colStrs = dim.getColumn();
-            
+
             // when column is omitted, special case
             if (colStrs == null && dim.isDerived() || ArrayUtils.contains(colStrs, "{FK}")) {
                 for (TblColRef col : join.getForeignKeyColumns()) {
@@ -478,18 +478,18 @@ public class CubeDesc extends RootPersistentEntity {
             else {
                 if (colStrs == null || colStrs.length == 0)
                     throw new IllegalStateException("Dimension column must not be blank " + dim);
-                
+
                 for (String colStr : colStrs) {
                     dimCols.add(initDimensionColRef(dim, colStr));
                 }
-                
+
                 // fill back column ref in hierarchy
                 if (dim.isHierarchy()) {
                     for (int i = 0; i < dimCols.size(); i++)
                         dim.getHierarchy()[i].setColumnRef(dimCols.get(i));
                 }
             }
-            
+
             TblColRef[] dimColArray = (TblColRef[]) dimCols.toArray(new TblColRef[dimCols.size()]);
             dim.setColumnRefs(dimColArray);
 
@@ -573,8 +573,17 @@ public class CubeDesc extends RootPersistentEntity {
         ColumnDesc col = table.findColumnByName(colName);
         if (col == null)
             throw new IllegalArgumentException("No column '" + colName + "' found in table " + table);
-        
+
         TblColRef ref = new TblColRef(col);
+        
+        // always use FK instead PK, FK could be shared by more than one lookup tables
+        JoinDesc join = dim.getJoin();
+        if (join != null) {
+            int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), ref);
+            if (idx >= 0) {
+                ref = join.getForeignKeyColumns()[idx];
+            }
+        }
         return initDimensionColRef(ref);
     }
 
@@ -607,7 +616,7 @@ public class CubeDesc extends RootPersistentEntity {
             if (m.getDependentMeasureRef() != null) {
                 m.setDependentMeasureRef(m.getDependentMeasureRef().toUpperCase());
             }
-            
+
             FunctionDesc f = m.getFunction();
             f.setExpression(f.getExpression().toUpperCase());
             f.setReturnDataType(DataType.getInstance(f.getReturnType()));
@@ -626,7 +635,7 @@ public class CubeDesc extends RootPersistentEntity {
                 if (colRefs.isEmpty() == false)
                     p.setColRefs(colRefs);
             }
-            
+
             // verify holistic count distinct as a dependent measure
             if (m.getFunction().isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
                 throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
