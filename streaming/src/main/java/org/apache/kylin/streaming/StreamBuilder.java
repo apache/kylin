@@ -52,7 +52,6 @@ import java.util.concurrent.*;
 public class StreamBuilder implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
-    private final long startTimestamp;
 
     private StreamParser streamParser = StringStreamParser.instance;
 
@@ -60,26 +59,49 @@ public class StreamBuilder implements Runnable {
 
     private final MicroStreamBatchConsumer consumer;
 
-    private final MicroBatchCondition condition;
-
     private final String streaming;
 
-    public StreamBuilder(String streaming, List<BlockingQueue<StreamMessage>> inputs, MicroBatchCondition condition, MicroStreamBatchConsumer consumer, long startTimestamp) {
+    private final long startTimestamp;
+
+    private final long batchInterval;
+
+    private final int batchSize;
+
+    public static final StreamBuilder newPeriodicalStreamBuilder(String streaming,
+                                                                 List<BlockingQueue<StreamMessage>> inputs,
+                                                                 MicroStreamBatchConsumer consumer,
+                                                                 long startTimestamp,
+                                                                 long batchInterval) {
+        return new StreamBuilder(streaming, inputs, consumer, startTimestamp, batchInterval);
+    }
+
+    public static final StreamBuilder newLimitedSizeStreamBuilder(String streaming,
+                                                                 BlockingQueue<StreamMessage> input,
+                                                                 MicroStreamBatchConsumer consumer,
+                                                                 long startTimestamp,
+                                                                 int batchSize) {
+        return new StreamBuilder(streaming, input, consumer, startTimestamp, batchSize);
+    }
+
+
+    private StreamBuilder(String streaming, List<BlockingQueue<StreamMessage>> inputs, MicroStreamBatchConsumer consumer, long startTimestamp, long batchInterval) {
         Preconditions.checkArgument(inputs.size() > 0);
         this.streaming = streaming;
         this.streamMessageQueues = Lists.newArrayList();
         this.consumer = Preconditions.checkNotNull(consumer);
-        this.condition = condition;
         this.startTimestamp = startTimestamp;
+        this.batchInterval = batchInterval;
+        this.batchSize = -1;
         init(inputs);
     }
 
-    public StreamBuilder(String streaming, BlockingQueue<StreamMessage> input, MicroBatchCondition condition, MicroStreamBatchConsumer consumer, long startTimestamp) {
+    private StreamBuilder(String streaming, BlockingQueue<StreamMessage> input, MicroStreamBatchConsumer consumer, long startTimestamp, int batchSize) {
         this.streaming = streaming;
         this.streamMessageQueues = Lists.newArrayList();
         this.consumer = Preconditions.checkNotNull(consumer);
-        this.condition = condition;
         this.startTimestamp = startTimestamp;
+        this.batchInterval = -1L;
+        this.batchSize = batchSize;
         init(Preconditions.checkNotNull(input));
     }
 
@@ -89,6 +111,14 @@ public class StreamBuilder implements Runnable {
 
     private void init(List<BlockingQueue<StreamMessage>> inputs) {
         this.streamMessageQueues.addAll(inputs);
+    }
+
+    private BatchCondition generateBatchCondition(long startTimestamp) {
+        if (batchInterval > 0) {
+            return new TimePeriodCondition(startTimestamp, startTimestamp + batchInterval);
+        } else {
+            return new LimitedSizeCondition(batchSize);
+        }
     }
 
     @Override
@@ -106,7 +136,7 @@ public class StreamBuilder implements Runnable {
                 ArrayList<Future<MicroStreamBatch>> futures = Lists.newArrayListWithExpectedSize(inputCount);
                 int partitionId = 0;
                 for (BlockingQueue<StreamMessage> streamMessageQueue : streamMessageQueues) {
-                    futures.add(executorService.submit(new StreamFetcher(partitionId++, streamMessageQueue, countDownLatch, start, start + condition.getBatchInterval())));
+                    futures.add(executorService.submit(new StreamFetcher(partitionId++, streamMessageQueue, countDownLatch, generateBatchCondition(start))));
                 }
                 countDownLatch.await();
                 ArrayList<MicroStreamBatch> batches = Lists.newArrayListWithExpectedSize(inputCount);
@@ -125,9 +155,9 @@ public class StreamBuilder implements Runnable {
                         batch = MicroStreamBatch.union(batch, batches.get(i));
                     }
                 }
-                batch.getTimestamp().setFirst(start);
-                batch.getTimestamp().setSecond(start + condition.getBatchInterval());
-                start += condition.getBatchInterval();
+                if (batchInterval > 0) {
+                    start += batchInterval;
+                }
 
                 if (batch.size() == 0) {
                     logger.info("nothing to build, skip to next iteration after sleeping 10s");
@@ -163,15 +193,13 @@ public class StreamBuilder implements Runnable {
         private final BlockingQueue<StreamMessage> streamMessageQueue;
         private final CountDownLatch countDownLatch;
         private final int partitionId;
-        private long startTimestamp;
-        private long endTimestamp;
+        private final BatchCondition condition;
 
-        public StreamFetcher(int partitionId, BlockingQueue<StreamMessage> streamMessageQueue, CountDownLatch countDownLatch, long startTimestamp, long endTimestamp) {
+        public StreamFetcher(int partitionId, BlockingQueue<StreamMessage> streamMessageQueue, CountDownLatch countDownLatch, BatchCondition condition) {
             this.partitionId = partitionId;
             this.streamMessageQueue = streamMessageQueue;
             this.countDownLatch = countDownLatch;
-            this.startTimestamp = startTimestamp;
-            this.endTimestamp = endTimestamp;
+            this.condition = condition;
         }
 
         private void clearCounter() {
@@ -228,22 +256,18 @@ public class StreamBuilder implements Runnable {
                         throw new RuntimeException("parsedStreamMessage of " + new String(streamMessage.getRawData()) + " is null");
                     }
 
-                    final long timestamp = parsedStreamMessage.getTimestamp();
-                    if (timestamp < startTimestamp) {
-                        //TODO properly handle late megs
-                        streamMessageQueue.take();
-                    } else if (timestamp < endTimestamp) {
-                        streamMessageQueue.take();
-                        if (parsedStreamMessage.isAccepted()) {
+                    final BatchCondition.Result result = condition.apply(parsedStreamMessage);
+                    if (parsedStreamMessage.isAccepted()) {
+                        if (result == BatchCondition.Result.ACCEPT) {
+                            streamMessageQueue.take();
                             microStreamBatch.add(parsedStreamMessage);
-                            if (microStreamBatch.size() >= condition.getBatchSize()) {
-                                return microStreamBatch;
-                            }
-                        } else {
-                            //ignore pruned stream message
+                        } else if (result == BatchCondition.Result.DISCARD) {
+                            streamMessageQueue.take();
+                        } else if (result == BatchCondition.Result.REJECT) {
+                            return microStreamBatch;
                         }
                     } else {
-                        return microStreamBatch;
+                        streamMessageQueue.take();
                     }
                 }
             } catch (Exception e) {
