@@ -22,8 +22,4 @@ public class LimitedSizeCondition implements BatchCondition {
         }
     }
 
-    @Override
-    public BatchCondition copy() {
-        return new LimitedSizeCondition(this.limit);
-    }
 }
