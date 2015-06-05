@@ -204,8 +204,7 @@ public class DictionaryManager {
         // 1. If 'useDict' specifies pre-defined data set, use that
         // 2. Otherwise find a lookup table to scan through
 
-        // Note FK on fact table is supported by scan the related PK on lookup
-        // table
+        // Note FK on fact table is supported by scan the related PK on lookup table
 
         //String useDict = cube.getRowkey().getDictionary(col);
 
@@ -279,10 +278,7 @@ public class DictionaryManager {
 
         TableSignature input = dictInfo.getInput();
         for (String existing : existings) {
-            DictionaryInfo existingInfo = load(existing, false); // skip cache,
-            // direct
-            // load from
-            // store
+            DictionaryInfo existingInfo = load(existing, false); // skip cache, direct load from store
             if (input.equals(existingInfo.getInput()))
                 return existing;
         }
@@ -298,9 +294,7 @@ public class DictionaryManager {
 
         for (String existing : existings) {
             logger.info("Checking dup dict :" + existing);
-            DictionaryInfo existingInfo = load(existing, true); // skip cache,
-            // direct load
-            // from store
+            DictionaryInfo existingInfo = load(existing, true); // skip cache, direct load from store
             if (existingInfo == null)
                 logger.info("existingInfo is null");
 
