@@ -111,7 +111,6 @@ public class KafkaConsumer implements Runnable {
             while (isRunning) {
                 int consumeMsgCountAtBeginning = consumeMsgCount;
                 fetchRound++;
-                logger.info("start " + fetchRound + "th round of fetching");
 
                 if (leadBroker == null) {
                     leadBroker = getLeadBroker();
@@ -141,7 +140,7 @@ public class KafkaConsumer implements Runnable {
                     offset++;
                     consumeMsgCount++;
                 }
-                logger.info("Number of messages consumed: " + consumeMsgCount + " offset is " + offset);
+                logger.info("Number of messages consumed: " + consumeMsgCount + " offset is: " + offset + " total fetch round: " + fetchRound);
 
                 if (consumeMsgCount == consumeMsgCountAtBeginning)//nothing this round
                 {

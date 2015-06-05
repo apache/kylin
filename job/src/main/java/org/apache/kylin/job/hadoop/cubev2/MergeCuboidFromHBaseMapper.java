@@ -24,9 +24,9 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableMapper;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.SplittedBytes;
@@ -44,7 +44,6 @@ import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.job.hadoop.cube.KeyValueCreator;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -71,7 +70,7 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
     private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
     // life cycle
 
-//    private Text outputKey = new Text();
+    //    private Text outputKey = new Text();
     private ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
 
     private byte[] newKeyBuf;
@@ -101,7 +100,6 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
             return ret;
         }
     }
-
 
     private CubeSegment findSegmentWithHTable(String htable, CubeInstance cubeInstance) {
         for (CubeSegment segment : cubeInstance.getSegments()) {
@@ -189,8 +187,14 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
                 }
 
                 int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[i + 1].value, 0, splittedByteses[i + 1].length);
+
                 int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBuf, bufOffset);
-                int idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBuf, bufOffset, size);
+                int idInMergedDict;
+                if (size < 0) {
+                    idInMergedDict = mergedDict.nullId();
+                } else {
+                    idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBuf, bufOffset, size);
+                }
                 BytesUtil.writeUnsigned(idInMergedDict, newKeyBuf, bufOffset, mergedDict.getSizeOfId());
 
                 bufOffset += mergedDict.getSizeOfId();
@@ -231,6 +235,5 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
         context.write(outputKey, outputValue);
     }
-
 
 }

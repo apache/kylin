@@ -105,6 +105,14 @@ public class TimeStrDictionary extends Dictionary<String> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o == null)
+            return false;
+
+        return o instanceof TimeStrDictionary;
+    }
+
+    @Override
     public void write(DataOutput out) throws IOException {
     }
 
