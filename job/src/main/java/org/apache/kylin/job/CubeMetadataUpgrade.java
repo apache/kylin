@@ -38,10 +38,6 @@ import org.apache.kylin.cube.model.v1.CubeInstance;
 import org.apache.kylin.cube.model.v1.CubeSegment;
 import org.apache.kylin.cube.model.v1.CubeSegmentStatusEnum;
 import org.apache.kylin.cube.model.v1.CubeStatusEnum;
-import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.lookup.SnapshotManager;
-import org.apache.kylin.dict.lookup.SnapshotTable;
-import org.apache.kylin.dict.lookup.TableReader;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.common.ShellExecutable;
@@ -69,7 +65,10 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -104,13 +103,13 @@ public class CubeMetadataUpgrade {
         upgradeCubeDesc();
         upgradeProjectInstance();
         upgradeCubeInstance();
-      //  upgradeJobInstance();
+        upgradeJobInstance();
 
         verify();
 
     }
 
-    private void verify() {
+    public void verify() {
         MetadataManager.getInstance(config).reload();
         CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
@@ -629,49 +628,61 @@ public class CubeMetadataUpgrade {
 
     public static void main(String[] args) {
 
-        if (!(args != null && args.length == 1)) {
-            System.out.println("Usage: java CubeMetadataUpgrade <metadata_export_folder>; e.g, /export/kylin/meta");
+        if (!(args != null && (args.length == 1 || args.length == 2))) {
+            System.out.println("Usage: java CubeMetadataUpgrade <metadata_export_folder> <verify>; e.g, /export/kylin/meta ");
             return;
         }
 
         String exportFolder = args[0];
-
-        File oldMetaFolder = new File(exportFolder);
-        if (!oldMetaFolder.exists()) {
-            System.out.println("Provided folder doesn't exist: '" + exportFolder + "'");
-            return;
+        boolean verify = false;
+        if (args.length == 2 && "verify".equals(args[1])) {
+            System.out.println("Only verify the metadata in folder " + exportFolder);
+            verify = true;
         }
 
-        if (!oldMetaFolder.isDirectory()) {
-            System.out.println("Provided folder is not a directory: '" + exportFolder + "'");
-            return;
+        CubeMetadataUpgrade instance = null;
+        if (verify) {
+            instance = new CubeMetadataUpgrade(exportFolder);
+            instance.verify();
+        } else {
+            File oldMetaFolder = new File(exportFolder);
+            if (!oldMetaFolder.exists()) {
+                System.out.println("Provided folder doesn't exist: '" + exportFolder + "'");
+                return;
+            }
+
+            if (!oldMetaFolder.isDirectory()) {
+                System.out.println("Provided folder is not a directory: '" + exportFolder + "'");
+                return;
+            }
+
+            String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
+            try {
+                FileUtils.deleteDirectory(new File(newMetadataUrl));
+                FileUtils.copyDirectory(oldMetaFolder, new File(newMetadataUrl));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            instance = new CubeMetadataUpgrade(newMetadataUrl);
+            instance.upgrade();
+            logger.info("=================================================================");
+            logger.info("Run CubeMetadataUpgrade completed; The following resources have been successfully updated : ");
+            for (String s : instance.updatedResources) {
+                logger.info(s);
+            }
+
         }
 
-
-        String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
-        try {
-            FileUtils.deleteDirectory(new File(newMetadataUrl));
-            FileUtils.copyDirectory(oldMetaFolder, new File(newMetadataUrl));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        CubeMetadataUpgrade instance = new CubeMetadataUpgrade(newMetadataUrl);
-
-        instance.upgrade();
         logger.info("=================================================================");
-        logger.info("Run CubeMetadataUpgrade completed; The following resources have been successfully updated in : " + newMetadataUrl);
-        for (String s : instance.updatedResources) {
-            logger.info(s);
-        }
-
-        logger.info("=================================================================");
-        if (instance.errorMsgs.size() > 0) {
+        if (instance.errorMsgs.size() > 0)
+        {
             logger.info("Here are the error/warning messages, you may need check:");
             for (String s : instance.errorMsgs) {
                 logger.warn(s);
             }
-        } else {
+        } else
+        {
             logger.info("No error or warning messages; The migration is success.");
         }
     }
