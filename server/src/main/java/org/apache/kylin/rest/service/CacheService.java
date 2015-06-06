@@ -159,23 +159,25 @@ public class CacheService extends BasicService {
         logger.debug("server mode: " + serverMode);
         if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
             logger.debug("This is the job engine node, will check whether auto merge is needed on cube " + cubeName);
-            CubeInstance cube = getCubeManager().getCube(cubeName);
             CubeSegment newSeg = null;
-            try {
-                newSeg = getCubeManager().autoMergeCubeSegments(cube);
-                if (newSeg != null) {
-                    logger.debug("Will submit merge job on " + newSeg);
-                    CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
-                    builder.setSubmitter("SYSTEM");
-                    newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd());
-                    CubingJob job = builder.mergeJob(newSeg);
-                    getExecutableManager().addJob(job);
-                } else {
-                    logger.debug("Not ready for merge on cube " + cubeName);
-                }
+            synchronized (getCubeManager().getCube(cubeName)) {
+                CubeInstance cube = getCubeManager().getCube(cubeName);
+                try {
+                    newSeg = getCubeManager().autoMergeCubeSegments(cube);
+                    if (newSeg != null) {
+                        newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd());
+                        logger.debug("Will submit merge job on " + newSeg);
+                        CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
+                        builder.setSubmitter("SYSTEM");
+                        CubingJob job = builder.mergeJob(newSeg);
+                        getExecutableManager().addJob(job);
+                    } else {
+                        logger.debug("Not ready for merge on cube " + cubeName);
+                    }
 
-            } catch (IOException e) {
-                logger.error("Failed to auto merge cube " + cubeName, e);
+                } catch (IOException e) {
+                    logger.error("Failed to auto merge cube " + cubeName, e);
+                }
             }
         }
     }
