@@ -563,6 +563,23 @@ public class KylinConfig {
             logger.error("fail to locate kylin.properties");
             throw new RuntimeException("fail to locate kylin.properties");
         }
+        
+        File overrideFile = new File (propFile.getParentFile(), propFile.getName() + ".override");
+        if (overrideFile.exists()) {
+            try {
+                PropertiesConfiguration conf = new PropertiesConfiguration();
+                conf.load(propFile);
+                PropertiesConfiguration override = new PropertiesConfiguration();
+                override.load(overrideFile);
+                conf.copy(override);
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                conf.save(bout);
+                return new ByteArrayInputStream(bout.toByteArray());
+            } catch (ConfigurationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         try {
             return new FileInputStream(propFile);
         } catch (FileNotFoundException e) {
