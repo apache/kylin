@@ -38,6 +38,8 @@ public class DebugTomcat {
             // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
             ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
             System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
+            overrideDevJobJarLocations();
+
             System.setProperty("spring.profiles.active", "testing");
             if (System.getProperty("hdp.version") == null)
                 System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
@@ -64,6 +66,29 @@ public class DebugTomcat {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private static void overrideDevJobJarLocations() {
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        File devJobJar = findFile("../job/target", "kylin-job-.*-SNAPSHOT-job.jar");
+        if (devJobJar != null) {
+            conf.overrideKylinJobJarPath(devJobJar.getAbsolutePath());
+        }
+        File devCoprocessorJar = findFile("../storage/target", "kylin-storage-.*-SNAPSHOT-coprocessor.jar");
+        if (devCoprocessorJar != null) {
+            conf.overrideCoprocessorLocalJar(devCoprocessorJar.getAbsolutePath());
+        }
+    }
+
+    private static File findFile(String dir, String ptn) {
+        File[] files = new File(dir).listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.getName().matches(ptn))
+                    return f;
+            }
+        }
+        return null;
     }
 
     public static void main(String[] args) throws Exception {
