@@ -304,6 +304,7 @@ public class KylinConfig {
     }
 
     public void overrideKylinJobJarPath(String path) {
+        logger.info("override " + KYLIN_JOB_JAR + " to " + path);
         System.setProperty(KYLIN_JOB_JAR, path);
     }
 
@@ -341,6 +342,7 @@ public class KylinConfig {
     }
 
     public void overrideCoprocessorLocalJar(String path) {
+        logger.info("override " + COPROCESSOR_LOCAL_JAR + " to " + path);
         System.setProperty(COPROCESSOR_LOCAL_JAR, path);
     }
 
@@ -468,7 +470,6 @@ public class KylinConfig {
         final String property = System.getProperty(prop);
         return property != null ? property : kylinConfig.getString(prop);
     }
-
 
     private String[] getOptionalStringArray(String prop) {
         final String property = System.getProperty(prop);
