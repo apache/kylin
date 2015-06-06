@@ -249,8 +249,14 @@ public class CubeManager implements IRealizationProvider {
         if (cubeBuilder.getToAddSegs() != null)
             cube.getSegments().addAll(Arrays.asList(cubeBuilder.getToAddSegs()));
 
-        if (cubeBuilder.getToRemoveSegs() != null)
+        List<String> toRemoveResources = Lists.newArrayList();
+        if (cubeBuilder.getToRemoveSegs() != null) {
             cube.getSegments().removeAll(Arrays.asList(cubeBuilder.getToRemoveSegs()));
+
+            for (CubeSegment toRemoveSeg : cubeBuilder.getToRemoveSegs()) {
+                toRemoveResources.add(toRemoveSeg.getStatisticsResourcePath());
+            }
+        }
 
         if (cubeBuilder.getToUpdateSegs() != null) {
             for (CubeSegment segment : cubeBuilder.getToUpdateSegs()) {
@@ -291,6 +297,16 @@ public class CubeManager implements IRealizationProvider {
             cubeBuilder.setCubeInstance(cube);
             retry++;
             cube = updateCube(cubeBuilder, retry);
+        }
+
+        if (toRemoveResources.size() > 0) {
+            for (String resource : toRemoveResources) {
+                try {
+                    getStore().deleteResource(resource);
+                } catch (IOException ioe) {
+                    logger.error("Failed to delete resource " + toRemoveResources.toString());
+                }
+            }
         }
 
         cubeMap.put(cube.getName(), cube);
