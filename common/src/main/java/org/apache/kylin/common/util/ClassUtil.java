@@ -50,4 +50,11 @@ public class ClassUtil {
         return (Class<? extends T>) Class.forName(name);
     }
 
+    public static Object newInstance(String clz) {
+        try {
+            return forName(clz, Object.class).newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

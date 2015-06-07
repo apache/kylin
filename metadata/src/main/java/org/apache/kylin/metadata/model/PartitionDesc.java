@@ -20,15 +20,16 @@ package org.apache.kylin.metadata.model;
 
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.StringSplitter;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.StringSplitter;
 
 /**
- * @author xduo
- * 
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class PartitionDesc {
@@ -44,31 +45,37 @@ public class PartitionDesc {
     private long partitionDateStart = 0L;
     @JsonProperty("partition_type")
     private PartitionType partitionType = PartitionType.APPEND;
+    @JsonProperty("partition_condition_builder")
+    private String partitionConditionBuilderClz = DefaultPartitionConditionBuilder.class.getName();
 
     private TblColRef partitionDateColumnRef;
+    private IPartitionConditionBuilder partitionConditionBuilder;
 
     public void init(Map<String, TableDesc> tables) {
-        if (StringUtils.isNotEmpty(partitionDateColumn)) {
-            partitionDateColumn = partitionDateColumn.toUpperCase();
+        if (StringUtils.isEmpty(partitionDateColumn))
+            return;
 
-            String[] columns = StringSplitter.split(partitionDateColumn, ".");
+        partitionDateColumn = partitionDateColumn.toUpperCase();
 
-            if (null != columns && columns.length == 3) {
-                String tableName = columns[0].toUpperCase() + "." + columns[1].toUpperCase();
+        String[] columns = StringSplitter.split(partitionDateColumn, ".");
 
-                TableDesc table = tables.get(tableName);
-                ColumnDesc col = table.findColumnByName(columns[2]);
-                if (col != null) {
-                    partitionDateColumnRef = new TblColRef(col);
-                } else {
-                    throw new IllegalStateException("The column '" + partitionDateColumn + "' provided in 'partition_date_column' doesn't exist.");
-                }
+        if (null != columns && columns.length == 3) {
+            String tableName = columns[0].toUpperCase() + "." + columns[1].toUpperCase();
+
+            TableDesc table = tables.get(tableName);
+            ColumnDesc col = table.findColumnByName(columns[2]);
+            if (col != null) {
+                partitionDateColumnRef = new TblColRef(col);
             } else {
-                throw new IllegalStateException("The 'partition_date_column' format is invalid: " + partitionDateColumn + ", it should be {db}.{table}.{column}.");
+                throw new IllegalStateException("The column '" + partitionDateColumn + "' provided in 'partition_date_column' doesn't exist.");
             }
+        } else {
+            throw new IllegalStateException("The 'partition_date_column' format is invalid: " + partitionDateColumn + ", it should be {db}.{table}.{column}.");
         }
+        
+        partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
     }
-    
+
     public boolean isPartitioned() {
         return partitionDateColumnRef != null;
     }
@@ -93,6 +100,10 @@ public class PartitionDesc {
         return partitionType;
     }
 
+    public IPartitionConditionBuilder getPartitionConditionBuilder() {
+        return partitionConditionBuilder;
+    }
+
     public void setCubePartitionType(PartitionType partitionType) {
         this.partitionType = partitionType;
     }
@@ -101,4 +112,36 @@ public class PartitionDesc {
         return partitionDateColumnRef;
     }
 
+    // ============================================================================
+
+    public static interface IPartitionConditionBuilder {
+        String buildDateRangeCondition(PartitionDesc partDesc, long startInclusive, long endExclusive, Map<String, String> tableAlias);
+    }
+
+    public static class DefaultPartitionConditionBuilder implements IPartitionConditionBuilder {
+
+        @Override
+        public String buildDateRangeCondition(PartitionDesc partDesc, long startInclusive, long endExclusive, Map<String, String> tableAlias) {
+            String partitionColumnName = partDesc.getPartitionDateColumn();
+
+            // convert to use table alias
+            int indexOfDot = partitionColumnName.lastIndexOf(".");
+            if (indexOfDot > 0) {
+                String partitionTableName = partitionColumnName.substring(0, indexOfDot);
+                if (tableAlias != null && tableAlias.containsKey(partitionTableName))
+                    partitionColumnName = tableAlias.get(partitionTableName) + partitionColumnName.substring(indexOfDot);
+            }
+
+            StringBuilder builder = new StringBuilder();
+
+            if (startInclusive > 0) {
+                builder.append(partitionColumnName + " >= '" + DateFormat.formatToDateStr(startInclusive) + "' ");
+                builder.append("AND ");
+            }
+            builder.append(partitionColumnName + " < '" + DateFormat.formatToDateStr(endExclusive) + "'");
+
+            return builder.toString();
+        }
+
+    }
 }
