@@ -18,6 +18,25 @@
 
 package org.apache.kylin.dict;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.dict.lookup.FileTable;
+import org.apache.kylin.dict.lookup.HiveTable;
+import org.apache.kylin.dict.lookup.ReadableTable;
+import org.apache.kylin.dict.lookup.TableSignature;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,24 +44,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.kylin.dict.lookup.FileTable;
-import org.apache.kylin.dict.lookup.HiveTable;
-import org.apache.kylin.dict.lookup.TableSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.dict.lookup.ReadableTable;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 
 public class DictionaryManager {
 
@@ -116,6 +117,8 @@ public class DictionaryManager {
     }
 
     public DictionaryInfo mergeDictionary(List<DictionaryInfo> dicts) throws IOException {
+        Preconditions.checkArgument(dicts.size() >= 2, "dicts size not valid");
+
         DictionaryInfo firstDictInfo = null;
         int totalSize = 0;
         for (DictionaryInfo info : dicts) {
@@ -134,6 +137,7 @@ public class DictionaryManager {
             throw new IllegalArgumentException("DictionaryManager.mergeDictionary input cannot be null");
         }
 
+        //identical
         DictionaryInfo newDictInfo = new DictionaryInfo(firstDictInfo);
         TableSignature signature = newDictInfo.getInput();
         signature.setSize(totalSize);
@@ -146,9 +150,23 @@ public class DictionaryManager {
             return getDictionaryInfo(dupDict);
         }
 
-        Dictionary<?> newDict = DictionaryGenerator.mergeDictionaries(newDictInfo, dicts);
+        //check for cases where merging dicts are actually same
+        boolean identicalSourceDicts = true;
+        for (int i = 1; i < dicts.size(); ++i) {
+            if (!dicts.get(0).getDictionaryObject().equals(dicts.get(i).getDictionaryObject())) {
+                identicalSourceDicts = false;
+                break;
+            }
+        }
 
-        return trySaveNewDict(newDict, newDictInfo);
+        if (identicalSourceDicts) {
+            logger.info("Use one of the merging dictionaries directly");
+            return dicts.get(0);
+        } else {
+            Dictionary<?> newDict = DictionaryGenerator.mergeDictionaries(DataType.getInstance(newDictInfo.getDataType()), dicts);
+            newDictInfo.setCardinality(newDict.getSize());
+            return trySaveNewDict(newDict, newDictInfo);
+        }
     }
 
     public DictionaryInfo buildDictionary(DataModelDesc model, String dict, TblColRef col, String factColumnsPath) throws IOException {
@@ -170,6 +188,7 @@ public class DictionaryManager {
         }
 
         Dictionary<?> dictionary = DictionaryGenerator.buildDictionary(dictInfo, inpTable);
+        dictInfo.setCardinality(dictionary.getSize());
 
         return trySaveNewDict(dictionary, dictInfo);
     }

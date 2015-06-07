@@ -45,12 +45,6 @@ public class DictionaryGenerator {
 
     private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd" };
 
-    public static Dictionary<?> buildDictionaryFromValueList(DictionaryInfo info, Collection<byte[]> values) {
-        Dictionary<?> dict = buildDictionaryFromValueList(DataType.getInstance(info.getDataType()), values);
-        info.setCardinality(dict.getSize());
-        return dict;
-    }
-
     public static Dictionary<?> buildDictionaryFromValueList(DataType dataType, Collection<byte[]> values) {
         Preconditions.checkNotNull(dataType, "dataType cannot be null");
         Dictionary dict;
@@ -83,7 +77,7 @@ public class DictionaryGenerator {
         return dict;
     }
 
-    public static Dictionary mergeDictionaries(DictionaryInfo targetInfo, List<DictionaryInfo> sourceDicts) {
+    public static Dictionary mergeDictionaries(DataType dataType, List<DictionaryInfo> sourceDicts) {
 
         HashSet<byte[]> dedup = new HashSet<byte[]>();
 
@@ -101,7 +95,8 @@ public class DictionaryGenerator {
         List<byte[]> valueList = new ArrayList<byte[]>();
         valueList.addAll(dedup);
 
-        return buildDictionaryFromValueList(targetInfo, valueList);
+        Dictionary<?> dict = buildDictionaryFromValueList(dataType, valueList);
+        return dict;
     }
 
     public static Dictionary<?> buildDictionary(DictionaryInfo info, ReadableTable inpTable) throws IOException {
@@ -109,11 +104,13 @@ public class DictionaryGenerator {
         // currently all data types are casted to string to build dictionary
         // String dataType = info.getDataType();
 
-        logger.debug("Building dictionary " + JsonUtil.writeValueAsString(info));
+        logger.debug("Building dictionary object " + JsonUtil.writeValueAsString(info));
 
         ArrayList<byte[]> values = loadColumnValues(inpTable, info.getSourceColumnIndex());
 
-        return buildDictionaryFromValueList(info, values);
+        Dictionary<?> dict = buildDictionaryFromValueList(DataType.getInstance(info.getDataType()), values);
+
+        return dict;
     }
 
     private static Dictionary buildDateTimeDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {

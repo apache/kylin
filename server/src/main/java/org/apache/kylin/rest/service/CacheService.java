@@ -27,11 +27,13 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.cube.CubingJobBuilder;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.constant.Constant;
@@ -101,12 +103,14 @@ public class CacheService extends BasicService {
                 CubeDescManager.clearCache();
                 break;
             case ALL:
-                getMetadataManager().reload();
+                MetadataManager.clearCache();
+                DictionaryManager.clearCache();
                 CubeDescManager.clearCache();
                 CubeManager.clearCache();
                 IIDescManager.clearCache();
                 IIManager.clearCache();
                 ProjectManager.clearCache();
+                cleanAllDataCache();
                 removeAllOLAPDataSources();
                 break;
             default:
