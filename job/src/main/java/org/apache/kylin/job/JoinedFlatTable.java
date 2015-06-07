@@ -20,29 +20,30 @@ package org.apache.kylin.job;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.hadoop.hive.SqlHiveDataTypeMapping;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.IntermediateColumnDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.IntermediateColumnDesc;
-import org.apache.kylin.job.hadoop.hive.SqlHiveDataTypeMapping;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author George Song (ysong1)
@@ -202,36 +203,23 @@ public class JoinedFlatTable {
         whereBuilder.append("WHERE");
 
         CubeDesc cubeDesc = desc.getCubeDesc();
-
-        if (cubeDesc.getModel().getFilterCondition() != null && cubeDesc.getModel().getFilterCondition().equals("") == false) {
-            whereBuilder.append(" (").append(cubeDesc.getModel().getFilterCondition()).append(") ");
+        DataModelDesc model = cubeDesc.getModel();
+        
+        if (model.getFilterCondition() != null && model.getFilterCondition().equals("") == false) {
+            whereBuilder.append(" (").append(model.getFilterCondition()).append(") ");
             hasCondition = true;
         }
 
         CubeSegment cubeSegment = desc.getCubeSegment();
 
         if (null != cubeSegment) {
+            PartitionDesc partDesc = model.getPartitionDesc();
             long dateStart = cubeSegment.getDateRangeStart();
             long dateEnd = cubeSegment.getDateRangeEnd();
 
             if (!(dateStart == 0 && dateEnd == Long.MAX_VALUE)) {
-                String partitionColumnName = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumn();
-                int indexOfDot = partitionColumnName.lastIndexOf(".");
-
-                // convert to use table alias;
-                if (indexOfDot > 0) {
-                    String partitionTableName = partitionColumnName.substring(0, indexOfDot);
-                    String columeOnly = partitionColumnName.substring(indexOfDot);
-                    String partitionTableAlias = tableAliasMap.get(partitionTableName);
-                    partitionColumnName = partitionTableAlias + columeOnly;
-                }
-
                 whereBuilder.append(hasCondition ? " AND (" : " (");
-                if (dateStart > 0) {
-                    whereBuilder.append(partitionColumnName + " >= '" + formatDateTimeInWhereClause(dateStart) + "' ");
-                    whereBuilder.append("AND ");
-                }
-                whereBuilder.append(partitionColumnName + " < '" + formatDateTimeInWhereClause(dateEnd) + "'");
+                whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, dateStart, dateEnd, tableAliasMap));
                 whereBuilder.append(")\n");
                 hasCondition = true;
             }
@@ -242,15 +230,6 @@ public class JoinedFlatTable {
         }
     }
 
-    private static String formatDateTimeInWhereClause(long datetime) {
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        f.setTimeZone(TimeZone.getTimeZone("GMT"));
-        Date date = new Date(datetime);
-        String str = f.format(date);
-        // note "2014-10-01" >= "2014-10-01 00:00:00" is FALSE
-        return StringUtil.dropSuffix(str, " 00:00:00");
-    }
-    
     private static String colName(String canonicalColName) {
         return canonicalColName.replace(".", "_");
     }
