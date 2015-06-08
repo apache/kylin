@@ -158,7 +158,39 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         assertEquals(merge, cube.getSegments().get(1));
         assertEquals(seg2, cube.getSegments().get(2));
     }
-    
+
+
+    @Test
+    public void testAllowGap()  throws IOException {
+
+        CubeManager mgr = mgr();
+        CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_left_join_empty");
+
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
+
+        // append first
+        CubeSegment seg1 = mgr.appendSegments(cube, 1000);
+        seg1.setStatus(SegmentStatusEnum.READY);
+
+        assertEquals(1, cube.getSegments().size());
+
+        CubeSegment seg3 = mgr.appendSegments(cube, 2000, 3000, false, false);
+        seg3.setStatus(SegmentStatusEnum.READY);
+        CubeBuilder builder = new CubeBuilder(cube).setToAddSegs(seg3);
+
+        mgr.updateCube(builder);
+        assertEquals(2, cube.getSegments().size());
+
+        CubeSegment seg2 = mgr.appendSegments(cube, 1000, 2000, false, false);
+        builder = new CubeBuilder(cube).setToAddSegs(seg2);
+        mgr.updateCube(builder);
+        assertEquals(3, cube.getSegments().size());
+
+    }
+
+
+
     private void discard(Object o) {
         // throw away input parameter
     }

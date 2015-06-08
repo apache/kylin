@@ -342,19 +342,22 @@ public class CubeManager implements IRealizationProvider {
         return appendSegments(cube, endDate, true, true);
     }
 
-    public CubeSegment appendSegments(CubeInstance cube, long endDate, boolean checkNoBuilding, boolean saveChange) throws IOException {
-        if (checkNoBuilding)
+    public CubeSegment appendSegments(CubeInstance cube, long endDate, boolean strictChecking, boolean saveChange) throws IOException {
+        long startDate = 0;
+        if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
+            startDate = calculateStartDateForAppendSegment(cube);
+        } else {
+            endDate = Long.MAX_VALUE;
+        }
+        return appendSegments(cube, startDate, endDate, strictChecking, saveChange);
+    }
+
+    public CubeSegment appendSegments(CubeInstance cube, long startDate,  long endDate, boolean strictChecking, boolean saveChange) throws IOException {
+        if (strictChecking)
             checkNoBuildingSegment(cube);
 
-        CubeSegment newSegment;
-        if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
-            long startDate = calculateStartDateForAppendSegment(cube);
-            newSegment = newSegment(cube, startDate, endDate);
-        } else {
-            newSegment = newSegment(cube, 0, Long.MAX_VALUE);
-        }
-
-        validateNewSegments(cube, newSegment);
+        CubeSegment newSegment = newSegment(cube, startDate, endDate);
+        validateNewSegments(cube, strictChecking, newSegment);
 
         if (saveChange) {
 
@@ -546,20 +549,29 @@ public class CubeManager implements IRealizationProvider {
         for (int i = timeRanges.length - 1; i >= 0; i--) {
             long toMergeRange = timeRanges[i];
             long currentRange = 0;
+            long lastEndTime = 0;
             List<CubeSegment> toMergeSegments = Lists.newArrayList();
             for (CubeSegment segment : readySegments) {
                 long thisSegmentRange = segment.getDateRangeEnd() - segment.getDateRangeStart();
 
-                if (thisSegmentRange >= toMergeRange) {
+                if (thisSegmentRange >= toMergeRange ) {
                     // this segment and its previous segments will not be merged
                     toMergeSegments.clear();
                     currentRange = 0;
+                    lastEndTime = segment.getDateRangeEnd();
                     continue;
+                }
+
+                if (segment.getDateRangeStart() != lastEndTime && toMergeSegments.isEmpty() == false) {
+                    // gap exists, give up the small segments before the gap;
+                    toMergeSegments.clear();
+                    currentRange = 0;
                 }
 
                 currentRange += thisSegmentRange;
                 if (currentRange < toMergeRange) {
                     toMergeSegments.add(segment);
+                    lastEndTime = segment.getDateRangeEnd();
                 } else {
                     // merge
                     toMergeSegments.add(segment);
@@ -576,7 +588,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment... newSegments) throws IOException {
-        List<CubeSegment> tobe = calculateToBeSegments(cube);
+        List<CubeSegment> tobe = calculateToBeSegments(cube, false);
 
         for (CubeSegment seg : newSegments) {
             if (tobe.contains(seg) == false)
@@ -610,7 +622,11 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {
-        List<CubeSegment> tobe = calculateToBeSegments(cube, newSegments);
+        validateNewSegments(cube, true, newSegments);
+    }
+
+    public void validateNewSegments(CubeInstance cube, boolean strictChecking, CubeSegment... newSegments) {
+        List<CubeSegment> tobe = calculateToBeSegments(cube, strictChecking, newSegments);
         List<CubeSegment> newList = Arrays.asList(newSegments);
         if (tobe.containsAll(newList) == false) {
             throw new IllegalStateException("For cube " + cube + ", the new segments " + newList + " do not fit in its current " + cube.getSegments() + "; the resulted tobe is " + tobe);
@@ -623,7 +639,7 @@ public class CubeManager implements IRealizationProvider {
      * - Favors new segments over the old
      * - Favors big segments over the small
      */
-    private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment... newSegments) {
+    private List<CubeSegment> calculateToBeSegments(CubeInstance cube, boolean strictChecking, CubeSegment... newSegments) {
         CubeDesc cubeDesc = cube.getDescriptor();
         PartitionDesc partDesc = cubeDesc.getModel().getPartitionDesc();
 
@@ -638,7 +654,7 @@ public class CubeManager implements IRealizationProvider {
 
         // check first segment start time
         CubeSegment firstSeg = tobe.get(0);
-        if (firstSeg.getDateRangeStart() != partDesc.getPartitionDateStart()) {
+        if (strictChecking && firstSeg.getDateRangeStart() != partDesc.getPartitionDateStart()) {
             throw new IllegalStateException("For " + cube + ", the first segment, " + firstSeg + ", must start at " + partDesc.getPartitionDateStart());
         }
         firstSeg.validate();
@@ -680,7 +696,7 @@ public class CubeManager implements IRealizationProvider {
             }
 
             // if i, j in sequence
-            if (is.getDateRangeEnd() == js.getDateRangeStart()) {
+            if ((!strictChecking && is.getDateRangeEnd() <= js.getDateRangeStart() || strictChecking && is.getDateRangeEnd() == js.getDateRangeStart())) {
                 i++;
                 j++;
                 continue;
