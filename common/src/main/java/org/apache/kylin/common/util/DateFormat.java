@@ -70,7 +70,7 @@ public class DateFormat {
             return stringToDate(str, DEFAULT_DATE_PATTERN).getTime();
         } else if (str.length() == 19) {
             return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).getTime();
-        } else if (str.length() == 23) {
+        } else if (str.length() > 19) {
             return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).getTime();
         } else {
             throw new IllegalArgumentException("there is no valid date pattern for:" + str);

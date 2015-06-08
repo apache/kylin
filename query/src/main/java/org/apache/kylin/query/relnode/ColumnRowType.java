@@ -32,10 +32,8 @@ import org.apache.kylin.metadata.model.TblColRef;
 public class ColumnRowType {
 
     private List<TblColRef> columns;
-    // for calculated column, like (CASE LSTG_FORMAT_NAME WHEN 'Auction' THEN
-    // '111' ELSE '222' END)
-    // source columns are the contributing physical columns, here the
-    // LSTG_FORMAT_NAME
+    // for calculated column, like (CASE LSTG_FORMAT_NAME WHEN 'Auction' THEN '111' ELSE '222' END)
+    // source columns are the contributing physical columns, here the LSTG_FORMAT_NAME
     private List<Set<TblColRef>> sourceColumns;
 
     public ColumnRowType(List<TblColRef> columns) {
