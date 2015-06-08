@@ -82,9 +82,9 @@ public final class MicroStreamBatch {
         MicroStreamBatch result = new MicroStreamBatch(one);
         result.streams.addAll(another.streams);
         result.offset.setFirst(Math.min(result.offset.getFirst(), another.offset.getFirst()));
-        result.offset.setSecond(Math.min(result.offset.getSecond(), another.offset.getSecond()));
+        result.offset.setSecond(Math.max(result.offset.getSecond(), another.offset.getSecond()));
         result.timestamp.setFirst(Math.min(result.timestamp.getFirst(), another.timestamp.getFirst()));
-        result.timestamp.setSecond(Math.min(result.timestamp.getSecond(), another.timestamp.getSecond()));
+        result.timestamp.setSecond(Math.max(result.timestamp.getSecond(), another.timestamp.getSecond()));
         result.rawMessageCount = one.rawMessageCount + another.rawMessageCount;
         return result;
     }

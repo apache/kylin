@@ -152,7 +152,8 @@ public class StreamBuilder implements Runnable {
                 MicroStreamBatch batch = batches.get(0);
                 if (batches.size() > 1) {
                     for (int i = 1; i < inputCount; i++) {
-                        batch = MicroStreamBatch.union(batch, batches.get(i));
+                        if (batches.get(i).size() > 0)
+                            batch = MicroStreamBatch.union(batch, batches.get(i));
                     }
                 }
                 if (batchInterval > 0) {
