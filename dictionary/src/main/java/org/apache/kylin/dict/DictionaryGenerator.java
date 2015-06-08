@@ -54,7 +54,10 @@ public class DictionaryGenerator {
 
         // build dict, case by data type
         if (dataType.isDateTimeFamily()) {
-            dict = buildDateTimeDict(values, baseId, nSamples, samples);
+            if (dataType.isDate())
+                dict = buildDateDict(values, baseId, nSamples, samples);
+            else
+                dict = new TimeStrDictionary(); // base ID is always 0
         } else if (dataType.isNumberFamily()) {
             dict = buildNumberDict(values, baseId, nSamples, samples);
         } else {
@@ -113,7 +116,7 @@ public class DictionaryGenerator {
         return dict;
     }
 
-    private static Dictionary buildDateTimeDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildDateDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         final int BAD_THRESHOLD = 0;
         String matchPattern = null;
 
@@ -131,7 +134,7 @@ public class DictionaryGenerator {
                     if (samples.size() < nSamples && samples.contains(str) == false)
                         samples.add(str);
                 } catch (ParseException e) {
-                    logger.info("Unrecognized datetime value: " + str);
+                    logger.info("Unrecognized date value: " + str);
                     badCount++;
                     if (badCount > BAD_THRESHOLD) {
                         matchPattern = null;
@@ -144,9 +147,7 @@ public class DictionaryGenerator {
             }
         }
 
-        //FIXME: except for date type, all other date time family types are treated as TimeStrDictionary
-        logger.info("Using TimeStrDictionary");
-        return new TimeStrDictionary();
+        throw new IllegalStateException("Unrecognized datetime value");
     }
 
     private static Dictionary buildStringDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {

@@ -181,7 +181,7 @@ public class Tuple implements ITuple {
             // convert epoch time
             return dateToEpicDays(strValue);// Optiq expects Integer instead of Long. by honma
         } else if ("timestamp".equals(dataTypeName) || "datetime".equals(dataTypeName)) {
-            return Long.parseLong(strValue);
+            return Long.valueOf(DateFormat.stringToMillis(strValue));
         } else if ("tinyint".equals(dataTypeName)) {
             return Byte.valueOf(strValue);
         } else if ("short".equals(dataTypeName) || "smallint".equals(dataTypeName)) {
@@ -194,8 +194,6 @@ public class Tuple implements ITuple {
             return Double.valueOf(strValue);
         } else if ("decimal".equals(dataTypeName)) {
             return new BigDecimal(strValue);
-        } else if ("timestamp".equals(dataTypeName)) {
-            return Long.valueOf(DateFormat.stringToMillis(strValue));
         } else if ("float".equals(dataTypeName)){
             return Float.valueOf(strValue);
         } else {

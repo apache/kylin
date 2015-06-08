@@ -148,6 +148,20 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
         return column;
     }
 
+    private TblColRef translateFirstRexInputRef(RexCall call, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
+        for (RexNode operand : call.getOperands()) {
+            if (operand instanceof RexInputRef) {
+                return translateRexInputRef((RexInputRef) operand, inputColumnRowType, fieldName, sourceCollector);
+            }
+            if (operand instanceof RexCall) {
+                TblColRef r = translateFirstRexInputRef((RexCall) operand, inputColumnRowType, fieldName, sourceCollector);
+                if (r != null)
+                    return r;
+            }
+        }
+        return null;
+    }
+    
     private TblColRef translateRexInputRef(RexInputRef inputRef, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
         int index = inputRef.getIndex();
         // check it for rewrite count
@@ -175,16 +189,10 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
     private TblColRef translateRexCall(RexCall call, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
         SqlOperator operator = call.getOperator();
         if (operator == SqlStdOperatorTable.EXTRACT_DATE) {
-            List<RexNode> extractDateOps = call.getOperands();
-            RexCall reinterpret = (RexCall) extractDateOps.get(1);
-            List<RexNode> reinterpretOps = reinterpret.getOperands();
-            RexInputRef inputRef = (RexInputRef) reinterpretOps.get(0);
-            return translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
+            return translateFirstRexInputRef(call, inputColumnRowType, fieldName, sourceCollector);
         } else if (operator instanceof SqlUserDefinedFunction) {
             if (operator.getName().equals("QUARTER")) {
-                List<RexNode> quaterOps = call.getOperands();
-                RexInputRef inputRef = (RexInputRef) quaterOps.get(0);
-                return translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
+                return translateFirstRexInputRef(call, inputColumnRowType, fieldName, sourceCollector);
             }
         } else if (operator instanceof SqlCaseOperator) {
             for (RexNode operand : call.getOperands()) {
