@@ -128,7 +128,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
       switch ($scope.newMeasure.function.expression) {
         case "SUM":
-          if (colType === "smallint" || colType === "int" || colType === "bigint") {
+          if (colType === "smallint" || colType === "int" || colType === "bigint"||colType==="integer") {
             $scope.newMeasure.function.returntype = 'bigint';
           } else {
             if (colType.indexOf('decimal') != -1) {

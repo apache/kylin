@@ -128,7 +128,7 @@
     </div>
 
     <div ng-if="curQuery.graph.show" class="row">
-        <div class="col-xs-2">
+          <div class="col-xs-4 col-md-3">
             <div class="graph_content">
                 <label>Graph Type</label>
 
@@ -174,8 +174,7 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-xs-10">
+      <div class="col-xs-8 col-md-9">
             <div ng-if="curQuery.graph.data.length > 0">
                 <div ng-if="curQuery.graph.type.value == 'bar'">
                     <nvd3-multi-bar-chart
