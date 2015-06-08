@@ -10,8 +10,16 @@ public class TimePeriodCondition implements BatchCondition {
     public TimePeriodCondition(long startTime, long endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
-
     }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
     @Override
     public Result apply(ParsedStreamMessage message) {
         if (message.getTimestamp() < startTime) {
