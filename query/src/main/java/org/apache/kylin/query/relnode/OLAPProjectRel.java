@@ -125,6 +125,8 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
             String fieldName = columnField.getName();
             Set<TblColRef> sourceCollector = new HashSet<TblColRef>();
             TblColRef column = translateRexNode(rex, inputColumnRowType, fieldName, sourceCollector);
+            if (column == null)
+                throw new IllegalStateException("No TblColRef found in " + rex);
             columns.add(column);
             sourceColumns.add(sourceCollector);
         }
