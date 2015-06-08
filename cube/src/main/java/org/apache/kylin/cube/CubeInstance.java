@@ -409,6 +409,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return autoMergeTimeRanges;
     }
 
+    public void setAutoMergeTimeRanges(long[] autoMergeTimeRanges) {
+        this.autoMergeTimeRanges = autoMergeTimeRanges;
+    }
+
     public boolean needAutoMerge() {
         if (!this.getDescriptor().getModel().getPartitionDesc().isPartitioned())
             return false;
