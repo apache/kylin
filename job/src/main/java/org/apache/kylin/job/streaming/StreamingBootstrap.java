@@ -146,7 +146,12 @@ public class StreamingBootstrap {
             if (partitionIdOffsetMap.containsKey(transferredPartitionId)) {
                 final long earliestOffset = KafkaRequester.getLastOffset(kafkaClusterConfig.getTopic(), partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaClusterConfig);
                 long committedOffset = partitionIdOffsetMap.get(transferredPartitionId);
-                Preconditions.checkArgument(committedOffset >= earliestOffset && committedOffset <= latestOffset, String.format("invalid offset:%d, earliestOffset:%d, latestOffset:%d", committedOffset, earliestOffset, latestOffset));
+                Preconditions.checkArgument(committedOffset <= latestOffset, String.format("invalid offset:%d, earliestOffset:%d, latestOffset:%d", committedOffset, earliestOffset, latestOffset));
+
+                if (committedOffset < earliestOffset) {
+                    logger.warn(String.format("invalid offset:%d, earliestOffset:%d; Will use earliestOffset as committedOffset.", committedOffset, earliestOffset));
+                    committedOffset = earliestOffset;
+                }
                 streamingOffset = committedOffset;
             }
             logger.info("starting offset:" + streamingOffset + " cluster id:" + clusterID + " partitionId:" + partitionId + " transferredPartitionId:" + transferredPartitionId);
