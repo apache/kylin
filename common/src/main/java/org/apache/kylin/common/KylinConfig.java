@@ -304,6 +304,7 @@ public class KylinConfig {
     }
 
     public void overrideKylinJobJarPath(String path) {
+        logger.info("override " + KYLIN_JOB_JAR + " to " + path);
         System.setProperty(KYLIN_JOB_JAR, path);
     }
 
@@ -341,6 +342,7 @@ public class KylinConfig {
     }
 
     public void overrideCoprocessorLocalJar(String path) {
+        logger.info("override " + COPROCESSOR_LOCAL_JAR + " to " + path);
         System.setProperty(COPROCESSOR_LOCAL_JAR, path);
     }
 
@@ -469,7 +471,6 @@ public class KylinConfig {
         return property != null ? property : kylinConfig.getString(prop);
     }
 
-
     private String[] getOptionalStringArray(String prop) {
         final String property = System.getProperty(prop);
         if (!StringUtil.isBlank(property))
@@ -562,6 +563,23 @@ public class KylinConfig {
             logger.error("fail to locate kylin.properties");
             throw new RuntimeException("fail to locate kylin.properties");
         }
+        
+        File overrideFile = new File (propFile.getParentFile(), propFile.getName() + ".override");
+        if (overrideFile.exists()) {
+            try {
+                PropertiesConfiguration conf = new PropertiesConfiguration();
+                conf.load(propFile);
+                PropertiesConfiguration override = new PropertiesConfiguration();
+                override.load(overrideFile);
+                conf.copy(override);
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                conf.save(bout);
+                return new ByteArrayInputStream(bout.toByteArray());
+            } catch (ConfigurationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         try {
             return new FileInputStream(propFile);
         } catch (FileNotFoundException e) {
