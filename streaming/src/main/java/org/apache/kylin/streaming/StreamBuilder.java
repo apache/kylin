@@ -136,7 +136,7 @@ public class StreamBuilder implements Runnable {
                 ArrayList<Future<MicroStreamBatch>> futures = Lists.newArrayListWithExpectedSize(inputCount);
                 int partitionId = 0;
                 for (BlockingQueue<StreamMessage> streamMessageQueue : streamMessageQueues) {
-                    futures.add(executorService.submit(new StreamFetcher(partitionId++, streamMessageQueue, countDownLatch, generateBatchCondition(start))));
+                    futures.add(executorService.submit(new StreamFetcher(partitionId++, streamMessageQueue, countDownLatch, generateBatchCondition(start), getStreamParser())));
                 }
                 countDownLatch.await();
                 ArrayList<MicroStreamBatch> batches = Lists.newArrayListWithExpectedSize(inputCount);
@@ -152,9 +152,14 @@ public class StreamBuilder implements Runnable {
                 MicroStreamBatch batch = batches.get(0);
                 if (batches.size() > 1) {
                     for (int i = 1; i < inputCount; i++) {
-                        if (batches.get(i).size() > 0)
+                        if (batches.get(i).size() > 0) {
                             batch = MicroStreamBatch.union(batch, batches.get(i));
+                        }
                     }
+                }
+                if (batches.size() > 1) {
+                    batch.getTimestamp().setFirst(start);
+                    batch.getTimestamp().setSecond(start + batchInterval);
                 }
                 if (batchInterval > 0) {
                     start += batchInterval;
@@ -186,98 +191,6 @@ public class StreamBuilder implements Runnable {
         } catch (Exception e) {
             logger.error("consumer encountered exception", e);
             throw new RuntimeException("consumer encountered exception", e);
-        }
-    }
-
-    private class StreamFetcher implements Callable<MicroStreamBatch> {
-
-        private final BlockingQueue<StreamMessage> streamMessageQueue;
-        private final CountDownLatch countDownLatch;
-        private final int partitionId;
-        private final BatchCondition condition;
-
-        public StreamFetcher(int partitionId, BlockingQueue<StreamMessage> streamMessageQueue, CountDownLatch countDownLatch, BatchCondition condition) {
-            this.partitionId = partitionId;
-            this.streamMessageQueue = streamMessageQueue;
-            this.countDownLatch = countDownLatch;
-            this.condition = condition;
-        }
-
-        private void clearCounter() {
-        }
-
-        private StreamMessage peek(BlockingQueue<StreamMessage> queue, long timeout) {
-            long t = System.currentTimeMillis();
-            while (true) {
-                final StreamMessage peek = queue.peek();
-                if (peek != null) {
-                    return peek;
-                } else {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        logger.warn("stream queue should not be interrupted", e);
-                        return null;
-                    }
-                    if (System.currentTimeMillis() - t > timeout) {
-                        break;
-                    }
-                }
-            }
-            return queue.peek();
-        }
-
-        @Override
-        public MicroStreamBatch call() throws Exception {
-            try {
-                MicroStreamBatch microStreamBatch = null;
-                while (true) {
-                    if (microStreamBatch == null) {
-                        microStreamBatch = new MicroStreamBatch(partitionId);
-                        clearCounter();
-                    }
-                    StreamMessage streamMessage = peek(streamMessageQueue, 30000);
-                    if (streamMessage == null) {
-                        logger.info("The stream queue is drained, current available stream count: " + microStreamBatch.size());
-                        if (!microStreamBatch.isEmpty()) {
-                            return microStreamBatch;
-                        } else {
-                            continue;
-                        }
-                    }
-                    if (streamMessage.getOffset() < 0) {
-                        consumer.stop();
-                        logger.warn("streaming encountered EOF, stop building");
-                        return null;
-                    }
-
-                    microStreamBatch.incRawMessageCount();
-                    final ParsedStreamMessage parsedStreamMessage = getStreamParser().parse(streamMessage);
-                    if (parsedStreamMessage == null) {
-                        throw new RuntimeException("parsedStreamMessage of " + new String(streamMessage.getRawData()) + " is null");
-                    }
-
-                    final BatchCondition.Result result = condition.apply(parsedStreamMessage);
-                    if (parsedStreamMessage.isAccepted()) {
-                        if (result == BatchCondition.Result.ACCEPT) {
-                            streamMessageQueue.take();
-                            microStreamBatch.add(parsedStreamMessage);
-                        } else if (result == BatchCondition.Result.DISCARD) {
-                            streamMessageQueue.take();
-                        } else if (result == BatchCondition.Result.REJECT) {
-                            return microStreamBatch;
-                        }
-                    } else {
-                        streamMessageQueue.take();
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("build stream error, stop building", e);
-                throw new RuntimeException("build stream error, stop building", e);
-            } finally {
-                logger.info("one partition sign off");
-                countDownLatch.countDown();
-            }
         }
     }
 

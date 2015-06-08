@@ -40,7 +40,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
-import kafka.javaapi.PartitionMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
@@ -63,6 +62,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -97,15 +97,6 @@ public class StreamingBootstrap {
         return bootstrap;
     }
 
-    private static Broker getLeadBroker(KafkaClusterConfig kafkaClusterConfig, int partitionId) {
-        final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(kafkaClusterConfig.getTopic(), partitionId, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
-        if (partitionMetadata != null && partitionMetadata.errorCode() == 0) {
-            return partitionMetadata.leader();
-        } else {
-            return null;
-        }
-    }
-
     public void stop() {
         for (KafkaConsumer consumer : kafkaConsumers.values()) {
             consumer.stop();
@@ -123,24 +114,34 @@ public class StreamingBootstrap {
         return result;
     }
 
-    public void start(String streaming, int partitionId) throws Exception {
+    public void start(String streaming, int partitionId, BootstrapConfig bootstrapConfig) throws Exception {
         final StreamingConfig streamingConfig = streamingManager.getStreamingConfig(streaming);
         Preconditions.checkArgument(streamingConfig != null, "cannot find kafka config:" + streaming);
 
         if (!StringUtils.isEmpty(streamingConfig.getIiName())) {
             startIIStreaming(streamingConfig, partitionId);
         } else if (!StringUtils.isEmpty(streamingConfig.getCubeName())) {
-            startCubeStreaming(streamingConfig, partitionId);
+            if (bootstrapConfig.isOneOff()) {
+                Preconditions.checkArgument(bootstrapConfig.getStart() != 0);
+                Preconditions.checkArgument(bootstrapConfig.getEnd() != 0);
+                startOneOffCubeStreaming(streamingConfig, bootstrapConfig.getStart(), bootstrapConfig.getEnd());
+            } else {
+                startCubeStreaming(streamingConfig, partitionId);
+            }
         } else {
             throw new IllegalArgumentException("no cube or ii in kafka config");
         }
     }
 
-    private List<BlockingQueue<StreamMessage>> consume(int clusterID, KafkaClusterConfig kafkaClusterConfig, final int partitionCount, final Map<Integer, Long> partitionIdOffsetMap, final int partitionOffset) {
+    public void start(String streaming, int partitionId) throws Exception {
+        start(streaming, partitionId, new BootstrapConfig());
+    }
+
+    private List<BlockingQueue<StreamMessage>> consume(int clusterID, KafkaClusterConfig kafkaClusterConfig, final int partitionCount, final Map<Integer, Long> partitionIdOffsetMap, final int partitionIdOffset) {
         List<BlockingQueue<StreamMessage>> result = Lists.newArrayList();
         for (int partitionId = 0; partitionId < partitionCount; ++partitionId) {
-            final Broker leadBroker = getLeadBroker(kafkaClusterConfig, partitionId);
-            final int transferredPartitionId = partitionId + partitionOffset;
+            final Broker leadBroker = StreamingUtil.getLeadBroker(kafkaClusterConfig, partitionId);
+            final int transferredPartitionId = partitionId + partitionIdOffset;
             final long latestOffset = KafkaRequester.getLastOffset(kafkaClusterConfig.getTopic(), partitionId, OffsetRequest.LatestTime(), leadBroker, kafkaClusterConfig);
             long streamingOffset = latestOffset;
             if (partitionIdOffsetMap.containsKey(transferredPartitionId)) {
@@ -168,27 +169,27 @@ public class StreamingBootstrap {
         final List<BlockingQueue<StreamMessage>> allClustersData = Lists.newArrayList();
 
         ArrayList<Integer> allPartitions = Lists.newArrayList();
-        int partitionOffset = 0;
+        int partitionIdOffset = 0;
         for (KafkaClusterConfig kafkaClusterConfig : kafkaClusterConfigs) {
             final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
             for (int i = 0; i < partitionCount; i++) {
-                allPartitions.add(i + partitionOffset);
+                allPartitions.add(i + partitionIdOffset);
             }
-            partitionOffset += partitionCount;
+            partitionIdOffset += partitionCount;
         }
         final Map<Integer, Long> partitionIdOffsetMap = streamingManager.getOffset(streamingConfig.getName(), allPartitions);
 
         int clusterID = 0;
-        partitionOffset = 0;
+        partitionIdOffset = 0;
         for (KafkaClusterConfig kafkaClusterConfig : kafkaClusterConfigs) {
             final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
             Preconditions.checkArgument(partitionId >= 0 && partitionId < partitionCount, "invalid partition id:" + partitionId);
 
-            final List<BlockingQueue<StreamMessage>> oneClusterData = consume(clusterID, kafkaClusterConfig, partitionCount, partitionIdOffsetMap, partitionOffset);
+            final List<BlockingQueue<StreamMessage>> oneClusterData = consume(clusterID, kafkaClusterConfig, partitionCount, partitionIdOffsetMap, partitionIdOffset);
             logger.info("Cluster {} with {} partitions", allClustersData.size(), oneClusterData.size());
             allClustersData.addAll(oneClusterData);
             clusterID++;
-            partitionOffset += partitionCount;
+            partitionIdOffset += partitionCount;
         }
 
         final String cubeName = streamingConfig.getCubeName();
@@ -219,6 +220,38 @@ public class StreamingBootstrap {
         }
     }
 
+    private void startOneOffCubeStreaming(StreamingConfig streamingConfig, long startTimestamp, long endTimestamp) throws Exception {
+        final String cubeName = streamingConfig.getCubeName();
+        final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
+        final StreamParser streamParser = getStreamParser(streamingConfig, Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(), new Function<IntermediateColumnDesc, TblColRef>() {
+            @Nullable
+            @Override
+            public TblColRef apply(IntermediateColumnDesc input) {
+                return input.getColRef();
+            }
+        }));
+        final int batchInterval = 5 * 60 * 1000;
+        startTimestamp = TimeUtil.getNextPeriodStart(startTimestamp, batchInterval);
+        endTimestamp = TimeUtil.getNextPeriodStart(endTimestamp, batchInterval);
+        final List<BlockingQueue<StreamMessage>> queues = Lists.newLinkedList();
+
+        int clusterId = 0;
+        for (KafkaClusterConfig kafkaClusterConfig : streamingConfig.getKafkaClusterConfigs()) {
+            HashMap<Integer, Long> partitionIdOffsetMap = Maps.newHashMap();
+            final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
+            for (int i = 0; i < partitionCount; ++i) {
+                partitionIdOffsetMap.put(i, StreamingUtil.findClosestOffsetWithDataTimestamp(kafkaClusterConfig, i, startTimestamp, streamParser));
+            }
+            final List<BlockingQueue<StreamMessage>> oneClusterQueue = consume(clusterId, kafkaClusterConfig, partitionCount, partitionIdOffsetMap, 0);
+            queues.addAll(oneClusterQueue);
+            logger.info("Cluster {} with {} partitions", clusterId, oneClusterQueue.size());
+        }
+
+        logger.info(String.format("starting one off streaming build with timestamp{%d, %d}", startTimestamp, endTimestamp));
+        OneOffStreamBuilder oneOffStreamBuilder = new OneOffStreamBuilder(streamingConfig.getName(), queues, streamParser, new CubeStreamConsumer(cubeName), startTimestamp, endTimestamp);
+        Executors.newSingleThreadExecutor().submit(oneOffStreamBuilder).get();
+    }
+
     private void startIIStreaming(StreamingConfig streamingConfig, final int partitionId) throws Exception {
 
         List<KafkaClusterConfig> allClustersConfigs = streamingConfig.getKafkaClusterConfigs();
@@ -236,7 +269,7 @@ public class StreamingBootstrap {
         Preconditions.checkArgument(ii.getSegments().size() > 0);
         final IISegment iiSegment = ii.getSegments().get(0);
 
-        final Broker leadBroker = getLeadBroker(kafkaClusterConfig, partitionId);
+        final Broker leadBroker = StreamingUtil.getLeadBroker(kafkaClusterConfig, partitionId);
         Preconditions.checkState(leadBroker != null, "cannot find lead broker");
         final int shard = ii.getDescriptor().getSharding();
         Preconditions.checkArgument(shard % partitionCount == 0);

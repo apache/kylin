@@ -34,6 +34,7 @@
 
 package org.apache.kylin.job.streaming;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.cache.RemoteCacheUpdater;
@@ -49,20 +50,33 @@ public class StreamingCLI {
 
     public static void main(String[] args) {
         try {
-            if (args.length != 3) {
-                printArgsError(args);
-                return;
-            }
-
             AbstractRestCache.setCacheUpdater(new RemoteCacheUpdater());
 
-            if (args[0].equals("start")) {
-                String kafkaConfName = args[1];
-                int partition = Integer.parseInt(args[2]);
-                StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).start(kafkaConfName, partition);
-            } else {
-                printArgsError(args);
+            Preconditions.checkArgument(args[0].equals("streaming"));
+            Preconditions.checkArgument(args[1].equals("start"));
+
+            String kafkaConfName = args[2];
+            int partition = Integer.parseInt(args[3]);
+            int i = 4;
+            BootstrapConfig bootstrapConfig = new BootstrapConfig();
+            while (i < args.length) {
+                String argName = args[i];
+                switch (argName) {
+                    case "-oneoff":
+                        bootstrapConfig.setOneOff(Boolean.parseBoolean(args[i + 1]));
+                        break;
+                    case "-start":
+                        bootstrapConfig.setStart(Long.parseLong(args[i + 1]));
+                        break;
+                    case "-end":
+                        bootstrapConfig.setEnd(Long.parseLong(args[i + 1]));
+                        break;
+                    default:
+                        throw new RuntimeException("invalid argName:" + argName);
+                }
+                i += 2;
             }
+            StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).start(kafkaConfName, partition, bootstrapConfig);
         } catch (Exception e) {
             printArgsError(args);
             logger.error("error start streaming", e);

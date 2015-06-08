@@ -81,7 +81,7 @@ then
     exit 0
 elif [ $1 == "streaming" ]
 then
-    if [ $# != 4 ]
+    if [ $# -lt 4 ]
     then
         echo 'invalid input args'
         exit -1
@@ -112,7 +112,7 @@ then
         -Dkylin.hive.dependency=${hive_dependency} \
         -Dkylin.hbase.dependency=${hbase_dependency} \
         -Dspring.profiles.active=${spring_profile} \
-        org.apache.kylin.job.streaming.StreamingCLI start $3 $4 > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/$3_$4 &
+        org.apache.kylin.job.streaming.StreamingCLI $@ > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/$3_$4 &
         echo "streaming started $3 partition $4"
         exit 0
     elif [ $2 == "stop" ]
