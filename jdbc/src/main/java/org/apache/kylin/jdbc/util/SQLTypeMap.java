@@ -23,7 +23,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import net.hydromatic.avatica.ColumnMetaData;
@@ -39,11 +39,11 @@ import org.apache.kylin.jdbc.stub.KylinColumnMetaData;
  */
 public class SQLTypeMap {
 
-    public final static Map<String, ColumnMetaData> schemaMetaTypeMapping = new HashMap<String, ColumnMetaData>();
+    public final static Map<String, ColumnMetaData> schemaMetaTypeMapping = new LinkedHashMap<String, ColumnMetaData>();
 
-    public final static Map<String, ColumnMetaData> columnMetaTypeMapping = new HashMap<String, ColumnMetaData>();
+    public final static Map<String, ColumnMetaData> columnMetaTypeMapping = new LinkedHashMap<String, ColumnMetaData>();
 
-    public final static Map<String, ColumnMetaData> tableMetaTypeMapping = new HashMap<String, ColumnMetaData>();
+    public final static Map<String, ColumnMetaData> tableMetaTypeMapping = new LinkedHashMap<String, ColumnMetaData>();
 
     static {
         schemaMetaTypeMapping.put("TABLE_CAT", KylinColumnMetaData.dummy(0, "TABLE_SCHEM", "TABLE_SCHEM", ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
