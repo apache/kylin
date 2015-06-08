@@ -30,11 +30,19 @@ public class DateFormat {
     }
 
     public static String formatToDateStr(long millis) {
-        return getDateFormat(DEFAULT_DATE_PATTERN).format(new Date(millis));
+        return formatToTimeStr(millis, DEFAULT_DATE_PATTERN);
     }
 
     public static String formatToTimeStr(long millis) {
-        return getDateFormat(DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS).format(new Date(millis));
+        return formatToTimeStr(millis, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS);
+    }
+
+    public static String formatToTimeWithoutMilliStr(long millis) {
+        return formatToTimeStr(millis, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+    }
+
+    public static String formatToTimeStr(long millis, String pattern) {
+        return getDateFormat(pattern).format(new Date(millis));
     }
 
     public static String dateToString(Date date, String pattern) {

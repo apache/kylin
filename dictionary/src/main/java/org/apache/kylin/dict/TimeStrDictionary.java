@@ -56,14 +56,7 @@ public class TimeStrDictionary extends Dictionary<String> {
             return null;
 
         long millis = 1000L * id;
-        String s = Long.toString(millis);
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < maxLenghOfPositiveLong - s.length(); ++i) {
-            sb.append('0');
-        }
-        sb.append(s);
-        return sb.toString();
+        return DateFormat.formatToTimeWithoutMilliStr(millis);
     }
 
     @Override

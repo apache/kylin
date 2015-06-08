@@ -5,8 +5,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Date;
-
 /**
  */
 public class TimeStrDictionaryTests {
@@ -31,17 +29,17 @@ public class TimeStrDictionaryTests {
 
     @Test
     public void testEncodeDecode() {
-        encodeDecode("1999-01-12", DateFormat.DEFAULT_DATE_PATTERN);
-        encodeDecode("2038-01-09", DateFormat.DEFAULT_DATE_PATTERN);
-        encodeDecode("2038-01-08", DateFormat.DEFAULT_DATE_PATTERN);
-        encodeDecode("1970-01-01", DateFormat.DEFAULT_DATE_PATTERN);
-        encodeDecode("1970-01-02", DateFormat.DEFAULT_DATE_PATTERN);
+        encodeDecode("1999-01-12");
+        encodeDecode("2038-01-09");
+        encodeDecode("2038-01-08");
+        encodeDecode("1970-01-01");
+        encodeDecode("1970-01-02");
 
-        encodeDecode("1999-01-12 11:00:01", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
-        encodeDecode("2038-01-09 01:01:02", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
-        encodeDecode("2038-01-19 03:14:07", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
-        encodeDecode("1970-01-01 23:22:11", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
-        encodeDecode("1970-01-02 23:22:11", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+        encodeDecode("1999-01-12 11:00:01");
+        encodeDecode("2038-01-09 01:01:02");
+        encodeDecode("2038-01-19 03:14:07");
+        encodeDecode("1970-01-01 23:22:11");
+        encodeDecode("1970-01-02 23:22:11");
     }
 
     @Test
@@ -49,14 +47,12 @@ public class TimeStrDictionaryTests {
         Assert.assertEquals(-1, dict.getIdFromValue("2038-01-19 03:14:08"));
     }
 
-    public void encodeDecode(String origin, String pattern) {
+    public void encodeDecode(String origin) {
         int a = dict.getIdFromValue(origin);
-        String v = dict.getValueFromId(a);
-        long ts = Long.parseLong(v);
-        String back = DateFormat.dateToString(new Date(ts), pattern);
-        Assert.assertEquals(origin, back);
+        String back = dict.getValueFromId(a);
+
+        String originChoppingMilis = DateFormat.formatToTimeWithoutMilliStr(DateFormat.stringToMillis(origin));
+        Assert.assertEquals(originChoppingMilis, back);
     }
-
-
 
 }
