@@ -286,10 +286,9 @@ public class CubeManager implements IRealizationProvider {
         try {
             getStore().putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
         } catch (IllegalStateException ise) {
-            logger.error("Get error when update cube " + cube.getName(), ise);
 
-            if (retry >= 3) {
-                logger.error("Retried 3 times till got error, abandoning...");
+            if (retry >= 7) {
+                logger.error("Retried 7 times till got error, abandoning...", ise);
                 throw ise;
             }
 
