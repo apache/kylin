@@ -144,7 +144,6 @@ public class CubeStorageEngine implements ICachableStorageEngine {
         return this.uuid;
     }
 
-
     @Override
     public boolean isDynamic() {
         return false;
@@ -399,8 +398,12 @@ public class CubeStorageEngine implements ICachableStorageEngine {
 
         List<HBaseKeyRange> result = Lists.newArrayList();
 
+        logger.info("Current cubeInstance is " + cubeInstance + " with " + cubeInstance.getSegments().size() + " segs in all");
+        List<CubeSegment> segs = cubeInstance.getSegments(SegmentStatusEnum.READY);
+        logger.info("READY segs count: " + segs.size());
+
         // build row key range for each cube segment
-        for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
+        for (CubeSegment cubeSeg : segs) {
 
             // consider derived (lookup snapshot), filter on dimension may
             // differ per segment
@@ -420,7 +423,9 @@ public class CubeStorageEngine implements ICachableStorageEngine {
             result.addAll(mergedRanges);
         }
 
+        logger.info("hbasekeyrange count: " + result.size());
         dropUnhitSegments(result);
+        logger.info("hbasekeyrange count after dropping unhit :" + result.size());
 
         return result;
     }

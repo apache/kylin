@@ -18,6 +18,8 @@
 
 package org.apache.kylin.cube;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -48,6 +50,7 @@ import org.apache.kylin.metadata.realization.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -351,7 +354,7 @@ public class CubeManager implements IRealizationProvider {
         return appendSegments(cube, startDate, endDate, strictChecking, saveChange);
     }
 
-    public CubeSegment appendSegments(CubeInstance cube, long startDate,  long endDate, boolean strictChecking, boolean saveChange) throws IOException {
+    public CubeSegment appendSegments(CubeInstance cube, long startDate, long endDate, boolean strictChecking, boolean saveChange) throws IOException {
         if (strictChecking)
             checkNoBuildingSegment(cube);
 
@@ -385,7 +388,7 @@ public class CubeManager implements IRealizationProvider {
         Pair<Long, Long> range = alignMergeRange(cube, startDate, endDate);
         CubeSegment newSegment = newSegment(cube, range.getFirst(), range.getSecond());
 
-        validateNewSegments(cube, newSegment);
+        validateNewSegments(cube, false, newSegment);
 
         CubeBuilder cubeBuilder = new CubeBuilder(cube);
         cubeBuilder.setToAddSegs(newSegment);
@@ -553,7 +556,7 @@ public class CubeManager implements IRealizationProvider {
             for (CubeSegment segment : readySegments) {
                 long thisSegmentRange = segment.getDateRangeEnd() - segment.getDateRangeStart();
 
-                if (thisSegmentRange >= toMergeRange ) {
+                if (thisSegmentRange >= toMergeRange) {
                     // this segment and its previous segments will not be merged
                     toMergeSegments.clear();
                     currentRange = 0;
@@ -658,7 +661,7 @@ public class CubeManager implements IRealizationProvider {
         }
         firstSeg.validate();
 
-        for (int i = 0, j = 1; j < tobe.size();) {
+        for (int i = 0, j = 1; j < tobe.size(); ) {
             CubeSegment is = tobe.get(i);
             CubeSegment js = tobe.get(j);
             js.validate();
@@ -749,6 +752,15 @@ public class CubeManager implements IRealizationProvider {
             for (CubeSegment segment : cubeInstance.getSegments()) {
                 usedStorageLocation.put(cubeName.toUpperCase(), segment.getStorageLocationIdentifier());
             }
+
+            logger.info("Reloaded new cube: " + cubeName + " with reference being" + cubeInstance + " having " + cubeInstance.getSegments().size() + " segments:" +
+                    StringUtils.join(Collections2.transform(cubeInstance.getSegments(), new Function<CubeSegment, String>() {
+                        @Nullable
+                        @Override
+                        public String apply(CubeSegment input) {
+                            return input.getStorageLocationIdentifier();
+                        }
+                    }), ","));
 
             return cubeInstance;
         } catch (Exception e) {
