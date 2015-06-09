@@ -1,12 +1,5 @@
 [
     {
-        "url": "/home",
-        "params": {
-            "templateUrl": "partials/home.html",
-            "controller": "IndexCtrl"
-        }
-    },
-    {
         "url": "/cubes",
         "params": {
             "templateUrl": "partials/cubes/cubes.html",

@@ -25,6 +25,8 @@ public class HBaseResponse implements Serializable {
     private String tableName;
     private long tableSize;
     private int regionCount;
+    private long dateRangeStart;
+    private long dateRangeEnd;
 
     public HBaseResponse() {
     }
@@ -73,4 +75,28 @@ public class HBaseResponse implements Serializable {
     public void setRegionCount(int regionCount) {
         this.regionCount = regionCount;
     }
+
+    /**
+     * @return the segmentStartTime
+     */
+    public long getDateRangeStart() {
+        return dateRangeStart;
+    }
+
+    /**
+     * @param segmentStartTime
+     *            the segmentStartTime to set
+     */
+    public void setDateRangeStart(long dateRangeStart) { this.dateRangeStart = dateRangeStart; }
+
+    /**
+     * @return the segmentEndTime
+     */
+    public long getDateRangeEnd() { return dateRangeEnd; }
+
+    /**
+     * @param segmentEndTime
+     *            the segmentEndTime to set
+     */
+    public void setDateRangeEnd(long dateRangeEnd) { this.dateRangeEnd = dateRangeEnd; }
 }
