@@ -89,7 +89,6 @@ public class DataType {
 
     private static final ConcurrentMap<DataType, DataType> CACHE = new ConcurrentHashMap<DataType, DataType>();
 
-
     public static DataType getInstance(String type) {
         if (type == null)
             return null;
@@ -143,7 +142,6 @@ public class DataType {
                     throw new IllegalArgumentException("bad data type -- " + datatype + ", too many precision/scale parts");
             }
         }
-
 
         // FIXME 256 for unknown string precision
         if ((name.equals("char") || name.equals("varchar")) && precision == -1) {
@@ -203,9 +201,20 @@ public class DataType {
         return DATETIME_FAMILY.contains(name);
     }
 
-    public boolean isDate()
-    {
+    public boolean isDate() {
         return name.equals("date");
+    }
+
+    public boolean isTime() {
+        return name.equals("time");
+    }
+
+    public boolean isTimestamp() {
+        return name.equals("timestamp");
+    }
+
+    public boolean isDatetime() {
+        return name.equals("datetime");
     }
 
     public boolean isTinyInt() {

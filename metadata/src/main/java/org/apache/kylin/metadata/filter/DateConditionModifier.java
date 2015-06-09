@@ -3,6 +3,7 @@ package org.apache.kylin.metadata.filter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.Collection;
@@ -11,21 +12,17 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ * Calcite passed down all time family constants as GregorianCalendar,
+ * we'll have to reformat it to date/time according to column definition
  */
 public class DateConditionModifier implements TupleFilterSerializer.Decorator {
 
-    private IdentityHashMap<TupleFilter, Boolean> dateCompareTupleChildren;
+    private IdentityHashMap<TupleFilter, DataType> dateCompareTupleChildren;
 
     public DateConditionModifier(TupleFilter root) {
         this.dateCompareTupleChildren = Maps.newIdentityHashMap();
     }
 
-    /**
-     * replace filter on timestamp column to null, so that two tuple filter trees can
-     * be compared regardless of the filter condition on timestamp column (In top level where conditions concatenated by ANDs)
-     * @param filter
-     * @return
-     */
     @Override
     public TupleFilter onSerialize(TupleFilter filter) {
 
@@ -38,24 +35,39 @@ public class DateConditionModifier implements TupleFilterSerializer.Decorator {
             }
 
             TblColRef col = cfilter.getColumn();
-            if (col == null || (!"date".equals(col.getDatatype()))) {
+            if (col == null || !col.getType().isDateTimeFamily()) {
                 return cfilter;
             }
 
             for (TupleFilter child : filter.getChildren()) {
-                dateCompareTupleChildren.put(child, true);
+                dateCompareTupleChildren.put(child, col.getType());
             }
         }
 
         if (filter instanceof ConstantTupleFilter && dateCompareTupleChildren.containsKey(filter)) {
             ConstantTupleFilter constantTupleFilter = (ConstantTupleFilter) filter;
             Set<String> newValues = Sets.newHashSet();
+            DataType columnType = dateCompareTupleChildren.get(filter);
 
             for (String value : (Collection<String>) constantTupleFilter.getValues()) {
-                newValues.add(DateFormat.formatToDateStr(Long.valueOf(value)));
+                newValues.add(formatTime(Long.valueOf(value), columnType));
             }
             return new ConstantTupleFilter(newValues);
         }
         return filter;
+    }
+
+    private String formatTime(long millis, DataType dataType) {
+        if (dataType.isDatetime() || dataType.isTime()) {
+            throw new RuntimeException("Datetime and time type are not supported yet");
+        }
+
+        if (dataType.isTimestamp()) {
+            return DateFormat.formatToTimeStr(millis);
+        } else if (dataType.isDate()) {
+            return DateFormat.formatToDateStr(millis);
+        } else {
+            throw new RuntimeException("Unknown type " + dataType + " to formatTime");
+        }
     }
 }

@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 6/3/15.
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class KafkaClusterConfig extends RootPersistentEntity {
