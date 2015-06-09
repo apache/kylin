@@ -55,28 +55,35 @@ public class StreamingCLI {
             Preconditions.checkArgument(args[0].equals("streaming"));
             Preconditions.checkArgument(args[1].equals("start"));
 
-            String kafkaConfName = args[2];
-            int partition = Integer.parseInt(args[3]);
-            int i = 4;
+            int i = 2;
             BootstrapConfig bootstrapConfig = new BootstrapConfig();
             while (i < args.length) {
                 String argName = args[i];
                 switch (argName) {
                     case "-oneoff":
-                        bootstrapConfig.setOneOff(Boolean.parseBoolean(args[i + 1]));
+                        bootstrapConfig.setOneOff(Boolean.parseBoolean(args[++i]));
                         break;
                     case "-start":
-                        bootstrapConfig.setStart(Long.parseLong(args[i + 1]));
+                        bootstrapConfig.setStart(Long.parseLong(args[++i]));
                         break;
                     case "-end":
-                        bootstrapConfig.setEnd(Long.parseLong(args[i + 1]));
+                        bootstrapConfig.setEnd(Long.parseLong(args[++i]));
+                        break;
+                    case "-streaming":
+                        bootstrapConfig.setStreaming(args[++i]);
+                        break;
+                    case "-partition":
+                        bootstrapConfig.setPartitionId(Integer.parseInt(args[++i]));
+                        break;
+                    case "-margin":
+                        bootstrapConfig.setMargin(Long.parseLong(args[++i]));
                         break;
                     default:
-                        throw new RuntimeException("invalid argName:" + argName);
+                        logger.warn("ignore this arg:" + argName);
                 }
-                i += 2;
+                i++;
             }
-            StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).start(kafkaConfName, partition, bootstrapConfig);
+            StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).start(bootstrapConfig);
         } catch (Exception e) {
             printArgsError(args);
             logger.error("error start streaming", e);

@@ -111,19 +111,23 @@ public class StreamingBootstrap {
         return result;
     }
 
-    public void start(String streaming, int partitionId, BootstrapConfig bootstrapConfig) throws Exception {
+    public void start(BootstrapConfig bootstrapConfig) throws Exception {
+        final String streaming = bootstrapConfig.getStreaming();
+        Preconditions.checkNotNull(streaming, "streaming name cannot be empty");
         final StreamingConfig streamingConfig = streamingManager.getStreamingConfig(streaming);
         Preconditions.checkArgument(streamingConfig != null, "cannot find kafka config:" + streaming);
 
         if (!StringUtils.isEmpty(streamingConfig.getIiName())) {
+            int partitionId = bootstrapConfig.getPartitionId();
+            Preconditions.checkArgument(partitionId >= 0, "partitionId cannot be empty for inverted index streaming");
             startIIStreaming(streamingConfig, partitionId);
         } else if (!StringUtils.isEmpty(streamingConfig.getCubeName())) {
             if (bootstrapConfig.isOneOff()) {
                 Preconditions.checkArgument(bootstrapConfig.getStart() != 0);
                 Preconditions.checkArgument(bootstrapConfig.getEnd() != 0);
-                startOneOffCubeStreaming(streamingConfig, bootstrapConfig.getStart(), bootstrapConfig.getEnd());
+                startOneOffCubeStreaming(streamingConfig, bootstrapConfig.getStart(), bootstrapConfig.getEnd(), bootstrapConfig.getMargin());
             } else {
-                startCubeStreaming(streamingConfig, partitionId);
+                startCubeStreaming(streamingConfig);
             }
         } else {
             throw new IllegalArgumentException("no cube or ii in kafka config");
@@ -131,7 +135,10 @@ public class StreamingBootstrap {
     }
 
     public void start(String streaming, int partitionId) throws Exception {
-        start(streaming, partitionId, new BootstrapConfig());
+        final BootstrapConfig bootstrapConfig = new BootstrapConfig();
+        bootstrapConfig.setPartitionId(partitionId);
+        bootstrapConfig.setStreaming(streaming);
+        start(bootstrapConfig);
     }
 
     private List<BlockingQueue<StreamMessage>> consume(final int clusterID, final KafkaClusterConfig kafkaClusterConfig, final int partitionCount, final Map<Integer, Long> partitionIdOffsetMap, final int partitionIdOffset) {
@@ -154,21 +161,13 @@ public class StreamingBootstrap {
             }
             logger.info("starting offset:" + streamingOffset + " cluster id:" + clusterID + " partitionId:" + partitionId + " transferredPartitionId:" + transferredPartitionId);
             KafkaConsumer consumer = new KafkaConsumer(clusterID, kafkaClusterConfig.getTopic(), partitionId, streamingOffset, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
-            final String threadName = String.format("%s_%d_%d", kafkaClusterConfig.getTopic(), clusterID, partitionId);
-            Executors.newSingleThreadExecutor(new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    final Thread thread = new Thread(r, threadName);
-                    thread.setDaemon(true);
-                    return thread;
-                }
-            }).submit(consumer);
+            Executors.newSingleThreadExecutor().submit(consumer);
             result.add(consumer.getStreamQueue(0));
         }
         return result;
     }
 
-    private void startCubeStreaming(StreamingConfig streamingConfig, final int partitionId) throws Exception {
+    private void startCubeStreaming(StreamingConfig streamingConfig) throws Exception {
         List<KafkaClusterConfig> kafkaClusterConfigs = streamingConfig.getKafkaClusterConfigs();
 
         final List<BlockingQueue<StreamMessage>> allClustersData = Lists.newArrayList();
@@ -188,7 +187,6 @@ public class StreamingBootstrap {
         partitionIdOffset = 0;
         for (KafkaClusterConfig kafkaClusterConfig : kafkaClusterConfigs) {
             final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
-            Preconditions.checkArgument(partitionId >= 0 && partitionId < partitionCount, "invalid partition id:" + partitionId);
 
             final List<BlockingQueue<StreamMessage>> oneClusterData = consume(clusterID, kafkaClusterConfig, partitionCount, partitionIdOffsetMap, partitionIdOffset);
             logger.info("Cluster {} with {} partitions", allClustersData.size(), oneClusterData.size());
@@ -225,7 +223,7 @@ public class StreamingBootstrap {
         }
     }
 
-    private void startOneOffCubeStreaming(StreamingConfig streamingConfig, long startTimestamp, long endTimestamp) throws Exception {
+    private void startOneOffCubeStreaming(StreamingConfig streamingConfig, long startTimestamp, long endTimestamp, long margin) throws Exception {
         final String cubeName = streamingConfig.getCubeName();
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
         final StreamParser streamParser = getStreamParser(streamingConfig, Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(), new Function<IntermediateColumnDesc, TblColRef>() {
@@ -235,9 +233,6 @@ public class StreamingBootstrap {
                 return input.getColRef();
             }
         }));
-        final int batchInterval = 5 * 60 * 1000;
-        startTimestamp = TimeUtil.getNextPeriodStart(startTimestamp, batchInterval);
-        endTimestamp = TimeUtil.getNextPeriodStart(endTimestamp, batchInterval);
         final List<BlockingQueue<StreamMessage>> queues = Lists.newLinkedList();
 
         int clusterId = 0;
@@ -248,7 +243,7 @@ public class StreamingBootstrap {
             final CountDownLatch countDownLatch = new CountDownLatch(partitionCount);
             for (int i = 0; i < partitionCount; ++i) {
                 final int idx = i;
-                final long start = startTimestamp;
+                final long start = startTimestamp - margin;
                 executorService.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -270,7 +265,7 @@ public class StreamingBootstrap {
         }
 
         logger.info(String.format("starting one off streaming build with timestamp{%d, %d}", startTimestamp, endTimestamp));
-        OneOffStreamBuilder oneOffStreamBuilder = new OneOffStreamBuilder(streamingConfig.getName(), queues, streamParser, new CubeStreamConsumer(cubeName), startTimestamp, endTimestamp);
+        OneOffStreamBuilder oneOffStreamBuilder = new OneOffStreamBuilder(streamingConfig.getName(), queues, streamParser, new CubeStreamConsumer(cubeName), startTimestamp, endTimestamp, margin);
         Executors.newSingleThreadExecutor().submit(oneOffStreamBuilder).get();
         logger.info("one off build finished");
         System.exit(0);

@@ -83,7 +83,7 @@ elif [ $1 == "streaming" ]
 then
     if [ $# -lt 4 ]
     then
-        echo 'invalid input args'
+        echo "invalid input args $@"
         exit -1
     fi
     if [ $2 == "start" ]
@@ -113,7 +113,7 @@ then
         -Dkylin.hbase.dependency=${hbase_dependency} \
         -Dspring.profiles.active=${spring_profile} \
         org.apache.kylin.job.streaming.StreamingCLI $@ > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/$3_$4 &
-        echo "streaming started $3 partition $4"
+        echo "streaming started name: $3 id: $4"
         exit 0
     elif [ $2 == "stop" ]
     then

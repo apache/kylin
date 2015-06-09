@@ -22,9 +22,9 @@ public class OneOffStreamBuilder implements Runnable {
     private final TimePeriodCondition batchCondition;
     private StreamParser streamParser;
 
-    public OneOffStreamBuilder(String streaming, List<BlockingQueue<StreamMessage>> queues, StreamParser streamParser, MicroStreamBatchConsumer consumer, long startTime, long endTime) {
+    public OneOffStreamBuilder(String streaming, List<BlockingQueue<StreamMessage>> queues, StreamParser streamParser, MicroStreamBatchConsumer consumer, long startTime, long endTime, long margin) {
         Preconditions.checkArgument(queues.size() > 0);
-        this.batchCondition = new TimePeriodCondition(startTime, endTime);
+        this.batchCondition = new TimePeriodCondition(startTime, endTime, margin);
         this.streaming = streaming;
         this.queues = queues;
         this.consumer = Preconditions.checkNotNull(consumer);
