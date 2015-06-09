@@ -154,6 +154,7 @@ public class RowKeyDesc {
 
     private RowKeyColDesc getColDesc(TblColRef col) {
         RowKeyColDesc desc = columnMap.get(col);
+
         if (desc == null)
             throw new NullPointerException("Column " + col + " does not exist in row key desc");
         return desc;
