@@ -52,7 +52,6 @@ import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
-import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -190,7 +189,6 @@ public class CubeController extends BasicController {
      *
      * @param cubeName Cube ID
      * @return
-     * @throws SchedulerException
      * @throws IOException
      */
     @RequestMapping(value = "/{cubeName}/rebuild", method = {RequestMethod.PUT})
