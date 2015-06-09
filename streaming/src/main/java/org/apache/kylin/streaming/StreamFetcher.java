@@ -84,6 +84,10 @@ public class StreamFetcher implements Callable<MicroStreamBatch> {
                     if (result == BatchCondition.Result.ACCEPT) {
                         streamMessageQueue.take();
                         microStreamBatch.add(parsedStreamMessage);
+                    } else if (result == BatchCondition.Result.LAST_ACCEPT_FOR_BATCH) {
+                        streamMessageQueue.take();
+                        microStreamBatch.add(parsedStreamMessage);
+                        return microStreamBatch;
                     } else if (result == BatchCondition.Result.DISCARD) {
                         streamMessageQueue.take();
                     } else if (result == BatchCondition.Result.REJECT) {

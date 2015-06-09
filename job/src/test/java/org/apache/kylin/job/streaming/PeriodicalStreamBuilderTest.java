@@ -95,7 +95,7 @@ public class PeriodicalStreamBuilderTest extends LocalFileMetadataTestCase {
         logger.info("prepare to add StreamMessage");
         while (true) {
             long ts = System.currentTimeMillis();
-            if (ts > timeout + interval) {
+            if (ts >= timeout + interval) {
                 break;
             }
             if (ts >= nextPeriodStart && ts < timeout) {

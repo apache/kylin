@@ -16,10 +16,14 @@ public class LimitedSizeCondition implements BatchCondition {
     public Result apply(ParsedStreamMessage message) {
         if (count < limit) {
             count++;
-            return Result.ACCEPT;
+
+            if (count == limit) {
+                return Result.LAST_ACCEPT_FOR_BATCH;
+            } else {
+                return Result.ACCEPT;
+            }
         } else {
             return Result.REJECT;
         }
     }
-
 }
