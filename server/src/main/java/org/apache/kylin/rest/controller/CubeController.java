@@ -449,6 +449,8 @@ public class CubeController extends BasicController {
             }
 
             hr.setTableName(tableName);
+            hr.setDateRangeStart(segment.getDateRangeStart());
+            hr.setDateRangeEnd(segment.getDateRangeEnd());
             hbase.add(hr);
         }
 
