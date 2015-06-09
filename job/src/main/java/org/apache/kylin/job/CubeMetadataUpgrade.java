@@ -65,10 +65,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -103,9 +100,79 @@ public class CubeMetadataUpgrade {
         upgradeCubeDesc();
         upgradeProjectInstance();
         upgradeCubeInstance();
-        upgradeJobInstance();
-
+        //upgradeJobInstance();
         verify();
+
+    }
+
+    public void cleanup() {
+        MetadataManager.getInstance(config).reload();
+        CubeDescManager.getInstance(config);
+        CubeManager cubeManager = CubeManager.getInstance(config);
+
+        List<String> activeResourceList = Lists.newArrayList();
+        for (org.apache.kylin.cube.CubeInstance cube : cubeManager.listAllCubes()) {
+            for (org.apache.kylin.cube.CubeSegment segment : cube.getSegments()) {
+                activeResourceList.addAll(segment.getSnapshotPaths());
+                activeResourceList.addAll(segment.getDictionaryPaths());
+            }
+        }
+
+        List<String> toDeleteResource = Lists.newArrayList();
+        List<String> activeResource = Lists.newArrayList();
+        try {
+            ArrayList<String> snapshotTables = getStore().listResources(ResourceStore.SNAPSHOT_RESOURCE_ROOT);
+
+            for (String snapshotTable : snapshotTables) {
+                ArrayList<String> snapshotNames = getStore().listResources(snapshotTable);
+                if (snapshotNames != null)
+                    for (String snapshot : snapshotNames) {
+                        if (!activeResourceList.contains(snapshot)) {
+                            toDeleteResource.add(snapshot);
+
+                        } else {
+                            activeResource.add(snapshot);
+                        }
+                    }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            ArrayList<String> dictTables = getStore().listResources(ResourceStore.DICT_RESOURCE_ROOT);
+
+            for (String table : dictTables) {
+                ArrayList<String> tableColNames = getStore().listResources(table);
+                if (tableColNames != null)
+                    for (String tableCol : tableColNames) {
+                        ArrayList<String> dictionaries = getStore().listResources(tableCol);
+                        if (dictionaries != null)
+                            for (String dict : dictionaries)
+                                if (!activeResourceList.contains(dict)) {
+                                    toDeleteResource.add(dict);
+                                } else {
+                                    activeResource.add(dict);
+                                }
+                    }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        if (toDeleteResource.size() > 0) {
+            logger.info("The following resources is never needed, will be dropped, number :" + toDeleteResource.size());
+
+            for (String s : toDeleteResource) {
+                logger.info(s);
+                try {
+                    getStore().deleteResource(s);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
     }
 
@@ -115,40 +182,8 @@ public class CubeMetadataUpgrade {
         CubeDescManager.getInstance(config);
         CubeManager cubeManager = CubeManager.getInstance(config);
         ProjectManager.getInstance(config);
+        //cleanup();
 
-        /*
-        DictionaryManager dictManager = DictionaryManager.getInstance(config);
-        SnapshotManager snapshotManager = SnapshotManager.getInstance(config);
-        List<org.apache.kylin.cube.CubeInstance> allCubes = cubeManager.listAllCubes();
-        for (org.apache.kylin.cube.CubeInstance cube : allCubes) {
-            for (org.apache.kylin.cube.CubeSegment cubeSegment : cube.getSegments()) {
-                Collection<String> snapshots = cubeSegment.getSnapshots().values();
-                for (String s : snapshots) {
-                    try {
-                        SnapshotTable t = snapshotManager.getSnapshotTable(s);
-                        TableReader reader = t.getReader();
-                        while (reader.next()) {
-                            System.out.println(Arrays.toString(reader.getRow()));
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                Collection<String> dicts = cubeSegment.getDictionaries().values();
-                for (String s : dicts) {
-                    try {
-                        org.apache.kylin.dict.Dictionary<?> dict = dictManager.getDictionary(s);
-
-                        System.out.println(dict.getMaxId());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-        }
-        */
     }
 
     private List<String> listResourceStore(String pathRoot) {
@@ -478,9 +513,15 @@ public class CubeMetadataUpgrade {
 
     private void upgradeJobInstance(String path) throws IOException {
         JobInstance job = getStore().getResource(path, JobInstance.class, new JsonSerializer<JobInstance>(JobInstance.class));
+        long lastModified = job.getLastModified();
+        if (System.currentTimeMillis() - lastModified > 2592000000l) {
+            // old than 30 days, skip;
+            return;
+        }
         CubingJob cubingJob = new CubingJob();
         cubingJob.setId(job.getId());
         cubingJob.setName(job.getName());
+        cubingJob.setCubeName(job.getRelatedCube());
         cubingJob.setSubmitter(job.getSubmitter());
         for (JobInstance.JobStep step : job.getSteps()) {
             final AbstractExecutable executable = parseToExecutable(step);
@@ -675,14 +716,12 @@ public class CubeMetadataUpgrade {
         }
 
         logger.info("=================================================================");
-        if (instance.errorMsgs.size() > 0)
-        {
+        if (instance.errorMsgs.size() > 0) {
             logger.info("Here are the error/warning messages, you may need check:");
             for (String s : instance.errorMsgs) {
                 logger.warn(s);
             }
-        } else
-        {
+        } else {
             logger.info("No error or warning messages; The migration is success.");
         }
     }

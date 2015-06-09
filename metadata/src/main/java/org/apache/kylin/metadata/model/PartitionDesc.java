@@ -73,7 +73,7 @@ public class PartitionDesc {
             throw new IllegalStateException("The 'partition_date_column' format is invalid: " + partitionDateColumn + ", it should be {db}.{table}.{column}.");
         }
         
-        partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
+       partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
     }
 
     public boolean isPartitioned() {
@@ -143,5 +143,30 @@ public class PartitionDesc {
             return builder.toString();
         }
 
+    }
+
+    public static class YearMonthDayPartitionConditionBuilder implements PartitionDesc.IPartitionConditionBuilder {
+
+        @Override
+        public String buildDateRangeCondition(PartitionDesc partDesc, long l, long l1, Map<String, String> map) {
+
+            String partitionColumnName = partDesc.getPartitionDateColumn();
+            String partitionTableName;
+
+            // convert to use table alias
+            int indexOfDot = partitionColumnName.lastIndexOf(".");
+            if (indexOfDot > 0) {
+                partitionTableName = partitionColumnName.substring(0, indexOfDot);
+            } else {
+                throw new IllegalStateException("The partitionColumnName is invalid: " + partitionColumnName);
+            }
+
+            if (map.containsKey(partitionTableName)) {
+                partitionTableName = map.get(partitionTableName);
+            }
+
+            String sql = String.format("CONCAT(%s.YEAR,'-',%s.MONTH,'-',%s.DAY)", partitionTableName, partitionTableName, partitionTableName);
+            return sql;
+        }
     }
 }

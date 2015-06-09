@@ -47,7 +47,7 @@ public class CubingJob extends DefaultChainedExecutable {
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
 
-    void setCubeName(String name) {
+    public void setCubeName(String name) {
         setParam(CUBE_INSTANCE_NAME, name);
     }
 
