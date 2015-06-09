@@ -133,7 +133,7 @@ public class TrieDictionaryTest {
 
     @Test
     public void englishWordsTest() throws Exception {
-        InputStream is = new FileInputStream("src/test/resources/dict/english-words.80 (scowl-2015.05.18).txt");
+        InputStream is = new FileInputStream("src/test/resources/dict/english-words.80 (scowl-2015.05.18).dic");
         ArrayList<String> str = loadStrings(is);
         testStringDictionary(str, null);
     }
