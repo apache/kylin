@@ -67,6 +67,7 @@ public class CacheService extends BasicService {
 
     public void rebuildCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "rebuild cache type: " + cacheType + " name:" + cacheKey;
+        logger.info(log);
         try {
             switch (cacheType) {
             case CUBE:
