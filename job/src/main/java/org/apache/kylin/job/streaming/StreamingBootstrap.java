@@ -65,10 +65,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /**
  */
@@ -137,7 +134,7 @@ public class StreamingBootstrap {
         start(streaming, partitionId, new BootstrapConfig());
     }
 
-    private List<BlockingQueue<StreamMessage>> consume(int clusterID, KafkaClusterConfig kafkaClusterConfig, final int partitionCount, final Map<Integer, Long> partitionIdOffsetMap, final int partitionIdOffset) {
+    private List<BlockingQueue<StreamMessage>> consume(final int clusterID, final KafkaClusterConfig kafkaClusterConfig, final int partitionCount, final Map<Integer, Long> partitionIdOffsetMap, final int partitionIdOffset) {
         List<BlockingQueue<StreamMessage>> result = Lists.newArrayList();
         for (int partitionId = 0; partitionId < partitionCount; ++partitionId) {
             final Broker leadBroker = StreamingUtil.getLeadBroker(kafkaClusterConfig, partitionId);
@@ -157,7 +154,15 @@ public class StreamingBootstrap {
             }
             logger.info("starting offset:" + streamingOffset + " cluster id:" + clusterID + " partitionId:" + partitionId + " transferredPartitionId:" + transferredPartitionId);
             KafkaConsumer consumer = new KafkaConsumer(clusterID, kafkaClusterConfig.getTopic(), partitionId, streamingOffset, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
-            Executors.newSingleThreadExecutor().submit(consumer);
+            final String threadName = String.format("%s_%d_%d", kafkaClusterConfig.getTopic(), clusterID, partitionId);
+            Executors.newSingleThreadExecutor(new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable r) {
+                    final Thread thread = new Thread(r, threadName);
+                    thread.setDaemon(true);
+                    return thread;
+                }
+            }).submit(consumer);
             result.add(consumer.getStreamQueue(0));
         }
         return result;
@@ -236,20 +241,39 @@ public class StreamingBootstrap {
         final List<BlockingQueue<StreamMessage>> queues = Lists.newLinkedList();
 
         int clusterId = 0;
-        for (KafkaClusterConfig kafkaClusterConfig : streamingConfig.getKafkaClusterConfigs()) {
-            HashMap<Integer, Long> partitionIdOffsetMap = Maps.newHashMap();
+        final ExecutorService executorService = Executors.newFixedThreadPool(10);
+        for (final KafkaClusterConfig kafkaClusterConfig : streamingConfig.getKafkaClusterConfigs()) {
+            final ConcurrentMap<Integer, Long> partitionIdOffsetMap = Maps.newConcurrentMap();
             final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
+            final CountDownLatch countDownLatch = new CountDownLatch(partitionCount);
             for (int i = 0; i < partitionCount; ++i) {
-                partitionIdOffsetMap.put(i, StreamingUtil.findClosestOffsetWithDataTimestamp(kafkaClusterConfig, i, startTimestamp, streamParser));
+                final int idx = i;
+                final long start = startTimestamp;
+                executorService.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            partitionIdOffsetMap.put(idx, StreamingUtil.findClosestOffsetWithDataTimestamp(kafkaClusterConfig, idx, start, streamParser));
+                        } finally {
+                            countDownLatch.countDown();
+                        }
+                    }
+                });
             }
+            countDownLatch.await();
+            logger.info("partitionId to start offset map:" + partitionIdOffsetMap);
+            Preconditions.checkArgument(partitionIdOffsetMap.size() == partitionCount, "fail to get all start offset");
             final List<BlockingQueue<StreamMessage>> oneClusterQueue = consume(clusterId, kafkaClusterConfig, partitionCount, partitionIdOffsetMap, 0);
             queues.addAll(oneClusterQueue);
             logger.info("Cluster {} with {} partitions", clusterId, oneClusterQueue.size());
+            clusterId++;
         }
 
         logger.info(String.format("starting one off streaming build with timestamp{%d, %d}", startTimestamp, endTimestamp));
         OneOffStreamBuilder oneOffStreamBuilder = new OneOffStreamBuilder(streamingConfig.getName(), queues, streamParser, new CubeStreamConsumer(cubeName), startTimestamp, endTimestamp);
         Executors.newSingleThreadExecutor().submit(oneOffStreamBuilder).get();
+        logger.info("one off build finished");
+        System.exit(0);
     }
 
     private void startIIStreaming(StreamingConfig streamingConfig, final int partitionId) throws Exception {
