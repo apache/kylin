@@ -233,7 +233,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;
-              
+
               SweetAlert.swal('', 'Created the cube successfully.', 'success');
 
               $location.path("/cubes");
@@ -299,9 +299,18 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
   function reGenerateRowKey() {
     $log.log("reGen rowkey & agg group");
+    var fk_pk = {};
     var tmpRowKeyColumns = [];
     var tmpAggregationItems = [];//put all aggregation item
     var hierarchyItemArray = [];//put all hierarchy items
+
+    // build fk_pk map
+    angular.forEach($scope.metaModel.model.lookups, function (_lookup, index) {
+      for(var i = 0;i< _lookup.join.foreign_key.length;i++){
+        fk_pk[_lookup.join.primary_key[i]] = _lookup.join.foreign_key[i];
+      }
+    });
+
     angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
 
       //derived column
@@ -325,11 +334,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
             tmpAggregationItems.push(fk);
           }
-        })
+        });
 
       }
+
       //normal column
-      else if (dimension.column && !dimension.hierarchy && dimension.column.length == 1) {
+      if (dimension.column && !dimension.hierarchy && dimension.column.length == 1) {
         for (var i = 0; i < tmpRowKeyColumns.length; i++) {
           if (tmpRowKeyColumns[i].column == dimension.column[0])
             break;
@@ -345,13 +355,21 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
       }
       // hierarchy
-      if (dimension.hierarchy && dimension.column.length) {
+     else if (dimension.hierarchy && dimension.column.length) {
         var hierarchyUnit = [];
+
         angular.forEach(dimension.column, function (hier_column, index) {
+
+          //use fk instead of fk as rowkey and aggregation item in hierarchy
+          if(hier_column in fk_pk){
+            hier_column = fk_pk[hier_column];
+          }
+
           for (var i = 0; i < tmpRowKeyColumns.length; i++) {
             if (tmpRowKeyColumns[i].column == hier_column)
               break;
           }
+
           if (i == tmpRowKeyColumns.length) {
             tmpRowKeyColumns.push({
               "column": hier_column,
@@ -361,6 +379,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             });
             tmpAggregationItems.push(hier_column);
           }
+
           if (hierarchyUnit.indexOf(hier_column) == -1) {
             hierarchyUnit.push(hier_column);
           }
@@ -370,10 +389,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
       }
 
+
+
     });
 
-
-    //rm mandatory column from aggregation item
+      //rm mandatory column from aggregation item
     angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns, function (value, index) {
       if (value.mandatory) {
         tmpAggregationItems = _.filter(tmpAggregationItems, function (item) {
@@ -434,7 +454,16 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
       });
 
+      //distinct hierarchyItem
       var hierarchyItems = hierarchyItemArray.join().split(",");
+      var _hierarchyItems = [];
+      angular.forEach(hierarchyItems, function (item, index) {
+        if (_hierarchyItems.indexOf(item) == -1) {
+          _hierarchyItems.push(item);
+        }
+      });
+      hierarchyItems = _hierarchyItems;
+
       var unHierarchyItems = increasedData(hierarchyItems, newUniqAggregationItem);
       //hierarchyItems
       var increasedDataGroups = sliceGroupItemToGroups(unHierarchyItems);
