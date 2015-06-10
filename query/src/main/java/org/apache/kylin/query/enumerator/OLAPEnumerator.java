@@ -22,7 +22,7 @@ import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.jdbc.OptiqConnection;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
-import org.apache.kylin.metadata.filter.DateConditionModifier;
+import org.apache.kylin.metadata.filter.TimeConditionLiteralsReplacer;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -108,7 +108,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         bindVariable(olapContext.filter);
 
         //modify date condition
-        olapContext.filter = modifyDateCondition(olapContext.filter);
+        olapContext.filter = modifyTimeLiterals(olapContext.filter);
         olapContext.resetSQLDigest();
 
         // query storage engine
@@ -121,8 +121,12 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         return iterator;
     }
 
-    private TupleFilter modifyDateCondition(TupleFilter filter) {
-        DateConditionModifier filterDecorator = new DateConditionModifier(filter);
+    /**
+     * Calcite passed down all time family constants as GregorianCalendar,
+     * we'll have to reformat it to date/time according to column definition
+     */
+    private TupleFilter modifyTimeLiterals(TupleFilter filter) {
+        TimeConditionLiteralsReplacer filterDecorator = new TimeConditionLiteralsReplacer(filter);
         byte[] bytes = TupleFilterSerializer.serialize(filter, filterDecorator, DictCodeSystem.INSTANCE);
         return TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
     }
