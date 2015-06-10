@@ -72,19 +72,42 @@ public class CubeDescUpgrader {
 
         updateDimensions(oldModel, newModel);
 
-        updateRowkeyDictionary(oldModel, newModel);
+        updateRowkeyDictionary(newModel);
 
         return newModel;
     }
 
-    private void updateRowkeyDictionary(CubeDesc oldModel, org.apache.kylin.cube.model.CubeDesc newModel) {
+    private void updateRowkeyDictionary(org.apache.kylin.cube.model.CubeDesc newModel) {
 
+        DataModelDesc modelDesc = newModel.getModel();
+        Map<String, String> pkToFK = Maps.newHashMap();
+        for (LookupDesc lookupDesc : modelDesc.getLookups()) {
+            if (lookupDesc.getJoin() != null) {
+                JoinDesc join = lookupDesc.getJoin();
+                for (int i=0; i< join.getForeignKey().length; i++) {
+                    pkToFK.put(join.getPrimaryKey()[i], join.getForeignKey()[i]);
+                }
+            }
+        }
         RowKeyDesc rowKey = newModel.getRowkey();
 
         for (RowKeyColDesc rowkeyCol : rowKey.getRowKeyColumns()) {
             if (rowkeyCol.getDictionary() != null && rowkeyCol.getDictionary().length() > 0)
                 rowkeyCol.setDictionary("true");
+
+            if (pkToFK.containsKey(rowkeyCol.getColumn())) {
+                rowkeyCol.setColumn(pkToFK.get(rowkeyCol.getColumn()));
+            }
         }
+
+        for (String[] aggregationGroup : rowKey.getAggregationGroups()) {
+            for (int i=0; i< aggregationGroup.length; i++) {
+                if (pkToFK.containsKey(aggregationGroup[i])) {
+                    aggregationGroup[i] = pkToFK.get(aggregationGroup[i]);
+                }
+            }
+        }
+
 
     }
 

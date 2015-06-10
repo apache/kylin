@@ -51,7 +51,7 @@ public class RowKeyColDesc {
         return column;
     }
 
-    void setColumn(String column) {
+    public void setColumn(String column) {
         this.column = column;
     }
 

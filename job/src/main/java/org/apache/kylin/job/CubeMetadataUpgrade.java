@@ -63,6 +63,7 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -700,7 +701,14 @@ public class CubeMetadataUpgrade {
             String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
             try {
                 FileUtils.deleteDirectory(new File(newMetadataUrl));
-                FileUtils.copyDirectory(oldMetaFolder, new File(newMetadataUrl));
+                FileUtils.copyDirectory(oldMetaFolder, new File(newMetadataUrl), new FileFilter() {
+                    @Override
+                    public boolean accept(File pathname) {
+                        if (pathname.getAbsolutePath().contains(ResourceStore.JOB_PATH_ROOT) || pathname.getAbsolutePath().contains(ResourceStore.JOB_OUTPUT_PATH_ROOT))
+                            return false;
+                        return true;
+                    }
+                });
             } catch (IOException e) {
                 e.printStackTrace();
             }
