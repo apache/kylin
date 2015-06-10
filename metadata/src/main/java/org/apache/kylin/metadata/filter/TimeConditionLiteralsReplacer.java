@@ -11,15 +11,12 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Calcite passed down all time family constants as GregorianCalendar,
- * we'll have to reformat it to date/time according to column definition
- */
-public class DateConditionModifier implements TupleFilterSerializer.Decorator {
+
+public class TimeConditionLiteralsReplacer implements TupleFilterSerializer.Decorator {
 
     private IdentityHashMap<TupleFilter, DataType> dateCompareTupleChildren;
 
-    public DateConditionModifier(TupleFilter root) {
+    public TimeConditionLiteralsReplacer(TupleFilter root) {
         this.dateCompareTupleChildren = Maps.newIdentityHashMap();
     }
 

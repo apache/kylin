@@ -70,11 +70,21 @@ public class HBaseConnection {
 
         HConnection connection = ConnPool.get(url);
         try {
-            // I don't use DCL since recreate a connection is not a big issue.
-            if (connection == null) {
-                connection = HConnectionManager.createConnection(conf);
-                ConnPool.put(url, connection);
+            while (true) {
+                // I don't use DCL since recreate a connection is not a big issue.
+                if (connection == null || connection.isClosed()) {
+                    logger.info("connection is null or closed, creating a new one");
+                    connection = HConnectionManager.createConnection(conf);
+                    ConnPool.put(url, connection);
+                }
+
+                if (connection == null || connection.isClosed()) {
+                    Thread.sleep(10000);// wait a while and retry
+                } else {
+                    break;
+                }
             }
+
         } catch (Throwable t) {
             logger.error("Error when open connection " + url, t);
             throw new StorageException("Error when open connection " + url, t);

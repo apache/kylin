@@ -10,7 +10,7 @@ import org.junit.Test;
 
 /**
  */
-public class DateConditionModifierTest extends FilterBaseTest {
+public class TimeConditionLiteralsReplacerTest extends FilterBaseTest {
     @Test
     public void basicTest() {
         TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
@@ -24,7 +24,7 @@ public class DateConditionModifierTest extends FilterBaseTest {
         constantFilter = new ConstantTupleFilter("946684800000");
         compareFilter.addChild(constantFilter);
 
-        DateConditionModifier filterDecorator = new DateConditionModifier(compareFilter);
+        TimeConditionLiteralsReplacer filterDecorator = new TimeConditionLiteralsReplacer(compareFilter);
         byte[] bytes = TupleFilterSerializer.serialize(compareFilter, filterDecorator, DictCodeSystem.INSTANCE);
         CompareTupleFilter compareTupleFilter = (CompareTupleFilter) TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
         Assert.assertEquals("2000-01-01", compareTupleFilter.getFirstValue());

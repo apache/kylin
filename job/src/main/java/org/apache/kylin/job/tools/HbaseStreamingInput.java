@@ -1,5 +1,13 @@
 package org.apache.kylin.job.tools;
 
+import com.google.common.collect.Lists;
+import org.apache.hadoop.hbase.*;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
+import org.apache.kylin.common.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -8,15 +16,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
-
-import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
-import org.apache.kylin.common.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 /**
  */
@@ -28,7 +27,8 @@ public class HbaseStreamingInput {
     private static final byte[] QN = "C".getBytes();
 
     public static void createTable(String tableName) throws IOException {
-        HBaseAdmin hadmin = new HBaseAdmin(getConnection());
+        HConnection conn = getConnection();
+        HBaseAdmin hadmin = new HBaseAdmin(conn);
 
         try {
             boolean tableExist = hadmin.tableExists(tableName);
@@ -49,6 +49,7 @@ public class HbaseStreamingInput {
 
             logger.info("HTable '" + tableName + "' created");
         } finally {
+            conn.close();
             hadmin.close();
         }
     }
