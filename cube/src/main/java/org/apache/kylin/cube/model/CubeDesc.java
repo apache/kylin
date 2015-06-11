@@ -530,39 +530,6 @@ public class CubeDesc extends RootPersistentEntity {
                  */
             }
         }
-
-
-        {
-            // drop those columns (like lookup table's PK but used as a dimension) that can be derived
-            List<TblColRef> derivedCols = Lists.newArrayList();
-            for (TblColRef col : dimensionColumns) {
-                if (isDerived(col) == true)
-                    derivedCols.add(col);
-            }
-
-            if (derivedCols.size() > 0) {
-                dimensionColumns.removeAll(derivedCols);
-            }
-        }
-
-        {
-            // for hierarchy columns, if a column can be derived, use the host col to replace
-            for (DimensionDesc dim : dimensions) {
-                if (dim.isHierarchy()) {
-                    for (int i = 0; i < dim.getColumnRefs().length; i++) {
-                        TblColRef colRef = dim.getColumnRefs()[i];
-                        if (isDerived(colRef)) {
-                            TblColRef[] hostCols = derivedToHostMap.get(colRef).columns;
-                            if (hostCols.length == 1) {
-                               dim.getHierarchy()[i].setColumnRef(hostCols[0]);
-                            } else {
-                                throw new IllegalStateException();
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private String[][] splitDerivedColumnAndExtra(String[] derived) {
