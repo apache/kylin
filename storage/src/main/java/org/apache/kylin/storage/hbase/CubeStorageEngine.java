@@ -18,10 +18,18 @@
 
 package org.apache.kylin.storage.hbase;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.Bytes;
@@ -35,6 +43,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -54,7 +63,10 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 
 /**
  * @author xjiang, yangli9
@@ -479,6 +491,8 @@ public class CubeStorageEngine implements ICachableStorageEngine {
         return orAndRanges;
     }
 
+    // return empty collection to mean true; return null to mean false
+    @SuppressWarnings("unchecked")
     private Collection<ColumnValueRange> translateToAndDimRanges(List<? extends TupleFilter> andFilters, CubeSegment cubeSegment) {
         Map<TblColRef, ColumnValueRange> rangeMap = new HashMap<TblColRef, ColumnValueRange>();
         for (TupleFilter filter : andFilters) {
@@ -491,11 +505,21 @@ public class CubeStorageEngine implements ICachableStorageEngine {
                 continue;
             }
 
-            @SuppressWarnings("unchecked")
             ColumnValueRange range = new ColumnValueRange(comp.getColumn(), (Collection<String>) comp.getValues(), comp.getOperator());
             andMerge(range, rangeMap);
-
         }
+
+        // a little pre-evaluation to remove invalid EQ/IN values and round start/end according to dictionary
+        Iterator<ColumnValueRange> it = rangeMap.values().iterator();
+        while (it.hasNext()) {
+            ColumnValueRange range = it.next();
+            range.preEvaluateWithDict((Dictionary<String>) cubeSegment.getDictionary(range.getColumn()));
+            if (range.satisfyAll())
+                it.remove();
+            else if (range.satisfyNone())
+                return null;
+        }
+
         return rangeMap.values();
     }
 

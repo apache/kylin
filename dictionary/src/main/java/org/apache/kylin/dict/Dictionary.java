@@ -67,23 +67,24 @@ abstract public class Dictionary<T> implements Writable {
     /**
      * Convenient form of <code>getIdFromValue(value, 0)</code>
      */
-    final public int getIdFromValue(T value) {
+    final public int getIdFromValue(T value) throws IllegalArgumentException {
         return getIdFromValue(value, 0);
     }
 
     /**
      * Returns the ID integer of given value. In case of not found
-     * - if roundingFlag=0, throw IllegalArgumentException;
-     * - if roundingFlag<0, the closest smaller ID integer if exist;
-     * - if roundingFlag>0, the closest bigger ID integer if exist.
-     * 
+     * <p>
+     * - if roundingFlag=0, throw IllegalArgumentException; <br>
+     * - if roundingFlag<0, the closest smaller ID integer if exist; <br>
+     * - if roundingFlag>0, the closest bigger ID integer if exist. <br>
+     * <p>
      * The implementation often has cache, thus faster than the byte[] version getIdFromValueBytes()
      * 
      * @throws IllegalArgumentException
      *             if value is not found in dictionary and rounding is off;
      *             or if rounding cannot find a smaller or bigger ID
      */
-    final public int getIdFromValue(T value, int roundingFlag) {
+    final public int getIdFromValue(T value, int roundingFlag) throws IllegalArgumentException {
         if (isNullObjectForm(value))
             return nullId();
         else
@@ -101,7 +102,7 @@ abstract public class Dictionary<T> implements Writable {
      * @throws IllegalArgumentException
      *             if ID is not found in dictionary
      */
-    final public T getValueFromId(int id) {
+    final public T getValueFromId(int id) throws IllegalArgumentException {
         if (isNullId(id))
             return null;
         else
@@ -114,23 +115,24 @@ abstract public class Dictionary<T> implements Writable {
      * Convenient form of
      * <code>getIdFromValueBytes(value, offset, len, 0)</code>
      */
-    final public int getIdFromValueBytes(byte[] value, int offset, int len) {
+    final public int getIdFromValueBytes(byte[] value, int offset, int len) throws IllegalArgumentException {
         return getIdFromValueBytes(value, offset, len, 0);
     }
 
     /**
      * A lower level API, return ID integer from raw value bytes. In case of not found 
-     * - if roundingFlag=0, throw IllegalArgumentException; 
-     * - if roundingFlag<0, the closest smaller ID integer if exist; 
-     * - if roundingFlag>0, the closest bigger ID integer if exist.
-     * 
+     * <p>
+     * - if roundingFlag=0, throw IllegalArgumentException; <br>
+     * - if roundingFlag<0, the closest smaller ID integer if exist; <br>
+     * - if roundingFlag>0, the closest bigger ID integer if exist. <br>
+     * <p>
      * Bypassing the cache layer, this could be significantly slower than getIdFromValue(T value).
      * 
      * @throws IllegalArgumentException
      *             if value is not found in dictionary and rounding is off;
      *             or if rounding cannot find a smaller or bigger ID
      */
-    final public int getIdFromValueBytes(byte[] value, int offset, int len, int roundingFlag) {
+    final public int getIdFromValueBytes(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
         if (isNullByteForm(value, offset, len))
             return nullId();
         else
@@ -162,7 +164,7 @@ abstract public class Dictionary<T> implements Writable {
      * @throws IllegalArgumentException
      *             if ID is not found in dictionary
      */
-    final public int getValueBytesFromId(int id, byte[] returnValue, int offset) {
+    final public int getValueBytesFromId(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
         if (isNullId(id))
             return -1;
         else
