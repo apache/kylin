@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.kylinolap.common.KylinConfig;
 import com.kylinolap.common.util.JsonUtil;
 import com.kylinolap.dict.lookup.ReadableTable;
 import com.kylinolap.dict.lookup.TableReader;
@@ -40,7 +41,7 @@ import com.kylinolap.metadata.model.schema.DataType;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
 
-    private static final int DICT_MAX_CARDINALITY = 2000000; // 2 million
+    private static final int DICT_MAX_CARDINALITY = KylinConfig.getInstanceFromEnv().getDictionaryMaxCardinality();
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 

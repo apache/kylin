@@ -392,16 +392,10 @@ public class KylinConfig {
         return Integer.parseInt(getOptional(KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS, "60"));
     }
 
-    /**
-     * @return
-     */
     public int getMaxConcurrentJobLimit() {
         return Integer.parseInt(getOptional(KYLIN_JOB_CONCURRENT_MAX_LIMIT, "10"));
     }
 
-    /**
-     * @return
-     */
     public String getTimeZone() {
         return getOptional(KYLIN_REST_TIMEZONE, "PST");
     }
@@ -413,26 +407,24 @@ public class KylinConfig {
         return nodes.split("\\s*,\\s*");
     }
 
-    /**
-     * @return
-     */
     public String getAdminDls() {
         return getOptional("kylin.job.admin.dls", null);
     }
 
-    public int getScanThreshold() {
-        return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
-    }
-
-    /**
-     * @return
-     */
     public long getJobStepTimeout() {
         return Long.parseLong(getOptional("kylin.job.step.timeout", String.valueOf(2 * 60 * 60)));
     }
 
     public String getServerMode() {
         return this.getOptional("kylin.server.mode", "all");
+    }
+    
+    public int getDictionaryMaxCardinality() {
+        return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
+    }
+
+    public int getScanThreshold() {
+        return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
 
     public Long getQueryDurationCacheThreshold() {
