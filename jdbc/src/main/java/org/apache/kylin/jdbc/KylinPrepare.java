@@ -19,6 +19,7 @@
 package org.apache.kylin.jdbc;
 
 import java.util.List;
+import java.util.Map;
 
 import net.hydromatic.avatica.AvaticaParameter;
 import net.hydromatic.avatica.AvaticaPrepareResult;
@@ -88,6 +89,10 @@ public interface KylinPrepare {
 
         public List<AvaticaParameter> getParameterList() {
             return parameterList;
+        }
+
+        public Map<String, Object> getInternalParameters() {
+            return null;
         }
 
         public String getSql() {

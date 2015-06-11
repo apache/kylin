@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.util.LinkedHashMap;
 import java.util.Stack;
 
 import net.hydromatic.optiq.rules.java.EnumerableRel;
@@ -139,7 +140,7 @@ public interface OLAPRel extends RelNode {
         private OLAPContext parentContext;
 
         public JavaImplementor(EnumerableRelImplementor enumImplementor) {
-            super(enumImplementor.getRexBuilder());
+            super(enumImplementor.getRexBuilder(), new LinkedHashMap<String, Object>());
         }
 
         public OLAPContext getParentContext() {
