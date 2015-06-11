@@ -20,6 +20,8 @@ package org.apache.kylin.dict;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.dict.lookup.ReadableTable;
@@ -39,7 +41,7 @@ import java.util.*;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
 
-    private static final int DICT_MAX_CARDINALITY = 2000000; // 2 million
+    private static final int DICT_MAX_CARDINALITY = KylinConfig.getInstanceFromEnv().getDictionaryMaxCardinality();
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
