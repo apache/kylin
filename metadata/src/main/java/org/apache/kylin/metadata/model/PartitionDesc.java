@@ -146,4 +146,43 @@ public class PartitionDesc {
         }
 
     }
+
+
+    /**
+     * Another implementation of IPartitionConditionBuilder, for the fact tables which have three partition columns "YEAR", "MONTH", and "DAY"; This
+     * class will concat the three columns into yyyy-MM-dd format for query hive;
+     */
+    public static class YearMonthDayPartitionConditionBuilder implements PartitionDesc.IPartitionConditionBuilder {
+
+        @Override
+        public String buildDateRangeCondition(PartitionDesc partDesc, long startInclusive, long endExclusive, Map<String, String> tableAlias) {
+
+            String partitionColumnName = partDesc.getPartitionDateColumn();
+            String partitionTableName;
+
+            // convert to use table alias
+            int indexOfDot = partitionColumnName.lastIndexOf(".");
+            if (indexOfDot > 0) {
+                partitionTableName = partitionColumnName.substring(0, indexOfDot).toUpperCase();
+            } else {
+                throw new IllegalStateException("The partitionColumnName is invalid: " + partitionColumnName);
+            }
+
+            if (tableAlias.containsKey(partitionTableName)) {
+                partitionTableName = tableAlias.get(partitionTableName);
+            }
+
+            String concatField = String.format("CONCAT(%s.YEAR,'-',%s.MONTH,'-',%s.DAY)", partitionTableName, partitionTableName, partitionTableName);
+            StringBuilder builder = new StringBuilder();
+
+            if (startInclusive > 0) {
+                builder.append(concatField + " >= '" + DateFormat.formatToDateStr(startInclusive) + "' ");
+                builder.append("AND ");
+            }
+            builder.append(concatField + " < '" + DateFormat.formatToDateStr(endExclusive) + "'");
+
+
+            return builder.toString();
+        }
+    }
 }

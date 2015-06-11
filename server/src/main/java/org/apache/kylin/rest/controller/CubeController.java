@@ -179,7 +179,6 @@ public class CubeController extends BasicController {
      *
      * @param cubeName Cube ID
      * @return
-     * @throws SchedulerException
      * @throws IOException
      */
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })

@@ -518,6 +518,7 @@ public class CubeDesc extends RootPersistentEntity {
                         initDerivedMap(hostCols[find], DeriveType.PK_FK, dim, derivedCol);
                     }
                 }
+                /** disable this code as we don't need fk be derived from pk
                 for (int i = 0; i < pk.length; i++) {
                     int find = ArrayUtils.indexOf(hostCols, pk[i]);
                     if (find >= 0) {
@@ -525,6 +526,7 @@ public class CubeDesc extends RootPersistentEntity {
                         initDerivedMap(hostCols[find], DeriveType.PK_FK, dim, derivedCol);
                     }
                 }
+                 */
             }
         }
     }
