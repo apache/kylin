@@ -237,18 +237,20 @@ public class StreamingBootstrap {
 
         int clusterId = 0;
         final ExecutorService executorService = Executors.newFixedThreadPool(10);
+        final long targetTimestamp = startTimestamp - margin;
         for (final KafkaClusterConfig kafkaClusterConfig : streamingConfig.getKafkaClusterConfigs()) {
             final ConcurrentMap<Integer, Long> partitionIdOffsetMap = Maps.newConcurrentMap();
             final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
             final CountDownLatch countDownLatch = new CountDownLatch(partitionCount);
             for (int i = 0; i < partitionCount; ++i) {
                 final int idx = i;
-                final long start = startTimestamp - margin;
-                executorService.submit(new Runnable() {
+                executorService.execute(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            partitionIdOffsetMap.put(idx, StreamingUtil.findClosestOffsetWithDataTimestamp(kafkaClusterConfig, idx, start, streamParser));
+                            partitionIdOffsetMap.put(idx, StreamingUtil.findClosestOffsetWithDataTimestamp(kafkaClusterConfig, idx, targetTimestamp, streamParser));
+                        } catch (Exception e) {
+                            logger.error(String.format("fail to get start offset partitionId: %d, target timestamp: %d", idx, targetTimestamp));
                         } finally {
                             countDownLatch.countDown();
                         }
