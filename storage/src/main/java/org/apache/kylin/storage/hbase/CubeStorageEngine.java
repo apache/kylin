@@ -26,7 +26,6 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
-
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Pair;
@@ -37,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -47,6 +47,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -384,8 +385,7 @@ public class CubeStorageEngine implements IStorageEngine {
         // build row key range for each cube segment
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
 
-            // consider derived (lookup snapshot), filter on dimension may
-            // differ per segment
+            // consider derived (lookup snapshot), filter on dimension may differ per segment
             List<Collection<ColumnValueRange>> orAndDimRanges = translateToOrAndDimRanges(flatFilter, cubeSeg);
             if (orAndDimRanges == null) { // has conflict
                 continue;
@@ -421,8 +421,7 @@ public class CubeStorageEngine implements IStorageEngine {
             }
 
             Collection<ColumnValueRange> andRanges = translateToAndDimRanges(andFilter.getChildren(), cubeSegment);
-            // ignore the empty-AND
-            if (andRanges != null && !andRanges.isEmpty()) {
+            if (andRanges != null) {
                 result.add(andRanges);
             }
         }
@@ -458,9 +457,10 @@ public class CubeStorageEngine implements IStorageEngine {
         return orAndRanges;
     }
 
+    // return empty collection to mean true; return null to mean false
+    @SuppressWarnings("unchecked")
     private Collection<ColumnValueRange> translateToAndDimRanges(List<? extends TupleFilter> andFilters, CubeSegment cubeSegment) {
         Map<TblColRef, ColumnValueRange> rangeMap = new HashMap<TblColRef, ColumnValueRange>();
-        boolean isEmptyAnd = false;
         for (TupleFilter filter : andFilters) {
             if ((filter instanceof CompareTupleFilter) == false) {
                 continue;
@@ -471,20 +471,22 @@ public class CubeStorageEngine implements IStorageEngine {
                 continue;
             }
 
-            // optimize the values of tuple filter
-            Collection<String> newValues = TupleFilterValueOptimizer.doOptimization(cubeSegment, comp.getColumn(), comp);
-            // in case the current filter is an empty-AND, do not generate ColumnValueRange
-            // and also set isEmptyAnd to true so that an empty AND-list will be returned
-            if (TupleFilterValueOptimizer.isEmptyAnd(comp, newValues)) {
-                isEmptyAnd = true;
-                break;
-            }
-
-            ColumnValueRange range = new ColumnValueRange(comp.getColumn(), newValues, comp.getOperator());
+            ColumnValueRange range = new ColumnValueRange(comp.getColumn(), comp.getValues(), comp.getOperator());
             andMerge(range, rangeMap);
-
         }
-        return isEmptyAnd ? Collections.<ColumnValueRange> emptyList() : rangeMap.values();
+        
+        // a little pre-evaluation to remove invalid EQ/IN values and round start/end according to dictionary
+        Iterator<ColumnValueRange> it = rangeMap.values().iterator();
+        while (it.hasNext()) {
+            ColumnValueRange range = it.next();
+            range.preEvaluateWithDict((Dictionary<String>) cubeSegment.getDictionary(range.getColumn()));
+            if (range.satisfyAll())
+                it.remove();
+            else if (range.satisfyNone())
+                return null;
+        }
+        
+        return rangeMap.values();
     }
 
     private void andMerge(ColumnValueRange range, Map<TblColRef, ColumnValueRange> rangeMap) {
