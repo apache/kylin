@@ -41,11 +41,19 @@ import java.util.*;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
 
-    private static final int DICT_MAX_CARDINALITY = KylinConfig.getInstanceFromEnv().getDictionaryMaxCardinality();
+    private static final int DICT_MAX_CARDINALITY = getDictionaryMaxCardinality();
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
     private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd" };
+
+    private static int getDictionaryMaxCardinality() {
+        try {
+            return KylinConfig.getInstanceFromEnv().getDictionaryMaxCardinality();
+        } catch (Throwable e) {
+            return 2000000; // some test case does not KylinConfig setup properly
+        }
+    }
 
     public static Dictionary<?> buildDictionaryFromValueList(DataType dataType, Collection<byte[]> values) {
         Preconditions.checkNotNull(dataType, "dataType cannot be null");
