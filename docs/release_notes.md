@@ -27,17 +27,15 @@ __Main Changes:__
 * Package renamed from com.kylinolap to org.apache.kylin
 * Binary pacakge avaliable download from: [http://kylin.incubator.apache.org/download](http://kylin.incubator.apache.org/download/)
 
+__New Feature__
 
-__JIRA Tickets__
-
-
-** New Feature
     * [KYLIN-327] - Binary distribution 
     * [KYLIN-368] - Move MailService to Common module
     * [KYLIN-540] - Data model upgrade for legacy cube descs
     * [KYLIN-576] - Refactor expansion rate expression
 
-** Task
+__Task__
+
     * [KYLIN-361] - Rename package name with Apache Kylin
     * [KYLIN-531] - Rename package name to org.apache.kylin
     * [KYLIN-533] - Job Engine Refactoring
@@ -48,12 +46,14 @@ __JIRA Tickets__
     * [KYLIN-650] - Move all document from github wiki to code repository (using md file)
     * [KYLIN-669] - Release v0.7.1 as first apache release
 
-** Sub-task
+__Sub-task__
+
     * [KYLIN-670] - Update pom with "incubating" in version number
     * [KYLIN-737] - Generate and sign release package for review and vote
     * [KYLIN-795] - Release after success vote
 
-** Bug
+__Bug__
+
     * [KYLIN-132] - Job framework
     * [KYLIN-194] - Dict & ColumnValueContainer does not support number comparison, they do string comparison right now
     * [KYLIN-220] - Enable swap column of Rowkeys in Cube Designer
@@ -110,7 +110,7 @@ __JIRA Tickets__
     * [KYLIN-739] - Dimension as metrics does not work with PK-FK derived column
     * [KYLIN-761] - Tables are not shown in the "Query" tab, and couldn't run SQL query after cube be built
 
-** Improvement
+__Improvement__
     * [KYLIN-168] - Installation fails if multiple ZK
     * [KYLIN-182] - Validation Rule: columns used in Join condition should have same datatype
     * [KYLIN-204] - Kylin web not works properly in IE
@@ -142,6 +142,6 @@ __JIRA Tickets__
     * [KYLIN-779] - [UI] jump to cube list after create cube
     * [KYLIN-796] - Add REST API to trigger storage cleanup/GC
 
-** Wish
+__Wish__
     * [KYLIN-608] - Distinct count for ii storage
 
