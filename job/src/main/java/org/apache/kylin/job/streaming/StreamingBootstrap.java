@@ -62,7 +62,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -270,7 +269,6 @@ public class StreamingBootstrap {
         OneOffStreamBuilder oneOffStreamBuilder = new OneOffStreamBuilder(streamingConfig.getName(), queues, streamParser, new CubeStreamConsumer(cubeName), startTimestamp, endTimestamp, margin);
         Executors.newSingleThreadExecutor().submit(oneOffStreamBuilder).get();
         logger.info("one off build finished");
-        System.exit(0);
     }
 
     private void startIIStreaming(StreamingConfig streamingConfig, final int partitionId) throws Exception {

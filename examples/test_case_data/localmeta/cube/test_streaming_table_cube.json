@@ -9,12 +9,6 @@
   "last_modified": 1433474940111,
   "descriptor": "test_streaming_table_cube",
   "create_time_utc": 1433343833458,
-  "auto_merge_time_ranges": [
-    600000,
-    3600000,
-    21600000,
-    86400000
-  ],
   "size_kb": 0,
   "input_records_count": 0,
   "input_records_size": 0
