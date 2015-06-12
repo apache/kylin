@@ -4,18 +4,18 @@
   "columns": [
     {
       "id": "1",
-      "name": "ts",
-      "datatype": "timestamp"
-    },
-    {
-      "id": "2",
       "name": "minute_start",
       "datatype": "timestamp"
     },
     {
-      "id": "3",
+      "id": "2",
       "name": "hour_start",
       "datatype": "timestamp"
+    },
+    {
+      "id": "3",
+      "name": "day_start",
+      "datatype": "date"
     },
     {
       "id": "4",

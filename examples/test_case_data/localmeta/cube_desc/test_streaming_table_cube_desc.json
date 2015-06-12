@@ -1,0 +1,139 @@
+{
+  "uuid": "901ed15e-7769-4c66-b7ae-fbdc971cd192",
+  "name": "test_streaming_table_cube_desc",
+  "description": "",
+  "dimensions": [
+    {
+      "id": 1,
+      "name": "DEFAULT.STREAMING_TABLE.SITE",
+      "table": "DEFAULT.STREAMING_TABLE",
+      "column": ["SITE"],
+      "derived": null,
+      "hierarchy": false
+    },
+    {
+      "id": 2,
+      "name": "DEFAULT.STREAMING_TABLE.ITM",
+      "table": "DEFAULT.STREAMING_TABLE",
+      "column": ["ITM"],
+      "derived": null,
+      "hierarchy": false
+    },
+    {
+      "id": 3,
+      "name": "TIME",
+      "table": "DEFAULT.STREAMING_TABLE",
+      "column": [
+        "DAY_START",
+        "HOUR_START",
+        "MINUTE_START"
+      ],
+      "derived": null,
+      "hierarchy": true
+    }
+  ],
+  "measures": [
+    {
+      "id": 1,
+      "name": "_COUNT_",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "constant",
+          "value": "1"
+        },
+        "returntype": "bigint"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 2,
+      "name": "GMV_SUM",
+      "function": {
+        "expression": "SUM",
+        "parameter": {
+          "type": "column",
+          "value": "GMV"
+        },
+        "returntype": "decimal(19,6)"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 3,
+      "name": "ITEM_COUNT_SUM",
+      "function": {
+        "expression": "SUM",
+        "parameter": {
+          "type": "column",
+          "value": "ITEM_COUNT"
+        },
+        "returntype": "bigint"
+      },
+      "dependent_measure_ref": null
+    }
+  ],
+  "rowkey": {
+    "rowkey_columns": [
+      {
+        "column": "DAY_START",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": true
+      },
+      {
+        "column": "HOUR_START",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "MINUTE_START",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "SITE",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "ITM",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      }
+    ],
+    "aggregation_groups": [
+      [
+        "HOUR_START",
+        "MINUTE_START",
+        "SITE",
+        "ITM"
+      ]
+    ]
+  },
+  "last_modified": 1433475256535,
+  "model_name": "test_streaming_table_model_desc",
+  "null_string": null,
+  "hbase_mapping": {
+    "column_family": [
+      {
+        "name": "F1",
+        "columns": [
+          {
+            "qualifier": "M",
+            "measure_refs": [
+              "_COUNT_",
+              "GMV_SUM",
+              "ITEM_COUNT_SUM"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "notify_list": []
+}
