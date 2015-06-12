@@ -19,6 +19,7 @@
 package org.apache.kylin.common.util;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.TreeMultiset;
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -62,6 +63,14 @@ public class BasicTest {
 
     @Test
     public void test0() throws Exception {
+        TreeMultiset<Long> xx = TreeMultiset.create();
+        xx.add(2L);
+        xx.add(1L);
+        xx.add(1L);
+        for(Long hi : xx)
+        {
+            System.out.println(hi);
+        }
         System.out.println(Long.MAX_VALUE);
 
         IdentityHashMap<String, Void> a = new IdentityHashMap<>();
