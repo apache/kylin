@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
+ * for tests
  */
 public class OneOffStreamProducer {
 

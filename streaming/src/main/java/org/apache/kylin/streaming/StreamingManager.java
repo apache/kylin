@@ -72,7 +72,6 @@ public class StreamingManager {
         return ResourceStore.getStore(this.config);
     }
 
-
     public static StreamingManager getInstance(KylinConfig config) {
         StreamingManager r = CACHE.get(config);
         if (r != null) {
@@ -109,7 +108,6 @@ public class StreamingManager {
         return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + StringUtils.join(partitions, "_") + ".json";
     }
 
-
     public boolean createOrUpdateKafkaConfig(String name, StreamingConfig config) {
         try {
             getStore().putResource(formatStreamingConfigPath(name), config, StreamingConfig.SERIALIZER);
@@ -127,6 +125,15 @@ public class StreamingManager {
             logger.error("error get resource name:" + name, e);
             throw new RuntimeException("error get resource name:" + name, e);
         }
+    }
+
+    public void saveStreamingConfig(StreamingConfig streamingConfig) throws IOException {
+        if (streamingConfig == null || StringUtils.isEmpty(streamingConfig.getName())) {
+            throw new IllegalArgumentException();
+        }
+
+        String path = formatStreamingConfigPath(streamingConfig.getName());
+        getStore().putResource(path, streamingConfig, StreamingConfig.SERIALIZER);
     }
 
     public long getOffset(String streaming, int shard) {
@@ -188,6 +195,5 @@ public class StreamingManager {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(Integer.class), SimpleType.construct(Long.class));
-
 
 }

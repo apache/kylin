@@ -41,6 +41,10 @@ public class KafkaClusterConfig extends RootPersistentEntity {
         return streamingConfig.getMaxReadCount();
     }
 
+    public List<BrokerConfig> getBrokerConfigs() {
+        return brokerConfigs;
+    }
+
     public List<Broker> getBrokers() {
         return Lists.transform(brokerConfigs, new Function<BrokerConfig, Broker>() {
             @Nullable
