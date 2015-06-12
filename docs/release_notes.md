@@ -17,10 +17,10 @@ limitations under the License.
 
 # Apache Kylin Release Notes
 
-## v0.7.1 (First Apache Release) - 2015-05-29
+## v0.7.1 (First Apache Release) - 2015-06-10
 _Tag:_ [kylin-0.7.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-0.7.1-incubating)
 
-This is first Apache Kylin release, including many changes after migrated to Apache.
+This is first Apache Kylin release, majority changes, bug fixes and otehers as below:
 
 __Main Changes:__
 
@@ -111,6 +111,7 @@ __Bug__
     * [KYLIN-761] - Tables are not shown in the "Query" tab, and couldn't run SQL query after cube be built
 
 __Improvement__
+
     * [KYLIN-168] - Installation fails if multiple ZK
     * [KYLIN-182] - Validation Rule: columns used in Join condition should have same datatype
     * [KYLIN-204] - Kylin web not works properly in IE
@@ -143,5 +144,6 @@ __Improvement__
     * [KYLIN-796] - Add REST API to trigger storage cleanup/GC
 
 __Wish__
+
     * [KYLIN-608] - Distinct count for ii storage
 
