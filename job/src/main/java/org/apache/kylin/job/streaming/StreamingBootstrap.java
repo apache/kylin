@@ -249,7 +249,7 @@ public class StreamingBootstrap {
                         try {
                             partitionIdOffsetMap.put(idx, StreamingUtil.findClosestOffsetWithDataTimestamp(kafkaClusterConfig, idx, targetTimestamp, streamParser));
                         } catch (Exception e) {
-                            logger.error(String.format("fail to get start offset partitionId: %d, target timestamp: %d", idx, targetTimestamp));
+                            logger.error(String.format("fail to get start offset partitionId: %d, target timestamp: %d", idx, targetTimestamp), e);
                         } finally {
                             countDownLatch.countDown();
                         }

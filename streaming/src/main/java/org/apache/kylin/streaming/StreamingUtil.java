@@ -72,7 +72,7 @@ public final class StreamingUtil {
         final long latestOffset = KafkaRequester.getLastOffset(topic, partitionId, OffsetRequest.LatestTime(), leadBroker, kafkaClusterConfig);
         logger.info(String.format("topic: %s, partitionId: %d, try to find closest offset with timestamp: %d between offset {%d, %d}", topic, partitionId, timestamp, earliestOffset, latestOffset));
         final long result = binarySearch(kafkaClusterConfig, partitionId, earliestOffset, latestOffset, timestamp, streamParser);
-        logger.info(String.format("topic: %s, partitionId: %d, found offset: %d" + topic, partitionId, result));
+        logger.info(String.format("topic: %s, partitionId: %d, found offset: %d", topic, partitionId, result));
         return result;
     }
 
