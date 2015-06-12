@@ -72,12 +72,12 @@ public final class StreamingUtil {
         final long latestOffset = KafkaRequester.getLastOffset(topic, partitionId, OffsetRequest.LatestTime(), leadBroker, kafkaClusterConfig);
         logger.info(String.format("topic: %s, partitionId: %d, try to find closest offset with timestamp: %d between offset {%d, %d}", topic, partitionId, timestamp, earliestOffset, latestOffset));
         final long result = binarySearch(kafkaClusterConfig, partitionId, earliestOffset, latestOffset, timestamp, streamParser);
-        logger.info("found offset:" + result);
+        logger.info(String.format("topic: %s, partitionId: %d, found offset: %d" + topic, partitionId, result));
         return result;
     }
 
     private static long binarySearch(KafkaClusterConfig kafkaClusterConfig, int partitionId, long startOffset, long endOffset, long targetTimestamp, StreamParser streamParser) {
-        while (startOffset <= endOffset + 2) {
+        while (startOffset < endOffset) {
             long midOffset = startOffset + ((endOffset - startOffset) >> 1);
             long startTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, startOffset, streamParser);
             long endTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, endOffset, streamParser);
@@ -85,19 +85,19 @@ public final class StreamingUtil {
             // hard to ensure these 2 conditions
 //            Preconditions.checkArgument(startTimestamp <= midTimestamp);
 //            Preconditions.checkArgument(midTimestamp <= endTimestamp);
-            if (startTimestamp > targetTimestamp) {
+            if (startTimestamp >= targetTimestamp) {
                 return startOffset;
             }
-            if (endTimestamp < targetTimestamp) {
+            if (endTimestamp <= targetTimestamp) {
                 return endOffset;
             }
             if (targetTimestamp == midTimestamp) {
                 return midOffset;
             } else if (targetTimestamp < midTimestamp) {
-                endOffset = midOffset;
+                endOffset = midOffset - 1;
                 continue;
             } else {
-                startOffset = midOffset;
+                startOffset = midOffset + 1;
                 continue;
             }
         }
