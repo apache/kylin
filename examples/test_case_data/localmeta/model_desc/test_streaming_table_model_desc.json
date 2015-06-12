@@ -5,9 +5,9 @@
     {
       "table": "default.streaming_table",
       "columns": [
-        "ts",
         "minute_start",
         "hour_start",
+        "day_start",
         "itm",
         "site"
       ]
@@ -23,7 +23,7 @@
   "fact_table": "default.streaming_table",
   "filter_condition": null,
   "partition_desc": {
-    "partition_date_column": "default.streaming_table.ts",
+    "partition_date_column": "default.streaming_table.minute_start",
     "partition_date_start": 0,
     "partition_type": "APPEND"
   }

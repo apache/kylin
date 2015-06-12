@@ -1,7 +1,7 @@
 {
   "uuid": "74bf87b5-c7b5-4420-a12a-07f6b3864789",
   "last_modified": 0,
-  "name": "test_streaming_table_desc",
+  "name": "test_streaming_table_ii_desc",
   "model_name": "test_streaming_table_model_desc",
   "timestamp_dimension": "ts",
   "value_dimensions": [
@@ -11,6 +11,7 @@
         "ts",
         "minute_start",
         "hour_start",
+        "day_start",
         "itm",
         "site"
       ]
