@@ -1,5 +1,5 @@
 ---
-layout: download
+layout: download-cn
 title: 下载
 ---
 __最新发布__
