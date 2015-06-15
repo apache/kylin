@@ -19,6 +19,10 @@
 package org.apache.kylin.rest.service;
 
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -26,25 +30,17 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.security.AclPermission;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author jiazhong
  */
 @Component("modelMgmtService")
 public class ModelService extends BasicService {
-
-    private static final Logger logger = LoggerFactory.getLogger(ModelService.class);
 
     @Autowired
     private AccessService accessService;
@@ -61,7 +57,7 @@ public class ModelService extends BasicService {
             project.getModels();
         }
 
-        List<DataModelDesc> filterModels = new ArrayList();
+        List<DataModelDesc> filterModels = new ArrayList<DataModelDesc>();
         for (DataModelDesc modelDesc : models) {
             boolean isModelMatch = (null == modelName) || modelDesc.getName().toLowerCase().contains(modelName.toLowerCase());
 

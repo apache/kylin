@@ -28,7 +28,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.model.SelectedColumnMeta;
@@ -204,25 +203,24 @@ public class QueryController extends BasicController {
             }
 
             checkQueryAuth(sqlResponse);
-            return sqlResponse;
-        } catch (AccessDeniedException ade) {
-            // Access exception is bind with each user, it will not be cached
-            logger.error("Exception when execute sql", ade);
-            throw new ForbiddenException(ade.getLocalizedMessage());
-        } catch (ScanOutOfLimitException e) {
-
-            //for exception queries, only cache ScanOutOfLimitException
-            SQLResponse exceptionRes = new SQLResponse(null, null, 0, true, e.getMessage());
-            Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-            exceptionCache.put(new Element(sqlRequest, exceptionRes));
-
-            logger.error("Exception when execute sql", e);
-            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
 
         } catch (Throwable e) { // calcite may throw AssertError
             logger.error("Exception when execute sql", e);
-            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
+            String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
+
+            sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
+
+            // for exception queries, only cache ScanOutOfLimitException
+            if (e instanceof ScanOutOfLimitException) {
+                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                exceptionCache.put(new Element(sqlRequest, sqlResponse));
+            }
         }
+
+        if (sqlResponse.getIsException())
+            throw new InternalErrorException(sqlResponse.getExceptionMessage());
+        else
+            return sqlResponse;
     }
 
     private SQLResponse searchQueryInCache(SQLRequest sqlRequest) {

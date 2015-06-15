@@ -25,12 +25,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import net.hydromatic.optiq.Schema;
-import net.hydromatic.optiq.SchemaFactory;
-import net.hydromatic.optiq.SchemaPlus;
-
-import org.eigenbase.util14.ConversionUtil;
-
+import org.apache.calcite.schema.Schema;
+import org.apache.calcite.schema.SchemaFactory;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.util.ConversionUtil;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.DatabaseDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -38,7 +36,6 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
- * @author xjiang
  */
 public class OLAPSchemaFactory implements SchemaFactory {
 
@@ -52,7 +49,8 @@ public class OLAPSchemaFactory implements SchemaFactory {
          * object and does not require additional codec.
          * 
          * Ref SaffronProperties.defaultCharset
-         * SqlUtil.translateCharacterSetName() NlsString constructor()
+         * Ref SqlUtil.translateCharacterSetName() 
+         * Ref NlsString constructor()
          */
         System.setProperty("saffron.default.charset", ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
         System.setProperty("saffron.default.nationalcharset", ConversionUtil.NATIVE_UTF16_CHARSET_NAME);
@@ -109,13 +107,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
                 out.write("            \"factory\": \"org.apache.kylin.query.schema.OLAPSchemaFactory\",\n");
                 out.write("            \"operand\": {\n");
                 out.write("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
-                out.write("            },\n");
-                out.write("           \"functions\": [\n");
-                out.write("                 {\n");
-                out.write("                     \"name\": \"QUARTER\",\n");
-                out.write("                     \"className\": \"org.apache.kylin.query.sqlfunc.QuarterFunc\"\n");
-                out.write("                 }\n");
-                out.write("            ]\n");
+                out.write("            }\n");
                 out.write("        }\n");
 
                 if (++counter != schemaCounts.size()) {

@@ -19,8 +19,6 @@
 package org.apache.kylin.metadata.model;
 
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -32,8 +30,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ColumnDesc {
-
-    private static final Logger logger = LoggerFactory.getLogger(ColumnDesc.class);
 
     @JsonProperty("id")
     private String id;

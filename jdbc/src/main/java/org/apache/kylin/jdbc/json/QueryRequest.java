@@ -16,23 +16,25 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.query.sqlfunc;
+package org.apache.kylin.jdbc.json;
 
-import net.hydromatic.optiq.runtime.SqlFunctions;
-import net.hydromatic.optiq.runtime.SqlFunctions.TimeUnitRange;
+public class QueryRequest {
+    private String sql;
+    private String project;
 
-/**
- * @author xjiang
- * 
- */
-public abstract class QuarterBase {
+    public String getSql() {
+        return sql;
+    }
 
-    /**
-     * According to jvm spec, it return self method before parent.
-     * So, we keep Date in parent and int in child
-     */
-    public static long eval(int date) {
-        long month = SqlFunctions.unixDateExtract(TimeUnitRange.MONTH, date);
-        return month / 4 + 1;
+    public void setSql(String sql) {
+        this.sql = sql;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
     }
 }

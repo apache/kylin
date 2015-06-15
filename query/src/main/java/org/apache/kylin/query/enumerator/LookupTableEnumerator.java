@@ -18,7 +18,7 @@
 
 package org.apache.kylin.query.enumerator;
 
-import net.hydromatic.linq4j.Enumerator;
+import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.DimensionDesc;
@@ -29,12 +29,12 @@ import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.tuple.Tuple;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * @author yangli9
  */
 public class LookupTableEnumerator implements Enumerator<Object[]> {
 
@@ -90,7 +90,8 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
 
     @Override
     public Object[] current() {
-        return current;
+        // NOTE if without the copy, sql_lookup/query03.sql will yields messy result. Very weird coz other lookup queries are all good.
+        return Arrays.copyOf(current, current.length);
     }
 
     @Override

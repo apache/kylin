@@ -18,35 +18,31 @@
 
 package org.apache.kylin.query.optrule;
 
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.kylin.query.relnode.OLAPRel;
-import org.eigenbase.rel.AggregateRel;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelTraitSet;
-
 import org.apache.kylin.query.relnode.OLAPAggregateRel;
 
 /**
- * 
- * @author xjiang
- * 
  */
 public class OLAPAggregateRule extends ConverterRule {
 
     public static final ConverterRule INSTANCE = new OLAPAggregateRule();
 
     public OLAPAggregateRule() {
-        super(AggregateRel.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPAggregateRule");
+        super(LogicalAggregate.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPAggregateRule");
     }
 
     @Override
     public RelNode convert(RelNode rel) {
-        AggregateRel agg = (AggregateRel) rel;
+        LogicalAggregate agg = (LogicalAggregate) rel;
         RelTraitSet traitSet = agg.getTraitSet().replace(OLAPRel.CONVENTION);
         try {
-            return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(agg.getChild(), traitSet), agg.getGroupSet(), agg.getAggCallList());
+            return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(agg.getInput(), traitSet), agg.getGroupSet(), agg.getAggCallList());
         } catch (InvalidRelException e) {
             throw new IllegalStateException("Can't create OLAPAggregateRel!", e);
         }

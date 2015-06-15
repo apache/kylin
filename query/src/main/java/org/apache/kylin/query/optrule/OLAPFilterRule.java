@@ -18,33 +18,29 @@
 
 package org.apache.kylin.query.optrule;
 
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.kylin.query.relnode.OLAPFilterRel;
 import org.apache.kylin.query.relnode.OLAPRel;
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
 
 /**
- * 
- * @author xjiang
- * 
  */
-
 public class OLAPFilterRule extends RelOptRule {
 
     public static final RelOptRule INSTANCE = new OLAPFilterRule();
 
     public OLAPFilterRule() {
-        super(operand(FilterRel.class, any()));
+        super(operand(LogicalFilter.class, any()));
     }
 
     @Override
     public void onMatch(RelOptRuleCall call) {
-        FilterRel filter = call.rel(0);
+        LogicalFilter filter = call.rel(0);
 
         RelTraitSet traitSet = filter.getTraitSet().replace(OLAPRel.CONVENTION);
-        OLAPFilterRel olapFilter = new OLAPFilterRel(filter.getCluster(), traitSet, convert(filter.getChild(), traitSet), filter.getCondition());
+        OLAPFilterRel olapFilter = new OLAPFilterRel(filter.getCluster(), traitSet, convert(filter.getInput(), traitSet), filter.getCondition());
         call.transformTo(olapFilter);
     }
 

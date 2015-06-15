@@ -23,7 +23,7 @@
     <artifactId>kylin-query</artifactId>
     <packaging>jar</packaging>
     <name>Kylin:Query</name>
-    <description>kylin query engine based on optiq</description>
+    <description>kylin query engine based on Calcite</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
@@ -54,8 +54,8 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>net.hydromatic</groupId>
-            <artifactId>linq4j</artifactId>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-linq4j</artifactId>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>

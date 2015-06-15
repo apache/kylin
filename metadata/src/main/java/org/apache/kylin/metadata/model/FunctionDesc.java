@@ -61,12 +61,13 @@ public class FunctionDesc {
     public boolean needRewrite() {
         return !isSum() && !isDimensionAsMetric();
     }
-    
+
     public ColumnDesc newFakeRewriteColumn(TableDesc sourceTable) {
         ColumnDesc fakeCol = new ColumnDesc();
         fakeCol.setName(getRewriteFieldName());
-        fakeCol.setDatatype(getSQLType());
-        fakeCol.setNullable(false);
+        fakeCol.setDatatype(getSQLType().toString());
+        if (isCount())
+            fakeCol.setNullable(false);
         fakeCol.init(sourceTable);
         return fakeCol;
     }
@@ -144,13 +145,13 @@ public class FunctionDesc {
         this.returnDataType = returnDataType;
     }
 
-    public String getSQLType() {
+    public DataType getSQLType() {
         if (isCountDistinct())
-            return "any";
+            return DataType.ANY;
         else if (isSum() || isMax() || isMin())
-            return parameter.getColRefs().get(0).getType().getName();
+            return parameter.getColRefs().get(0).getType();
         else
-            return returnType;
+            return returnDataType;
     }
 
     public String getReturnType() {
