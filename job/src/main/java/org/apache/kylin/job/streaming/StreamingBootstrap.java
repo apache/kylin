@@ -269,6 +269,7 @@ public class StreamingBootstrap {
         OneOffStreamBuilder oneOffStreamBuilder = new OneOffStreamBuilder(streamingConfig.getName(), queues, streamParser, new CubeStreamConsumer(cubeName), startTimestamp, endTimestamp, margin);
         Executors.newSingleThreadExecutor().submit(oneOffStreamBuilder).get();
         logger.info("one off build finished");
+        System.exit(0);
     }
 
     private void startIIStreaming(StreamingConfig streamingConfig, final int partitionId) throws Exception {
