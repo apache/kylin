@@ -124,11 +124,7 @@ public class MergeCuboidFromHBaseJob extends CuboidJob {
             this.deletePath(job.getConfiguration(), output);
 
             return waitForCompletion(job);
-        } catch (
-                Exception e
-                )
-
-        {
+        } catch (Exception e) {
             logger.error("error in MergeCuboidFromHBaseJob", e);
             printUsage(options);
             throw e;
