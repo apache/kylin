@@ -242,6 +242,31 @@ public class CubeManager implements IRealizationProvider {
         return updateCube(cubeBuilder, 0);
     }
 
+    private boolean validateReadySegments(CubeInstance cube) {
+        final List<CubeSegment> readySegments = cube.getSegment(SegmentStatusEnum.READY);
+        if (readySegments.size() == 0) {
+            return true;
+        }
+        for (CubeSegment readySegment : readySegments) {
+            if (readySegment.getDateRangeEnd() <= readySegment.getDateRangeStart()) {
+                logger.warn(String.format("segment:%s has invalid date range:[%d, %d], validation failed", readySegment.getName(), readySegment.getDateRangeStart(), readySegment.getDateRangeEnd()));
+                return false;
+            }
+        }
+        Collections.sort(readySegments);
+        for (int i = 0, size = readySegments.size(); i < size - 1; i++) {
+            CubeSegment lastSegment = readySegments.get(i);
+            CubeSegment segment = readySegments.get(i + 1);
+            if (lastSegment.getDateRangeEnd() <= segment.getDateRangeStart()) {
+                continue;
+            } else {
+                logger.warn(String.format("segment:%s and %s data range has overlap, validation failed", lastSegment.getName(), segment.getName()));
+                return false;
+            }
+        }
+        return true;
+    }
+
     private CubeInstance updateCube(CubeBuilder cubeBuilder, int retry) throws IOException {
         if (cubeBuilder == null || cubeBuilder.getCubeInstance() == null)
             throw new IllegalStateException();
@@ -273,6 +298,10 @@ public class CubeManager implements IRealizationProvider {
         }
 
         Collections.sort(cube.getSegments());
+
+        if (!validateReadySegments(cube)) {
+            return cube;
+        }
 
         if (cubeBuilder.getStatus() != null) {
             cube.setStatus(cubeBuilder.getStatus());
