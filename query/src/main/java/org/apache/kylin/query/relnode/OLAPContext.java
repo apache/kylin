@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.relnode;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
@@ -27,14 +29,10 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.tuple.TupleInfo;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
 
 import java.util.*;
 
 /**
- * @author xjiang
- * 
  */
 public class OLAPContext {
 

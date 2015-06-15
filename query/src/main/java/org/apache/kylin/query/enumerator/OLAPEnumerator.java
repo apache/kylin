@@ -18,9 +18,12 @@
 
 package org.apache.kylin.query.enumerator;
 
-import net.hydromatic.linq4j.Enumerator;
-import net.hydromatic.optiq.DataContext;
-import net.hydromatic.optiq.jdbc.OptiqConnection;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.calcite.DataContext;
+import org.apache.calcite.jdbc.CalciteConnection;
+import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TimeConditionLiteralsReplacer;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -34,11 +37,7 @@ import org.apache.kylin.storage.hbase.coprocessor.DictCodeSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.Properties;
-
 /**
- * @author xjiang
  */
 public class OLAPEnumerator implements Enumerator<Object[]> {
 
@@ -154,7 +153,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
     }
 
     private void setConnectionProperties() {
-        OptiqConnection conn = (OptiqConnection) optiqContext.getQueryProvider();
+        CalciteConnection conn = (CalciteConnection) optiqContext.getQueryProvider();
         Properties connProps = conn.getProperties();
 
         String propThreshold = connProps.getProperty(OLAPQuery.PROP_SCAN_THRESHOLD);

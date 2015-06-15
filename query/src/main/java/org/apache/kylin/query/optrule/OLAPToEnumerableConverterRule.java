@@ -18,19 +18,14 @@
 
 package org.apache.kylin.query.optrule;
 
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
-
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.kylin.query.relnode.OLAPRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.relopt.RelTraitSet;
-
 import org.apache.kylin.query.relnode.OLAPToEnumerableConverter;
 
 /**
- * 
- * @author xjiang
- * 
  */
 public class OLAPToEnumerableConverterRule extends ConverterRule {
 

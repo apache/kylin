@@ -28,14 +28,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+import org.apache.kylin.jdbc.Driver;
 import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Unit test for Driver.
- * 
- * @author xduo
- * 
  */
 public class DriverTest {
 
@@ -47,8 +45,11 @@ public class DriverTest {
 
         ResultSet tables = conn.getMetaData().getTables(null, null, null, null);
         while (tables.next()) {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 4; i++) {
                 assertEquals("dummy", tables.getString(i + 1));
+            }
+            for (int i = 4; i < 10; i++) {
+                assertEquals(null, tables.getString(i + 1));
             }
         }
 
@@ -68,7 +69,7 @@ public class DriverTest {
     }
 
     @Test
-    public void testPreStatementWithMockData() throws SQLException {
+    public void testPreparedStatementWithMockData() throws SQLException {
         Driver driver = new DummyDriver();
 
         Connection conn = driver.connect("jdbc:kylin://test_url/test_db", null);
@@ -88,87 +89,77 @@ public class DriverTest {
         }
     }
 
-    @Ignore("not maintaining")
+    @Ignore("require dev sandbox")
     @Test
-    public void testWithCubeData() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-        Driver driver = (Driver) Class.forName("org.apache.kylin.kylin.jdbc.Driver").newInstance();
+    public void testWithCubeData() throws Exception {
+        Driver driver = new Driver();
         Properties info = new Properties();
-        info.put("user", "");
-        info.put("password", "");
-        Connection conn = driver.connect("jdbc:kylin://localhost/default", info);
+        info.put("user", "ADMIN");
+        info.put("password", "KYLIN");
+        Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
 
         ResultSet catalogs = conn.getMetaData().getCatalogs();
-        while (catalogs.next()) {
-            System.out.println(catalogs.getString("TABLE_CAT"));
-        }
+        System.out.println("CATALOGS");
+        printResultSet(catalogs);
 
         ResultSet schemas = conn.getMetaData().getSchemas();
-        while (schemas.next()) {
-            System.out.println(schemas.getString(1));
-            System.out.println(schemas.getString(2));
-        }
+        System.out.println("SCHEMAS");
+        printResultSet(schemas);
 
         ResultSet tables = conn.getMetaData().getTables(null, null, null, null);
-        while (tables.next()) {
-            String tableName = tables.getString(3);
-            assertEquals(tables.getString("TABLE_NAME"), tableName);
-            ResultSet columns = conn.getMetaData().getColumns(null, null, tableName, null);
-
-            while (columns.next()) {
-                System.out.println(columns.getString("COLUMN_NAME"));
-                String column = "";
-                for (int i = 0; i < 23; i++) {
-                    column += columns.getString(i + 1) + ", ";
-                }
-
-                System.out.println("Column in table " + tableName + ": " + column);
-            }
-        }
+        System.out.println("TABLES");
+        printResultSet(tables);
 
         for (int j = 0; j < 3; j++) {
             Statement state = conn.createStatement();
             ResultSet resultSet = state.executeQuery("select * from test_kylin_fact");
 
-            ResultSetMetaData metadata = resultSet.getMetaData();
-            System.out.println("Metadata:");
-
-            for (int i = 0; i < metadata.getColumnCount(); i++) {
-                String metaStr = metadata.getCatalogName(i + 1) + " " + metadata.getColumnClassName(i + 1) + " " + metadata.getColumnDisplaySize(i + 1) + " " + metadata.getColumnLabel(i + 1) + " " + metadata.getColumnName(i + 1) + " " + metadata.getColumnType(i + 1) + " " + metadata.getColumnTypeName(i + 1) + " " + metadata.getPrecision(i + 1) + " " + metadata.getScale(i + 1) + " " + metadata.getSchemaName(i + 1) + " " + metadata.getTableName(i + 1);
-                System.out.println(metaStr);
-            }
-
-            System.out.println("Data:");
-            while (resultSet.next()) {
-                String dataStr = resultSet.getFloat(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3) + " " + resultSet.getLong(4) + " " + resultSet.getDate(5) + " " + resultSet.getString(6);
-                System.out.println(dataStr);
-            }
+            printResultSetMetaData(resultSet);
+            printResultSet(resultSet);
         }
     }
 
-    @Ignore("not maintaining")
+    @Ignore("require dev sandbox")
     @Test
-    public void testPreStatementWithCubeData() throws SQLException {
+    public void testPreparedStatementWithCubeData() throws SQLException {
         Driver driver = new Driver();
         Properties info = new Properties();
-        info.put("user", "");
-        info.put("password", "");
-        Connection conn = driver.connect("jdbc:kylin://localhost/default", info);
-        PreparedStatement state = conn.prepareStatement("select * from test_kylin_fact where seller_id=?");
+        info.put("user", "ADMIN");
+        info.put("password", "KYLIN");
+        Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
+        
+        PreparedStatement state = conn.prepareStatement("select cal_dt, count(*) from test_kylin_fact where seller_id=? group by cal_dt");
         state.setLong(1, 10000001);
         ResultSet resultSet = state.executeQuery();
 
-        ResultSetMetaData metadata = resultSet.getMetaData();
+        printResultSetMetaData(resultSet);
+        printResultSet(resultSet);
+    }
+
+    private void printResultSet(ResultSet rs) throws SQLException {
+        ResultSetMetaData meta = rs.getMetaData();
+        System.out.println("Data:");
+        
+        while (rs.next()) {
+            StringBuilder buf = new StringBuilder();
+            buf.append("[");
+            for (int i = 0; i < meta.getColumnCount(); i++) {
+                if (i > 0)
+                    buf.append(", ");
+                buf.append(rs.getString(i + 1));
+            }
+            buf.append("]");
+            System.out.println(buf);
+        }
+    }
+
+    private void printResultSetMetaData(ResultSet rs) throws SQLException {
+        ResultSetMetaData metadata = rs.getMetaData();
         System.out.println("Metadata:");
 
         for (int i = 0; i < metadata.getColumnCount(); i++) {
             String metaStr = metadata.getCatalogName(i + 1) + " " + metadata.getColumnClassName(i + 1) + " " + metadata.getColumnDisplaySize(i + 1) + " " + metadata.getColumnLabel(i + 1) + " " + metadata.getColumnName(i + 1) + " " + metadata.getColumnType(i + 1) + " " + metadata.getColumnTypeName(i + 1) + " " + metadata.getPrecision(i + 1) + " " + metadata.getScale(i + 1) + " " + metadata.getSchemaName(i + 1) + " " + metadata.getTableName(i + 1);
             System.out.println(metaStr);
-        }
-
-        System.out.println("Data:");
-        while (resultSet.next()) {
-            String dataStr = resultSet.getFloat(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3) + " " + resultSet.getLong(4) + " " + resultSet.getDate(5) + " " + resultSet.getString(6);
-            System.out.println(dataStr);
         }
     }
 }

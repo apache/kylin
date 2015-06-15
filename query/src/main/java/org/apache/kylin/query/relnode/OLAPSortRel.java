@@ -18,32 +18,30 @@
 
 package org.apache.kylin.query.relnode;
 
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.JavaRules.EnumerableSortRel;
+import java.util.List;
 
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SortRel;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexNode;
-
-import com.google.common.base.Preconditions;
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.adapter.enumerable.EnumerableSort;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rex.RexNode;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
 
+import com.google.common.base.Preconditions;
+
 /**
- * @author xjiang
- * 
  */
-public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
+public class OLAPSortRel extends Sort implements OLAPRel {
 
     private ColumnRowType columnRowType;
     private OLAPContext context;
@@ -66,26 +64,26 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
-        implementor.visitChild(getChild(), this);
+        implementor.visitChild(getInput(), this);
 
         this.context = implementor.getContext();
         this.columnRowType = buildColumnRowType();
     }
 
     private ColumnRowType buildColumnRowType() {
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
         return inputColumnRowType;
     }
 
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
-        implementor.visitChild(this, getChild());
+        implementor.visitChild(this, getInput());
 
         for (RelFieldCollation fieldCollation : this.collation.getFieldCollations()) {
             int index = fieldCollation.getFieldIndex();
             StorageContext.OrderEnum order = getOrderEnum(fieldCollation.getDirection());
-            OLAPRel olapChild = (OLAPRel) this.getChild();
+            OLAPRel olapChild = (OLAPRel) this.getInput();
             TblColRef orderCol = olapChild.getColumnRowType().getAllColumns().get(index);
             MeasureDesc measure = findMeasure(orderCol);
             if (measure != null) {
@@ -116,17 +114,9 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
     }
 
     @Override
-    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        OLAPRel childRel = (OLAPRel) getChild();
-        childRel.replaceTraitSet(EnumerableConvention.INSTANCE);
-
-        EnumerableSortRel enumSort = new EnumerableSortRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE, collation), getChild(), collation, offset, fetch);
-
-        Result res = enumSort.implement(implementor, pref);
-
-        childRel.replaceTraitSet(OLAPRel.CONVENTION);
-
-        return res;
+    public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
+        return new EnumerableSort(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE, collation), //
+                sole(inputs), collation, offset, fetch);
     }
 
     @Override
@@ -141,7 +131,7 @@ public class OLAPSortRel extends SortRel implements EnumerableRel, OLAPRel {
 
     @Override
     public boolean hasSubQuery() {
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         return olapChild.hasSubQuery();
     }
 

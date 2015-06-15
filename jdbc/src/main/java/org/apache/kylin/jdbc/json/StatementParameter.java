@@ -16,17 +16,32 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.jdbc;
+package org.apache.kylin.jdbc.json;
 
-import org.apache.kylin.jdbc.Driver;
+public class StatementParameter {
 
-/**
- */
-public class DummyDriver extends Driver {
+    private String className;
+    private String value;
 
-    @Override
-    protected String getFactoryClassName(JdbcVersion jdbcVersion) {
-        return DummyJdbcFactory.class.getName();
+    public StatementParameter(String className, String value) {
+        this.className = className;
+        this.value = value;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClazz(String className) {
+        this.className = className;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
 }

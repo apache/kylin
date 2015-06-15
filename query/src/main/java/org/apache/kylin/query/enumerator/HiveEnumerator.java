@@ -25,15 +25,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
-import net.hydromatic.linq4j.Enumerator;
-
+import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.query.relnode.OLAPContext;
 
 /**
  * Hive Query Result Enumerator
- * 
- * @author xjiang
- * 
  */
 public class HiveEnumerator implements Enumerator<Object[]> {
 

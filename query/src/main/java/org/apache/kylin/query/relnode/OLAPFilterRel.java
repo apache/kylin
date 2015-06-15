@@ -18,36 +18,55 @@
 
 package org.apache.kylin.query.relnode;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.JavaRules.EnumerableCalcRel;
-import net.hydromatic.optiq.runtime.SqlFunctions;
-import org.apache.kylin.metadata.filter.*;
-import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.eigenbase.rel.FilterRelBase;
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.*;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.util.NlsString;
-
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.calcite.adapter.enumerable.EnumerableCalc;
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.avatica.util.TimeUnitRange;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexDynamicParam;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexLocalRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexProgram;
+import org.apache.calcite.rex.RexProgramBuilder;
+import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.util.NlsString;
+import org.apache.kylin.metadata.filter.CaseTupleFilter;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.DynamicTupleFilter;
+import org.apache.kylin.metadata.filter.ExtractTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+
 /**
- * @author xjiang
  */
-public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableRel {
+public class OLAPFilterRel extends Filter implements OLAPRel {
 
     private static class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
@@ -176,6 +195,7 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
             return filter;
         }
 
+        @SuppressWarnings("unused")
         private String normToTwoDigits(int i) {
             if (i < 10)
                 return "0" + i;
@@ -193,9 +213,9 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
                 GregorianCalendar g = (GregorianCalendar) literalValue;
                 //strValue = "" + g.get(Calendar.YEAR) + "-" + normToTwoDigits(g.get(Calendar.MONTH) + 1) + "-" + normToTwoDigits(g.get(Calendar.DAY_OF_MONTH));
                 strValue = Long.toString(g.getTimeInMillis());
-            } else if (literalValue instanceof SqlFunctions.TimeUnitRange) {
+            } else if (literalValue instanceof TimeUnitRange) {
                 // Extract(x from y) in where clause
-                strValue = ((SqlFunctions.TimeUnitRange) literalValue).name();
+                strValue = ((TimeUnitRange) literalValue).name();
             } else if (literalValue == null) {
                 strValue = null;
             } else {
@@ -229,13 +249,13 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
     }
 
     @Override
-    public FilterRelBase copy(RelTraitSet traitSet, RelNode input, RexNode condition) {
+    public Filter copy(RelTraitSet traitSet, RelNode input, RexNode condition) {
         return new OLAPFilterRel(getCluster(), traitSet, input, condition);
     }
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
-        implementor.visitChild(getChild(), this);
+        implementor.visitChild(getInput(), this);
 
         this.columnRowType = buildColumnRowType();
         this.context = implementor.getContext();
@@ -247,7 +267,7 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
     }
 
     private ColumnRowType buildColumnRowType() {
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
         return inputColumnRowType;
     }
@@ -262,7 +282,6 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
 
         context.filterColumns = collectColumns(context.filter);
     }
-
 
     private Set<TblColRef> collectColumns(TupleFilter filter) {
         Set<TblColRef> ret = Sets.newHashSet();
@@ -280,23 +299,22 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
     }
 
     @Override
-    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+    public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
         // keep it for having clause
         RexBuilder rexBuilder = getCluster().getRexBuilder();
-        RelDataType inputRowType = getChild().getRowType();
+        RelDataType inputRowType = getInput().getRowType();
         RexProgramBuilder programBuilder = new RexProgramBuilder(inputRowType, rexBuilder);
         programBuilder.addIdentity();
         programBuilder.addCondition(this.condition);
         RexProgram program = programBuilder.getProgram();
 
-        EnumerableCalcRel enumCalcRel = new EnumerableCalcRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), getChild(), this.rowType, program, ImmutableList.<RelCollation> of());
-
-        return enumCalcRel.implement(implementor, pref);
+        return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
+                sole(inputs), program, ImmutableList.<RelCollation> of());
     }
 
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
-        implementor.visitChild(this, getChild());
+        implementor.visitChild(this, getInput());
 
         this.rowType = this.deriveRowType();
         this.columnRowType = buildColumnRowType();
@@ -314,7 +332,7 @@ public class OLAPFilterRel extends FilterRelBase implements OLAPRel, EnumerableR
 
     @Override
     public boolean hasSubQuery() {
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         return olapChild.hasSubQuery();
     }
 

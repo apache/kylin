@@ -18,18 +18,32 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.sql.DataSource;
+
 import net.sf.ehcache.CacheManager;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.jdbc.Driver;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -47,17 +61,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-import javax.sql.DataSource;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 public abstract class BasicService {
 
@@ -67,9 +75,6 @@ public abstract class BasicService {
 
     @Autowired
     private CacheManager cacheManager;
-
-    //    @Autowired
-    //    protected JdbcTemplate jdbcTemplate;
 
     public KylinConfig getConfig() {
         return KylinConfig.getInstanceFromEnv();
@@ -132,7 +137,7 @@ public abstract class BasicService {
             Properties props = new Properties();
             props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, String.valueOf(KylinConfig.getInstanceFromEnv().getScanThreshold()));
             ds.setConnectionProperties(props);
-            ds.setDriverClassName("net.hydromatic.optiq.jdbc.Driver");
+            ds.setDriverClassName(Driver.class.getName());
             ds.setUrl("jdbc:calcite:model=" + modelJson.getAbsolutePath());
 
             ret = olapDataSources.putIfAbsent(project, ds);

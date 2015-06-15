@@ -16,19 +16,18 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.query.sqlfunc;
+package org.apache.kylin.jdbc.json;
 
-import java.sql.Date;
+import java.util.List;
 
-/**
- * @author xjiang
- * 
- */
-public class QuarterFunc extends QuarterBase {
-    private QuarterFunc() {
+public class PreparedQueryRequest extends QueryRequest {
+    private List<StatementParameter> params;
+
+    public List<StatementParameter> getParams() {
+        return params;
     }
 
-    public static long eval(Date date) {
-        throw new UnsupportedOperationException();
+    public void setParams(List<StatementParameter> params) {
+        this.params = params;
     }
 }

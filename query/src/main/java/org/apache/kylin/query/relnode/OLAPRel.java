@@ -18,23 +18,25 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Stack;
 
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 /**
- * 
- * @author xjiang
- * 
  */
 public interface OLAPRel extends RelNode {
 
@@ -137,24 +139,52 @@ public interface OLAPRel extends RelNode {
      */
     public static class JavaImplementor extends EnumerableRelImplementor {
 
-        private OLAPContext parentContext;
+        private IdentityHashMap<EnumerableRel, OLAPContext> relContexts = Maps.newIdentityHashMap();
+        private boolean calciteDebug = System.getProperty("calcite.debug") != null;
 
         public JavaImplementor(EnumerableRelImplementor enumImplementor) {
             super(enumImplementor.getRexBuilder(), new LinkedHashMap<String, Object>());
         }
 
-        public OLAPContext getParentContext() {
-            return parentContext;
+        public EnumerableRel createEnumerable(OLAPRel parent) {
+            ArrayList<EnumerableRel> enumInputs = null;
+            List<RelNode> children = parent.getInputs();
+            if (children != null) {
+                enumInputs = Lists.newArrayListWithCapacity(children.size());
+                for (RelNode child : children) {
+                    enumInputs.add(createEnumerable((OLAPRel) child));
+                }
+            }
+
+            EnumerableRel result = parent.implementEnumerable(enumInputs);
+            relContexts.put(result, parent.getContext());
+            return result;
         }
 
         @Override
         public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child, EnumerableRel.Prefer prefer) {
-            if (parent instanceof OLAPRel) {
-                OLAPRel olapRel = (OLAPRel) parent;
-                this.parentContext = olapRel.getContext();
+            // OLAPTableScan is shared instance when the same table appears multiple times in the tree.
+            // Its context must be set (or corrected) right before visiting.
+            if (child instanceof OLAPTableScan) {
+                OLAPContext parentContext = relContexts.get(parent);
+                if (parentContext != null) {
+                    ((OLAPTableScan) child).overrideContext(parentContext);
+                }
             }
+
+            if (calciteDebug) {
+                OLAPContext context;
+                if (child instanceof OLAPRel)
+                    context = ((OLAPRel) child).getContext();
+                else
+                    context = relContexts.get(child);
+                System.out.println(context + " - " + child);
+            }
+
             return super.visitChild(parent, ordinal, child, prefer);
         }
     }
+
+    public EnumerableRel implementEnumerable(List<EnumerableRel> inputs);
 
 }
