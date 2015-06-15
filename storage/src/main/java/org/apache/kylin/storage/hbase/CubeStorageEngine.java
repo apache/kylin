@@ -26,7 +26,6 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
-
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Pair;
@@ -37,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -47,6 +47,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -384,8 +385,7 @@ public class CubeStorageEngine implements IStorageEngine {
         // build row key range for each cube segment
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
 
-            // consider derived (lookup snapshot), filter on dimension may
-            // differ per segment
+            // consider derived (lookup snapshot), filter on dimension may differ per segment
             List<Collection<ColumnValueRange>> orAndDimRanges = translateToOrAndDimRanges(flatFilter, cubeSeg);
             if (orAndDimRanges == null) { // has conflict
                 continue;
@@ -421,8 +421,9 @@ public class CubeStorageEngine implements IStorageEngine {
             }
 
             Collection<ColumnValueRange> andRanges = translateToAndDimRanges(andFilter.getChildren(), cubeSegment);
-
-            result.add(andRanges);
+            if (andRanges != null) {
+                result.add(andRanges);
+            }
         }
 
         return preprocessConstantConditions(result);
@@ -456,6 +457,8 @@ public class CubeStorageEngine implements IStorageEngine {
         return orAndRanges;
     }
 
+    // return empty collection to mean true; return null to mean false
+    @SuppressWarnings("unchecked")
     private Collection<ColumnValueRange> translateToAndDimRanges(List<? extends TupleFilter> andFilters, CubeSegment cubeSegment) {
         Map<TblColRef, ColumnValueRange> rangeMap = new HashMap<TblColRef, ColumnValueRange>();
         for (TupleFilter filter : andFilters) {
@@ -470,8 +473,19 @@ public class CubeStorageEngine implements IStorageEngine {
 
             ColumnValueRange range = new ColumnValueRange(comp.getColumn(), comp.getValues(), comp.getOperator());
             andMerge(range, rangeMap);
-
         }
+        
+        // a little pre-evaluation to remove invalid EQ/IN values and round start/end according to dictionary
+        Iterator<ColumnValueRange> it = rangeMap.values().iterator();
+        while (it.hasNext()) {
+            ColumnValueRange range = it.next();
+            range.preEvaluateWithDict((Dictionary<String>) cubeSegment.getDictionary(range.getColumn()));
+            if (range.satisfyAll())
+                it.remove();
+            else if (range.satisfyNone())
+                return null;
+        }
+        
         return rangeMap.values();
     }
 

@@ -20,17 +20,17 @@ package org.apache.kylin.storage.hbase;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+
 import org.apache.kylin.cube.kv.RowKeyColumnOrder;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 
 /**
- * 
- * @author xjiang
- * 
  */
 public class ColumnValueRange {
     private TblColRef column;
@@ -163,6 +163,44 @@ public class ColumnValueRange {
         return (beginValue == null || order.compare(beginValue, v) <= 0) && (endValue == null || order.compare(v, endValue) <= 0);
     }
 
+    // remove invalid EQ/IN values and round start/end according to dictionary
+    public void preEvaluateWithDict(Dictionary<String> dict) {
+        if (dict == null)
+            return;
+        
+        if (equalValues != null) {
+            Iterator<String> it = equalValues.iterator();
+            while (it.hasNext()) {
+                String v = it.next();
+                try {
+                    dict.getIdFromValue(v);
+                } catch (IllegalArgumentException e) {
+                    // value not in dictionary
+                    it.remove();
+                }
+            }
+            refreshBeginEndFromEquals();
+        }
+        
+        if (beginValue != null) {
+            try {
+                beginValue = dict.getValueFromId(dict.getIdFromValue(beginValue, -1));
+            } catch (IllegalArgumentException e) {
+                // value is less than the smallest in dictionary
+                beginValue = null;
+            }
+        }
+        
+        if (endValue != null) {
+            try {
+                endValue = dict.getValueFromId(dict.getIdFromValue(endValue, 1));
+            } catch (IllegalArgumentException e) {
+                // value is greater than the biggest in dictionary
+                endValue = null;
+            }
+        }
+    }
+
     public String toString() {
         if (equalValues == null) {
             return column.getName() + " between " + beginValue + " and " + endValue;
@@ -170,4 +208,5 @@ public class ColumnValueRange {
             return column.getName() + " in " + equalValues;
         }
     }
+
 }
