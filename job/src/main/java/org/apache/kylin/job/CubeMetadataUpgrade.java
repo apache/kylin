@@ -101,7 +101,7 @@ public class CubeMetadataUpgrade {
         upgradeCubeDesc();
         upgradeProjectInstance();
         upgradeCubeInstance();
-        //upgradeJobInstance();
+        upgradeJobInstance();
         verify();
 
     }
@@ -716,10 +716,7 @@ public class CubeMetadataUpgrade {
             instance = new CubeMetadataUpgrade(newMetadataUrl);
             instance.upgrade();
             logger.info("=================================================================");
-            logger.info("Run CubeMetadataUpgrade completed; The following resources have been successfully updated : ");
-            for (String s : instance.updatedResources) {
-                logger.info(s);
-            }
+            logger.info("Run CubeMetadataUpgrade completed;");
 
         }
 
