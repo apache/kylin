@@ -20,8 +20,8 @@ package org.apache.kylin.jdbc.stub;
 
 import java.util.List;
 
-import net.hydromatic.avatica.ColumnMetaData;
-import net.hydromatic.linq4j.Enumerator;
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.linq4j.Enumerator;
 
 /**
  * Data set wrapper.

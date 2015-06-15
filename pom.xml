@@ -83,9 +83,8 @@
         <!-- REST Service -->
         <spring.framework.version>3.1.2.RELEASE</spring.framework.version>
 
-        <!-- Optiq Version -->
-        <optiq.version>0.9.2-incubating</optiq.version>
-        <linq4j.version>0.4</linq4j.version>
+        <!-- Calcite Version -->
+        <calcite.version>1.0.0-incubating</calcite.version>
 
         <!-- Metrics Codahale Version -->
         <metrics.version>3.0.1</metrics.version>
@@ -102,7 +101,7 @@
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
         <sonar.language>java</sonar.language>
         <sonar.jacoco.excludes>
-            org/apache/kylin/**/tools/**:**/*CLI.java:net/hydromatic/optiq/**:org/eigenbase/sql2rel/**
+            org/apache/kylin/**/tools/**:**/*CLI.java
         </sonar.jacoco.excludes>
 
     </properties>
@@ -248,21 +247,21 @@
                 <version>${yarn.version}</version>
             </dependency>
 
-            <!-- optiq dependencies -->
+            <!-- Calcite dependencies -->
             <dependency>
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-core</artifactId>
-                <version>${optiq.version}</version>
+                <version>${calcite.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-avatica</artifactId>
-                <version>${optiq.version}</version>
+                <version>${calcite.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.hydromatic</groupId>
-                <artifactId>linq4j</artifactId>
-                <version>${linq4j.version}</version>
+                <groupId>org.apache.calcite</groupId>
+                <artifactId>calcite-linq4j</artifactId>
+                <version>${calcite.version}</version>
             </dependency>
 
             <!-- Other dependencies -->

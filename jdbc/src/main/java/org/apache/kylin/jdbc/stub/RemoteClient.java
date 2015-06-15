@@ -20,7 +20,7 @@ package org.apache.kylin.jdbc.stub;
 
 import java.sql.SQLException;
 
-import net.hydromatic.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.AvaticaStatement;
 
 import org.apache.kylin.jdbc.KylinMetaImpl.MetaProject;
 

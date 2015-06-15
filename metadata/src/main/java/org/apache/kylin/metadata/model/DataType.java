@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * 
  */
 public class DataType {
-
+    
     public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|binary" //
             + "|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" //
             + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc" //
@@ -89,6 +89,7 @@ public class DataType {
 
     private static final ConcurrentMap<DataType, DataType> CACHE = new ConcurrentHashMap<DataType, DataType>();
 
+    public static final DataType ANY = DataType.getInstance("any");
 
     public static DataType getInstance(String type) {
         if (type == null)

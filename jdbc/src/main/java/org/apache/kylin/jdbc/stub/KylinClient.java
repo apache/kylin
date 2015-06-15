@@ -23,10 +23,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.ColumnMetaData;
-import net.hydromatic.avatica.ColumnMetaData.Rep;
-import net.hydromatic.avatica.ColumnMetaData.ScalarType;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.ColumnMetaData.Rep;
+import org.apache.calcite.avatica.ColumnMetaData.ScalarType;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;

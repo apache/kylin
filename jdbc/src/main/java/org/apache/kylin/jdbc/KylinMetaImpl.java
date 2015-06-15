@@ -29,25 +29,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.AvaticaResultSet;
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.ColumnMetaData;
-import net.hydromatic.avatica.ColumnMetaData.Rep;
-import net.hydromatic.avatica.Cursor;
-import net.hydromatic.avatica.Meta;
-import net.hydromatic.linq4j.Enumerator;
-import net.hydromatic.optiq.runtime.EnumeratorCursor;
-
+import org.apache.calcite.avatica.AvaticaResultSet;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.ColumnMetaData.Rep;
+import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.linq4j.Enumerator;
+import org.apache.calcite.sql.SqlJdbcFunctionCall;
+import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.kylin.jdbc.stub.DataSet;
 import org.apache.kylin.jdbc.stub.KylinColumnMetaData;
 import org.apache.kylin.jdbc.stub.RemoteClient;
-import org.eigenbase.sql.SqlJdbcFunctionCall;
-import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.jdbc.util.SQLTypeMap;
 
 /**
@@ -329,7 +323,7 @@ public class KylinMetaImpl implements Meta {
      * Client could request metadata after prepare
      * 
      * (non-Javadoc)
-     * @see net.hydromatic.avatica.Meta#prepare(net.hydromatic.avatica.AvaticaStatement, java.lang.String)
+     * @see org.apache.calcite.avatica.Meta#prepare(org.apache.calcite.avatica.AvaticaStatement, java.lang.String)
      */
     public AvaticaPrepareResult prepare(AvaticaStatement statement, String sql) {
         RemoteClient client = factory.newRemoteClient(conn);

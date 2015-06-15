@@ -239,7 +239,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         for (FunctionDesc measure : measures) {
-            info.setField(measure.getRewriteFieldName(), null, measure.getSQLType(), index++);
+            info.setField(measure.getRewriteFieldName(), null, measure.getSQLType().getName(), index++);
         }
 
         return info;

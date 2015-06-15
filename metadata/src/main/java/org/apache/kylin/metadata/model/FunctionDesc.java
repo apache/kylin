@@ -130,13 +130,13 @@ public class FunctionDesc {
         this.parameter = parameter;
     }
 
-    public String getSQLType() {
+    public DataType getSQLType() {
         if (isCountDistinct())
-            return "any";
+            return DataType.ANY;
         else if (isSum() || isMax() || isMin())
-            return parameter.getColRefs().get(0).getType().getName();
+            return parameter.getColRefs().get(0).getType();
         else
-            return returnType;
+            return returnDataType;
     }
 
     public String getReturnType() {

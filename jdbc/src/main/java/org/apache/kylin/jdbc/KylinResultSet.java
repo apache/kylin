@@ -21,9 +21,9 @@ package org.apache.kylin.jdbc;
 import java.sql.ResultSetMetaData;
 import java.util.TimeZone;
 
-import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.AvaticaResultSet;
-import net.hydromatic.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.AvaticaPrepareResult;
+import org.apache.calcite.avatica.AvaticaResultSet;
+import org.apache.calcite.avatica.AvaticaStatement;
 
 import org.apache.kylin.jdbc.KylinPrepare.PrepareResult;
 

@@ -25,42 +25,43 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.hydromatic.linq4j.expressions.Blocks;
-import net.hydromatic.linq4j.expressions.Expressions;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.JavaRules.EnumerableJoinRel;
-import net.hydromatic.optiq.rules.java.PhysType;
-import net.hydromatic.optiq.rules.java.PhysTypeImpl;
-
-import org.apache.kylin.query.schema.OLAPTable;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.JoinInfo;
-import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory.FieldInfoBuilder;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelDataTypeFieldImpl;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.util.ImmutableIntList;
-
-import com.google.common.base.Preconditions;
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.adapter.enumerable.EnumerableJoin;
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
+import org.apache.calcite.adapter.enumerable.PhysType;
+import org.apache.calcite.adapter.enumerable.PhysTypeImpl;
+import org.apache.calcite.linq4j.tree.Blocks;
+import org.apache.calcite.linq4j.tree.Expressions;
+import org.apache.calcite.linq4j.tree.MethodCallExpression;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.JoinInfo;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.util.ImmutableIntList;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.query.schema.OLAPTable;
+
+import com.google.common.base.Preconditions;
 
 /**
- * @author xjiang
  */
-public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
+public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
     private final static String[] COLUMN_ARRAY_MARKER = new String[0];
 
@@ -79,7 +80,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
     }
 
     @Override
-    public EnumerableJoinRel copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, //
+    public EnumerableJoin copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, //
             JoinRelType joinType, boolean semiJoinDone) {
 
         final JoinInfo joinInfo = JoinInfo.of(left, right, condition);
@@ -87,8 +88,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
         try {
             return new OLAPJoinRel(getCluster(), traitSet, left, right, condition, joinInfo.leftKeys, joinInfo.rightKeys, joinType, variablesStopped);
         } catch (InvalidRelException e) {
-            // Semantic error not possible. Must be a bug. Convert to
-            // internal error.
+            // Semantic error not possible. Must be a bug. Convert to internal error.
             throw new AssertionError(e);
         }
     }
@@ -227,18 +227,25 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
     }
 
     @Override
-    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        Result result = null;
+    public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
         if (this.hasSubQuery) {
-            result = super.implement(implementor, pref);
+            try {
+                return new EnumerableJoin(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
+                        inputs.get(0), inputs.get(1), condition, leftKeys, rightKeys, joinType, variablesStopped);
+            } catch (InvalidRelException e) {
+                throw new IllegalStateException("Can't create EnumerableJoin!", e);
+            }
         } else {
-            PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
-
-            RelOptTable factTable = context.firstTableScan.getTable();
-            result = implementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeIndexQuery", implementor.getRootExpression(), Expressions.constant(context.id))));
+            return this;
         }
+    }
 
-        return result;
+    @Override
+    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+        PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
+        RelOptTable factTable = context.firstTableScan.getTable();
+        MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable.class), "executeIndexQuery", implementor.getRootExpression(), Expressions.constant(context.id));
+        return implementor.result(physType, Blocks.toBlock(exprCall));
     }
 
     @Override
@@ -259,7 +266,7 @@ public class OLAPJoinRel extends EnumerableJoinRel implements OLAPRel {
             List<RelDataTypeField> newFieldList = new LinkedList<RelDataTypeField>();
             for (Map.Entry<String, RelDataType> rewriteField : this.context.rewriteFields.entrySet()) {
                 String fieldName = rewriteField.getKey();
-                if (this.rowType.getField(fieldName, true) == null) {
+                if (this.rowType.getField(fieldName, true, false) == null) {
                     RelDataType fieldType = rewriteField.getValue();
                     RelDataTypeField newField = new RelDataTypeFieldImpl(fieldName, paramIndex++, fieldType);
                     newFieldList.add(newField);

@@ -22,32 +22,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.linq4j.expressions.Blocks;
-import net.hydromatic.linq4j.expressions.Expressions;
-import net.hydromatic.linq4j.expressions.Primitive;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.PhysType;
-import net.hydromatic.optiq.rules.java.PhysTypeImpl;
-
-import org.apache.kylin.query.schema.OLAPSchema;
-import org.apache.kylin.query.schema.OLAPTable;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelWriter;
-import org.eigenbase.rel.TableAccessRelBase;
-import org.eigenbase.rel.rules.*;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-
-import com.google.common.base.Preconditions;
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
+import org.apache.calcite.adapter.enumerable.PhysType;
+import org.apache.calcite.adapter.enumerable.PhysTypeImpl;
+import org.apache.calcite.linq4j.tree.Blocks;
+import org.apache.calcite.linq4j.tree.Expressions;
+import org.apache.calcite.linq4j.tree.MethodCallExpression;
+import org.apache.calcite.linq4j.tree.Primitive;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.volcano.AbstractConverter.ExpandConversionRule;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
+import org.apache.calcite.rel.rules.FilterJoinRule;
+import org.apache.calcite.rel.rules.FilterProjectTransposeRule;
+import org.apache.calcite.rel.rules.JoinCommuteRule;
+import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.optrule.OLAPAggregateRule;
@@ -57,11 +57,14 @@ import org.apache.kylin.query.optrule.OLAPLimitRule;
 import org.apache.kylin.query.optrule.OLAPProjectRule;
 import org.apache.kylin.query.optrule.OLAPSortRule;
 import org.apache.kylin.query.optrule.OLAPToEnumerableConverterRule;
+import org.apache.kylin.query.schema.OLAPSchema;
+import org.apache.kylin.query.schema.OLAPTable;
+
+import com.google.common.base.Preconditions;
 
 /**
- * @author xjiang
  */
-public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, EnumerableRel {
+public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     private final OLAPTable olapTable;
     private final String tableName;
@@ -94,6 +97,10 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         return context;
     }
 
+    void overrideContext(OLAPContext context) {
+        this.context = context;
+    }
+
     @Override
     public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
         Preconditions.checkArgument(inputs.isEmpty());
@@ -115,20 +122,19 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
         planner.addRule(OLAPSortRule.INSTANCE);
 
         // since join is the entry point, we can't push filter past join
-        planner.removeRule(PushFilterPastJoinRule.FILTER_ON_JOIN);
-        planner.removeRule(PushFilterPastJoinRule.JOIN);
+        planner.removeRule(FilterJoinRule.FILTER_ON_JOIN);
+        planner.removeRule(FilterJoinRule.JOIN);
 
         // TODO : since we don't have statistic of table, the optimization of join is too cost
-        planner.removeRule(SwapJoinRule.INSTANCE);
-        planner.removeRule(PushJoinThroughJoinRule.LEFT);
-        planner.removeRule(PushJoinThroughJoinRule.RIGHT);
+        planner.removeRule(JoinCommuteRule.INSTANCE);
+        planner.removeRule(JoinPushThroughJoinRule.LEFT);
+        planner.removeRule(JoinPushThroughJoinRule.RIGHT);
 
-        // for columns in having clause will enable table scan filter rule
-        // cause kylin does not depend on MPP
-        planner.removeRule(PushFilterPastProjectRule.INSTANCE);
+        // for columns in having clause will enable table scan filter rule cause kylin does not depend on MPP
+        planner.removeRule(FilterProjectTransposeRule.INSTANCE);
         // distinct count will be split into a separated query that is joined with the left query
-        planner.removeRule(RemoveDistinctAggregateRule.INSTANCE);
-        
+        planner.removeRule(AggregateExpandDistinctAggregatesRule.INSTANCE);
+
         // see Dec 26th email @ http://mail-archives.apache.org/mod_mbox/calcite-dev/201412.mbox/browser
         planner.removeRule(ExpandConversionRule.INSTANCE);
     }
@@ -185,26 +191,22 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
     }
 
     @Override
+    public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
+        return this;
+    }
+
+    @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        if (!(implementor instanceof JavaImplementor))
-            throw new IllegalStateException("implementor is not JavaImplementor");
-        JavaImplementor javaImplementor = (JavaImplementor) implementor;
-
-        int ctxId = this.context.id;
-        if (javaImplementor.getParentContext() != null) {
-            ctxId = javaImplementor.getParentContext().id;
-        }
-
-        PhysType physType = PhysTypeImpl.of(javaImplementor.getTypeFactory(), this.rowType, pref.preferArray());
+        PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), this.rowType, pref.preferArray());
 
         String execFunction = genExecFunc();
 
-        return javaImplementor.result(physType, Blocks.toBlock(Expressions.call(table.getExpression(OLAPTable.class), execFunction, javaImplementor.getRootExpression(), Expressions.constant(ctxId))));
+        MethodCallExpression exprCall = Expressions.call(table.getExpression(OLAPTable.class), execFunction, implementor.getRootExpression(), Expressions.constant(context.id));
+        return implementor.result(physType, Blocks.toBlock(exprCall));
     }
 
     private String genExecFunc() {
-        // if the table to scan is not the fact table of cube, then it's a
-        // lookup table
+        // if the table to scan is not the fact table of cube, then it's a lookup table
         if (context.hasJoin == false && tableName.equalsIgnoreCase(context.realization.getFactTable()) == false) {
             return "executeLookupTableQuery";
         } else {
@@ -231,7 +233,7 @@ public class OLAPTableScan extends TableAccessRelBase implements OLAPRel, Enumer
 
         for (Map.Entry<String, RelDataType> rewriteField : rewriteFields.entrySet()) {
             String fieldName = rewriteField.getKey();
-            RelDataTypeField field = rowType.getField(fieldName, true);
+            RelDataTypeField field = rowType.getField(fieldName, true, false);
             if (field != null) {
                 RelDataType fieldType = field.getType();
                 rewriteField.setValue(fieldType);

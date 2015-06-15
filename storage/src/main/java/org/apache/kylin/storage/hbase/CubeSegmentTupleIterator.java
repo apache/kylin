@@ -315,7 +315,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             List<String> names = rowValueDecoder.getNames();
             MeasureDesc[] measures = rowValueDecoder.getMeasures();
             for (int i = 0; i < measures.length; i++) {
-                String dataType = measures[i].getFunction().getSQLType();
+                String dataType = measures[i].getFunction().getSQLType().getName();
                 info.setField(names.get(i), null, dataType, index++);
             }
         }

@@ -18,35 +18,32 @@
 
 package org.apache.kylin.query.optrule;
 
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.core.JoinInfo;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.kylin.query.relnode.OLAPFilterRel;
 import org.apache.kylin.query.relnode.OLAPJoinRel;
 import org.apache.kylin.query.relnode.OLAPRel;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.JoinInfo;
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
 
 /**
- * 
- * @author xjiang
- * 
  */
 public class OLAPJoinRule extends ConverterRule {
 
     public static final ConverterRule INSTANCE = new OLAPJoinRule();
 
     public OLAPJoinRule() {
-        super(JoinRel.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPJoinRule");
+        super(LogicalJoin.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPJoinRule");
     }
 
     @Override
     public RelNode convert(RelNode rel) {
-        JoinRel join = (JoinRel) rel;
+        LogicalJoin join = (LogicalJoin) rel;
         RelNode left = join.getInput(0);
         RelNode right = join.getInput(1);
 
@@ -68,8 +65,7 @@ public class OLAPJoinRule extends ConverterRule {
                     info.getEquiCondition(left, right, cluster.getRexBuilder()), //
                     info.leftKeys, info.rightKeys, join.getJoinType(), join.getVariablesStopped());
         } catch (InvalidRelException e) {
-            // Semantic error not possible. Must be a bug. Convert to
-            // internal error.
+            // Semantic error not possible. Must be a bug. Convert to internal error.
             throw new AssertionError(e);
             // LOGGER.fine(e.toString());
             // return null;

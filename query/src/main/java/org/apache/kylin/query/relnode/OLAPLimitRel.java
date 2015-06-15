@@ -20,30 +20,25 @@ package org.apache.kylin.query.relnode;
 
 import java.util.List;
 
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.JavaRules.EnumerableLimitRel;
-
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelWriter;
-import org.eigenbase.rel.SingleRel;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexNode;
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.adapter.enumerable.EnumerableLimit;
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
 
 import com.google.common.base.Preconditions;
 
 /**
- * 
- * @author xjiang
- * 
  */
-public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
+public class OLAPLimitRel extends SingleRel implements OLAPRel {
 
     private final RexNode localOffset; // avoid same name in parent class
     private final RexNode localFetch; // avoid same name in parent class
@@ -75,7 +70,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
-        implementor.visitChild(getChild(), this);
+        implementor.visitChild(getInput(), this);
 
         this.columnRowType = buildColumnRowType();
 
@@ -86,30 +81,23 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
     }
 
     private ColumnRowType buildColumnRowType() {
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
         return inputColumnRowType;
     }
 
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
-        implementor.visitChild(this, getChild());
+        implementor.visitChild(this, getInput());
 
         this.rowType = this.deriveRowType();
         this.columnRowType = buildColumnRowType();
     }
 
     @Override
-    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        OLAPRel childRel = (OLAPRel) getChild();
-        childRel.replaceTraitSet(EnumerableConvention.INSTANCE);
-
-        EnumerableLimitRel enumLimit = new EnumerableLimitRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), getChild(), localOffset, localFetch);
-        Result res = enumLimit.implement(implementor, pref);
-
-        childRel.replaceTraitSet(CONVENTION);
-
-        return res;
+    public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
+        return new EnumerableLimit(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
+                sole(inputs), localOffset, localFetch);
     }
 
     @Override
@@ -124,7 +112,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel, EnumerableRel {
 
     @Override
     public boolean hasSubQuery() {
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         return olapChild.hasSubQuery();
     }
 
