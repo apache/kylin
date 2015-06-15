@@ -25,44 +25,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.JavaRules.EnumerableCalcRel;
-
+import org.apache.calcite.adapter.enumerable.EnumerableCalc;
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexProgram;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlCaseOperator;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
-import org.eigenbase.rel.ProjectRelBase;
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory.FieldInfoBuilder;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelDataTypeFieldImpl;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexProgram;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.fun.SqlCaseOperator;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.validate.SqlUserDefinedFunction;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
- * 
- * @author xjiang
- * 
  */
-public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, EnumerableRel {
+public class OLAPProjectRel extends Project implements OLAPRel {
 
     private OLAPContext context;
     private List<RexNode> rewriteProjects;
@@ -98,13 +93,13 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
     }
 
     @Override
-    public ProjectRelBase copy(RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType) {
+    public Project copy(RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType) {
         return new OLAPProjectRel(getCluster(), traitSet, child, exps, rowType, this.flags);
     }
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
-        implementor.visitChild(getChild(), this);
+        implementor.visitChild(getInput(), this);
 
         this.context = implementor.getContext();
         this.hasJoin = context.hasJoin;
@@ -117,7 +112,7 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
     private ColumnRowType buildColumnRowType() {
         List<TblColRef> columns = new ArrayList<TblColRef>();
         List<Set<TblColRef>> sourceColumns = new ArrayList<Set<TblColRef>>();
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         ColumnRowType inputColumnRowType = olapChild.getColumnRowType();
         for (int i = 0; i < this.rewriteProjects.size(); i++) {
             RexNode rex = this.rewriteProjects.get(i);
@@ -125,10 +120,26 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
             String fieldName = columnField.getName();
             Set<TblColRef> sourceCollector = new HashSet<TblColRef>();
             TblColRef column = translateRexNode(rex, inputColumnRowType, fieldName, sourceCollector);
+            if (column == null)
+                throw new IllegalStateException("No TblColRef found in " + rex);
             columns.add(column);
             sourceColumns.add(sourceCollector);
         }
         return new ColumnRowType(columns, sourceColumns);
+    }
+
+    private TblColRef translateFirstRexInputRef(RexCall call, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
+        for (RexNode operand : call.getOperands()) {
+            if (operand instanceof RexInputRef) {
+                return translateRexInputRef((RexInputRef) operand, inputColumnRowType, fieldName, sourceCollector);
+            }
+            if (operand instanceof RexCall) {
+                TblColRef r = translateFirstRexInputRef((RexCall) operand, inputColumnRowType, fieldName, sourceCollector);
+                if (r != null)
+                    return r;
+            }
+        }
+        return null;
     }
 
     private TblColRef translateRexNode(RexNode rexNode, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
@@ -175,16 +186,10 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
     private TblColRef translateRexCall(RexCall call, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
         SqlOperator operator = call.getOperator();
         if (operator == SqlStdOperatorTable.EXTRACT_DATE) {
-            List<RexNode> extractDateOps = call.getOperands();
-            RexCall reinterpret = (RexCall) extractDateOps.get(1);
-            List<RexNode> reinterpretOps = reinterpret.getOperands();
-            RexInputRef inputRef = (RexInputRef) reinterpretOps.get(0);
-            return translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
+            return translateFirstRexInputRef(call, inputColumnRowType, fieldName, sourceCollector);
         } else if (operator instanceof SqlUserDefinedFunction) {
             if (operator.getName().equals("QUARTER")) {
-                List<RexNode> quaterOps = call.getOperands();
-                RexInputRef inputRef = (RexInputRef) quaterOps.get(0);
-                return translateRexInputRef(inputRef, inputColumnRowType, fieldName, sourceCollector);
+                return translateFirstRexInputRef(call, inputColumnRowType, fieldName, sourceCollector);
             }
         } else if (operator instanceof SqlCaseOperator) {
             for (RexNode operand : call.getOperands()) {
@@ -202,24 +207,21 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
     }
 
     @Override
-    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        EnumerableCalcRel enumCalcRel;
-
-        RelNode child = getChild();
-        if (child instanceof OLAPFilterRel) {
+    public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
+        if (getInput() instanceof OLAPFilterRel) {
             // merge project & filter
-            OLAPFilterRel filter = (OLAPFilterRel) getChild();
-            RexProgram program = RexProgram.create(filter.getChild().getRowType(), this.rewriteProjects, filter.getCondition(), this.rowType, getCluster().getRexBuilder());
-
-            enumCalcRel = new EnumerableCalcRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), filter.getChild(), this.rowType, program, ImmutableList.<RelCollation> of());
+            OLAPFilterRel filter = (OLAPFilterRel) getInput();
+            RelNode inputOfFilter = inputs.get(0).getInput(0);
+            RexProgram program = RexProgram.create(inputOfFilter.getRowType(), this.rewriteProjects, filter.getCondition(), this.rowType, getCluster().getRexBuilder());
+            return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
+                    inputOfFilter, program, ImmutableList.<RelCollation> of());
         } else {
-            // keep project for tablescan
-            RexProgram program = RexProgram.create(child.getRowType(), this.rewriteProjects, null, this.rowType, getCluster().getRexBuilder());
-
-            enumCalcRel = new EnumerableCalcRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), child, this.rowType, program, ImmutableList.<RelCollation> of());
+            // keep project for table scan
+            EnumerableRel input = sole(inputs);
+            RexProgram program = RexProgram.create(input.getRowType(), this.rewriteProjects, null, this.rowType, getCluster().getRexBuilder());
+            return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
+                    input, program, ImmutableList.<RelCollation> of());
         }
-
-        return enumCalcRel.implement(implementor, pref);
     }
 
     @Override
@@ -229,7 +231,7 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
 
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
-        implementor.visitChild(this, getChild());
+        implementor.visitChild(this, getInput());
 
         this.rewriting = true;
 
@@ -243,7 +245,7 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
         int paramIndex = this.rowType.getFieldList().size();
         List<RelDataTypeField> newFieldList = new LinkedList<RelDataTypeField>();
         List<RexNode> newExpList = new LinkedList<RexNode>();
-        ColumnRowType inputColumnRowType = ((OLAPRel) getChild()).getColumnRowType();
+        ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
 
         for (Map.Entry<String, RelDataType> rewriteField : this.context.rewriteFields.entrySet()) {
             String rewriteFieldName = rewriteField.getKey();
@@ -256,7 +258,7 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
                     RelDataTypeField newField = new RelDataTypeFieldImpl(rewriteFieldName, paramIndex++, fieldType);
                     newFieldList.add(newField);
                     // new project
-                    RelDataTypeField inputField = getChild().getRowType().getFieldList().get(inputIndex);
+                    RelDataTypeField inputField = getInput().getRowType().getFieldList().get(inputIndex);
                     RexInputRef newFieldRef = new RexInputRef(inputField.getIndex(), inputField.getType());
                     newExpList.add(newFieldRef);
                 }
@@ -289,7 +291,7 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
 
     @Override
     public boolean hasSubQuery() {
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         return olapChild.hasSubQuery();
     }
 

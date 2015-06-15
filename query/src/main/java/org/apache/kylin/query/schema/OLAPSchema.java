@@ -22,9 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import net.hydromatic.optiq.Table;
-import net.hydromatic.optiq.impl.AbstractSchema;
-
+import org.apache.calcite.schema.Table;
+import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.MetadataManager;
@@ -33,7 +32,6 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
- * @author xjiang
  */
 public class OLAPSchema extends AbstractSchema {
 

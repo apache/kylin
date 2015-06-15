@@ -18,9 +18,9 @@
 
 package org.apache.kylin.jdbc;
 
-import net.hydromatic.avatica.AvaticaConnection;
-import net.hydromatic.avatica.AvaticaResultSet;
-import net.hydromatic.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaResultSet;
+import org.apache.calcite.avatica.AvaticaStatement;
 
 /**
  * Kylin statement implementation

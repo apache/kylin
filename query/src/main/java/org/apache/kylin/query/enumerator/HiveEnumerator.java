@@ -24,16 +24,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import net.hydromatic.linq4j.Enumerator;
-
+import org.apache.calcite.linq4j.Enumerator;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.query.relnode.OLAPContext;
-import org.eigenbase.reltype.RelDataTypeField;
 
 /**
  * Hive Query Result Enumerator
- * 
- * @author xjiang
- * 
  */
 public class HiveEnumerator implements Enumerator<Object[]> {
 

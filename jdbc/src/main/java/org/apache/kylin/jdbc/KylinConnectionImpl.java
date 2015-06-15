@@ -27,12 +27,12 @@ import java.util.Properties;
 
 import javax.xml.bind.DatatypeConverter;
 
-import net.hydromatic.avatica.AvaticaConnection;
-import net.hydromatic.avatica.AvaticaFactory;
-import net.hydromatic.avatica.AvaticaPreparedStatement;
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.Meta;
-import net.hydromatic.avatica.UnregisteredDriver;
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaFactory;
+import org.apache.calcite.avatica.AvaticaPreparedStatement;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Meta;
+import org.apache.calcite.avatica.UnregisteredDriver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,31 +20,31 @@ package org.apache.kylin.query.relnode;
 
 import java.util.List;
 
-import net.hydromatic.linq4j.expressions.Blocks;
-import net.hydromatic.linq4j.expressions.Expressions;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.PhysType;
-import net.hydromatic.optiq.rules.java.PhysTypeImpl;
-
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
+import org.apache.calcite.adapter.enumerable.PhysType;
+import org.apache.calcite.adapter.enumerable.PhysTypeImpl;
+import org.apache.calcite.linq4j.tree.Blocks;
+import org.apache.calcite.linq4j.tree.Expressions;
+import org.apache.calcite.plan.ConventionTraitDef;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterImpl;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
 import org.apache.kylin.query.routing.QueryRouter;
 import org.apache.kylin.query.schema.OLAPTable;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRelImpl;
-import org.eigenbase.relopt.ConventionTraitDef;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
 
 /**
- * @author xjiang
  */
-public class OLAPToEnumerableConverter extends ConverterRelImpl implements EnumerableRel {
+public class OLAPToEnumerableConverter extends ConverterImpl implements EnumerableRel {
 
     public OLAPToEnumerableConverter(RelOptCluster cluster, RelTraitSet traits, RelNode input) {
         super(cluster, ConventionTraitDef.INSTANCE, traits, input);
@@ -64,7 +64,7 @@ public class OLAPToEnumerableConverter extends ConverterRelImpl implements Enume
     public Result implement(EnumerableRelImplementor enumImplementor, Prefer pref) {
         // post-order travel children
         OLAPRel.OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
-        olapImplementor.visitChild(getChild(), this);
+        olapImplementor.visitChild(getInput(), this);
 
         // find cube from olap context
         try {
@@ -84,13 +84,20 @@ public class OLAPToEnumerableConverter extends ConverterRelImpl implements Enume
 
         // rewrite query if necessary
         OLAPRel.RewriteImplementor rewriteImplementor = new OLAPRel.RewriteImplementor();
-        rewriteImplementor.visitChild(this, getChild());
+        rewriteImplementor.visitChild(this, getInput());
 
-        // build java implementation
-        EnumerableRel child = (EnumerableRel) getChild();
-        OLAPRel.JavaImplementor javaImplementor = new OLAPRel.JavaImplementor(enumImplementor);
-        return javaImplementor.visitChild(this, 0, child, pref);
+        // implement as EnumerableRel
+        OLAPRel.JavaImplementor impl = new OLAPRel.JavaImplementor(enumImplementor);
+        EnumerableRel inputAsEnum = impl.createEnumerable((OLAPRel) getInput());
+        this.replaceInput(0, inputAsEnum);
+        
+        if (System.getProperty("calcite.debug") != null) {
+            String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+            System.out.println("EXECUTION PLAN AFTER REWRITE");
+            System.out.println(dumpPlan);
+        }
 
+        return impl.visitChild(this, 0, inputAsEnum, pref);
     }
 
     private Result buildHiveResult(EnumerableRelImplementor enumImplementor, Prefer pref, OLAPContext context) {

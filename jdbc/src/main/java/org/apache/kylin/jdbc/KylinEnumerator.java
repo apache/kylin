@@ -21,7 +21,7 @@ package org.apache.kylin.jdbc;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.hydromatic.linq4j.Enumerator;
+import org.apache.calcite.linq4j.Enumerator;
 
 /**
  * Query results enumerator

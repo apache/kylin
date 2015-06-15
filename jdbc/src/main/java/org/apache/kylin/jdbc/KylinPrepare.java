@@ -21,12 +21,10 @@ package org.apache.kylin.jdbc;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.avatica.AvaticaParameter;
-import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.ColumnMetaData;
-import net.hydromatic.avatica.Cursor;
-import net.hydromatic.linq4j.Enumerator;
-import net.hydromatic.optiq.runtime.EnumeratorCursor;
+import org.apache.calcite.avatica.AvaticaParameter;
+import org.apache.calcite.avatica.AvaticaPrepareResult;
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.Cursor;
 
 /**
  * Interface of kylin prepare statement implementation

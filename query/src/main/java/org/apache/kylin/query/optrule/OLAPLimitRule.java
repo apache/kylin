@@ -18,35 +18,32 @@
 
 package org.apache.kylin.query.optrule;
 
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Sort;
 import org.apache.kylin.query.relnode.OLAPLimitRel;
 import org.apache.kylin.query.relnode.OLAPRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SortRel;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
 
 /**
- * 
- * @author xjiang
- * 
  */
 public class OLAPLimitRule extends RelOptRule {
 
     public static final RelOptRule INSTANCE = new OLAPLimitRule();
 
     public OLAPLimitRule() {
-        super(operand(SortRel.class, any()), "OLAPLimitRule");
+        super(operand(Sort.class, any()), "OLAPLimitRule");
     }
 
     @Override
     public void onMatch(RelOptRuleCall call) {
-        final SortRel sort = call.rel(0);
+        final Sort sort = call.rel(0);
         if (sort.offset == null && sort.fetch == null) {
             return;
         }
         final RelTraitSet traitSet = sort.getTraitSet().replace(OLAPRel.CONVENTION);
-        RelNode input = sort.getChild();
+        RelNode input = sort.getInput();
         if (!sort.getCollation().getFieldCollations().isEmpty()) {
             // Create a sort with the same sort key, but no offset or fetch.
             input = sort.copy(sort.getTraitSet(), input, sort.getCollation(), null, null);
