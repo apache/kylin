@@ -127,7 +127,8 @@ public class DictionaryManager {
                 firstDictInfo = info;
             } else {
                 if (!firstDictInfo.isDictOnSameColumn(info)) {
-                    throw new IllegalArgumentException("Merging dictionaries are not structurally equal(regardless of signature).");
+                    // don't throw exception, just output warning as legacy cube segment may build dict on PK
+                    logger.warn("Merging dictionaries are not structurally equal : " + firstDictInfo.getResourcePath() + " and " + info.getResourcePath());
                 }
             }
             totalSize += info.getInput().getSize();
