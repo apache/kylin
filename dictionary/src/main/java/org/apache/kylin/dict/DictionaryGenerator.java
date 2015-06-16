@@ -85,7 +85,7 @@ public class DictionaryGenerator {
         logger.info("Dictionary value samples: " + buf.toString());
         logger.info("Dictionary cardinality " + info.getCardinality());
 
-        if (values.size() > DICT_MAX_CARDINALITY)
+        if (dict instanceof TrieDictionary && values.size() > DICT_MAX_CARDINALITY)
             throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- " + info.getSourceTable() + "." + info.getSourceColumn() + " cardinality: " + values.size());
 
         return dict;

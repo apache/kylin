@@ -35,13 +35,13 @@ import org.apache.kylin.dict.lookup.HiveTable;
 import org.apache.kylin.dict.lookup.TableSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.dict.lookup.ReadableTable;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 public class DictionaryManager {
@@ -146,8 +146,20 @@ public class DictionaryManager {
             return getDictionaryInfo(dupDict);
         }
 
+        // check for cases where merging dicts are actually same
+        boolean identicalSourceDicts = true;
+        for (int i = 1; i < dicts.size(); ++i) {
+            if (!dicts.get(0).getDictionaryObject().equals(dicts.get(i).getDictionaryObject())) {
+                identicalSourceDicts = false;
+                break;
+            }
+        }
+        if (identicalSourceDicts) {
+            logger.info("Use one of the merging dictionaries directly");
+            return dicts.get(0);
+        }
+        
         Dictionary<?> newDict = DictionaryGenerator.mergeDictionaries(newDictInfo, dicts);
-
         return trySaveNewDict(newDict, newDictInfo);
     }
 
