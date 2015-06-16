@@ -18,15 +18,12 @@
 
 package org.apache.kylin.storage.hbase;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
@@ -35,10 +32,8 @@ import org.apache.kylin.cube.kv.FuzzyMaskEncoder;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.common.util.DateFormat;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.*;
 
 /**
  * 
@@ -135,10 +130,10 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
     private void initPartitionRange(ColumnValueRange dimRange) {
         if (null != dimRange.getBeginValue()) {
-            this.partitionColumnStartDate = DateFormat.stringToDate(dimRange.getBeginValue()).getTime();
+            this.partitionColumnStartDate = DateFormat.stringToMillis(dimRange.getBeginValue());
         }
         if (null != dimRange.getEndValue()) {
-            this.partitionColumnEndDate = DateFormat.stringToDate(dimRange.getEndValue()).getTime();
+            this.partitionColumnEndDate = DateFormat.stringToMillis(dimRange.getEndValue());
         }
     }
 

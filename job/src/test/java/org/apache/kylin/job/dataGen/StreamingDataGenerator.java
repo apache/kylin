@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Random;
 
 /**
+ * data gen for II streaming, may be merged with StreamingTableDataGenerator
  */
 public class StreamingDataGenerator {
     private static final Logger logger = LoggerFactory.getLogger(StreamingDataGenerator.class);
@@ -27,7 +28,7 @@ public class StreamingDataGenerator {
 
     public static Iterator<String> generate(final long start, final long end, final int count) {
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
-        final IIInstance ii = IIManager.getInstance(config).getII("test_streaming_table");
+        final IIInstance ii = IIManager.getInstance(config).getII("test_streaming_table_ii");
         final IIDesc iiDesc = ii.getDescriptor();
         final List<TblColRef> columns = iiDesc.listAllColumns();
 
@@ -44,9 +45,9 @@ public class StreamingDataGenerator {
             public String next() {
                 values.clear();
                 long ts = this.createTs(start, end);
-                values.put("ts", Long.toString(ts));
                 values.put("minute_start", Long.toString(TimeUtil.getMinuteStart(ts)));
                 values.put("hour_start", Long.toString(TimeUtil.getHourStart(ts)));
+                values.put("day_start",Long.toString(TimeUtil.getDayStart(ts)));
                 values.put("itm", Integer.toString(random.nextInt(20)));
                 values.put("site", Integer.toString(random.nextInt(5)));
 

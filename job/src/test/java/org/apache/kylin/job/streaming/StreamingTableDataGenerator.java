@@ -20,19 +20,19 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * this is for generating fact table data for test_streaming_table
+ * this is for generating fact table data for test_streaming_table (cube streaming)
  */
 public class StreamingTableDataGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamingTableDataGenerator.class);
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static List<String> generate(int recordCount, long startTime, long endTime)  {
+    public static List<String> generate(int recordCount, long startTime, long endTime, String tableName) {
         Preconditions.checkArgument(startTime < endTime);
         Preconditions.checkArgument(recordCount > 0);
 
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc("streaming_table");
+        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName);
 
         SortedMultiset<Long> times = TreeMultiset.create();
         Random r = new Random();
@@ -47,24 +47,26 @@ public class StreamingTableDataGenerator {
             kvs.clear();
             kvs.put("timestamp", String.valueOf(time));
             for (ColumnDesc columnDesc : tableDesc.getColumns()) {
+                String lowerCaseColumnName = columnDesc.getName().toLowerCase();
                 DataType dataType = columnDesc.getType();
                 if (dataType.isDateTimeFamily()) {
+                    //TimedJsonStreamParser will derived minute_start,hour_start,day_start from timestamp
                     continue;
                 } else if (dataType.isStringFamily()) {
                     char c = (char) ('A' + (int) (26 * r.nextDouble()));
-                    kvs.put(columnDesc.getName(), String.valueOf(c));
+                    kvs.put(lowerCaseColumnName, String.valueOf(c));
                 } else if (dataType.isIntegerFamily()) {
                     int v = r.nextInt(10000);
-                    kvs.put(columnDesc.getName(), String.valueOf(v));
+                    kvs.put(lowerCaseColumnName, String.valueOf(v));
                 } else if (dataType.isNumberFamily()) {
                     String v = String.format("%.4f", r.nextDouble() * 100);
-                    kvs.put(columnDesc.getName(), v);
+                    kvs.put(lowerCaseColumnName, v);
                 }
             }
             try {
                 ret.add(mapper.writeValueAsString(kvs));
             } catch (JsonProcessingException e) {
-                logger.error("error!",e);
+                logger.error("error!", e);
             }
         }
 

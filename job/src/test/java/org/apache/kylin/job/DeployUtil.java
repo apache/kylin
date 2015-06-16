@@ -18,6 +18,7 @@
 
 package org.apache.kylin.job;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -33,15 +34,22 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.kylin.job.hadoop.hive.SqlHiveDataTypeMapping;
+import org.apache.kylin.job.streaming.KafkaDataLoader;
+import org.apache.kylin.job.streaming.StreamingTableDataGenerator;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.streaming.StreamMessage;
+import org.apache.kylin.streaming.StreamingConfig;
+import org.apache.kylin.streaming.TimedJsonStreamParser;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.List;
 
 public class DeployUtil {
     @SuppressWarnings("unused")
@@ -138,7 +146,7 @@ public class DeployUtil {
 
     static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
 
-    public static void prepareTestData(String joinType, String cubeName) throws Exception {
+    public static void prepareTestDataForNormalCubes(String cubeName) throws Exception {
 
         String factTableName = TABLE_KYLIN_FACT.toUpperCase();
         String content = null;
@@ -147,22 +155,38 @@ public class DeployUtil {
         if (!buildCubeUsingProvidedData) {
             System.out.println("build cube with random dataset");
             // data is generated according to cube descriptor and saved in resource store
-            if (joinType.equalsIgnoreCase("inner")) {
-                content = FactTableGenerator.generate(cubeName, "10000", "1", null, "inner");
-            } else if (joinType.equalsIgnoreCase("left")) {
-                content = FactTableGenerator.generate(cubeName, "10000", "0.6", null, "left");
-            } else {
-                throw new IllegalArgumentException("Unsupported join type : " + joinType);
-            }
-
+            content = FactTableGenerator.generate(cubeName, "10000", "0.6", null);
             assert content != null;
             overrideFactTableData(content, factTableName);
         } else {
-            System.out.println("build cube with provided dataset");
+            System.out.println("build normal cubes with provided dataset");
         }
 
-        duplicateFactTableData(factTableName, joinType);
         deployHiveTables();
+    }
+
+    public static void prepareTestDataForStreamingCube(long startTime, long endTime, StreamingConfig streamingConfig) throws IOException {
+        MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(streamingConfig.getCubeName());
+        List<String> data = StreamingTableDataGenerator.generate(10000, startTime, endTime, cubeInstance.getFactTable());
+        TableDesc tableDesc = metadataManager.getTableDesc(cubeInstance.getFactTable());
+
+        //load into kafka
+        KafkaDataLoader.loadIntoKafka(streamingConfig, data);
+
+        //csv data for H2 use
+        List<TblColRef> tableColumns = Lists.newArrayList();
+        for (ColumnDesc columnDesc : tableDesc.getColumns()) {
+            tableColumns.add(new TblColRef(columnDesc));
+        }
+        TimedJsonStreamParser timedJsonStreamParser = new TimedJsonStreamParser(tableColumns, true);
+        StringBuilder sb = new StringBuilder();
+        for (String json : data) {
+            List<String> rowColumns = timedJsonStreamParser.parse(new StreamMessage(0, json.getBytes())).getStreamMessage();
+            sb.append(StringUtils.join(rowColumns, ","));
+            sb.append(System.getProperty("line.separator"));
+        }
+        overrideFactTableData(sb.toString(), cubeInstance.getFactTable());
     }
 
     public static void overrideFactTableData(String factTableContent, String factTableName) throws IOException {
@@ -173,17 +197,6 @@ public class DeployUtil {
         String factTablePath = "/data/" + factTableName + ".csv";
         store.deleteResource(factTablePath);
         store.putResource(factTablePath, in, System.currentTimeMillis());
-        in.close();
-    }
-
-    public static void duplicateFactTableData(String factTableName, String joinType) throws IOException {
-        // duplicate a copy of this fact table, with a naming convention with fact.csv.inner or fact.csv.left
-        // so that later test cases can select different data files
-        ResourceStore store = ResourceStore.getStore(config());
-        InputStream in = store.getResource("/data/" + factTableName + ".csv");
-        String factTablePathWithJoinType = "/data/" + factTableName + ".csv." + joinType.toLowerCase();
-        store.deleteResource(factTablePathWithJoinType);
-        store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());
         in.close();
     }
 

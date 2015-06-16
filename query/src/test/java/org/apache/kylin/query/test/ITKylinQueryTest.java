@@ -73,7 +73,7 @@ public class ITKylinQueryTest extends KylinTestBase {
         h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++), "sa", "");
         // Load H2 Tables (inner join)
         H2Database h2DB = new H2Database(h2Connection, config);
-        h2DB.loadAllTables(joinType);
+        h2DB.loadAllTables();
     }
 
     protected static void clean() {
@@ -95,7 +95,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query00.sql";
+        String queryFileName = "src/test/resources/query/sql_streaming/query07.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
@@ -160,6 +160,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testDistinctCountQuery() throws Exception {
         batchExecuteQuery("src/test/resources/query/sql_distinct");
+    }
+
+    @Test
+    public void testStreamingTableQuery() throws Exception {
+        execAndCompQuery("src/test/resources/query/sql_streaming",null,true);
     }
 
     @Test

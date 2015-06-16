@@ -18,30 +18,17 @@
 
 package org.apache.kylin.job;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.MapType;
-import com.fasterxml.jackson.databind.type.SimpleType;
-import com.google.common.base.Function;
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.common.util.SortUtil;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
-import org.apache.kylin.job.dataGen.StreamingDataGenerator;
 import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 
 /**
+ *
  */
 public class DataGenTest extends LocalFileMetadataTestCase {
 
@@ -58,7 +45,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        String content = FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "1", null, "inner");// default  settings
+        String content = FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "1",null);// default  settings
         System.out.println(content);
         assertTrue(content.contains("FP-non GTC"));
         assertTrue(content.contains("ABIN"));
@@ -66,43 +53,4 @@ public class DataGenTest extends LocalFileMetadataTestCase {
         DeployUtil.overrideFactTableData(content, "default.test_kylin_fact");
     }
 
-    @Test
-    public void testStreaming() throws Exception {
-        int totalCount = 10000;
-        int counter = 0;
-
-        Iterator<String> iterator = StreamingDataGenerator.generate(DateFormat.stringToMillis("2015-01-03"), DateFormat.stringToMillis("2015-02-05"), totalCount);
-
-        iterator = SortUtil.extractAndSort(iterator, new Function<String, Comparable>() {
-            public Comparable apply(String input) {
-                return getTsStr(input);
-            }
-        });
-
-        //FileUtils.writeLines(new File("//Users/honma/streaming_table_data"),Lists.newArrayList(iterator));
-
-        long lastTs = 0;
-        while (iterator.hasNext()) {
-            counter++;
-            String row = iterator.next();
-            System.out.println(row);
-            long ts = Long.parseLong(getTsStr(row));
-            Assert.assertTrue(ts >= lastTs);
-            lastTs = ts;
-        }
-        Assert.assertEquals(totalCount, counter);
-    }
-
-    final JavaType javaType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
-    final ObjectMapper objectMapper = new ObjectMapper();
-
-    private String getTsStr(String input) {
-        Map<String, String> json ;
-        try {
-            json = objectMapper.readValue(input.getBytes(), javaType);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return json.get("ts");
-    }
 }

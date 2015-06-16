@@ -26,8 +26,8 @@ import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.cube.CubingJob;
@@ -118,7 +118,7 @@ public class BuildCubeWithEngineTest {
 
     @Test
     public void test() throws Exception {
-        DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
+        DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_left_join_empty");
         testInner();
         testLeft();
     }

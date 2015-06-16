@@ -18,6 +18,13 @@
 
 package org.apache.kylin.query.test;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,18 +35,10 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-
 public class H2Database {
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
-    private static final String[] ALL_TABLES = new String[] { "edw.test_cal_dt", "default.test_category_groupings", "default.test_kylin_fact", "edw.test_seller_type_dim", "edw.test_sites" };
+    private static final String[] ALL_TABLES = new String[] { "edw.test_cal_dt", "default.test_category_groupings", "default.test_kylin_fact", "edw.test_seller_type_dim", "edw.test_sites", "default.streaming_table" };
     private static final Map<String, String> javaToH2DataTypeMapping = new HashMap<String, String>();
 
     static {
@@ -58,33 +57,22 @@ public class H2Database {
         this.config = config;
     }
 
-    public void loadAllTables(String joinType) throws SQLException {
+    public void loadAllTables() throws SQLException {
         for (String tableName : ALL_TABLES) {
-            loadH2Table(tableName, joinType);
+            loadH2Table(tableName);
         }
     }
 
-    private void loadH2Table(String tableName, String joinType) throws SQLException {
+    private void loadH2Table(String tableName) throws SQLException {
         MetadataManager metaMgr = MetadataManager.getInstance(config);
         TableDesc tableDesc = metaMgr.getTableDesc(tableName.toUpperCase());
         File tempFile = null;
-
-        String fileNameSuffix = joinType.equalsIgnoreCase("default") ? "" : "." + joinType;
 
         try {
             tempFile = File.createTempFile("tmp_h2", ".csv");
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
             String normalPath = "/data/" + tableDesc.getIdentity() + ".csv";
-
-            // If it's the fact table, there will be a facttable.csv.inner or
-            // facttable.csv.left in hbase
-            // otherwise just use lookup.csv
-            InputStream csvStream = metaMgr.getStore().getResource(normalPath + fileNameSuffix);
-            if (csvStream == null) {
-                csvStream = metaMgr.getStore().getResource(normalPath);
-            } else {
-                logger.info("H2 decides to load " + (normalPath + fileNameSuffix) + " for table " + tableDesc.getIdentity());
-            }
+            InputStream csvStream = metaMgr.getStore().getResource(normalPath);
 
             org.apache.commons.io.IOUtils.copy(csvStream, tempFileStream);
 
