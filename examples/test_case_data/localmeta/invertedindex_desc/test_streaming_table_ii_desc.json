@@ -3,12 +3,11 @@
   "last_modified": 0,
   "name": "test_streaming_table_ii_desc",
   "model_name": "test_streaming_table_model_desc",
-  "timestamp_dimension": "ts",
+  "timestamp_dimension": "minute_start",
   "value_dimensions": [
     {
       "table": "default.streaming_table",
       "columns": [
-        "ts",
         "minute_start",
         "hour_start",
         "day_start",

@@ -1,0 +1,1 @@
+select count(*) AS c ,cast(sum(item_count) as BIGINT) as i from streaming_table group by site,day_start

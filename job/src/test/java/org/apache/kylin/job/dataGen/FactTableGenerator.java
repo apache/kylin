@@ -603,7 +603,7 @@ public class FactTableGenerator {
      *                      lookup table by INNER join
      * @param randomSeed    random seed
      */
-    public static String generate(String cubeName, String rowCount, String linkableRatio, String randomSeed, String joinType) throws Exception {
+    public static String generate(String cubeName, String rowCount, String linkableRatio, String randomSeed) throws Exception {
 
         if (rowCount == null)
             rowCount = "10000";

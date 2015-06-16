@@ -69,7 +69,7 @@ public final class StreamingUtil {
         final String topic = kafkaClusterConfig.getTopic();
         final Broker leadBroker = Preconditions.checkNotNull(getLeadBroker(kafkaClusterConfig, partitionId), "unable to find leadBroker with config:" + kafkaClusterConfig + " partitionId:" + partitionId);
         final long earliestOffset = KafkaRequester.getLastOffset(topic, partitionId, OffsetRequest.EarliestTime(), leadBroker, kafkaClusterConfig);
-        final long latestOffset = KafkaRequester.getLastOffset(topic, partitionId, OffsetRequest.LatestTime(), leadBroker, kafkaClusterConfig);
+        final long latestOffset = KafkaRequester.getLastOffset(topic, partitionId, OffsetRequest.LatestTime(), leadBroker, kafkaClusterConfig) - 1;
         logger.info(String.format("topic: %s, partitionId: %d, try to find closest offset with timestamp: %d between offset {%d, %d}", topic, partitionId, timestamp, earliestOffset, latestOffset));
         final long result = binarySearch(kafkaClusterConfig, partitionId, earliestOffset, latestOffset, timestamp, streamParser);
         logger.info(String.format("topic: %s, partitionId: %d, found offset: %d", topic, partitionId, result));
@@ -83,8 +83,8 @@ public final class StreamingUtil {
             long endTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, endOffset, streamParser);
             long midTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, midOffset, streamParser);
             // hard to ensure these 2 conditions
-//            Preconditions.checkArgument(startTimestamp <= midTimestamp);
-//            Preconditions.checkArgument(midTimestamp <= endTimestamp);
+            //            Preconditions.checkArgument(startTimestamp <= midTimestamp);
+            //            Preconditions.checkArgument(midTimestamp <= endTimestamp);
             if (startTimestamp >= targetTimestamp) {
                 return startOffset;
             }
@@ -102,7 +102,6 @@ public final class StreamingUtil {
             }
         }
         return startOffset;
-
 
     }
 }

@@ -40,9 +40,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.job.streaming.BootstrapConfig;
-import org.apache.kylin.job.streaming.KafkaDataLoader;
 import org.apache.kylin.job.streaming.StreamingBootstrap;
-import org.apache.kylin.job.streaming.StreamingTableDataGenerator;
 import org.apache.kylin.streaming.StreamingConfig;
 import org.apache.kylin.streaming.StreamingManager;
 import org.junit.After;
@@ -53,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -64,8 +61,8 @@ public class BuildCubeWithStreamTest {
     private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStreamTest.class);
     private static final String streamingName = "test_streaming_table_cube";
     private static final long startTime = DateFormat.stringToMillis("2015-01-01 00:00:00");
-    private static final long endTime = DateFormat.stringToMillis("2015-11-01 00:00:00");
-    private static final long batchInterval = 12 * 60 * 60 * 1000;//12 hours
+    private static final long endTime = DateFormat.stringToMillis("2015-01-03 00:00:00");
+    private static final long batchInterval = 16 * 60 * 60 * 1000;//16 hours
 
     private KylinConfig kylinConfig;
 
@@ -89,13 +86,7 @@ public class BuildCubeWithStreamTest {
         streamingConfig.setTopic(UUID.randomUUID().toString());
         StreamingManager.getInstance(kylinConfig).saveStreamingConfig(streamingConfig);
 
-        loadDataIntoKafka();
-    }
-
-    private void loadDataIntoKafka() {
-        //10 day's data,sorted
-        List<String> data = StreamingTableDataGenerator.generate(10000, startTime, endTime);
-        KafkaDataLoader.loadIntoKafka(streamingName, data);
+        DeployUtil.prepareTestDataForStreamingCube(startTime, endTime, streamingConfig);
     }
 
     @After
@@ -108,7 +99,7 @@ public class BuildCubeWithStreamTest {
         for (long start = startTime; start < endTime; start += batchInterval) {
             BootstrapConfig bootstrapConfig = new BootstrapConfig();
             bootstrapConfig.setStart(start);
-            bootstrapConfig.setEnd(start + endTime);
+            bootstrapConfig.setEnd(start + batchInterval);
             bootstrapConfig.setMargin(0);
             bootstrapConfig.setOneOff(true);
             bootstrapConfig.setPartitionId(0);

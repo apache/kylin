@@ -1,0 +1,1 @@
+select count(*) as c from streaming_table where day_start >= DATE'2015-01-02'
