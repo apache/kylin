@@ -22,7 +22,7 @@ then
 
 
 
-    useSandbox=`cat ${KYLIN_HOME}/conf/kylin.properties | grep 'kylin.sandbox' | awk -F '=' '{print $2}'`
+    useSandbox=`sh ${dir}/check-sandbox-properties.sh`
     spring_profile="default"
     if [ "$useSandbox" = "true" ]
         then spring_profile="sandbox"
@@ -88,7 +88,7 @@ then
     fi
     if [ $2 == "start" ]
     then
-        useSandbox=`cat ${KYLIN_HOME}/conf/kylin.properties | grep 'kylin.sandbox' | awk -F '=' '{print $2}'`
+        useSandbox=`sh ${dir}/check-sandbox-properties.sh`
         spring_profile="default"
         if [ "$useSandbox" = "true" ]
             then spring_profile="sandbox"
