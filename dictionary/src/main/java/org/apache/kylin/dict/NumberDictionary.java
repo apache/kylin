@@ -166,6 +166,11 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
     }
 
     @Override
+    protected boolean isNullObjectForm(T value) {
+        return value == null || value.equals("");
+    }
+
+    @Override
     protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
         NumberBytesCodec codec = getCodec();
         codec.encodeNumber(value, offset, len);
