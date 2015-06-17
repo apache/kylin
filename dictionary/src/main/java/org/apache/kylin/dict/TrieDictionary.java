@@ -169,7 +169,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
         int seq = lookupSeqNoFromValue(headSize, value, offset, offset + len, roundingFlag);
         int id = calcIdFromSeqNo(seq);
         if (id < 0)
-            throw new IllegalArgumentException("Not a valid value: " + bytesConvert.convertFromBytes(value, offset, len));
+            throw new IllegalArgumentException("Not a valid value: '" + bytesConvert.convertFromBytes(value, offset, len) + "'");
         return id;
     }
 

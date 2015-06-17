@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dict.lookup.TableReader;
@@ -160,6 +161,8 @@ public class DictionaryGenerator {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
             String v = Bytes.toString(value);
+            if (StringUtils.isBlank(v)) // empty string is null for numbers
+                continue;
             builder.addValue(v);
             if (samples.size() < nSamples && samples.contains(v) == false)
                 samples.add(v);
