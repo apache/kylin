@@ -43,6 +43,7 @@ import kafka.cluster.Broker;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
+import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -160,7 +161,7 @@ public class StreamingBootstrap {
             }
             logger.info("starting offset:" + streamingOffset + " cluster id:" + clusterID + " partitionId:" + partitionId + " transferredPartitionId:" + transferredPartitionId);
             KafkaConsumer consumer = new KafkaConsumer(clusterID, kafkaClusterConfig.getTopic(), partitionId, streamingOffset, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
-            Executors.newSingleThreadExecutor().submit(consumer);
+            Executors.newSingleThreadExecutor(new DaemonThreadFactory()).submit(consumer);
             result.add(consumer.getStreamQueue(0));
         }
         return result;
@@ -314,14 +315,10 @@ public class StreamingBootstrap {
 
         final IIDesc iiDesc = iiSegment.getIIDesc();
 
-        Executors.newSingleThreadExecutor().submit(consumer);
+        Executors.newSingleThreadExecutor(new DaemonThreadFactory()).submit(consumer);
         final ExecutorService streamingBuilderPool = Executors.newFixedThreadPool(parallelism);
         for (int i = startShard; i < endShard; ++i) {
-            final StreamBuilder task = StreamBuilder.newLimitedSizeStreamBuilder(streamingConfig.getName(),
-                    consumer.getStreamQueue(i % parallelism),
-                    new IIStreamConsumer(streamingConfig.getName(), iiSegment.getStorageLocationIdentifier(), iiDesc, i),
-                    0L,
-                    iiDesc.getSliceSize());
+            final StreamBuilder task = StreamBuilder.newLimitedSizeStreamBuilder(streamingConfig.getName(), consumer.getStreamQueue(i % parallelism), new IIStreamConsumer(streamingConfig.getName(), iiSegment.getStorageLocationIdentifier(), iiDesc, i), 0L, iiDesc.getSliceSize());
             task.setStreamParser(getStreamParser(streamingConfig, ii.getDescriptor().listAllColumns()));
             if (i == endShard - 1) {
                 streamingBuilderPool.submit(task).get();
