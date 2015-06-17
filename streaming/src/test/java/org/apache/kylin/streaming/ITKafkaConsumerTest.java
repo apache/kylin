@@ -36,6 +36,7 @@ package org.apache.kylin.streaming;
 
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -87,7 +88,7 @@ public class ITKafkaConsumerTest extends KafkaBaseTest {
     @Ignore("since ci does not have the topic")
     public void test() throws InterruptedException {
         final TopicMeta kafkaTopicMeta = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig);
-        final ExecutorService executorService = Executors.newFixedThreadPool(kafkaTopicMeta.getPartitionIds().size());
+        final ExecutorService executorService = Executors.newFixedThreadPool(kafkaTopicMeta.getPartitionIds().size(), new DaemonThreadFactory());
         List<BlockingQueue<StreamMessage>> queues = Lists.newArrayList();
         for (Integer partitionId : kafkaTopicMeta.getPartitionIds()) {
             KafkaConsumer consumer = new KafkaConsumer(0, kafkaTopicMeta.getName(), partitionId, 0, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
