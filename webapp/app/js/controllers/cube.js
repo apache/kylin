@@ -325,7 +325,7 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
                         return $scope.metaModel;
                     },
                     buildType: function () {
-                        return 'BUILD';
+                        return 'REFRESH';
                     }
                 }
             });
