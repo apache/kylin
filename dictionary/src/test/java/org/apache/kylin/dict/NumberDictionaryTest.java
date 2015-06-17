@@ -50,7 +50,7 @@ public class NumberDictionaryTest {
         
         // check "" is treated as NULL, not a code of dictionary
         Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(DataType.getInstance("integer"), intBytes);
-        assertEquals(5, dict.getSize());
+        assertEquals(4, dict.getSize());
 
         final int id = ((NumberDictionary<String>) dict).getIdFromValue("");
         assertEquals(id, dict.nullId());
