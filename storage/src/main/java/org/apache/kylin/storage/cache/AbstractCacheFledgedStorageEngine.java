@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/13/15.
  */
 public abstract class AbstractCacheFledgedStorageEngine implements IStorageEngine, TeeTupleItrListener {
     private static final Logger logger = LoggerFactory.getLogger(AbstractCacheFledgedStorageEngine.class);

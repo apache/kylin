@@ -18,10 +18,11 @@
 
 package org.apache.kylin.rest.controller;
 
-import javax.servlet.http.HttpServletRequest;
-
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
+import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.response.ErrorResponse;
+import org.apache.kylin.rest.service.MetricsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +31,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import org.apache.kylin.rest.exception.BadRequestException;
-import org.apache.kylin.rest.exception.NotFoundException;
-import org.apache.kylin.rest.service.MetricsService;
+import javax.servlet.http.HttpServletRequest;
 
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 9/1/13 Time: 10:54 PM To
- * change this template use File | Settings | File Templates.
  */
 public class BasicController {
 

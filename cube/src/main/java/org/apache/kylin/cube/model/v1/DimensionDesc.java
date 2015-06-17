@@ -31,8 +31,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To
- * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DimensionDesc {

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/14/15.
  */
 public class DynamicCacheTest {
 

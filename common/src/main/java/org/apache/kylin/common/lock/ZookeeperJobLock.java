@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/26/15.
  */
 public class ZookeeperJobLock implements JobLock {
     private Logger logger = LoggerFactory.getLogger(ZookeeperJobLock.class);

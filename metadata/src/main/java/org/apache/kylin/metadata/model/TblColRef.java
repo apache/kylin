@@ -21,8 +21,6 @@ package org.apache.kylin.metadata.model;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To
- * change this template use File | Settings | File Templates.
  */
 public class TblColRef {
 

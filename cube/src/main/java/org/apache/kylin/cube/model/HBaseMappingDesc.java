@@ -30,8 +30,6 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:44 AM To
- * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class HBaseMappingDesc {

@@ -10,7 +10,6 @@ import org.h2.util.StringUtils;
 import java.io.IOException;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/19/15.
  */
 public class RealAclHBaseStorage implements AclHBaseStorage {
 

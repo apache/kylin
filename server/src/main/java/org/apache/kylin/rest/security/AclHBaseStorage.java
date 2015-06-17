@@ -5,7 +5,6 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import java.io.IOException;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/19/15.
  */
 public interface AclHBaseStorage {
     String DEFAULT_TABLE_PREFIX = "kylin_metadata";

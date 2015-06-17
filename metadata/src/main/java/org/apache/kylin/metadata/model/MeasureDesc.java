@@ -23,8 +23,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:41 AM To
- * change this template use File | Settings | File Templates.
  */
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)

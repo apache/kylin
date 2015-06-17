@@ -8,7 +8,6 @@ import org.junit.Test;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/14/15.
  */
 public class IdentityUtilTest {
     @Test

@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 12/2/13 Time: 11:43 AM To
- * change this template use File | Settings | File Templates.
  */
 public class StringUtil {
 
