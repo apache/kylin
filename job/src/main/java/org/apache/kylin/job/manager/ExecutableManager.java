@@ -18,13 +18,10 @@
 
 package org.apache.kylin.job.manager;
 
-import java.lang.reflect.Constructor;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.dao.ExecutableDao;
@@ -32,18 +29,16 @@ import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.IllegalStateTranferException;
 import org.apache.kylin.job.exception.PersistentException;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.DefaultOutput;
-import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.execution.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import javax.annotation.Nullable;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  */
@@ -119,14 +114,32 @@ public class ExecutableManager {
         try {
             final ExecutableOutputPO jobOutput = executableDao.getJobOutput(uuid);
             Preconditions.checkArgument(jobOutput != null, "there is no related output for job id:" + uuid);
-            final DefaultOutput result = new DefaultOutput();
-            result.setExtra(jobOutput.getInfo());
-            result.setState(ExecutableState.valueOf(jobOutput.getStatus()));
-            result.setVerboseMsg(jobOutput.getContent());
-            result.setLastModified(jobOutput.getLastModified());
-            return result;
+            return parseOutput(jobOutput);
         } catch (PersistentException e) {
             logger.error("fail to get job output:" + uuid, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private DefaultOutput parseOutput(ExecutableOutputPO jobOutput) {
+        final DefaultOutput result = new DefaultOutput();
+        result.setExtra(jobOutput.getInfo());
+        result.setState(ExecutableState.valueOf(jobOutput.getStatus()));
+        result.setVerboseMsg(jobOutput.getContent());
+        result.setLastModified(jobOutput.getLastModified());
+        return result;
+    }
+
+    public Map<String, Output> getAllOutputs() {
+        try {
+            final List<ExecutableOutputPO> jobOutputs = executableDao.getJobOutputs();
+            HashMap<String, Output> result = Maps.newHashMap();
+            for (ExecutableOutputPO jobOutput : jobOutputs) {
+                result.put(jobOutput.getId(), parseOutput(jobOutput));
+            }
+            return result;
+        } catch (PersistentException e) {
+            logger.error("fail to get all job output:", e);
             throw new RuntimeException(e);
         }
     }

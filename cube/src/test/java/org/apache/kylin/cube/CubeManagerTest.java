@@ -30,6 +30,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -115,6 +119,17 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         assertTrue(mergedSeg != null);
 
+    }
+
+    @Test
+    public void testGetAllCubes() throws Exception {
+        final ResourceStore store = ResourceStore.getStore(getTestConfig());
+        final ArrayList<String> cubePath = store.listResources(ResourceStore.CUBE_RESOURCE_ROOT);
+        assertTrue(cubePath.size() > 1);
+        Collections.sort(cubePath);
+        final List<CubeInstance> cubes = store.getAllResources(cubePath.get(0), cubePath.get(cubePath.size() - 1), CubeInstance.class, CubeManager.CUBE_SERIALIZER);
+        assertEquals(cubePath.size(), cubes.size());
+        assertEquals(cubePath.size() - 1, store.getAllResources(cubePath.get(1), cubePath.get(cubePath.size() - 1), CubeInstance.class, CubeManager.CUBE_SERIALIZER).size());
     }
 
 
