@@ -511,6 +511,9 @@ public class CubeDesc extends RootPersistentEntity {
             if (join != null) {
                 TblColRef[] fk = join.getForeignKeyColumns();
                 TblColRef[] pk = join.getPrimaryKeyColumns();
+
+                allColumns.addAll(Arrays.asList(fk));
+                allColumns.addAll(Arrays.asList(pk));
                 for (int i = 0; i < fk.length; i++) {
                     int find = ArrayUtils.indexOf(hostCols, fk[i]);
                     if (find >= 0) {
