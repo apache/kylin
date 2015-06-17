@@ -160,9 +160,9 @@ public class DictionaryGenerator {
     private static Dictionary buildStringDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
-            String v = Bytes.toString(value);
-            if (StringUtils.isBlank(v)) // empty string is null for numbers
+            if (value == null)
                 continue;
+            String v = Bytes.toString(value);
             builder.addValue(v);
             if (samples.size() < nSamples && samples.contains(v) == false)
                 samples.add(v);
@@ -173,7 +173,12 @@ public class DictionaryGenerator {
     private static Dictionary buildNumberDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
+            if (value == null)
+                continue;
             String v = Bytes.toString(value);
+            if (StringUtils.isBlank(v)) // empty string is null for numbers
+                continue;
+
             builder.addValue(v);
             if (samples.size() < nSamples && samples.contains(v) == false)
                 samples.add(v);
