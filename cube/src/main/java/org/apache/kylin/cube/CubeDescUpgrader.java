@@ -205,14 +205,20 @@ public class CubeDescUpgrader {
         List<org.apache.kylin.cube.model.v1.DimensionDesc> oldDimensions = oldModel.getDimensions();
 
         List<LookupDesc> lookups = Lists.newArrayList();
+        List<String> lookupTables = Lists.newArrayList();
         for (org.apache.kylin.cube.model.v1.DimensionDesc dim : oldDimensions) {
             JoinDesc join = dim.getJoin();
             if (join != null && !StringUtils.isEmpty(join.getType()) && join.getForeignKey() != null && join.getForeignKey().length > 0) {
+                String table = dim.getTable();
+                table = getMetadataManager().appendDBName(table);
+
+                if (lookupTables.contains(table)) {
+                    continue;
+                }
                 LookupDesc lookup = new LookupDesc();
                 lookup.setJoin(join);
-                String table = dim.getTable();
-                lookup.setTable(getMetadataManager().appendDBName(table));
-
+                lookup.setTable(table);
+                lookupTables.add(table);
                 lookups.add(lookup);
             }
         }
