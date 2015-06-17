@@ -19,7 +19,9 @@
 package org.apache.kylin.common.util;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -41,7 +43,7 @@ public class ClassUtil {
             method.invoke(urlClassLoader, new Object[] { file.toURI().toURL() });
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     public static <T> Class<? extends T> forName(String name, Class<T> clz) throws ClassNotFoundException {
         if (name.startsWith("com.kylinolap")) {
@@ -53,6 +55,22 @@ public class ClassUtil {
     public static Object newInstance(String clz) {
         try {
             return forName(clz, Object.class).newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void updateFinalField(Class<?> clz, String fieldName, Object obj, Object newValue) {
+        try {
+            Field field = clz.getDeclaredField(fieldName);
+            field.setAccessible(true);
+
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+            field.set(obj, newValue);
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
