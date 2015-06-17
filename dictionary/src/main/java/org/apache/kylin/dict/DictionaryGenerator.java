@@ -21,6 +21,7 @@ package org.apache.kylin.dict;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.JsonUtil;
@@ -176,9 +177,12 @@ public class DictionaryGenerator {
     private static Dictionary buildNumberDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
-            if (value == null) // "" is null for numbers
+            if (value == null)
                 continue;
             String v = Bytes.toString(value);
+            if (StringUtils.isBlank(v)) // empty string is null for numbers
+                continue;
+            
             builder.addValue(v);
             if (samples.size() < nSamples && samples.contains(v) == false)
                 samples.add(v);
