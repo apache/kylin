@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.persistence;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -30,14 +31,8 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 public class HBaseResourceStore extends ResourceStore {
 
@@ -137,11 +132,36 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected InputStream getResourceImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, B_FAMILY, B_COLUMN);
-        if (r == null)
-            return null;
+    protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException {
+        byte[] startRow = Bytes.toBytes(rangeStart);
+        byte[] endRow = Bytes.toBytes(rangeEnd);
 
+        Scan scan = new Scan(startRow, endRow);
+        scan.addColumn(B_FAMILY, B_COLUMN_TS);
+        scan.addColumn(B_FAMILY, B_COLUMN);
+
+        HTableInterface table = getConnection().getTable(getAllInOneTableName());
+        List<RawResource> result = Lists.newArrayList();
+        try {
+            ResultScanner scanner = table.getScanner(scan);
+            for (Result r : scanner) {
+                result.add(new RawResource(getInputStream(Bytes.toString(r.getRow()), r), getTimestamp(r)));
+            }
+        } catch (IOException e) {
+            for (RawResource rawResource : result) {
+                IOUtils.closeQuietly(rawResource.resource);
+            }
+            throw e;
+        } finally {
+            IOUtils.closeQuietly(table);
+        }
+        return result;
+    }
+
+    private InputStream getInputStream(String resPath, Result r) throws IOException {
+        if (r == null) {
+            return null;
+        }
         byte[] value = r.getValue(B_FAMILY, B_COLUMN);
         if (value.length == 0) {
             Path redirectPath = bigCellHDFSPath(resPath);
@@ -154,13 +174,24 @@ public class HBaseResourceStore extends ResourceStore {
         }
     }
 
+    private long getTimestamp(Result r) {
+        if (r == null) {
+            return 0;
+        } else {
+            return Bytes.toLong(r.getValue(B_FAMILY, B_COLUMN_TS));
+        }
+    }
+
+    @Override
+    protected InputStream getResourceImpl(String resPath) throws IOException {
+        Result r = getByScan(resPath, B_FAMILY, B_COLUMN);
+        return getInputStream(resPath, r);
+    }
+
     @Override
     protected long getResourceTimestampImpl(String resPath) throws IOException {
         Result r = getByScan(resPath, B_FAMILY, B_COLUMN_TS);
-        if (r == null)
-            return 0;
-        else
-            return Bytes.toLong(r.getValue(B_FAMILY, B_COLUMN_TS));
+        return getTimestamp(r);
     }
 
     @Override
