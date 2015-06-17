@@ -29,8 +29,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Column Metadata from Source. All name should be uppercase.
  * <p/>
- * User: lukhan Date: 10/15/13 Time: 9:07 AM To change this template use File |
- * Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ColumnDesc {

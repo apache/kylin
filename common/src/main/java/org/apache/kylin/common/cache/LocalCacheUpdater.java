@@ -4,7 +4,6 @@ import org.apache.kylin.common.restclient.AbstractRestCache;
 import org.apache.kylin.common.restclient.Broadcaster;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 6/1/15.
  */
 public class LocalCacheUpdater implements CacheUpdater {
     @Override

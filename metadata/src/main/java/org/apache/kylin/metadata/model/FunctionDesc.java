@@ -25,8 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collection;
 
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To
- * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class FunctionDesc {

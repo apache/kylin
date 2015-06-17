@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/14/15.
  */
 public class IdentityUtils {
     public static <K> boolean collectionReferenceEquals(Collection<K> collectionA, Collection<K> collectionB) {

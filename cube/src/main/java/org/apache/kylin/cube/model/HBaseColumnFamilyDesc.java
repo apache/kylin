@@ -18,15 +18,13 @@
 
 package org.apache.kylin.cube.model;
 
-import java.util.Arrays;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Arrays;
+
 /**
- * Created with IntelliJ IDEA. User: lukhan Date: 9/30/13 Time: 10:41 AM To
- * change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class HBaseColumnFamilyDesc {

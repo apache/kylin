@@ -17,9 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-/**
- * Created by Hongbin Ma(Binmahone) on 5/11/15.
- */
 public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorageEngine {
     private static final Logger logger = LoggerFactory.getLogger(CacheFledgedStaticStorageEngine.class);
 

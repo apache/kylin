@@ -23,8 +23,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 /**
  * Validate Table metadata from source.
  * <p/>
- * User: lukhan Date: 12/2/13 Time: 10:45 AM To change this template use File |
- * Settings | File Templates.
  */
 public class SourceTableMetadataValidator {
 

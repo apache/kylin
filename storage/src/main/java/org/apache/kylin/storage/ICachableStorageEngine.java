@@ -3,7 +3,6 @@ package org.apache.kylin.storage;
 import com.google.common.collect.Range;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/14/15.
  */
 public interface ICachableStorageEngine extends IStorageEngine {
     /**

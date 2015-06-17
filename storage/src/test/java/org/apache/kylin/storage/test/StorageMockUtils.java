@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 5/14/15.
  */
 public class StorageMockUtils {
     public static  TupleInfo newTupleInfo(List<TblColRef> groups, List<FunctionDesc> aggregations) {
