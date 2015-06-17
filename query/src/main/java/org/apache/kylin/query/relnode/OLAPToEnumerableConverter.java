@@ -34,7 +34,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRelImpl;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-
+import org.eigenbase.sql.SqlExplainLevel;
 import org.apache.kylin.metadata.realization.IRealization;
 
 /**
@@ -81,6 +81,10 @@ public class OLAPToEnumerableConverter extends ConverterRelImpl implements Enume
         // rewrite query if necessary
         OLAPRel.RewriteImplementor rewriteImplementor = new OLAPRel.RewriteImplementor();
         rewriteImplementor.visitChild(this, getChild());
+
+        //        String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+        //        System.out.println("============================================================================");
+        //        System.out.println(dumpPlan);
 
         // build java implementation
         EnumerableRel child = (EnumerableRel) getChild();

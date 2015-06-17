@@ -33,6 +33,12 @@ import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableAggregateRel;
 
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.sqlfunc.HLLDistinctCountAggFunc;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
@@ -50,7 +56,6 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.fun.SqlSumEmptyIsZeroAggFunction;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.InferTypes;
 import org.eigenbase.sql.type.OperandTypes;
@@ -60,12 +65,6 @@ import org.eigenbase.sql.validate.SqlUserDefinedAggFunction;
 import org.eigenbase.util.Util;
 
 import com.google.common.base.Preconditions;
-
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author xjiang
@@ -284,6 +283,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
                 }
                 this.rewriteAggCalls.add(aggCall);
             }
+            ClassUtil.updateFinalField(AggregateRelBase.class, "aggCalls", this, this.rewriteAggCalls);
         }
 
         // rebuild rowType & columnRowType
