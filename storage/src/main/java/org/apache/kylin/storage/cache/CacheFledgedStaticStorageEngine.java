@@ -30,7 +30,7 @@ public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorage
         streamSQLDigest = new StreamSQLDigest(sqlDigest, null);
         StreamSQLResult cachedResult = null;
         Cache cache = CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID());
-        Element element = cache.get(streamSQLDigest);
+        Element element = cache.get(streamSQLDigest.hashCode());
         if (element != null) {
             this.queryCacheExists = true;
             cachedResult = (StreamSQLResult) element.getObjectValue();
@@ -79,7 +79,7 @@ public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorage
 
         if (cacheIt) {
             StreamSQLResult newCacheEntry = new StreamSQLResult(duplicated, Ranges.<Long> all(), null);
-            CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest, newCacheEntry));
+            CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest.hashCode(), newCacheEntry));
             logger.info("cache after the query: " + newCacheEntry);
         }
     }

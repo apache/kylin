@@ -62,7 +62,6 @@ public abstract class AbstractCacheFledgedStorageEngine implements IStorageEngin
         if (CACHE_MANAGER.getCache(storageUUID) == null) {
             logger.info("Cache for {} initting...", storageUUID);
 
-            // TODO: L4J [2015-04-20 10:44:03,817][WARN][net.sf.ehcache.pool.sizeof.ObjectGraphWalker] - The configured limit of 1,000 object references was reached while attempting to calculate the size of the object graph. Severe performance degradation could occur if the sizing operation continues. This can be avoided by setting the CacheManger or Cache <sizeOfPolicy> elements maxDepthExceededBehavior to "abort" or adding stop points with @IgnoreSizeOf annotations. If performance degradation is NOT an issue at the configured limit, raise the limit value using the CacheManager or Cache <sizeOfPolicy
             //Create a Cache specifying its configuration.
             CacheConfiguration templateConf = CACHE_MANAGER.getCache(storageCacheTemplate).getCacheConfiguration();
             PersistenceConfiguration pconf = templateConf.getPersistenceConfiguration();

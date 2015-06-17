@@ -164,7 +164,7 @@ public class CacheService extends BasicService {
         logger.debug("server mode: " + serverMode);
         if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
             logger.debug("This is the job engine node, will check whether auto merge is needed on cube " + cubeName);
-            CubeSegment newSeg = null;
+            CubeSegment newSeg;
             synchronized (CacheService.class) {
                 CubeInstance cube = getCubeManager().getCube(cubeName);
                 try {

@@ -40,6 +40,13 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
 
     @Override
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo) {
+        //check if ts condition in sqlDigest valid
+        ts = TsConditionExtractor.extractTsCondition(partitionColRef, sqlDigest.filter);
+        if (ts == null || ts.isEmpty()) {
+            logger.info("ts range in the query conflicts,return empty directly");
+            return ITupleIterator.EMPTY_TUPLE_ITERATOR;
+        }
+
         //enable dynamic cache iff group by columns contains partition col
         //because cache extraction requires partition col value as selection key
         boolean needUpdateCache = sqlDigest.groupbyColumns.contains(partitionColRef);
@@ -47,16 +54,10 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
         streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
         StreamSQLResult cachedResult = null;
         Cache cache = CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID());
-        Element element = cache.get(streamSQLDigest);
+        Element element = cache.get(streamSQLDigest.hashCode());
         if (element != null) {
             this.queryCacheExists = true;
             cachedResult = (StreamSQLResult) element.getObjectValue();
-        }
-
-        ts = TsConditionExtractor.extractTsCondition(partitionColRef, sqlDigest.filter);
-        if (ts == null || ts.isEmpty()) {
-            logger.info("ts range in the query conflicts,return empty directly");
-            return ITupleIterator.EMPTY_TUPLE_ITERATOR;
         }
 
         ITupleIterator ret = null;
@@ -75,7 +76,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
                     List<ITupleIterator> iTupleIteratorList = Lists.newArrayList();
                     iTupleIteratorList.add(reusedTuples);
 
-                    for (Range<Long> remaining : remainings) {
+                    for (Range<Long> remaining : remainings) {//actually there will be only one loop
                         logger.info("Appending ts " + RangeUtil.formatTsRange(remaining) + " as additional filter");
 
                         ITupleIterator freshTuples = SQLDigestUtil.appendTsFilterToExecute(sqlDigest, partitionColRef, remaining, new Function<Void, ITupleIterator>() {
@@ -89,10 +90,13 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
 
                     ret = new CompoundTupleIterator(iTupleIteratorList);
                 } else if (remainings.size() == 0) {
+                    logger.info("The ts range in new query was fully cached");
                     needUpdateCache = false;
                     ret = new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
                 } else {
-                    //if using cache causes two underlyingStorage searches, we'd rather not use the cache
+                    //if using cache causes more than one underlyingStorage searches
+                    //the incurred overhead might be more expensive than the cache benefit
+                    logger.info("Give up using cache to avoid complexity");
                 }
             }
         } else {
@@ -100,10 +104,10 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
         }
 
         if (ret == null) {
-            logger.info("decision: not using cache");
             ret = underlyingStorage.search(context, sqlDigest, returnTupleInfo);
+            logger.info("No Cache being used");
         } else {
-            logger.info("decision: use cache");
+            logger.info("Cache being used");
         }
 
         if (needUpdateCache) {
@@ -117,23 +121,24 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
     }
 
     @Override
-    public void notify(List<ITuple> duplicated,long createTime) {
+    public void notify(List<ITuple> duplicated, long createTime) {
 
         Range<Long> cacheExclude = this.underlyingStorage.getVolatilePeriod();
         if (cacheExclude != null) {
             List<Range<Long>> cachablePeriods = RangeUtil.remove(ts, cacheExclude);
             if (cachablePeriods.size() == 1) {
                 if (!ts.equals(cachablePeriods.get(0))) {
-                    logger.info("With respect to each shard's build status, the cacheable tsRange shrinks from " + RangeUtil.formatTsRange(ts) + " to " + RangeUtil.formatTsRange(cachablePeriods.get(0)));
+                    logger.info("With respect to growing storage, the cacheable tsRange shrinks from " + RangeUtil.formatTsRange(ts) + " to " + RangeUtil.formatTsRange(cachablePeriods.get(0)));
                 }
                 ts = cachablePeriods.get(0);
             } else {
                 //give up updating the cache, in avoid to make cache complicated
+                logger.info("Skip updating cache to avoid complexity");
             }
         }
 
         StreamSQLResult newCacheEntry = new StreamSQLResult(duplicated, ts, partitionColRef);
-        CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest, newCacheEntry));
+        CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest.hashCode(), newCacheEntry));
         logger.info("cache after the query: " + newCacheEntry);
     }
 }
