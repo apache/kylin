@@ -22,14 +22,14 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LogTitlePrinter;
 import org.apache.kylin.common.util.MailService;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
 import org.apache.kylin.job.manager.ExecutableManager;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Created by qianzhou on 12/16/14.
  */
 public abstract class AbstractExecutable implements Executable, Idempotent {
 
@@ -232,7 +231,30 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     protected long getExtraInfoAsLong(String key, long defaultValue) {
-        final String str = executableManager.getOutput(getId()).getExtra().get(key);
+        return getExtraInfoAsLong(executableManager.getOutput(getId()), key, defaultValue);
+    }
+
+    public static long getStartTime(Output output) {
+        return getExtraInfoAsLong(output, START_TIME, 0L);
+    }
+
+    public static long getEndTime(Output output) {
+        return getExtraInfoAsLong(output, END_TIME, 0L);
+    }
+
+    public static long getDuration(long startTime, long endTime) {
+        if (startTime == 0) {
+            return 0;
+        }
+        if (endTime == 0) {
+            return System.currentTimeMillis() - startTime;
+        } else {
+            return endTime - startTime;
+        }
+    }
+
+    public static long getExtraInfoAsLong(Output output, String key, long defaultValue) {
+        final String str = output.getExtra().get(key);
         if (str != null) {
             return Long.parseLong(str);
         } else {
@@ -261,16 +283,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     public final long getDuration() {
-        final long startTime = getStartTime();
-        if (startTime == 0) {
-            return 0;
-        }
-        final long endTime = getEndTime();
-        if (endTime == 0) {
-            return System.currentTimeMillis() - startTime;
-        } else {
-            return endTime - startTime;
-        }
+        return getDuration(getStartTime(), getEndTime());
     }
 
     /*

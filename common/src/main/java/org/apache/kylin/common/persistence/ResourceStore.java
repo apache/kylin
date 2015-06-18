@@ -24,6 +24,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -50,6 +51,7 @@ abstract public class ResourceStore {
     public static final String SNAPSHOT_RESOURCE_ROOT = "/table_snapshot";
     public static final String TABLE_EXD_RESOURCE_ROOT = "/table_exd";
     public static final String TABLE_RESOURCE_ROOT = "/table";
+
 
     private static ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
@@ -143,6 +145,28 @@ abstract public class ResourceStore {
     final public InputStream getResource(String resPath) throws IOException {
         return getResourceImpl(norm(resPath));
     }
+
+    final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, Class<T> clazz, Serializer<T> serializer) throws IOException {
+        final List<RawResource> allResources = getAllResources(rangeStart, rangeEnd);
+        if (allResources.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<T> result = Lists.newArrayList();
+        try {
+            for (RawResource rawResource : allResources) {
+                final T element = serializer.deserialize(new DataInputStream(rawResource.resource));
+                element.setLastModified(rawResource.timestamp);
+                result.add(element);
+            }
+            return result;
+        } finally {
+            for (RawResource rawResource : allResources) {
+                IOUtils.closeQuietly(rawResource.resource);
+            }
+        }
+    }
+
+    abstract protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException;
 
     abstract protected InputStream getResourceImpl(String resPath) throws IOException;
 

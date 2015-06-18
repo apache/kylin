@@ -57,7 +57,7 @@ import java.util.*;
 public class JobService extends BasicService {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
+    private static final Logger logger = LoggerFactory.getLogger(JobService.class);
 
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue) throws IOException, JobException {
         Integer limit = (null == limitValue) ? 30 : limitValue;
@@ -90,10 +90,11 @@ public class JobService extends BasicService {
                 states.add(parseToExecutableState(status));
             }
         }
-        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states)).transform(new Function<CubingJob, JobInstance>() {
+        final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs();
+        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, allOutputs)).transform(new Function<CubingJob, JobInstance>() {
             @Override
             public JobInstance apply(CubingJob cubingJob) {
-                return parseToJobInstance(cubingJob);
+                return parseToJobInstance(cubingJob, allOutputs);
             }
         }));
     }
@@ -149,18 +150,18 @@ public class JobService extends BasicService {
             throw new JobException("invalid build type:" + buildType);
         }
         getExecutableManager().addJob(job);
-        return parseToJobInstance(job);
+        return getSingleJobInstance(job);
     }
 
     public JobInstance getJobInstance(String uuid) throws IOException, JobException {
-        return parseToJobInstance(getExecutableManager().getJob(uuid));
+        return getSingleJobInstance(getExecutableManager().getJob(uuid));
     }
 
     public Output getOutput(String id) {
         return getExecutableManager().getOutput(id);
     }
 
-    private JobInstance parseToJobInstance(AbstractExecutable job) {
+    private JobInstance getSingleJobInstance(AbstractExecutable job) {
         if (job == null) {
             return null;
         }
@@ -179,31 +180,56 @@ public class JobService extends BasicService {
         result.setDuration(cubeJob.getDuration() / 1000);
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i));
+            result.addStep(parseToJobStep(task, i, getExecutableManager().getOutput(task.getId())));
         }
         return result;
     }
 
-    private JobInstance.JobStep parseToJobStep(AbstractExecutable task, int i) {
+    private JobInstance parseToJobInstance(AbstractExecutable job, Map<String, Output> outputs) {
+        if (job == null) {
+            return null;
+        }
+        Preconditions.checkState(job instanceof CubingJob, "illegal job type, id:" + job.getId());
+        CubingJob cubeJob = (CubingJob) job;
+        Output output = outputs.get(job.getId());
+        final JobInstance result = new JobInstance();
+        result.setName(job.getName());
+        result.setRelatedCube(cubeJob.getCubeName());
+        result.setRelatedSegment(cubeJob.getSegmentId());
+        result.setLastModified(output.getLastModified());
+        result.setSubmitter(cubeJob.getSubmitter());
+        result.setUuid(cubeJob.getId());
+        result.setType(CubeBuildTypeEnum.BUILD);
+        result.setStatus(parseToJobStatus(output.getState()));
+        result.setMrWaiting(AbstractExecutable.getExtraInfoAsLong(output, CubingJob.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
+        result.setDuration(AbstractExecutable.getDuration(AbstractExecutable.getStartTime(output), AbstractExecutable.getEndTime(output)) / 1000);
+        for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
+            AbstractExecutable task = cubeJob.getTasks().get(i);
+            result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
+        }
+        return result;
+    }
+
+    private JobInstance.JobStep parseToJobStep(AbstractExecutable task, int i, Output stepOutput) {
+        Preconditions.checkNotNull(stepOutput);
         JobInstance.JobStep result = new JobInstance.JobStep();
         result.setId(task.getId());
         result.setName(task.getName());
         result.setSequenceID(i);
-        result.setStatus(parseToJobStepStatus(task.getStatus()));
-        final Output output = getExecutableManager().getOutput(task.getId());
-        for (Map.Entry<String, String> entry : output.getExtra().entrySet()) {
+        result.setStatus(parseToJobStepStatus(stepOutput.getState()));
+        for (Map.Entry<String, String> entry : stepOutput.getExtra().entrySet()) {
             if (entry.getKey() != null && entry.getValue() != null) {
                 result.putInfo(entry.getKey(), entry.getValue());
             }
         }
-        result.setExecStartTime(task.getStartTime());
-        result.setExecEndTime(task.getEndTime());
+        result.setExecStartTime(AbstractExecutable.getStartTime(stepOutput));
+        result.setExecEndTime(AbstractExecutable.getEndTime(stepOutput));
         if (task instanceof ShellExecutable) {
             result.setExecCmd(((ShellExecutable) task).getCmd());
         }
         if (task instanceof MapReduceExecutable) {
             result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
-            result.setExecWaitTime(((MapReduceExecutable) task).getMapReduceWaitTime() / 1000);
+            result.setExecWaitTime(AbstractExecutable.getExtraInfoAsLong(stepOutput, MapReduceExecutable.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
         }
         if (task instanceof HadoopShellExecutable) {
             result.setExecCmd(((HadoopShellExecutable) task).getJobParams());

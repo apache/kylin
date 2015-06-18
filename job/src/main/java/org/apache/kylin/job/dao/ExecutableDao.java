@@ -19,8 +19,10 @@
 package org.apache.kylin.job.dao;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.job.exception.PersistentException;
@@ -28,6 +30,7 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +38,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by qianzhou on 12/15/14.
  */
 public class ExecutableDao {
 
@@ -99,11 +101,10 @@ public class ExecutableDao {
             if (resources == null) {
                 return Collections.emptyList();
             }
-            ArrayList<ExecutableOutputPO> result = new ArrayList<ExecutableOutputPO>(resources.size());
-            for (String path : resources) {
-                result.add(readJobOutputResource(path));
-            }
-            return result;
+            Collections.sort(resources);
+            String rangeStart = resources.get(0);
+            String rangeEnd = resources.get(resources.size() - 1);
+            return store.getAllResources(rangeStart, rangeEnd, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -112,15 +113,14 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
-            ArrayList<String> resources = store.listResources(JOB_PATH_ROOT);
-            if (resources == null) {
+            final List<String> jobIds = store.listResources(JOB_PATH_ROOT);
+            if (jobIds== null || jobIds.isEmpty()) {
                 return Collections.emptyList();
             }
-            ArrayList<ExecutablePO> result = new ArrayList<ExecutablePO>(resources.size());
-            for (String path : resources) {
-                result.add(readJobResource(path));
-            }
-            return result;
+            Collections.sort(jobIds);
+            String rangeStart = jobIds.get(0);
+            String rangeEnd = jobIds.get(jobIds.size() - 1);
+            return store.getAllResources(rangeStart, rangeEnd, ExecutablePO.class, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
