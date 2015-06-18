@@ -30,7 +30,6 @@ import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableCalcRel;
 
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 import org.eigenbase.rel.ProjectRelBase;
@@ -269,7 +268,6 @@ public class OLAPProjectRel extends ProjectRelBase implements OLAPRel, Enumerabl
             List<RexNode> newProjects = new ArrayList<RexNode>(this.rewriteProjects);
             newProjects.addAll(newExpList);
             this.rewriteProjects = newProjects;
-            ClassUtil.updateFinalField(ProjectRelBase.class, "exps", this, ImmutableList.copyOf(this.rewriteProjects));
 
             // rebuild row type
             FieldInfoBuilder fieldInfo = getCluster().getTypeFactory().builder();

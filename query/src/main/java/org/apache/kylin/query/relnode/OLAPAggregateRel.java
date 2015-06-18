@@ -33,7 +33,6 @@ import net.hydromatic.optiq.rules.java.EnumerableRel;
 import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableAggregateRel;
 
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
@@ -283,7 +282,6 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
                 }
                 this.rewriteAggCalls.add(aggCall);
             }
-            ClassUtil.updateFinalField(AggregateRelBase.class, "aggCalls", this, this.rewriteAggCalls);
         }
 
         // rebuild rowType & columnRowType
