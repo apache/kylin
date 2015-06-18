@@ -18,16 +18,14 @@
 
 package org.apache.kylin.common.persistence;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 
 public class FileResourceStore extends ResourceStore {
@@ -60,6 +58,31 @@ public class FileResourceStore extends ResourceStore {
         File f = file(resPath);
         return f.exists() && f.isFile(); // directory is not considered a
                                          // resource
+    }
+
+    @Override
+    protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException {
+        List<RawResource> result = Lists.newArrayList();
+        try {
+            String commonPrefix = StringUtils.getCommonPrefix(rangeEnd, rangeStart);
+            commonPrefix = commonPrefix.substring(0, commonPrefix.lastIndexOf("/") + 1);
+            final ArrayList<String> resources = listResourcesImpl(commonPrefix);
+            for (String resource : resources) {
+                if (resource.compareTo(rangeStart) >= 0 && resource.compareTo(rangeEnd) <= 0) {
+                    if (existsImpl(resource)) {
+                        result.add(new RawResource(getResourceImpl(resource), getResourceTimestampImpl(resource)));
+                    }
+                }
+            }
+            return result;
+        } catch (IOException ex) {
+            for (RawResource rawResource : result) {
+                IOUtils.closeQuietly(rawResource.resource);
+            }
+            throw ex;
+        } catch (Exception ex) {
+            throw new UnsupportedOperationException(ex);
+        }
     }
 
     @Override
