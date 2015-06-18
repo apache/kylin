@@ -98,7 +98,7 @@ public class ExecutableDao {
     public List<ExecutableOutputPO> getJobOutputs() throws PersistentException {
         try {
             ArrayList<String> resources = store.listResources(JOB_OUTPUT_ROOT);
-            if (resources == null) {
+            if (resources == null || resources.isEmpty()) {
                 return Collections.emptyList();
             }
             Collections.sort(resources);
@@ -114,7 +114,7 @@ public class ExecutableDao {
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
             final List<String> jobIds = store.listResources(JOB_PATH_ROOT);
-            if (jobIds.isEmpty()) {
+            if (jobIds == null || jobIds.isEmpty()) {
                 return Collections.emptyList();
             }
             Collections.sort(jobIds);

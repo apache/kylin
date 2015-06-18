@@ -134,7 +134,7 @@ public class HBaseResourceStore extends ResourceStore {
     @Override
     protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException {
         byte[] startRow = Bytes.toBytes(rangeStart);
-        byte[] endRow = Bytes.toBytes(rangeEnd);
+        byte[] endRow = plusZero(Bytes.toBytes(rangeEnd));
 
         Scan scan = new Scan(startRow, endRow);
         scan.addColumn(B_FAMILY, B_COLUMN_TS);
