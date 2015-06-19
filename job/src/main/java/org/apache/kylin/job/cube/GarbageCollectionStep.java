@@ -22,12 +22,17 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.job.cmd.ShellCmdOutput;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,20 +79,27 @@ public class GarbageCollectionStep extends AbstractExecutable {
 
         List<String> oldTables = getOldHTables();
         if (oldTables != null && oldTables.size() > 0) {
+            String metadataUrlPrefix = KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
             Configuration conf = HBaseConfiguration.create();
             HBaseAdmin admin = null;
             try {
                 admin = new HBaseAdmin(conf);
                 for (String table : oldTables) {
                     if (admin.tableExists(table)) {
-                        if (admin.isTableEnabled(table)) {
-                            admin.disableTable(table);
+                        HTableDescriptor tableDescriptor = admin.getTableDescriptor(Bytes.toBytes(table));
+                        String host = tableDescriptor.getValue(IRealizationConstants.HTableTag);
+                        if (metadataUrlPrefix.equalsIgnoreCase(host)) {
+                            if (admin.isTableEnabled(table)) {
+                                admin.disableTable(table);
+                            }
+                            admin.deleteTable(table);
+                            logger.debug("Dropped htable: " + table);
+                            output.append("HBase table " + table + " is dropped. \n");
+                        } else {
+                            logger.debug("Skip htable: " + table);
+                            output.append("Skip htable: " + table + ". \n");
                         }
-
-                        admin.deleteTable(table);
                     }
-                    logger.debug("Dropped htable: " + table);
-                    output.append("HBase table " + table + " is dropped. \n");
                 }
 
             } catch (IOException e) {
