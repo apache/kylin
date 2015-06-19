@@ -63,7 +63,6 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -468,10 +467,18 @@ public class CubeMetadataUpgrade {
             for (String path : paths) {
                 upgradeJobInstance(path);
             }
+
+            for (String folder : new String[]{ResourceStore.JOB_PATH_ROOT, ResourceStore.JOB_OUTPUT_PATH_ROOT}) {
+                for (String res : getStore().listResources(folder)) {
+                    getStore().deleteResource(res);
+                }
+                getStore().deleteResource(folder);
+            }
         } catch (IOException ex) {
             errorMsgs.add("upgrade job failed" + ex.getLocalizedMessage());
             throw new RuntimeException(ex);
         }
+
     }
 
     private ExecutableState parseState(JobStatusEnum state) {
@@ -537,7 +544,8 @@ public class CubeMetadataUpgrade {
 
         for (int i = 0, size = job.getSteps().size(); i < size; ++i) {
             final JobInstance.JobStep jobStep = job.getSteps().get(i);
-            final InputStream inputStream = getStore().getResource(ResourceStore.JOB_OUTPUT_PATH_ROOT + "/" + job.getId() + "." + i);
+            final String outputPath = ResourceStore.JOB_OUTPUT_PATH_ROOT + "/" + job.getId() + "." + i;
+            final InputStream inputStream = getStore().getResource(outputPath);
 
             String output = null;
             if (inputStream != null) {
@@ -546,6 +554,7 @@ public class CubeMetadataUpgrade {
                 if (job_output != null) {
                     output = job_output.get("output");
                 }
+                org.apache.commons.io.IOUtils.closeQuietly(inputStream);
             }
             updateJobStepOutput(jobStep, output, cubingJob.getTasks().get(i));
         }
@@ -701,14 +710,7 @@ public class CubeMetadataUpgrade {
             String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
             try {
                 FileUtils.deleteDirectory(new File(newMetadataUrl));
-                FileUtils.copyDirectory(oldMetaFolder, new File(newMetadataUrl), new FileFilter() {
-                    @Override
-                    public boolean accept(File pathname) {
-                        if (pathname.getAbsolutePath().contains(ResourceStore.JOB_PATH_ROOT) || pathname.getAbsolutePath().contains(ResourceStore.JOB_OUTPUT_PATH_ROOT))
-                            return false;
-                        return true;
-                    }
-                });
+                FileUtils.copyDirectory(oldMetaFolder, new File(newMetadataUrl));
             } catch (IOException e) {
                 e.printStackTrace();
             }
