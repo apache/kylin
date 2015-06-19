@@ -58,12 +58,10 @@ hs_err_pid*
 .project
 .idea
 **/*.DS_Store
-*.jar
 *.releaseBackup
 *.log
 jdbc/kylin_jdbc.log.*
 *.DS_Store
-*.releaseBackup
 
 
 
@@ -91,3 +89,4 @@ logs
 tomcat
 lib
 webapp/app/components/*
+/commit_SHA1
