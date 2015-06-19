@@ -18,9 +18,11 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
+import akka.actor.Deploy;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -28,6 +30,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -79,6 +82,12 @@ public abstract class BaseSchedulerTest extends HBaseMetadataTestCase {
                 }
             }
         }
+    }
+
+    @BeforeClass
+    public static void beforeClass() {
+        System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
+        DeployUtil.overrideJobJarLocations();
     }
 
     @Before

@@ -69,6 +69,9 @@
         <commons-httpclient.version>3.1</commons-httpclient.version>
         <commons-collections4.version>4.0</commons-collections4.version>
 
+        <!-- Spark -->
+        <spark.version>1.4.0</spark.version>
+
 
         <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>
@@ -257,6 +260,25 @@
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-linq4j</artifactId>
                 <version>${calcite.version}</version>
+            </dependency>
+
+            <!-- Spark dependency -->
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-core_2.10</artifactId>
+                <version>${spark.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-sql_2.10</artifactId>
+                <version>${spark.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-hive_2.10</artifactId>
+                <version>${spark.version}</version>
             </dependency>
 
             <!-- Other dependencies -->
@@ -466,7 +488,7 @@
                     <configuration>
                         <packagingExcludes>
                             WEB-INF/lib/servlet-api-*.jar,
-                            WEB-INF/lib/zookeeper-*.jar,
+                            WEB-INF/lib/zookeeper-*.jar
                         </packagingExcludes>
                     </configuration>
                 </plugin>

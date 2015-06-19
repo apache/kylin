@@ -130,6 +130,14 @@ public class KylinConfig {
     public static final String KYLIN_HOME = "KYLIN_HOME";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
+    public static final String HBASE_REGION_CUT_SMALL = "kylin.job.hbase.region.cut.small";
+    public static final String HBASE_REGION_CUT_MEDIUM = "kylin.job.hbase.region.cut.medium";
+    public static final String HBASE_REGION_CUT_LARGE = "kylin.job.hbase.region.cut.large";
+
+
+    public static final String SPARK_HOME = "kylin.spark.home";
+    public static final String SPARK_MASTER = "kylin.spark.master";
+
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
     public static final String VERSION = "${project.version}";
@@ -433,30 +441,11 @@ public class KylinConfig {
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
     }
-    
+
     public int getTableSnapshotMaxMB() {
         return Integer.parseInt(getOptional("kylin.table.snapshot.max_mb", "300"));
     }
-    
-    public int getHBaseRegionCut(String capacity) {
-        String cut;
-        switch (capacity) {
-        case "SMALL":
-            cut = getProperty("kylin.job.hbase.region.cut.small", "5");
-            break;
-        case "MEDIUM":
-            cut = getProperty("kylin.job.hbase.region.cut.medium", "10");
-            break;
-        case "LARGE":
-            cut = getProperty("kylin.job.hbase.region.cut.large", "50");
-            break;
-        default:
-            throw new IllegalArgumentException("Capacity not recognized: " + capacity);
-        }
 
-        return Integer.valueOf(cut);
-    }
-    
     public int getHBaseRegionCutMin() {
         return Integer.parseInt(getOptional("kylin.job.hbase.region.cut.min", "2"));
     }
@@ -464,11 +453,11 @@ public class KylinConfig {
     public int getHBaseRegionCutMax() {
         return Integer.parseInt(getOptional("kylin.job.hbase.region.cut.max", "1000"));
     }
-    
+
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
-    
+
     public boolean getQueryRunLocalCoprocessor() {
         return Boolean.parseBoolean(getOptional("kylin.query.run.local.coprocessor", "false"));
     }
@@ -708,6 +697,32 @@ public class KylinConfig {
         } catch (ConfigurationException ex) {
             throw new IOException("Error writing KylinConfig to String", ex);
         }
+    }
+
+    public String getSparkHome() {
+        return kylinConfig.getString(SPARK_HOME);
+    }
+    public String getSparkMaster() {
+        return kylinConfig.getString(SPARK_MASTER);
+    }
+
+    public int getHBaseRegionCut(String capacity) {
+        String cut;
+        switch (capacity) {
+        case "SMALL":
+            cut = getProperty(HBASE_REGION_CUT_SMALL, "5");
+            break;
+        case "MEDIUM":
+            cut = getProperty(HBASE_REGION_CUT_MEDIUM, "10");
+            break;
+        case "LARGE":
+            cut = getProperty(HBASE_REGION_CUT_LARGE, "50");
+            break;
+        default:
+            throw new IllegalArgumentException("Capacity not recognized: " + capacity);
+        }
+
+        return Integer.valueOf(cut);
     }
 
     public String toString() {

@@ -21,9 +21,13 @@ package org.apache.kylin.job.impl.threadpool;
 import org.apache.kylin.job.*;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.spark.SparkExecutable;
+import org.apache.kylin.job.spark.SparkHelloWorld;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  */
@@ -93,5 +97,18 @@ public class ITDefaultSchedulerTest extends BaseSchedulerTest {
         assertEquals(ExecutableState.DISCARDED, jobService.getOutput(task1.getId()).getState());
         Thread.sleep(5000);
         System.out.println(job);
+    }
+
+    @Test
+    public void testSparkExecutable() throws Exception {
+        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        SparkExecutable task = new SparkExecutable();
+        task.setClassName(SparkHelloWorld.class.getName());
+        job.addTask(task);
+        jobService.addJob(job);
+        waitForJobFinish(job.getId());
+        assertEquals(ExecutableState.SUCCEED, job.getStatus());
+        final Output output = jobService.getOutput(task.getId());
+        assertTrue(output.getVerboseMsg().contains("hello kylin-spark"));
     }
 }
