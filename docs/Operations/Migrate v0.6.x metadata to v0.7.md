@@ -1,4 +1,5 @@
-In v0.7, Kylin refactored the metadata structure, for the new features like inverted-index and streaming; If you have cube created with v0.6 and want to keep in v0.7, a migration is needed; Below is the steps;
+In v0.7, Kylin refactored the metadata structure, for the new features like inverted-index and streaming; If you have cube created with v0.6 and want to keep in v0.7, a migration is needed; (Please skip v0.7.1 as
+it has several compatible issues and the fix will be included in v0.7.2) Below is the steps;
 
 # Backup v0.6 metadata
 
@@ -24,8 +25,11 @@ This step is to run the migration tool to parse the v0.6 metadata and then conve
     hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar org.apache.kylin.job.CubeMetadataUpgrade ./meta_dump
 
 1. The tool will not overwrite v0.6 metadata; It will create a new folder with "_v2" suffix in the same folder, in this case the "./meta_dump_v2" will be created;
-2. By default this tool will not migrate the job history ("/job" and "/job_output");
+2. By default this tool will only migrate the job history in last 30 days; If you want to keep elder job history, please tweak upgradeJobInstance() method by your own;
 3. If you see _No error or warning messages; The migration is success_ , that's good; Otherwise please check the error/warning messages carefully;
+4. For some problem you may need manually update the JSON file, to check whether the problem is gone, you can run a verify against the new metadata:
+
+    hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar org.apache.kylin.job.CubeMetadataUpgrade ./meta_dump2 verify
 
 # Upload the new metadata to HBase
 
