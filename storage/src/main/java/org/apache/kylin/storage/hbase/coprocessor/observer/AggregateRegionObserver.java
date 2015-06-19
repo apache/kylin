@@ -18,11 +18,6 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.observer;
 
-import java.io.IOException;
-
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.Scan;
@@ -32,6 +27,11 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
+
+import java.io.IOException;
 
 /**
  * @author yangli9
@@ -46,6 +46,8 @@ public class AggregateRegionObserver extends BaseRegionObserver {
     static final String PROJECTOR = "_Projector";
     static final String AGGREGATORS = "_Aggregators";
     static final String FILTER = "_Filter";
+    static final String BEHAVIOR = "_Behavior";
+
 
     @Override
     public final RegionScanner postScannerOpen(final ObserverContext<RegionCoprocessorEnvironment> ctxt, final Scan scan, final RegionScanner innerScanner) throws IOException {
@@ -83,6 +85,9 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         byte[] filterBytes = scan.getAttribute(FILTER);
         CoprocessorFilter filter = CoprocessorFilter.deserialize(filterBytes);
 
+        byte[] behavior = scan.getAttribute(BEHAVIOR);
+        ObserverBehavior observerBehavior = ObserverBehavior.valueOf(new String(behavior));
+
         // start/end region operation & sync on scanner is suggested by the
         // javadoc of RegionScanner.nextRaw()
         // FIXME: will the lock still work when a iterator is returned? is it safe? Is readonly attribute helping here? by mhb
@@ -90,7 +95,7 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         region.startRegionOperation();
         try {
             synchronized (innerScanner) {
-                return new AggregationScanner(type, filter, projector, aggregators, innerScanner);
+                return new AggregationScanner(type, filter, projector, aggregators, innerScanner,observerBehavior);
             }
         } finally {
             region.closeRegionOperation();
