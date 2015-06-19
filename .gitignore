@@ -56,7 +56,6 @@ hs_err_pid*
 .DS_Store
 target
 logs
-*.jar
 *.releaseBackup
 *.log
 *.DS_Store
@@ -84,3 +83,4 @@ lib
 webapp/app/components/*
 
 ebay*
+/commit_SHA1
