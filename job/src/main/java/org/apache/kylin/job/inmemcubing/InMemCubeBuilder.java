@@ -18,6 +18,7 @@ package org.apache.kylin.job.inmemcubing;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
@@ -48,19 +49,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * Build a cube (many cuboids) in memory. Calculating multiple cuboids at the same time as long as memory permits.
+ * Assumes base cuboid fits in memory or otherwise OOM exception will occur.
  */
-public class InMemCubeBuilder implements Runnable {
+public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(InMemCubeBuilder.class);
     private static final LongWritable ONE = new LongWritable(1l);
 
-    private final BlockingQueue<List<String>> inputQueue;
-    private final ICuboidWriter outputWriter;
-
-    private final CubeDesc cubeDesc;
     private final long baseCuboidId;
     private final CuboidScheduler cuboidScheduler;
-    private final Map<TblColRef, Dictionary<?>> dictionaryMap;
     private final CubeJoinedFlatTableDesc intermediateTableDesc;
     private final MeasureCodec measureCodec;
     private final String[] metricsAggrFuncs;
@@ -70,7 +68,6 @@ public class InMemCubeBuilder implements Runnable {
     private final int measureCount;
 
     private MemoryBudgetController memBudget;
-    private int taskThreadCount = 4;
     private Thread[] taskThreads;
     private Throwable[] taskThreadExceptions;
     private TreeSet<CuboidTask> taskPending;
@@ -78,19 +75,12 @@ public class InMemCubeBuilder implements Runnable {
 
     private OutputThread outputThread;
     private int outputCuboidExpected;
-    private boolean outputOrderRequired;
     private CuboidResult baseResult;
     private Object[] totalSumForSanityCheck;
 
-    public InMemCubeBuilder(BlockingQueue<List<String>> queue, CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap, ICuboidWriter gtRecordWriter) {
-        if (dictionaryMap == null || dictionaryMap.isEmpty()) {
-            throw new IllegalArgumentException("dictionary cannot be empty");
-        }
-        this.inputQueue = queue;
-        this.cubeDesc = cubeDesc;
+    public InMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
+        super(cubeDesc, dictionaryMap);
         this.cuboidScheduler = new CuboidScheduler(cubeDesc);
-        this.dictionaryMap = dictionaryMap;
-        this.outputWriter = gtRecordWriter;
         this.baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         this.intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
         this.measureCodec = new MeasureCodec(cubeDesc.getMeasures());
@@ -136,18 +126,10 @@ public class InMemCubeBuilder implements Runnable {
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
     }
 
-    public void setConcurrentThreads(int n) {
-        this.taskThreadCount = n;
-    }
-
-    public void setOutputOrder(boolean required) {
-        this.outputOrderRequired = required;
-    }
-
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
 
-        // Before several store implementation are very similar in performance. The ConcurrentDiskStore is the simplest.
+        // Below several store implementation are very similar in performance. The ConcurrentDiskStore is the simplest.
         // MemDiskStore store = new MemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
         // MemDiskStore store = new MemDiskStore(info, MemoryBudgetController.ZERO_BUDGET);
         ConcurrentDiskStore store = new ConcurrentDiskStore(info);
@@ -166,17 +148,7 @@ public class InMemCubeBuilder implements Runnable {
     }
 
     @Override
-    public void run() {
-        try {
-            build();
-        } catch (IOException e) {
-            logger.error("Fail to build cube", e);
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    public void build() throws IOException {
+    public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
         long startTime = System.currentTimeMillis();
         logger.info("In Mem Cube Build start, " + cubeDesc.getName());
 
@@ -187,11 +159,12 @@ public class InMemCubeBuilder implements Runnable {
         taskThreadExceptions = new Throwable[taskThreadCount];
 
         // output goes in a separate thread to leverage any async-ness
-        outputThread = new OutputThread();
+        outputThread = new OutputThread(output);
         outputCuboidExpected = outputThread.getOutputCuboidExpected();
 
         // build base cuboid
-        baseResult = createBaseCuboid();
+        totalSumForSanityCheck = null;
+        baseResult = createBaseCuboid(input);
         taskCuboidCompleted.incrementAndGet();
         if (baseResult.nRows == 0)
             return;
@@ -213,10 +186,20 @@ public class InMemCubeBuilder implements Runnable {
 
         throwExceptionIfAny();
     }
+    
+    public void abort() {
+        interrupt(taskThreads);
+        interrupt(outputThread);
+    }
 
     private void start(Thread... threads) {
         for (Thread t : threads)
             t.start();
+    }
+    
+    private void interrupt(Thread... threads) {
+        for (Thread t : threads)
+            t.interrupt();
     }
 
     private void join(Thread... threads) throws IOException {
@@ -261,6 +244,10 @@ public class InMemCubeBuilder implements Runnable {
         return result;
     }
 
+    public boolean isAllCuboidDone() {
+        return taskCuboidCompleted.get() == outputCuboidExpected;
+    }
+    
     private class CuboidTaskThread extends Thread {
         private int id;
 
@@ -272,7 +259,7 @@ public class InMemCubeBuilder implements Runnable {
         @Override
         public void run() {
             try {
-                while (taskCuboidCompleted.get() < outputCuboidExpected) {
+                while (!isAllCuboidDone()) {
                     CuboidTask task = null;
                     synchronized (taskPending) {
                         while (task == null && taskHasNoException()) {
@@ -291,7 +278,7 @@ public class InMemCubeBuilder implements Runnable {
                     task.parent.markOneSpanningDone();
                     taskCuboidCompleted.incrementAndGet();
 
-                    if (taskCuboidCompleted.get() == outputCuboidExpected) {
+                    if (isAllCuboidDone()) {
                         for (Thread t : taskThreads) {
                             if (t != Thread.currentThread())
                                 t.interrupt();
@@ -299,7 +286,7 @@ public class InMemCubeBuilder implements Runnable {
                     }
                 }
             } catch (Throwable ex) {
-                if (taskCuboidCompleted.get() < outputCuboidExpected) {
+                if (!isAllCuboidDone()) {
                     logger.error("task thread exception", ex);
                     taskThreadExceptions[id] = ex;
                 }
@@ -339,7 +326,7 @@ public class InMemCubeBuilder implements Runnable {
     private void makeMemoryBudget() {
         int systemAvailMB = getSystemAvailMB();
         logger.info("System avail " + systemAvailMB + " MB");
-        int reserve = Math.max(100, baseResult.aggrCacheMB / 3);
+        int reserve = Math.max(reserveMemoryMB, baseResult.aggrCacheMB / 3);
         logger.info("Reserve " + reserve + " MB for system basics");
 
         int budget = systemAvailMB - reserve;
@@ -350,15 +337,13 @@ public class InMemCubeBuilder implements Runnable {
         }
 
         logger.info("Memory Budget is " + budget + " MB");
-        if (budget > 0) {
-            memBudget = new MemoryBudgetController(budget);
-        }
+        memBudget = new MemoryBudgetController(budget);
     }
 
-    private CuboidResult createBaseCuboid() throws IOException {
+    private CuboidResult createBaseCuboid(BlockingQueue<List<String>> input) throws IOException {
         GridTable baseCuboid = newGridTableByCuboidID(baseCuboidId);
         GTBuilder baseBuilder = baseCuboid.rebuild();
-        IGTScanner baseInput = new InputConverter(baseCuboid.getInfo());
+        IGTScanner baseInput = new InputConverter(baseCuboid.getInfo(), input);
 
         int mbBefore = getSystemAvailMB();
         int mbAfter = 0;
@@ -384,7 +369,7 @@ public class InMemCubeBuilder implements Runnable {
         long timeSpent = System.currentTimeMillis() - startTime;
         logger.info("Cuboid " + baseCuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
 
-        int mbBaseAggrCacheOnHeap = mbBefore - mbAfter;
+        int mbBaseAggrCacheOnHeap = mbAfter == 0 ? 0 : mbBefore - mbAfter;
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
         int mbBaseAggrCache = Math.max((int) (mbBaseAggrCacheOnHeap * 1.1), mbEstimateBaseAggrCache);
         mbBaseAggrCache = Math.max(mbBaseAggrCache, 10); // let it be 10 MB at least
@@ -503,6 +488,7 @@ public class InMemCubeBuilder implements Runnable {
                 builder.write(newRecord);
             }
 
+            // disable sanity check for performance
             sanityCheck(scanner.getTotalSumForSanityCheck());
         } finally {
             scanner.close();
@@ -515,6 +501,7 @@ public class InMemCubeBuilder implements Runnable {
         return updateCuboidResult(cuboidId, newGridTable, count, timeSpent, 0);
     }
 
+    //@SuppressWarnings("unused")
     private void sanityCheck(Object[] totalSum) {
         // double sum introduces error and causes result not exactly equal
         for (int i = 0; i < totalSum.length; i++) {
@@ -599,14 +586,16 @@ public class InMemCubeBuilder implements Runnable {
     // ============================================================================
 
     private class OutputThread extends Thread {
+        private ICuboidWriter output;
         private SortedMap<Long, Long> outputSequence; // synchronized sorted map
         private LinkedBlockingDeque<CuboidResult> outputPending;
         private int outputCount;
         private int outputCuboidExpected;
         private Throwable outputThreadException;
 
-        OutputThread() {
+        OutputThread(ICuboidWriter output) {
             super("CuboidOutput");
+            this.output = output;
             this.outputSequence = prepareOutputSequence();
             this.outputPending = new LinkedBlockingDeque<CuboidResult>();
             this.outputCount = 0;
@@ -696,7 +685,7 @@ public class InMemCubeBuilder implements Runnable {
             GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, null);
             IGTScanner scanner = gridTable.scan(req);
             for (GTRecord record : scanner) {
-                outputWriter.write(cuboidId, record);
+                output.write(cuboidId, record);
             }
             scanner.close();
             logger.info("Cuboid " + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
@@ -720,9 +709,11 @@ public class InMemCubeBuilder implements Runnable {
     private class InputConverter implements IGTScanner {
         GTInfo info;
         GTRecord record;
+        BlockingQueue<List<String>> input;
 
-        public InputConverter(GTInfo info) {
+        public InputConverter(GTInfo info, BlockingQueue<List<String>> input) {
             this.info = info;
+            this.input = input;
             this.record = new GTRecord(info);
         }
 
@@ -735,7 +726,7 @@ public class InMemCubeBuilder implements Runnable {
                 @Override
                 public boolean hasNext() {
                     try {
-                        currentObject = inputQueue.take();
+                        currentObject = input.take();
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }

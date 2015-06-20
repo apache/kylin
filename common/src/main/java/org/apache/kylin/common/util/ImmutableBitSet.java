@@ -39,10 +39,12 @@ public class ImmutableBitSet {
         }
     }
 
+    /** return number of true bits */
     public int trueBitCount() {
         return arr.length;
     }
 
+    /** return the i-th true bit index */
     public int trueBitAt(int i) {
         return arr[i];
     }
