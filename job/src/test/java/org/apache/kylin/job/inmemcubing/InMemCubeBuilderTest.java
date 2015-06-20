@@ -77,22 +77,39 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
     public void test() throws Exception {
         final int inputRows = 70000;
         final int threads = 4;
-        
+
         final CubeInstance cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         final String flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
 
         Map<TblColRef, Dictionary<?>> dictionaryMap = getDictionaryMap(cube, flatTable);
         ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
 
-        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(queue, cube.getDescriptor(), dictionaryMap, new ConsoleGTRecordWriter());
+        InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(cube.getDescriptor(), dictionaryMap);
         cubeBuilder.setConcurrentThreads(threads);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Future<?> future = executorService.submit(cubeBuilder);
-
-        feedData(cube, flatTable, queue, inputRows);
 
         try {
-            future.get();
+            // round 1
+            {
+                Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
+                feedData(cube, flatTable, queue, inputRows);
+                future.get();
+            }
+            
+            // round 2, zero input
+            {
+                Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
+                feedData(cube, flatTable, queue, 0);
+                future.get();
+            }
+            
+            // round 3
+            {
+                Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
+                feedData(cube, flatTable, queue, inputRows);
+                future.get();
+            }
+            
         } catch (Exception e) {
             logger.error("stream build failed", e);
             throw new IOException("Failed to build cube ", e);
