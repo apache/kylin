@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
@@ -85,8 +86,15 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     // ============================================================================
 
     @Override
-    public MeasureAggregator<?> newMetricsAggregator(String aggrFunction, int col) {
-        return MeasureAggregator.create(aggrFunction, info.colTypes[col].toString());
+    public MeasureAggregator<?>[] newMetricsAggregators(ImmutableBitSet columns, String[] aggrFunctions) {
+        assert columns.trueBitCount() == aggrFunctions.length;
+        
+        MeasureAggregator<?>[] result = new MeasureAggregator[aggrFunctions.length];
+        for (int i = 0; i < result.length; i++) {
+            int col = columns.trueBitAt(i);
+            result[i] = MeasureAggregator.create(aggrFunctions[i], info.getColumnType(col).toString());
+        }
+        return result;
     }
 
     @Override

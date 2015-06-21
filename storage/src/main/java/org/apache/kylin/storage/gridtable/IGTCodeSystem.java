@@ -3,6 +3,7 @@ package org.apache.kylin.storage.gridtable;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 
@@ -38,7 +39,7 @@ public interface IGTCodeSystem {
     /** Decode a code into value */
     Object decodeColumnValue(int col, ByteBuffer buf);
     
-    /** Return an aggregator for metrics */
-    MeasureAggregator<?> newMetricsAggregator(String aggrFunction, int col);
+    /** Return aggregators for metrics */
+    MeasureAggregator<?>[] newMetricsAggregators(ImmutableBitSet columns, String[] aggrFunctions);
     
 }

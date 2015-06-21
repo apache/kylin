@@ -31,17 +31,17 @@ public class GTInfo {
     ImmutableBitSet colBlocksAll;
     int rowBlockSize; // 0: disable row block
 
-    // sharding & rowkey
+    // sharding
     int nShards; // 0: no sharding
 
     // must create from builder
     private GTInfo() {
     }
-    
+
     public String getTableName() {
         return tableName;
     }
-    
+
     public IGTCodeSystem getCodeSystem() {
         return codeSystem;
     }
@@ -49,7 +49,7 @@ public class GTInfo {
     public int getColumnCount() {
         return nColumns;
     }
-    
+
     public DataType getColumnType(int i) {
         return colTypes[i];
     }
@@ -57,7 +57,7 @@ public class GTInfo {
     public ImmutableBitSet getPrimaryKey() {
         return primaryKey;
     }
-    
+
     public boolean isShardingEnabled() {
         return nShards > 0;
     }
@@ -69,11 +69,11 @@ public class GTInfo {
     public int getRowBlockSize() {
         return rowBlockSize;
     }
-    
+
     public int getMaxRecordLength() {
         return getMaxColumnLength(colAll);
     }
-    
+
     public int getMaxColumnLength(ImmutableBitSet selectedCols) {
         int result = 0;
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
@@ -82,7 +82,7 @@ public class GTInfo {
         }
         return result;
     }
-    
+
     public int getMaxColumnLength() {
         int max = 0;
         for (int i = 0; i < nColumns; i++)
@@ -135,13 +135,13 @@ public class GTInfo {
 
     private void validateColumnBlocks() {
         colAll = new ImmutableBitSet(0, nColumns);
-        
+
         if (colBlocks == null) {
             colBlocks = new ImmutableBitSet[2];
             colBlocks[0] = primaryKey;
             colBlocks[1] = colAll.andNot(primaryKey);
         }
-        
+
         colBlocksAll = new ImmutableBitSet(0, colBlocks.length);
 
         if (colPreferIndex == null)
@@ -190,7 +190,7 @@ public class GTInfo {
             info.tableName = name;
             return this;
         }
-        
+
         /** required */
         public Builder setCodeSystem(IGTCodeSystem cs) {
             info.codeSystem = cs;

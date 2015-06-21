@@ -1,6 +1,7 @@
 package org.apache.kylin.storage.cube;
 
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ import com.google.common.collect.Maps;
 public class CuboidToGridTableMapping {
 
     final private Cuboid cuboid;
-    
+
     private List<DataType> gtDataTypes;
     private List<ImmutableBitSet> gtColBlocks;
 
@@ -63,15 +64,17 @@ public class CuboidToGridTableMapping {
             for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
                 BitSet colBlock = new BitSet();
                 for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
-                    // count distinct & holistic count distinct are equals() but different
-                    // assert the holistic version if exists always comes earlier
+                    // Count distinct & holistic count distinct are equals() but different.
+                    // Ensure the holistic version if exists is always the first.
                     FunctionDesc func = measure.getFunction();
                     if (func.isHolisticCountDistinct()) {
-                        if (metrics2gt.get(func).size() > 0 )
-                            throw new IllegalStateException();
+                        List<Integer> existing = metrics2gt.removeAll(func);
+                        metrics2gt.put(func, gtColIdx);
+                        metrics2gt.putAll(func, existing);
+                    } else {
+                        metrics2gt.put(func, gtColIdx);
                     }
                     gtDataTypes.add(func.getReturnDataType());
-                    metrics2gt.put(func, gtColIdx);
                     colBlock.set(gtColIdx);
                     gtColIdx++;
                 }
@@ -81,19 +84,19 @@ public class CuboidToGridTableMapping {
         nMetrics = gtColIdx - nDimensions;
         assert nMetrics == cuboid.getCube().getMeasures().size();
     }
-    
+
     public int getColumnCount() {
         return nDimensions + nMetrics;
     }
-    
+
     public int getDimensionCount() {
         return nDimensions;
     }
-    
+
     public int getMetricsCount() {
         return nMetrics;
     }
-    
+
     public DataType[] getDataTypes() {
         return (DataType[]) gtDataTypes.toArray(new DataType[gtDataTypes.size()]);
     }
@@ -126,8 +129,30 @@ public class CuboidToGridTableMapping {
         else
             return -1;
     }
-
+    
     public List<TblColRef> getCuboidDimensionsInGTOrder() {
         return cuboid.getColumns();
+    }
+    
+    public Map<Integer, Integer> getDependentMetricsMap() {
+        Map<Integer, Integer> result = Maps.newHashMap();
+        List<MeasureDesc> measures = cuboid.getCube().getMeasures();
+        for (MeasureDesc child : measures) {
+            if (child.getDependentMeasureRef() != null) {
+                boolean ok = false;
+                for (MeasureDesc parent : measures) {
+                    if (parent.getName().equals(child.getDependentMeasureRef())) {
+                        int childIndex = getIndexOf(child.getFunction());
+                        int parentIndex = getIndexOf(parent.getFunction());
+                        result.put(childIndex, parentIndex);
+                        ok = true;
+                        break;
+                    }
+                }
+                if (!ok)
+                    throw new IllegalStateException("Cannot find dependent measure: " + child.getDependentMeasureRef());
+            }
+        }
+        return result.isEmpty() ? Collections.<Integer, Integer>emptyMap() : result;
     }
 }

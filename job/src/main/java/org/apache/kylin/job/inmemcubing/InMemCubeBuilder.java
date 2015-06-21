@@ -16,13 +16,28 @@
  */
 package org.apache.kylin.job.inmemcubing;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.common.util.*;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -35,18 +50,19 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.cube.CubeGridTable;
-import org.apache.kylin.storage.gridtable.*;
+import org.apache.kylin.storage.gridtable.GTAggregateScanner;
+import org.apache.kylin.storage.gridtable.GTBuilder;
+import org.apache.kylin.storage.gridtable.GTInfo;
+import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.storage.gridtable.GTScanRequest;
+import org.apache.kylin.storage.gridtable.GridTable;
+import org.apache.kylin.storage.gridtable.IGTScanner;
+import org.apache.kylin.storage.gridtable.IGTStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Build a cube (many cuboids) in memory. Calculating multiple cuboids at the same time as long as memory permits.
@@ -62,7 +78,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private final CubeJoinedFlatTableDesc intermediateTableDesc;
     private final MeasureCodec measureCodec;
     private final String[] metricsAggrFuncs;
-    private final Map<Integer, Integer> dependentMeasures; // key: index of Measure which depends on another measure; value: index of Measure which is depended on;
     private final int[] hbaseMeasureRefIndex;
     private final MeasureDesc[] measureDescs;
     private final int measureCount;
@@ -113,16 +128,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             measureIndexMap.put(measureDesc.getName(), i);
         }
         this.metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
-
-        this.dependentMeasures = Maps.newHashMap();
-        for (int i = 0; i < measureCount; i++) {
-            String depMsrRef = measureDescsList.get(i).getDependentMeasureRef();
-            if (depMsrRef != null) {
-                int index = measureIndexMap.get(depMsrRef);
-                dependentMeasures.put(i, index);
-            }
-        }
-
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
     }
 
@@ -447,44 +452,13 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         GTRecord newRecord = new GTRecord(newGridTable.getInfo());
         int count = 0;
-        ByteArray byteArray = new ByteArray(8);
-        ByteBuffer byteBuffer = ByteBuffer.allocate(8);
         try {
-            BitSet dependentMetricsBS = new BitSet(allNeededColumns.cardinality());
-            for (Integer i : dependentMeasures.keySet()) {
-                dependentMetricsBS.set((allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)));
-            }
-            ImmutableBitSet dependentMetrics = new ImmutableBitSet(dependentMetricsBS);
-
-            Object[] hllObjects = new Object[dependentMeasures.keySet().size()];
-
             for (GTRecord record : scanner) {
                 count++;
                 for (int i = 0; i < allNeededColumns.trueBitCount(); i++) {
                     int c = allNeededColumns.trueBitAt(i);
                     newRecord.set(i, record.get(c));
                 }
-
-                if (dependentMeasures.size() > 0) {
-                    // update measures which have 'dependent_measure_ref'
-                    newRecord.getValues(dependentMetrics, hllObjects);
-
-                    for (Integer i : dependentMeasures.keySet()) {
-                        for (int index = 0; index < dependentMetrics.trueBitCount(); index++) {
-                            int c = dependentMetrics.trueBitAt(index);
-                            if (c == allNeededColumns.cardinality() - measureCount + dependentMeasures.get(i)) {
-                                assert hllObjects[index] instanceof HyperLogLogPlusCounter; // currently only HLL is allowed
-
-                                byteBuffer.clear();
-                                BytesUtil.writeVLong(((HyperLogLogPlusCounter) hllObjects[index]).getCountEstimate(), byteBuffer);
-                                byteArray.set(byteBuffer.array(), 0, byteBuffer.position());
-                                newRecord.set(allNeededColumns.cardinality() - measureCount + i, byteArray);
-                            }
-                        }
-
-                    }
-                }
-
                 builder.write(newRecord);
             }
 
