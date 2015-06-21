@@ -162,13 +162,7 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         private MeasureAggregator[] newAggregators() {
-            MeasureAggregator[] aggrs;
-            aggrs = new MeasureAggregator[metricsAggrFuncs.length];
-            for (int i = 0; i < aggrs.length; i++) {
-                int col = metrics.trueBitAt(i);
-                aggrs[i] = info.codeSystem.newMetricsAggregator(metricsAggrFuncs[i], col);
-            }
-            return aggrs;
+            return info.codeSystem.newMetricsAggregators(metrics, metricsAggrFuncs);
         }
 
         public Object[] calculateTotalSumSanityCheck() {

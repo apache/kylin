@@ -44,9 +44,18 @@ public class ImmutableBitSet {
         return arr.length;
     }
 
-    /** return the i-th true bit index */
+    /** return the i-th true bit */
     public int trueBitAt(int i) {
         return arr[i];
+    }
+    
+    /** return the bit's index among true bits */
+    public int trueBitIndexOf(int bitIndex) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == bitIndex)
+                return i;
+        }
+        return -1;
     }
 
     public BitSet mutable() {

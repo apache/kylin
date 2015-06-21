@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
@@ -31,18 +32,20 @@ public class CubeCodeSystem implements IGTCodeSystem {
     // ============================================================================
 
     private GTInfo info;
-    private Map<Integer, Dictionary> dictionaryMap = null; // column index ==> dictionary of column
-    private Map<Integer, Integer> fixLenMap = null; // column index ==> fixed length of column
+    private Map<Integer, Dictionary> dictionaryMap; // column index ==> dictionary of column
+    private Map<Integer, Integer> fixLenMap; // column index ==> fixed length of column
+    private Map<Integer, Integer> dependentMetricsMap;
     private IFilterCodeSystem<ByteArray> filterCS;
     private DataTypeSerializer[] serializers;
 
     public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap) {
-        this(dictionaryMap, Collections.<Integer, Integer>emptyMap());
+        this(dictionaryMap, Collections.<Integer, Integer>emptyMap(), Collections.<Integer, Integer>emptyMap());
     }
             
-    public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap, Map<Integer, Integer> fixLenMap) {
+    public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap, Map<Integer, Integer> fixLenMap, Map<Integer, Integer> dependentMetricsMap) {
         this.dictionaryMap = dictionaryMap;
         this.fixLenMap = fixLenMap;
+        this.dependentMetricsMap = dependentMetricsMap;
     }
 
     @Override
@@ -150,8 +153,31 @@ public class CubeCodeSystem implements IGTCodeSystem {
     }
 
     @Override
-    public MeasureAggregator<?> newMetricsAggregator(String aggrFunction, int col) {
-        return MeasureAggregator.create(aggrFunction, info.getColumnType(col).toString());
+    public MeasureAggregator<?>[] newMetricsAggregators(ImmutableBitSet columns, String[] aggrFunctions) {
+        assert columns.trueBitCount() == aggrFunctions.length;
+        
+        MeasureAggregator<?>[] result = new MeasureAggregator[aggrFunctions.length];
+        for (int i = 0; i < result.length; i++) {
+            int col = columns.trueBitAt(i);
+            result[i] = MeasureAggregator.create(aggrFunctions[i], info.getColumnType(col).toString());
+        }
+        
+        // deal with holistic distinct count
+        if (dependentMetricsMap != null) {
+            for (Integer child : dependentMetricsMap.keySet()) {
+                if (columns.get(child)) {
+                    Integer parent = dependentMetricsMap.get(child);
+                    if (columns.get(parent) == false)
+                        throw new IllegalStateException();
+                    
+                    int childIdx = columns.trueBitIndexOf(child);
+                    int parentIdx = columns.trueBitIndexOf(parent);
+                    result[childIdx].setDependentAggregator(result[parentIdx]);
+                }
+            }
+        }
+        
+        return result;
     }
 
     static class DictionarySerializer extends DataTypeSerializer {
