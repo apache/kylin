@@ -63,7 +63,7 @@ public class GTFilterScanner implements IGTScanner {
                 if (next != null)
                     return true;
 
-                IFilterCodeSystem<ByteArray> filterCodeSystem = getInfo().codeSystem.getFilterCodeSystem();
+                IFilterCodeSystem<ByteArray> filterCodeSystem = GTUtil.wrap(getInfo().codeSystem.getComparator());
 
                 while (inputIterator.hasNext()) {
                     next = inputIterator.next();

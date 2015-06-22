@@ -14,7 +14,6 @@ import java.util.Set;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
-import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
@@ -36,11 +35,11 @@ public class GTScanRangePlanner {
     public GTScanRangePlanner(GTInfo info) {
         this.info = info;
 
-        IFilterCodeSystem<ByteArray> cs = info.codeSystem.getFilterCodeSystem();
-        this.byteUnknownIsSmaller = byteComparatorTreatsUnknownSmaller(cs);
-        this.byteUnknownIsBigger = byteComparatorTreatsUnknownBigger(cs);
-        this.recordUnknownIsSmaller = recordComparatorTreatsUnknownSmaller(cs);
-        this.recordUnknownIsBigger = recordComparatorTreatsUnknownBigger(cs);
+        IGTComparator comp = info.codeSystem.getComparator();
+        this.byteUnknownIsSmaller = byteComparatorTreatsUnknownSmaller(comp);
+        this.byteUnknownIsBigger = byteComparatorTreatsUnknownBigger(comp);
+        this.recordUnknownIsSmaller = recordComparatorTreatsUnknownSmaller(comp);
+        this.recordUnknownIsBigger = recordComparatorTreatsUnknownBigger(comp);
     }
 
     // return empty list meaning filter is always false
@@ -325,7 +324,7 @@ public class GTScanRangePlanner {
             if (equals != null) {
                 return equals.isEmpty();
             } else if (begin.array() != null && end.array() != null) {
-                return info.codeSystem.getFilterCodeSystem().compare(begin, end) > 0;
+                return info.codeSystem.getComparator().compare(begin, end) > 0;
             } else {
                 return false;
             }
@@ -425,7 +424,7 @@ public class GTScanRangePlanner {
         }
     }
 
-    public static ComparatorEx<ByteArray> byteComparatorTreatsUnknownSmaller(final IFilterCodeSystem<ByteArray> cs) {
+    public static ComparatorEx<ByteArray> byteComparatorTreatsUnknownSmaller(final IGTComparator comp) {
         return new ComparatorEx<ByteArray>() {
             @Override
             public int compare(ByteArray a, ByteArray b) {
@@ -434,12 +433,12 @@ public class GTScanRangePlanner {
                 else if (b.array() == null)
                     return 1;
                 else
-                    return cs.compare(a, b);
+                    return comp.compare(a, b);
             }
         };
     }
 
-    public static ComparatorEx<ByteArray> byteComparatorTreatsUnknownBigger(final IFilterCodeSystem<ByteArray> cs) {
+    public static ComparatorEx<ByteArray> byteComparatorTreatsUnknownBigger(final IGTComparator comp) {
         return new ComparatorEx<ByteArray>() {
             @Override
             public int compare(ByteArray a, ByteArray b) {
@@ -448,17 +447,17 @@ public class GTScanRangePlanner {
                 else if (b.array() == null)
                     return -1;
                 else
-                    return cs.compare(a, b);
+                    return comp.compare(a, b);
             }
         };
     }
 
-    public static ComparatorEx<GTRecord> recordComparatorTreatsUnknownSmaller(IFilterCodeSystem<ByteArray> cs) {
-        return new RecordComparator(byteComparatorTreatsUnknownSmaller(cs));
+    public static ComparatorEx<GTRecord> recordComparatorTreatsUnknownSmaller(IGTComparator comp) {
+        return new RecordComparator(byteComparatorTreatsUnknownSmaller(comp));
     }
 
-    public static ComparatorEx<GTRecord> recordComparatorTreatsUnknownBigger(IFilterCodeSystem<ByteArray> cs) {
-        return new RecordComparator(byteComparatorTreatsUnknownBigger(cs));
+    public static ComparatorEx<GTRecord> recordComparatorTreatsUnknownBigger(IGTComparator comp) {
+        return new RecordComparator(byteComparatorTreatsUnknownBigger(comp));
     }
 
     private static class RecordComparator extends ComparatorEx<GTRecord> {
