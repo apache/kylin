@@ -6,23 +6,22 @@ import java.util.NavigableMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 
 import com.google.common.collect.Maps;
 
 public class GTInvertedIndexOfColumn {
 
-    final private IFilterCodeSystem<ByteArray> codeSystem;
+    final private IGTComparator comparator;
     final private ReentrantReadWriteLock rwLock;
 
     private int nBlocks;
     private NavigableMap<ByteArray, ConciseSet> rangeIndex;
     private ConciseSet nullIndex;
 
-    public GTInvertedIndexOfColumn(IFilterCodeSystem<ByteArray> codeSystem) {
-        this.codeSystem = codeSystem;
+    public GTInvertedIndexOfColumn(IGTComparator comparator) {
+        this.comparator = comparator;
         this.rwLock = new ReentrantReadWriteLock();
-        this.rangeIndex = Maps.newTreeMap(codeSystem);
+        this.rangeIndex = Maps.newTreeMap(comparator);
         this.nullIndex = new ConciseSet();
     }
 
@@ -30,7 +29,7 @@ public class GTInvertedIndexOfColumn {
         rwLock.writeLock().lock();
         try {
             for (ByteArray code : codes) {
-                if (codeSystem.isNull(code)) {
+                if (comparator.isNull(code)) {
                     nullIndex.add(blockId);
                     continue;
                 }

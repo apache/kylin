@@ -37,7 +37,7 @@ public class GTInvertedIndex {
         index = new GTInvertedIndexOfColumn[info.getColumnCount()];
         for (int i = 0; i < colPreferIndex.trueBitCount(); i++) {
             int c = colPreferIndex.trueBitAt(i);
-            index[c] = new GTInvertedIndexOfColumn(info.codeSystem.getFilterCodeSystem());
+            index[c] = new GTInvertedIndexOfColumn(info.codeSystem.getComparator());
         }
     }
 

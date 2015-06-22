@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -45,6 +47,8 @@ public class GTUtil {
             final List<TblColRef> colMapping, final boolean encodeConstants, //
             final Set<TblColRef> unevaluatableColumnCollector) {
 
+        IFilterCodeSystem<ByteArray> filterCodeSystem = wrap(info.codeSystem.getComparator());
+        
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new TupleFilterSerializer.Decorator() {
             @Override
             public TupleFilter onSerialize(TupleFilter filter) {
@@ -182,9 +186,36 @@ public class GTUtil {
                     return null;
                 }
             }
-        }, info.codeSystem.getFilterCodeSystem());
+        }, filterCodeSystem);
 
-        return TupleFilterSerializer.deserialize(bytes, info.codeSystem.getFilterCodeSystem());
+        return TupleFilterSerializer.deserialize(bytes, filterCodeSystem);
     }
 
+    public static IFilterCodeSystem<ByteArray> wrap(final IGTComparator comp) {
+        return new IFilterCodeSystem<ByteArray>() {
+
+            @Override
+            public int compare(ByteArray o1, ByteArray o2) {
+                return comp.compare(o1, o2);
+            }
+
+            @Override
+            public boolean isNull(ByteArray code) {
+                return comp.isNull(code);
+            }
+
+            @Override
+            public void serialize(ByteArray code, ByteBuffer buffer) {
+                if (code == null)
+                    BytesUtil.writeByteArray(null, 0, 0, buffer);
+                else
+                    BytesUtil.writeByteArray(code.array(), code.offset(), code.length(), buffer);
+            }
+
+            @Override
+            public ByteArray deserialize(ByteBuffer buffer) {
+                return new ByteArray(BytesUtil.readByteArray(buffer));
+            }
+        };
+    }
 }

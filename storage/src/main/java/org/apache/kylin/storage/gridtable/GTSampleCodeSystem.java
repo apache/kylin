@@ -3,9 +3,7 @@ package org.apache.kylin.storage.gridtable;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 
@@ -22,7 +20,7 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
 
     private GTInfo info;
     private DataTypeSerializer[] serializers;
-    private IFilterCodeSystem<ByteArray> filterCS;
+    private IGTComparator comparator;
 
     public GTSampleCodeSystem() {
     }
@@ -36,7 +34,7 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
             this.serializers[i] = DataTypeSerializer.create(info.colTypes[i]);
         }
 
-        this.filterCS = new IFilterCodeSystem<ByteArray>() {
+        this.comparator = new IGTComparator() {
             @Override
             public boolean isNull(ByteArray code) {
                 // all 0xff is null
@@ -52,19 +50,6 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
             public int compare(ByteArray code1, ByteArray code2) {
                 return code1.compareTo(code2);
             }
-
-            @Override
-            public void serialize(ByteArray code, ByteBuffer buffer) {
-                if (code == null)
-                    BytesUtil.writeByteArray(null, 0, 0, buffer);
-                else
-                    BytesUtil.writeByteArray(code.array(), code.offset(), code.length(), buffer);
-            }
-
-            @Override
-            public ByteArray deserialize(ByteBuffer buffer) {
-                return new ByteArray(BytesUtil.readByteArray(buffer));
-            }
         };
     }
 
@@ -79,8 +64,8 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     }
 
     @Override
-    public IFilterCodeSystem<ByteArray> getFilterCodeSystem() {
-        return filterCS;
+    public IGTComparator getComparator() {
+        return comparator;
     }
 
     // ============================================================================

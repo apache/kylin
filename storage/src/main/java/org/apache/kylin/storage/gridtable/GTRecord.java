@@ -1,12 +1,11 @@
 package org.apache.kylin.storage.gridtable;
 
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.metadata.filter.IFilterCodeSystem;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
+
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 
 public class GTRecord implements Comparable<GTRecord> {
 
@@ -167,12 +166,12 @@ public class GTRecord implements Comparable<GTRecord> {
     public int compareTo(GTRecord o) {
         assert this.info == o.info;
         assert this.maskForEqualHashComp == o.maskForEqualHashComp; // reference equal for performance
-        IFilterCodeSystem<ByteArray> cs = info.codeSystem.getFilterCodeSystem();
+        IGTComparator comparator = info.codeSystem.getComparator();
 
         int comp = 0;
         for (int i = 0; i < maskForEqualHashComp.trueBitCount(); i++) {
             int c = maskForEqualHashComp.trueBitAt(i);
-            comp = cs.compare(cols[c], o.cols[c]);
+            comp = comparator.compare(cols[c], o.cols[c]);
             if (comp != 0)
                 return comp;
         }

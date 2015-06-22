@@ -12,11 +12,11 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.IGTCodeSystem;
+import org.apache.kylin.storage.gridtable.IGTComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
     private Map<Integer, Dictionary> dictionaryMap; // column index ==> dictionary of column
     private Map<Integer, Integer> fixLenMap; // column index ==> fixed length of column
     private Map<Integer, Integer> dependentMetricsMap;
-    private IFilterCodeSystem<ByteArray> filterCS;
+    private IGTComparator comparator;
     private DataTypeSerializer[] serializers;
 
     public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap) {
@@ -68,7 +68,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
             }
         }
 
-        this.filterCS = new IFilterCodeSystem<ByteArray>() {
+        this.comparator = new IGTComparator() {
             @Override
             public boolean isNull(ByteArray code) {
                 // all 0xff is null
@@ -84,25 +84,12 @@ public class CubeCodeSystem implements IGTCodeSystem {
             public int compare(ByteArray code1, ByteArray code2) {
                 return code1.compareTo(code2);
             }
-
-            @Override
-            public void serialize(ByteArray code, ByteBuffer buffer) {
-                if (code == null)
-                    BytesUtil.writeByteArray(null, 0, 0, buffer);
-                else
-                    BytesUtil.writeByteArray(code.array(), code.offset(), code.length(), buffer);
-            }
-
-            @Override
-            public ByteArray deserialize(ByteBuffer buffer) {
-                return new ByteArray(BytesUtil.readByteArray(buffer));
-            }
         };
     }
 
     @Override
-    public IFilterCodeSystem<ByteArray> getFilterCodeSystem() {
-        return filterCS;
+    public IGTComparator getComparator() {
+        return comparator;
     }
 
     @Override
