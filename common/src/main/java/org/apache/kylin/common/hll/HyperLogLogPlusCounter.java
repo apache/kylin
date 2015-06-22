@@ -120,6 +120,11 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         }
         return size;
     }
+    
+    @Override
+    public String toString() {
+        return "" + getCountEstimate();
+    }
 
     // ============================================================================
 

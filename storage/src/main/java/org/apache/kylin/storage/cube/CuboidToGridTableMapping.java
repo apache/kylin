@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.metadata.model.DataType;
@@ -37,7 +38,7 @@ public class CuboidToGridTableMapping {
         this.cuboid = cuboid;
         init();
     }
-
+    
     private void init() {
         int gtColIdx = 0;
         gtDataTypes = Lists.newArrayList();
@@ -154,5 +155,18 @@ public class CuboidToGridTableMapping {
             }
         }
         return result.isEmpty() ? Collections.<Integer, Integer>emptyMap() : result;
+    }
+
+    public static MeasureDesc[] getMeasureSequenceOnGridTable(CubeDesc cube) {
+        MeasureDesc[] result = new MeasureDesc[cube.getMeasures().size()];
+        int i = 0;
+        for (HBaseColumnFamilyDesc familyDesc : cube.getHbaseMapping().getColumnFamily()) {
+            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
+                for (MeasureDesc m : hbaseColDesc.getMeasures()) {
+                    result[i++] = m;
+                }
+            }
+        }
+        return result;
     }
 }

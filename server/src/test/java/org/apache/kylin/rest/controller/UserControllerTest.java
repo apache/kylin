@@ -43,7 +43,7 @@ public class UserControllerTest extends ServiceTestBase {
 
     @BeforeClass
     public static void setupResource() {
-        staticCreateTestMetadata(LOCALMETA_TEST_DATA);
+        staticCreateTestMetadata();
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
         User user = new User("ADMIN", "ADMIN", authorities);
         Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", "ROLE_ADMIN");

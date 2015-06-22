@@ -42,8 +42,8 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.lookup.FileTableReader;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,42 +57,45 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCubeBuilderTest.class);
 
-    private KylinConfig kylinConfig;
-    private CubeManager cubeManager;
-
-    @Before
-    public void before() {
-        createTestMetadata();
-
-        kylinConfig = KylinConfig.getInstanceFromEnv();
-        cubeManager = CubeManager.getInstance(kylinConfig);
+    private static final int INPUT_ROWS = 70000;
+    private static final int THREADS = 4;
+    
+    private static CubeInstance cube;
+    private static String flatTable;
+    private static Map<TblColRef, Dictionary<?>> dictionaryMap;
+    
+    @BeforeClass
+    public static void before() throws IOException {
+        staticCreateTestMetadata();
+        
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
+        
+        cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
+        flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
+        dictionaryMap = getDictionaryMap(cube, flatTable);
     }
 
-    @After
-    public void after() throws Exception {
-        cleanupTestMetadata();
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
     }
 
     @Test
     public void test() throws Exception {
-        final int inputRows = 70000;
-        final int threads = 4;
-
-        final CubeInstance cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
-        final String flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
-
-        Map<TblColRef, Dictionary<?>> dictionaryMap = getDictionaryMap(cube, flatTable);
-        ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
 
         InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(cube.getDescriptor(), dictionaryMap);
-        cubeBuilder.setConcurrentThreads(threads);
+        cubeBuilder.setOutputOrder(true);
+        cubeBuilder.setConcurrentThreads(THREADS);
+        
+        ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         try {
             // round 1
             {
                 Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
-                feedData(cube, flatTable, queue, inputRows);
+                feedData(cube, flatTable, queue, INPUT_ROWS);
                 future.get();
             }
             
@@ -106,7 +109,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             // round 3
             {
                 Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
-                feedData(cube, flatTable, queue, inputRows);
+                feedData(cube, flatTable, queue, INPUT_ROWS);
                 future.get();
             }
             
@@ -116,7 +119,11 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         }
     }
 
-    private void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count) throws IOException, InterruptedException {
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count) throws IOException, InterruptedException {
+        feedData(cube, flatTable, queue, count, 0);
+    }
+    
+    static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count, long randSeed) throws IOException, InterruptedException {
         CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
         int nColumns = flatTableDesc.getColumnList().size();
 
@@ -139,8 +146,11 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             distincts.add((String[]) distinctSets[i].toArray(new String[distinctSets[i].size()]));
         }
 
-        // output with random data
         Random rand = new Random();
+        if (randSeed != 0)
+            rand.setSeed(randSeed);
+        
+        // output with random data
         for (; count > 0; count--) {
             ArrayList<String> row = new ArrayList<String>(nColumns);
             for (int i = 0; i < nColumns; i++) {
@@ -152,7 +162,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         queue.put(new ArrayList<String>(0));
     }
 
-    private Map<TblColRef, Dictionary<?>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {
+    static Map<TblColRef, Dictionary<?>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {
         Map<TblColRef, Dictionary<?>> result = Maps.newHashMap();
         CubeDesc desc = cube.getDescriptor();
         CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(desc, null);
@@ -171,7 +181,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         return result;
     }
 
-    private List<byte[]> readValueList(String flatTable, int nColumns, int c) throws IOException {
+    private static List<byte[]> readValueList(String flatTable, int nColumns, int c) throws IOException {
         List<byte[]> result = Lists.newArrayList();
         FileTableReader reader = new FileTableReader(flatTable, nColumns);
         while (reader.next()) {

@@ -86,7 +86,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private Thread[] taskThreads;
     private Throwable[] taskThreadExceptions;
     private TreeSet<CuboidTask> taskPending;
-    private AtomicInteger taskCuboidCompleted;
+    private AtomicInteger taskCuboidCompleted = new AtomicInteger(0);
 
     private OutputThread outputThread;
     private int outputCuboidExpected;
@@ -159,7 +159,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         // multiple threads to compute cuboid in parallel
         taskPending = new TreeSet<CuboidTask>();
-        taskCuboidCompleted = new AtomicInteger(0);
+        taskCuboidCompleted.set(0);
         taskThreads = prepareTaskThreads();
         taskThreadExceptions = new Throwable[taskThreadCount];
 

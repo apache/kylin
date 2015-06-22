@@ -32,6 +32,10 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
 
     @Override
     public void createTestMetadata() {
+        staticCreateTestMetadata();
+    }
+    
+    public static void staticCreateTestMetadata() {
         staticCreateTestMetadata(LOCALMETA_TEST_DATA);
     }
     
