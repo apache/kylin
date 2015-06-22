@@ -45,7 +45,7 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
 
     @BeforeClass
     public static void setupResource() throws Exception {
-        staticCreateTestMetadata(LOCALMETA_TEST_DATA);
+        staticCreateTestMetadata();
         Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
