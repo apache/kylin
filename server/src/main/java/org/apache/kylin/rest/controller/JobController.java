@@ -169,7 +169,8 @@ public class JobController extends BasicController implements InitializingBean {
     @ResponseBody
     public JobInstance resume(@PathVariable String jobId) {
         try {
-            jobService.resumeJob(jobId);
+            final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            jobService.resumeJob(jobInstance);
             return jobService.getJobInstance(jobId);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
@@ -188,7 +189,8 @@ public class JobController extends BasicController implements InitializingBean {
     public JobInstance cancel(@PathVariable String jobId) {
 
         try {
-            return jobService.cancelJob(jobId);
+            final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            return jobService.cancelJob(jobInstance);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
