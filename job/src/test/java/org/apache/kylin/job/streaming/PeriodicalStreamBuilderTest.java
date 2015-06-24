@@ -104,7 +104,7 @@ public class PeriodicalStreamBuilderTest extends LocalFileMetadataTestCase {
             for (BlockingQueue<StreamMessage> queue : queues) {
                 queue.put(new StreamMessage(messageCount, String.valueOf(ts).getBytes()));
             }
-            if (expectedOffset == 0 && ts > timeout) {
+            if (expectedOffset == 0 && ts >= timeout) {
                 expectedOffset = messageCount - 1;
             }
             messageCount++;
