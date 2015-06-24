@@ -187,9 +187,9 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             int systemAvailMB = MemoryBudgetController.getSystemAvailMB();
             int nSplit = splits.size();
             long splitRowCount = nSplit == 0 ? 0 : splits.get(nSplit - 1).inputRowCount;
-            
+
             logger.debug(splitRowCount + " records went into split #" + nSplit + "; " + systemAvailMB + " MB left, " + reserveMemoryMB + " MB threshold");
-            
+
             return splitRowCount >= splitRowThreshold || systemAvailMB <= reserveMemoryMB;
         }
     }
@@ -296,7 +296,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                     metrics = getMetricsValues(slot.record);
                     reuseAggrs.aggregate(metrics);
                 } while (smallest.isSameKey(heap.peek()));
-                
+
                 reuseAggrs.collectStates(metrics);
                 setMetricsValues(smallest.record, metrics);
             }
@@ -383,25 +383,23 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             long cuboidComp = this.cuboidId - o.cuboidId;
             if (cuboidComp != 0)
                 return cuboidComp < 0 ? -1 : 1;
-            else
-                return this.record.compareTo(o.record);
-        }
-
-        public boolean isSameKey(MergeSlot o) {
-            if (o == null)
-                return false;
-
-            if (this.cuboidId != o.cuboidId)
-                return false;
 
             // note GTRecord.equals() don't work because the two GTRecord comes from different GridTable
             ImmutableBitSet pk = this.record.getInfo().getPrimaryKey();
             for (int i = 0; i < pk.trueBitCount(); i++) {
                 int c = pk.trueBitAt(i);
-                if (this.record.get(c).equals(o.record.get(c)) == false)
-                    return false;
+                int comp = this.record.get(c).compareTo(o.record.get(c));
+                if (comp != 0)
+                    return comp;
             }
-            return true;
+            return 0;
+        }
+
+        public boolean isSameKey(MergeSlot o) {
+            if (o == null)
+                return false;
+            else
+                return this.compareTo(o) == 0;
         }
 
     };
