@@ -22,6 +22,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,7 @@ public class Broadcaster {
     }
 
     private Broadcaster() {
-        Executors.newSingleThreadExecutor().execute(new Runnable() {
+        Executors.newSingleThreadExecutor(new DaemonThreadFactory()).execute(new Runnable() {
             @Override
             public void run() {
                 final String[] nodes = KylinConfig.getInstanceFromEnv().getRestServers();
