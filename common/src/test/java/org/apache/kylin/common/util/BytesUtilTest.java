@@ -53,4 +53,13 @@ public class BytesUtilTest extends TestCase {
         assertEquals(y[1], false);
     }
 
+    @Test
+    public void testReadable()
+    {
+        String x = "\\x00\\x00\\x00\\x00\\x00\\x01\\xFC\\xA8";
+        byte[] bytes = BytesUtil.fromReadableText(x);
+        String y = BytesUtil.toHex(bytes);
+        assertEquals(x,y);
+    }
+
 }
