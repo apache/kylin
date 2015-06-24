@@ -17,14 +17,7 @@
 
 package org.apache.kylin.job.inmemcubing;
 
-import static org.junit.Assert.*;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -47,13 +40,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
+public class DoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(DoggedCubeBuilderTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(DoggedCubeBuilderStressTest.class);
 
-    private static final int INPUT_ROWS = 10000;
-    private static final int SPLIT_ROWS = 5000;
+    // CI sandbox memory is no more than 512MB, this many input should hit memory threshold
+    private static final int INPUT_ROWS = 200000;
     private static final int THREADS = 4;
 
     private static CubeInstance cube;
@@ -86,69 +79,17 @@ public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
 
         DoggedCubeBuilder doggedBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
         doggedBuilder.setConcurrentThreads(THREADS);
-        doggedBuilder.setSplitRowThreshold(SPLIT_ROWS);
-        FileRecordWriter doggedResult = new FileRecordWriter();
 
         {
-            Future<?> future = executorService.submit(doggedBuilder.buildAsRunnable(queue, doggedResult));
+            Future<?> future = executorService.submit(doggedBuilder.buildAsRunnable(queue, new NoopWriter()));
             InMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
             future.get();
-            doggedResult.close();
         }
-
-        InMemCubeBuilder inmemBuilder = new InMemCubeBuilder(cube.getDescriptor(), dictionaryMap);
-        inmemBuilder.setConcurrentThreads(THREADS);
-        FileRecordWriter inmemResult = new FileRecordWriter();
-
-        {
-            Future<?> future = executorService.submit(inmemBuilder.buildAsRunnable(queue, inmemResult));
-            InMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
-            future.get();
-            inmemResult.close();
-        }
-
-        fileCompare(doggedResult.file, inmemResult.file);
-        doggedResult.file.delete();
-        inmemResult.file.delete();
     }
 
-    private void fileCompare(File file, File file2) throws IOException {
-        BufferedReader r1 = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-        BufferedReader r2 = new BufferedReader(new InputStreamReader(new FileInputStream(file2), "UTF-8"));
-
-        String line1, line2;
-        do {
-            line1 = r1.readLine();
-            line2 = r2.readLine();
-            
-            assertEquals(line1, line2);
-            
-        } while (line1 != null || line2 != null);
-
-        r1.close();
-        r2.close();
-    }
-
-    class FileRecordWriter implements ICuboidWriter {
-
-        File file;
-        PrintWriter writer;
-
-        FileRecordWriter() throws IOException {
-            file = File.createTempFile("DoggedCubeBuilderTest_", ".data");
-            writer = new PrintWriter(file, "UTF-8");
-        }
-
+    class NoopWriter implements ICuboidWriter {
         @Override
         public void write(long cuboidId, GTRecord record) throws IOException {
-            writer.print(cuboidId);
-            writer.print(", ");
-            writer.print(record.toString());
-            writer.println();
-        }
-
-        public void close() {
-            writer.close();
         }
     }
 }

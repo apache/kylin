@@ -19,10 +19,12 @@ package org.apache.kylin.job.inmemcubing;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.TreeMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -31,11 +33,14 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.job.inmemcubing.InMemCubeBuilder.CuboidResult;
 import org.apache.kylin.metadata.measure.MeasureAggregators;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.cube.CuboidToGridTableMapping;
 import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.storage.gridtable.GTScanRequest;
+import org.apache.kylin.storage.gridtable.IGTScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,34 +72,63 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
     private class BuildOnce {
 
-        final List<SplitThread> splits = new ArrayList<SplitThread>();
-        final Merger merger = new Merger();
-
         public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
-            SplitThread last = null;
-            boolean eof = false;
+            final List<SplitThread> splits = new ArrayList<SplitThread>();
+            final Merger merger = new Merger();
 
-            while (!eof) {
+            long start = System.currentTimeMillis();
+            logger.info("Dogged Cube Build start");
 
-                if (last != null && shouldCutSplit()) {
-                    cutSplit(last);
-                    last = null;
+            try {
+                SplitThread last = null;
+                boolean eof = false;
+
+                while (!eof) {
+
+                    if (last != null && shouldCutSplit(splits)) {
+                        cutSplit(last);
+                        last = null;
+                    }
+
+                    checkException(splits);
+
+                    if (last == null) {
+                        last = new SplitThread();
+                        splits.add(last);
+                        last.start();
+                    }
+
+                    eof = feedSomeInput(input, last, unitRows);
                 }
 
+                for (SplitThread split : splits) {
+                    split.join();
+                }
                 checkException(splits);
+                logger.info("Dogged Cube Build splits complete, took " + (System.currentTimeMillis() - start) + " ms");
 
-                if (last == null) {
-                    last = new SplitThread(merger);
-                    splits.add(last);
-                    last.start();
-                }
+                merger.mergeAndOutput(splits, output);
 
-                eof = feedSomeInput(input, last, unitRows);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            } finally {
+                closeGirdTables(splits);
+                logger.info("Dogged Cube Build end, totally took " + (System.currentTimeMillis() - start) + " ms");
             }
+        }
 
-            merger.mergeAndOutput(splits, output);
-
-            checkException(splits);
+        private void closeGirdTables(List<SplitThread> splits) {
+            for (SplitThread split : splits) {
+                if (split.buildResult != null) {
+                    for (CuboidResult r : split.buildResult.values()) {
+                        try {
+                            r.table.close();
+                        } catch (Throwable e) {
+                            logger.error("Error closing grid table " + r.table, e);
+                        }
+                    }
+                }
+            }
         }
 
         private void checkException(List<SplitThread> splits) throws IOException {
@@ -171,7 +205,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                     Thread.sleep(1000);
                 }
 
-                // wait cuboid build done (but still pending output)
+                // wait cuboid build done
                 while (last.isAlive()) {
                     if (last.builder.isAllCuboidDone()) {
                         break;
@@ -183,7 +217,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             }
         }
 
-        private boolean shouldCutSplit() {
+        private boolean shouldCutSplit(List<SplitThread> splits) {
             int systemAvailMB = MemoryBudgetController.getSystemAvailMB();
             int nSplit = splits.size();
             long splitRowCount = nSplit == 0 ? 0 : splits.get(nSplit - 1).inputRowCount;
@@ -197,24 +231,21 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
     private class SplitThread extends Thread {
         final BlockingQueue<List<String>> inputQueue = new ArrayBlockingQueue<List<String>>(16);
         final InMemCubeBuilder builder;
-        final MergeSlot output;
 
+        TreeMap<Long, CuboidResult> buildResult;
         long inputRowCount = 0;
         RuntimeException exception;
 
-        public SplitThread(Merger merger) {
+        public SplitThread() {
             this.builder = new InMemCubeBuilder(cubeDesc, dictionaryMap);
             this.builder.setConcurrentThreads(taskThreadCount);
-            this.builder.setOutputOrder(true); // merge sort requires order
             this.builder.setReserveMemoryMB(reserveMemoryMB);
-
-            this.output = merger.newMergeSlot(this);
         }
 
         @Override
         public void run() {
             try {
-                builder.build(inputQueue, output);
+                buildResult = builder.build(inputQueue);
             } catch (Exception e) {
                 if (e instanceof RuntimeException)
                     this.exception = (RuntimeException) e;
@@ -239,74 +270,55 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             reuseMetricsArray = new Object[measures.length];
         }
 
-        public MergeSlot newMergeSlot(SplitThread split) {
-            return new MergeSlot(split);
-        }
-
         public void mergeAndOutput(List<SplitThread> splits, ICuboidWriter output) throws IOException {
-            LinkedList<MergeSlot> open = Lists.newLinkedList();
-            for (SplitThread split : splits)
-                open.add(split.output);
-
             if (splits.size() == 1) {
-                splits.get(0).output.directOutput = output;
+                for (CuboidResult cuboidResult : splits.get(0).buildResult.values()) {
+                    outputCuboid(cuboidResult.cuboidId, cuboidResult.table, output);
+                    cuboidResult.table.close();
+                }
+                return;
             }
 
-            try {
-                PriorityQueue<MergeSlot> heap = new PriorityQueue<MergeSlot>();
-                boolean hasMore = true;
+            LinkedList<MergeSlot> open = Lists.newLinkedList();
+            for (SplitThread split : splits) {
+                open.add(new MergeSlot(split));
+            }
 
-                while (hasMore) {
-                    takeRecordsFromAllOpenSlots(open, heap);
-                    hasMore = mergeAndOutputOneRecord(heap, open, output);
+            PriorityQueue<MergeSlot> heap = new PriorityQueue<MergeSlot>();
+
+            while (true) {
+                // ready records in open slots and add to heap
+                while (!open.isEmpty()) {
+                    MergeSlot slot = open.removeFirst();
+                    if (slot.fetchNext()) {
+                        heap.add(slot);
+                    }
                 }
 
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+                // find the smallest on heap
+                MergeSlot smallest = heap.poll();
+                if (smallest == null)
+                    break;
+                open.add(smallest);
 
-        private void takeRecordsFromAllOpenSlots(LinkedList<MergeSlot> open, PriorityQueue<MergeSlot> heap) throws InterruptedException {
-            while (!open.isEmpty()) {
-                MergeSlot slot = open.getFirst();
-                // ready one record in the slot
-                if (slot.readySignal.poll(1, TimeUnit.SECONDS) != null) {
-                    open.removeFirst();
-                    heap.add(slot);
-                } else if (slot.isClosed()) {
-                    open.removeFirst();
-                }
-            }
-            return;
-        }
-
-        private boolean mergeAndOutputOneRecord(PriorityQueue<MergeSlot> heap, LinkedList<MergeSlot> open, ICuboidWriter output) throws IOException, InterruptedException {
-            MergeSlot smallest = heap.poll();
-            if (smallest == null)
-                return false;
-            open.add(smallest);
-
-            if (smallest.isSameKey(heap.peek())) {
-                Object[] metrics = getMetricsValues(smallest.record);
-                reuseAggrs.reset();
-                reuseAggrs.aggregate(metrics);
-                do {
-                    MergeSlot slot = heap.poll();
-                    open.add(slot);
-                    metrics = getMetricsValues(slot.record);
+                // merge with slots having the same key
+                if (smallest.isSameKey(heap.peek())) {
+                    Object[] metrics = getMetricsValues(smallest.currentRecord);
+                    reuseAggrs.reset();
                     reuseAggrs.aggregate(metrics);
-                } while (smallest.isSameKey(heap.peek()));
+                    do {
+                        MergeSlot slot = heap.poll();
+                        open.add(slot);
+                        metrics = getMetricsValues(slot.currentRecord);
+                        reuseAggrs.aggregate(metrics);
+                    } while (smallest.isSameKey(heap.peek()));
 
-                reuseAggrs.collectStates(metrics);
-                setMetricsValues(smallest.record, metrics);
+                    reuseAggrs.collectStates(metrics);
+                    setMetricsValues(smallest.currentRecord, metrics);
+                }
+
+                output.write(smallest.currentCuboidId, smallest.currentRecord);
             }
-
-            output.write(smallest.cuboidId, smallest.record);
-
-            for (MergeSlot slot : open) {
-                slot.consumedSignal.put(this);
-            }
-            return true;
         }
 
         private void setMetricsValues(GTRecord record, Object[] metricsValues) {
@@ -337,58 +349,52 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
         }
     }
 
-    private static class MergeSlot implements ICuboidWriter, Comparable<MergeSlot> {
+    private static class MergeSlot implements Comparable<MergeSlot> {
 
-        final SplitThread split;
-        final BlockingQueue<Object> readySignal = new ArrayBlockingQueue<Object>(1);
-        final BlockingQueue<Object> consumedSignal = new ArrayBlockingQueue<Object>(1);
+        final Iterator<CuboidResult> cuboidIterator;
+        IGTScanner scanner;
+        Iterator<GTRecord> recordIterator;
 
-        ICuboidWriter directOutput = null;
-        long cuboidId;
-        GTRecord record;
+        long currentCuboidId;
+        GTRecord currentRecord;
 
         public MergeSlot(SplitThread split) {
-            this.split = split;
+            cuboidIterator = split.buildResult.values().iterator();
         }
 
-        @Override
-        public void write(long cuboidId, GTRecord record) throws IOException {
-            // when only one split left
-            if (directOutput != null) {
-                directOutput.write(cuboidId, record);
-                return;
+        public boolean fetchNext() throws IOException {
+            if (recordIterator == null) {
+                if (cuboidIterator.hasNext()) {
+                    CuboidResult cuboid = cuboidIterator.next();
+                    currentCuboidId = cuboid.cuboidId;
+                    scanner = cuboid.table.scan(new GTScanRequest(cuboid.table.getInfo(), null, null, null));
+                    recordIterator = scanner.iterator();
+                } else {
+                    return false;
+                }
             }
 
-            this.cuboidId = cuboidId;
-            this.record = record;
-
-            try {
-                // signal record is ready
-                readySignal.put(this);
-
-                // wait record be consumed
-                consumedSignal.take();
-
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            if (recordIterator.hasNext()) {
+                currentRecord = recordIterator.next();
+                return true;
+            } else {
+                scanner.close();
+                recordIterator = null;
+                return fetchNext();
             }
-        }
-
-        public boolean isClosed() {
-            return split.isAlive() == false;
         }
 
         @Override
         public int compareTo(MergeSlot o) {
-            long cuboidComp = this.cuboidId - o.cuboidId;
+            long cuboidComp = this.currentCuboidId - o.currentCuboidId;
             if (cuboidComp != 0)
                 return cuboidComp < 0 ? -1 : 1;
 
             // note GTRecord.equals() don't work because the two GTRecord comes from different GridTable
-            ImmutableBitSet pk = this.record.getInfo().getPrimaryKey();
+            ImmutableBitSet pk = this.currentRecord.getInfo().getPrimaryKey();
             for (int i = 0; i < pk.trueBitCount(); i++) {
                 int c = pk.trueBitAt(i);
-                int comp = this.record.get(c).compareTo(o.record.get(c));
+                int comp = this.currentRecord.get(c).compareTo(o.currentRecord.get(c));
                 if (comp != 0)
                     return comp;
             }
