@@ -84,6 +84,8 @@ public class StreamingCLI {
                 i++;
             }
             StreamingBootstrap.getInstance(KylinConfig.getInstanceFromEnv()).start(bootstrapConfig);
+            logger.info("streaming process stop, exit with 0");
+            System.exit(0);
         } catch (Exception e) {
             printArgsError(args);
             logger.error("error start streaming", e);

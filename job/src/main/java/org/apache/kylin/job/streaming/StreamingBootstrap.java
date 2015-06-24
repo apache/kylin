@@ -236,7 +236,7 @@ public class StreamingBootstrap {
         final List<BlockingQueue<StreamMessage>> queues = Lists.newLinkedList();
 
         int clusterId = 0;
-        final ExecutorService executorService = Executors.newFixedThreadPool(10);
+        final ExecutorService executorService = Executors.newFixedThreadPool(10, new DaemonThreadFactory());
         final long targetTimestamp = startTimestamp - margin;
         for (final KafkaClusterConfig kafkaClusterConfig : streamingConfig.getKafkaClusterConfigs()) {
             final ConcurrentMap<Integer, Long> partitionIdOffsetMap = Maps.newConcurrentMap();
