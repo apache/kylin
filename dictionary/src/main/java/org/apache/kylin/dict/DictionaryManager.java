@@ -42,6 +42,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -308,20 +309,22 @@ public class DictionaryManager {
 
     private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<?> dict) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
-        ArrayList<String> existings = store.listResources(dictInfo.getResourceDir());
-        if (existings == null)
+        ArrayList<String> dictInfos = store.listResources(dictInfo.getResourceDir());
+        if (dictInfos == null || dictInfos.isEmpty()) {
             return null;
-
-        for (String existing : existings) {
-            logger.info("Checking dup dict :" + existing);
-            DictionaryInfo existingInfo = load(existing, true); // skip cache, direct load from store
-            if (existingInfo == null)
-                logger.info("existingInfo is null");
-
-            if (existingInfo != null && dict.equals(existingInfo.getDictionaryObject()))
-                return existing;
         }
+        Collections.sort(dictInfos);
 
+        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.get(0),
+                dictInfos.get(dictInfos.size() - 1),
+                DictionaryInfo.class,
+                DictionaryInfoSerializer.FULL_SERIALIZER);
+
+        for (DictionaryInfo dictionaryInfo : allResources) {
+            if (dict.equals(dictionaryInfo.getDictionaryObject())) {
+                return dictionaryInfo.getResourcePath();
+            }
+        }
         return null;
     }
 
