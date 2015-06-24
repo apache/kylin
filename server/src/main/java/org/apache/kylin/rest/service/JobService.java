@@ -45,6 +45,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -59,6 +60,9 @@ public class JobService extends BasicService {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(JobService.class);
+
+    @Autowired
+    private AccessService accessService;
 
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue) throws IOException, JobException {
         Integer limit = (null == limitValue) ? 30 : limitValue;
@@ -151,7 +155,12 @@ public class JobService extends BasicService {
             throw new JobException("invalid build type:" + buildType);
         }
         getExecutableManager().addJob(job);
-        return getSingleJobInstance(job);
+        JobInstance jobInstance = getSingleJobInstance(job);
+
+        accessService.init(jobInstance, null);
+        accessService.inherit(jobInstance, cube);
+
+        return jobInstance;
     }
 
     public JobInstance getJobInstance(String uuid) throws IOException, JobException {
@@ -275,19 +284,18 @@ public class JobService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public void resumeJob(String jobId) throws IOException, JobException {
-        getExecutableManager().resumeJob(jobId);
+    public void resumeJob(JobInstance job) throws IOException, JobException {
+        getExecutableManager().resumeJob(job.getId());
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public JobInstance cancelJob(String jobId) throws IOException, JobException {
+    public JobInstance cancelJob(JobInstance job) throws IOException, JobException {
         //        CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
         //        for (BuildCubeJob cubeJob: listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING))) {
         //            getExecutableManager().stopJob(cubeJob.getId());
         //        }
-        final JobInstance jobInstance = getJobInstance(jobId);
-        final String segmentId = jobInstance.getRelatedSegment();
-        CubeInstance cubeInstance = getCubeManager().getCube(jobInstance.getRelatedCube());
+        final String segmentId = job.getRelatedSegment();
+        CubeInstance cubeInstance = getCubeManager().getCube(job.getRelatedCube());
         final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
         if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
             // Remove this segments
@@ -296,8 +304,8 @@ public class JobService extends BasicService {
             getCubeManager().updateCube(cubeBuilder);
         }
 
-        getExecutableManager().discardJob(jobId);
-        return jobInstance;
+        getExecutableManager().discardJob(job.getId());
+        return job;
     }
 
 }
