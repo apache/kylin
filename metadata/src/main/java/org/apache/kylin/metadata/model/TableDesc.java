@@ -18,15 +18,15 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringSplitter;
+
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * Table Metadata from Source. All name should be uppercase.
@@ -42,6 +42,8 @@ public class TableDesc extends RootPersistentEntity {
     private ColumnDesc[] columns;
 
     private DatabaseDesc database;
+
+    private String identity = null;
 
     public ColumnDesc findColumnByName(String name) {
         //ignore the db name and table name if exists
@@ -73,7 +75,10 @@ public class TableDesc extends RootPersistentEntity {
     }
     
     public String getIdentity() {
-        return String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
+        if (identity == null) {
+            identity = String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
+        }
+        return identity;
     }
     
     public static String concatResourcePath(String tableIdentity) {
