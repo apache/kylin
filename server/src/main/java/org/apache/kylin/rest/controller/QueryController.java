@@ -18,50 +18,45 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
+import com.codahale.metrics.annotation.Timed;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.model.Query;
+import org.apache.kylin.rest.model.SelectedColumnMeta;
+import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.MetaRequest;
+import org.apache.kylin.rest.request.PrepareSqlRequest;
+import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.service.QueryService;
+import org.apache.kylin.rest.util.QueryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import com.codahale.metrics.annotation.Timed;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.model.Query;
-import org.apache.kylin.rest.model.SelectedColumnMeta;
-import org.apache.kylin.rest.model.TableMeta;
-import org.apache.kylin.rest.request.PrepareSqlRequest;
-import org.apache.kylin.rest.request.SQLRequest;
-import org.apache.kylin.rest.request.SaveSqlRequest;
-import org.apache.kylin.rest.service.QueryService;
-import org.apache.kylin.rest.util.QueryUtil;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Handle query requests.
@@ -86,12 +81,14 @@ public class QueryController extends BasicController {
     @ResponseBody
     @Timed(name = "query")
     public SQLResponse query(@RequestBody SQLRequest sqlRequest) {
-        long startTimestamp = System.currentTimeMillis();
+        initDebugToggles(sqlRequest);
 
+        long startTimestamp = System.currentTimeMillis();
         SQLResponse response = doQuery(sqlRequest);
         response.setDuration(System.currentTimeMillis() - startTimestamp);
-
         queryService.logQuery(sqlRequest, response, new Date(startTimestamp), new Date(System.currentTimeMillis()));
+
+        cleanupDebugToggles();
 
         return response;
     }
@@ -259,6 +256,20 @@ public class QueryController extends BasicController {
 
     public void setCacheManager(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
+    }
+
+    private void initDebugToggles(SQLRequest sqlRequest) {
+
+        Map<String, String> toggles = sqlRequest.getBackdoorToggles();
+        if (toggles == null || toggles.size() == 0) {
+            return;
+        }
+
+        BackdoorToggles.setToggles(toggles);
+    }
+
+    private void cleanupDebugToggles() {
+        BackdoorToggles.cleanToggles();
     }
 
 }

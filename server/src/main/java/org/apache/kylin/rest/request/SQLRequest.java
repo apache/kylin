@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.request;
 
+import java.util.Map;
+
 public class SQLRequest {
 
     private String sql;
@@ -26,8 +28,19 @@ public class SQLRequest {
     private Integer limit = 0;
     private boolean acceptPartial = true;
 
+    private Map<String,String> backdoorToggles;
+
     public SQLRequest() {
     }
+
+    public Map<String, String> getBackdoorToggles() {
+        return backdoorToggles;
+    }
+
+    public void setBackdoorToggles(Map<String, String> backdoorToggles) {
+        this.backdoorToggles = backdoorToggles;
+    }
+
 
     public String getProject() {
         return project;

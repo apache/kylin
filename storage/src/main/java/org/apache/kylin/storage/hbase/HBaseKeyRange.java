@@ -18,12 +18,9 @@
 
 package org.apache.kylin.storage.hbase;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.DateFormat;
@@ -36,9 +33,10 @@ import org.apache.kylin.cube.kv.FuzzyMaskEncoder;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.*;
 
 /**
  * 
@@ -46,6 +44,8 @@ import com.google.common.collect.Maps;
  * 
  */
 public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
+
+    private static final Logger logger = LoggerFactory.getLogger(HBaseKeyRange.class);
 
     private static final int FUZZY_VALUE_CAP = 20;
     private static final byte[] ZERO_TAIL_BYTES = new byte[] { 0 };
@@ -160,12 +160,22 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
             buf.append(BytesUtil.toHex(fuzzyKey.getFirst()));
             buf.append(" ");
             buf.append(BytesUtil.toHex(fuzzyKey.getSecond()));
+            buf.append(System.lineSeparator());
         }
         this.fuzzyKeyString = buf.toString();
     }
 
     private List<Pair<byte[], byte[]>> buildFuzzyKeys(Map<TblColRef, Set<String>> fuzzyValueSet) {
         ArrayList<Pair<byte[], byte[]>> result = new ArrayList<Pair<byte[], byte[]>>();
+
+        //debug/profiling purpose
+        String toggle;
+        if ((toggle = BackdoorToggles.getToggle(BackdoorToggles.DEBUG_TOGGLE_DISABLE_FUZZY_KEY)) != null) {
+            if (Boolean.valueOf(toggle)) {
+                logger.info("The execution of this query will not use fuzzy key");
+                return result;
+            }
+        }
 
         FuzzyKeyEncoder fuzzyKeyEncoder = new FuzzyKeyEncoder(cubeSeg, cuboid);
         FuzzyMaskEncoder fuzzyMaskEncoder = new FuzzyMaskEncoder(cubeSeg, cuboid);

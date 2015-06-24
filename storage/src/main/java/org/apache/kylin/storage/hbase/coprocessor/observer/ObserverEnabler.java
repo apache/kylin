@@ -24,6 +24,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -72,8 +73,17 @@ public class ObserverEnabler {
             AggregationScanner aggrScanner = new AggregationScanner(type, filter, projector, aggrs, innerScanner, ObserverBehavior.SCAN_FILTER_AGGR);
             return new ResultScannerAdapter(aggrScanner);
         } else {
+
+            //debug/profiling purpose
+            String toggle;
+            if ((toggle = BackdoorToggles.getToggle(BackdoorToggles.DEBUG_TOGGLE_OBSERVER_BEHAVIOR)) == null) {
+                toggle = ObserverBehavior.SCAN_FILTER_AGGR.toString();//default behavior
+            } else {
+                logger.info("The execution of this query will use " + toggle + " as observer's behavior");
+            }
+
             scan.setAttribute(AggregateRegionObserver.COPROCESSOR_ENABLE, new byte[] { 0x01 });
-            scan.setAttribute(AggregateRegionObserver.BEHAVIOR, ObserverBehavior.SCAN_FILTER_AGGR.toString().getBytes());
+            scan.setAttribute(AggregateRegionObserver.BEHAVIOR, toggle.getBytes());
             scan.setAttribute(AggregateRegionObserver.TYPE, CoprocessorRowType.serialize(type));
             scan.setAttribute(AggregateRegionObserver.PROJECTOR, CoprocessorProjector.serialize(projector));
             scan.setAttribute(AggregateRegionObserver.AGGREGATORS, ObserverAggregators.serialize(aggrs));
