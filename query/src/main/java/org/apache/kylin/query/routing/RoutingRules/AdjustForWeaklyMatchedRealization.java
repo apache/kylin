@@ -86,7 +86,7 @@ public class AdjustForWeaklyMatchedRealization extends RoutingRule {
             FunctionDesc functionDesc = it.next();
             if (!availableAggregations.contains(functionDesc)) {
                 // try to convert the metric to dimension to see if it works
-                TblColRef col = functionDesc.selectTblColRef(olapContext.metricsColumns, factTableName);
+                TblColRef col = functionDesc.getParameter().getColRefs().get(0);
                 functionDesc.setDimensionAsMetric(true);
                 olapContext.rewriteFields.remove(functionDesc.getRewriteFieldName());
                 if (col != null) {

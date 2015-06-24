@@ -134,7 +134,10 @@ public class CubeCapabilityChecker {
             if (functionDesc.isCountDistinct()) // calcite can not handle distinct count
                 matched = false;
 
-            TblColRef col = functionDesc.selectTblColRef(metricColumns, cubeDesc.getFactTable());
+            TblColRef col = null;
+            if (functionDesc.getParameter().getColRefs().size() > 0)
+                col = functionDesc.getParameter().getColRefs().get(0);
+
             if (col == null || !cubeDesc.listDimensionColumnsIncludingDerived().contains(col)) {
                 matched = false;
             }

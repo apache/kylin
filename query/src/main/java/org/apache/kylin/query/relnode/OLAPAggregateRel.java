@@ -18,12 +18,7 @@
 
 package org.apache.kylin.query.relnode;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import net.hydromatic.optiq.AggregateFunction;
 import net.hydromatic.optiq.FunctionParameter;
@@ -214,6 +209,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
                     parameter = new ParameterDesc();
                     parameter.setValue(column.getName());
                     parameter.setType("column");
+                    parameter.setColRefs(Arrays.asList(column));
                 }
             }
             FunctionDesc aggFunc = new FunctionDesc();
