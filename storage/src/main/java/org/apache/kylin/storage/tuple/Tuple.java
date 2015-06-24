@@ -18,10 +18,6 @@
 
 package org.apache.kylin.storage.tuple;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.cube.CubeManager;
@@ -30,6 +26,10 @@ import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author xjiang
@@ -82,7 +82,7 @@ public class Tuple implements ITuple {
         return info.getDataType(fieldName);
     }
 
-    private void setFieldObjectValue(String fieldName, Object fieldValue) {
+    public void setFieldObjectValue(String fieldName, Object fieldValue) {
         int index = info.getFieldIndex(fieldName);
         values[index] = fieldValue;
     }
