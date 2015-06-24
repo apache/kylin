@@ -85,7 +85,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
     public void test() throws Exception {
 
         InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(cube.getDescriptor(), dictionaryMap);
-        cubeBuilder.setOutputOrder(true);
+        //DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
         cubeBuilder.setConcurrentThreads(THREADS);
         
         ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);

@@ -1,8 +1,9 @@
 package org.apache.kylin.storage.gridtable;
 
+import java.io.Closeable;
 import java.io.IOException;
 
-public class GridTable {
+public class GridTable implements Closeable {
 
     final GTInfo info;
     final IGTStore store;
@@ -49,5 +50,12 @@ public class GridTable {
 
     public IGTStore getStore() {
         return store;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (store instanceof Closeable) {
+            ((Closeable) store).close();
+        }
     }
 }

@@ -19,8 +19,6 @@
 package org.apache.kylin.cube.cuboid;
 
 /** 
- * @author George Song (ysong1)
- * 
  */
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,6 +39,18 @@ public class CuboidScheduler {
         this.size = cube.getRowkey().getRowKeyColumns().length;
         this.max = (long) Math.pow(2, size) - 1;
         this.cache = new ConcurrentHashMap<Long, List<Long>>();
+    }
+    
+    public int getCuboidCount() {
+        return getCuboidCount(Cuboid.getBaseCuboidId(cubeDef));
+    }
+
+    private int getCuboidCount(long cuboidId) {
+        int r = 1;
+        for (Long child : getSpanningCuboid(cuboidId)) {
+            r += getCuboidCount(child);
+        }
+        return r;
     }
 
     public List<Long> getSpanningCuboid(long cuboid) {
