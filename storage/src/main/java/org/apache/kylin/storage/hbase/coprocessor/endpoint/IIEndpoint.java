@@ -22,22 +22,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
-
-import org.apache.kylin.invertedindex.index.RawTableRecord;
-import org.apache.kylin.invertedindex.index.Slice;
-import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
-import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
-import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
-import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
-
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -49,6 +34,15 @@ import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.invertedindex.index.RawTableRecord;
+import org.apache.kylin.invertedindex.index.Slice;
+import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
+import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
+import org.apache.kylin.storage.hbase.coprocessor.*;
+import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -137,7 +131,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
             Iterator<RawTableRecord> iterator = slice.iterateWithBitmap(result);
             while (iterator.hasNext()) {
                 byte[] data = iterator.next().getBytes();
-                CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
+                AggrKey aggKey = projector.getAggrKey(data);
                 MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
                 aggregators.aggregate(bufs, data);
                 aggCache.checkMemoryUsage();
@@ -145,8 +139,8 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         }
 
         byte[] metricBuffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
-        for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
-            CoprocessorProjector.AggrKey aggrKey = entry.getKey();
+        for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+            AggrKey aggrKey = entry.getKey();
             IIProtos.IIResponse.IIRow.Builder rowBuilder = IIProtos.IIResponse.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
             int length = aggregators.serializeMetricValues(entry.getValue(), metricBuffer);
             rowBuilder.setMeasures(ByteString.copyFrom(metricBuffer, 0, length));
