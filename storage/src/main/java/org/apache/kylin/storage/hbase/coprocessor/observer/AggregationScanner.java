@@ -18,19 +18,18 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.observer;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.HRegionInfo;
-import org.apache.hadoop.hbase.regionserver.RegionScanner;
 
-import org.apache.kylin.metadata.measure.MeasureAggregator;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author yangli9
@@ -39,10 +38,13 @@ import org.apache.kylin.metadata.measure.MeasureAggregator;
 public class AggregationScanner implements RegionScanner {
 
     private RegionScanner outerScanner;
+    private ObserverBehavior behavior;
 
-    public AggregationScanner(CoprocessorRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner) throws IOException {
+    public AggregationScanner(CoprocessorRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner, ObserverBehavior behavior) throws IOException {
 
         AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
+
+        this.behavior = behavior;
 
         ObserverAggregationCache aggCache;
         Stats stats = new Stats();
@@ -73,14 +75,19 @@ public class AggregationScanner implements RegionScanner {
 
             Cell cell = results.get(0);
             tuple.setUnderlying(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength());
-            if (filter != null && filter.evaluate(tuple) == false)
-                continue;
 
-            AggrKey aggKey = projector.getAggrKey(results);
-            MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-            aggregators.aggregate(bufs, results);
+            if (behavior.ordinal() >= ObserverBehavior.SCAN_FILTER.ordinal()) {
+                if (filter != null && filter.evaluate(tuple) == false)
+                    continue;
 
-            aggCache.checkMemoryUsage();
+                if (behavior.ordinal() >= ObserverBehavior.SCAN_FILTER_AGGR.ordinal()) {
+                    AggrKey aggKey = projector.getAggrKey(results);
+                    MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
+                    aggregators.aggregate(bufs, results);
+
+                    aggCache.checkMemoryUsage();
+                }
+            }
         }
         return aggCache;
     }
