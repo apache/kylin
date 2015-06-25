@@ -18,17 +18,18 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import java.util.Map;
-
+import com.google.common.collect.Maps;
+import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
 
 /**
  */
 @SuppressWarnings("rawtypes")
 public abstract class AggregationCache {
-    static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
+    static final long MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
+    static final long MEMOERY_MAX_BYTES = Runtime.getRuntime().maxMemory();
     protected final Map<AggrKey, MeasureAggregator[]> aggBufMap;
     transient int rowMemBytes;
     private AggrKey firstKey = null;
@@ -73,9 +74,15 @@ public abstract class AggregationCache {
             }
         }
         int size = aggBufMap.size();
-        int memUsage = (40 + rowMemBytes) * size;
+        long memUsage = (40 + rowMemBytes) * size;
         if (memUsage > MEMORY_USAGE_CAP) {
-            throw new RuntimeException("Kylin coprocess memory usage goes beyond cap, (40 + " + rowMemBytes + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abort coprocessor.");
+            throw new RuntimeException("Kylin coprocessor memory usage goes beyond cap, (40 + " + rowMemBytes + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abort coprocessor.");
+        }
+
+        //If less than 5% of max memory
+        long avail = MemoryBudgetController.getSystemAvailBytes();
+        if (avail < (MEMOERY_MAX_BYTES / 20)) {
+            throw new RuntimeException("Running Kylin coprocessor when too little memory is left. Abort coprocessor. Current available memory is " + avail + ". Max memory is " + MEMOERY_MAX_BYTES);
         }
     }
 }
