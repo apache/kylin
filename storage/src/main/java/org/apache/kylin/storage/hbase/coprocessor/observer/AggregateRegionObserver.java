@@ -48,7 +48,6 @@ public class AggregateRegionObserver extends BaseRegionObserver {
     static final String FILTER = "_Filter";
     static final String BEHAVIOR = "_Behavior";
 
-
     @Override
     public final RegionScanner postScannerOpen(final ObserverContext<RegionCoprocessorEnvironment> ctxt, final Scan scan, final RegionScanner innerScanner) throws IOException {
 
@@ -85,8 +84,11 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         byte[] filterBytes = scan.getAttribute(FILTER);
         CoprocessorFilter filter = CoprocessorFilter.deserialize(filterBytes);
 
+        ObserverBehavior observerBehavior = ObserverBehavior.SCAN_FILTER_AGGR;
         byte[] behavior = scan.getAttribute(BEHAVIOR);
-        ObserverBehavior observerBehavior = ObserverBehavior.valueOf(new String(behavior));
+        if (behavior != null && behavior.length != 0) {
+            observerBehavior = ObserverBehavior.valueOf(new String(behavior));
+        }
 
         // start/end region operation & sync on scanner is suggested by the
         // javadoc of RegionScanner.nextRaw()
@@ -95,7 +97,7 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         region.startRegionOperation();
         try {
             synchronized (innerScanner) {
-                return new AggregationScanner(type, filter, projector, aggregators, innerScanner,observerBehavior);
+                return new AggregationScanner(type, filter, projector, aggregators, innerScanner, observerBehavior);
             }
         } finally {
             region.closeRegionOperation();
