@@ -17,13 +17,13 @@
 
 package org.apache.kylin.job.inmemcubing;
 
-import static org.junit.Assert.*;
+import org.apache.kylin.common.util.MemoryBudgetController;
+import org.apache.kylin.common.util.MemoryBudgetController.NotEnoughBudgetException;
+import org.junit.Test;
 
 import java.util.ArrayList;
 
-import org.apache.kylin.job.inmemcubing.MemoryBudgetController;
-import org.apache.kylin.job.inmemcubing.MemoryBudgetController.NotEnoughBudgetException;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class MemoryBudgetControllerTest {
 

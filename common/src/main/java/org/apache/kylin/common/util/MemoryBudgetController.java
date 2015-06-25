@@ -15,13 +15,13 @@
  *  limitations under the License.
  */
 
-package org.apache.kylin.job.inmemcubing;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
+package org.apache.kylin.common.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MemoryBudgetController {
 

@@ -17,7 +17,7 @@
 
 package org.apache.kylin.job.inmemcubing;
 
-import static org.apache.kylin.job.inmemcubing.MemoryBudgetController.*;
+import static org.apache.kylin.common.util.MemoryBudgetController.*;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -34,8 +34,9 @@ import java.nio.file.StandardOpenOption;
 import java.util.NoSuchElementException;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.job.inmemcubing.MemoryBudgetController.MemoryConsumer;
-import org.apache.kylin.job.inmemcubing.MemoryBudgetController.NotEnoughBudgetException;
+import org.apache.kylin.common.util.MemoryBudgetController;
+import org.apache.kylin.common.util.MemoryBudgetController.MemoryConsumer;
+import org.apache.kylin.common.util.MemoryBudgetController.NotEnoughBudgetException;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.GTRecord;
 import org.apache.kylin.storage.gridtable.GTRowBlock;
