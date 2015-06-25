@@ -168,13 +168,10 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
     private List<Pair<byte[], byte[]>> buildFuzzyKeys(Map<TblColRef, Set<String>> fuzzyValueSet) {
         ArrayList<Pair<byte[], byte[]>> result = new ArrayList<Pair<byte[], byte[]>>();
 
-        //debug/profiling purpose
-        String toggle;
-        if ((toggle = BackdoorToggles.getToggle(BackdoorToggles.DEBUG_TOGGLE_DISABLE_FUZZY_KEY)) != null) {
-            if (Boolean.valueOf(toggle)) {
-                logger.info("The execution of this query will not use fuzzy key");
-                return result;
-            }
+        // debug/profiling purpose
+        if (BackdoorToggles.getDisableFuzzyKey()) {
+            logger.info("The execution of this query will not use fuzzy key");
+            return result;
         }
 
         FuzzyKeyEncoder fuzzyKeyEncoder = new FuzzyKeyEncoder(cubeSeg, cuboid);

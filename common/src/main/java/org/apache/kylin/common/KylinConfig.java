@@ -40,8 +40,6 @@ public class KylinConfig {
 
     public static final String KYLIN_STORAGE_URL = "kylin.storage.url";
 
-    public static final String PROP_SCAN_THRESHOLD = "PROP_SCAN_THRESHOLD";
-
     public static final String KYLIN_METADATA_URL = "kylin.metadata.url";
 
     public static final String KYLIN_REST_SERVERS = "kylin.rest.servers";
@@ -91,8 +89,6 @@ public class KylinConfig {
     public static final String KYLIN_JOB_JAR = "kylin.job.jar";
 
     public static final String COPROCESSOR_LOCAL_JAR = "kylin.coprocessor.local.jar";
-
-    public static final String COPROCESSOR_SCAN_BITS_THRESHOLD = "kylin.coprocessor.scan.bits.threshold";
 
     public static final String KYLIN_JOB_LOG_DIR = "kylin.job.log.dir";
 
@@ -345,10 +341,6 @@ public class KylinConfig {
         System.setProperty(COPROCESSOR_LOCAL_JAR, path);
     }
 
-    public int getCoprocessorScanBitsThreshold() {
-        return Integer.parseInt(getOptional(COPROCESSOR_SCAN_BITS_THRESHOLD, "32"));
-    }
-
     public double getDefaultHadoopJobReducerInputMB() {
         return Double.parseDouble(getOptional(KYLIN_JOB_MAPREDUCE_DEFAULT_REDUCE_INPUT_MB, "500"));
     }
@@ -428,9 +420,13 @@ public class KylinConfig {
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
     }
-
+    
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
+    }
+    
+    public boolean getQueryRunLocalCoprocessor() {
+        return Boolean.parseBoolean(getOptional("kylin.query.run.local.coprocessor", "false"));
     }
 
     public Long getQueryDurationCacheThreshold() {
@@ -443,10 +439,6 @@ public class KylinConfig {
 
     public boolean isQuerySecureEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.query.security.enabled", "false"));
-    }
-
-    public int getConcurrentScanThreadCount() {
-        return Integer.parseInt(this.getOptional("kylin.query.scan.thread.count", "40"));
     }
 
     public boolean isQueryCacheEnabled() {
@@ -635,15 +627,6 @@ public class KylinConfig {
 
     public void setRemoteHadoopCliPassword(String v) {
         kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_PASSWORD, v);
-    }
-
-    /**
-     * return -1 if there is no setting
-     *
-     * @return
-     */
-    public int getPropScanThreshold() {
-        return kylinConfig.getInt(PROP_SCAN_THRESHOLD, -1);
     }
 
     public String getProperty(String key, String defaultValue) {
