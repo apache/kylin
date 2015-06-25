@@ -84,7 +84,7 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         byte[] filterBytes = scan.getAttribute(FILTER);
         CoprocessorFilter filter = CoprocessorFilter.deserialize(filterBytes);
 
-        ObserverBehavior observerBehavior = ObserverBehavior.SCAN_FILTER_AGGR;
+        ObserverBehavior observerBehavior = ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM;
         byte[] behavior = scan.getAttribute(BEHAVIOR);
         if (behavior != null && behavior.length != 0) {
             observerBehavior = ObserverBehavior.valueOf(new String(behavior));

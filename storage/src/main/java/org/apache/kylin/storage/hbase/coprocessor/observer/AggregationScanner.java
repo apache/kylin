@@ -85,7 +85,9 @@ public class AggregationScanner implements RegionScanner {
                     MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
                     aggregators.aggregate(bufs, results);
 
-                    aggCache.checkMemoryUsage();
+                    if (behavior.ordinal() >= ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
+                        aggCache.checkMemoryUsage();
+                    }
                 }
             }
         }
