@@ -294,16 +294,23 @@ public class DictionaryManager {
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         ArrayList<String> existings = store.listResources(dictInfo.getResourceDir());
-        if (existings == null)
+        if (existings == null || existings.isEmpty()) {
             return null;
+        }
+        Collections.sort(existings);
+
+        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(existings.get(0),
+                existings.get(existings.size() - 1),
+                DictionaryInfo.class,
+                DictionaryInfoSerializer.INFO_SERIALIZER);
 
         TableSignature input = dictInfo.getInput();
-        for (String existing : existings) {
-            DictionaryInfo existingInfo = load(existing, false); // skip cache, direct load from store
-            if (input.equals(existingInfo.getInput()))
-                return existing;
-        }
 
+        for (DictionaryInfo dictionaryInfo : allResources) {
+            if (input.equals(dictionaryInfo.getInput())) {
+                return dictionaryInfo.getResourcePath();
+            }
+        }
         return null;
     }
 
