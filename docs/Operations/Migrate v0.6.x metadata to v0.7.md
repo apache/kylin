@@ -38,4 +38,11 @@ Now the new format of metadata will be upload to the HBase to replace the old fo
 	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar  org.apache.kylin.common.persistence.ResourceTool  reset
 	hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar  org.apache.kylin.common.persistence.ResourceTool  upload  ./meta_dump_v2
 
+# Update HTables to use new coprocessor
+
+Kylin uses HBase coprocessor to do server side aggregation; When Kylin instance upgrades to V0.7, the HTables that created in V0.6 should also be updated to use the new coprocessor:
+
+    hbase  org.apache.hadoop.util.RunJar  ${KYLIN_HOME}/lib/kylin-job-x.x.x-SNAPSHOT-job.jar  org.apache.kylin.job.tools.DeployCoprocessorCLI ${KYLIN_HOME}/lib/kylin-coprocessor-x.x.x-SNAPSHOT.jar
+
+
 Done; Update your v0.7 Kylin configure to point to the same metadata HBase table, then start Kylin server; Check whether all cubes and other information are kept;
