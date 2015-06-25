@@ -37,6 +37,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -54,7 +57,6 @@ public class ObserverEnabler {
     private static final Logger logger = LoggerFactory.getLogger(ObserverEnabler.class);
 
     static final String FORCE_COPROCESSOR = "forceObserver";
-    static final boolean DEBUG_LOCAL_COPROCESSOR = false;
     static final Map<String, Boolean> CUBE_OVERRIDES = Maps.newConcurrentMap();
 
     public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid, TupleFilter tupleFiler, //
@@ -68,8 +70,10 @@ public class ObserverEnabler {
         CoprocessorFilter filter = CoprocessorFilter.fromFilter(segment, tupleFiler, FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_GLOBAL_DICT);
         CoprocessorProjector projector = CoprocessorProjector.makeForObserver(segment, cuboid, groupBy);
         ObserverAggregators aggrs = ObserverAggregators.fromValueDecoders(rowValueDecoders);
+        
+        boolean localCoprocessor = KylinConfig.getInstanceFromEnv().getQueryRunLocalCoprocessor() || BackdoorToggles.getRunLocalCoprocessor();
 
-        if (DEBUG_LOCAL_COPROCESSOR) {
+        if (localCoprocessor) {
             RegionScanner innerScanner = new RegionScannerAdapter(table.getScanner(scan));
             AggregationScanner aggrScanner = new AggregationScanner(type, filter, projector, aggrs, innerScanner);
             return new ResultScannerAdapter(aggrScanner);
