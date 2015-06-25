@@ -61,6 +61,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
 
     private ExecutableManager executableManager;
+    private FetcherRunner fetcher;
     private ScheduledExecutorService fetcherPool;
     private ExecutorService jobPool;
     private DefaultContext context;
@@ -80,7 +81,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private class FetcherRunner implements Runnable {
 
         @Override
-        public void run() {
+        synchronized public void run() {
             // logger.debug("Job Fetcher is running...");
             Map<String, Executable> runningJobs = context.getRunningJobs();
             if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
@@ -130,6 +131,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         public void run() {
             try {
                 executable.execute(context);
+                // trigger the next step asap
+                fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
             } catch (ExecuteException e) {
                 logger.error("ExecuteException job:" + executable.getId(), e);
             } catch (Exception e) {
@@ -231,7 +234,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
             }
         });
 
-        fetcherPool.scheduleAtFixedRate(new FetcherRunner(), 10, ExecutableConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        fetcher = new FetcherRunner();
+        fetcherPool.scheduleAtFixedRate(fetcher, 10, ExecutableConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
         hasStarted = true;
     }
 
