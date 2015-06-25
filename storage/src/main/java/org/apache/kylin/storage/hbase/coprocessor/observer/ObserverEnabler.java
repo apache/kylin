@@ -73,14 +73,14 @@ public class ObserverEnabler {
 
         if (localCoprocessor) {
             RegionScanner innerScanner = new RegionScannerAdapter(table.getScanner(scan));
-            AggregationScanner aggrScanner = new AggregationScanner(type, filter, projector, aggrs, innerScanner, ObserverBehavior.SCAN_FILTER_AGGR);
+            AggregationScanner aggrScanner = new AggregationScanner(type, filter, projector, aggrs, innerScanner, ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM);
             return new ResultScannerAdapter(aggrScanner);
         } else {
 
             // debug/profiling purpose
             String toggle = BackdoorToggles.getObserverBehavior();
             if (toggle == null) {
-                toggle = ObserverBehavior.SCAN_FILTER_AGGR.toString(); //default behavior
+                toggle = ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString(); //default behavior
             } else {
                 logger.info("The execution of this query will use " + toggle + " as observer's behavior");
             }
