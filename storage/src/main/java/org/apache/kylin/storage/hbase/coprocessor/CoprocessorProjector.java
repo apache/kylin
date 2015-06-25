@@ -18,11 +18,6 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.hadoop.hbase.Cell;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
@@ -31,6 +26,11 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author yangli9
@@ -102,10 +102,11 @@ public class CoprocessorProjector {
     // ============================================================================
 
     final byte[] groupByMask; // mask out columns that are not needed (by group by)
-    final AggrKey aggrKey = new AggrKey();
+    final AggrKey aggrKey;
 
     public CoprocessorProjector(byte[] groupByMask) {
         this.groupByMask = groupByMask;
+        this.aggrKey = new AggrKey(this.groupByMask);
     }
 
     public AggrKey getAggrKey(List<Cell> rowCells) {
@@ -123,76 +124,4 @@ public class CoprocessorProjector {
         aggrKey.set(row, 0);
         return aggrKey;
     }
-
-    public class AggrKey implements Comparable<AggrKey> {
-        byte[] data;
-        int offset;
-
-        public byte[] get() {
-            return data;
-        }
-
-        public int offset() {
-            return offset;
-        }
-
-        public int length() {
-            return groupByMask.length;
-        }
-
-        void set(byte[] data, int offset) {
-            this.data = data;
-            this.offset = offset;
-        }
-
-        public AggrKey copy() {
-            AggrKey copy = new AggrKey();
-            copy.set(new byte[length()], 0);
-            System.arraycopy(this.data, this.offset, copy.data, copy.offset, length());
-            return copy;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 1;
-            for (int i = 0, j = offset, n = length(); i < n; i++, j++) {
-                if (groupByMask[i] != 0)
-                    hash = (31 * hash) + (int) data[j];
-            }
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            AggrKey other = (AggrKey) obj;
-            if (this.length() != other.length())
-                return false;
-
-            return compareTo(other) == 0;
-        }
-
-        @Override
-        public int compareTo(AggrKey o) {
-            int comp = this.length() - o.length();
-            if (comp != 0)
-                return comp;
-
-            int n = this.length();
-            for (int i = 0, j = offset, k = o.offset; i < n; i++, j++, k++) {
-                if (groupByMask[i] != 0) {
-                    comp = BytesUtil.compareByteUnsigned(this.data[j], o.data[k]);
-                    if (comp != 0)
-                        return comp;
-                }
-            }
-            return 0;
-        }
-    }
-
 }

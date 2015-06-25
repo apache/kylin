@@ -22,6 +22,7 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
@@ -80,7 +81,7 @@ public class AggregationScanner implements RegionScanner {
                     continue;
 
                 if (behavior.ordinal() >= ObserverBehavior.SCAN_FILTER_AGGR.ordinal()) {
-                    CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(results);
+                    AggrKey aggKey = projector.getAggrKey(results);
                     MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
                     aggregators.aggregate(bufs, results);
 

@@ -18,19 +18,17 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import static org.junit.Assert.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.kylin.common.util.Bytes;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector.AggrKey;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author yangli9

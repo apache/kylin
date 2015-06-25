@@ -19,8 +19,8 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
 import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.coprocessor.AggregationCache;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +41,7 @@ public class EndpointAggregationCache extends AggregationCache {
         return this.aggregators.createBuffer();
     }
 
-    public Set<Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]>> getAllEntries() {
+    public Set<Map.Entry<AggrKey, MeasureAggregator[]>> getAllEntries() {
         return aggBufMap.entrySet();
     }
 }

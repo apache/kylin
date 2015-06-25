@@ -18,29 +18,30 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import static org.junit.Assert.assertEquals;
-
+import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.model.*;
+import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
-import org.apache.hadoop.io.LongWritable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
@@ -173,7 +174,7 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
 
         for (int i = 0; i < tableData.size(); ++i) {
             byte[] data = tableData.get(i).getBytes();
-            CoprocessorProjector.AggrKey aggKey = projector.getAggrKey(data);
+            AggrKey aggKey = projector.getAggrKey(data);
             MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
             aggregators.aggregate(bufs, data);
             aggCache.checkMemoryUsage();
@@ -183,7 +184,7 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
 
         long sumTotal = 0;
         long minTotal = 0;
-        for (Map.Entry<CoprocessorProjector.AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
+        for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
             sumTotal += ((LongWritable) entry.getValue()[0].getState()).get();
             minTotal += ((LongWritable) entry.getValue()[1].getState()).get();
 

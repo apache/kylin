@@ -30,7 +30,7 @@ import java.util.SortedMap;
 public abstract class AggregationCache {
     transient int rowMemBytes;
     static final int MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
-    protected final SortedMap<CoprocessorProjector.AggrKey, MeasureAggregator[]> aggBufMap;
+    protected final SortedMap<AggrKey, MeasureAggregator[]> aggBufMap;
 
     public AggregationCache() {
         this.aggBufMap = Maps.newTreeMap();
@@ -38,7 +38,7 @@ public abstract class AggregationCache {
 
     public abstract MeasureAggregator[] createBuffer();
 
-    public MeasureAggregator[] getBuffer(CoprocessorProjector.AggrKey aggkey) {
+    public MeasureAggregator[] getBuffer(AggrKey aggkey) {
         MeasureAggregator[] aggBuf = aggBufMap.get(aggkey);
         if (aggBuf == null) {
             aggBuf = createBuffer();
