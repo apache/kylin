@@ -30,6 +30,7 @@ import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeDescUpgrader;
 import org.apache.kylin.cube.CubeManager;
@@ -54,8 +55,7 @@ import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.*;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -101,6 +101,7 @@ public class CubeMetadataUpgrade {
         upgradeProjectInstance();
         upgradeCubeInstance();
         upgradeJobInstance();
+        copyDictionaryForFK();
         verify();
 
     }
@@ -395,6 +396,7 @@ public class CubeMetadataUpgrade {
                     newInstance.setStatus(RealizationStatusEnum.READY);
                 }
 
+
                 List<org.apache.kylin.cube.CubeSegment> newSegments = Lists.newArrayList();
                 // segment
                 for (CubeSegment segment : cubeInstance.getSegments()) {
@@ -449,9 +451,68 @@ public class CubeMetadataUpgrade {
         }
     }
 
+    private void copyDictionaryForFK() {
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        List<org.apache.kylin.cube.CubeInstance> cubeInstances = cubeManager.listAllCubes();
+
+        Set<String> changedCubes = Sets.newHashSet();
+        for (org.apache.kylin.cube.CubeInstance newInstance : cubeInstances) {
+
+            boolean updated = false;
+            DataModelDesc dataModelDesc = null;
+            try {
+                String modelName = this.getCubeDescManager().getCubeDesc(newInstance.getDescName()).getModelName();
+                dataModelDesc = this.getMetadataManager().getDataModelDesc(modelName);
+                Map<String, String> pkToFK = Maps.newHashMap();
+                for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
+                    if (lookupDesc.getJoin() != null) {
+                        JoinDesc join = lookupDesc.getJoin();
+                        for (int i=0; i< join.getForeignKey().length; i++) {
+                            pkToFK.put(lookupDesc.getTable() + "/" +join.getPrimaryKey()[i], dataModelDesc.getFactTable() + "/" +join.getForeignKey()[i]);
+                        }
+                    }
+                }
+
+                List<Pair<String, String>> newDictionaries = Lists.newArrayList();
+
+                // segment
+                for (org.apache.kylin.cube.CubeSegment newSeg : newInstance.getSegments()) {
+
+                    for (Map.Entry<String, String> e : newSeg.getDictionaries().entrySet()) {
+                        String key = e.getKey();
+                        if (pkToFK.containsKey(key) && !newSeg.getDictionaries().containsKey(pkToFK.get(key))) {
+                            logger.debug("Duplicate dictionary for FK " + pkToFK.get(key) + " in cube " + newInstance.getName());
+                            changedCubes.add(newInstance.getName());
+                            newDictionaries.add(new Pair(pkToFK.get(key), e.getValue()));
+
+                        }
+                    }
+                    for(Pair<String, String> dict: newDictionaries) {
+                        newSeg.getDictionaries().put(dict.getFirst(), dict.getSecond());
+                        updated = true;
+                    }
+                }
+
+                if (updated)
+                    store.putResource(newInstance.getResourcePath(), newInstance, CubeManager.CUBE_SERIALIZER);
+            } catch (Exception e) {
+                logger.error("Error during upgrade cube instance " + newInstance.getName(), e);
+            }
+        }
+
+        if (changedCubes.size() > 0)
+            logger.info("Updated these cubeInstances: " + changedCubes);
+    }
+
     private MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(config);
     }
+
+
+    private CubeDescManager getCubeDescManager() {
+        return CubeDescManager.getInstance(config);
+    }
+
 
     private ResourceStore getStore() {
         return ResourceStore.getStore(config);
@@ -650,33 +711,6 @@ public class CubeMetadataUpgrade {
     }
 
 
-    public static void main1(String[] args) {
-
-        if (!(args != null && args.length == 1)) {
-            System.out.println("Usage: java CubeMetadataUpgrade <metadata_export_folder>; e.g, /export/kylin/meta");
-            return;
-        }
-
-        String exportFolder = args[0];
-
-        File oldMetaFolder = new File(exportFolder);
-        if (!oldMetaFolder.exists()) {
-            System.out.println("Provided folder doesn't exist: '" + exportFolder + "'");
-            return;
-        }
-
-        if (!oldMetaFolder.isDirectory()) {
-            System.out.println("Provided folder is not a directory: '" + exportFolder + "'");
-            return;
-        }
-
-
-        String newMetadataUrl = oldMetaFolder.getAbsolutePath() + "_v2";
-        CubeMetadataUpgrade instance = new CubeMetadataUpgrade(newMetadataUrl);
-        instance.verify();
-    }
-
-
     public static void main(String[] args) {
 
         if (!(args != null && (args.length == 1 || args.length == 2))) {
@@ -695,6 +729,7 @@ public class CubeMetadataUpgrade {
         if (verify) {
             instance = new CubeMetadataUpgrade(exportFolder);
             instance.verify();
+            instance.addDictionaryForFK();
         } else {
             File oldMetaFolder = new File(exportFolder);
             if (!oldMetaFolder.exists()) {
