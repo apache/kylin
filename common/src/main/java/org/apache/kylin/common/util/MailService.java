@@ -47,15 +47,25 @@ public class MailService {
     }
 
     public MailService(KylinConfig config) {
-        enabled = "true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "false"));
-        host = config.getProperty(KylinConfig.MAIL_HOST, "");
-        username = config.getProperty(KylinConfig.MAIL_USERNAME, "");
-        password = config.getProperty(KylinConfig.MAIL_PASSWORD, "");
-        sender = config.getProperty(KylinConfig.MAIL_SENDER, "");
+        this("true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "false")),
+                config.getProperty(KylinConfig.MAIL_HOST, ""),
+                config.getProperty(KylinConfig.MAIL_USERNAME, ""),
+                config.getProperty(KylinConfig.MAIL_PASSWORD, ""),
+                config.getProperty(KylinConfig.MAIL_SENDER, "")
+                );
+    }
+
+    public MailService(boolean enabled, String host, String username, String password, String sender) {
+        this.enabled = enabled;
+        this.host = host;
+        this.username = username;
+        this.password = password;
+        this.sender = sender;
 
         if (enabled) {
-            if (host.isEmpty())
+            if (host.isEmpty()) {
                 throw new RuntimeException("mail service host is empty");
+            }
         }
     }
 
@@ -66,7 +76,18 @@ public class MailService {
      * @return true or false indicating whether the email was delivered successfully
      * @throws IOException
      */
-    public boolean sendMail(List<String> receivers, String subject, String content) throws IOException {
+    public boolean sendMail(List<String> receivers, String subject, String content) {
+        return sendMail(receivers, subject, content, true);
+    }
+
+    /**
+     * @param receivers
+     * @param subject
+     * @param content
+     * @return true or false indicating whether the email was delivered successfully
+     * @throws IOException
+     */
+    public boolean sendMail(List<String> receivers, String subject, String content, boolean isHtmlMsg) {
 
         if (!enabled) {
             logger.info("Email service is disabled; this mail will not be delivered: " + subject);
@@ -89,7 +110,11 @@ public class MailService {
             email.setFrom(sender);
             email.setSubject(subject);
             email.setCharset("UTF-8");
-            ((HtmlEmail) email).setHtmlMsg(content);
+            if (isHtmlMsg) {
+                ((HtmlEmail) email).setHtmlMsg(content);
+            } else {
+                ((HtmlEmail) email).setTextMsg(content);
+            }
             email.send();
             email.getMailSession();
 

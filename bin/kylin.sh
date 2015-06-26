@@ -136,6 +136,39 @@ then
     else
         echo
     fi
+elif [ $1 == "monitor" ]
+then
+    echo "monitor job"
+    tomcat_root=${dir}/../tomcat
+    export tomcat_root
+    useSandbox=`sh ${dir}/check-sandbox-properties.sh`
+    spring_profile="default"
+    if [ "$useSandbox" = "true" ]
+        then spring_profile="sandbox"
+    fi
+
+    #retrive $hive_dependency and $hbase_dependency
+    source ${dir}/find-hive-dependency.sh
+    source ${dir}/find-hbase-dependency.sh
+    #retrive $KYLIN_EXTRA_START_OPTS
+    if [ -f "${dir}/setenv.sh" ]
+        then source ${dir}/setenv.sh
+    fi
+
+    mkdir -p ${KYLIN_HOME}/ext
+    export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
+    export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
+
+    # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
+    hbase ${KYLIN_EXTRA_START_OPTS} \
+    -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
+    -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
+    -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
+    -Dkylin.hive.dependency=${hive_dependency} \
+    -Dkylin.hbase.dependency=${hbase_dependency} \
+    -Dspring.profiles.active=${spring_profile} \
+    org.apache.kylin.job.monitor.MonitorCLI $@ > ${KYLIN_HOME}/logs/monitor.log 2>&1
+    exit 0
 else
     echo "usage: kylin.sh start or kylin.sh stop"
     exit 1
