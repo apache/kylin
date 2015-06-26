@@ -108,10 +108,9 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         final Map<TblColRef, Dictionary<?>> dictionaryMap = buildDictionary(cubeInstance, parsedStreamMessages);
         writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);
 
-        final HTableInterface hTable = createHTable(cubeSegment);
-
-        final CubeStreamRecordWriter gtRecordWriter = new CubeStreamRecordWriter(cubeDesc, hTable);
         InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), dictionaryMap);
+        final HTableInterface hTable = createHTable(cubeSegment);
+        final CubeStreamRecordWriter gtRecordWriter = new CubeStreamRecordWriter(cubeDesc, hTable);
 
         executorService.submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, gtRecordWriter)).get();
         gtRecordWriter.flush();
