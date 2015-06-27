@@ -729,7 +729,7 @@ public class CubeMetadataUpgrade {
         if (verify) {
             instance = new CubeMetadataUpgrade(exportFolder);
             instance.verify();
-            instance.addDictionaryForFK();
+            instance.copyDictionaryForFK();
         } else {
             File oldMetaFolder = new File(exportFolder);
             if (!oldMetaFolder.exists()) {
