@@ -32,6 +32,10 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.StringBytesConverter;
+import org.apache.kylin.dict.TrieDictionary;
+import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.metadata.model.TableDesc;
 
 /**
@@ -44,6 +48,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     private TableSignature signature;
     @JsonProperty("column_delimeter")
     private String columnDelimeter;
+    @JsonProperty("useDictionary")
+    private Boolean useDictionary;
 
     private ArrayList<String[]> rows;
 
@@ -54,6 +60,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     SnapshotTable(ReadableTable table) throws IOException {
         this.signature = table.getSignature();
         this.columnDelimeter = table.getColumnDelimeter();
+        this.useDictionary = Boolean.TRUE;
     }
 
     public void takeSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
@@ -154,13 +161,37 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         if (rows.size() > 0) {
             int n = rows.get(0).length;
             out.writeInt(n);
-            for (int i = 0; i < rows.size(); i++) {
-                String[] row = rows.get(i);
-                for (int j = 0; j < n; j++) {
-                    out.writeUTF(row[j]);
+
+            if (this.useDictionary == Boolean.TRUE) {
+                Dictionary<String> dict = buildDictionary();
+                dict.write(out);
+                for (int i = 0; i < rows.size(); i++) {
+                    String[] row = rows.get(i);
+                    for (int j = 0; j < n; j++) {
+                        out.writeInt(dict.getIdFromValue(row[j]));
+                    }
+                }
+
+            } else {
+                for (int i = 0; i < rows.size(); i++) {
+                    String[] row = rows.get(i);
+                    for (int j = 0; j < n; j++) {
+                        out.writeUTF(row[j]);
+                    }
                 }
             }
         }
+    }
+
+    Dictionary<String> buildDictionary() {
+        TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
+        for (String[] row : rows) {
+            for (String cell : row) {
+                b.addValue(cell);
+            }
+        }
+        TrieDictionary<String> dict = b.build(0);
+        return dict;
     }
 
     void readData(DataInput in) throws IOException {
@@ -168,11 +199,23 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         rows = new ArrayList<String[]>(rowNum);
         if (rowNum > 0) {
             int n = in.readInt();
-            for (int i = 0; i < rowNum; i++) {
-                String[] row = new String[n];
-                rows.add(row);
-                for (int j = 0; j < n; j++) {
-                    row[j] = in.readUTF();
+            if (this.useDictionary == Boolean.TRUE) {
+                Dictionary<String> dict = new TrieDictionary<String>();
+                dict.readFields(in);
+                for (int i = 0; i < rowNum; i++) {
+                    String[] row = new String[n];
+                    rows.add(row);
+                    for (int j = 0; j < n; j++) {
+                        row[j] = dict.getValueFromId(in.readInt());
+                    }
+                }
+            } else {
+                for (int i = 0; i < rowNum; i++) {
+                    String[] row = new String[n];
+                    rows.add(row);
+                    for (int j = 0; j < n; j++) {
+                        row[j] = in.readUTF();
+                    }
                 }
             }
         }
