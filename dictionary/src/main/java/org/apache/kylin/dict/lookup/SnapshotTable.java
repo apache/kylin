@@ -49,7 +49,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     @JsonProperty("column_delimeter")
     private String columnDelimeter;
     @JsonProperty("useDictionary")
-    private Boolean useDictionary;
+    private boolean useDictionary;
 
     private ArrayList<String[]> rows;
 
@@ -60,7 +60,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     SnapshotTable(ReadableTable table) throws IOException {
         this.signature = table.getSignature();
         this.columnDelimeter = table.getColumnDelimeter();
-        this.useDictionary = Boolean.TRUE;
+        this.useDictionary = true;
     }
 
     public void takeSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
@@ -162,7 +162,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
             int n = rows.get(0).length;
             out.writeInt(n);
 
-            if (this.useDictionary == Boolean.TRUE) {
+            if (this.useDictionary == true) {
                 Dictionary<String> dict = buildDictionary();
                 dict.write(out);
                 for (int i = 0; i < rows.size(); i++) {
@@ -199,7 +199,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         rows = new ArrayList<String[]>(rowNum);
         if (rowNum > 0) {
             int n = in.readInt();
-            if (this.useDictionary == Boolean.TRUE) {
+            if (this.useDictionary == true) {
                 Dictionary<String> dict = new TrieDictionary<String>();
                 dict.readFields(in);
                 for (int i = 0; i < rowNum; i++) {
