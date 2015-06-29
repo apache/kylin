@@ -39,6 +39,7 @@
       }
   }, {
     "name" : "20131112000000_20131212000000",
+    "uuid" : "32f668f6-dcff-4cb6-a89b-77f1119df8fa",
     "storage_location_identifier" : "KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_READY-F24668F6-DCFF-4CB6-A89B-77F1119DF8FB",
     "date_range_start" : 1384243200000,
     "date_range_end" : 1386835200000,
