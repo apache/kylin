@@ -209,6 +209,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         int rowNum = in.readInt();
         if (rowNum > 0) {
             int n = in.readInt();
+            rowIndices = new ArrayList<int[]>(rowNum);
+
             if (this.useDictionary == true) {
                 this.dict = new TrieDictionary<String>();
                 dict.readFields(in);
@@ -222,7 +224,6 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
                 }
             } else {
                 List<String[]> rows = new ArrayList<String[]>(rowNum);
-                ArrayList<int[]> allRowIndices = new ArrayList<int[]>();
                 TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
 
                 for (int i = 0; i < rowNum; i++) {
@@ -239,9 +240,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
                     for (int i = 0; i < n; i++) {
                         rowIndex[i] = dict.getIdFromValue(row[i]);
                     }
-                    allRowIndices.add(rowIndex);
+                    this.rowIndices.add(rowIndex);
                 }
-                this.rowIndices = allRowIndices;
             }
         }
     }
