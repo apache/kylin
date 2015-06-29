@@ -279,17 +279,23 @@ public class CubeManager implements IRealizationProvider {
 
         List<String> toRemoveResources = Lists.newArrayList();
         if (cubeBuilder.getToRemoveSegs() != null) {
-            cube.getSegments().removeAll(Arrays.asList(cubeBuilder.getToRemoveSegs()));
-
-            for (CubeSegment toRemoveSeg : cubeBuilder.getToRemoveSegs()) {
-                toRemoveResources.add(toRemoveSeg.getStatisticsResourcePath());
+            Iterator<CubeSegment> iterator = cube.getSegments().iterator();
+            while (iterator.hasNext()) {
+                CubeSegment currentSeg = iterator.next();
+                for (CubeSegment toRemoveSeg : cubeBuilder.getToRemoveSegs()) {
+                    if(currentSeg.getUuid().equals(toRemoveSeg.getUuid())) {
+                        iterator.remove();
+                        toRemoveResources.add(toRemoveSeg.getStatisticsResourcePath());
+                    }
+                }
             }
+
         }
 
         if (cubeBuilder.getToUpdateSegs() != null) {
             for (CubeSegment segment : cubeBuilder.getToUpdateSegs()) {
                 for (int i = 0; i < cube.getSegments().size(); i++) {
-                    if (cube.getSegments().get(i).getName().equals(segment.getName())) {
+                    if (cube.getSegments().get(i).getUuid().equals(segment.getUuid())) {
                         cube.getSegments().set(i, segment);
                     }
                 }
@@ -300,7 +306,7 @@ public class CubeManager implements IRealizationProvider {
         Collections.sort(cube.getSegments());
 
         if (!validateReadySegments(cube)) {
-            return cube;
+            throw new IllegalStateException("Has invalid Ready segments in cube " + cube.getName());
         }
 
         if (cubeBuilder.getStatus() != null) {
@@ -318,7 +324,7 @@ public class CubeManager implements IRealizationProvider {
         try {
             getStore().putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
         } catch (IllegalStateException ise) {
-
+            logger.warn("Write conflict to update cube " + cube.getName() + " at try " + retry + ", will retry...");
             if (retry >= 7) {
                 logger.error("Retried 7 times till got error, abandoning...", ise);
                 throw ise;
@@ -645,7 +651,7 @@ public class CubeManager implements IRealizationProvider {
                 toRemoveSegs.add(segment);
         }
 
-        logger.info("Promoting cube " + cube + ", new segments " + newSegments);
+        logger.info("Promoting cube " + cube + ", new segments " + Arrays.toString(newSegments) + ", to remove segments " + toRemoveSegs);
 
         CubeBuilder cubeBuilder = new CubeBuilder(cube);
         cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()])).setToUpdateSegs(newSegments).setStatus(RealizationStatusEnum.READY);
