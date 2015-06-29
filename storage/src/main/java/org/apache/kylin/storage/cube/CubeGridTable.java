@@ -48,9 +48,6 @@ public class CubeGridTable {
             int colIndex = mapping.getIndexOf(dim);
             if (cubeDesc.getRowkey().isUseDictionary(dim)) {
                 Dictionary dict = dictionaryMap.get(dim);
-                if (dict == null)
-                    throw new IllegalStateException();
-
                 dictionaryByColIdx.put(colIndex, dict);
             } else {
                 int len = cubeDesc.getRowkey().getColumnLength(dim);

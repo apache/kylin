@@ -7,6 +7,7 @@
   "descriptor" : "test_kylin_cube_with_slr_desc",
   "cost" : 50,
   "segments" : [ {
+    "uuid" : "1aeca32a-a33e-4b69-83dd-xxe8b1f8dddd",
     "name" : "19691231160000_20131112000000",
     "storage_location_identifier" : "KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_READY-F24668F6-DCFF-4CB6-A89B-77F1119DF8FA",
     "date_range_start" : 1384240200000,
@@ -37,6 +38,7 @@
         "EDW.TEST_SITES" : "/table_snapshot/TEST_SITES.csv/28130338-fcf4-429e-91b0-cd8dfd397280.snapshot"
       }
   }, {
+    "uuid" : "2aeca32a-a33e-4b69-83dd-xxe8b1f8dddd",
     "name" : "20131112000000_20131212000000",
     "storage_location_identifier" : "KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_READY-F24668F6-DCFF-4CB6-A89B-77F1119DF8FB",
     "date_range_start" : 1384243200000,

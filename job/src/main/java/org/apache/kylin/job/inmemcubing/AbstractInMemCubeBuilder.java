@@ -47,8 +47,8 @@ abstract public class AbstractInMemCubeBuilder {
     public AbstractInMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         if(cubeDesc == null)
             throw new NullPointerException();
-        if (dictionaryMap == null || dictionaryMap.isEmpty())
-            throw new IllegalArgumentException("dictionary cannot be empty");
+        if (dictionaryMap == null)
+            throw new IllegalArgumentException("dictionary cannot be null");
         
         this.cubeDesc = cubeDesc;
         this.dictionaryMap = dictionaryMap;
