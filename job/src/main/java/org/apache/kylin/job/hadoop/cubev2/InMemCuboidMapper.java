@@ -9,6 +9,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,10 +86,14 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
     public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
         // put each row to the queue
         List<String> row = HiveTableReader.getRowAsList(record);
-        queue.put(row);
-        counter++;
-        if (counter % BatchConstants.COUNTER_MAX == 0) {
-            logger.info("Handled " + counter + " records!");
+        while (!future.isDone()) {
+            if (queue.offer(row, 1, TimeUnit.SECONDS)) {
+                counter++;
+                if (counter % BatchConstants.COUNTER_MAX == 0) {
+                    logger.info("Handled " + counter + " records!");
+                }
+                break;
+            }
         }
     }
 
@@ -96,16 +101,18 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
     protected void cleanup(Context context) throws IOException, InterruptedException {
         logger.info("Totally handled " + counter + " records!");
 
-        queue.put(new ArrayList<String>(0));
+        while (!future.isDone()) {
+            if (queue.offer(new ArrayList<String>(0), 1, TimeUnit.SECONDS)) {
+                break;
+            }
+        }
+        
         try {
             future.get();
         } catch (Exception e) {
-            logger.error("stream build failed", e);
             throw new IOException("Failed to build cube in mapper " + context.getTaskAttemptID().getTaskID().getId(), e);
         }
         queue.clear();
-
     }
-
 
 }

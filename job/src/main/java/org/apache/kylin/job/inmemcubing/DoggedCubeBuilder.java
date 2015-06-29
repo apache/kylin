@@ -89,6 +89,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                         last = new SplitThread();
                         splits.add(last);
                         last.start();
+                        logger.info("Split #" + splits.size() + " kickoff");
                     }
 
                     eof = feedSomeInput(input, last, unitRows);
@@ -102,11 +103,19 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
                 merger.mergeAndOutput(splits, output);
 
-            } catch (InterruptedException e) {
-                throw new IOException(e);
+            } catch (Throwable e) {
+                logger.error("Dogged Cube Build error", e);
+                if (e instanceof Error)
+                    throw (Error) e;
+                else if (e instanceof RuntimeException)
+                    throw (RuntimeException) e;
+                else
+                    throw new IOException(e);
             } finally {
                 closeGirdTables(splits);
                 logger.info("Dogged Cube Build end, totally took " + (System.currentTimeMillis() - start) + " ms");
+                ensureExit(splits);
+                logger.info("Dogged Cube Build return");
             }
         }
 
@@ -121,6 +130,19 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                         }
                     }
                 }
+            }
+        }
+
+        private void ensureExit(List<SplitThread> splits) throws IOException {
+            try {
+                for (int i = 0; i < splits.size(); i++) {
+                    SplitThread split = splits.get(i);
+                    if (split.isAlive()) {
+                        abort(splits);
+                    }
+                }
+            } catch (Throwable e) {
+                logger.error("Dogged Cube Build error", e);
             }
         }
 
@@ -161,7 +183,6 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                     logger.error("Exception during in-mem cube build", t);
                 throw new IOException(errors.size() + " exceptions during in-mem cube build, cause set to the first, check log for more", errors.get(0));
             }
-
         }
 
         private boolean feedSomeInput(BlockingQueue<List<String>> input, SplitThread split, int n) {

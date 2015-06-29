@@ -626,12 +626,12 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 } else if (flatTableIdx == null) {
                     value = measureCodec.getSerializer(i).valueOf(measureDesc.getFunction().getParameter().getValue());
                 } else if (flatTableIdx.length == 1) {
-                    value = measureCodec.getSerializer(i).valueOf(Bytes.toBytes(row.get(flatTableIdx[0])));
+                    value = measureCodec.getSerializer(i).valueOf(toBytes(row.get(flatTableIdx[0])));
                 } else {
 
                     byte[] result = null;
                     for (int x = 0; x < flatTableIdx.length; x++) {
-                        byte[] split = Bytes.toBytes(row.get(flatTableIdx[x]));
+                        byte[] split = toBytes(row.get(flatTableIdx[x]));
                         if (result == null) {
                             result = Arrays.copyOf(split, split.length);
                         } else {
@@ -648,5 +648,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             return values;
         }
 
+        private byte[] toBytes(String v) {
+            return v == null ? null : Bytes.toBytes(v);
+        }
+        
     }
 }
