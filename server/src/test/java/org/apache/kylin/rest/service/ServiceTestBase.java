@@ -21,11 +21,11 @@ package org.apache.kylin.rest.service;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -59,12 +59,14 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
         this.createTestMetadata();
 
         MetadataManager.clearCache();
-        DictionaryManager.clearCache();
         CubeDescManager.clearCache();
         CubeManager.clearCache();
         IIDescManager.clearCache();
         IIManager.clearCache();
+        RealizationRegistry.clearCache();
         ProjectManager.clearCache();
+        BasicService.cleanAllDataCache();
+        BasicService.removeAllOLAPDataSources();
 
     }
 
