@@ -27,7 +27,6 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.cube.CubingJob;
@@ -36,6 +35,7 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.rest.constant.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,14 +105,14 @@ public class CacheService extends BasicService {
                 break;
             case ALL:
                 MetadataManager.clearCache();
-                DictionaryManager.clearCache();
                 CubeDescManager.clearCache();
                 CubeManager.clearCache();
                 IIDescManager.clearCache();
                 IIManager.clearCache();
+                RealizationRegistry.clearCache();
                 ProjectManager.clearCache();
-                cleanAllDataCache();
-                removeAllOLAPDataSources();
+                BasicService.cleanAllDataCache();
+                BasicService.removeAllOLAPDataSources();
                 break;
             default:
                 throw new RuntimeException("invalid cacheType:" + cacheType);

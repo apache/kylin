@@ -66,7 +66,7 @@ public abstract class BasicService {
     private static ConcurrentMap<String, DataSource> olapDataSources = new ConcurrentHashMap<String, DataSource>();
 
     @Autowired
-    private CacheManager cacheManager;
+    private static CacheManager cacheManager;
 
     //    @Autowired
     //    protected JdbcTemplate jdbcTemplate;
@@ -81,7 +81,7 @@ public abstract class BasicService {
         }
     }
 
-    protected void cleanAllDataCache() {
+    public static void cleanAllDataCache() {
         if (cacheManager != null)
             cacheManager.clearAll();
     }
