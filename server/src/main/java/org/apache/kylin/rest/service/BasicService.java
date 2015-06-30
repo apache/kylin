@@ -43,6 +43,7 @@ import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.kylin.rest.controller.QueryController;
+import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,7 +115,7 @@ public abstract class BasicService {
             Properties props = new Properties();
             props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, String.valueOf(KylinConfig.getInstanceFromEnv().getScanThreshold()));
             ds.setConnectionProperties(props);
-            ds.setDriverClassName("net.hydromatic.optiq.jdbc.Driver");
+            ds.setDriverClassName(Driver.class.getName());
             ds.setUrl("jdbc:calcite:model=" + modelJson.getAbsolutePath());
 
             ret = olapDataSources.putIfAbsent(project, ds);

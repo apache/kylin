@@ -16,17 +16,25 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.jdbc;
+package org.apache.kylin.jdbc.json;
 
-import org.apache.kylin.jdbc.Driver;
+public class QueryRequest {
+    private String sql;
+    private String project;
 
-/**
- */
-public class DummyDriver extends Driver {
-
-    @Override
-    protected String getFactoryClassName(JdbcVersion jdbcVersion) {
-        return DummyJdbcFactory.class.getName();
+    public String getSql() {
+        return sql;
     }
 
+    public void setSql(String sql) {
+        this.sql = sql;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
 }
