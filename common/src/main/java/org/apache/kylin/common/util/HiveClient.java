@@ -29,6 +29,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
@@ -44,6 +45,7 @@ public class HiveClient {
     protected HiveConf hiveConf = null;
     protected Driver driver = null;
     protected HiveMetaStoreClient metaStoreClient = null;
+    protected String type;
 
     public HiveClient() {
         hiveConf = new HiveConf(HiveClient.class);
@@ -86,8 +88,8 @@ public class HiveClient {
     /**
      * 
      * @param hql
-     * @throws CommandNeedRetryException
-     * @throws IOException
+     * @throws org.apache.hadoop.hive.ql.CommandNeedRetryException
+     * @throws java.io.IOException
      */
     public void executeHQL(String hql) throws CommandNeedRetryException, IOException {
         CommandProcessorResponse response = getDriver().run(hql);
@@ -109,6 +111,7 @@ public class HiveClient {
         }
         return metaStoreClient;
     }
+
 
     public Table getHiveTable(String database, String tableName) throws Exception {
         return getMetaStoreClient().getTable(database, tableName);
@@ -153,6 +156,20 @@ public class HiveClient {
             }
         }
         return result;
+    }
+
+    /**
+     *
+     * @param database
+     * @param tableName
+     * @throws Exception
+     */
+
+    public boolean isNativeTable(String database, String tableName)  throws Exception{
+
+        return !MetaStoreUtils.isNonNativeTable(getMetaStoreClient().getTable(database, tableName));
+
+
     }
 
 }

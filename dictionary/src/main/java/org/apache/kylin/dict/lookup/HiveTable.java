@@ -48,6 +48,8 @@ public class HiveTable implements ReadableTable {
     private int nColumns;
     private String hdfsLocation;
     private FileTable fileTable;
+    private HiveClient hiveClient;
+    private boolean nativeTable;
 
     public HiveTable(MetadataManager metaMgr, String table) {
         TableDesc tableDesc = metaMgr.getTableDesc(table);
@@ -72,20 +74,26 @@ public class HiveTable implements ReadableTable {
     }
 
     private FileTable getFileTable() throws IOException {
-        if (fileTable == null) {
-            fileTable = new FileTable(getHDFSLocation(true), nColumns);
+        try {
+            if (fileTable == null) {
+                nativeTable = getHiveClient().isNativeTable(database, hiveTable);
+                fileTable = new FileTable(getHDFSLocation(), nColumns, nativeTable);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException(e);
         }
         return fileTable;
     }
 
-    public String getHDFSLocation(boolean needFilePath) throws IOException {
+    public String getHDFSLocation() throws IOException {
         if (hdfsLocation == null) {
-            hdfsLocation = computeHDFSLocation(needFilePath);
+            hdfsLocation = computeHDFSLocation();
         }
         return hdfsLocation;
     }
 
-    private String computeHDFSLocation(boolean needFilePath) throws IOException {
+    private String computeHDFSLocation() throws IOException {
 
         String override = KylinConfig.getInstanceFromEnv().getOverrideHiveTableLocation(hiveTable);
         if (override != null) {
@@ -95,14 +103,13 @@ public class HiveTable implements ReadableTable {
         
         String hdfsDir = null;
         try {
-            HiveClient hiveClient = new HiveClient();
-            hdfsDir = hiveClient.getHiveTableLocation(database, hiveTable);
+            hdfsDir = getHiveClient().getHiveTableLocation(database, hiveTable);
         } catch (Exception e) {
             e.printStackTrace();
             throw new IOException(e);
         }
 
-        if (needFilePath) {
+        if (nativeTable) {
             FileSystem fs = HadoopUtil.getFileSystem(hdfsDir);
             FileStatus file = findOnlyFile(hdfsDir, fs);
             return file.getPath().toString();
@@ -127,6 +134,14 @@ public class HiveTable implements ReadableTable {
     @Override
     public String toString() {
         return "hive: database=[" + database + "], table=[" + hiveTable + "]";
+    }
+
+    public HiveClient getHiveClient()  {
+
+        if (hiveClient == null) {
+            hiveClient = new HiveClient();
+        }
+        return hiveClient;
     }
 
 }
