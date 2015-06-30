@@ -157,8 +157,10 @@ public class QueryUtil {
      */
     public static String makeErrorMsgUserFriendly(String errorMsg) {
         try {
-            errorMsg = errorMsg.replaceAll("\\s", " ");// replace all invisible
-                                                       // characters
+            // make one line
+            errorMsg = errorMsg.replaceAll("\\s", " ");
+            
+            // move cause to be ahead of sql, calcite creates the message pattern below
             Pattern pattern = Pattern.compile("error while executing SQL \"(.*)\":(.*)");
             Matcher matcher = pattern.matcher(errorMsg);
             if (matcher.find()) {
