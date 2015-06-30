@@ -170,7 +170,7 @@ public class CacheService extends BasicService {
                 try {
                     newSeg = getCubeManager().autoMergeCubeSegments(cube);
                     if (newSeg != null) {
-                        newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd());
+                        newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd(), true);
                         logger.debug("Will submit merge job on " + newSeg);
                         CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
                         builder.setSubmitter("SYSTEM");
