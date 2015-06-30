@@ -179,8 +179,10 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             msg = "After merge, the cube has row count: \t " + grantTotal;
             writeLine(out, msg);
 
-            msg = "The compaction factor is: \t" + totalRowsBeforeMerge / grantTotal;
-            writeLine(out, msg);
+            if (grantTotal > 0) {
+                msg = "The compaction factor is: \t" + totalRowsBeforeMerge / grantTotal;
+                writeLine(out, msg);
+            }
 
         } finally {
             out.close();

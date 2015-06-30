@@ -81,7 +81,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
             }
 
             for (String cell : row) {
-                b.addValue(cell);
+                if (cell != null)
+                    b.addValue(cell);
             }
         }
 
@@ -149,6 +150,11 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     @Override
     public String getColumnDelimeter() throws IOException {
         return columnDelimeter;
+    }
+
+    @Override
+    public boolean exists() throws IOException {
+        return true;
     }
 
     /**

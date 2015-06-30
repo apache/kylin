@@ -123,8 +123,10 @@ public class MergeDictionaryStep extends AbstractExecutable {
             List<DictionaryInfo> dictInfos = new ArrayList<DictionaryInfo>();
             for (CubeSegment segment : mergingSegments) {
                 logger.info("Including fact table dictionary of segment : " + segment);
-                DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
-                dictInfos.add(dictInfo);
+                if (segment.getDictResPath(col) != null) {
+                    DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
+                    dictInfos.add(dictInfo);
+                }
             }
             mergeDictionaries(dictMgr, newSeg, dictInfos, col);
         }
@@ -137,7 +139,8 @@ public class MergeDictionaryStep extends AbstractExecutable {
 
     private DictionaryInfo mergeDictionaries(DictionaryManager dictMgr, CubeSegment cubeSeg, List<DictionaryInfo> dicts, TblColRef col) throws IOException {
         DictionaryInfo dictInfo = dictMgr.mergeDictionary(dicts);
-        cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
+        if (dictInfo != null)
+            cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
         return dictInfo;
     }

@@ -52,12 +52,20 @@ public class FileTable implements ReadableTable {
     }
 
     @Override
+    public boolean exists() throws IOException {
+        FileSystem fs = HadoopUtil.getFileSystem(path);
+        return fs.exists(new Path(path));
+    }
+
+    @Override
     public TableReader getReader() throws IOException {
         return new FileTableReader(path, delim, nColumns);
     }
 
     @Override
     public TableSignature getSignature() throws IOException {
+        if (!exists())
+            throw new IllegalStateException("Table not exists");
         FileSystem fs = HadoopUtil.getFileSystem(path);
         FileStatus status = fs.getFileStatus(new Path(path));
         return new TableSignature(path, status.getLen(), status.getModificationTime());

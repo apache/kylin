@@ -118,7 +118,12 @@ public class DictionaryManager {
     }
 
     public DictionaryInfo mergeDictionary(List<DictionaryInfo> dicts) throws IOException {
-        Preconditions.checkArgument(dicts.size() >= 2, "dicts size not valid");
+
+        if (dicts.size() == 0)
+            return null;
+
+        if (dicts.size() == 1)
+            return dicts.get(0);
 
         DictionaryInfo firstDictInfo = null;
         int totalSize = 0;
@@ -180,6 +185,9 @@ public class DictionaryManager {
         String srcCol = (String) tmp[1];
         int srcColIdx = (Integer) tmp[2];
         ReadableTable inpTable = (ReadableTable) tmp[3];
+
+        if (!inpTable.exists())
+            return null;
 
         DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inpTable.getSignature(), inpTable.getColumnDelimeter());
 

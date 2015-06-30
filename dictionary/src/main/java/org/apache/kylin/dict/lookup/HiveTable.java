@@ -62,6 +62,11 @@ public class HiveTable implements ReadableTable {
     }
 
     @Override
+    public boolean exists() throws IOException {
+        return true;
+    }
+
+    @Override
     public TableReader getReader() throws IOException {
         return new HiveTableReader(database, hiveTable);
     }

@@ -34,4 +34,6 @@ public interface ReadableTable {
 
     public String getColumnDelimeter() throws IOException;
 
+    public boolean exists() throws IOException;
+
 }

@@ -68,7 +68,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, Imm
                 if (cubeDesc.getRowkey().isUseDictionary(col)) {
                     Dictionary<?> dict = cubeSegment.getDictionary(col);
                     if (dict == null) {
-                        throw new IllegalArgumentException("Dictionary for " + col + " was not found.");
+                        logger.warn("Dictionary for " + col + " was not found.");
                     }
 
                     dictionaryMap.put(col, cubeSegment.getDictionary(col));
