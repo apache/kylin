@@ -34,13 +34,14 @@
 
 package org.apache.kylin.job.streaming;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.cache.RemoteCacheUpdater;
 import org.apache.kylin.common.restclient.AbstractRestCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -60,26 +61,26 @@ public class StreamingCLI {
             while (i < args.length) {
                 String argName = args[i];
                 switch (argName) {
-                    case "-oneoff":
-                        bootstrapConfig.setOneOff(Boolean.parseBoolean(args[++i]));
-                        break;
-                    case "-start":
-                        bootstrapConfig.setStart(Long.parseLong(args[++i]));
-                        break;
-                    case "-end":
-                        bootstrapConfig.setEnd(Long.parseLong(args[++i]));
-                        break;
-                    case "-streaming":
-                        bootstrapConfig.setStreaming(args[++i]);
-                        break;
-                    case "-partition":
-                        bootstrapConfig.setPartitionId(Integer.parseInt(args[++i]));
-                        break;
-                    case "-margin":
-                        bootstrapConfig.setMargin(Long.parseLong(args[++i]));
-                        break;
-                    default:
-                        logger.warn("ignore this arg:" + argName);
+                case "-oneoff":
+                    bootstrapConfig.setOneOff(Boolean.parseBoolean(args[++i]));
+                    break;
+                case "-start":
+                    bootstrapConfig.setStart(Long.parseLong(args[++i]));
+                    break;
+                case "-end":
+                    bootstrapConfig.setEnd(Long.parseLong(args[++i]));
+                    break;
+                case "-streaming":
+                    bootstrapConfig.setStreaming(args[++i]);
+                    break;
+                case "-partition":
+                    bootstrapConfig.setPartitionId(Integer.parseInt(args[++i]));
+                    break;
+                case "-margin":
+                    bootstrapConfig.setMargin(Long.parseLong(args[++i]));
+                    break;
+                default:
+                    logger.warn("ignore this arg:" + argName);
                 }
                 i++;
             }

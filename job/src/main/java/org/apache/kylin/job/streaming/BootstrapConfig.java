@@ -12,6 +12,7 @@ public class BootstrapConfig {
     private long end = 0L;
     private long margin = 0L;
 
+
     public long getMargin() {
         return margin;
     }
