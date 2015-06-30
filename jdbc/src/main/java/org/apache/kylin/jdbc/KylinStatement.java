@@ -18,15 +18,14 @@
 
 package org.apache.kylin.jdbc;
 
-import org.apache.kylin.jdbc.Driver;
+import org.apache.calcite.avatica.AvaticaConnection;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Meta.StatementHandle;
 
-/**
- */
-public class DummyDriver extends Driver {
+public class KylinStatement extends AvaticaStatement {
 
-    @Override
-    protected String getFactoryClassName(JdbcVersion jdbcVersion) {
-        return DummyJdbcFactory.class.getName();
+    protected KylinStatement(AvaticaConnection connection, StatementHandle h, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
+        super(connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
 }

@@ -149,12 +149,22 @@ public class QueryUtil {
         return null;
     }
 
-    /**
-     * adjust error message order
-     * 
-     * @param errorMsg
-     * @return
-     */
+    public static String makeErrorMsgUserFriendly(Throwable e) {
+        String msg = e.getMessage();
+        
+        // pick ParseException error message if possible
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause.getClass().getName().contains("ParseException")) {
+                msg = cause.getMessage();
+                break;
+            }
+            cause = cause.getCause();
+        }
+        
+        return makeErrorMsgUserFriendly(msg);
+    }
+
     public static String makeErrorMsgUserFriendly(String errorMsg) {
         try {
             // make one line

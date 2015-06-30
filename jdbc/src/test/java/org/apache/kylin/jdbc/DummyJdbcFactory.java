@@ -18,15 +18,22 @@
 
 package org.apache.kylin.jdbc;
 
-import org.apache.kylin.jdbc.Driver;
+import org.apache.kylin.jdbc.IRemoteClient;
+import org.apache.kylin.jdbc.KylinConnection;
+import org.apache.kylin.jdbc.KylinJdbcFactory;
 
 /**
  */
-public class DummyDriver extends Driver {
-
-    @Override
-    protected String getFactoryClassName(JdbcVersion jdbcVersion) {
-        return DummyJdbcFactory.class.getName();
+public class DummyJdbcFactory extends KylinJdbcFactory {
+    
+    public DummyJdbcFactory() {
+        super(4, 1);
     }
 
+    @Override
+    public IRemoteClient newRemoteClient(KylinConnection conn) {
+        return new DummyClient(conn);
+    }
+
+    
 }

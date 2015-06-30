@@ -16,17 +16,18 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.jdbc;
+package org.apache.kylin.jdbc.json;
 
-import org.apache.kylin.jdbc.Driver;
+import java.util.List;
 
-/**
- */
-public class DummyDriver extends Driver {
+public class PreparedQueryRequest extends QueryRequest {
+    private List<StatementParameter> params;
 
-    @Override
-    protected String getFactoryClassName(JdbcVersion jdbcVersion) {
-        return DummyJdbcFactory.class.getName();
+    public List<StatementParameter> getParams() {
+        return params;
     }
 
+    public void setParams(List<StatementParameter> params) {
+        this.params = params;
+    }
 }
