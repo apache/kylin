@@ -26,6 +26,7 @@ import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -64,6 +65,7 @@ public class ServiceTestBase extends HBaseMetadataTestCase {
         CubeManager.clearCache();
         IIDescManager.clearCache();
         IIManager.clearCache();
+        RealizationRegistry.clearCache();
         ProjectManager.clearCache();
     }
 

@@ -67,9 +67,11 @@ public class CacheController extends BasicController {
         case CREATE:
         case UPDATE:
             cacheService.rebuildCache(wipeType, name);
+            cacheService.cleanDataCache();
             break;
         case DROP:
             cacheService.removeCache(wipeType, name);
+            cacheService.cleanDataCache();
             break;
         default:
             throw new RuntimeException("invalid type:" + wipeEvent);

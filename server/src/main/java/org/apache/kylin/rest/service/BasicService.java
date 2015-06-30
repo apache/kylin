@@ -37,6 +37,7 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
@@ -131,9 +132,7 @@ public abstract class BasicService {
      */
     @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void cleanDataCache() {
-        CubeManager.clearCache();
-        ProjectManager.clearCache();
-        BasicService.resetOLAPDataSources();
+        logger.debug("clean query cache...");
     }
 
     public final KylinConfig getKylinConfig() {
