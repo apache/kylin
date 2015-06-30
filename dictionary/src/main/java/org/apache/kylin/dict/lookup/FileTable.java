@@ -35,15 +35,24 @@ public class FileTable implements ReadableTable {
     String path;
     String delim;
     int nColumns;
+    boolean nativeTable;
 
     public FileTable(String path, int nColumns) {
-        this(path, DELIM_AUTO, nColumns);
+        this(path, DELIM_AUTO, nColumns, true);
     }
 
-    public FileTable(String path, String delim, int nColumns) {
+    public FileTable(String path, String delim, int nColumns, boolean nativeTable) {
         this.path = path;
         this.delim = delim;
         this.nColumns = nColumns;
+        this.nativeTable = nativeTable;
+    }
+
+    public FileTable(String path, int nColumns, boolean nativeTable) {
+        this.path = path;
+        this.delim = DELIM_AUTO;
+        this.nColumns = nColumns;
+        this.nativeTable = nativeTable;
     }
 
     @Override
@@ -60,7 +69,10 @@ public class FileTable implements ReadableTable {
     public TableSignature getSignature() throws IOException {
         FileSystem fs = HadoopUtil.getFileSystem(path);
         FileStatus status = fs.getFileStatus(new Path(path));
-        return new TableSignature(path, status.getLen(), status.getModificationTime());
+        if (nativeTable) {
+            return new TableSignature(path, status.getLen(), status.getModificationTime());
+        }
+        return new TableSignature(path, status.getLen(), System.currentTimeMillis());
     }
 
     @Override
