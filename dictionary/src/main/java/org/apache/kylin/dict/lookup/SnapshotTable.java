@@ -80,7 +80,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
             }
 
             for (String cell : row) {
-                b.addValue(cell);
+                if (cell != null)
+                    b.addValue(cell);
             }
         }
 
@@ -231,7 +232,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
                     rows.add(row);
                     for (int j = 0; j < n; j++) {
                         row[j] = in.readUTF();
-                        b.addValue(row[j]);
+                        if (row[j] != null)
+                            b.addValue(row[j]);
                     }
                 }
                 this.dict = b.build(0);
