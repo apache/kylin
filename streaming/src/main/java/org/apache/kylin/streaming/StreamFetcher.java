@@ -10,7 +10,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  */
 public class StreamFetcher implements Callable<MicroStreamBatch> {
-    private static final Logger logger = LoggerFactory.getLogger(StreamBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(StreamFetcher.class);
 
     private final BlockingQueue<StreamMessage> streamMessageQueue;
     private final CountDownLatch countDownLatch;

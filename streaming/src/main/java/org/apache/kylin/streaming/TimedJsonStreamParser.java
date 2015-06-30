@@ -65,11 +65,6 @@ public final class TimedJsonStreamParser implements StreamParser {
     private final ObjectMapper mapper = new ObjectMapper();
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
 
-    public TimedJsonStreamParser(List<TblColRef> allColumns) {
-        this.allColumns = allColumns;
-        this.formatTs = false;
-    }
-
     public TimedJsonStreamParser(List<TblColRef> allColumns, boolean formatTs) {
         this.allColumns = allColumns;
         this.formatTs = formatTs;

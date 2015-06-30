@@ -64,9 +64,9 @@ public class BackdoorToggles {
      *
      *
      *
-     example:
+     example:(put it into request body)
      "backdoorToggles": {
-     "DEBUG_TOGGLE_DISABLE_FUZZY_KEY": "true"
+        "DEBUG_TOGGLE_DISABLE_FUZZY_KEY": "true"
      }
      */
     public final static String DEBUG_TOGGLE_DISABLE_FUZZY_KEY = "DEBUG_TOGGLE_DISABLE_FUZZY_KEY";
@@ -74,9 +74,9 @@ public class BackdoorToggles {
     /**
      * set DEBUG_TOGGLE_OBSERVER_BEHAVIOR=SCAN/SCAN_FILTER/SCAN_FILTER_AGGR to control observer behavior for debug/profile usage
      *
-     example:
+     example:(put it into request body)
      "backdoorToggles": {
-     "DEBUG_TOGGLE_OBSERVER_BEHAVIOR": "SCAN"
+        "DEBUG_TOGGLE_OBSERVER_BEHAVIOR": "SCAN"
      }
      */
     public final static String DEBUG_TOGGLE_OBSERVER_BEHAVIOR = "DEBUG_TOGGLE_OBSERVER_BEHAVIOR";
@@ -84,9 +84,9 @@ public class BackdoorToggles {
     /**
      * set DEBUG_TOGGLE_LOCAL_COPROCESSOR=true to run coprocessor at client side (not in HBase region server)
      *
-     example:
+     example:(put it into request body)
      "backdoorToggles": {
-     "DEBUG_TOGGLE_LOCAL_COPROCESSOR": "true"
+        "DEBUG_TOGGLE_LOCAL_COPROCESSOR": "true"
      }
      */
     public final static String DEBUG_TOGGLE_LOCAL_COPROCESSOR = "DEBUG_TOGGLE_LOCAL_COPROCESSOR";

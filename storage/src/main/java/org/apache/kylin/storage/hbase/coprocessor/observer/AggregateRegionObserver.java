@@ -85,9 +85,14 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         CoprocessorFilter filter = CoprocessorFilter.deserialize(filterBytes);
 
         ObserverBehavior observerBehavior = ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM;
-        byte[] behavior = scan.getAttribute(BEHAVIOR);
-        if (behavior != null && behavior.length != 0) {
-            observerBehavior = ObserverBehavior.valueOf(new String(behavior));
+        try {
+            byte[] behavior = scan.getAttribute(BEHAVIOR);
+            if (behavior != null && behavior.length != 0) {
+                observerBehavior = ObserverBehavior.valueOf(new String(behavior));
+            }
+        } catch (Exception e) {
+            LOG.error("failed to parse behavior,using default behavior SCAN_FILTER_AGGR_CHECKMEM", e);
+            observerBehavior = ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM;
         }
 
         // start/end region operation & sync on scanner is suggested by the
@@ -102,7 +107,5 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         } finally {
             region.closeRegionOperation();
         }
-
     }
-
 }
