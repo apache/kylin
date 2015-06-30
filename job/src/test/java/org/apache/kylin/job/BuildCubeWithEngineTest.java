@@ -235,6 +235,13 @@ public class BuildCubeWithEngineTest {
         dateStart = f.parse("2012-06-01").getTime();
         dateEnd = f.parse("2022-01-01").getTime();
         result.add(buildSegment(cubeName, dateStart, dateEnd));
+
+
+        // build an empty segment which doesn't have data
+        dateStart = f.parse("2022-01-01").getTime();
+        dateEnd = f.parse("2023-01-01").getTime();
+        result.add(buildSegment(cubeName, dateStart, dateEnd));
+
         return result;
 
     }

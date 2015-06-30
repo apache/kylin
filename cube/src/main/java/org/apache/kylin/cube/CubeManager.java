@@ -154,12 +154,14 @@ public class CubeManager implements IRealizationProvider {
 
         DictionaryManager dictMgr = getDictionaryManager();
         DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
-        cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
-        CubeBuilder cubeBuilder = new CubeBuilder(cubeSeg.getCubeInstance());
-        cubeBuilder.setToUpdateSegs(cubeSeg);
-        updateCube(cubeBuilder);
+        if (dictInfo != null) {
+            cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
+            CubeBuilder cubeBuilder = new CubeBuilder(cubeSeg.getCubeInstance());
+            cubeBuilder.setToUpdateSegs(cubeSeg);
+            updateCube(cubeBuilder);
+        }
         return dictInfo;
     }
 
