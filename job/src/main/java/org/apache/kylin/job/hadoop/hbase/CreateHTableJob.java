@@ -18,22 +18,26 @@
 
 package org.apache.kylin.job.hadoop.hbase;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
-import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
-import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
-import org.apache.hadoop.hbase.security.User;
-import org.apache.hadoop.io.*;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
@@ -49,33 +53,23 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.job.tools.DeployCoprocessorCLI;
-import org.apache.kylin.job.tools.LZOSupportnessChecker;
-import org.apache.kylin.metadata.model.*;
-import org.apache.kylin.metadata.realization.IRealizationConstants;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
- * @author George Song (ysong1)
  */
-
 public class CreateHTableJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(CreateHTableJob.class);
-
-    public static final int MAX_REGION = 1000;
 
     CubeInstance cube = null;
     CubeDesc cubeDesc = null;
@@ -235,8 +229,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
 
         int nRegion = Math.round((float) totalSizeInM / ((float) cut * 1024l));
-        nRegion = Math.max(1, nRegion);
-        nRegion = Math.min(MAX_REGION, nRegion);
+        nRegion = Math.max(kylinConfig.getHBaseRegionCutMin(), nRegion);
+        nRegion = Math.min(kylinConfig.getHBaseRegionCutMax(), nRegion);
 
         int mbPerRegion = (int) (totalSizeInM / (nRegion));
         mbPerRegion = Math.max(1, mbPerRegion);
