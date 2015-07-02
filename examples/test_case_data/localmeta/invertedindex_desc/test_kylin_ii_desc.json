@@ -1,12 +1,11 @@
 {
   "uuid": "74bf87b5-c7b5-4420-a12a-07f6b37b3187",
-
   "last_modified": 0,
   "name": "test_kylin_ii_desc",
   "fact_table": "default.test_kylin_fact",
   "model_name": "test_kylin_ii_model_desc",
   "timestamp_dimension": "cal_dt",
-  "bitmap_dimensions": [
+  "value_dimensions": [
     {
       "table": "default.test_kylin_fact",
       "columns": [
@@ -43,9 +42,7 @@
         "seller_type_cd",
         "seller_type_desc"
       ]
-    }
-  ],
-  "value_dimensions": [
+    },
     {
       "table": "edw.test_cal_dt",
       "columns": [

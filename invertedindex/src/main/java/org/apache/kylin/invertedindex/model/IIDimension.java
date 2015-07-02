@@ -18,6 +18,7 @@
 
 package org.apache.kylin.invertedindex.model;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -52,9 +53,11 @@ public class IIDimension {
 
 
     public static void capicalizeStrings(List<IIDimension> dimensions) {
-        for (IIDimension iiDimension : dimensions) {
-            iiDimension.setTable(iiDimension.getTable().toUpperCase());
-            StringUtil.toUpperCaseArray(iiDimension.getColumns(), iiDimension.getColumns());
+        if (dimensions != null) {
+            for (IIDimension iiDimension : dimensions) {
+                iiDimension.setTable(iiDimension.getTable().toUpperCase());
+                StringUtil.toUpperCaseArray(iiDimension.getColumns(), iiDimension.getColumns());
+            }
         }
     }
 

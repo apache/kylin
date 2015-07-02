@@ -327,7 +327,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @Override
     public int getCost(SQLDigest digest) {
-        return 0;
+        return cost;
     }
 
     @Override
@@ -348,4 +348,41 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         this.projectName = projectName;
     }
 
+
+    @Override
+    public long getDateRangeStart() {
+        List<CubeSegment> readySegs = getSegments(SegmentStatusEnum.READY);
+
+        long startTime = Long.MAX_VALUE;
+        for (CubeSegment seg : readySegs) {
+            if (seg.getDateRangeStart() < startTime)
+                startTime = seg.getDateRangeStart();
+        }
+
+        return startTime;
+    }
+
+    @Override
+    public long getDateRangeEnd() {
+
+        List<CubeSegment> readySegs = getSegments(SegmentStatusEnum.READY);
+
+        long endTime = 0;
+        for (CubeSegment seg : readySegs) {
+            if (seg.getDateRangeEnd() > endTime)
+                endTime = seg.getDateRangeEnd();
+        }
+
+        return endTime;
+    }
+
+    @Override
+    public String getModelName() {
+        return this.getDescriptor().getModelName();
+    }
+
+    @Override
+    public List<TblColRef> getAllDimensions() {
+        return Lists.newArrayList(getDescriptor().listDimensionColumnsIncludingDerived());
+    }
 }

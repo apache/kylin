@@ -111,6 +111,7 @@ public class RealizationRegistry {
         IRealizationProvider p = providers.get(type);
         if (p == null) {
             logger.warn("No provider for realization type " + type);
+            return null;
         }
 
         try {

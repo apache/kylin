@@ -180,6 +180,11 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         return this.tuple;
     }
 
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
     private void scanNextRange() {
         if (this.rangeIterator.hasNext()) {
             closeScanner();

@@ -18,39 +18,49 @@
 
 package org.apache.kylin.query.routing.RoutingRules;
 
-import java.util.*;
-
-import com.google.common.collect.Maps;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
+import org.apache.kylin.storage.hybrid.HybridInstance;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/5/15.
  */
-public class RealizationPriorityRule extends RoutingRule {
-    static Map<RealizationType, Integer> priorities = Maps.newHashMap();
+public class RealizationSortRule extends RoutingRule {
+    @Override
+    public void apply(List<IRealization> realizations, final OLAPContext olapContext) {
 
-    static {
-        priorities.put(RealizationType.HYBRID, 2);
-        priorities.put(RealizationType.CUBE, 1);
-        priorities.put(RealizationType.INVERTED_INDEX, 0);
-    }
-
-    public static void setPriorities(Map<RealizationType, Integer> priorities) {
-        RealizationPriorityRule.priorities = priorities;
-    }
-
-    public void apply(List<IRealization> realizations, OLAPContext olapContext) {
+        // sort cube candidates, 0) the priority 1) the cost indicator, 2) the lesser header
+        // columns the better, 3) the lesser body columns the better 4) the larger date range the better
 
         Collections.sort(realizations, new Comparator<IRealization>() {
             @Override
             public int compare(IRealization o1, IRealization o2) {
-                int i1 = priorities.get(o1.getType());
-                int i2 = priorities.get(o2.getType());
-                return i1 - i2;
+                int i1 = RealizationPriorityRule.priorities.get(o1.getType());
+                int i2 = RealizationPriorityRule.priorities.get(o2.getType());
+                int comp = i1 - i2;
+                if (comp != 0) {
+                    return comp;
+                }
+
+                comp = o1.getCost(olapContext.getSQLDigest()) - o2.getCost(olapContext.getSQLDigest());
+                if (comp != 0) {
+                    return comp;
+                }
+
+                if (o1 instanceof HybridInstance)
+                    return -1;
+                else if (o2 instanceof HybridInstance)
+                    return 1;
+
+                return 0;
             }
         });
+
+
     }
+
 }

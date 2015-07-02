@@ -70,7 +70,7 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
 
         IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_desc");
 
-        IIInstance ii = IIInstance.create("new ii", "default", iiDesc);
+        IIInstance ii = IIInstance.create("new_ii", "default", iiDesc);
 
         IIManager iiMgr = IIManager.getInstance(getTestConfig());
 
@@ -78,7 +78,7 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
 
         iiMgr.createII(ii);
 
-        Assert.assertNotNull(iiMgr.getII("new ii"));
+        Assert.assertNotNull(iiMgr.getII("new_ii"));
     }
 
 

@@ -27,11 +27,5 @@
       "type": "INVERTED_INDEX",
       "realization": "test_kylin_ii"
     }
-  ],
-  "cubes": [
-    "test_kylin_cube_with_slr_empty",
-    "test_kylin_cube_without_slr_empty",
-    "test_kylin_cube_with_slr_left_join_empty",
-    "test_kylin_cube_without_slr_left_join_empty"
   ]
 }

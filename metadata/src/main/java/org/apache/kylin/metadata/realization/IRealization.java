@@ -51,6 +51,8 @@ public interface IRealization {
 
     public List<TblColRef> getAllColumns();
 
+    public List<TblColRef> getAllDimensions();
+
     public List<MeasureDesc> getMeasures();
 
     public boolean isReady();
@@ -62,5 +64,11 @@ public interface IRealization {
     public String getProjectName();
     
     public void setProjectName(String prjName);
+
+    public long getDateRangeStart();
+
+    public long getDateRangeEnd();
+
+    public String getModelName();
 
 }

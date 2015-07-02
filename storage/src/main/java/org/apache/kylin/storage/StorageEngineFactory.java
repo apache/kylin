@@ -24,6 +24,8 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.hbase.CubeStorageEngine;
 import org.apache.kylin.storage.hbase.InvertedIndexStorageEngine;
+import org.apache.kylin.storage.hybrid.HybridInstance;
+import org.apache.kylin.storage.hybrid.HybridStorageEngine;
 
 /**
  * @author xjiang
@@ -33,8 +35,10 @@ public class StorageEngineFactory {
     public static IStorageEngine getStorageEngine(IRealization realization) {
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
             return new InvertedIndexStorageEngine((IIInstance) realization);
-        } else {
+        } else if (realization.getType() == RealizationType.CUBE) {
             return new CubeStorageEngine((CubeInstance) realization);
+        } else {
+            return new HybridStorageEngine((HybridInstance) realization);
         }
     }
 
