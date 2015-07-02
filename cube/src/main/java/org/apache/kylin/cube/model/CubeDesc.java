@@ -113,6 +113,8 @@ public class CubeDesc extends RootPersistentEntity {
     private String signature;
     @JsonProperty("notify_list")
     private List<String> notifyList;
+    @JsonProperty("status_need_notify")
+    private List<String> statusNeedNotify = Collections.emptyList();
 
     private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
@@ -368,6 +370,14 @@ public class CubeDesc extends RootPersistentEntity {
 
     public void setNotifyList(List<String> notifyList) {
         this.notifyList = notifyList;
+    }
+
+    public List<String> getStatusNeedNotify() {
+        return statusNeedNotify;
+    }
+
+    public void setStatusNeedNotify(List<String> statusNeedNotify) {
+        this.statusNeedNotify = statusNeedNotify;
     }
 
     @Override

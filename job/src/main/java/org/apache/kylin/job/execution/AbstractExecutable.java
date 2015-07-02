@@ -190,11 +190,11 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         setNotifyList(StringUtils.join(notifications, ","));
     }
 
-    protected Pair<String, String> formatNotifications(ExecutableState state) {
+    protected Pair<String, String> formatNotifications(ExecutableContext executableContext, ExecutableState state) {
         return null;
     }
 
-    protected final void notifyUserStatusChange(ExecutableState state) {
+    protected final void notifyUserStatusChange(ExecutableContext context, ExecutableState state) {
         try {
             List<String> users = Lists.newArrayList();
             users.addAll(getNotifyList());
@@ -207,7 +207,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             if (users.isEmpty()) {
                 return;
             }
-            final Pair<String, String> email = formatNotifications(state);
+            final Pair<String, String> email = formatNotifications(context, state);
             if (email == null) {
                 return;
             }
