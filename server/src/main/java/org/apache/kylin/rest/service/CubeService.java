@@ -23,8 +23,8 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
@@ -73,6 +73,8 @@ public class CubeService extends BasicService {
     private static final String DESC_SUFFIX = "_desc";
 
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
+
+    private static WeakHashMap<String, HBaseResponse> htableInfoCache = new WeakHashMap<>();
 
     @Autowired
     private AccessService accessService;
@@ -433,6 +435,10 @@ public class CubeService extends BasicService {
      * @throws IOException Exception when HTable resource is not closed correctly.
      */
     public HBaseResponse getHTableInfo(String tableName) throws IOException {
+        if (htableInfoCache.containsKey(tableName)) {
+            return htableInfoCache.get(tableName);
+        }
+
         // Get HBase storage conf.
         String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
         Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
@@ -463,6 +469,8 @@ public class CubeService extends BasicService {
                 table.close();
             }
         }
+
+        htableInfoCache.put(tableName, hr);
 
         return hr;
     }
