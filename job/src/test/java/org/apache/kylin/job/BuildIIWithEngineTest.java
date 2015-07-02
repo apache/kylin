@@ -35,6 +35,7 @@ import java.util.concurrent.Future;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.junit.After;
 import org.junit.Before;
@@ -108,7 +109,7 @@ public class BuildIIWithEngineTest {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.getInstance();
-        scheduler.init(new JobEngineConfig(kylinConfig));
+        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
@@ -134,7 +135,7 @@ public class BuildIIWithEngineTest {
             ii.setStatus(RealizationStatusEnum.READY);
             iiManager.updateII(ii);
         }
-        backup();
+       // backup();
     }
 
     @Test

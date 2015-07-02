@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -96,7 +97,7 @@ public class BuildCubeWithEngineTest {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.getInstance();
-        scheduler.init(new JobEngineConfig(kylinConfig));
+        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
@@ -212,7 +213,7 @@ public class BuildCubeWithEngineTest {
 
         // this cube's start date is 0, end date is 20501112000000
         long date1 = 0;
-        long date2 = f.parse("2013-01-01").getTime();
+        long date2 = f.parse("2022-01-01").getTime();
 
 
         // this cube doesn't support incremental build, always do full build

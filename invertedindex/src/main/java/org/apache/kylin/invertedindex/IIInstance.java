@@ -310,4 +310,40 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         this.projectName = projectName;
     }
 
+    @Override
+    public long getDateRangeStart() {
+        List<IISegment> readySegs = getSegments(SegmentStatusEnum.READY);
+
+        long startTime = Long.MAX_VALUE;
+        for (IISegment seg : readySegs) {
+            if (seg.getDateRangeStart() < startTime)
+                startTime = seg.getDateRangeStart();
+        }
+
+        return startTime;
+    }
+
+    @Override
+    public long getDateRangeEnd() {
+
+        List<IISegment> readySegs = getSegments(SegmentStatusEnum.READY);
+
+        long endTime = 0;
+        for (IISegment seg : readySegs) {
+            if (seg.getDateRangeEnd() > endTime)
+                endTime = seg.getDateRangeEnd();
+        }
+
+        return endTime;
+    }
+
+    @Override
+    public String getModelName() {
+        return this.getDescriptor().getModelName();
+    }
+
+    @Override
+    public List<TblColRef> getAllDimensions() {
+        return getDescriptor().listAllDimensions();
+    }
 }

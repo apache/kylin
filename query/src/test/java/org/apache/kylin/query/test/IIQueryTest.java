@@ -24,6 +24,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.RoutingRules.RealizationPriorityRule;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -40,6 +41,7 @@ public class IIQueryTest extends KylinQueryTest {
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 0);
         priorities.put(RealizationType.CUBE, 1);
+        priorities.put(RealizationType.HYBRID, 1);
         RealizationPriorityRule.setPriorities(priorities);
 
     }
@@ -51,6 +53,7 @@ public class IIQueryTest extends KylinQueryTest {
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 1);
         priorities.put(RealizationType.CUBE, 0);
+        priorities.put(RealizationType.HYBRID, 0);
         RealizationPriorityRule.setPriorities(priorities);
     }
 
