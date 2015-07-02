@@ -68,7 +68,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         if (isDiscarded()) {
             setEndTime(System.currentTimeMillis());
-            notifyUserStatusChange(ExecutableState.DISCARDED);
+            notifyUserStatusChange(executableContext, ExecutableState.DISCARDED);
         } else if (result.succeed()) {
             List<? extends Executable> jobs = getTasks();
             boolean allSucceed = true;
@@ -85,18 +85,18 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             if (allSucceed) {
                 setEndTime(System.currentTimeMillis());
                 jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, null);
-                notifyUserStatusChange(ExecutableState.SUCCEED);
+                notifyUserStatusChange(executableContext, ExecutableState.SUCCEED);
             } else if (hasError) {
                 setEndTime(System.currentTimeMillis());
                 jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
-                notifyUserStatusChange(ExecutableState.ERROR);
+                notifyUserStatusChange(executableContext, ExecutableState.ERROR);
             } else {
                 jobService.updateJobOutput(getId(), ExecutableState.READY, null, null);
             }
         } else {
             setEndTime(System.currentTimeMillis());
             jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
-            notifyUserStatusChange(ExecutableState.ERROR);
+            notifyUserStatusChange(executableContext, ExecutableState.ERROR);
         }
     }
 

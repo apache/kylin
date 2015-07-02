@@ -24,6 +24,8 @@ import java.util.Date;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -63,18 +65,25 @@ public class CubingJob extends DefaultChainedExecutable {
     }
 
     @Override
-    protected Pair<String, String> formatNotifications(ExecutableState state) {
+    protected Pair<String, String> formatNotifications(ExecutableContext context, ExecutableState state) {
+        CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig()).getCube(getCubeName());
         final Output output = jobService.getOutput(getId());
         String logMsg;
-        switch (output.getState()) {
+        state = output.getState();
+        if (state != ExecutableState.ERROR &&
+                !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString().toLowerCase())) {
+            logger.info("state:" + state + " no need to notify users");
+            return null;
+        }
+        switch (state) {
             case ERROR:
                 logMsg = output.getVerboseMsg();
                 break;
             case DISCARDED:
-                logMsg = "";
+                logMsg = "job has been discarded";
                 break;
             case SUCCEED:
-                logMsg = "";
+                logMsg = "job has succeeded";
                 break;
             default:
                 return null;
