@@ -48,6 +48,8 @@ import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -60,6 +62,7 @@ import java.util.List;
  */
 public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritable, Text> {
 
+    private static final Logger logger = LoggerFactory.getLogger(MergeCuboidFromHBaseMapper.class);
     private KylinConfig config;
     private String cubeName;
     private String segmentName;
@@ -133,9 +136,9 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
         byte[] tableName = currentSplit.getTableName();
         String htableName = Bytes.toString(tableName);
         // decide which source segment
-        System.out.println("htable:" + htableName);
+        logger.info("htable:" + htableName);
         sourceCubeSegment = findSegmentWithHTable(htableName, cube);
-        System.out.println(sourceCubeSegment);
+        logger.info(sourceCubeSegment.toString());
 
         this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
 
