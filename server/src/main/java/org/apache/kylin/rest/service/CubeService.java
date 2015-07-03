@@ -313,9 +313,6 @@ public class CubeService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance purgeCube(CubeInstance cube) throws IOException, JobException {
 
-        //clean query related cache first
-        super.cleanDataCache(cube.getUuid());
-
         String cubeName = cube.getName();
         RealizationStatusEnum ostatus = cube.getStatus();
         if (null != ostatus && !RealizationStatusEnum.DISABLED.equals(ostatus)) {
@@ -340,9 +337,6 @@ public class CubeService extends BasicService {
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance disableCube(CubeInstance cube) throws IOException, JobException {
-
-        //clean query related cache first
-        super.cleanDataCache(cube.getUuid());
 
         String cubeName = cube.getName();
 
