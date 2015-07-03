@@ -177,8 +177,6 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         if (context.firstTableScan == null) {
             context.firstTableScan = this;
         }
-
-        context.setReturnTupleInfo(rowType, columnRowType);
     }
 
     private ColumnRowType buildColumnRowType() {
@@ -197,10 +195,11 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-        PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), this.rowType, pref.preferArray());
 
+        context.setReturnTupleInfo(rowType, columnRowType);
         String execFunction = genExecFunc();
 
+        PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), this.rowType, pref.preferArray());
         MethodCallExpression exprCall = Expressions.call(table.getExpression(OLAPTable.class), execFunction, implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));
     }

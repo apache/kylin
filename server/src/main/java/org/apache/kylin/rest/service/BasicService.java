@@ -37,13 +37,13 @@ import javax.sql.DataSource;
 
 import net.sf.ehcache.CacheManager;
 
+import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
-import org.apache.kylin.jdbc.Driver;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;

@@ -229,9 +229,12 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
     @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
+        
+        context.setReturnTupleInfo(rowType, columnRowType);
+        
         PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(), pref.preferArray());
         RelOptTable factTable = context.firstTableScan.getTable();
-        MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable.class), "executeIndexQuery", implementor.getRootExpression(), Expressions.constant(context.id));
+        MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable.class), "executeOLAPQuery", implementor.getRootExpression(), Expressions.constant(context.id));
         return implementor.result(physType, Blocks.toBlock(exprCall));
     }
 
