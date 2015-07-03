@@ -18,21 +18,16 @@
 
 package org.apache.kylin.dict;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.ref.SoftReference;
-import java.util.Arrays;
-import java.util.HashMap;
-
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.lang.ref.SoftReference;
+import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -173,7 +168,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
         int seq = lookupSeqNoFromValue(headSize, value, offset, offset + len, roundingFlag);
         int id = calcIdFromSeqNo(seq);
         if (id < 0)
-            throw new IllegalArgumentException("Not a valid value: " + bytesConvert.convertFromBytes(value, offset, len));
+            logger.error("Not a valid value: " + bytesConvert.convertFromBytes(value, offset, len));
         return id;
     }
 
@@ -478,11 +473,26 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     public boolean equals(Object o) {
         if ((o instanceof TrieDictionary) == false) {
-            logger.info("Equals return false because o is not TrieDictionary");
+            logger.info("Equals return false because it's not TrieDictionary");
             return false;
         }
         TrieDictionary that = (TrieDictionary) o;
         return Arrays.equals(this.trieBytes, that.trieBytes);
+    }
+
+    @Override
+    public boolean containedBy(Dictionary other) {
+        if (this.getSize() > other.getSize()) {
+            return false;
+        }
+
+        for (int i = getMinId(); i <= getMaxId(); ++i) {
+            T v = this.getValueFromId(i);
+            if (!other.containsValue(v)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static void main(String[] args) throws Exception {

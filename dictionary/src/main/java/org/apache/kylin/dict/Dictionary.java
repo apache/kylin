@@ -65,6 +65,11 @@ abstract public class Dictionary<T> implements Writable {
     abstract public int getSizeOfValue();
 
     /**
+     * @return true if each entry of this dict is contained by the dict in param
+     */
+    abstract public boolean containedBy(Dictionary another);
+
+    /**
      * Convenient form of <code>getIdFromValue(value, 0)</code>
      */
     final public int getIdFromValue(T value) throws IllegalArgumentException {
@@ -89,6 +94,20 @@ abstract public class Dictionary<T> implements Writable {
             return nullId();
         else
             return getIdFromValueImpl(value, roundingFlag);
+    }
+
+    final public boolean containsValue(T value) throws IllegalArgumentException {
+        if (isNullObjectForm(value)) {
+            return true;
+        } else {
+            try {
+                //if no key found, it will throw exception
+                getIdFromValueImpl(value, 0);
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
+            return true;
+        }
     }
 
     protected boolean isNullObjectForm(T value) {
@@ -135,8 +154,12 @@ abstract public class Dictionary<T> implements Writable {
     final public int getIdFromValueBytes(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
         if (isNullByteForm(value, offset, len))
             return nullId();
-        else
-            return getIdFromValueBytesImpl(value, offset, len, roundingFlag);
+        else {
+            int id = getIdFromValueBytesImpl(value, offset, len, roundingFlag);
+            if (id < 0)
+                throw new IllegalArgumentException("Value not exists!");
+            return id;
+        }
     }
 
     protected boolean isNullByteForm(byte[] value, int offset, int len) {
@@ -151,9 +174,9 @@ abstract public class Dictionary<T> implements Writable {
         else
             return getValueBytesFromIdImpl(id);
     }
-    
+
     abstract protected byte[] getValueBytesFromIdImpl(int id);
-    
+
     /**
      * A lower level API, get byte values from ID, return the number of bytes
      * written. Bypassing the cache layer, this could be significantly slower

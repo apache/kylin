@@ -18,16 +18,12 @@
 
 package org.apache.kylin.dict;
 
-import static org.apache.kylin.common.util.DateFormat.*;
+import org.apache.commons.lang.StringUtils;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
+import static org.apache.kylin.common.util.DateFormat.*;
 
 /**
  * A dictionary for date string (date only, no time).
@@ -175,6 +171,11 @@ public class DateStrDictionary extends Dictionary<String> {
             return false;
         DateStrDictionary that = (DateStrDictionary) o;
         return StringUtils.equals(this.pattern, that.pattern) && this.baseId == that.baseId;
+    }
+
+    @Override
+    public boolean containedBy(Dictionary other) {
+        return this.equals(other);
     }
 
     @Override

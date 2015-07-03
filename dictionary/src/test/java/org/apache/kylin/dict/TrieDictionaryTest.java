@@ -18,25 +18,12 @@
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.*;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.TreeSet;
-
 import org.junit.Test;
+
+import java.io.*;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 public class TrieDictionaryTest {
 
@@ -130,6 +117,32 @@ public class TrieDictionaryTest {
 
         testStringDictionary(str, notFound);
     }
+
+    @Test
+    public void dictionaryContainTest()
+    {
+        ArrayList<String> str = new ArrayList<String>();
+        str.add("part");
+        str.add("part"); // meant to be dup
+        str.add("par");
+        str.add("partition");
+        str.add("party");
+        str.add("parties");
+        str.add("paint");
+
+        TrieDictionaryBuilder<String> b = newDictBuilder(str);
+        int baseId = new Random().nextInt(100);
+        TrieDictionary<String> dict = b.build(baseId);
+
+        str.add("py");
+        b = newDictBuilder(str);
+        baseId = new Random().nextInt(100);
+        TrieDictionary<String> dict2 = b.build(baseId);
+
+        assertEquals(true,dict.containedBy(dict2));
+        assertEquals(false,dict2.containedBy(dict));
+    }
+
 
     @Test
     public void englishWordsTest() throws Exception {

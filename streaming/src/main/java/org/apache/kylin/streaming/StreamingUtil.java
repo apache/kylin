@@ -63,7 +63,7 @@ public final class StreamingUtil {
     }
 
     public static long findClosestOffsetWithDataTimestamp(KafkaClusterConfig kafkaClusterConfig, int partitionId, long timestamp, StreamParser streamParser) {
-        Pair<Long,Long> firstAndLast = getFirstAndLastOffset(kafkaClusterConfig, partitionId);
+        Pair<Long, Long> firstAndLast = getFirstAndLastOffset(kafkaClusterConfig, partitionId);
         final String topic = kafkaClusterConfig.getTopic();
 
         logger.info(String.format("topic: %s, partitionId: %d, try to find closest offset with timestamp: %d between offset {%d, %d}", topic, partitionId, timestamp, firstAndLast.getFirst(), firstAndLast.getSecond()));
