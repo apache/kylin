@@ -45,6 +45,7 @@ import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.kylin.rest.controller.QueryController;
 import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
@@ -172,6 +173,10 @@ public abstract class BasicService {
 
     public final IIManager getIIManager() {
         return IIManager.getInstance(getConfig());
+    }
+
+    public final HybridManager getHybridManager() {
+        return HybridManager.getInstance(getConfig());
     }
 
     protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs) {

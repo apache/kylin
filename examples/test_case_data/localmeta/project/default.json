@@ -26,6 +26,16 @@
       "name": "test_kylin_ii",
       "type": "INVERTED_INDEX",
       "realization": "test_kylin_ii"
+    },
+    {
+      "name": "test_kylin_hybrid_inner_join",
+      "type": "HYBRID",
+      "realization": "test_kylin_hybrid_inner_join"
+    },
+    {
+      "name": "test_kylin_hybrid_left_join",
+      "type": "HYBRID",
+      "realization": "test_kylin_hybrid_left_join"
     }
   ]
 }

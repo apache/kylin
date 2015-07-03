@@ -69,6 +69,4 @@ public interface IRealization {
 
     public long getDateRangeEnd();
 
-    public String getModelName();
-
 }
