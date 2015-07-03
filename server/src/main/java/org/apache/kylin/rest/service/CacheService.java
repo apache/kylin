@@ -75,7 +75,7 @@ public class CacheService extends BasicService {
                 getProjectManager().clearL2Cache();
                 //clean query related cache first
                 super.cleanDataCache(newCube.getUuid());
-                //move this logic to other place
+                //TODO: move this logic to other place
                 mergeCubeOnNewSegmentReady(cacheKey);
                 break;
             case CUBE_DESC:
@@ -111,7 +111,7 @@ public class CacheService extends BasicService {
                 IIManager.clearCache();
                 RealizationRegistry.clearCache();
                 ProjectManager.clearCache();
-                BasicService.cleanAllDataCache();
+                super.cleanAllDataCache();
                 BasicService.removeAllOLAPDataSources();
                 break;
             default:
