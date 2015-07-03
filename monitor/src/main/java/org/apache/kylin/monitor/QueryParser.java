@@ -235,7 +235,7 @@ public class QueryParser {
      */
     public FileSystem getHdfsFileSystem() throws IOException {
         Configuration conf = new Configuration();
-        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+//        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
         FileSystem fs = null;
         try {
             fs = FileSystem.get(conf);
