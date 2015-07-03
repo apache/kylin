@@ -18,7 +18,7 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -102,14 +102,29 @@ public class DictionaryManager {
 
     public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
 
-        String dupDict = checkDupByContent(newDictInfo, newDict);
-        if (dupDict != null) {
-            logger.info("Identical dictionary content " + newDict + ", reuse existing dictionary at " + dupDict);
-            return getDictionaryInfo(dupDict);
-        }
-
         newDictInfo.setDictionaryObject(newDict);
         newDictInfo.setDictionaryClass(newDict.getClass().getName());
+
+        DictionaryInfo largestDict = findLargestDict(newDictInfo);
+        if (largestDict != null) {
+            if (newDict.containedBy(largestDict.getDictionaryObject())) {
+                logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDict.getResourcePath());
+                return largestDict;
+            } else if (largestDict.getDictionaryObject().containedBy(newDict)) {
+                logger.info("dictionary content " + newDict + " is by far the largest, save it");
+                return saveNewDict(newDict, newDictInfo);
+            } else {
+                logger.info("merge dict and save...");
+                return mergeDictionary(Lists.newArrayList(newDictInfo, largestDict));
+            }
+        } else {
+            logger.info("first dict of this column, save it directly");
+            return saveNewDict(newDict, newDictInfo);
+        }
+    }
+
+    private DictionaryInfo saveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
+
 
         save(newDictInfo);
         dictCache.put(newDictInfo.getResourcePath(), newDictInfo);
@@ -307,10 +322,7 @@ public class DictionaryManager {
         }
         Collections.sort(existings);
 
-        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(existings.get(0),
-                existings.get(existings.size() - 1),
-                DictionaryInfo.class,
-                DictionaryInfoSerializer.INFO_SERIALIZER);
+        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(existings.get(0), existings.get(existings.size() - 1), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         TableSignature input = dictInfo.getInput();
 
@@ -322,25 +334,28 @@ public class DictionaryManager {
         return null;
     }
 
-    private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<?> dict) throws IOException {
+    private DictionaryInfo findLargestDict(DictionaryInfo dictInfo) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         ArrayList<String> dictInfos = store.listResources(dictInfo.getResourceDir());
         if (dictInfos == null || dictInfos.isEmpty()) {
             return null;
         }
-        Collections.sort(dictInfos);
+        //Collections.sort(dictInfos);
 
-        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.get(0),
-                dictInfos.get(dictInfos.size() - 1),
-                DictionaryInfo.class,
-                DictionaryInfoSerializer.FULL_SERIALIZER);
+        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.get(0), dictInfos.get(dictInfos.size() - 1), DictionaryInfo.class, DictionaryInfoSerializer.FULL_SERIALIZER);
 
+        DictionaryInfo largestDict = null;
         for (DictionaryInfo dictionaryInfo : allResources) {
-            if (dict.equals(dictionaryInfo.getDictionaryObject())) {
-                return dictionaryInfo.getResourcePath();
+            if (largestDict == null) {
+                largestDict = dictionaryInfo;
+                continue;
+            }
+
+            if (largestDict.getDictionaryObject().getSize() < dictionaryInfo.getDictionaryObject().getSize()) {
+                largestDict = dictionaryInfo;
             }
         }
-        return null;
+        return largestDict;
     }
 
     public void removeDictionary(String resourcePath) throws IOException {

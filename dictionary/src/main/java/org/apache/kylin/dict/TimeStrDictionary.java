@@ -106,6 +106,11 @@ public class TimeStrDictionary extends Dictionary<String> {
     }
 
     @Override
+    public boolean containedBy(Dictionary other) {
+        return this.equals(other);
+    }
+
+    @Override
     public void write(DataOutput out) throws IOException {
     }
 
