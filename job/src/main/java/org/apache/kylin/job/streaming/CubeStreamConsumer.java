@@ -1,7 +1,6 @@
 package org.apache.kylin.job.streaming;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -19,7 +18,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.*;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -83,7 +85,6 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
     @Override
     public void consume(MicroStreamBatch microStreamBatch) throws Exception {
 
-
         totalConsumedMessageCount += microStreamBatch.size();
         totalRawMessageCount += microStreamBatch.getRawMessageCount();
 
@@ -106,9 +107,9 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         ResourceStore.getStore(kylinConfig).putResource(cubeSegment.getStatisticsResourcePath(), FileSystem.getLocal(conf).open(new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION)), 0);
 
         final Map<TblColRef, Dictionary<?>> dictionaryMap = buildDictionary(cubeInstance, parsedStreamMessages);
-        writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);
+        Map<TblColRef, Dictionary<?>> realDictMap = writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);
 
-        InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), dictionaryMap);
+        InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), realDictMap);
         final HTableInterface hTable = createHTable(cubeSegment);
         final CubeStreamRecordWriter gtRecordWriter = new CubeStreamRecordWriter(cubeDesc, hTable);
 
@@ -119,7 +120,9 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         logger.info("Consumed {} messages out of {} raw messages", totalConsumedMessageCount, totalRawMessageCount);
     }
 
-    private void writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<?>> dictionaryMap, long startOffset, long endOffset) {
+    private Map<TblColRef, Dictionary<?>> writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<?>> dictionaryMap, long startOffset, long endOffset) {
+        Map<TblColRef, Dictionary<?>> realDictMap = Maps.newHashMap();
+
         for (Map.Entry<TblColRef, Dictionary<?>> entry : dictionaryMap.entrySet()) {
             final TblColRef tblColRef = entry.getKey();
             final Dictionary<?> dictionary = entry.getValue();
@@ -131,12 +134,16 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
             logger.info("writing dictionary for TblColRef:" + tblColRef.toString());
             DictionaryManager dictionaryManager = DictionaryManager.getInstance(kylinConfig);
             try {
-                cubeSegment.putDictResPath(tblColRef, dictionaryManager.trySaveNewDict(dictionary, dictInfo).getResourcePath());
+                DictionaryInfo realDict = dictionaryManager.trySaveNewDict(dictionary, dictInfo);
+                cubeSegment.putDictResPath(tblColRef, realDict.getResourcePath());
+                realDictMap.put(tblColRef, realDict.getDictionaryObject());
             } catch (IOException e) {
                 logger.error("error save dictionary for column:" + tblColRef, e);
                 throw new RuntimeException("error save dictionary for column:" + tblColRef, e);
             }
         }
+
+        return realDictMap;
     }
 
     private class CubeStreamRecordWriter implements ICuboidWriter {

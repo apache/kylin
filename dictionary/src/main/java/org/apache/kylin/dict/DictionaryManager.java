@@ -100,6 +100,10 @@ public class DictionaryManager {
         return dictInfo == NONE_INDICATOR ? null : dictInfo;
     }
 
+    /**
+     * @return may return another dict that is a super set of the input
+     * @throws IOException
+     */
     public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
 
         newDictInfo.setDictionaryObject(newDict);
@@ -112,19 +116,18 @@ public class DictionaryManager {
                 return largestDict;
             } else if (largestDict.getDictionaryObject().containedBy(newDict)) {
                 logger.info("dictionary content " + newDict + " is by far the largest, save it");
-                return saveNewDict(newDict, newDictInfo);
+                return saveNewDict(newDictInfo);
             } else {
                 logger.info("merge dict and save...");
                 return mergeDictionary(Lists.newArrayList(newDictInfo, largestDict));
             }
         } else {
             logger.info("first dict of this column, save it directly");
-            return saveNewDict(newDict, newDictInfo);
+            return saveNewDict(newDictInfo);
         }
     }
 
-    private DictionaryInfo saveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
-
+    private DictionaryInfo saveNewDict(DictionaryInfo newDictInfo) throws IOException {
 
         save(newDictInfo);
         dictCache.put(newDictInfo.getResourcePath(), newDictInfo);
