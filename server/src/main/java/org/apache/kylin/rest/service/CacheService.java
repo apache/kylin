@@ -28,6 +28,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.storage.hybrid.HybridManager;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -45,6 +46,7 @@ public class CacheService extends BasicService {
             switch (cacheType) {
             case CUBE:
                 getCubeManager().loadCubeCache(cacheKey);
+                getHybridManager().reloadHybridInstanceByChild(RealizationType.CUBE, cacheKey);
                 cleanProjectCacheByRealization(RealizationType.CUBE, cacheKey);
                 break;
             case CUBE_DESC:
@@ -55,6 +57,7 @@ public class CacheService extends BasicService {
                 break;
             case INVERTED_INDEX:
                 getIIManager().loadIICache(cacheKey);
+                getHybridManager().reloadHybridInstanceByChild(RealizationType.INVERTED_INDEX, cacheKey);
                 cleanProjectCacheByRealization(RealizationType.INVERTED_INDEX, cacheKey);
                 break;
             case INVERTED_INDEX_DESC:
@@ -76,6 +79,7 @@ public class CacheService extends BasicService {
                 CubeManager.clearCache();
                 IIDescManager.clearCache();
                 IIManager.clearCache();
+                HybridManager.clearCache();
                 RealizationRegistry.clearCache();
                 ProjectManager.clearCache();
                 BasicService.resetOLAPDataSources();

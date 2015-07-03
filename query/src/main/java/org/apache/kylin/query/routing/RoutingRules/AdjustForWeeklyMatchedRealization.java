@@ -49,8 +49,8 @@ public class AdjustForWeeklyMatchedRealization extends RoutingRule {
             if (first instanceof HybridInstance) {
                 HybridInstance hybrid = (HybridInstance) first;
 
-                if (hybrid.getHistoryRealizationInstance() instanceof CubeInstance)
-                    first = hybrid.getHistoryRealizationInstance();
+                if (hybrid.getRealizations()[0] instanceof CubeInstance)
+                    first = hybrid.getRealizations()[0];
             }
 
             if (first instanceof CubeInstance) {

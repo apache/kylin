@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.query.enumerator.OLAPQuery;
+import org.apache.kylin.storage.hybrid.HybridManager;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.junit.AfterClass;
@@ -105,6 +106,7 @@ public class KylinQueryTest extends KylinTestBase {
     protected static void preferCubeOf(String joinType) {
 
         CubeManager cubeManager = CubeManager.getInstance(config);
+        HybridManager hybridManager = HybridManager.getInstance(config);
 
         boolean cubesBuiltInBatch = cubeManager.getCube("test_kylin_cube_with_slr_empty") != null && cubeManager.getCube("test_kylin_cube_without_slr_empty") != null && cubeManager.getCube("test_kylin_cube_with_slr_left_join_empty") != null && cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty") != null;
 
@@ -114,11 +116,15 @@ public class KylinQueryTest extends KylinTestBase {
         }
 
         if (joinType.equals("inner")) {
+            hybridManager.getHybridInstance("test_kylin_hybrid_inner_join").setCost(10);
+            hybridManager.getHybridInstance("test_kylin_hybrid_left_join").setCost(100);
             cubeManager.getCube("test_kylin_cube_with_slr_empty").setCost(20);
             cubeManager.getCube("test_kylin_cube_without_slr_empty").setCost(10);
             cubeManager.getCube("test_kylin_cube_with_slr_left_join_empty").setCost(100);
             cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty").setCost(90);
         } else if (joinType.equals("left") || joinType.equals("default")) {
+            hybridManager.getHybridInstance("test_kylin_hybrid_left_join").setCost(20);
+            hybridManager.getHybridInstance("test_kylin_hybrid_inner_join").setCost(100);
             cubeManager.getCube("test_kylin_cube_with_slr_empty").setCost(100);
             cubeManager.getCube("test_kylin_cube_without_slr_empty").setCost(90);
             cubeManager.getCube("test_kylin_cube_with_slr_left_join_empty").setCost(20);
