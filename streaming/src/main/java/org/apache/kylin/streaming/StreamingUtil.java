@@ -36,15 +36,21 @@ public final class StreamingUtil {
     private static MessageAndOffset getKafkaMessage(KafkaClusterConfig kafkaClusterConfig, int partitionId, long offset) {
         final String topic = kafkaClusterConfig.getTopic();
         int retry = 3;
-        while (retry > 0) {
-            final Broker leadBroker = Preconditions.checkNotNull(getLeadBroker(kafkaClusterConfig, partitionId), "unable to find leadBroker with config:" + kafkaClusterConfig + " partitionId:" + partitionId);
+        while (retry-- > 0) {
+            final Broker leadBroker = getLeadBroker(kafkaClusterConfig, partitionId);
+            if (leadBroker == null) {
+                logger.warn("unable to find leadBroker with config:" + kafkaClusterConfig + " partitionId:" + partitionId);
+                continue;
+            }
             final FetchResponse response = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, kafkaClusterConfig);
-            Preconditions.checkArgument(response.errorCode(topic, partitionId) == 0, "errorCode of FetchResponse is:" + response.errorCode(topic, partitionId));
+            if (response.errorCode(topic, partitionId) != 0) {
+                logger.warn("errorCode of FetchResponse is:" + response.errorCode(topic, partitionId));
+                continue;
+            }
             final Iterator<MessageAndOffset> iterator = response.messageSet(topic, partitionId).iterator();
             if (iterator.hasNext()) {
                 return iterator.next();
             } else {
-                retry--;
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
