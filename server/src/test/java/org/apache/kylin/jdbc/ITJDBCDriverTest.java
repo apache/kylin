@@ -43,7 +43,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
     @BeforeClass
     public static void beforeClass() throws Exception {
         sysPropsOverride.override("spring.profiles.active", "testing");
-        //sysPropsOverride.override("catalina.home", "."); // resources/log4j.properties ref ${catalina.home}
+        sysPropsOverride.override("catalina.home", "."); // resources/log4j.properties ref ${catalina.home}
         staticCreateTestMetadata();
         startJetty();
     }

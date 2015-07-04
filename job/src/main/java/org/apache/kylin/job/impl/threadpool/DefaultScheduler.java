@@ -150,7 +150,9 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         this.jobEngineConfig = jobEngineConfig;
 
-        jobLock.lock();
+        if (jobLock.lock() == false) {
+            throw new IllegalStateException("Cannot start job scheduler due to lack of job lock");
+        }
 
         executableManager = ExecutableManager.getInstance(jobEngineConfig.getConfig());
         //load all executable, set them to a consistent status
