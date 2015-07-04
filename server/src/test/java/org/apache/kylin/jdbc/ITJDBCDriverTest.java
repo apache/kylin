@@ -20,6 +20,7 @@
 package org.apache.kylin.jdbc;
 
 import com.google.common.collect.Lists;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.eclipse.jetty.server.Server;
@@ -28,6 +29,7 @@ import org.junit.*;
 
 import java.io.File;
 import java.sql.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -36,15 +38,12 @@ import java.util.Properties;
 public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     private static Server server = null;
-
-    private static String previousSpringProfile = null;
-
-    private static String SPRING_PROFILE_PROPERTY = "spring.profiles.active";
+    private static SystemPropertiesOverride sysPropsOverride = new SystemPropertiesOverride();
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        previousSpringProfile = System.getProperty(SPRING_PROFILE_PROPERTY);
-        System.setProperty(SPRING_PROFILE_PROPERTY, "testing");
+        sysPropsOverride.override("spring.profiles.active", "testing");
+        sysPropsOverride.override("catalina.home", "."); // resources/log4j.properties ref ${catalina.home}
         staticCreateTestMetadata();
         startJetty();
     }
@@ -53,11 +52,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
     public static void afterClass() throws Exception {
         stopJetty();
         staticCleanupTestMetadata();
-        if (previousSpringProfile == null) {
-            System.clearProperty(SPRING_PROFILE_PROPERTY);
-        } else {
-            System.setProperty(SPRING_PROFILE_PROPERTY, previousSpringProfile);
-        }
+        sysPropsOverride.restore();
     }
 
     protected static void stopJetty() throws Exception {
@@ -261,4 +256,23 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     }
 
+    private static class SystemPropertiesOverride {
+        HashMap<String, String> backup = new HashMap<String, String>();
+        
+        public void override(String key, String value) {
+            backup.put(key, System.getProperty(key));
+            System.setProperty(key, value);
+        }
+        
+        public void restore() {
+            for (String key : backup.keySet()) {
+                String value = backup.get(key);
+                if (value == null)
+                    System.clearProperty(key);
+                else
+                    System.setProperty(key, value);
+            }
+            backup.clear();
+        }
+    }
 }
