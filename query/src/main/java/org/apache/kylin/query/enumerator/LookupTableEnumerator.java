@@ -29,9 +29,13 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPTable;
+import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.tuple.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -42,10 +46,23 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
     private final Object[] current;
     private Iterator<String[]> iterator;
 
+    private final static Logger logger = LoggerFactory.getLogger(LookupTableEnumerator.class);
     public LookupTableEnumerator(OLAPContext olapContext) {
 
         //TODO: assuming LookupTableEnumerator is handled by a cube
-        CubeInstance cube = (CubeInstance) olapContext.realization;
+        CubeInstance cube = null;
+
+        if (olapContext.realization instanceof CubeInstance)
+            cube = (CubeInstance) olapContext.realization;
+        else if (olapContext.realization instanceof HybridInstance) {
+            final HybridInstance hybridInstance = (HybridInstance)olapContext.realization;
+            final IRealization latestRealization = hybridInstance.getLatestRealization();
+            if (latestRealization instanceof CubeInstance) {
+                cube = (CubeInstance) latestRealization;
+            } else {
+                throw new IllegalStateException();
+            }
+        }
 
         String lookupTableName = olapContext.firstTableScan.getTableName();
         DimensionDesc dim = cube.getDescriptor().findDimensionByTable(lookupTableName);
