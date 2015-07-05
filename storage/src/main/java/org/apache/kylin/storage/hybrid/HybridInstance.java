@@ -14,9 +14,10 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  */
@@ -46,6 +47,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     private String projectName;
 
     private boolean initiated = false;
+    private final static Logger logger = LoggerFactory.getLogger(HybridInstance.class);
 
     public List<RealizationEntry> getRealizationEntries() {
         return realizationEntries;
@@ -63,12 +65,18 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
                 throw new IllegalArgumentException();
 
             RealizationRegistry registry = RealizationRegistry.getInstance(config);
-            realizations = new IRealization[realizationEntries.size()];
+            List<IRealization> realizationList = Lists.newArrayList();
             for (int i = 0; i < realizationEntries.size(); i++) {
                 IRealization realization = registry.getRealization(realizationEntries.get(i).getType(), realizationEntries.get(i).getRealization());
-                if (realization == null)
-                    throw new IllegalArgumentException("Realization '" + realizationEntries.get(i) + "' not loaded.");
-                realizations[i] = realization;
+                if (realization == null) {
+                    logger.error("Realization '" + realization.getName() + " is not found, remove from Hybrid '" + this.getName() + "'");
+                    continue;
+                }
+                if (realization.isReady() == false) {
+                    logger.error("Realization '" + realization.getName() + " is disabled, remove from Hybrid '" + this.getName() + "'");
+                    continue;
+                }
+                realizationList.add(realization);
             }
 
             LinkedHashSet<TblColRef> columns = new LinkedHashSet<TblColRef>();
@@ -76,10 +84,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             LinkedHashSet<MeasureDesc> measures = new LinkedHashSet<MeasureDesc>();
             dateRangeStart = 0;
             dateRangeEnd = Long.MAX_VALUE;
-            for (IRealization realization : realizations) {
-                if (realization.isReady() == false)
-                    continue;
-
+            for (IRealization realization : realizationList) {
                 columns.addAll(realization.getAllColumns());
                 dimensions.addAll(realization.getAllDimensions());
                 measures.addAll(realization.getMeasures());
@@ -98,6 +103,29 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             allColumns = Lists.newArrayList(columns);
             allMeasures = Lists.newArrayList(measures);
 
+            Collections.sort(realizationList, new Comparator<IRealization>() {
+                @Override
+                public int compare(IRealization o1, IRealization o2) {
+
+                    long i1 = o1.getDateRangeStart();
+                    long i2 = o2.getDateRangeStart();
+                    long comp = i1 - i2;
+                    if (comp != 0) {
+                        return comp > 0 ? 1 : -1;
+                    }
+
+                    i1 = o1.getDateRangeEnd();
+                    i2 = o2.getDateRangeEnd();
+                    comp = i1 - i2;
+                    if (comp != 0) {
+                        return comp > 0 ? 1 : -1;
+                    }
+
+                    return 0;
+                }
+            });
+
+            this.realizations = realizationList.toArray(new IRealization[realizationList.size()]);
             initiated = true;
         }
     }
@@ -207,5 +235,12 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     public void setCost(int cost) {
         this.cost = cost;
+    }
+
+    public IRealization getLatestRealization() {
+        if (realizations.length > 0) {
+            return realizations[realizations.length - 1];
+        }
+        return null;
     }
 }
