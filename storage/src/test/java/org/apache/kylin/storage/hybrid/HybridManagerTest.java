@@ -3,7 +3,6 @@ package org.apache.kylin.storage.hybrid;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.junit.After;
 import org.junit.Assert;
@@ -26,12 +25,15 @@ public class HybridManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        HybridInstance hybridInstance = getHybridManager().getHybridInstance("test_kylin_hybrid_left_join");
+        HybridInstance hybridInstance = getHybridManager().getHybridInstance("test_kylin_hybrid_ready");
         System.out.println(JsonUtil.writeValueAsIndentString(hybridInstance));
 
-        IRealization history = hybridInstance.getRealizations()[0];
+        IRealization[] realizations = hybridInstance.getRealizations();
+        Assert.assertEquals(realizations.length, 2);
 
-        Assert.assertTrue(history instanceof CubeInstance);
+        IRealization lastReal = hybridInstance.getLatestRealization();
+        Assert.assertTrue(lastReal instanceof CubeInstance);
+        Assert.assertEquals(lastReal.getName(), "test_kylin_cube_with_slr_ready_2_segments");
 
     }
 
