@@ -111,25 +111,27 @@ KylinApp
         confirmButtonColor: '#DD6B55',
         confirmButtonText: "Yes",
         closeOnConfirm: true
-      }, function () {
-        loadingRequest.show();
-        JobService.resume({jobId: job.uuid}, {}, function (job) {
-          loadingRequest.hide();
-          JobList.jobs[job.uuid] = job;
-          if (angular.isDefined($scope.state.selectedJob)) {
-            $scope.state.selectedJob = JobList.jobs[$scope.state.selectedJob.uuid];
-          }
-          SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
-        }, function (e) {
-          loadingRequest.hide();
-          if (e.data && e.data.exception) {
-            var message = e.data.exception;
-            var msg = !!(message) ? message : 'Failed to take action.';
-            SweetAlert.swal('Oops...', msg, 'error');
-          } else {
-            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-          }
-        });
+      }, function (isConfirm) {
+        if (isConfirm) {
+          loadingRequest.show();
+          JobService.resume({jobId: job.uuid}, {}, function (job) {
+            loadingRequest.hide();
+            JobList.jobs[job.uuid] = job;
+            if (angular.isDefined($scope.state.selectedJob)) {
+              $scope.state.selectedJob = JobList.jobs[$scope.state.selectedJob.uuid];
+            }
+            SweetAlert.swal('Success!', 'Job has been resumed successfully!', 'success');
+          }, function (e) {
+            loadingRequest.hide();
+            if (e.data && e.data.exception) {
+              var message = e.data.exception;
+              var msg = !!(message) ? message : 'Failed to take action.';
+              SweetAlert.swal('Oops...', msg, 'error');
+            } else {
+              SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
+          });
+        }
       });
     }
 
@@ -143,28 +145,30 @@ KylinApp
         confirmButtonColor: '#DD6B55',
         confirmButtonText: "Yes",
         closeOnConfirm: true
-      }, function () {
-        loadingRequest.show();
-        JobService.cancel({jobId: job.uuid}, {}, function (job) {
-          loadingRequest.hide();
-          $scope.safeApply(function () {
-            JobList.jobs[job.uuid] = job;
-            if (angular.isDefined($scope.state.selectedJob)) {
-              $scope.state.selectedJob = JobList.jobs[$scope.state.selectedJob.uuid];
-            }
+      }, function (isConfirm) {
+        if (isConfirm) {
+          loadingRequest.show();
+          JobService.cancel({jobId: job.uuid}, {}, function (job) {
+            loadingRequest.hide();
+            $scope.safeApply(function () {
+              JobList.jobs[job.uuid] = job;
+              if (angular.isDefined($scope.state.selectedJob)) {
+                $scope.state.selectedJob = JobList.jobs[$scope.state.selectedJob.uuid];
+              }
 
+            });
+            SweetAlert.swal('Success!', 'Job has been discarded successfully!', 'success');
+          }, function (e) {
+            loadingRequest.hide();
+            if (e.data && e.data.exception) {
+              var message = e.data.exception;
+              var msg = !!(message) ? message : 'Failed to take action.';
+              SweetAlert.swal('Oops...', msg, 'error');
+            } else {
+              SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
           });
-          SweetAlert.swal('Success!', 'Job has been discarded successfully!', 'success');
-        }, function (e) {
-          loadingRequest.hide();
-          if (e.data && e.data.exception) {
-            var message = e.data.exception;
-            var msg = !!(message) ? message : 'Failed to take action.';
-            SweetAlert.swal('Oops...', msg, 'error');
-          } else {
-            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-          }
-        });
+        }
       });
     }
 
