@@ -137,14 +137,6 @@ public class FunctionDesc {
         this.parameter = parameter;
     }
 
-    public DataType getReturnDataType() {
-        return returnDataType;
-    }
-
-    public void setReturnDataType(DataType returnDataType) {
-        this.returnDataType = returnDataType;
-    }
-
     public DataType getSQLType() {
         if (isCountDistinct())
             return DataType.ANY;
@@ -158,8 +150,18 @@ public class FunctionDesc {
         return returnType;
     }
 
+    public DataType getReturnDataType() {
+        return returnDataType;
+    }
+
     public void setReturnType(String returnType) {
         this.returnType = returnType;
+        this.initReturnDataType();
+    }
+    
+    // Jackson does not provide object post-processing currently
+    public void initReturnDataType() {
+        this.returnDataType = DataType.getInstance(returnType);
     }
 
     public TblColRef selectTblColRef(Collection<TblColRef> metricColumns, String factTableName) {
