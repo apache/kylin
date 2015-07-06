@@ -45,6 +45,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.DaemonThreadFactory;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -53,6 +54,8 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.job.monitor.MonitorCLI;
+import org.apache.kylin.job.monitor.StreamingMonitor;
 import org.apache.kylin.metadata.model.IntermediateColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.streaming.*;
@@ -122,12 +125,20 @@ public class StreamingBootstrap {
             Preconditions.checkArgument(partitionId >= 0, "partitionId cannot be empty for inverted index streaming");
             startIIStreaming(streamingConfig, partitionId);
         } else if (!StringUtils.isEmpty(streamingConfig.getCubeName())) {
-            if (bootstrapConfig.isOneOff()) {
-                Preconditions.checkArgument(bootstrapConfig.getStart() != 0);
-                Preconditions.checkArgument(bootstrapConfig.getEnd() != 0);
-                startOneOffCubeStreaming(streamingConfig, bootstrapConfig.getStart(), bootstrapConfig.getEnd(), bootstrapConfig.getMargin());
+            if (bootstrapConfig.isFillGap()) {
+                final List<Pair<Long, Long>> gaps = StreamingMonitor.findGaps(streamingConfig.getCubeName());
+                logger.info("all gaps:" + StringUtils.join(gaps, ","));
+                for (Pair<Long, Long> gap : gaps) {
+                    startOneOffCubeStreaming(streamingConfig, gap.getFirst(), gap.getSecond(), bootstrapConfig.getMargin());
+                }
             } else {
-                startCubeStreaming(streamingConfig);
+                if (bootstrapConfig.isOneOff()) {
+                    Preconditions.checkArgument(bootstrapConfig.getStart() != 0);
+                    Preconditions.checkArgument(bootstrapConfig.getEnd() != 0);
+                    startOneOffCubeStreaming(streamingConfig, bootstrapConfig.getStart(), bootstrapConfig.getEnd(), bootstrapConfig.getMargin());
+                } else {
+                    startCubeStreaming(streamingConfig);
+                }
             }
         } else {
             throw new IllegalArgumentException("no cube or ii in kafka config");

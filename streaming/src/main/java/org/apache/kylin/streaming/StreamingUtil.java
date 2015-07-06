@@ -35,8 +35,8 @@ public final class StreamingUtil {
 
     private static MessageAndOffset getKafkaMessage(KafkaClusterConfig kafkaClusterConfig, int partitionId, long offset) {
         final String topic = kafkaClusterConfig.getTopic();
-        int retry = 3;
-        while (retry-- > 0) {
+        int retry = 0;
+        while (retry++ < 4) {
             final Broker leadBroker = getLeadBroker(kafkaClusterConfig, partitionId);
             if (leadBroker == null) {
                 logger.warn("unable to find leadBroker with config:" + kafkaClusterConfig + " partitionId:" + partitionId);
@@ -52,7 +52,7 @@ public final class StreamingUtil {
                 return iterator.next();
             } else {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep((long) (Math.pow(2, retry) * 1000));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

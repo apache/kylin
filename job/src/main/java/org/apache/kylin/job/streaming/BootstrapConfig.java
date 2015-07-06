@@ -12,6 +12,8 @@ public class BootstrapConfig {
     private long end = 0L;
     private long margin = 0L;
 
+    private boolean fillGap;
+
 
     public long getMargin() {
         return margin;
@@ -59,5 +61,13 @@ public class BootstrapConfig {
 
     public void setPartitionId(int partitionId) {
         this.partitionId = partitionId;
+    }
+
+    public boolean isFillGap() {
+        return fillGap;
+    }
+
+    public void setFillGap(boolean fillGap) {
+        this.fillGap = fillGap;
     }
 }
