@@ -135,7 +135,7 @@ public class BuildIIWithEngineTest {
             ii.setStatus(RealizationStatusEnum.READY);
             iiManager.updateII(ii);
         }
-       // backup();
+       backup();
     }
 
     @Test
