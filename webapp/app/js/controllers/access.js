@@ -102,25 +102,26 @@ KylinApp.controller('AccessCtrl', function ($scope, AccessService, MessageServic
       confirmButtonColor: '#DD6B55',
       confirmButtonText: "Yes",
       closeOnConfirm: true
-    }, function () {
-      var revokeRequst = {
-        type: type,
-        uuid: entity.uuid,
-        accessEntryId: access.id
-      };
-      AccessService.revoke(revokeRequst, function (accessEntities) {
-        entity.accessEntities = accessEntities.accessEntryResponseList;
-        SweetAlert.swal('Success!', 'The access has been revoked.', 'success');
-      }, function (e) {
-        if (e.data && e.data.exception) {
-          var message = e.data.exception;
-          var msg = !!(message) ? message : 'Failed to take action.';
-          SweetAlert.swal('Oops...', msg, 'error');
-        } else {
-          SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-        }
-      });
-
+    }, function (isConfirm) {
+      if (isConfirm) {
+        var revokeRequst = {
+          type: type,
+          uuid: entity.uuid,
+          accessEntryId: access.id
+        };
+        AccessService.revoke(revokeRequst, function (accessEntities) {
+          entity.accessEntities = accessEntities.accessEntryResponseList;
+          SweetAlert.swal('Success!', 'The access has been revoked.', 'success');
+        }, function (e) {
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+          }
+        });
+      }
     });
 
   }
