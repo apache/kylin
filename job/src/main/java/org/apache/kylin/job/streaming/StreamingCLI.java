@@ -79,6 +79,9 @@ public class StreamingCLI {
                 case "-margin":
                     bootstrapConfig.setMargin(Long.parseLong(args[++i]));
                     break;
+                case "-fillGap":
+                    bootstrapConfig.setFillGap(Boolean.parseBoolean(args[++i]));
+                    break;
                 default:
                     logger.warn("ignore this arg:" + argName);
                 }

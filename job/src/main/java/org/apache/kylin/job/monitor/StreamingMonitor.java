@@ -1,6 +1,7 @@
 package org.apache.kylin.job.monitor;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
@@ -71,17 +72,9 @@ public class StreamingMonitor {
         sendMail(receivers, title, stringBuilder.toString());
     }
 
-    public void checkCube(List<String> receivers, String cubeName) {
-        final CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
-        if (cube == null) {
-            logger.info("cube:" + cubeName + " does not exist");
-            return;
-        }
-        final List<CubeSegment> segments = cube.getSegment(SegmentStatusEnum.READY);
-        logger.info("totally " + segments.size() + " cubeSegments");
-        Collections.sort(segments);
+    public static final List<Pair<Long, Long>> findGaps(String cubeName) {
+        List<CubeSegment> segments = getSortedReadySegments(cubeName);
         List<Pair<Long, Long>> gaps = Lists.newArrayList();
-        List<Pair<String, String>> overlaps = Lists.newArrayList();
         for (int i = 0; i < segments.size() - 1; ++i) {
             CubeSegment first = segments.get(i);
             CubeSegment second = segments.get(i + 1);
@@ -89,10 +82,43 @@ public class StreamingMonitor {
                 continue;
             } else if (first.getDateRangeEnd() < second.getDateRangeStart()) {
                 gaps.add(Pair.newPair(first.getDateRangeEnd(), second.getDateRangeStart()));
+            }
+        }
+        return gaps;
+    }
+
+    private static List<CubeSegment> getSortedReadySegments(String cubeName) {
+        final CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
+        Preconditions.checkNotNull(cube);
+        final List<CubeSegment> segments = cube.getSegment(SegmentStatusEnum.READY);
+        logger.info("totally " + segments.size() + " cubeSegments");
+        Collections.sort(segments);
+        return segments;
+    }
+
+    public static final List<Pair<String, String>> findOverlaps(String cubeName) {
+        List<CubeSegment> segments = getSortedReadySegments(cubeName);
+        List<Pair<String, String>> overlaps = Lists.newArrayList();
+        for (int i = 0; i < segments.size() - 1; ++i) {
+            CubeSegment first = segments.get(i);
+            CubeSegment second = segments.get(i + 1);
+            if (first.getDateRangeEnd() == second.getDateRangeStart()) {
+                continue;
             } else {
                 overlaps.add(Pair.newPair(first.getName(), second.getName()));
             }
         }
+        return overlaps;
+    }
+
+    public void checkCube(List<String> receivers, String cubeName) {
+        final CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
+        if (cube == null) {
+            logger.info("cube:" + cubeName + " does not exist");
+            return;
+        }
+        List<Pair<Long, Long>> gaps = findGaps(cubeName);
+        List<Pair<String, String>> overlaps = Lists.newArrayList();
         StringBuilder content = new StringBuilder();
         if (!gaps.isEmpty()) {
             content.append("all gaps:").append("\n").append(
