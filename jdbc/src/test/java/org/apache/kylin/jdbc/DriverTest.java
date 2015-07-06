@@ -100,14 +100,17 @@ public class DriverTest {
 
         ResultSet catalogs = conn.getMetaData().getCatalogs();
         System.out.println("CATALOGS");
+        printResultSetMetaData(catalogs);
         printResultSet(catalogs);
 
         ResultSet schemas = conn.getMetaData().getSchemas();
         System.out.println("SCHEMAS");
+        printResultSetMetaData(schemas);
         printResultSet(schemas);
 
         ResultSet tables = conn.getMetaData().getTables(null, null, null, null);
         System.out.println("TABLES");
+        printResultSetMetaData(tables);
         printResultSet(tables);
 
         for (int j = 0; j < 3; j++) {
