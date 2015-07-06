@@ -89,19 +89,19 @@ public class KylinMeta extends MetaImpl {
     @Override
     public MetaResultSet getCatalogs() {
         List<KMetaCatalog> catalogs = getMetaProject().catalogs;
-        return createResultSet(catalogs, MetaCatalog.class, "TABLE_CATALOG");
+        return createResultSet(catalogs, KMetaCatalog.class, "TABLE_CAT");
     }
 
     @Override
     public MetaResultSet getSchemas(String catalog, Pat schemaPattern) {
         List<KMetaSchema> schemas = getMetaProject().getSchemas(catalog, schemaPattern);
-        return createResultSet(schemas, MetaSchema.class, "TABLE_SCHEM", "TABLE_CATALOG");
+        return createResultSet(schemas, KMetaSchema.class, "TABLE_SCHEM", "TABLE_CATALOG");
     }
 
     @Override
     public MetaResultSet getTables(String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
         List<KMetaTable> tables = getMetaProject().getTables(catalog, schemaPattern, tableNamePattern, typeList);
-        return createResultSet(tables, MetaTable.class, //
+        return createResultSet(tables, KMetaTable.class, //
                 "TABLE_CAT", //
                 "TABLE_SCHEM", //
                 "TABLE_NAME", //
@@ -117,7 +117,7 @@ public class KylinMeta extends MetaImpl {
     @Override
     public MetaResultSet getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
         List<KMetaColumn> columns = getMetaProject().getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
-        return createResultSet(columns, MetaColumn.class, //
+        return createResultSet(columns, KMetaColumn.class, //
                 "TABLE_CAT", //
                 "TABLE_SCHEM", //
                 "TABLE_NAME", //
@@ -285,12 +285,18 @@ public class KylinMeta extends MetaImpl {
         }
     }
 
-    public static class KMetaCatalog extends MetaCatalog implements NamedWithChildren {
+    public static class KMetaCatalog implements NamedWithChildren {
+        public final String tableCat;
         public final List<KMetaSchema> schemas;
 
         public KMetaCatalog(String tableCatalog, List<KMetaSchema> schemas) {
-            super(tableCatalog);
+            this.tableCat = tableCatalog;
             this.schemas = schemas;
+        }
+        
+        @Override
+        public String getName() {
+            return tableCat;
         }
 
         @Override
