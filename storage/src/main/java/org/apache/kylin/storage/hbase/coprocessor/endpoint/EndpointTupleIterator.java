@@ -19,9 +19,11 @@
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
 import java.io.IOException;
-import java.util.*;
-
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -29,7 +31,17 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.invertedindex.index.TableRecord;
+import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ITuple;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
@@ -40,19 +52,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
-
-import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.invertedindex.index.TableRecord;
-import org.apache.kylin.invertedindex.index.TableRecordInfo;
-import org.apache.kylin.metadata.model.DataType;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
-import org.apache.kylin.metadata.tuple.ITuple;
-import org.apache.kylin.metadata.tuple.ITupleIterator;
 
 
 /**
@@ -144,7 +145,6 @@ public class EndpointTupleIterator implements ITupleIterator {
         for (FunctionDesc functionDesc : measures) {
             if (functionDesc.isCount()) {
                 functionDesc.setReturnType("bigint");
-                functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
             } else {
                 boolean updated = false;
                 for (TblColRef column : columns) {
@@ -153,10 +153,8 @@ public class EndpointTupleIterator implements ITupleIterator {
                             //TODO: default precision might need be configurable
                             String iiDefaultHLLC = "hllc10";
                             functionDesc.setReturnType(iiDefaultHLLC);
-                            functionDesc.setReturnDataType(DataType.getInstance(iiDefaultHLLC));
                         } else {
                             functionDesc.setReturnType(column.getColumn().getType().toString());
-                            functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
                         }
                         functionDesc.getParameter().setColRefs(ImmutableList.of(column));
                         updated = true;
