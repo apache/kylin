@@ -18,10 +18,16 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
-import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -37,7 +43,6 @@ import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -53,9 +58,15 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.*;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.collect.Ranges;
+import com.google.common.collect.Sets;
+import com.google.protobuf.ByteString;
 
 /**
  */
@@ -188,7 +199,6 @@ public class EndpointTupleIterator implements ITupleIterator {
         for (FunctionDesc functionDesc : measures) {
             if (functionDesc.isCount()) {
                 functionDesc.setReturnType("bigint");
-                functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
             } else {
                 boolean updated = false;
                 for (TblColRef column : columns) {
@@ -197,10 +207,8 @@ public class EndpointTupleIterator implements ITupleIterator {
                             //TODO: default precision might need be configurable
                             String iiDefaultHLLC = "hllc10";
                             functionDesc.setReturnType(iiDefaultHLLC);
-                            functionDesc.setReturnDataType(DataType.getInstance(iiDefaultHLLC));
                         } else {
                             functionDesc.setReturnType(column.getColumnDesc().getType().toString());
-                            functionDesc.setReturnDataType(DataType.getInstance(functionDesc.getReturnType()));
                         }
                         functionDesc.getParameter().setColRefs(ImmutableList.of(column));
                         updated = true;
