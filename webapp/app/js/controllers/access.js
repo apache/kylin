@@ -102,7 +102,8 @@ KylinApp.controller('AccessCtrl', function ($scope, AccessService, MessageServic
       confirmButtonColor: '#DD6B55',
       confirmButtonText: "Yes",
       closeOnConfirm: true
-    }, function () {
+    }, function (isConfirm) {
+      if(isConfirm){
       var revokeRequst = {
         type: type,
         uuid: entity.uuid,
@@ -120,7 +121,7 @@ KylinApp.controller('AccessCtrl', function ($scope, AccessService, MessageServic
           SweetAlert.swal('Oops...', "Failed to take action.", 'error');
         }
       });
-
+      }
     });
 
   }
