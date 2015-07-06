@@ -21,6 +21,8 @@ public final class StreamingUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamingUtil.class);
 
+    private static final int MAX_RETRY_TIMES = 6;
+
     private StreamingUtil() {
     }
 
@@ -33,31 +35,39 @@ public final class StreamingUtil {
         }
     }
 
+    private static void sleep(int retryTimes) {
+        int seconds = (int) Math.pow(2, retryTimes);
+        logger.info("retry times:" + retryTimes + " sleep:" + seconds + " seconds");
+        try {
+            Thread.sleep(seconds * 1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static MessageAndOffset getKafkaMessage(KafkaClusterConfig kafkaClusterConfig, int partitionId, long offset) {
         final String topic = kafkaClusterConfig.getTopic();
         int retry = 0;
-        while (retry++ < 4) {
+        while (retry < MAX_RETRY_TIMES) {//max sleep time 63 seconds
             final Broker leadBroker = getLeadBroker(kafkaClusterConfig, partitionId);
             if (leadBroker == null) {
                 logger.warn("unable to find leadBroker with config:" + kafkaClusterConfig + " partitionId:" + partitionId);
+                sleep(retry++);
                 continue;
             }
             final FetchResponse response = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, kafkaClusterConfig);
             if (response.errorCode(topic, partitionId) != 0) {
                 logger.warn("errorCode of FetchResponse is:" + response.errorCode(topic, partitionId));
+                sleep(retry++);
                 continue;
             }
             final Iterator<MessageAndOffset> iterator = response.messageSet(topic, partitionId).iterator();
-            if (iterator.hasNext()) {
-                return iterator.next();
-            } else {
-                try {
-                    Thread.sleep((long) (Math.pow(2, retry) * 1000));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+            if (!iterator.hasNext()) {
+                logger.warn("messageSet is empty");
+                sleep(retry++);
                 continue;
             }
+            return iterator.next();
         }
         throw new IllegalStateException(String.format("try to get timestamp of topic: %s, partitionId: %d, offset: %d, failed to get StreamMessage from kafka", topic, partitionId, offset));
     }
