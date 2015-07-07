@@ -259,7 +259,7 @@ public class KylinClient implements IRemoteClient {
 
             for (int i = 0; i < result.length; i++) {
                 ColumnMetaData meta = metas.get(i);
-                row[i] = wrapObject(result[i], meta.type.type);
+                row[i] = wrapObject(result[i], meta.type.id);
             }
 
             data.add(row);
