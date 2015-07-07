@@ -39,9 +39,11 @@ public class OLAPProjectRule extends RelOptRule {
     public void onMatch(RelOptRuleCall call) {
         LogicalProject project = call.rel(0);
 
-        RelTraitSet traitSet = project.getTraitSet().replace(OLAPRel.CONVENTION);
+        RelTraitSet origTraitSet = project.getTraitSet();
+        RelTraitSet traitSet = origTraitSet.replace(OLAPRel.CONVENTION).simplify();
+
         OLAPProjectRel olapProj = new OLAPProjectRel(project.getCluster(), traitSet, //
-                convert(project.getInput(), traitSet), project.getProjects(), project.getRowType(), project.getFlags());
+                convert(project.getInput(), traitSet), project.getProjects(), project.getRowType());
         call.transformTo(olapProj);
     }
 

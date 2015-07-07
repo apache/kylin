@@ -39,7 +39,9 @@ public class OLAPFilterRule extends RelOptRule {
     public void onMatch(RelOptRuleCall call) {
         LogicalFilter filter = call.rel(0);
 
-        RelTraitSet traitSet = filter.getTraitSet().replace(OLAPRel.CONVENTION);
+        RelTraitSet origTraitSet = filter.getTraitSet();
+        RelTraitSet traitSet = origTraitSet.replace(OLAPRel.CONVENTION).simplify();
+        
         OLAPFilterRel olapFilter = new OLAPFilterRel(filter.getCluster(), traitSet, convert(filter.getInput(), traitSet), filter.getCondition());
         call.transformTo(olapFilter);
     }

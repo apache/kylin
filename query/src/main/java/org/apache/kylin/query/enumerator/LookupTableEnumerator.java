@@ -46,7 +46,9 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
     private final Object[] current;
     private Iterator<String[]> iterator;
 
+    @SuppressWarnings("unused")
     private final static Logger logger = LoggerFactory.getLogger(LookupTableEnumerator.class);
+    
     public LookupTableEnumerator(OLAPContext olapContext) {
 
         //TODO: assuming LookupTableEnumerator is handled by a cube

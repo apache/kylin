@@ -27,21 +27,22 @@ import java.util.TimeZone;
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Meta.Frame;
 import org.apache.calcite.avatica.Meta.Signature;
 import org.apache.calcite.avatica.MetaImpl;
 import org.apache.kylin.jdbc.IRemoteClient.QueryResult;
 
 public class KylinResultSet extends AvaticaResultSet {
 
-    public KylinResultSet(AvaticaStatement statement, Signature signature, ResultSetMetaData resultSetMetaData, TimeZone timeZone, Iterable<Object> iterable) {
-        super(statement, signature, resultSetMetaData, timeZone, iterable);
+    public KylinResultSet(AvaticaStatement statement, Signature signature, ResultSetMetaData resultSetMetaData, TimeZone timeZone, Frame firstFrame) {
+        super(statement, signature, resultSetMetaData, timeZone, firstFrame);
     }
 
     @Override
     protected AvaticaResultSet execute() throws SQLException {
         
         // skip execution if result is already there (case of meta data lookup)
-        if (this.iterable != null) {
+        if (this.firstFrame != null) {
             return super.execute();
         }
         
@@ -49,7 +50,7 @@ public class KylinResultSet extends AvaticaResultSet {
         List<AvaticaParameter> params = signature.parameters;
         List<Object> paramValues = null;
         if (params != null && params.size() > 0) {
-            paramValues = ((KylinPreparedStatement) statement).getParameterValues();
+            paramValues = ((KylinPreparedStatement) statement).getParameterValues2();
         }
         
         IRemoteClient client = ((KylinConnection) statement.connection).getRemoteClient();

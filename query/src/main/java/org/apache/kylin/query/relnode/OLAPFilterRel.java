@@ -33,7 +33,6 @@ import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.type.RelDataType;
@@ -62,7 +61,6 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 /**
@@ -307,7 +305,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         RexProgram program = programBuilder.getProgram();
 
         return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
-                sole(inputs), program, ImmutableList.<RelCollation> of());
+                sole(inputs), program);
     }
 
     @Override
