@@ -280,9 +280,9 @@ public class ExecutableManager {
         result.setUuid(executable.getId());
         result.setType(executable.getClass().getName());
         result.setParams(executable.getParams());
-        if (executable instanceof DefaultChainedExecutable) {
+        if (executable instanceof ChainedExecutable) {
             List<ExecutablePO> tasks = Lists.newArrayList();
-            for (AbstractExecutable task : ((DefaultChainedExecutable) executable).getTasks()) {
+            for (AbstractExecutable task : ((ChainedExecutable) executable).getTasks()) {
                 tasks.add(parse(task));
             }
             result.setTasks(tasks);
@@ -304,9 +304,9 @@ public class ExecutableManager {
             result.setParams(executablePO.getParams());
             List<ExecutablePO> tasks = executablePO.getTasks();
             if (tasks != null && !tasks.isEmpty()) {
-                Preconditions.checkArgument(result instanceof DefaultChainedExecutable);
+                Preconditions.checkArgument(result instanceof ChainedExecutable);
                 for (ExecutablePO subTask: tasks) {
-                    ((DefaultChainedExecutable) result).addTask(parseTo(subTask));
+                    ((ChainedExecutable) result).addTask(parseTo(subTask));
                 }
             }
             return result;

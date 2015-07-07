@@ -16,21 +16,17 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.storage;
+package org.apache.kylin.storage.hbase;
 
-import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.storage.tuple.TupleInfo;
+import org.apache.kylin.engine.mr.IMRJobFlowParticipant;
+import org.apache.kylin.engine.mr.IMROutput;
 
-/**
- * 
- * @author xjiang
- * 
- */
-public interface IStorageEngine {
+public class HBaseMROutput implements IMROutput {
 
-    ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo);
-
-
+    @Override
+    public IMRJobFlowParticipant createBuildFlowParticipant() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

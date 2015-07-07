@@ -11,13 +11,13 @@ import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
 import org.apache.kylin.metadata.tuple.TeeTupleItrListener;
 import org.apache.kylin.storage.ICachableStorageEngine;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.IStorageQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  */
-public abstract class AbstractCacheFledgedStorageEngine implements IStorageEngine, TeeTupleItrListener {
+public abstract class AbstractCacheFledgedStorageEngine implements IStorageQuery, TeeTupleItrListener {
     private static final Logger logger = LoggerFactory.getLogger(AbstractCacheFledgedStorageEngine.class);
     private static final String storageCacheTemplate = "StorageCache";
 

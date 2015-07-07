@@ -39,14 +39,18 @@ import org.apache.kylin.job.execution.Output;
  */
 public class CubingJob extends DefaultChainedExecutable {
 
+    // KEYS of Output.extraInfo map, info passed across job steps
+    public static final String SOURCE_RECORD_COUNT = "sourceRecordCount";
+    public static final String SOURCE_SIZE_BYTES = "sourceSizeBytes";
+    public static final String CUBE_SIZE_BYTES = "byteSizeBytes";
+    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
+    
+    private static final String CUBE_INSTANCE_NAME = "cubeName";
+    private static final String SEGMENT_ID = "segmentId";
+
     public CubingJob() {
         super();
     }
-
-    private static final String CUBE_INSTANCE_NAME = "cubeName";
-    private static final String SEGMENT_ID = "segmentId";
-    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
-
 
     void setCubeName(String name) {
         setParam(CUBE_INSTANCE_NAME, name);
@@ -135,5 +139,27 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public void setMapReduceWaitTime(long t) {
         addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
+    }
+    
+    public long findSourceRecordCount() {
+        return Long.parseLong(findExtraInfo(SOURCE_RECORD_COUNT, "0"));
+    }
+    
+    public long findSourceSizeBytes() {
+        return Long.parseLong(findExtraInfo(SOURCE_SIZE_BYTES, "0"));
+    }
+    
+    public long findCubeSizeBytes() {
+        return Long.parseLong(findExtraInfo(CUBE_SIZE_BYTES, "0"));
+    }
+    
+    private String findExtraInfo(String key, String dft) {
+        for (AbstractExecutable child : getTasks()) {
+            Output output = executableManager.getOutput(child.getId());
+            String value = output.getExtra().get(key);
+            if (value != null)
+                return value;
+        }
+        return dft;
     }
 }

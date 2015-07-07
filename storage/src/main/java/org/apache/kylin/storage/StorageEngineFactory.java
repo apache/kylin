@@ -42,7 +42,7 @@ import com.google.common.base.Preconditions;
 public class StorageEngineFactory {
     private static boolean allowStorageLayerCache = true;
 
-    public static IStorageEngine getStorageEngine(IRealization realization) {
+    public static IStorageQuery getStorageEngine(IRealization realization) {
 
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
             ICachableStorageEngine ret = new InvertedIndexStorageEngine((IIInstance) realization);
@@ -63,7 +63,7 @@ public class StorageEngineFactory {
         }
     }
 
-    private static IStorageEngine wrapWithCache(ICachableStorageEngine underlyingStorageEngine, IRealization realization) {
+    private static IStorageQuery wrapWithCache(ICachableStorageEngine underlyingStorageEngine, IRealization realization) {
         if (underlyingStorageEngine.isDynamic()) {
             return new CacheFledgedDynamicStorageEngine(underlyingStorageEngine, getPartitionCol(realization));
         } else {

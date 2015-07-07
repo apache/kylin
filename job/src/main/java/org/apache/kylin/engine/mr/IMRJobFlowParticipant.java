@@ -16,16 +16,19 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.engine.mr;
 
 import java.util.List;
 
-/**
- */
-public interface ChainedExecutable extends Executable {
+import org.apache.kylin.job.execution.AbstractExecutable;
 
-    List<? extends AbstractExecutable> getTasks();
+public interface IMRJobFlowParticipant {
+
+    public List<? extends AbstractExecutable> contributePhase1CreateFlatTable(List<? extends AbstractExecutable> steps);
     
-    void addTask(AbstractExecutable executable);
-
+    public List<? extends AbstractExecutable> contributePhase2CreateDictionary(List<? extends AbstractExecutable> steps);
+    
+    public List<? extends AbstractExecutable> contributePhase3BuildCube(List<? extends AbstractExecutable> steps);
+    
+    public List<? extends AbstractExecutable> contributePhase4UpdateCubeMetadata(List<? extends AbstractExecutable> steps);
 }

@@ -18,23 +18,22 @@
 
 package org.apache.kylin.job.cube;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -43,7 +42,6 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
     private static final String CUBE_NAME = "cubeName";
     private static final String SEGMENT_ID = "segmentId";
     private static final String MERGING_SEGMENT_IDS = "mergingSegmentIds";
-    private static final String CONVERT_TO_HFILE_STEP_ID = "convertToHFileStepId";
     private static final String CUBING_JOB_ID = "cubingJobId";
 
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -60,9 +58,9 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         if (mergedSegment == null) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there is no segment with id:" + getSegmentId());
         }
-        String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
-        Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
-        long cubeSize = Long.parseLong(cubeSizeString) / 1024;
+        
+        CubingJob cubingJob = (CubingJob) executableManager.getJob(getCubingJobId());
+        long cubeSizeBytes = cubingJob.findCubeSizeBytes();
 
         // collect source statistics
         List<String> mergingSegmentIds = getMergingSegmentIds();
@@ -78,7 +76,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         }
 
         // update segment info
-        mergedSegment.setSizeKB(cubeSize);
+        mergedSegment.setSizeKB(cubeSizeBytes / 1024);
         mergedSegment.setInputRecords(sourceCount);
         mergedSegment.setInputRecordsSize(sourceSize);
         mergedSegment.setLastBuildJobID(getCubingJobId());
@@ -125,14 +123,6 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         } else {
             return Collections.emptyList();
         }
-    }
-
-    public void setConvertToHFileStepId(String id) {
-        setParam(CONVERT_TO_HFILE_STEP_ID, id);
-    }
-
-    private String getConvertToHfileStepId() {
-        return getParam(CONVERT_TO_HFILE_STEP_ID);
     }
 
     public void setCubingJobId(String id) {

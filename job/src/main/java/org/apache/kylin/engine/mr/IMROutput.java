@@ -16,16 +16,10 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.engine.mr;
 
-import java.util.List;
+public interface IMROutput {
 
-/**
- */
-public interface ChainedExecutable extends Executable {
-
-    List<? extends AbstractExecutable> getTasks();
-    
-    void addTask(AbstractExecutable executable);
+    public IMRJobFlowParticipant createBuildFlowParticipant();
 
 }

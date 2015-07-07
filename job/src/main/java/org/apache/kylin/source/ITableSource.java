@@ -16,16 +16,9 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.source;
 
-import java.util.List;
+public interface ITableSource {
 
-/**
- */
-public interface ChainedExecutable extends Executable {
-
-    List<? extends AbstractExecutable> getTasks();
-    
-    void addTask(AbstractExecutable executable);
-
+    public <I> I adaptToBuildEngine(Class<I> engineInterface);
 }

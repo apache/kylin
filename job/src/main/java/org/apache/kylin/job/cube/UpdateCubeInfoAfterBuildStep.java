@@ -18,21 +18,16 @@
 
 package org.apache.kylin.job.cube;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.cube.CubeInstance;
+import java.io.IOException;
+
 import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.execution.Output;
-
-import java.io.IOException;
 
 /**
  */
@@ -40,9 +35,6 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
     private static final String SEGMENT_ID = "segmentId";
     private static final String CUBE_NAME = "cubeName";
-    private static final String CONVERT_TO_HFILE_STEP_ID = "convertToHFileStepId";
-    private static final String BASE_CUBOID_STEP_ID = "baseCuboidStepId";
-    private static final String CREATE_FLAT_TABLE_STEP_ID = "createFlatTableStepId";
     private static final String CUBING_JOB_ID = "cubingJobId";
 
     public UpdateCubeInfoAfterBuildStep() {
@@ -65,26 +57,6 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         return getParam(SEGMENT_ID);
     }
 
-    public void setConvertToHFileStepId(String id) {
-        setParam(CONVERT_TO_HFILE_STEP_ID, id);
-    }
-
-    private String getConvertToHfileStepId() {
-        return getParam(CONVERT_TO_HFILE_STEP_ID);
-    }
-
-    public void setBaseCuboidStepId(String id) {
-        setParam(BASE_CUBOID_STEP_ID, id);
-    }
-
-    private String getBaseCuboidStepId() {
-        return getParam(BASE_CUBOID_STEP_ID);
-    }
-
-    public void setCreateFlatTableStepId(String id) {
-        setParam(CREATE_FLAT_TABLE_STEP_ID, id);
-    }
-
     public void setCubingJobId(String id) {
         setParam(CUBING_JOB_ID, id);
     }
@@ -98,32 +70,18 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = cubeManager.getCube(getCubeName());
         final CubeSegment segment = cube.getSegmentById(getSegmentId());
-
-        Output baseCuboidOutput = executableManager.getOutput(getBaseCuboidStepId());
-        String sourceRecordsCount = baseCuboidOutput.getExtra().get(ExecutableConstants.SOURCE_RECORDS_COUNT);
-        Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsCount), "Can't get cube source record count.");
-        long sourceCount = Long.parseLong(sourceRecordsCount);
-
-        String sourceRecordsSize = baseCuboidOutput.getExtra().get(ExecutableConstants.SOURCE_RECORDS_SIZE);
-        Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsSize), "Can't get cube source record size.");
-        long sourceSize = Long.parseLong(sourceRecordsSize);
-
-        long size = 0;
-        boolean segmentReady = true;
-        if (!StringUtils.isBlank(getConvertToHfileStepId())) {
-            String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
-            Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
-            size = Long.parseLong(cubeSizeString) / 1024;
-        } else {
-            // for the increment & merge case, the increment segment is only built to be merged, won't serve query by itself
-            segmentReady = false;
-        }
+        
+        CubingJob cubingJob = (CubingJob) executableManager.getJob(getCubingJobId());
+        long sourceCount = cubingJob.findSourceRecordCount();
+        long sourceSizeBytes = cubingJob.findSourceSizeBytes();
+        long cubeSizeBytes = cubingJob.findCubeSizeBytes();
+        boolean segmentReady = cubeSizeBytes > 0; // for build+merge scenario, convert HFile not happen yet, so cube size is 0
 
         segment.setLastBuildJobID(getCubingJobId());
         segment.setLastBuildTime(System.currentTimeMillis());
-        segment.setSizeKB(size);
+        segment.setSizeKB(cubeSizeBytes / 1024);
         segment.setInputRecords(sourceCount);
-        segment.setInputRecordsSize(sourceSize);
+        segment.setInputRecordsSize(sourceSizeBytes);
 
         try {
             if (segmentReady) {

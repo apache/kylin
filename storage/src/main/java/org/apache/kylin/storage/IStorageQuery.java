@@ -16,16 +16,21 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.storage;
 
-import java.util.List;
+import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.storage.tuple.TupleInfo;
 
 /**
+ * 
+ * @author xjiang
+ * 
  */
-public interface ChainedExecutable extends Executable {
+public interface IStorageQuery {
 
-    List<? extends AbstractExecutable> getTasks();
-    
-    void addTask(AbstractExecutable executable);
+    ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo);
+
+
 
 }

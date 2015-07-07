@@ -16,16 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.storage;
 
-import java.util.List;
+import org.apache.kylin.metadata.realization.IRealization;
 
-/**
- */
-public interface ChainedExecutable extends Executable {
-
-    List<? extends AbstractExecutable> getTasks();
+public interface IStorage {
     
-    void addTask(AbstractExecutable executable);
+    public IStorageQuery createStorageQuery(IRealization realization);
 
+    public <I> I adaptToBuildEngine(Class<I> engineInterface);
 }
