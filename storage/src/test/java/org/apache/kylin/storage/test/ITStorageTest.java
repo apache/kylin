@@ -28,7 +28,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
 import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ITStorageTest extends HBaseMetadataTestCase {
 
-    private IStorageEngine storageEngine;
+    private IStorageQuery storageEngine;
     private CubeInstance cube;
     private StorageContext context;
 

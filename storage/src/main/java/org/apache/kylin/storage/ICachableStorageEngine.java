@@ -4,7 +4,7 @@ import com.google.common.collect.Range;
 
 /**
  */
-public interface ICachableStorageEngine extends IStorageEngine {
+public interface ICachableStorageEngine extends IStorageQuery {
     /**
      *
      * being dynamic => getVolatilePeriod() return not null

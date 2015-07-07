@@ -16,16 +16,29 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.storage.hbase;
 
-import java.util.List;
+import org.apache.kylin.engine.mr.IMROutput;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.storage.IStorage;
+import org.apache.kylin.storage.IStorageQuery;
 
-/**
- */
-public interface ChainedExecutable extends Executable {
+public class HBaseStorage implements IStorage {
 
-    List<? extends AbstractExecutable> getTasks();
-    
-    void addTask(AbstractExecutable executable);
+    @Override
+    public IStorageQuery createStorageQuery(IRealization realization) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <I> I adaptToBuildEngine(Class<I> engineInterface) {
+        if (engineInterface == IMROutput.class) {
+            return (I) new HBaseMROutput();
+        } else {
+            throw new RuntimeException("Cannot adapt to " + engineInterface);
+        }
+    }
 
 }

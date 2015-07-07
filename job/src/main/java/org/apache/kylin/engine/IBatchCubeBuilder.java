@@ -16,16 +16,17 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.engine;
 
-import java.util.List;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.job.execution.ChainedExecutable;
 
-/**
- */
-public interface ChainedExecutable extends Executable {
+public interface IBatchCubeBuilder {
 
-    List<? extends AbstractExecutable> getTasks();
+    /** Build a new cube segment, typically its time range appends to the end of current cube. */
+    public ChainedExecutable createBuildJob(CubeSegment newSegment);
     
-    void addTask(AbstractExecutable executable);
-
+    /** Merge multiple small segments into a big one. */
+    public ChainedExecutable createMergeJob(CubeSegment mergeSegment);
+    
 }

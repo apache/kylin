@@ -5,7 +5,7 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.CompoundTupleIterator;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageEngineFactory;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -14,14 +14,14 @@ import java.util.List;
 
 /**
  */
-public class HybridStorageEngine implements IStorageEngine {
+public class HybridStorageEngine implements IStorageQuery {
 
     private IRealization[] realizations;
-    private IStorageEngine[] storageEngines;
+    private IStorageQuery[] storageEngines;
 
     public HybridStorageEngine(HybridInstance hybridInstance) {
         this.realizations = hybridInstance.getRealizations();
-        storageEngines = new IStorageEngine[realizations.length];
+        storageEngines = new IStorageQuery[realizations.length];
         for (int i = 0; i < realizations.length; i++) {
             storageEngines[i] = StorageEngineFactory.getStorageEngine(realizations[i]);
         }

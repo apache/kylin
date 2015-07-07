@@ -16,16 +16,17 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.source.hive;
 
-import java.util.List;
+import org.apache.kylin.engine.mr.IMRJobFlowParticipant;
+import org.apache.kylin.engine.mr.IMRInput;
 
-/**
- */
-public interface ChainedExecutable extends Executable {
+public class HiveMRInput implements IMRInput {
 
-    List<? extends AbstractExecutable> getTasks();
-    
-    void addTask(AbstractExecutable executable);
+    @Override
+    public IMRJobFlowParticipant createBuildFlowParticipant() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

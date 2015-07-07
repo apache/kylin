@@ -16,16 +16,16 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.engine.mr;
 
-import java.util.List;
+import org.apache.kylin.engine.IBatchCubeBuilder;
+import org.apache.kylin.engine.IBuildEngine;
 
-/**
- */
-public interface ChainedExecutable extends Executable {
+public class MRBuildEngine implements IBuildEngine {
 
-    List<? extends AbstractExecutable> getTasks();
-    
-    void addTask(AbstractExecutable executable);
+    @Override
+    public IBatchCubeBuilder createBatchCubeBuilder() {
+        return new MRCubeBuilder();
+    }
 
 }

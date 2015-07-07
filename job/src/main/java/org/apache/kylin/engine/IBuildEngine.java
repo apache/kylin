@@ -16,16 +16,9 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.engine;
 
-import java.util.List;
+public interface IBuildEngine {
 
-/**
- */
-public interface ChainedExecutable extends Executable {
-
-    List<? extends AbstractExecutable> getTasks();
-    
-    void addTask(AbstractExecutable executable);
-
+    public IBatchCubeBuilder createBatchCubeBuilder();
 }

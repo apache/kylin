@@ -53,6 +53,8 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     private static final String KEY_MR_JOB = "MR_JOB_CLASS";
     private static final String KEY_PARAMS = "MR_JOB_PARAMS";
+    private static final String KEY_COUNTER_SAVEAS = "MR_COUNTER_SAVEAS";
+    
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
     public MapReduceExecutable() {
@@ -145,11 +147,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 status = newStatus;
                 executableManager.addJobInfo(getId(), hadoopCmdOutput.getInfo());
                 if (status.isComplete()) {
-                    hadoopCmdOutput.updateJobCounter();
                     final Map<String, String> info = hadoopCmdOutput.getInfo();
-                    info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
-                    info.put(ExecutableConstants.SOURCE_RECORDS_SIZE, hadoopCmdOutput.getHdfsBytesRead());
-                    info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
+                    readCounters(hadoopCmdOutput, info);
                     executableManager.addJobInfo(getId(), info);
 
                     if (status == JobStepStatusEnum.FINISHED) {
@@ -170,6 +169,27 @@ public class MapReduceExecutable extends AbstractExecutable {
         } catch (Exception e) {
             logger.error("error execute " + this.toString(), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+        }
+    }
+
+    private void readCounters(final HadoopCmdOutput hadoopCmdOutput, final Map<String, String> info) {
+        hadoopCmdOutput.updateJobCounter();
+        info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
+        info.put(ExecutableConstants.SOURCE_RECORDS_SIZE, hadoopCmdOutput.getHdfsBytesRead());
+        info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
+        
+        String saveAs = getParam(KEY_COUNTER_SAVEAS);
+        if (saveAs != null) {
+            String[] saveAsNames = saveAs.split(",");
+            saveCounterAs(hadoopCmdOutput.getMapInputRecords(), saveAsNames, 0, info);
+            saveCounterAs(hadoopCmdOutput.getHdfsBytesRead(), saveAsNames, 1, info);
+            saveCounterAs(hadoopCmdOutput.getHdfsBytesWritten(), saveAsNames, 2, info);
+        }
+    }
+
+    private void saveCounterAs(String counter, String[] saveAsNames, int i, Map<String, String> info) {
+        if (saveAsNames.length > i && StringUtils.isBlank(saveAsNames[i]) == false) {
+            info.put(saveAsNames[i].trim(), counter);
         }
     }
 
@@ -215,6 +235,14 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     public String getMapReduceParams() {
         return getParam(KEY_PARAMS);
+    }
+    
+    public String getCounterSaveAs() {
+        return getParam(KEY_COUNTER_SAVEAS);
+    }
+    
+    public void setCounterSaveAs(String value) {
+        setParam(KEY_COUNTER_SAVEAS, value);
     }
 
 }

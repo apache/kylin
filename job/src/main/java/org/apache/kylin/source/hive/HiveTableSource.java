@@ -16,16 +16,21 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.source.hive;
 
-import java.util.List;
+import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.source.ITableSource;
 
-/**
- */
-public interface ChainedExecutable extends Executable {
+public class HiveTableSource implements ITableSource {
 
-    List<? extends AbstractExecutable> getTasks();
-    
-    void addTask(AbstractExecutable executable);
+    @SuppressWarnings("unchecked")
+    @Override
+    public <I> I adaptToBuildEngine(Class<I> engineInterface) {
+        if (engineInterface == IMRInput.class) {
+            return (I) new HiveMRInput();
+        } else {
+            throw new RuntimeException("Cannot adapt to " + engineInterface);
+        }
+    }
 
 }
