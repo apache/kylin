@@ -279,7 +279,11 @@ public class KylinConfig {
     }
 
     public String getHdfsWorkingDirectory() {
-        return getRequired(KYLIN_HDFS_WORKING_DIR);
+        String root = getRequired(KYLIN_HDFS_WORKING_DIR);
+        if (!root.endsWith("/")) {
+            root += "/";
+        }
+        return root + getMetadataUrlPrefix();
     }
 
     public String getKylinJobLogDir() {
