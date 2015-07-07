@@ -2,6 +2,7 @@
 layout: download
 title: Download
 ---
+
 __Latest Release__
 
 The latest release of Apache Kylin can be downloaded from the ASF:
@@ -30,6 +31,14 @@ And ODBC Driver could be find here:
 
   * [Kylin ODBC Driver](http://kylin.incubator.apache.org/download/KylinODBC.zip)
   * _Source Code will be migrated to Apache Source Repo in next release_
+
+__Development Version (v0.7.x)__
+
+Here's latest development version binary package:
+
+  * [kylin-v0.7.2-incubating-SNAPSHOT](http://kylin.incubator.apache.org/download/kylin-0.7.2-incubating-SNAPSHOT.tar.gz)
+  * Updated Date: 2015-06-30
+  * Commit ID: e7fcc20d8ab6f824eb6b88b8f8fa133e284dc34f
 
 
 
