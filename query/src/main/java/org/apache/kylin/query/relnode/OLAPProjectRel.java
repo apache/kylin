@@ -33,7 +33,6 @@ import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.type.RelDataType;
@@ -53,7 +52,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 /**
  */
@@ -67,8 +65,8 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     private boolean afterJoin;
     private boolean afterAggregate;
 
-    public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType, int flags) {
-        super(cluster, traitSet, child, exps, rowType, flags);
+    public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType) {
+        super(cluster, traitSet, child, exps, rowType);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(child.getConvention() == OLAPRel.CONVENTION);
         this.rewriteProjects = exps;
@@ -94,7 +92,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
     @Override
     public Project copy(RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType) {
-        return new OLAPProjectRel(getCluster(), traitSet, child, exps, rowType, this.flags);
+        return new OLAPProjectRel(getCluster(), traitSet, child, exps, rowType);
     }
 
     @Override
@@ -214,13 +212,13 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             RelNode inputOfFilter = inputs.get(0).getInput(0);
             RexProgram program = RexProgram.create(inputOfFilter.getRowType(), this.rewriteProjects, filter.getCondition(), this.rowType, getCluster().getRexBuilder());
             return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
-                    inputOfFilter, program, ImmutableList.<RelCollation> of());
+                    inputOfFilter, program);
         } else {
             // keep project for table scan
             EnumerableRel input = sole(inputs);
             RexProgram program = RexProgram.create(input.getRowType(), this.rewriteProjects, null, this.rowType, getCluster().getRexBuilder());
             return new EnumerableCalc(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
-                    input, program, ImmutableList.<RelCollation> of());
+                    input, program);
         }
     }
 

@@ -31,6 +31,8 @@ import org.apache.calcite.avatica.AvaticaUtils;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.MetaImpl;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Implementation of Avatica interface
  */
@@ -48,25 +50,33 @@ public class KylinMeta extends MetaImpl {
 
     // insert/update/delete go this path, ignorable for Kylin
     @Override
-    public Signature prepare(StatementHandle h, String sql, int maxRowCount) {
-        return connection().mockPreparedSignature(sql);
+    public StatementHandle prepare(ConnectionHandle ch, String sql, int maxRowCount) {
+        StatementHandle result = super.createStatement(ch);
+        result.signature = connection().mockPreparedSignature(sql);
+        return result;
     }
 
     // mimic from CalciteMetaImpl, real execution happens via callback in KylinResultSet.execute()
     @Override
-    public MetaResultSet prepareAndExecute(StatementHandle h, String sql, int maxRowCount, PrepareCallback callback) {
-        final Signature signature;
+    public ExecuteResult prepareAndExecute(ConnectionHandle ch, String sql, int maxRowCount, PrepareCallback callback) {
+        final StatementHandle sh;
         try {
             synchronized (callback.getMonitor()) {
                 callback.clear();
-                signature = prepare(h, sql, maxRowCount);
-                callback.assign(signature, null);
+                sh = prepare(ch, sql, maxRowCount);
+                callback.assign(sh.signature, null, -1);
             }
             callback.execute();
-            return new MetaResultSet(h.id, false, signature, null);
+            final MetaResultSet metaResultSet = MetaResultSet.create(ch.id, sh.id, false, sh.signature, null);
+            return new ExecuteResult(ImmutableList.of(metaResultSet));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    @Override
+    public void closeStatement(StatementHandle h) {
+        // nothing to do
     }
 
     private KMetaProject getMetaProject() {
@@ -164,9 +174,10 @@ public class KylinMeta extends MetaImpl {
 
         CursorFactory cursorFactory = CursorFactory.record(clazz, fields, fieldNames);
         Signature signature = new Signature(columns, "", null, Collections.<String, Object> emptyMap(), cursorFactory);
-        StatementHandle statementHandle = this.createStatement(null);
+        StatementHandle sh = this.createStatement(connection().handle);
+        Frame frame = new Frame(0, true, iterable);
 
-        return new MetaResultSet(statementHandle.id, true, signature, iterable);
+        return MetaResultSet.create(connection().id, sh.id, true, signature, frame);
     }
 
     // ============================================================================
@@ -177,7 +188,7 @@ public class KylinMeta extends MetaImpl {
 
     public static List<? extends NamedWithChildren> searchByPatterns(NamedWithChildren parent, Pat... patterns) {
         assert patterns != null && patterns.length > 0;
-        
+
         List<? extends NamedWithChildren> children = findChildren(parent, patterns[0]);
         if (patterns.length == 1) {
             return children;
@@ -268,12 +279,12 @@ public class KylinMeta extends MetaImpl {
         public List<KMetaTable> getTables(String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
             return (List<KMetaTable>) searchByPatterns(this, Pat.of(catalog), schemaPattern, tableNamePattern);
         }
-        
+
         @SuppressWarnings("unchecked")
         public List<KMetaColumn> getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
             return (List<KMetaColumn>) searchByPatterns(this, Pat.of(catalog), schemaPattern, tableNamePattern, columnNamePattern);
         }
-        
+
         @Override
         public String getName() {
             return projectName;
@@ -293,7 +304,7 @@ public class KylinMeta extends MetaImpl {
             this.tableCat = tableCatalog;
             this.schemas = schemas;
         }
-        
+
         @Override
         public String getName() {
             return tableCat;
@@ -344,4 +355,5 @@ public class KylinMeta extends MetaImpl {
             return Collections.<NamedWithChildren> emptyList();
         }
     }
+
 }
