@@ -1,7 +1,7 @@
 ---
 layout: post-blog
 title:  "Introduce Data Model of Cube Designer"
-date:   2015-01-25 22:28:00
+date:   2015-01-25 12:28:00
 author: Luke Han
 categories: blog
 ---

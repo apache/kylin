@@ -31,5 +31,12 @@ Apache Kylin ODBC驱动:
   * [Kylin ODBC Driver](http://kylin.incubator.apache.org/download/KylinODBC.zip)
   * _Source Code will be migrated to Apache Source Repo in next release_
 
+__开发版本 (v0.7.x)__
+
+最新的开发版本二进制包:
+
+  * [kylin-v0.7.2-incubating-SNAPSHOT](http://kylin.incubator.apache.org/download/kylin-0.7.2-incubating-SNAPSHOT.tar.gz)
+  * 更新日期: 2015-06-30
+  * Commit ID: e7fcc20d8ab6f824eb6b88b8f8fa133e284dc34f
 
 
