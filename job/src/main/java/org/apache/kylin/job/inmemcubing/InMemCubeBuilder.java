@@ -142,23 +142,25 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             cuboidResult.table.close();
         }
     }
-    
+
     TreeMap<Long, CuboidResult> build(BlockingQueue<List<String>> input) throws IOException {
         final TreeMap<Long, CuboidResult> result = new TreeMap<Long, CuboidResult>();
         ICuboidCollector collector = new ICuboidCollector() {
             @Override
             public void collect(CuboidResult cuboidResult) {
-                result.put(cuboidResult.cuboidId, cuboidResult);
+                synchronized (result) {
+                    result.put(cuboidResult.cuboidId, cuboidResult);
+                }
             }
         };
         build(input, collector);
         return result;
     }
-    
+
     static interface ICuboidCollector {
         public void collect(CuboidResult result);
     }
-    
+
     static class CuboidResult {
         public long cuboidId;
         public GridTable table;
@@ -207,7 +209,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         throwExceptionIfAny();
     }
-    
+
     public void abort() {
         interrupt(taskThreads);
     }
@@ -216,7 +218,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         for (Thread t : threads)
             t.start();
     }
-    
+
     private void interrupt(Thread... threads) {
         for (Thread t : threads)
             t.interrupt();
@@ -264,7 +266,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     public boolean isAllCuboidDone() {
         return taskCuboidCompleted.get() == totalCuboidCount;
     }
-    
+
     private class CuboidTaskThread extends Thread {
         private int id;
 
@@ -397,10 +399,10 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         if (aggrCacheMB <= 0) {
             aggrCacheMB = (int) Math.ceil(1.0 * nRows / baseResult.nRows * baseResult.aggrCacheMB);
         }
-        
+
         CuboidResult result = new CuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB);
         taskCuboidCompleted.incrementAndGet();
-        
+
         resultCollector.collect(result);
         return result;
     }
@@ -651,6 +653,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         private byte[] toBytes(String v) {
             return v == null ? null : Bytes.toBytes(v);
         }
-        
+
     }
 }
