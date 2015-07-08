@@ -31,6 +31,8 @@ import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.cube.CubingJob;
+import org.apache.kylin.job.cube.CubingJobBuilder;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -564,6 +566,41 @@ public class CubeService extends BasicService {
                 calculateCardinality(table, submitter);
             }
         }
+    }
+
+    public void mergeCubeOnNewSegmentReady(String cubeName) {
+
+        logger.debug("on mergeCubeOnNewSegmentReady: " + cubeName);
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String serverMode = kylinConfig.getServerMode();
+
+        logger.debug("server mode: " + serverMode);
+        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
+            logger.debug("This is the job engine node, will check whether auto merge is needed on cube " + cubeName);
+            CubeSegment newSeg;
+            CubeInstance cube = getCubeManager().getCube(cubeName);
+            if (cube.needAutoMerge()) {
+                synchronized (CacheService.class) {
+                    try {
+                        newSeg = getCubeManager().autoMergeCubeSegments(cube);
+                        if (newSeg != null) {
+                            newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd(), true);
+                            logger.debug("Will submit merge job on " + newSeg);
+                            CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
+                            builder.setSubmitter("SYSTEM");
+                            CubingJob job = builder.mergeJob(newSeg);
+                            getExecutableManager().addJob(job);
+                        } else {
+                            logger.debug("Not ready for merge on cube " + cubeName);
+                        }
+
+                    } catch (IOException e) {
+                        logger.error("Failed to auto merge cube " + cubeName, e);
+                    }
+                }
+            }
+        }
+
     }
 
 }
