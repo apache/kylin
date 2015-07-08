@@ -133,7 +133,7 @@ public class CliCommandExecutor {
         String line;
         StringBuilder result = new StringBuilder();
         while ((line = reader.readLine()) != null) {
-            result.append("line").append('\n');
+            result.append(line).append('\n');
             if (logAppender != null) {
                 logAppender.log(line);
             }
