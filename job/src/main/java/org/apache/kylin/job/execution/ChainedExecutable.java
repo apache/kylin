@@ -25,6 +25,8 @@ import java.util.List;
  */
 public interface ChainedExecutable extends Executable {
 
-    List<? extends Executable> getTasks();
+    List<? extends AbstractExecutable> getTasks();
+    
+    void addTask(AbstractExecutable executable);
 
 }
