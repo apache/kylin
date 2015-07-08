@@ -56,6 +56,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
+import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -172,6 +173,10 @@ public abstract class BasicService {
 
     public final ProjectManager getProjectManager() {
         return ProjectManager.getInstance(getConfig());
+    }
+
+    public final HybridManager getHybridManager() {
+        return HybridManager.getInstance(getConfig());
     }
 
     public final ExecutableManager getExecutableManager() {

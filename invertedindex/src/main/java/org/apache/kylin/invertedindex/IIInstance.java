@@ -110,6 +110,7 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return IIDescManager.getInstance(config).getIIDesc(descName);
     }
 
+    @Override
     public DataModelDesc getDataModelDesc(){
         return this.getDescriptor().getModel();
     }

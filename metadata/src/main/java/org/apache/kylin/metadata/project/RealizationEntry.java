@@ -48,7 +48,28 @@ public class RealizationEntry {
     public void setRealization(String realization) {
         this.realization = realization;
     }
-    
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RealizationEntry entry = (RealizationEntry) o;
+
+        if (realization != null ? !realization.equalsIgnoreCase(entry.realization) : entry.realization != null)
+            return false;
+        if (type != entry.type) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = type != null ? type.hashCode() : 0;
+        result = 31 * result + (realization != null ? realization.hashCode() : 0);
+        return result;
+    }
+
     @Override
     public String toString() {
         return "" + type.name() + "." + realization;

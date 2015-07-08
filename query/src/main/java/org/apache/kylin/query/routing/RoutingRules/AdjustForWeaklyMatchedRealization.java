@@ -48,9 +48,7 @@ public class AdjustForWeaklyMatchedRealization extends RoutingRule {
 
             if (first instanceof HybridInstance) {
                 HybridInstance hybrid = (HybridInstance) first;
-
-                if (hybrid.getHistoryRealizationInstance() instanceof CubeInstance)
-                    first = hybrid.getHistoryRealizationInstance();
+                first = hybrid.getLatestRealization();
             }
 
             if (first instanceof CubeInstance) {

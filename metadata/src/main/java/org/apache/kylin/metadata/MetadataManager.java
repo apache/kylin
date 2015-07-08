@@ -310,8 +310,8 @@ public class MetadataManager {
             IRealization rel = registry.getRealization(realization.getType(), realization.getRealization());
             if (rel != null) {
                 DataModelDesc modelDesc = rel.getDataModelDesc();
-                if(!ret.contains(modelDesc)){
-                    ProjectManager.getInstance(config).updateModelToProject(modelDesc.getName(),projectName);
+                if (modelDesc != null && !ret.contains(modelDesc)) {
+                    ProjectManager.getInstance(config).updateModelToProject(modelDesc.getName(), projectName);
                     ret.add(modelDesc);
                 }
             } else {
