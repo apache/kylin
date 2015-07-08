@@ -49,7 +49,6 @@ public class CacheService extends BasicService {
     @Autowired
     private CacheUpdater cacheUpdater;
 
-
     @Autowired
     private CubeService cubeService;
 
@@ -61,6 +60,10 @@ public class CacheService extends BasicService {
     public void initCacheUpdater(CacheUpdater cacheUpdater) {
         Preconditions.checkNotNull(cacheUpdater, "cacheManager is not injected yet");
         AbstractRestCache.setCacheUpdater(cacheUpdater);
+    }
+
+    public void setCubeService(CubeService cubeService) {
+        this.cubeService = cubeService;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
