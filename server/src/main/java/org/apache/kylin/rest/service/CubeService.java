@@ -76,7 +76,7 @@ public class CubeService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
 
-    private static WeakHashMap<String, HBaseResponse> htableInfoCache = new WeakHashMap<>();
+    private WeakHashMap<String, HBaseResponse> htableInfoCache = new WeakHashMap<>();
 
     @Autowired
     private AccessService accessService;
@@ -580,7 +580,7 @@ public class CubeService extends BasicService {
             CubeSegment newSeg;
             CubeInstance cube = getCubeManager().getCube(cubeName);
             if (cube.needAutoMerge()) {
-                synchronized (CacheService.class) {
+                synchronized (CubeService.class) {
                     try {
                         newSeg = getCubeManager().autoMergeCubeSegments(cube);
                         if (newSeg != null) {

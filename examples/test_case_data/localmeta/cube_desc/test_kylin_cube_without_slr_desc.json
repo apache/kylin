@@ -172,7 +172,7 @@
       "dictionary" : "true",
       "mandatory" : false
     } ],
-    "aggregation_groups" : [ [ "lstg_format_name", "lstg_site_id", "slr_segment_cd" ], [ "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name", ] ]
+    "aggregation_groups" : [ [ "lstg_format_name", "lstg_site_id", "slr_segment_cd" ], [ "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name" ] ]
   },
   "last_modified" : 1422435345362,
   "model_name" : "test_kylin_inner_join_model_desc",

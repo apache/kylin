@@ -86,8 +86,25 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
             }
         };
 
+
+        final CubeService cubeServiceA = new CubeService() {
+            @Override
+            public KylinConfig getConfig() {
+                return configA;
+            }
+        };
+        final CubeService cubeServiceB = new CubeService() {
+            @Override
+            public KylinConfig getConfig() {
+                return configB;
+            }
+        };
+
+
         serviceA.initCacheUpdater(new RemoteCacheUpdater());
+        serviceA.setCubeService(cubeServiceA);
         serviceB.initCacheUpdater(new RemoteCacheUpdater());
+        serviceB.setCubeService(cubeServiceB);
 
         context.addServlet(new ServletHolder(new BroadcasterReceiveServlet(new BroadcasterReceiveServlet.BroadcasterHandler() {
             @Override

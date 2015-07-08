@@ -70,7 +70,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             for (int i = 0; i < realizationEntries.size(); i++) {
                 IRealization realization = registry.getRealization(realizationEntries.get(i).getType(), realizationEntries.get(i).getRealization());
                 if (realization == null) {
-                    logger.error("Realization '" + realization.getName() + " is not found, remove from Hybrid '" + this.getName() + "'");
+                    logger.error("Realization '" + realizationEntries.get(i) + " is not found, remove from Hybrid '" + this.getName() + "'");
                     continue;
                 }
                 if (realization.isReady() == false) {
