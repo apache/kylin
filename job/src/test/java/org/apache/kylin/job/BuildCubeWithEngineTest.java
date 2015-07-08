@@ -207,7 +207,7 @@ public class BuildCubeWithEngineTest {
 
         // this cube's start date is 0, end date is 20501112000000
         long date1 = 0;
-        long date2 = f.parse("2013-01-01").getTime();
+        long date2 = f.parse("2050-01-11").getTime();
 
         // this cube doesn't support incremental build, always do full build
 

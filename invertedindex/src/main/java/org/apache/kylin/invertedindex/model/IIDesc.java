@@ -223,6 +223,7 @@ public class IIDesc extends RootPersistentEntity {
         f1.setParameter(p1);
         f1.setReturnType(returnType);
         measureDesc.setFunction(f1);
+        measureDesc.setName(func + "_" + columnName);
         return measureDesc;
     }
 
@@ -242,6 +243,7 @@ public class IIDesc extends RootPersistentEntity {
         f1.setParameter(p1);
         f1.setReturnType(hllType);
         measureDesc.setFunction(f1);
+        measureDesc.setName("COUNT_DISTINCT" + "_" + columnName);
         return measureDesc;
     }
 
@@ -255,6 +257,7 @@ public class IIDesc extends RootPersistentEntity {
         f1.setParameter(p1);
         f1.setReturnType("bigint");
         measureDesc.setFunction(f1);
+        measureDesc.setName("COUNT_1");
         return measureDesc;
     }
 

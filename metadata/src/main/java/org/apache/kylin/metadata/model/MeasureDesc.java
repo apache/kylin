@@ -78,10 +78,17 @@ public class MeasureDesc {
 
         MeasureDesc that = (MeasureDesc) o;
 
-        if (!name.equalsIgnoreCase(that.getName()))
+        if (!function.equals(that.getFunction()))
             return false;
 
-        return true;
+        if (dependentMeasureRef != null && that.getDependentMeasureRef() == null
+                || dependentMeasureRef == null && that.getDependentMeasureRef() != null)
+            return false;
+
+        if (dependentMeasureRef == null && that.getDependentMeasureRef() == null)
+            return true;
+
+        return dependentMeasureRef.equalsIgnoreCase(that.getDependentMeasureRef());
     }
 
     @Override

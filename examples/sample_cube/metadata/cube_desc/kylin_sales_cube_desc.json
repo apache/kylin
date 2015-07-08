@@ -143,7 +143,6 @@
     } ],
     "aggregation_groups" : [ [ "part_dt", "lstg_site_id", "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name", "lstg_format_name" ] ]
   },
-  "signature" : "OWc6h/qpWCBgxEnzB5wr0w==",
   "last_modified" : 1426255280419,
   "model_name" : "kylin_sales_model",
   "null_string" : null,

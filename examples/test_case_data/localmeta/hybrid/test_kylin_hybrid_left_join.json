@@ -5,10 +5,6 @@
     {
       "type": "CUBE",
       "realization": "test_kylin_cube_with_slr_left_join_empty"
-    },
-    {
-      "type": "INVERTED_INDEX",
-      "realization": "test_kylin_ii_left_join"
     }
   ],
   "last_modified": 1420016227424,
