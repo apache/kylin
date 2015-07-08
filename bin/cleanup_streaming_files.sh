@@ -2,7 +2,8 @@
 
 if [ $# != 1 ]
 then
-    echo 'invalid input' || exit -1
+    echo 'invalid input'
+    exit -1
 fi
 
 cd $KYLIN_HOME/logs

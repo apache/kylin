@@ -22,7 +22,7 @@ then
 
 
 
-    useSandbox=`sh ${dir}/check-sandbox-properties.sh`
+    useSandbox=`sh ${dir}/get-properties.sh kylin.sandbox`
     spring_profile="default"
     if [ "$useSandbox" = "true" ]
         then spring_profile="sandbox"
@@ -88,7 +88,7 @@ then
     fi
     if [ $2 == "start" ]
     then
-        useSandbox=`sh ${dir}/check-sandbox-properties.sh`
+        useSandbox=`sh ${dir}/get-properties.sh kylin.sandbox`
         spring_profile="default"
         if [ "$useSandbox" = "true" ]
             then spring_profile="sandbox"
@@ -141,7 +141,7 @@ then
     echo "monitor job"
     tomcat_root=${dir}/../tomcat
     export tomcat_root
-    useSandbox=`sh ${dir}/check-sandbox-properties.sh`
+    useSandbox=`sh ${dir}/get-properties.sh kylin.sandbox`
     spring_profile="default"
     if [ "$useSandbox" = "true" ]
         then spring_profile="sandbox"
