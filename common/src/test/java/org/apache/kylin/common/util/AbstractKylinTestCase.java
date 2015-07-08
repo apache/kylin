@@ -41,6 +41,7 @@ public abstract class AbstractKylinTestCase {
             "org.apache.kylin.cube.CubeDescManager", //
             "org.apache.kylin.invertedindex.IIDescManager",//
             "org.apache.kylin.invertedindex.IIManager",//
+            "org.apache.kylin.storage.hybrid.HybridManager",
             "org.apache.kylin.metadata.realization.RealizationRegistry", //
             "org.apache.kylin.metadata.project.ProjectManager", //
             "org.apache.kylin.metadata.MetadataManager" //

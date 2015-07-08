@@ -31,6 +31,8 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
+import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +72,7 @@ public class CacheService extends BasicService {
             switch (cacheType) {
                 case CUBE:
                     CubeInstance newCube = getCubeManager().reloadCubeLocal(cacheKey);
+                    getHybridManager().reloadHybridInstanceByChild(RealizationType.CUBE, cacheKey);
                     getProjectManager().clearL2Cache();
                     //clean query related cache first
                     super.cleanDataCache(newCube.getUuid());
@@ -85,6 +88,7 @@ public class CacheService extends BasicService {
                 case INVERTED_INDEX:
                     //II update does not need to update storage cache because it is dynamic already
                     getIIManager().reloadIILocal(cacheKey);
+                    getHybridManager().reloadHybridInstanceByChild(RealizationType.INVERTED_INDEX, cacheKey);
                     getProjectManager().clearL2Cache();
                     break;
                 case INVERTED_INDEX_DESC:
@@ -106,6 +110,7 @@ public class CacheService extends BasicService {
                     CubeManager.clearCache();
                     IIDescManager.clearCache();
                     IIManager.clearCache();
+                    HybridManager.clearCache();
                     RealizationRegistry.clearCache();
                     ProjectManager.clearCache();
                     super.cleanAllDataCache();

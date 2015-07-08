@@ -81,6 +81,22 @@ public class HybridManager implements IRealizationProvider {
         logger.debug("Loaded " + paths.size() + " Hybrid(s)");
     }
 
+    public void reloadHybridInstanceByChild(RealizationType type, String realizationName) throws IOException {
+        for (HybridInstance hybridInstance : hybridMap.values()) {
+            boolean includes = false;
+            for (IRealization realization : hybridInstance.getRealizations()) {
+                if (realization.getType() == type && realization.getName().equalsIgnoreCase(realizationName)) {
+                    includes = true;
+                    break;
+                }
+            }
+
+            if (includes == true)
+                loadHybridInstance(HybridInstance.concatResourcePath(hybridInstance.getName()));
+        }
+    }
+
+
     private synchronized HybridInstance loadHybridInstance(String path) throws IOException {
         ResourceStore store = getStore();
 
@@ -89,13 +105,12 @@ public class HybridManager implements IRealizationProvider {
             hybridInstance = store.getResource(path, HybridInstance.class, HYBRID_SERIALIZER);
             hybridInstance.setConfig(config);
 
+            if (hybridInstance.getRealizationEntries() == null || hybridInstance.getRealizationEntries().size() == 0) {
+                throw new IllegalStateException("HybridInstance must have realization entries, " + path);
+            }
+
             if (StringUtils.isBlank(hybridInstance.getName()))
                 throw new IllegalStateException("HybridInstance name must not be blank, at " + path);
-
-            if (hybridInstance.getHistoryRealization() == null || hybridInstance.getRealTimeRealization() == null) {
-
-                throw new IllegalStateException("HybridInstance must have both historyRealization and realTimeRealization set, at " + path);
-            }
 
             final String name = hybridInstance.getName();
             hybridMap.putLocal(name, hybridInstance);

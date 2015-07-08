@@ -120,6 +120,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
 
+    @Override
     public DataModelDesc getDataModelDesc(){return this.getDescriptor().getModel();}
 
     public boolean isReady() {
