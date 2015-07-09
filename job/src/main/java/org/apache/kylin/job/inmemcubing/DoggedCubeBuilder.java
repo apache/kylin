@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -246,7 +247,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
         final BlockingQueue<List<String>> inputQueue = new ArrayBlockingQueue<List<String>>(16);
         final InMemCubeBuilder builder;
 
-        TreeMap<Long, CuboidResult> buildResult;
+        ConcurrentNavigableMap<Long, CuboidResult> buildResult;
         long inputRowCount = 0;
         RuntimeException exception;
 

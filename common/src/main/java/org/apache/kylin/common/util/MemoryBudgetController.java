@@ -17,6 +17,7 @@
 
 package org.apache.kylin.common.util;
 
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ public class MemoryBudgetController {
 
     private static final boolean debug = true;
 
-    public static interface MemoryConsumer {
+    public interface MemoryConsumer {
         // return number MB released
         int freeUp(int mb);
     }
@@ -65,11 +66,8 @@ public class MemoryBudgetController {
     private final ReentrantLock lock = new ReentrantLock();
 
     public MemoryBudgetController(int totalBudgetMB) {
-        if (totalBudgetMB < 0)
-            throw new IllegalArgumentException();
-        if (totalBudgetMB > getSystemAvailMB())
-            throw new IllegalStateException();
-
+        Preconditions.checkArgument(totalBudgetMB >= 0);
+        Preconditions.checkState(totalBudgetMB <= getSystemAvailMB());
         this.totalBudgetMB = totalBudgetMB;
         this.totalReservedMB = 0;
     }
