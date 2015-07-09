@@ -30,30 +30,15 @@ limitations under the License.
 
 <module name="Checker">
     <property name="localeLanguage" value="en"/>
+    <property name="charset" value="UTF-8"/>
+
 
     <!-- Checks for headers -->
     <!-- See http://checkstyle.sf.net/config_header.html -->
     <!-- Verify that EVERY source file has the appropriate license -->
     <module name="Header">
         <property name="headerFile" value="${checkstyle.header.file}"/>
+        <property name="fileExtensions" value="java"/>
     </module>
 
-    <!-- Setup special comments to suppress specific checks from source files -->
-    <module name="SuppressionCommentFilter">
-        <property name="offCommentFormat" value="CHECKSTYLE\: stop ([\w\|]+)"/>
-        <property name="onCommentFormat"  value="CHECKSTYLE\: resume ([\w\|]+)"/>
-        <property name="checkFormat"      value="$1"/>
-    </module>
-
-    <!-- Turn off all checks between OFF and ON -->
-    <module name="SuppressionCommentFilter">
-        <property name="offCommentFormat" value="CHECKSTYLE\: OFF"/>
-        <property name="onCommentFormat"  value="CHECKSTYLE\: ON"/>
-    </module>
-
-    <!-- Turn off checks for the next N lines. -->
-    <module name="SuppressWithNearbyCommentFilter">
-        <property name="commentFormat" value="CHECKSTYLE: +IGNORE (\d+)"/>
-        <property name="influenceFormat" value="$1"/>
-    </module>
 </module>

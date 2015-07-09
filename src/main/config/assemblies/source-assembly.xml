@@ -18,7 +18,9 @@ limitations under the License.
 <assembly>
     <id>source-release</id>
     <formats>
+        <!--
         <format>zip</format>
+        -->
         <format>tar.gz</format>
     </formats>
     <fileSets>
