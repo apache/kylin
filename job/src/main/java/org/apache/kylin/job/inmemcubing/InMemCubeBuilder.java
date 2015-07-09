@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -67,7 +67,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private MemoryBudgetController memBudget;
     private Thread[] taskThreads;
     private Throwable[] taskThreadExceptions;
-    private TreeSet<CuboidTask> taskPending;
+    private LinkedBlockingQueue<CuboidTask> taskPending;
     private AtomicInteger taskCuboidCompleted = new AtomicInteger(0);
 
     private CuboidResult baseResult;
@@ -136,29 +136,26 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     @Override
     public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
-        TreeMap<Long, CuboidResult> result = build(input);
+        ConcurrentNavigableMap<Long, CuboidResult> result = build(input);
         for (CuboidResult cuboidResult : result.values()) {
             outputCuboid(cuboidResult.cuboidId, cuboidResult.table, output);
             cuboidResult.table.close();
         }
     }
 
-    TreeMap<Long, CuboidResult> build(BlockingQueue<List<String>> input) throws IOException {
-        final TreeMap<Long, CuboidResult> result = new TreeMap<Long, CuboidResult>();
-        ICuboidCollector collector = new ICuboidCollector() {
+    ConcurrentNavigableMap<Long, CuboidResult> build(BlockingQueue<List<String>> input) throws IOException {
+        final ConcurrentNavigableMap<Long, CuboidResult> result = new ConcurrentSkipListMap<Long, CuboidResult>();
+        build(input, new ICuboidCollector() {
             @Override
             public void collect(CuboidResult cuboidResult) {
-                synchronized (result) {
-                    result.put(cuboidResult.cuboidId, cuboidResult);
-                }
+                result.put(cuboidResult.cuboidId, cuboidResult);
             }
-        };
-        build(input, collector);
+        });
         return result;
     }
 
-    static interface ICuboidCollector {
-        public void collect(CuboidResult result);
+    interface ICuboidCollector {
+        void collect(CuboidResult result);
     }
 
     static class CuboidResult {
@@ -182,7 +179,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         logger.info("In Mem Cube Build start, " + cubeDesc.getName());
 
         // multiple threads to compute cuboid in parallel
-        taskPending = new TreeSet<CuboidTask>();
+        taskPending = new LinkedBlockingQueue<>();
         taskCuboidCompleted.set(0);
         taskThreads = prepareTaskThreads();
         taskThreadExceptions = new Throwable[taskThreadCount];
@@ -280,14 +277,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             try {
                 while (!isAllCuboidDone()) {
                     CuboidTask task = null;
-                    synchronized (taskPending) {
-                        while (task == null && taskHasNoException()) {
-                            task = taskPending.pollFirst();
-                            if (task == null)
-                                taskPending.wait(60000);
-                        }
+                    while (task == null && taskHasNoException()) {
+                        task = taskPending.poll(15, TimeUnit.SECONDS);
                     }
-
                     // if task error occurs
                     if (task == null)
                         break;
@@ -320,13 +312,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private void addChildTasks(CuboidResult parent) {
         List<Long> children = cuboidScheduler.getSpanningCuboid(parent.cuboidId);
-        if (!children.isEmpty()) {
-            synchronized (taskPending) {
-                for (Long child : children) {
-                    taskPending.add(new CuboidTask(parent, child));
-                }
-                taskPending.notifyAll();
-            }
+        for (Long child : children) {
+            taskPending.add(new CuboidTask(parent, child));
         }
     }
 
@@ -511,8 +498,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     // ===========================================================================
 
     private static class CuboidTask implements Comparable<CuboidTask> {
-        CuboidResult parent;
-        long childCuboidId;
+        final CuboidResult parent;
+        final long childCuboidId;
 
         CuboidTask(CuboidResult parent, long childCuboidId) {
             this.parent = parent;
