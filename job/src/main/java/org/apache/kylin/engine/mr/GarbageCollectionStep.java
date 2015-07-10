@@ -16,14 +16,17 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.cube;
+package org.apache.kylin.engine.mr;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
@@ -36,10 +39,7 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Drop the resources that is no longer needed, including intermediate hive table (after cube build) and hbase tables (after cube merge)
@@ -59,7 +59,6 @@ public class GarbageCollectionStep extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
 
-        ExecuteResult.State state = null;
         StringBuffer output = new StringBuffer();
 
         final String hiveTable = this.getOldHiveTable();

@@ -18,14 +18,26 @@
 
 package org.apache.kylin.engine.mr;
 
-import org.apache.kylin.engine.IBatchCubeBuilder;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.IBuildEngine;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public class MRBuildEngine implements IBuildEngine {
 
     @Override
-    public IBatchCubeBuilder createBatchCubeBuilder() {
-        return new MRCubeBuilder();
+    public Runnable createStreamingCubeBuilder(CubeSegment newSegment, String submitter) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public DefaultChainedExecutable createBatchBuildJob(CubeSegment newSegment, String submitter) {
+        return new BatchCubingJobBuilder(newSegment, submitter).build();
+    }
+
+    @Override
+    public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
+        return new BatchMergeJobBuilder(mergeSegment, submitter).build();
     }
 
 }

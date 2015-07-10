@@ -18,7 +18,17 @@
 
 package org.apache.kylin.engine;
 
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
+
 public interface IBuildEngine {
 
-    public IBatchCubeBuilder createBatchCubeBuilder();
+    public Runnable createStreamingCubeBuilder(CubeSegment newSegment, String submitter);
+    
+    /** Build a new cube segment, typically its time range appends to the end of current cube. */
+    public DefaultChainedExecutable createBatchBuildJob(CubeSegment newSegment, String submitter);
+    
+    /** Merge multiple small segments into a big one. */
+    public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter);
+    
 }

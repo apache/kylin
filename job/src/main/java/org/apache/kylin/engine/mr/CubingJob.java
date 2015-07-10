@@ -16,18 +16,21 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.cube;
+package org.apache.kylin.engine.mr;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -47,11 +50,31 @@ public class CubingJob extends DefaultChainedExecutable {
     
     private static final String CUBE_INSTANCE_NAME = "cubeName";
     private static final String SEGMENT_ID = "segmentId";
+    
+    public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
+        return initCubingJob(seg, "BUILD", submitter, config);
+    }
+    
+    public static CubingJob createMergeJob(CubeSegment seg, String submitter, JobEngineConfig config) {
+        return initCubingJob(seg, "MERGE", submitter, config);
+    }
+    
+    private static CubingJob initCubingJob(CubeSegment seg, String jobType, String submitter, JobEngineConfig config) {
+        CubingJob result = new CubingJob();
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
+        format.setTimeZone(TimeZone.getTimeZone(config.getTimeZone()));
+        result.setCubeName(seg.getCubeInstance().getName());
+        result.setSegmentId(seg.getUuid());
+        result.setName(seg.getCubeInstance().getName() + " - " + seg.getName() + " - " + jobType + " - " + format.format(new Date(System.currentTimeMillis())));
+        result.setSubmitter(submitter);
+        result.setNotifyList(seg.getCubeInstance().getDescriptor().getNotifyList());
+        return result;
+    }
 
     public CubingJob() {
         super();
     }
-
+    
     void setCubeName(String name) {
         setParam(CUBE_INSTANCE_NAME, name);
     }

@@ -18,6 +18,16 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
@@ -29,10 +39,9 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.BuildEngineFactory;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.common.HadoopShellExecutable;
-import org.apache.kylin.job.cube.CubingJob;
-import org.apache.kylin.job.cube.CubingJobBuilder;
-import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -61,9 +70,6 @@ import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
@@ -586,9 +592,7 @@ public class CubeService extends BasicService {
                         if (newSeg != null) {
                             newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd(), true);
                             logger.debug("Will submit merge job on " + newSeg);
-                            CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
-                            builder.setSubmitter("SYSTEM");
-                            CubingJob job = builder.mergeJob(newSeg);
+                            DefaultChainedExecutable job = BuildEngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
                             getExecutableManager().addJob(job);
                         } else {
                             logger.debug("Not ready for merge on cube " + cubeName);

@@ -35,6 +35,10 @@ public class JobEngineConfig {
     public static String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
     public static String HIVE_CONF_FILENAME = "kylin_hive_conf";
 
+    public boolean isInMemCubing() {
+        return config.isCubingInMem();
+    }
+    
     private static File getJobConfig(String fileName) {
         String path = System.getProperty(KylinConfig.KYLIN_CONF);
         if (StringUtils.isNotEmpty(path)) {
@@ -96,17 +100,6 @@ public class JobEngineConfig {
         return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
     }
 
-    private void inputStreamToFile(InputStream ins, File file) throws IOException {
-        OutputStream os = new FileOutputStream(file);
-        int bytesRead = 0;
-        byte[] buffer = new byte[8192];
-        while ((bytesRead = ins.read(buffer, 0, 8192)) != -1) {
-            os.write(buffer, 0, bytesRead);
-        }
-        os.close();
-        ins.close();
-    }
-
     // there should be no setters
     private final KylinConfig config;
 
@@ -121,8 +114,7 @@ public class JobEngineConfig {
     public String getHdfsWorkingDirectory() {
         return config.getHdfsWorkingDirectory();
     }
-
-
+    
     /**
      * @return the maxConcurrentJobLimit
      */

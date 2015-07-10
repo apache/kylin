@@ -217,7 +217,7 @@ public class BuildIIWithEngineTest {
         iiInstance.getSegments().add(segment);
         iiManager.updateII(iiInstance);
         IIJobBuilder iiJobBuilder = new IIJobBuilder(jobEngineConfig);
-        IIJob job = iiJobBuilder.buildJob(segment);
+        IIJob job = iiJobBuilder.buildJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
         return job.getId();
