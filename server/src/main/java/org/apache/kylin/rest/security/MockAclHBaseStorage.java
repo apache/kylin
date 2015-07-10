@@ -1,7 +1,6 @@
 package org.apache.kylin.rest.security;
 
 import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.kylin.common.util.MockHTable;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.UserService;
 import org.h2.util.StringUtils;
