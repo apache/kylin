@@ -19,29 +19,21 @@
 package org.apache.kylin.engine;
 
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.MRBuildEngine;
+import org.apache.kylin.engine.mr.MRBatchCubingEngine;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public class BuildEngineFactory {
     
-    private static final IBuildEngine defaultEngine = new MRBuildEngine();
-    
-    public static IBuildEngine getDefaultEngine() {
-        return defaultEngine;
-    }
-
-    public static Runnable createStreamingCubeBuilder(CubeSegment newSegment, String submitter) {
-        return getDefaultEngine().createStreamingCubeBuilder(newSegment, submitter);
-    }
+    private static final IBatchCubingEngine defaultBatch = new MRBatchCubingEngine();
     
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
-    public static DefaultChainedExecutable createBatchBuildJob(CubeSegment newSegment, String submitter) {
-        return getDefaultEngine().createBatchBuildJob(newSegment, submitter);
+    public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
+        return defaultBatch.createBatchCubingJob(newSegment, submitter);
     }
     
     /** Merge multiple small segments into a big one. */
     public static DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
-        return getDefaultEngine().createBatchMergeJob(mergeSegment, submitter);
+        return defaultBatch.createBatchMergeJob(mergeSegment, submitter);
     }
     
 

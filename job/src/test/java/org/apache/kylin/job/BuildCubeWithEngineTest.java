@@ -275,7 +275,7 @@ public class BuildCubeWithEngineTest {
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {
         CubeSegment segment = cubeManager.appendSegments(cubeManager.getCube(cubeName), endDate);
-        DefaultChainedExecutable job = BuildEngineFactory.createBatchBuildJob(segment, "TEST");
+        DefaultChainedExecutable job = BuildEngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
         return job.getId();
