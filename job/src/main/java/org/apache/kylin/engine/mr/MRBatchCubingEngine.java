@@ -19,19 +19,13 @@
 package org.apache.kylin.engine.mr;
 
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.IBuildEngine;
+import org.apache.kylin.engine.IBatchCubingEngine;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
-public class MRBuildEngine implements IBuildEngine {
+public class MRBatchCubingEngine implements IBatchCubingEngine {
 
     @Override
-    public Runnable createStreamingCubeBuilder(CubeSegment newSegment, String submitter) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public DefaultChainedExecutable createBatchBuildJob(CubeSegment newSegment, String submitter) {
+    public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
         return new BatchCubingJobBuilder(newSegment, submitter).build();
     }
 
