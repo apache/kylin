@@ -10,7 +10,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
 
-package org.apache.kylin.common.util;
+package org.apache.kylin.rest.security;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
@@ -682,7 +682,7 @@ public class MockHTable implements HTableInterface {
 
     }
 
-    @Override
+    //@Override  (only since 0.98.8)
     public boolean checkAndMutate(byte[] row, byte[] family, byte[] qualifier, CompareFilter.CompareOp compareOp, byte[] value, RowMutations mutation) throws IOException {
         throw new NotImplementedException();
 
