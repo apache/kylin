@@ -17,15 +17,59 @@ limitations under the License.
 
 # Apache Kylin Release Notes
 
-## v0.7.1 (First Apache Release) - 2015-06-10
+## v0.7.2-incubating  
+_Tag:_ [kylin-0.7.2-incubating](https://github.com/apache/incubator-kylin/tree/kylin-0.7.2-incubating)
+
+
+__Detail JIRA and notes will coming after verify__
+
+** Sub-task  
+
+    * [KYLIN-812] - Upgrade to Calcite 0.9.2
+
+** Bug  
+
+    * [KYLIN-457] - "ERROR Could not instantiate appender" from log4j when tomcat startup 
+    * [KYLIN-514] - Error message is not helpful to user when doing something in Jason Editor window
+    * [KYLIN-518] - Cannot select Right join type if current join type is Left join type
+    * [KYLIN-598] - Kylin detecting hive table delim failure
+    * [KYLIN-632] - "kylin.sh stop" doesn't check whether KYLIN_HOME was set
+    * [KYLIN-660] - Make configurable of dictionary cardinality cap
+    * [KYLIN-693] - Couldn't change a cube's name after it be created
+    * [KYLIN-814] - Duplicate columns error for subqueries on fact table
+    * [KYLIN-819] - Fix necessary ColumnMetaData order for Calcite (Optic)
+    * [KYLIN-824] - Cube Build fails if lookup table doesn't have any files under HDFS location
+    * [KYLIN-829] - Cube "Actions" shows "NA"; but after expand the "access" tab, the button shows up
+    * [KYLIN-830] - Cube merge failed after migrating from v0.6 to v0.7
+    * [KYLIN-831] - Kylin report "Column 'ABC' not found in table 'TABLE' while executing SQL", when that column is FK but not define as a dimension
+    * [KYLIN-840] - HBase table compress not enabled even LZO is installed
+    * [KYLIN-847] - "select * from fact" does not work on 0.7 branch
+    * [KYLIN-848] - Couldn't resume or discard a cube job
+    * [KYLIN-849] - Couldn't query metrics on lookup table PK
+    * [KYLIN-865] - Cube has been built but couldn't query; In log it said "Realization 'CUBE.CUBE_NAME' defined under project PROJECT_NAME is not found
+    * [KYLIN-873] - cancel button does not work when [resume][discard] job
+
+## v0.7.1-incubating (First Apache Release) - 2015-06-10  
 _Tag:_ [kylin-0.7.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-0.7.1-incubating)
 
-This is first Apache Kylin release, majority changes, bug fixes and otehers as below:
+Apache Kylin v0.7.1-incubating has rolled out on June 10, 2015. This is also the first Apache release after join incubating. 
+
+To download this release, please visit: [http://kylin.incubator.apache.org/download/](http://kylin.incubator.apache.org/download/), there are source code package, binary package, ODBC driver and installation guide avaliable.
+
+Any problem or issue, please send to Apache Kylin mailing list: [dev@kylin.incubator.apache.org](mailto:dev@kylin.incubator.apache.org)
+
+Or, report to Apache Kylin JIRA project: [https://issues.apache.org/jira/browse/KYLIN](https://issues.apache.org/jira/browse/KYLIN)
+
 
 __Main Changes:__
 
 * Package renamed from com.kylinolap to org.apache.kylin
-* Binary pacakge avaliable download from: [http://kylin.incubator.apache.org/download](http://kylin.incubator.apache.org/download/)
+* Code cleaned up to apply Apache License policy
+* Easy install and setup with bunch of scripts and automation
+* Job engine refactor to be generic job manager for all jobs, and improved efficiency
+* Support Hive database other than 'default'
+* JDBC driver avaliable for client to interactive with Kylin server
+* Binary pacakge avaliable download 
 
 __New Feature__
 
