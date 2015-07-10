@@ -47,6 +47,16 @@ public class StringUtil {
         return (String[]) whatsLeft.toArray(new String[whatsLeft.size()]);
     }
 
+    public static String join(Iterable<String> parts, String separator) {
+        StringBuilder buf = new StringBuilder();
+        for (String p : parts) {
+            if (buf.length() > 0)
+                buf.append(separator);
+            buf.append(p);
+        }
+        return buf.toString();
+    }
+    
     public static void toUpperCaseArray(String[] source, String[] target) {
         if(source!=null) {
             for (int i = 0; i < source.length; i++) {

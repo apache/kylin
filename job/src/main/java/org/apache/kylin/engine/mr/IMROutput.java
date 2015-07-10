@@ -22,4 +22,5 @@ public interface IMROutput {
 
     public IMRJobFlowParticipant createBuildFlowParticipant();
 
+    public IMRJobFlowParticipant createMergeFlowParticipant();
 }

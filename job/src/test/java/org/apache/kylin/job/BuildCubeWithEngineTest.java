@@ -18,7 +18,19 @@
 
 package org.apache.kylin.job;
 
-import com.google.common.collect.Lists;
+import static org.junit.Assert.*;
+
+import java.io.File;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
@@ -30,10 +42,11 @@ import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.job.cube.CubingJob;
-import org.apache.kylin.job.cube.CubingJobBuilder;
+import org.apache.kylin.engine.BuildEngineFactory;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.manager.ExecutableManager;
@@ -42,23 +55,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.concurrent.*;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.collect.Lists;
 
 public class BuildCubeWithEngineTest {
 
-    private JobEngineConfig jobEngineConfig;
-
     private CubeManager cubeManager;
-
     private DefaultScheduler scheduler;
-
     protected ExecutableManager jobService;
 
     private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
@@ -102,7 +104,6 @@ public class BuildCubeWithEngineTest {
             throw new RuntimeException("scheduler has not been started");
         }
         cubeManager = CubeManager.getInstance(kylinConfig);
-        jobEngineConfig = new JobEngineConfig(kylinConfig);
         for (String jobId : jobService.getAllJobIds()) {
             if (jobService.getJob(jobId) instanceof CubingJob) {
                 jobService.deleteJob(jobId);
@@ -274,8 +275,7 @@ public class BuildCubeWithEngineTest {
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {
         CubeSegment segment = cubeManager.appendSegments(cubeManager.getCube(cubeName), endDate);
-        CubingJobBuilder cubingJobBuilder = new CubingJobBuilder(jobEngineConfig);
-        CubingJob job = cubingJobBuilder.buildJob(segment);
+        DefaultChainedExecutable job = BuildEngineFactory.createBatchBuildJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
         return job.getId();

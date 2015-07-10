@@ -22,15 +22,13 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * @author xduo
- * 
  */
 public class ClassUtil {
-
-    private static WeakHashMap<String, Class<?>> forNameCache = new WeakHashMap<>();
 
     public static void addClasspath(String path) throws Exception {
         System.out.println("Adding path " + path + " to class path");
@@ -45,21 +43,36 @@ public class ClassUtil {
         }
     }
 
+    private static final WeakHashMap<String, Class<?>> forNameCache = new WeakHashMap<>();
+    private static final Map<String, String> classRenameMap;
+    static {
+        classRenameMap = new HashMap<>();
+        classRenameMap.put("org.apache.kylin.job.cube.CubingJob", "org.apache.kylin.engine.mr.CubingJob");
+        classRenameMap.put("org.apache.kylin.job.cube.GarbageCollectionStep", "org.apache.kylin.engine.mr.GarbageCollectionStep");
+        classRenameMap.put("org.apache.kylin.job.cube.MergeDictionaryStep", "org.apache.kylin.engine.mr.MergeDictionaryStep");
+        classRenameMap.put("org.apache.kylin.job.cube.UpdateCubeInfoAfterBuildStep", "org.apache.kylin.engine.mr.UpdateCubeInfoAfterBuildStep");
+        classRenameMap.put("org.apache.kylin.job.cube.UpdateCubeInfoAfterMergeStep", "org.apache.kylin.engine.mr.UpdateCubeInfoAfterMergeStep");
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> Class<? extends T> forName(String name, Class<T> clz) throws ClassNotFoundException {
+        String origName = name;
+        
+        Class<? extends T> result = (Class<? extends T>) forNameCache.get(origName);
+        if (result == null) {
+            name = forRenamedClass(name);
+            result = (Class<? extends T>) Class.forName(name);
+            forNameCache.put(origName, result);
+        }
+        return result;
+    }
 
+    private static String forRenamedClass(String name) {
         if (name.startsWith("com.kylinolap")) {
             name = "org.apache.kylin" + name.substring("com.kylinolap".length());
         }
-
-        if (forNameCache.containsKey(name)) {
-            return (Class<? extends T>) forNameCache.get(name);
-        }
-
-        Class<?> ret = Class.forName(name);
-        forNameCache.put(name, ret);
-
-        return (Class<? extends T>) ret;
+        String rename = classRenameMap.get(name);
+        return rename == null ? name : rename;
     }
 
     public static Object newInstance(String clz) {

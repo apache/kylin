@@ -18,27 +18,28 @@
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.apache.kylin.common.util.Pair;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.cube.CubeBuilder;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.engine.BuildEngineFactory;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
-import org.apache.kylin.job.cube.CubingJob;
-import org.apache.kylin.job.cube.CubingJobBuilder;
-import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -49,8 +50,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.*;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author ysong1
@@ -126,31 +130,19 @@ public class JobService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, boolean forceMergeEmptySeg, String submitter) throws IOException, JobException {
 
-        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
-        for (CubingJob job : cubingJobs) {
-            if (job.getStatus() == ExecutableState.READY || job.getStatus() == ExecutableState.RUNNING || job.getStatus() == ExecutableState.ERROR) {
-                throw new JobException("The cube " + cube.getName() + " has running job(" + job.getId() + ") please discard it and try again.");
-            }
-        }
+        checkNoRunningJob(cube);
 
-        CubingJob job;
-        CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
-        builder.setSubmitter(submitter);
+        DefaultChainedExecutable job;
 
         if (buildType == CubeBuildTypeEnum.BUILD) {
-            if (cube.getDescriptor().hasHolisticCountDistinctMeasures() && cube.getSegments().size() > 0) {
-                Pair<CubeSegment, CubeSegment> segs = getCubeManager().appendAndMergeSegments(cube, endDate);
-                job = builder.buildAndMergeJob(segs.getFirst(), segs.getSecond());
-            } else {
-                CubeSegment newSeg = getCubeManager().appendSegments(cube, endDate);
-                job = builder.buildJob(newSeg);
-            }
+            CubeSegment newSeg = getCubeManager().appendSegments(cube, endDate);
+            job = BuildEngineFactory.createBatchBuildJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);
-            job = builder.mergeJob(newSeg);
+            job = BuildEngineFactory.createBatchMergeJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.REFRESH) {
             CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate);
-            job = builder.buildJob(refreshSeg);
+            job = BuildEngineFactory.createBatchBuildJob(refreshSeg, submitter);
         } else {
             throw new JobException("invalid build type:" + buildType);
         }
@@ -161,6 +153,15 @@ public class JobService extends BasicService {
         accessService.inherit(jobInstance, cube);
 
         return jobInstance;
+    }
+
+    private void checkNoRunningJob(CubeInstance cube) throws JobException {
+        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
+        for (CubingJob job : cubingJobs) {
+            if (job.getStatus() == ExecutableState.READY || job.getStatus() == ExecutableState.RUNNING || job.getStatus() == ExecutableState.ERROR) {
+                throw new JobException("The cube " + cube.getName() + " has running job(" + job.getId() + ") please discard it and try again.");
+            }
+        }
     }
 
     public JobInstance getJobInstance(String uuid) throws IOException, JobException {

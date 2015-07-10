@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.cube;
+package org.apache.kylin.engine.mr;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;

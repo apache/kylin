@@ -29,4 +29,10 @@ public class HBaseMROutput implements IMROutput {
         return null;
     }
 
+    @Override
+    public IMRJobFlowParticipant createMergeFlowParticipant() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

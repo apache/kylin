@@ -23,17 +23,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import com.google.common.base.Preconditions;
-
+import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.job.AbstractJobBuilder;
+import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.hadoop.dict.CreateInvertedIndexDictionaryJob;
-import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.hadoop.invertedindex.IIBulkLoadJob;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHFileJob;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
@@ -41,26 +39,30 @@ import org.apache.kylin.job.hadoop.invertedindex.IIDistinctColumnsJob;
 import org.apache.kylin.job.hadoop.invertedindex.InvertedIndexJob;
 import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 
+import com.google.common.base.Preconditions;
+
 /**
  */
-public final class IIJobBuilder extends AbstractJobBuilder {
+public final class IIJobBuilder {
 
+    final JobEngineConfig engineConfig;
+    
     public IIJobBuilder(JobEngineConfig engineConfig) {
-        super(engineConfig);
+        this.engineConfig = engineConfig;
     }
 
-    public IIJob buildJob(IISegment seg) {
+    public IIJob buildJob(IISegment seg, String submitter) {
         checkPreconditions(seg);
 
-        IIJob result = initialJob(seg, "BUILD");
+        IIJob result = initialJob(seg, "BUILD", submitter);
         final String jobId = result.getId();
         final IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(seg.getIIDesc());
-        final String intermediateHiveTableName = getIntermediateHiveTableName(intermediateTableDesc, jobId);
+        final String intermediateHiveTableName = intermediateTableDesc.getTableName(jobId);
         final String factDistinctColumnsPath = getIIDistinctColumnsPath(seg, jobId);
         final String iiRootPath = getJobWorkingDir(jobId) + "/" + seg.getIIInstance().getName() + "/";
         final String iiPath = iiRootPath + "*";
 
-        final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
+        final AbstractExecutable intermediateHiveTableStep = createFlatHiveTableStep(intermediateTableDesc, jobId);
         result.addTask(intermediateHiveTableStep);
 
         result.addTask(createFactDistinctColumnsStep(seg, intermediateHiveTableName, jobId, factDistinctColumnsPath));
@@ -81,14 +83,18 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         return result;
     }
 
-    private IIJob initialJob(IISegment seg, String type) {
+    private AbstractExecutable createFlatHiveTableStep(IIJoinedFlatTableDesc intermediateTableDesc, String jobId) {
+        return JobBuilderSupport.createFlatHiveTableStep(engineConfig, intermediateTableDesc, jobId);
+    }
+
+    private IIJob initialJob(IISegment seg, String type, String submitter) {
         IIJob result = new IIJob();
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(engineConfig.getTimeZone()));
         result.setIIName(seg.getIIInstance().getName());
         result.setSegmentId(seg.getUuid());
         result.setName(seg.getIIInstance().getName() + " - " + seg.getName() + " - " + type + " - " + format.format(new Date(System.currentTimeMillis())));
-        result.setSubmitter(this.submitter);
+        result.setSubmitter(submitter);
         return result;
     }
 
@@ -210,4 +216,11 @@ public final class IIJobBuilder extends AbstractJobBuilder {
 
     }
 
+    private StringBuilder appendExecCmdParameters(StringBuilder buf, String paraName, String paraValue) {
+        return buf.append(" -").append(paraName).append(" ").append(paraValue);
+    }
+
+    private String getJobWorkingDir(String uuid) {
+        return engineConfig.getHdfsWorkingDirectory() + "/" + "kylin-" + uuid;
+    }
 }

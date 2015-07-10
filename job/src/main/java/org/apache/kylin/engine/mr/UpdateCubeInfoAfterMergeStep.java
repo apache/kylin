@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.cube;
+package org.apache.kylin.engine.mr;
 
 import java.io.IOException;
 import java.util.ArrayList;
