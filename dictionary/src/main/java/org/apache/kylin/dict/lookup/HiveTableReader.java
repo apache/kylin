@@ -33,11 +33,10 @@ import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
 import org.apache.hive.hcatalog.data.transfer.HCatReader;
 import org.apache.hive.hcatalog.data.transfer.ReadEntity;
 import org.apache.hive.hcatalog.data.transfer.ReaderContext;
+import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
 
 /**
  * An implementation of TableReader with HCatalog for Hive table.
- * @author shaoshi
- *
  */
 public class HiveTableReader implements TableReader {
 
@@ -132,11 +131,6 @@ public class HiveTableReader implements TableReader {
         List<String> row = getRowAsList(record);
 
         return row.toArray(new String[row.size()]);
-    }
-
-    @Override
-    public void setExpectedColumnNumber(int expectedColumnNumber) {
-
     }
 
     @Override

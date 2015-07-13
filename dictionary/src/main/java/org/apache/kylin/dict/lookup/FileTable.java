@@ -23,14 +23,14 @@ import java.io.IOException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.kylin.common.util.HadoopUtil;
 
 /**
- * @author yangli9
- * 
  */
 public class FileTable implements ReadableTable {
+
+    public static final String DELIM_AUTO = "auto";
+    public static final String DELIM_COMMA = ",";
 
     String path;
     String delim;
@@ -46,15 +46,8 @@ public class FileTable implements ReadableTable {
         this.nColumns = nColumns;
     }
 
-    @Override
     public String getColumnDelimeter() {
         return delim;
-    }
-
-    @Override
-    public boolean exists() throws IOException {
-        FileSystem fs = HadoopUtil.getFileSystem(path);
-        return fs.exists(new Path(path));
     }
 
     @Override
@@ -64,8 +57,6 @@ public class FileTable implements ReadableTable {
 
     @Override
     public TableSignature getSignature() throws IOException {
-        if (!exists())
-            throw new IllegalStateException("Table not exists");
         FileSystem fs = HadoopUtil.getFileSystem(path);
         FileStatus status = fs.getFileStatus(new Path(path));
         return new TableSignature(path, status.getLen(), status.getModificationTime());

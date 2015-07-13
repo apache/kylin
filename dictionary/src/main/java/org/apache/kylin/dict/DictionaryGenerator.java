@@ -18,23 +18,27 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.dict.lookup.ReadableTable;
-import org.apache.kylin.dict.lookup.TableReader;
+import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
 import org.apache.kylin.metadata.model.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
