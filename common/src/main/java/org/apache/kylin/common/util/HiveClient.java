@@ -158,18 +158,8 @@ public class HiveClient {
         return result;
     }
 
-    /**
-     *
-     * @param database
-     * @param tableName
-     * @throws Exception
-     */
-
     public boolean isNativeTable(String database, String tableName)  throws Exception{
-
         return !MetaStoreUtils.isNonNativeTable(getMetaStoreClient().getTable(database, tableName));
-
-
     }
 
 }
