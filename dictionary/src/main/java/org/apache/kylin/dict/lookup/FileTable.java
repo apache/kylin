@@ -32,6 +32,9 @@ import org.apache.kylin.common.util.HadoopUtil;
  */
 public class FileTable implements ReadableTable {
 
+    public static final String DELIM_AUTO = "auto";
+    public static final String DELIM_COMMA = ",";
+
     String path;
     String delim;
     int nColumns;
@@ -53,11 +56,6 @@ public class FileTable implements ReadableTable {
         this.delim = DELIM_AUTO;
         this.nColumns = nColumns;
         this.nativeTable = nativeTable;
-    }
-
-    @Override
-    public String getColumnDelimeter() {
-        return delim;
     }
 
     @Override
