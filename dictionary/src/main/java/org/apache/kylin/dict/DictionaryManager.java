@@ -18,7 +18,15 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.collect.Lists;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -29,7 +37,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.dict.lookup.FileTable;
 import org.apache.kylin.dict.lookup.HiveTable;
 import org.apache.kylin.dict.lookup.ReadableTable;
-import org.apache.kylin.dict.lookup.TableSignature;
+import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataType;
@@ -37,14 +45,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Lists;
 
 public class DictionaryManager {
 
@@ -204,10 +205,11 @@ public class DictionaryManager {
         int srcColIdx = (Integer) tmp[2];
         ReadableTable inpTable = (ReadableTable) tmp[3];
 
-        if (!inpTable.exists())
+        TableSignature inputSig = inpTable.getSignature();
+        if (inputSig == null) // table does not exists
             return null;
 
-        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inpTable.getSignature(), inpTable.getColumnDelimeter());
+        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inputSig);
 
         String dupDict = checkDupByInfo(dictInfo);
         if (dupDict != null) {

@@ -37,9 +37,9 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringSplitter;
+import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
 
 /**
  * Tables are typically CSV or SEQ file.
@@ -61,7 +61,7 @@ public class FileTableReader implements TableReader {
     private int expectedColumnNumber = -1; // helps delimiter detection
 
     public FileTableReader(String filePath, int expectedColumnNumber) throws IOException {
-        this(filePath, ReadableTable.DELIM_AUTO, expectedColumnNumber);
+        this(filePath, FileTable.DELIM_AUTO, expectedColumnNumber);
     }
     
     public FileTableReader(String filePath, String delim, int expectedColumnNumber) throws IOException {
@@ -94,11 +94,6 @@ public class FileTableReader implements TableReader {
     }
 
     @Override
-    public void setExpectedColumnNumber(int expectedColumnNumber) {
-        this.expectedColumnNumber = expectedColumnNumber;
-    }
-
-    @Override
     public boolean next() throws IOException {
         curLine = reader.nextLine();
         curColumns = null;
@@ -112,7 +107,7 @@ public class FileTableReader implements TableReader {
     @Override
     public String[] getRow() {
         if (curColumns == null) {
-            if (ReadableTable.DELIM_AUTO.equals(delim))
+            if (FileTable.DELIM_AUTO.equals(delim))
                 delim = autoDetectDelim(curLine);
 
             if (delim == null)
@@ -128,7 +123,7 @@ public class FileTableReader implements TableReader {
         String str[] = StringSplitter.split(line, delim);
 
         // un-escape CSV
-        if (ReadableTable.DELIM_COMMA.equals(delim)) {
+        if (FileTable.DELIM_COMMA.equals(delim)) {
             for (int i = 0; i < str.length; i++) {
                 str[i] = unescapeCsv(str[i]);
             }

@@ -21,9 +21,10 @@ package org.apache.kylin.dict;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.dict.lookup.TableSignature;
+import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DictionaryInfo extends RootPersistentEntity {
@@ -38,8 +39,6 @@ public class DictionaryInfo extends RootPersistentEntity {
     private String dataType;
     @JsonProperty("input")
     private TableSignature input;
-    @JsonProperty("input_delimeter")
-    private String inputDelimeter;
     @JsonProperty("dictionary_class")
     private String dictionaryClass;
     @JsonProperty("cardinality")
@@ -50,7 +49,7 @@ public class DictionaryInfo extends RootPersistentEntity {
     public DictionaryInfo() {
     }
 
-    public DictionaryInfo(String sourceTable, String sourceColumn, int sourceColumnIndex, String dataType, TableSignature input, String inputDelimeter) {
+    public DictionaryInfo(String sourceTable, String sourceColumn, int sourceColumnIndex, String dataType, TableSignature input) {
 
         this.updateRandomUuid();
 
@@ -59,7 +58,6 @@ public class DictionaryInfo extends RootPersistentEntity {
         this.sourceColumnIndex = sourceColumnIndex;
         this.dataType = dataType;
         this.input = input;
-        this.inputDelimeter = inputDelimeter;
     }
 
     public DictionaryInfo(DictionaryInfo other) {
@@ -71,7 +69,6 @@ public class DictionaryInfo extends RootPersistentEntity {
         this.sourceColumnIndex = other.sourceColumnIndex;
         this.dataType = other.dataType;
         this.input = other.input;
-        this.inputDelimeter = other.inputDelimeter;
     }
 
     // ----------------------------------------------------------------------------
@@ -89,7 +86,7 @@ public class DictionaryInfo extends RootPersistentEntity {
     // to decide if two dictionaries are built on the same table/column,
     // regardless of their signature
     public boolean isDictOnSameColumn(DictionaryInfo other) {
-        return this.sourceTable.equalsIgnoreCase(other.sourceTable) && this.sourceColumn.equalsIgnoreCase(other.sourceColumn) && this.sourceColumnIndex == other.sourceColumnIndex && this.dataType.equalsIgnoreCase(other.dataType) && this.inputDelimeter.equalsIgnoreCase(other.inputDelimeter) && this.dictionaryClass.equalsIgnoreCase(other.dictionaryClass);
+        return this.sourceTable.equalsIgnoreCase(other.sourceTable) && this.sourceColumn.equalsIgnoreCase(other.sourceColumn) && this.sourceColumnIndex == other.sourceColumnIndex && this.dataType.equalsIgnoreCase(other.dataType) && this.dictionaryClass.equalsIgnoreCase(other.dictionaryClass);
     }
 
     public String getSourceTable() {
@@ -130,14 +127,6 @@ public class DictionaryInfo extends RootPersistentEntity {
 
     public void setInput(TableSignature input) {
         this.input = input;
-    }
-
-    public String getInputDelimeter() {
-        return inputDelimeter;
-    }
-
-    public void setInputDelimeter(String inputDelimeter) {
-        this.inputDelimeter = inputDelimeter;
     }
 
     public String getDictionaryClass() {
