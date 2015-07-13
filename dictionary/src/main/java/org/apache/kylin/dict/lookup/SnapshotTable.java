@@ -46,8 +46,6 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
 
     @JsonProperty("signature")
     private TableSignature signature;
-    @JsonProperty("column_delimeter")
-    private String columnDelimeter;
     @JsonProperty("useDictionary")
     private boolean useDictionary;
 
@@ -60,13 +58,11 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
 
     SnapshotTable(ReadableTable table) throws IOException {
         this.signature = table.getSignature();
-        this.columnDelimeter = table.getColumnDelimeter();
         this.useDictionary = true;
     }
 
     public void takeSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
         this.signature = table.getSignature();
-        this.columnDelimeter = table.getColumnDelimeter();
 
         int maxIndex = tableDesc.getMaxColumnIndex();
 
@@ -133,22 +129,12 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
             @Override
             public void close() throws IOException {
             }
-
-            @Override
-            public void setExpectedColumnNumber(int expectedColumnNumber) {
-                // noop
-            }
         };
     }
 
     @Override
     public TableSignature getSignature() throws IOException {
         return signature;
-    }
-
-    @Override
-    public String getColumnDelimeter() throws IOException {
-        return columnDelimeter;
     }
 
     /**

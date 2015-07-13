@@ -30,19 +30,18 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.dict.lookup.FileTable;
-import org.apache.kylin.dict.lookup.HiveTable;
-import org.apache.kylin.dict.lookup.TableSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.dict.lookup.FileTable;
+import org.apache.kylin.dict.lookup.HiveTable;
 import org.apache.kylin.dict.lookup.ReadableTable;
+import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DictionaryManager {
 
@@ -174,7 +173,7 @@ public class DictionaryManager {
         int srcColIdx = (Integer) tmp[2];
         ReadableTable inpTable = (ReadableTable) tmp[3];
 
-        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inpTable.getSignature(), inpTable.getColumnDelimeter());
+        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inpTable.getSignature());
 
         String dupDict = checkDupByInfo(dictInfo);
         if (dupDict != null) {

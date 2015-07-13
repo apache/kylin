@@ -59,11 +59,6 @@ public class HiveTable implements ReadableTable {
     }
 
     @Override
-    public String getColumnDelimeter() throws IOException {
-        return getFileTable().getColumnDelimeter();
-    }
-
-    @Override
     public TableReader getReader() throws IOException {
         return new HiveTableReader(database, hiveTable);
     }

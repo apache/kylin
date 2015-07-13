@@ -24,9 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 
@@ -123,9 +123,7 @@ public class SnapshotManager {
         TableSignature sig = snapshot.getSignature();
         for (String existing : existings) {
             SnapshotTable existingTable = load(existing, false); // skip cache,
-            // direct
-            // load from
-            // store
+            // direct load from store
             if (existingTable != null && sig.equals(existingTable.getSignature()))
                 return existing;
         }

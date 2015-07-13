@@ -28,7 +28,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kylin.common.util.Pair;
 
 import com.google.common.collect.Sets;
+
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
 import org.apache.kylin.metadata.model.TableDesc;
 
 /**
