@@ -3,88 +3,51 @@ layout: docs
 title: Docs
 ---
 
-<main id="main" >
-  <div class="container" >
-    <div id="zero" class=" main" >
-      <header style=" padding:1.0em 0 4em 0">
-        <div class="container" >
+Welcome to Apache Kylin
+------------  
+> Extreme OLAP Engine for Big Data
 
-         
-     <div id="content-container" class="animated fadeIn">
-       
+Apache Kylin is an open source Distributed Analytics Engine, contributed by eBay Inc., provides SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
-<p class="content-header" >What should I use Kylin for?</p>
-<p class="content-p">
-If you want to do multi-dimension analysis on large data sets (billion+ rows) with low query latency (sub-seconds), Kylin is a good option. Kylin also provides good integration with existing BI tools (e.g Tableau).
-</p>
+Installation 
+------------  
+Please follow  installation & tutorial to start with Kylin.
 
-<hr/>
- 
-<p class="content-header">Why existing SQL-on-Hadoop solutions fall short?</p>
-<p class="content-p">
-The existing SQL-on-Hadoop needs to scan partial or whole data set to answer a user query. Due to large data scan, many queries are very slow (minute+ latency).  
-</p>
-<hr/>
- 
-<p class="content-header">What is MOLAP/ROLAP?</p>
-<p class="content-p">
-MOLAP (Multi-dimensional OLAP) is to pre-compute data along different dimensions of interest and store resultant values in the cube. MOLAP is much faster but is inflexible.
-ROLAP (Relational-OLAP) is to use star or snow-flake schema to do runtime aggregation. ROLAP is flexible but much slower.
-</p>
-<hr/>
+Advanced Topics
+-------  
+####Connectivity
+1.[How to use kylin remote jdbc driver](docs/Tutorial/How to use kylin remote jdbc driver.md)
 
-<p class="content-header">How does Kylin support ROLAP/MOLAP?</p>
-<p class="content-p">
-Kylin builds data cube (MOLAP) from hive table (ROLAP) according to the metadata definition.
-If the query can be fulfilled by data cube, Kylin will route the query to data cube that is MOLAP.
-If the query can’t be fulfilled by data cube, Kylin will route the query to hive table that is ROLAP.
-Basically, you can think Kylin as HOLAP on top of MOLAP and ROLAP. 
-</p>
-<hr/>
-<p class="content-header">What does a Kylin query look like?</p>
-<p class="content-p">
-Kylin supports join, projection, filter, aggregation, groups and sub-query. For example:
-<div align="left">
+2.[SQL Reference](https://github.com/apache/incubator-calcite/blob/master/doc/reference.md)
 
-<pre class="prettyprint" style="margin-top:1em;">select test_cal_dt.week_beg_dt, test_category.lv1_categ, test_category.lv2_categ, test_kylin_fact.format_name, test_sites.site_name, sum(test_kylin_fact.price) as total_price, count(*) as total_count from test_kylin_fact left join test_cal_dt on test_kylin_fact.cal_dt = test_cal_dt.cal_dt left join test_category on test_kylin_fact.leaf_categ_id = test_category.leaf_categ_id and test_kylin_fact.site_id = test_category.site_id left join test_sites on test_kylin_fact.site_id = test_sites.site_id where test_kylin_fact.seller_id = 123456 or test_kylin_fact.format_name = 'New' group by test_cal_dt.week_beg_dt, test_category.lv1_categ, test_category.lv2_categ, test_kylin_fact.format_name, test_sites.site_name</pre>
-</div>
-<hr/>
+####REST
 
-<p class="content-header">What Hadoop components does it work with?</p>
-<p class="content-p">
-Kylin depends on HDFS, MapReduce, Hive and HBase.
-Hive and MapReduce is used for cube building. Hive is used for pre-join and MapReduce is used for pre-aggregation.
-HDFS is used to store intermediated files during cube building.
-HBase is used to store data cube and answer the query. HBase coprocessor is also used for query processing.
-</p>
-<hr/>
+1.[Kylin Restful API List](docs/REST/Kylin Restful API List.md)
 
-<!-- Migrate wiki to here 
-<p class="content-header">Where can I find the technical details about Kylin?</p>
-<p class="content-p"><a href="http://www.slideshare.net/XuJiang2/kylin-hadoop-olap-engine" target="_blank">Kylin Wiki</a></p>
+2.[Build Cube with Restful API](docs/REST/Build Cube with Restful API.md)
 
--->
+3.[How to consume Kylin REST API in javascript](docs/REST/How to consume Kylin REST API in javascript.md)
 
-     </div>
-         
-         </div><!--end of rightcontent-->
-         
-         </div><!--end of row-->
-        </div>
-        <!-- /container --> 
-        
-        
-        
-      </header>
-    </div>
-    <!-- / section --> 
-  </div>
-  <!-- /container -->
- 
+####Operations
+1.[Kylin Metadata Store](docs/Operations/Kylin Metadata Store.md)
 
-  
+2.[Export Kylin HBase data](docs/Operations/Export Kylin HBase data.md)
 
-      
-    </header>
-  </section>
-</main>
+3.[Advanced settings of Kylin environment](docs/Operations/Advanced settings of Kylin environment.md)
+
+####Test
+
+1.[Run Kylin test case with HBase Mini Cluster](docs/Test/Run Kylin test case with HBase Mini Cluster.md)
+
+
+####Technial Details
+
+1.[New meta data model structure](docs/TechInside/New meta data model structure.md)
+
+2.[Job Engine Design](docs/JobEngine/Design.md)
+
+
+## Disclaimer
+
+Apache Kylin is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.
+

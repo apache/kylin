@@ -29,7 +29,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.7.2-incubating-SNAPSHOT</version>
+    <version>0.7.3-incubating-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
@@ -41,6 +41,7 @@
         <maven-model.version>3.1.1</maven-model.version>
         <maven-release.version>2.5.1</maven-release.version>
         <maven-assembly.version>2.4</maven-assembly.version>
+        <maven-license.plugin.version>2.6</maven-license.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -440,6 +441,9 @@
                         <target>${javaVersion}</target>
                     </configuration>
                 </plugin>
+
+
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
@@ -536,13 +540,76 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!-- utility plugins -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>${maven-assembly.version}</version>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.15</version>
+                </plugin>
+
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <!--
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>${maven-license.plugin.version}</version>
+                <configuration>
+                    <header>License-Header.txt</header>
+                    <licenseName>apache_v2</licenseName>
+                    <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                    <canUpdateCopyright>true</canUpdateCopyright>
+                    <canUpdateDescription>true</canUpdateDescription>
+                    <excludes>
+                        <exclude>**/*.diff</exclude>
+                        <exclude>*.patch</exclude>
+                        <exclude>**/*.log</exclude>
+                        <exclude>**/*.data</exclude>
+                        <exclude>**/README.*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <!-- Checkstyle Plugin -->
+            <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>validate</id>
+                            <phase>validate</phase>
+                            <configuration>
+                                <configLocation>src/main/config/checkstyle/checkstyle.xml</configLocation>
+                                <suppressionsLocation>src/main/config/checkstyle/suppressions.xml</suppressionsLocation>
+                                <consoleOutput>true</consoleOutput>
+                                <headerLocation>src/main/config/checkstyle/checkstyle-java-header.txt</headerLocation>
+                                <failOnViolation>true</failOnViolation>
+                                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            </configuration>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+        </plugins>
+
     </build>
 
     <modules>
@@ -602,7 +669,94 @@
                             <argLine>-Xms1G -Xmx4G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
                         </configuration>
                     </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <!-- Apache-RAT checks for files without headers.
+                         If run on a messy developer's sandbox, it will fail.
+                         This serves as a reminder to only build a release in a clean
+                         sandbox! -->
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                        <configuration>
+                            <numUnapprovedLicenses>0</numUnapprovedLicenses>
+                            <excludes>
+                                <exclude>.idea/**</exclude>
+                                <exclude>.git/**</exclude>
+                                <exclude>.settings/**</exclude>
+                                <!-- text files without comments -->
+                                <exclude>**/*.csv</exclude>
+                                <exclude>**/*.json</exclude>
+                                <exclude>**/*.md</exclude>
+                                <!-- binary files -->
+                                <exclude>**/*.dict</exclude>
+                                <exclude>**/*.dic</exclude>
+                                <exclude>**/*.snapshot</exclude>
+                                <exclude>**/*.pdf</exclude>
+                                <exclude>**/*.log</exclude>
 
+                                <exclude>**/.checkstyle</exclude>
+
+                                <!-- generated files -->
+                                <exclude>**/target/**</exclude>
+                                <exclude>lib/**</exclude>
+                                <!-- Kylin's website content -->
+                                <exclude>**/.sass-cache/**</exclude>
+
+                                <exclude>docs/website/**</exclude>
+
+                                <!-- tomcat package -->
+                                <exclude>tomcat/**</exclude>
+                                <!-- front end libary and generated files -->
+                                <exclude>webapp/node_modules/**</exclude>
+                                <exclude>webapp/dist/**</exclude>
+                                <exclude>webapp/app/components/**</exclude>
+                                <!-- json configuration file-->
+                                <exclude>webapp/.bowerrc</exclude>
+                                <exclude>webapp/.jshintrc</exclude>
+                                <!-- generated dict files -->
+                                <exclude>dictionary/metastore_db/**</exclude>
+
+                                <!-- MIT license -->
+                                <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
+                                <exclude>webapp/app/css/AdminLTE.css</exclude>
+
+                                <!-- jdbc log -->
+                                <exclude>jdbc/kylin_jdbc.log*</exclude>
+
+                                <!-- HBase MiniCluster Testing Data, for testing only -->
+                                <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
+                                <exclude>examples/test_case_data/**/*.xml</exclude>
+
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.maven.doxia</groupId>
+                                <artifactId>doxia-core</artifactId>
+                                <version>1.6</version>
+                                <exclusions>
+                                    <exclusion>
+                                        <groupId>xerces</groupId>
+                                        <artifactId>xercesImpl</artifactId>
+                                    </exclusion>
+                                </exclusions>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -662,6 +816,14 @@
             <id>apache-release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+
                     <!-- Override the parent assembly execution to customize the assembly
               descriptor and final name. -->
                     <plugin>
@@ -742,6 +904,8 @@
                                 <exclude>**/*.pdf</exclude>
                                 <exclude>**/*.log</exclude>
 
+                                <exclude>**/.checkstyle</exclude>
+
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
                                 <exclude>lib/**</exclude>
@@ -819,6 +983,12 @@
 
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <skipCheck>true</skipCheck>
+            </properties>
         </profile>
     </profiles>
 </project>
