@@ -160,4 +160,5 @@
         <url-pattern>/matrics/*</url-pattern>
     </servlet-mapping>
      -->
+    <distributable />
 </web-app>
