@@ -55,10 +55,7 @@ public class SnapshotManager {
     // ============================================================================
 
     private KylinConfig config;
-    private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource
-
-    // path ==>
-    // SnapshotTable
+    private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource path ==> SnapshotTable
 
     private SnapshotManager(KylinConfig config) {
         this.config = config;
@@ -92,6 +89,11 @@ public class SnapshotManager {
         if (dup != null) {
             logger.info("Identical input " + table.getSignature() + ", reuse existing snapshot at " + dup);
             return getSnapshotTable(dup);
+        }
+
+        if (snapshot.getSignature().getSize() / 1024 / 1024 > config.getTableSnapshotMaxMB()) {
+            throw new IllegalStateException("Table snapshot should be no greater than " + config.getTableSnapshotMaxMB() //
+                    + " MB, but " + tableDesc + " size is " + snapshot.getSignature().getSize());
         }
 
         snapshot.takeSnapshot(table, tableDesc);
