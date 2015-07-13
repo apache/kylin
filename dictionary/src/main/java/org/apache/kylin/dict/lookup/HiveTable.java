@@ -18,42 +18,31 @@
 
 package org.apache.kylin.dict.lookup;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HiveClient;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.HiveClient;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.TableDesc;
-
 /**
- * @author yangli9
- * 
  */
 public class HiveTable implements ReadableTable {
 
     private static final Logger logger = LoggerFactory.getLogger(HiveTable.class);
 
-    private String database;
-    private String hiveTable;
-    private int nColumns;
-    private String hdfsLocation;
-    private FileTable fileTable;
+    final private String database;
+    final private String hiveTable;
+    
+    private HiveClient hiveClient;
 
     public HiveTable(MetadataManager metaMgr, String table) {
         TableDesc tableDesc = metaMgr.getTableDesc(table);
         this.database = tableDesc.getDatabase();
         this.hiveTable = tableDesc.getName();
-        this.nColumns = tableDesc.getColumnCount();
     }
 
     @Override
@@ -63,60 +52,44 @@ public class HiveTable implements ReadableTable {
 
     @Override
     public TableSignature getSignature() throws IOException {
-        return getFileTable().getSignature();
-    }
+        try {
+            String path = computeHDFSLocation();
+            Pair<Long, Long> sizeAndLastModified = FileTable.getSizeAndLastModified(path);
+            long size = sizeAndLastModified.getFirst();
+            long lastModified = sizeAndLastModified.getSecond();
 
-    private FileTable getFileTable() throws IOException {
-        if (fileTable == null) {
-            fileTable = new FileTable(getHDFSLocation(true), nColumns);
+            // for non-native hive table, cannot rely on size & last modified on HDFS
+            if (getHiveClient().isNativeTable(database, hiveTable) == false) {
+                lastModified = System.currentTimeMillis(); // assume table is ever changing
+            }
+
+            return new TableSignature(path, size, lastModified);
+
+        } catch (Exception e) {
+            if (e instanceof IOException)
+                throw (IOException) e;
+            else
+                throw new IOException(e);
         }
-        return fileTable;
     }
 
-    public String getHDFSLocation(boolean needFilePath) throws IOException {
-        if (hdfsLocation == null) {
-            hdfsLocation = computeHDFSLocation(needFilePath);
-        }
-        return hdfsLocation;
-    }
-
-    private String computeHDFSLocation(boolean needFilePath) throws IOException {
+    private String computeHDFSLocation() throws Exception {
 
         String override = KylinConfig.getInstanceFromEnv().getOverrideHiveTableLocation(hiveTable);
         if (override != null) {
             logger.debug("Override hive table location " + hiveTable + " -- " + override);
             return override;
         }
-        
-        String hdfsDir = null;
-        try {
-            HiveClient hiveClient = new HiveClient();
-            hdfsDir = hiveClient.getHiveTableLocation(database, hiveTable);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new IOException(e);
-        }
 
-        if (needFilePath) {
-            FileSystem fs = HadoopUtil.getFileSystem(hdfsDir);
-            FileStatus file = findOnlyFile(hdfsDir, fs);
-            return file.getPath().toString();
-        } else {
-            return hdfsDir;
-        }
-
+        return getHiveClient().getHiveTableLocation(database, hiveTable);
     }
 
-    private FileStatus findOnlyFile(String hdfsDir, FileSystem fs) throws FileNotFoundException, IOException {
-        FileStatus[] files = fs.listStatus(new Path(hdfsDir));
-        ArrayList<FileStatus> nonZeroFiles = Lists.newArrayList();
-        for (FileStatus f : files) {
-            if (f.getLen() > 0)
-                nonZeroFiles.add(f);
+    public HiveClient getHiveClient() {
+
+        if (hiveClient == null) {
+            hiveClient = new HiveClient();
         }
-        if (nonZeroFiles.size() != 1)
-            throw new IllegalStateException("Expect 1 and only 1 non-zero file under " + hdfsDir + ", but find " + nonZeroFiles.size());
-        return nonZeroFiles.get(0);
+        return hiveClient;
     }
 
     @Override
