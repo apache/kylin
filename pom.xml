@@ -29,11 +29,10 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.7.3-incubating-SNAPSHOT</version>
+    <version>0.7.2-incubating-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
-
 
     <properties>
         <!-- General Properties -->
@@ -838,7 +837,7 @@
                                 </goals>
                                 <configuration>
                                     <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <appendAssemblyId>true</appendAssemblyId>
                                     <descriptor>src/main/config/assemblies/source-assembly.xml</descriptor>
                                     <finalName>apache-kylin-${project.version}-src</finalName>
                                     <tarLongFileMode>gnu</tarLongFileMode>
@@ -891,6 +890,7 @@
                         <configuration>
                             <numUnapprovedLicenses>0</numUnapprovedLicenses>
                             <excludes>
+                                <exclude>DEPENDENCIES</exclude>
                                 <exclude>.idea/**</exclude>
                                 <exclude>.git/**</exclude>
                                 <exclude>.settings/**</exclude>
@@ -906,6 +906,8 @@
                                 <exclude>**/*.log</exclude>
 
                                 <exclude>**/.checkstyle</exclude>
+                                <!--Job's Test Data-->
+                                <exclude>job/src/test/resources/data/**</exclude>
 
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
