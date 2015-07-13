@@ -80,11 +80,10 @@ KylinApp
       };
       $scope.state.loading = true;
 
-      var defer = $q.defer();
       return JobList.list(jobRequest).then(function (resp) {
         $scope.state.loading = false;
         defer.resolve(resp);
-        defer.promise;
+        return defer.promise;
       });
     }
 
