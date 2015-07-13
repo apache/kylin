@@ -434,6 +434,10 @@ public class KylinConfig {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
     }
     
+    public int getTableSnapshotMaxMB() {
+        return Integer.parseInt(getOptional("kylin.table.snapshot.max_mb", "300"));
+    }
+    
     public int getHBaseRegionCut(String capacity) {
         String cut;
         switch (capacity) {
