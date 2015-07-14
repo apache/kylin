@@ -7,6 +7,7 @@
       "realization": "test_kylin_cube_without_slr_empty"
     }
   ],
+  "cost": 100,
   "last_modified": 1420016227424,
   "create_time": null
 }
