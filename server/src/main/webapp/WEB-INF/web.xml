@@ -36,14 +36,6 @@
     <listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
-    
-    <listener>
-    	<listener-class>com.ryantenney.metrics.spring.servlets.MetricsServletsContextListener</listener-class>
-    </listener>
-    <listener>
-    	<listener-class>org.apache.kylin.rest.metrics.KylinInstrumentedFilterContextListener</listener-class>
-    </listener>
-
 	<listener>
 		<listener-class>
 			org.springframework.security.web.session.HttpSessionEventPublisher
@@ -84,15 +76,6 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-	<filter>
-	    <filter-name>instrumentedFilter</filter-name>
-	    <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
-	</filter>
-	<filter-mapping>
-	    <filter-name>instrumentedFilter</filter-name>
-	    <url-pattern>/*</url-pattern>
-	</filter-mapping>
-
     <!--request log filter-->
     <filter>
         <filter-name>requestLoggingFilter</filter-name>
@@ -129,36 +112,6 @@
         <servlet-name>kylin</servlet-name>
         <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
-    <servlet>
-        <servlet-name>metricsservlet</servlet-name>
-        <servlet-class>com.codahale.metrics.servlets.MetricsServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>metricsservlet</servlet-name>
-        <url-pattern>/metrics/*</url-pattern>
-    </servlet-mapping>
-    
-    <servlet>
-        <servlet-name>metricsadminservlet</servlet-name>
-        <servlet-class>com.codahale.metrics.servlets.AdminServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>metricsadminservlet</servlet-name>
-        <url-pattern>/metricsadmin/*</url-pattern>
-    </servlet-mapping>
-    
-	<!-- 
-	<servlet>
-        <servlet-name>matricsadmin</servlet-name>
-        <servlet-class>com.codahale.metrics.servlets.MetricsServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>matricsadmin</servlet-name>
-        <url-pattern>/matrics/*</url-pattern>
-    </servlet-mapping>
-     -->
+
     <distributable />
 </web-app>
