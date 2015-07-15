@@ -30,8 +30,8 @@
 						<div id="pjax">
 							<h1 class="post-title">{{ page.title }}</h1>
 							{% if page.version == NULL %}
-							{% else %}
-								version: {{page.version}}, since: {{page.since}}
+							{% else %}							
+								<p>version: {{page.version}}, since: {{page.since}}</p>
 							{% endif %}	
 
 							{{ content }}

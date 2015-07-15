@@ -29,6 +29,7 @@ And ODBC Driver could be find here:
   * [Kylin ODBC Driver](KylinODBC.zip)
   * _ODBC Driver's source sode avaliable with 0.8 branch_
 
+<!--
 __Development Version (v0.7.x)__
 
 Here's latest development version binary package:
@@ -36,6 +37,6 @@ Here's latest development version binary package:
   * [kylin-v0.7.3-incubating-SNAPSHOT](kylin-0.7.3-incubating-SNAPSHOT.tar.gz)
   * Updated Date: 2015-06-30
   * Commit ID: e7fcc20d8ab6f824eb6b88b8f8fa133e284dc34f
-
+-->
 
 
