@@ -1,0 +1,177 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+"resource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+"#include ""afxres.h""\r\n"
+"\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+"\r\n"
+"\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 1, 0, 0, 1
+PRODUCTVERSION 1, 0, 0, 1
+FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+FILEFLAGS 0x1L
+#else
+FILEFLAGS 0x0L
+#endif
+FILEOS 0x40004L
+FILETYPE 0x2L
+FILESUBTYPE 0x0L
+BEGIN
+BLOCK "StringFileInfo"
+BEGIN
+BLOCK "040904b0"
+BEGIN
+VALUE "CompanyName", "kylinolap"
+VALUE "FileDescription", "Kylin ODBC Driver"
+VALUE "FileVersion", "1, 0, 0, 1"
+VALUE "InternalName", "KylinODBC"
+VALUE "LegalCopyright", "Copyright ?2014"
+VALUE "OriginalFilename", "driver.dll"
+VALUE "ProductName", "Kylin ODBC Driver"
+VALUE "ProductVersion", "1, 0, 0, 1"
+END
+END
+BLOCK "VarFileInfo"
+BEGIN
+VALUE "Translation", 0x409, 1200
+END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DSN_CFG1 DIALOGEX 0, 0, 263, 162
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Kylin Driver Connect Dialog"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+PUSHBUTTON      "Cancel", IDCANCEL, 152, 138, 50, 14
+LTEXT           "Server Host", IDC_STATIC, 49, 16, 38, 8
+LTEXT           "Port", IDC_STATIC, 69, 32, 14, 8
+EDITTEXT        IDC_SERVER, 92, 14, 110, 12, ES_AUTOHSCROLL
+EDITTEXT        IDC_PORT, 92, 31, 30, 12, ES_AUTOHSCROLL
+LTEXT           "Username", IDC_STATIC, 52, 60, 33, 8
+LTEXT           "Password", IDC_STATIC, 54, 79, 32, 8
+EDITTEXT        IDC_UID, 92, 59, 111, 12, ES_AUTOHSCROLL
+EDITTEXT        IDC_PWD, 92, 76, 111, 13, ES_PASSWORD | ES_AUTOHSCROLL
+DEFPUSHBUTTON   "Done", IDOK, 91, 138, 50, 14, WS_DISABLED
+LTEXT           "(only https service permitted)", IDC_STATIC, 93, 45, 90, 8
+COMBOBOX        IDC_COMBO1, 92, 117, 112, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+PUSHBUTTON      "Connect", IDC_CONNECT, 91, 95, 111, 14
+LTEXT           "Project", IDC_STATIC, 61, 119, 23, 8
+END
+
+IDD_DSN_CFG2 DIALOGEX 0, 0, 263, 204
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Kylin DSN Configuration Dialog"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+PUSHBUTTON      "Cancel", IDCANCEL, 145, 167, 50, 14
+LTEXT           "Server Host", IDC_STATIC, 48, 35, 38, 8
+LTEXT           "Port", IDC_STATIC, 72, 52, 14, 8
+EDITTEXT        IDC_SERVER, 93, 33, 102, 12, ES_AUTOHSCROLL
+EDITTEXT        IDC_PORT, 93, 50, 30, 12, ES_AUTOHSCROLL
+LTEXT           "Username", IDC_STATIC, 53, 82, 33, 8
+LTEXT           "Password", IDC_STATIC, 55, 102, 32, 8
+EDITTEXT        IDC_UID, 93, 79, 102, 12, ES_AUTOHSCROLL
+EDITTEXT        IDC_PWD, 93, 97, 102, 13, ES_PASSWORD | ES_AUTOHSCROLL
+DEFPUSHBUTTON   "Done", IDOK, 84, 167, 50, 14, WS_DISABLED
+LTEXT           "&DSN Name", IDC_STATIC, 49, 17, 37, 8
+EDITTEXT        IDC_DSNNAME, 93, 14, 102, 12, ES_AUTOHSCROLL
+LTEXT           "(only https service permitted)", IDC_STATIC, 94, 66, 90, 8
+PUSHBUTTON      "Test", IDC_BTEST, 94, 117, 102, 14
+LTEXT           "Project", IDC_STATIC, 63, 145, 23, 8
+COMBOBOX        IDC_COMBO1, 94, 143, 101, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+IDD_DSN_CFG1, DIALOG
+BEGIN
+LEFTMARGIN, 7
+RIGHTMARGIN, 256
+TOPMARGIN, 7
+BOTTOMMARGIN, 155
+END
+
+IDD_DSN_CFG2, DIALOG
+BEGIN
+LEFTMARGIN, 7
+RIGHTMARGIN, 256
+TOPMARGIN, 7
+BOTTOMMARGIN, 197
+END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

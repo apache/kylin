@@ -1,0 +1,9 @@
+1.C++ REST SDK
+	http://katyscode.wordpress.com/2014/04/01/how-to-statically-link-the-c-rest-sdk-casablanca/
+
+2.VLD
+
+3.ZLIB
+	http://blog.sina.com.cn/s/blog_6e0693f70100sjgj.html
+	compile with MT
+	add /safeseh to bld_ml.bat
