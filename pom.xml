@@ -387,17 +387,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz</artifactId>
-                <version>${quartz.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz-jobs</artifactId>
-                <version>${quartz.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-framework</artifactId>
                 <version>${curator.version}</version>
@@ -476,7 +465,14 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.0.2</version>
+                    <version>2.6</version>
+                    <configuration>
+                        <packagingExcludes>
+                            WEB-INF/lib/servlet-api-*.jar,
+                            WEB-INF/lib/zookeeper-*.jar,
+                            WEB-INF/lib/metrics-*.jar
+                        </packagingExcludes>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
