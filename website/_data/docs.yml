@@ -1,0 +1,43 @@
+- title: Getting Started
+  docs:
+  - index
+  - gettingstarted/faq
+  - gettingstarted/events
+  - gettingstarted/terminology
+
+- title: Installation
+  docs:
+  - install/index
+  - install/manual_install_guide
+
+- title: Tutorial
+  docs:
+  - tutorial/create_cube
+  - tutorial/cube_build_job
+  - tutorial/acl
+  - tutorial/web
+  - tutorial/tableau
+  - tutorial/odbc
+
+- title: How To
+  docs:
+  - howto/howto_contribute
+  - howto/howto_jdbc
+  - howto/howto_javascript
+  - howto/howto_backup
+  - howto/howto_release
+
+- title: Development
+  docs:
+  - development/build_cube_rest
+  - development/metadata_store
+  - development/new_metadata
+  - development/rest_api
+  - development/test_minicluster
+  - development/web_tech
+
+
+- title: Meta
+  docs:
+  - contributing
+  - history
