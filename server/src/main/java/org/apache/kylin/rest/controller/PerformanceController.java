@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import com.codahale.metrics.annotation.Metered;
-import com.codahale.metrics.annotation.Timed;
 import net.sf.ehcache.CacheManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.rest.service.CubeService;
@@ -56,14 +54,12 @@ public class PerformanceController extends BasicController {
 
     @RequestMapping(value = "/eachDayPercentile", method = RequestMethod.GET)
     @ResponseBody
-    @Timed(name = "eachDayPercentile")
     public List<String[]> eachDayPercentile() throws IOException {
         return performService.eachDayPercentile();
     }
 
     @RequestMapping(value = "/projectPercentile", method = RequestMethod.GET)
     @ResponseBody
-    @Timed(name = "projectPercentile")
     public List<String[]> projectPercentile() throws IOException {
         return performService.projectPercentile();
     }
@@ -71,14 +67,12 @@ public class PerformanceController extends BasicController {
 
     @RequestMapping(value = "/last30DayPercentile", method = RequestMethod.GET)
     @ResponseBody
-    @Timed(name = "last30DayPercentile")
     public List<String[]> last30DayPercentile() throws IOException {
         return performService.last30DayPercentile();
     }
 
     @RequestMapping(value = "/cubesStorage", method = {RequestMethod.GET})
     @ResponseBody
-    @Metered(name = "cubesStorage")
     public List<CubeInstance> getCubeStorage() {
         return cubeService.listAllCubes(null, null);
     }
@@ -86,28 +80,24 @@ public class PerformanceController extends BasicController {
 
     @RequestMapping(value = "/totalQueryUser", method = {RequestMethod.GET})
     @ResponseBody
-    @Metered(name = "totalQueryUser")
     public List<String[]> totalQueryUser() throws IOException {
         return performService.getTotalQueryUser();
     }
 
     @RequestMapping(value = "/dailyQueryCount", method = {RequestMethod.GET})
     @ResponseBody
-    @Metered(name = "dailyQueryCount")
     public List<String[]> dailyQueryCount() throws IOException {
         return performService.dailyQueryCount();
     }
 
     @RequestMapping(value = "/avgDayQuery", method = {RequestMethod.GET})
     @ResponseBody
-    @Metered(name = "avgDayQuery")
     public List<String[]> avgDayQuery() throws IOException {
         return performService.avgDayQuery();
     }
 
     @RequestMapping(value = "/listCubes", method = {RequestMethod.GET})
     @ResponseBody
-    @Metered(name = "listCubes")
     public List<CubeInstance> getCubes() {
         return cubeService.listAllCubes(null,null);
     }
