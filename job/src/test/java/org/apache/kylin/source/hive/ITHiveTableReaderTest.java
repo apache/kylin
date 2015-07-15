@@ -16,10 +16,10 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.dict;
+package org.apache.kylin.source.hive;
 
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.dict.lookup.HiveTableReader;
+import org.apache.kylin.source.hive.HiveTableReader;
 import org.junit.Assert;
 import org.junit.Test;
 

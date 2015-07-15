@@ -30,8 +30,9 @@ import org.apache.kylin.common.util.Pair;
 import com.google.common.collect.Sets;
 
 import org.apache.kylin.common.util.Array;
-import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.ReadableTable.TableReader;
 
 /**
  * An in-memory lookup table, in which each cell is an object of type T. The

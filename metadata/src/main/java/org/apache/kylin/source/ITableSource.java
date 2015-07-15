@@ -18,7 +18,11 @@
 
 package org.apache.kylin.source;
 
+import org.apache.kylin.metadata.model.TableDesc;
+
 public interface ITableSource {
 
     public <I> I adaptToBuildEngine(Class<I> engineInterface);
+    
+    public ReadableTable createReadableTable(TableDesc tableDesc);
 }

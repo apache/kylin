@@ -23,18 +23,14 @@ import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
-import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.hadoop.cube.CubeHFileJob;
 import org.apache.kylin.job.hadoop.cube.RangeKeyDistributionJob;
 import org.apache.kylin.job.hadoop.hbase.BulkLoadJob;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
-import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 
 import com.google.common.base.Preconditions;
 
@@ -52,10 +48,6 @@ abstract public class JobBuilderSupport {
         this.config = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         this.seg = seg;
         this.submitter = submitter;
-    }
-    
-    protected AbstractExecutable createFlatHiveTableStep(IJoinedFlatTableDesc flatTableDesc, String jobId) {
-        return createFlatHiveTableStep(config, flatTableDesc, jobId);
     }
     
     protected MapReduceExecutable createRangeRowkeyDistributionStep(String inputPath, String jobId) {
@@ -174,34 +166,8 @@ abstract public class JobBuilderSupport {
     }
 
     // ============================================================================
-    // static methods also shared by IIJobBuilder
+    // static methods also shared by other job flow participant
     // ----------------------------------------------------------------------------
-
-    public static AbstractExecutable createFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId) {
-
-        final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatTableDesc, jobId);
-        final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatTableDesc, getJobWorkingDir(conf, jobId), jobId);
-        String insertDataHqls;
-        try {
-            insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc, jobId, conf);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-            throw new RuntimeException("Failed to generate insert data SQL for intermediate table.");
-        }
-
-        ShellExecutable step = new ShellExecutable();
-        StringBuffer buf = new StringBuffer();
-        buf.append("hive -e \"");
-        buf.append(dropTableHql + "\n");
-        buf.append(createTableHql + "\n");
-        buf.append(insertDataHqls + "\n");
-        buf.append("\"");
-
-        step.setCmd(buf.toString());
-        step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
-
-        return step;
-    }
 
     public static String getJobWorkingDir(JobEngineConfig conf, String jobId) {
         return conf.getHdfsWorkingDirectory() + "/" + "kylin-" + jobId;

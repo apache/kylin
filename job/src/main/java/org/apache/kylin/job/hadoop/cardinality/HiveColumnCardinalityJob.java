@@ -29,9 +29,9 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
-
-import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
+import org.apache.kylin.engine.mr.MRBatchCubingEngine;
+import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 
 /**
@@ -69,16 +69,17 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
             setJobClasspath(job);
             
+            String table = getOptionValue(OPTION_TABLE);
+            job.getConfiguration().set(BatchConstants.TABLE_NAME, table);
+            
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             FileOutputFormat.setOutputPath(job, output);
             job.getConfiguration().set("dfs.block.size", "67108864");
 
             // Mapper
-            String table = getOptionValue(OPTION_TABLE);
-            String[] dbTableNames = HadoopUtil.parseHiveTableName(table);
-            HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
+            IMRTableInputFormat tableInputFormat = MRBatchCubingEngine.getTableInputFormat(table);
+            tableInputFormat.configureJob(job);
 
-            job.setInputFormatClass(HCatInputFormat.class);
             job.setMapperClass(ColumnCardinalityMapper.class);
             job.setMapOutputKeyClass(IntWritable.class);
             job.setMapOutputValueClass(BytesWritable.class);

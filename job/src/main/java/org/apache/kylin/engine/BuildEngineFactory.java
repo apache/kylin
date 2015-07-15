@@ -36,5 +36,4 @@ public class BuildEngineFactory {
         return defaultBatch.createBatchMergeJob(mergeSegment, submitter);
     }
     
-
 }

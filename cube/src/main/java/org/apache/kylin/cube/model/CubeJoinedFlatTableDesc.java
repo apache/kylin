@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author George Song (ysong1)
  */
 public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
@@ -127,8 +126,8 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     }
 
     @Override
-    public String getTableName(String jobUUID) {
-        return tableName + "_" + jobUUID.replace("-", "_");
+    public String getTableName() {
+        return tableName;
     }
 
     @Override

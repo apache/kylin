@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.util;
+package org.apache.kylin.source.hive;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

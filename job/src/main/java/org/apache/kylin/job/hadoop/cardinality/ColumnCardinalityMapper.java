@@ -24,52 +24,60 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.kylin.common.util.Bytes;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hive.hcatalog.data.HCatRecord;
-import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
-import org.apache.hive.hcatalog.data.schema.HCatSchema;
-import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
-
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.mr.KylinMapper;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
+import org.apache.kylin.engine.mr.MRBatchCubingEngine;
+import org.apache.kylin.job.constant.BatchConstants;
+import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * @author Jack
  * 
  */
-public class ColumnCardinalityMapper<T> extends KylinMapper<T, HCatRecord, IntWritable, BytesWritable> {
+public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritable, BytesWritable> {
 
     private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
     public static final String DEFAULT_DELIM = ",";
 
     private int counter = 0;
     
-    private HCatSchema schema = null;
-    private int columnSize = 0;
+    private TableDesc tableDesc;
+    private IMRTableInputFormat tableInputFormat;
     
     @Override
     protected void setup(Context context) throws IOException {
-        super.bindCurrentConfiguration(context.getConfiguration());
-        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
-        columnSize = schema.getFields().size();
+        Configuration conf = context.getConfiguration();
+        bindCurrentConfiguration(conf);
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
+        
+        String tableName = conf.get(BatchConstants.TABLE_NAME);
+        tableDesc = MetadataManager.getInstance(config).getTableDesc(tableName);
+        tableInputFormat = MRBatchCubingEngine.getTableInputFormat(tableDesc);
     }
 
     @Override
-    public void map(T key, HCatRecord value, Context context) throws IOException, InterruptedException {
-
-        HCatFieldSchema field;
-        Object fieldValue;
-        for (int m = 0; m < columnSize; m++) {
-            field = schema.get(m);
-            fieldValue = value.get(field.getName(), schema);
+    public void map(T key, Object value, Context context) throws IOException, InterruptedException {
+        ColumnDesc[] columns = tableDesc.getColumns();
+        String[] values = tableInputFormat.parseMapperInput(value);
+        
+        for (int m = 0; m < columns.length; m++) {
+            String field = columns[m].getName();
+            String fieldValue = values[m];
             if (fieldValue == null)
                 fieldValue = "NULL";
             
             if (counter < 5 && m < 10) {
-                System.out.println("Get row " + counter + " column '" + field.getName() + "'  value: " + fieldValue);
+                System.out.println("Get row " + counter + " column '" + field + "'  value: " + fieldValue);
             }
 
             if (fieldValue != null)

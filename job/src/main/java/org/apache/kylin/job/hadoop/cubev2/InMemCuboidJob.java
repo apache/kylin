@@ -31,21 +31,21 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
+import org.apache.kylin.engine.mr.MRBatchCubingEngine;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author shaoshi
  */
-
 public class InMemCuboidJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(InMemCuboidJob.class);
@@ -62,7 +62,6 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_NCUBOID_LEVEL);
             options.addOption(OPTION_INPUT_FORMAT);
-            options.addOption(OPTION_TABLE_NAME);
             options.addOption(OPTION_HTABLE_NAME);
             options.addOption(OPTION_STATISTICS_OUTPUT);
             parseOptions(options, args);
@@ -71,14 +70,12 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
-            String intermediateTable = getOptionValue(OPTION_TABLE_NAME);
             String htableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
-
 
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
-
+            CubeSegment cubeSeg = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());
@@ -89,13 +86,9 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             DataModelDesc.RealizationCapacity realizationCapacity = cube.getDescriptor().getModel().getCapacity();
             job.getConfiguration().set(BatchConstants.CUBE_CAPACITY, realizationCapacity.toString());
 
-            String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
-            HCatInputFormat.setInput(job, dbTableNames[0],
-                    dbTableNames[1]);
-
-            job.setInputFormatClass(HCatInputFormat.class);
-
             // set Mapper
+            IMRTableInputFormat flatTableInputFormat = MRBatchCubingEngine.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
+            flatTableInputFormat.configureJob(job);
             job.setMapperClass(InMemCuboidMapper.class);
             job.setMapOutputKeyClass(ImmutableBytesWritable.class);
             job.setMapOutputValueClass(Text.class);
@@ -112,8 +105,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
             HTable htable = new HTable(conf, htableName);
-            HFileOutputFormat.configureIncrementalLoad(job,
-                    htable);
+            HFileOutputFormat.configureIncrementalLoad(job, htable);
 
 
             // set Reducer; This need be after configureIncrementalLoad, to overwrite the default reducer class

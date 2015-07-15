@@ -232,52 +232,44 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
-        File tmp = File.createTempFile("kylin_job_meta", "");
-        tmp.delete(); // we need a directory, so delete the file first
-
-        File metaDir = new File(tmp, "meta");
-        metaDir.mkdirs();
-        metaDir.getParentFile().deleteOnExit();
-
-        // write kylin.properties
+    public static KylinConfig loadKylinPropsAndMetadata() throws IOException {
+        File metaDir = new File("meta");
+        System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
+        logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        File kylinPropsFile = new File(metaDir, "kylin.properties");
-        kylinConfig.writeProperties(kylinPropsFile);
+        kylinConfig.setMetadataUrl(metaDir.getCanonicalPath());
+        return kylinConfig;
+    }
 
+    protected void attachKylinPropsAndMetadata(TableDesc table, Configuration conf) throws IOException {
+        ArrayList<String> dumpList = new ArrayList<String>();
+        dumpList.add(table.getResourcePath());
+        attachKylinPropsAndMetadata(dumpList, conf);
+    }
+    
+    protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
+        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        
         // write cube / model_desc / cube_desc / dict / table
         ArrayList<String> dumpList = new ArrayList<String>();
         dumpList.add(cube.getResourcePath());
         dumpList.add(cube.getDescriptor().getModel().getResourcePath());
         dumpList.add(cube.getDescriptor().getResourcePath());
+        
         for (String tableName : cube.getDescriptor().getModel().getAllTables()) {
-            TableDesc table = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName);
+            TableDesc table = metaMgr.getTableDesc(tableName);
             dumpList.add(table.getResourcePath());
         }
-
         for (CubeSegment segment : cube.getSegments()) {
             dumpList.addAll(segment.getDictionaryPaths());
         }
-
-        dumpResources(kylinConfig, metaDir, dumpList);
-
-        // hadoop distributed cache
-        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+        
+        attachKylinPropsAndMetadata(dumpList, conf);
     }
 
     protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
-        File tmp = File.createTempFile("kylin_job_meta", "");
-        tmp.delete(); // we need a directory, so delete the file first
-
-        File metaDir = new File(tmp, "meta");
-        metaDir.mkdirs();
-        metaDir.getParentFile().deleteOnExit();
-
-        // write kylin.properties
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        File kylinPropsFile = new File(metaDir, "kylin.properties");
-        kylinConfig.writeProperties(kylinPropsFile);
-
+        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        
         // write II / model_desc / II_desc / dict / table
         ArrayList<String> dumpList = new ArrayList<String>();
         dumpList.add(ii.getResourcePath());
@@ -285,14 +277,30 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpList.add(ii.getDescriptor().getResourcePath());
 
         for (String tableName : ii.getDescriptor().getModel().getAllTables()) {
-            TableDesc table = MetadataManager.getInstance(kylinConfig).getTableDesc(tableName);
+            TableDesc table = metaMgr.getTableDesc(tableName);
             dumpList.add(table.getResourcePath());
         }
-
         for (IISegment segment : ii.getSegments()) {
             dumpList.addAll(segment.getDictionaryPaths());
         }
 
+        attachKylinPropsAndMetadata(dumpList, conf);
+    }
+
+    private void attachKylinPropsAndMetadata(ArrayList<String> dumpList, Configuration conf) throws IOException {
+        File tmp = File.createTempFile("kylin_job_meta", "");
+        tmp.delete(); // we need a directory, so delete the file first
+
+        File metaDir = new File(tmp, "meta");
+        metaDir.mkdirs();
+        metaDir.getParentFile().deleteOnExit();
+
+        // write kylin.properties
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        File kylinPropsFile = new File(metaDir, "kylin.properties");
+        kylinConfig.writeProperties(kylinPropsFile);
+
+        // write resources
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
@@ -344,15 +352,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
         InputFormat<?, ?> input = ReflectionUtils.newInstance(job.getInputFormatClass(), job.getConfiguration());
         return input.getSplits(job).size();
-    }
-
-    public static KylinConfig loadKylinPropsAndMetadata() throws IOException {
-        File metaDir = new File("meta");
-        System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
-        logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        kylinConfig.setMetadataUrl(metaDir.getCanonicalPath());
-        return kylinConfig;
     }
 
     public void kill() throws JobException {

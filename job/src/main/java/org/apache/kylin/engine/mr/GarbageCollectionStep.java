@@ -44,6 +44,7 @@ import com.google.common.collect.Lists;
 /**
  * Drop the resources that is no longer needed, including intermediate hive table (after cube build) and hbase tables (after cube merge)
  */
+@Deprecated // only exists for backward compatibility
 public class GarbageCollectionStep extends AbstractExecutable {
 
     private static final String OLD_HTABLES = "oldHTables";
