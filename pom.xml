@@ -34,13 +34,12 @@
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
 
-
     <properties>
         <!-- General Properties -->
         <javaVersion>1.7</javaVersion>
         <maven-model.version>3.1.1</maven-model.version>
         <maven-release.version>2.5.1</maven-release.version>
-        <maven-assembly.version>2.4</maven-assembly.version>
+        <maven-assembly.version>2.5.5</maven-assembly.version>
         <maven-license.plugin.version>2.6</maven-license.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -676,91 +675,6 @@
                             <skip>true</skip>
                         </configuration>
                     </plugin>
-                    <!-- Apache-RAT checks for files without headers.
-                         If run on a messy developer's sandbox, it will fail.
-                         This serves as a reminder to only build a release in a clean
-                         sandbox! -->
-                    <plugin>
-                        <groupId>org.apache.rat</groupId>
-                        <artifactId>apache-rat-plugin</artifactId>
-                        <configuration>
-                            <numUnapprovedLicenses>0</numUnapprovedLicenses>
-                            <excludes>
-                                <exclude>DEPENDENCIES</exclude>
-                                <exclude>.idea/**</exclude>
-                                <exclude>.git/**</exclude>
-                                <exclude>.settings/**</exclude>
-                                <!-- text files without comments -->
-                                <exclude>**/*.csv</exclude>
-                                <exclude>**/*.json</exclude>
-                                <exclude>**/*.md</exclude>
-                                <!-- binary files -->
-                                <exclude>**/*.dict</exclude>
-                                <exclude>**/*.dic</exclude>
-                                <exclude>**/*.snapshot</exclude>
-                                <exclude>**/*.pdf</exclude>
-                                <exclude>**/*.log</exclude>
-
-                                <exclude>**/.checkstyle</exclude>
-
-                                <!-- generated files -->
-                                <exclude>**/target/**</exclude>
-                                <exclude>lib/**</exclude>
-                                <!--Job's Test Data-->
-                                <exclude>job/src/test/resources/data/**</exclude>
-
-                                <!-- Kylin's website content -->
-                                <exclude>**/.sass-cache/**</exclude>
-
-                                <exclude>docs/website/**</exclude>
-
-                                <!-- tomcat package -->
-                                <exclude>tomcat/**</exclude>
-                                <!-- front end libary and generated files -->
-                                <exclude>webapp/node_modules/**</exclude>
-                                <exclude>webapp/dist/**</exclude>
-                                <exclude>webapp/app/components/**</exclude>
-                                <!-- json configuration file-->
-                                <exclude>webapp/.bowerrc</exclude>
-                                <exclude>webapp/.jshintrc</exclude>
-                                <!-- generated dict files -->
-                                <exclude>dictionary/metastore_db/**</exclude>
-
-                                <!-- MIT license -->
-                                <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
-                                <exclude>webapp/app/css/AdminLTE.css</exclude>
-
-                                <!-- jdbc log -->
-                                <exclude>jdbc/kylin_jdbc.log*</exclude>
-
-                                <!-- HBase MiniCluster Testing Data, for testing only -->
-                                <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
-                                <exclude>examples/test_case_data/**/*.xml</exclude>
-
-                            </excludes>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.apache.maven.doxia</groupId>
-                                <artifactId>doxia-core</artifactId>
-                                <version>1.6</version>
-                                <exclusions>
-                                    <exclusion>
-                                        <groupId>xerces</groupId>
-                                        <artifactId>xercesImpl</artifactId>
-                                    </exclusion>
-                                </exclusions>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -840,11 +754,11 @@
                                     <goal>single</goal>
                                 </goals>
                                 <configuration>
+                                    <tarLongFileMode>posix</tarLongFileMode>
                                     <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <appendAssemblyId>true</appendAssemblyId>
                                     <descriptor>src/main/config/assemblies/source-assembly.xml</descriptor>
                                     <finalName>apache-kylin-${project.version}-src</finalName>
-                                    <tarLongFileMode>gnu</tarLongFileMode>
                                 </configuration>
                             </execution>
                         </executions>
@@ -884,7 +798,90 @@
                             <argLine>-Xms1G -Xmx4G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
                         </configuration>
                     </plugin>
-                    
+                    <!-- Apache-RAT checks for files without headers.
+                         If run on a messy developer's sandbox, it will fail.
+                         This serves as a reminder to only build a release in a clean
+                         sandbox! -->
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                        <configuration>
+                            <numUnapprovedLicenses>0</numUnapprovedLicenses>
+                            <excludes>
+                                <exclude>DEPENDENCIES</exclude>
+                                <exclude>.idea/**</exclude>
+                                <exclude>.git/**</exclude>
+                                <exclude>.settings/**</exclude>
+                                <!-- text files without comments -->
+                                <exclude>**/*.csv</exclude>
+                                <exclude>**/*.json</exclude>
+                                <exclude>**/*.md</exclude>
+                                <!-- binary files -->
+                                <exclude>**/*.dict</exclude>
+                                <exclude>**/*.dic</exclude>
+                                <exclude>**/*.snapshot</exclude>
+                                <exclude>**/*.pdf</exclude>
+                                <exclude>**/*.log</exclude>
+
+                                <exclude>**/.checkstyle</exclude>
+                                <!--Job's Test Data-->
+                                <exclude>**/src/test/resources/data/**</exclude>
+
+                                <!-- generated files -->
+                                <exclude>**/target/**</exclude>
+                                <exclude>lib/**</exclude>
+                                <!-- Kylin's website content -->
+                                <exclude>**/.sass-cache/**</exclude>
+
+                                <exclude>docs/website/**</exclude>
+
+                                <!-- tomcat package -->
+                                <exclude>tomcat/**</exclude>
+                                <!-- front end libary and generated files -->
+                                <exclude>webapp/node_modules/**</exclude>
+                                <exclude>webapp/dist/**</exclude>
+                                <exclude>webapp/app/components/**</exclude>
+                                <!-- json configuration file-->
+                                <exclude>webapp/.bowerrc</exclude>
+                                <exclude>webapp/.jshintrc</exclude>
+                                <!-- generated dict files -->
+                                <exclude>dictionary/metastore_db/**</exclude>
+
+                                <!-- MIT license -->
+                                <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
+                                <exclude>webapp/app/css/AdminLTE.css</exclude>
+
+                                <!-- jdbc log -->
+                                <exclude>jdbc/kylin_jdbc.log*</exclude>
+
+                                <!-- HBase MiniCluster Testing Data, for testing only -->
+                                <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
+                                <exclude>examples/test_case_data/**/*.xml</exclude>
+
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.maven.doxia</groupId>
+                                <artifactId>doxia-core</artifactId>
+                                <version>1.6</version>
+                                <exclusions>
+                                    <exclusion>
+                                        <groupId>xerces</groupId>
+                                        <artifactId>xercesImpl</artifactId>
+                                    </exclusion>
+                                </exclusions>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
                     <plugin>
                         <groupId>net.ju-n.maven.plugins</groupId>
                         <artifactId>checksum-maven-plugin</artifactId>
