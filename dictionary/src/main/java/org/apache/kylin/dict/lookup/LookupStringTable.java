@@ -21,6 +21,7 @@ package org.apache.kylin.dict.lookup;
 import java.io.IOException;
 
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.source.ReadableTable;
 
 /**
  * @author yangli9

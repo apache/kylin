@@ -326,7 +326,7 @@ public class CubeDesc extends RootPersistentEntity {
     public String getFactTable() {
         return model.getFactTable().toUpperCase();
     }
-
+    
     public String[] getNullStrings() {
         return nullStrings;
     }

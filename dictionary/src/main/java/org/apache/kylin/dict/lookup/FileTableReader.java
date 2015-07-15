@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringSplitter;
-import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
+import org.apache.kylin.source.ReadableTable.TableReader;
 
 /**
  * Tables are typically CSV or SEQ file.

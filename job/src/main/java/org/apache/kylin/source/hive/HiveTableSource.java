@@ -19,7 +19,9 @@
 package org.apache.kylin.source.hive;
 
 import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ITableSource;
+import org.apache.kylin.source.ReadableTable;
 
 public class HiveTableSource implements ITableSource {
 
@@ -31,6 +33,11 @@ public class HiveTableSource implements ITableSource {
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
+    }
+
+    @Override
+    public ReadableTable createReadableTable(TableDesc tableDesc) {
+        return new HiveTable(tableDesc);
     }
 
 }

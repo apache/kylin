@@ -18,8 +18,30 @@
 
 package org.apache.kylin.engine.mr;
 
-public interface IMRInput {
-    
-    public IMRJobFlowParticipant createBuildFlowParticipant();
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.metadata.model.TableDesc;
 
+public interface IMRInput {
+
+    public IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg);
+
+    public IMRTableInputFormat getTableInputFormat(TableDesc table);
+    
+    public interface IMRTableInputFormat {
+        
+        public void configureJob(Job job);
+        
+        public String[] parseMapperInput(Object mapperInput);
+    }
+    
+    public interface IMRBatchCubingInputSide {
+        
+        public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow);
+        
+        public void addStepPhase4_UpdateMetadataAndCleanup(DefaultChainedExecutable jobFlow);
+        
+        public IMRTableInputFormat getFlatTableInputFormat();
+    }
 }

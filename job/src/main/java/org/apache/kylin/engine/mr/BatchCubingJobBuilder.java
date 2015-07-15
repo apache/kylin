@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -31,17 +32,12 @@ import org.apache.kylin.job.hadoop.cubev2.SaveStatisticsStep;
 import org.apache.kylin.job.hadoop.dict.CreateDictionaryJob;
 
 public class BatchCubingJobBuilder extends JobBuilderSupport {
-    
-    public static interface IMRBuildInputParticipant {
-        
-    }
-    
-    public static interface IMRBuildOutputParticipant {
-        
-    }
+
+    private final IMRBatchCubingInputSide inputSide;
     
     public BatchCubingJobBuilder(CubeSegment newSegment, String submitter) {
         super(newSegment, submitter);
+        this.inputSide = MRBatchCubingEngine.getBatchCubingInputSide(seg);
     }
 
     public CubingJob build() {
@@ -50,7 +46,8 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         final String cuboidRootPath = getCuboidRootPath(jobId);
         final CubeJoinedFlatTableDesc flatHiveTableDesc = new CubeJoinedFlatTableDesc(seg.getCubeDesc(), seg);
 
-        result.addTask(createFlatHiveTableStep(flatHiveTableDesc, jobId));
+        // Phase 1: Create Flat Table
+        inputSide.addStepPhase1_CreateFlatTable(result);
         
         result.addTask(createFactDistinctColumnsStep(flatHiveTableDesc, jobId));
         result.addTask(createBuildDictionaryStep(jobId));
@@ -85,9 +82,9 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
             result.addTask(createBulkLoadStep(jobId));
         }
 
+        // Phase 4: Update Metadata & Cleanup
         result.addTask(createUpdateCubeInfoAfterBuildStep(jobId));
-
-        result.addTask(createGarbageCollectionStep(null, flatHiveTableDesc.getTableName(jobId)));
+        inputSide.addStepPhase4_UpdateMetadataAndCleanup(result);
 
         return result;
     }
@@ -105,7 +102,6 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         appendExecCmdParameters(cmd, "statisticsoutput", getStatisticsPath(jobId));
         appendExecCmdParameters(cmd, "statisticssamplingpercent", String.valueOf(config.getConfig().getCubingInMemSamplingPercent()));
         appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + seg.getCubeInstance().getName() + "_Step");
-        appendExecCmdParameters(cmd, "tablename", flatHiveTableDesc.getTableName(jobId));
 
         result.setMapReduceParams(cmd.toString());
         return result;
@@ -192,7 +188,6 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         appendExecCmdParameters(cmd, "output", getHFilePath(jobId));
         appendExecCmdParameters(cmd, "jobname", "Kylin_Cube_Builder_" + seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "level", "0");
-        appendExecCmdParameters(cmd, "tablename", flatHiveTableDesc.getTableName(jobId));
         appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
 
         baseCuboidStep.setMapReduceParams(cmd.toString());
@@ -211,7 +206,7 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
     }
     
     private String getFlatHiveTableLocation(CubeJoinedFlatTableDesc flatTableDesc, String jobId) {
-        return getJobWorkingDir(jobId) + "/" + flatTableDesc.getTableName(jobId);
+        return getJobWorkingDir(jobId) + "/" + flatTableDesc.getTableName();
     }
     
     private String[] getCuboidOutputPaths(String cuboidRootPath, int totalRowkeyColumnCount, int groupRowkeyColumnsCount) {

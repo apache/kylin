@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.tool;
+package org.apache.kylin.source.hive;
 
 import static org.junit.Assert.assertTrue;
 
@@ -25,7 +25,7 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.metadata.util.HiveSourceTableLoader;
+import org.apache.kylin.source.hive.HiveSourceTableLoader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

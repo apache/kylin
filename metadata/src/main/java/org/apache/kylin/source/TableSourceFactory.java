@@ -16,20 +16,20 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.model;
+package org.apache.kylin.source;
 
-import java.util.List;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.metadata.model.TableDesc;
 
-/**
- */
-public interface IJoinedFlatTableDesc {
+public class TableSourceFactory {
 
-    public String getTableName();
-
-    public List<IntermediateColumnDesc> getColumnList();
-
-    public DataModelDesc getDataModel();
-
-    public DataModelDesc.RealizationCapacity getCapacity();
-
+    private static ITableSource dft = (ITableSource) ClassUtil.newInstance("org.apache.kylin.source.hive.HiveTableSource");
+    
+    public static ReadableTable createReadableTable(TableDesc table) {
+        return dft.createReadableTable(table);
+    }
+    
+    public static <T> T createEngineAdapter(TableDesc table, Class<T> engineInterface) {
+        return dft.adaptToBuildEngine(engineInterface);
+    }
 }

@@ -16,10 +16,10 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.dict.lookup;
+package org.apache.kylin.source.hive;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +33,7 @@ import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
 import org.apache.hive.hcatalog.data.transfer.HCatReader;
 import org.apache.hive.hcatalog.data.transfer.ReadEntity;
 import org.apache.hive.hcatalog.data.transfer.ReaderContext;
-import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
+import org.apache.kylin.source.ReadableTable.TableReader;
 
 /**
  * An implementation of TableReader with HCatalog for Hive table.
@@ -113,24 +113,25 @@ public class HiveTableReader implements TableReader {
         return getRowAsList(currentHCatRecord);
     }
 
-    public static List<String> getRowAsList(HCatRecord record) {
-        List<String> rowValues = new ArrayList<String>(record.size());
-        return getRowAsList(record, rowValues);
-    }
-
     public static List<String> getRowAsList(HCatRecord record, List<String> rowValues) {
         List<Object> allFields = record.getAll();
         for (Object o : allFields) {
-            rowValues.add(o != null ? o.toString() : null);
+            rowValues.add((o == null) ? null : o.toString());
         }
-
         return rowValues;
     }
 
-    public static String[] getRowAsStringArray(HCatRecord record) {
-        List<String> row = getRowAsList(record);
+    public static List<String> getRowAsList(HCatRecord record) {
+        return Arrays.asList(getRowAsStringArray(record));
+    }
 
-        return row.toArray(new String[row.size()]);
+    public static String[] getRowAsStringArray(HCatRecord record) {
+        String[] arr = new String[record.size()];
+        for (int i = 0; i < arr.length; i++) {
+            Object o = record.get(i);
+            arr[i] = (o == null) ? null : o.toString();
+        }
+        return arr;
     }
 
     @Override

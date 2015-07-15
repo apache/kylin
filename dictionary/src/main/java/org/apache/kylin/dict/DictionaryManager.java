@@ -35,13 +35,13 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.dict.lookup.FileTable;
-import org.apache.kylin.dict.lookup.HiveTable;
-import org.apache.kylin.dict.lookup.ReadableTable;
-import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.ReadableTable.TableSignature;
+import org.apache.kylin.source.TableSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,7 +272,7 @@ public class DictionaryManager {
             if (model.isFactTable(col.getTable())) {
                 table = new FileTable(factColumnsPath + "/" + col.getName(), -1);
             } else {
-                table = new HiveTable(metaMgr, col.getTable());
+                table = TableSourceFactory.createReadableTable(metaMgr.getTableDesc(col.getTable()));
             }
         }
         // otherwise could refer to a data set, e.g. common_indicators.txt

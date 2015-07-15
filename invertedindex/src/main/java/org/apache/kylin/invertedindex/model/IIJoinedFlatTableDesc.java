@@ -51,8 +51,8 @@ public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     }
 
     @Override
-    public String getTableName(String jobUUID) {
-        return tableName + "_" + jobUUID.replace("-", "_");
+    public String getTableName() {
+        return tableName + "_" + "II_Flat";
     }
 
     @Override

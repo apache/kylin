@@ -20,8 +20,6 @@ package org.apache.kylin.cube;
 
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
-import java.util.List;
-
 /**
  */
 public class CubeBuilder {

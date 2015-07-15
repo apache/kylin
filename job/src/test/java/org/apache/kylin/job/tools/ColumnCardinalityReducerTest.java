@@ -46,6 +46,8 @@ import org.apache.kylin.cube.kv.RowConstants;
  * 
  */
 public class ColumnCardinalityReducerTest {
+    
+    public final static String strArr = "abc,tests,test,test,as,sts,test,tss,sets";
 
     ReduceDriver<IntWritable, BytesWritable, IntWritable, LongWritable> reduceDriver;
     String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
@@ -76,23 +78,23 @@ public class ColumnCardinalityReducerTest {
     public void testReducer() throws IOException {
         IntWritable key1 = new IntWritable(1);
         List<BytesWritable> values1 = new ArrayList<BytesWritable>();
-        values1.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr)));
+        values1.add(new BytesWritable(getBytes(strArr)));
 
         IntWritable key2 = new IntWritable(2);
         List<BytesWritable> values2 = new ArrayList<BytesWritable>();
-        values2.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr + " x")));
+        values2.add(new BytesWritable(getBytes(strArr + " x")));
 
         IntWritable key3 = new IntWritable(3);
         List<BytesWritable> values3 = new ArrayList<BytesWritable>();
-        values3.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr + " xx")));
+        values3.add(new BytesWritable(getBytes(strArr + " xx")));
 
         IntWritable key4 = new IntWritable(4);
         List<BytesWritable> values4 = new ArrayList<BytesWritable>();
-        values4.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr + " xxx")));
+        values4.add(new BytesWritable(getBytes(strArr + " xxx")));
 
         IntWritable key5 = new IntWritable(5);
         List<BytesWritable> values5 = new ArrayList<BytesWritable>();
-        values5.add(new BytesWritable(getBytes(ColumnCardinalityMapperTest.strArr + " xxxx")));
+        values5.add(new BytesWritable(getBytes(strArr + " xxxx")));
 
         reduceDriver.withInput(key1, values1);
         reduceDriver.withInput(key2, values2);

@@ -1,24 +1,28 @@
 package org.apache.kylin.job.hadoop.cube;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
+import org.apache.kylin.engine.mr.MRBatchCubingEngine;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  */
@@ -26,10 +30,12 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
 
     protected String cubeName;
     protected CubeInstance cube;
+    protected CubeSegment cubeSeg;
     protected CubeDesc cubeDesc;
     protected long baseCuboidId;
     protected List<TblColRef> columns;
     protected ArrayList<Integer> factDictCols;
+    protected IMRTableInputFormat flatTableInputFormat;
 
     protected LongWritable outputKey = new LongWritable();
     protected Text outputValue = new Text();
@@ -43,6 +49,7 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
 
         cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         cube = CubeManager.getInstance(config).getCube(cubeName);
+        cubeSeg = cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), SegmentStatusEnum.NEW);
         cubeDesc = cube.getDescriptor();
         baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         columns = Cuboid.findById(cubeDesc, baseCuboidId).getColumns();
@@ -60,11 +67,13 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
                 factDictCols.add(i);
             }
         }
+        
+        flatTableInputFormat = MRBatchCubingEngine.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
     }
 
-    protected void handleErrorRecord(HCatRecord record, Exception ex) throws IOException {
+    protected void handleErrorRecord(String[] record, Exception ex) throws IOException {
 
-        System.err.println("Insane record: " + record.getAll());
+        System.err.println("Insane record: " + Arrays.toString(record));
         ex.printStackTrace(System.err);
 
         errorRecordCounter++;
