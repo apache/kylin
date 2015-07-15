@@ -13,6 +13,7 @@
   - install/manual_install_guide
   - install/kylin_cluster
   - install/advance_settings
+  - install/kylin_docker
 
 - title: Tutorial
   docs:

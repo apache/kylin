@@ -2,6 +2,7 @@
 layout: docs
 title:  "On Hadoop Kylin installation using Docker"
 categories: install
+permalink: /docs/install/kylin_docker.html
 version: v0.6
 since: v0.6
 ---
