@@ -1,7 +1,10 @@
 ---
-layout: post
-title:  "Restful Service Doc"
-categories: api
+layout: docs
+title:  "REST API"
+categories: development
+permalink: /docs/development/rest_api.html
+version: v0.7.2
+since: v0.6
 ---
 
 ## Kylin Restful API List
@@ -27,30 +30,30 @@ categories: api
    * Load Hive Table
 * Wipe cache
 
-***
-
 ### Login
 `POST /user/authentication`
 
-for example: 
-{% highlight Groff markup %}sh
+for example:  
+```sh
+
 curl -c /path/to/cookiefile.txt -X POST -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/json' http://<host>:<port>/kylin/api/user/authentication
-{% endhighlight %}
+```
 
 If login successfully, the JSESSIONID will be saved into the cookie file; In the subsequent http requests, attach the cookie, for example:
-{% highlight Groff markup %}
-curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/rebuild
-{% endhighlight %}
 
-#### Header
+```sh
+curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/rebuild
+```
+
+### Header
 Authorization data encoded by basic auth. Header sample:
 Authorization:Basic {data}
+### Response Sample
+```sh
 
-#### Response Sample
-{% highlight Groff markup %}
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {  
    "userDetails":{  
       "password":null,
@@ -69,20 +72,19 @@ Status: 200OK
       "enabled":true
    }
 }
-{% endhighlight %}
+```
 
 ***
 
 ### Query
 `POST /query`
-
-#### Request Body
+### Request Body
 * sql - `required` `string` The sql query string.
 * offset - `optional` `int` Query offset. If offset is set in sql, curIndex will be ignored.
 * limit - `optional` `int` Query limit. If limit is set in sql, perPage will be ignored.
 * acceptPartial - `optional` `bool` Flag to switch partial query.
 * project - `optional` `string` Project to perform query. Default value is 'DEFAULT'
-{% highlight Groff markup %}
+```sh
 {  
    "sql":"select * from TEST_KYLIN_FACT",
    "offset":0,
@@ -90,12 +92,14 @@ Status: 200OK
    "acceptPartial":true,
    "project":"DEFAULT"
 }
-{% endhighlight %}
-#### Response Sample
-{% highlight Groff markup %}
+```
+
+### Response Sample
+
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {  
    "columnMetas":[  
       {  
@@ -390,21 +394,20 @@ Status: 200OK
    "duration":3451,
    "partial":false
 }
-{% endhighlight %}
+```
 
 ***
 
 ### List queryable tables
 `GET /tables_and_columns`
-
-#### Request Parameters
+### Request Parameters
 * project - `required` `string` The project to load tables
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 [  
    {  
       "columns":[  
@@ -1052,24 +1055,23 @@ Status: 200OK
       "type_NAME":null
    }
 ]
-{% endhighlight %}
+```
 
 
 ***
 
 ### List cubes
 `GET /cubes`
-
-#### Request Parameters
+### Request Parameters
 * cubeName - `optional` `string` Cube name to find.
 * offset - `required` `int` Offset used by pagination
 * limit - `required` `int ` Cubes per page.
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 [  
    {  
       "uuid":"1eaca32a-a33e-4b69-83dd-0bb8b1f8c53b",
@@ -1088,24 +1090,23 @@ Status: 200OK
       "size_kb":0
    }
 ]
-{% endhighlight %}
+```
 
 ### Rebuild cube
 `PUT /cubes/{cubeName}/rebuild`
-
-#### Path Variable
+### Path Variable
 * cubeName - `required` `string` Cube name.
 
-#### Request Body
+### Request Body
 * startTime - `required` `long` Start timestamp of data to build, e.g. 1388563200000 for 2014-1-1
 * endTime - `required` `long` End timestamp of data to build
 * buildType - `required` `string` Build type: 'BUILD' OR 'MERGE'
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {  
    "uuid":"c143e0e4-ac5f-434d-acf3-46b0d15e3dc6",
    "last_modified":1407908916705,
@@ -1304,40 +1305,37 @@ Status: 200OK
    "job_status":"PENDING",
    "progress":0.0
 }
-{% endhighlight %}
+```
 
 
 ### Disable Cube
 `PUT /cubes/{cubeName}/disable`
-
-#### Path variable
+### Path variable
 * cubeName - `required` `string` Cube name.
 
-#### Response Sample
+### Response Sample
 (Same as "Enable Cube")
 
 
 ### Purge Cube
 `PUT /cubes/{cubeName}/purge`
-
-#### Path variable
+### Path variable
 * cubeName - `required` `string` Cube name.
 
-#### Response Sample
+### Response Sample
 (Same as "Enable Cube")
 
 
 ### Enable Cube
 `PUT /cubes/{cubeName}/enable`
-
-#### Path variable
+### Path variable
 * cubeName - `required` `string` Cube name.
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {  
    "uuid":"1eaca32a-a33e-4b69-83dd-0bb8b1f8c53b",
    "last_modified":1407909046305,
@@ -1382,19 +1380,19 @@ Status: 200OK
    "source_records_size":0,
    "size_kb":4758
 }
-{% endhighlight %}
+```
 
 ### Resume Job
 `PUT /jobs/{jobId}/resume`
 
-#### Path variable
+### Path variable
 * jobId- `required` `string` Job id.
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {  
    "uuid":"c143e0e4-ac5f-434d-acf3-46b0d15e3dc6",
    "last_modified":1407908916705,
@@ -1593,19 +1591,18 @@ Status: 200OK
    "job_status":"PENDING",
    "progress":0.0
 }
-{% endhighlight %}
+```
 
 ### Discard Job
 `PUT /jobs/{jobId}/cancel`
-
-#### Path variable
+### Path variable
 * jobId- `required` `string` Job id.
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {  
    "uuid":"c143e0e4-ac5f-434d-acf3-46b0d15e3dc6",
    "last_modified":1407908916705,
@@ -1804,37 +1801,35 @@ Status: 200OK
    "job_status":"PENDING",
    "progress":0.0
 }
-{% endhighlight %}
+```
 
 ### Get job step output
 `GET /{jobId}/steps/{stepId}/output`
-
-#### Path Variable
+### Path Variable
 * jobId - `required` `string` Job id.
 * stepId - `required` `string` Step id; the step id is composed by jobId with step sequence id; for example, the jobId is "fb479e54-837f-49a2-b457-651fc50be110", its 3rd step id is "fb479e54-837f-49a2-b457-651fc50be110-3", 
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {  
    "cmd_output":"log string"
 }
-{% endhighlight %}
+```
 
 
 ### Get Hive Table
 `GET /tables/{tableName}`
-
-#### Request Parameters
+### Request Parameters
 * tableName - `required` `string` table name to find.
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {
     uuid: "69cc92c0-fc42-4bb9-893f-bd1141c91dbe",
     name: "SAMPLE_07",
@@ -1858,19 +1853,18 @@ Status: 200OK
     database: "DEFAULT",
     last_modified: 1419330476755
 }
-{% endhighlight %}
+```
 
 ### Get Hive Table  (Extend Info)
 `GET /tables/{tableName}/exd-map`
-
-#### Request Parameters
+### Request Parameters
 * tableName - `optional` `string` table name to find.
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {
     "minFileSize": "46055",
     "totalNumberFiles": "1",
@@ -1888,20 +1882,19 @@ Status: 200OK
     "totalFileSize": "46055",
     "outputformat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 }
-{% endhighlight %}
+```
 
 ### Get Hive Tables
 `GET /tables`
-
-#### Request Parameters
+### Request Parameters
 * project- `required` `string` will list all tables in the project.
 * ext- `optional` `boolean`  set true to get extend info of table.
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 [
  {
     uuid: "53856c96-fe4d-459e-a9dc-c339b1bc3310",
@@ -2005,7 +1998,7 @@ Status: 200OK
     }
  }
 ]
-{% endhighlight %}
+```
 
 ### Load Hive Tables
 `POST /tables/{tables}/{project}`
@@ -2014,27 +2007,27 @@ Status: 200OK
 * project- `required` `String`  specif.
 
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
-{% highlight Groff markup %}
+```
+```sh
 {
     "result.loaded": ["DEFAULT.SAMPLE_07"],
     "result.unloaded": ["sapmle_08"]
 }
-{% endhighlight %}
+```
 
 
 ### Wipe cache
 `GET /cache/{type}/{name}/{action}`
-
-#### Path variable
+### Path variable
 * type - `required` `string` 'METADATA' or 'CUBE'
 * name - `required` `string` Cache key.
 * action - `required` `string` 'create', 'update' or 'drop'
 
-#### Response Sample
-{% highlight Groff markup %}
+### Response Sample
+```sh
 Status: 200OK
-{% endhighlight %}
+```
+

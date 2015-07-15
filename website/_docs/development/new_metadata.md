@@ -1,7 +1,10 @@
 ---
-layout: post
+layout: docs
 title:  "New meta data model structure"
 categories: development
+permalink: /docs/development/new_metadata.html
+version: v0.7.2
+since: v0.7.1
 ---
 
 Kylin is doing a round code refactor which will introduce the following two changes on meta data:

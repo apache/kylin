@@ -1,7 +1,10 @@
 ---
-layout: post
+layout: docs
 title:  "Run Kylin test case with HBase Mini Cluster"
 categories: development
+permalink: /docs/development/test_minicluster.html
+version: v0.7.2
+since: v0.7.1
 ---
 
 ## Run test case with HBase Mini Cluster

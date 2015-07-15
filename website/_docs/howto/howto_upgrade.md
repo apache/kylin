@@ -1,3 +1,12 @@
+---
+layout: docs
+title:  How to Upgrade
+categories: howto
+permalink: /docs/howto/howto_upgrade.html
+version: v0.7.2
+since: v0.7.1
+---
+
 In v0.7, Kylin refactored the metadata structure, for the new features like inverted-index and streaming; If you have cube created with v0.6 and want to keep in v0.7, a migration is needed; (Please skip v0.7.1 as
 it has several compatible issues and the fix will be included in v0.7.2) Below is the steps;
 

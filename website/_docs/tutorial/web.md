@@ -1,8 +1,10 @@
 ---
-layout: post
-title:  "Kylin Web Tutorial"
+layout: docs
+title:  Kylin Web Tutorial
 categories: tutorial
 permalink: /docs/tutorial/web.html
+version: v0.7.2
+since: v0.7.1
 ---
 
 > **Supported Browsers**

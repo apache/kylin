@@ -1,8 +1,10 @@
 ---
-layout: post
-title:  "Manual Installation Guide"
-categories: installation
+layout: docs
+title:  Manual Installation Guide
+categories: install
 permalink: /docs/install/manual_install_guide.html
+version: v0.7.2
+since: v0.7.1
 ---
 
 ## INTRODUCTION

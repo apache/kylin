@@ -7,8 +7,6 @@ version: v0.7.2
 since: v0.7.1
 ---
 
->version: {{page.version}}, since {{page.since}}
-
 ## Hadoop Environment
 
 Kylin requires you having access to a hadoop CLI, where you have full permissions to hdfs, hive, hbase and map-reduce. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox, like <http://hortonworks.com/products/hortonworks-sandbox/>. In the following tutorial we'll go with **Hortonworks Sandbox 2.1** and **Cloudera QuickStart VM 5.1**. 

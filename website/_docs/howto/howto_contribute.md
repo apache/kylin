@@ -3,6 +3,8 @@ layout: docs
 title:  How to Contribute
 categories: howto
 permalink: /docs/howto/howto_contribute.html
+version: v0.7.2
+since: v0.7.1
 ---
 
 ## Making Changes

@@ -7,8 +7,6 @@ version: v0.7.2
 since: v0.6.x
 ---
 
->version: {{page.version}}, since {{page.since}}
-
 ### Some NPM error causes ERROR exit (中国大陆地区用户请特别注意此问题)?  
 For people from China:  
 
@@ -20,9 +18,6 @@ For people from China:
 
 ### Can't get master address from ZooKeeper" when installing Kylin on Hortonworks Sandbox
 Check out [https://github.com/KylinOLAP/Kylin/issues/9](https://github.com/KylinOLAP/Kylin/issues/9).
-
-### Install scripted finished in my virtual machine, but cannot visit via http://localhost:9080
-Check out [https://github.com/KylinOLAP/Kylin/issues/12](https://github.com/KylinOLAP/Kylin/issues/12).
 
 ### Map Reduce Job information can't display on sandbox deployment
 Check out [https://github.com/KylinOLAP/Kylin/issues/40](https://github.com/KylinOLAP/Kylin/issues/40)

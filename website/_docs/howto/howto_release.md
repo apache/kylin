@@ -1,8 +1,10 @@
 ---
-layout: post
-title:  "How to making a release"
+layout: docs
+title:  How to making a release
 categories: howto
 permalink: /docs/howto/howto_release.html
+version: v0.7.2
+since: v0.7.1
 ---
 
 _This guide is for Apache Kylin Committers only._  

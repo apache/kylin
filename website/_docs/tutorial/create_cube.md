@@ -1,10 +1,13 @@
 ---
-layout: post
-title:  "Kylin Cube Creation Tutorial"
+layout: docs
+title:  Kylin Cube Creation Tutorial
 categories: tutorial
 permalink: /docs/tutorial/create_cube.html
+version: v0.7.2
+since: v0.7.1
 ---
-
+  
+  
 ### I. Create a Project
 1. Go to `Query` page in top menu bar, then click `Manage Projects`.
 

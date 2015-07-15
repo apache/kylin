@@ -1,6 +1,6 @@
 ---
-layout: post-cn
-title:  "Kylin Cube 建立和Job监控教程"
+layout: docs-cn
+title:  Kylin Cube 建立和Job监控教程
 categories: 教程
 permalink: /cn/docs/tutorial/cube_build_job.html
 ---
