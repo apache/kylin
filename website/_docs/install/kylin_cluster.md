@@ -7,8 +7,6 @@ version: v0.7.2
 since: v0.7.1
 ---
 
->version: {{page.version}}, since {{page.since}}
-
 ### Multiple Kylin REST servers
 
 If you are running Kylin in a cluster or you have multiple Kylin REST server instances, please make sure you have the following property correctly configured in ${KYLIN_HOME}/conf/kylin.properties

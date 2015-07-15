@@ -9,11 +9,11 @@ permalink: /cn/docs/index.html
 ------------  
 > Extreme OLAP Engine for Big Data
 
-Apache Kylin is an open source Distributed Analytics Engine, contributed by eBay Inc., provides SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
+Apache Kylin 是由eBay开源的分布式分析引擎，提供Hadoop之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据。
 
 安装 
 ------------  
-Please follow  installation & tutorial to start with Kylin.
+请参考安装文档以安装Apache Kylin: [安装向导](/cn/docs/install/)
 
 Advanced Topics
 -------  

@@ -29,7 +29,11 @@
 					<div id="container">
 						<div id="pjax">
 							<h1 class="post-title">{{ page.title }}</h1>
-							version: {{page.version}}, since: {{page.since}}
+							{% if page.version == NULL %}
+							{% else %}
+								version: {{page.version}}, since: {{page.since}}
+							{% endif %}	
+
 							{{ content }}
 						</div>
 					</div>

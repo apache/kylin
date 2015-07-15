@@ -1,8 +1,10 @@
 ---
-layout: post-cn
-title:  "Kylin网页版教程"
+layout: docs-cn
+title:  Kylin网页版教程
 categories: 教程
 permalink: /cn/docs/tutorial/web.html
+version: v0.7.2
+since: v0.7.1
 ---
 
 > **支持的浏览器**

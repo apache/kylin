@@ -1,9 +1,12 @@
 ---
-layout: post-cn
-title:  "Kylin和Tableau教程"
+layout: docs-cn
+title:  Kylin和Tableau教程
 categories: 教程
 permalink: /cn/docs/tutorial/tableau.html
+version: v0.7.2
+since: v0.7.1
 ---
+
 > Kylin ODBC驱动程序与Tableau存在一些限制，请在尝试前仔细阅读本说明书。
 > * 仅支持“managed”分析路径，Kylin引擎将对意外的维度或度量报错
 > * 请始终优先选择事实表，然后使用正确的连接条件添加查找表（cube中已定义的连接类型）

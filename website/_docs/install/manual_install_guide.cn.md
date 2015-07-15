@@ -3,6 +3,8 @@ layout: docs-cn
 title:  "手动安装指南"
 categories: 安装
 permalink: /cn/docs/install/manual_install_guide.html
+version: v0.7.2
+since: v0.7.1
 ---
 
 ## 引言

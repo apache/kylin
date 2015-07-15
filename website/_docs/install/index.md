@@ -7,8 +7,6 @@ version: v0.7.2
 since: v0.7.1
 ---
 
->version: {{page.version}}, since {{page.since}}
-
 ### Environment
 
 Kylin Rquires a properly setup hadoop environment to run. Following are the minium request to run Kylin, for more detial, please check this reference: [Hadoop Environment](hadoop_env.html).

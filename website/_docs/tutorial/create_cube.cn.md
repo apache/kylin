@@ -1,10 +1,13 @@
 ---
-layout: post-cn
+layout: docs-cn
 title:  "Kylin Cube 创建教程"
 categories: 教程
 permalink: /cn/docs/tutorial/create_cube.html
+version: v0.7.2
+since: v0.7.1
 ---
-
+  
+  
 ### I. 新建一个项目
 1. 由顶部菜单栏进入`Query`页面，然后点击`Manage Projects`。
 

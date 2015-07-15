@@ -30,8 +30,12 @@ include: [_docs]
 
 # Build settings
 markdown: kramdown
-# Code highlight
-highlighter: pygments
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+highlighter: rouge
+
 # Permalinks, default is pretty
 # permalink: /:categories/:title.html
 permalink: pretty
@@ -39,7 +43,7 @@ permalink: pretty
 google_analytics_id: UA-55534813-2
 
 # Multiple Languages Plugin
-gems:           ['jekyll-multiple-languages']
+gems:           ['jekyll-multiple-languages', 'kramdown', 'rouge']
 # Supported Languages
 languages: ['en','cn']
 language_default: 'en'

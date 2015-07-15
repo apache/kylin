@@ -1,7 +1,8 @@
 ---
-layout: post
+layout: docs
 title:  "Events and Conferences"
 categories: gettingstarted
+permalink: /docs/gettingstarted/events.html
 ---
 
 __Coming Events__

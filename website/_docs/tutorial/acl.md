@@ -1,9 +1,13 @@
 ---
-layout: post
-title:  "Kylin Cube Permission Grant Tutorial"
+layout: docs
+title:  Kylin Cube Permission Grant Tutorial
 categories: tutorial
 permalink: /docs/tutorial/acl.html
+version: v0.7.2
+since: v0.7.1
 ---
+
+   
 
 In `Cubes` page, double click the cube row to see the detail information. Here we focus on the `Access` tab.
 Click the `+Grant` button to grant permission. 

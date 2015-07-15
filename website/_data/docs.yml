@@ -1,6 +1,7 @@
 - title: Getting Started
   docs:
   - index
+  - release_notes
   - gettingstarted/faq
   - gettingstarted/events
   - gettingstarted/terminology
@@ -8,7 +9,10 @@
 - title: Installation
   docs:
   - install/index
+  - install/hadoop_env
   - install/manual_install_guide
+  - install/kylin_cluster
+  - install/advance_settings
 
 - title: Tutorial
   docs:
@@ -25,19 +29,23 @@
   - howto/howto_jdbc
   - howto/howto_javascript
   - howto/howto_backup
+  - howto/howto_upgrade
   - howto/howto_release
+
 
 - title: Development
   docs:
-  - development/build_cube_rest
+  - development/dev_env
   - development/metadata_store
   - development/new_metadata
   - development/rest_api
-  - development/test_minicluster
+  - development/build_api
+  - development/javascript_api
   - development/web_tech
+  - development/test_minicluster
+  
 
 
 - title: Meta
   docs:
-  - contributing
   - history

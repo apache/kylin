@@ -1,9 +1,13 @@
 ---
-layout: post-cn
-title:  "Kylin Cube 权限授予教程"
+layout: docs-cn
+title:  Kylin Cube 权限授予教程
 categories: 教程
 permalink: /cn/docs/tutorial/acl.html
+version: v0.7.2
+since: v0.7.1
 ---
+
+  
 
 在`Cubes`页面，双击cube行查看详细信息。在这里我们关注`Access`标签。
 点击`+Grant`按钮进行授权。

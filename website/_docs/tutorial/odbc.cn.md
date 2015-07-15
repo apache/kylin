@@ -1,9 +1,12 @@
 ---
-layout: post-cn
-title:  "Kylin ODBC 驱动程序教程"
+layout: docs-cn
+title:  Kylin ODBC 驱动程序教程
 categories: 教程
 permalink: /cn/docs/tutorial/odbc.html
+version: v0.7.2
+since: v0.7.1
 ---
+
 > 我们提供Kylin ODBC驱动程序以支持ODBC兼容客户端应用的数据访问。
 > 
 > 32位版本或64位版本的驱动程序都是可用的。
