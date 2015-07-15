@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 import java.util.Iterator;
-import com.codahale.metrics.annotation.Metered;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -58,7 +57,6 @@ public class ModelController extends BasicController {
 
     @RequestMapping(value = "", method = {RequestMethod.GET})
     @ResponseBody
-    @Metered(name = "listModels")
     public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value="limit",required=false) Integer limit, @RequestParam(value="offset",required=false) Integer offset) {
         try{
             return modelService.getModels(modelName, projectName, limit, offset);
@@ -76,7 +74,6 @@ public class ModelController extends BasicController {
      */
     @RequestMapping(value = "", method = {RequestMethod.POST})
     @ResponseBody
-    @Metered(name = "saveModel")
     public ModelRequest saveModelDesc(@RequestBody ModelRequest modelRequest) {
         //Update Model
         DataModelDesc modelDesc = deserializeDataModelDesc(modelRequest);
@@ -106,7 +103,6 @@ public class ModelController extends BasicController {
 
     @RequestMapping(value = "", method = {RequestMethod.PUT})
     @ResponseBody
-    @Metered(name = "updateModel")
     public ModelRequest updateModelDesc(@RequestBody ModelRequest modelRequest) throws JsonProcessingException {
         DataModelDesc modelDesc = deserializeDataModelDesc(modelRequest);
         if (modelDesc == null) {
@@ -134,7 +130,6 @@ public class ModelController extends BasicController {
 
     @RequestMapping(value = "/{modelName}", method = {RequestMethod.DELETE})
     @ResponseBody
-    @Metered(name = "deleteModel")
     public void deleteModel(@PathVariable String modelName) {
         DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);
         if (null == desc) {

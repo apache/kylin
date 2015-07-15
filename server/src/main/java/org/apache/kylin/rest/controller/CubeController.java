@@ -56,7 +56,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import com.codahale.metrics.annotation.Metered;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -79,7 +78,6 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
-    @Metered(name = "listCubes")
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return cubeService.getCubes(cubeName, projectName, modelName, limit, offset);
     }
@@ -134,7 +132,6 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT })
     @ResponseBody
-    @Metered(name = "updateCubeCost")
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
         try {
             return cubeService.updateCubeCost(cubeName, cost);
@@ -200,7 +197,6 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
     @ResponseBody
-    @Metered(name = "disableCube")
     public CubeInstance disableCube(@PathVariable String cubeName) {
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -219,7 +215,6 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT })
     @ResponseBody
-    @Metered(name = "purgeCube")
     public CubeInstance purgeCube(@PathVariable String cubeName) {
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -238,7 +233,6 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
     @ResponseBody
-    @Metered(name = "enableCube")
     public CubeInstance enableCube(@PathVariable String cubeName) {
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -256,7 +250,6 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE })
     @ResponseBody
-    @Metered(name = "deleteCube")
     public void deleteCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (null == cube) {
@@ -279,7 +272,6 @@ public class CubeController extends BasicController {
      */
     @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
-    @Metered(name = "saveCube")
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
 
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
@@ -316,7 +308,6 @@ public class CubeController extends BasicController {
      */
     @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
-    @Metered(name = "updateCube")
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
 
         //update cube
@@ -371,7 +362,6 @@ public class CubeController extends BasicController {
      */
     @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET })
     @ResponseBody
-    @Metered(name = "getHBaseInfo")
     public List<HBaseResponse> getHBaseInfo(@PathVariable String cubeName) {
         List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
 
@@ -410,7 +400,6 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "/{cubeName}/segments", method = {RequestMethod.POST})
     @ResponseBody
-    @Metered(name = "appendSegment")
     public CubeSegmentRequest appendSegment(@PathVariable String cubeName, @RequestBody CubeSegmentRequest cubeSegmentRequest) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (null == cube) {

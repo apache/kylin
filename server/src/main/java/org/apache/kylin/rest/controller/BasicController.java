@@ -22,7 +22,6 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.response.ErrorResponse;
-import org.apache.kylin.rest.service.MetricsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +31,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.exception.NotFoundException;
 
 /**
  */
 public class BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicController.class);
-
-    @Autowired
-    protected MetricsService metricsService;
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)

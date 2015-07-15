@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Preconditions;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -87,7 +86,6 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/query", method = RequestMethod.POST)
     @ResponseBody
-    @Timed(name = "query")
     public SQLResponse query(@RequestBody SQLRequest sqlRequest) {
         return doQuery(sqlRequest);
     }
@@ -95,14 +93,12 @@ public class QueryController extends BasicController {
     // TODO should be just "prepare" a statement, get back expected ResultSetMetaData
     @RequestMapping(value = "/query/prestate", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
-    @Timed(name = "query")
     public SQLResponse prepareQuery(@RequestBody PrepareSqlRequest sqlRequest) {
         return doQuery(sqlRequest);
     }
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
     @ResponseBody
-    @Timed(name = "saveQuery")
     public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
@@ -112,7 +108,6 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    @Timed(name = "removeQuery")
     public void removeQuery(@PathVariable String id) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         queryService.removeQuery(creator, id);
@@ -120,7 +115,6 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.GET)
     @ResponseBody
-    @Timed(name = "getQueries")
     public List<Query> getQueries() throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         return queryService.getQueries(creator);
@@ -128,7 +122,6 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET)
     @ResponseBody
-    @Timed(name = "downloadResult")
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
         SQLResponse result = doQuery(sqlRequest);
         response.setContentType("text/" + format + ";charset=utf-8");
