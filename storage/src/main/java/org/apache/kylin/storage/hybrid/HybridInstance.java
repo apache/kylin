@@ -18,7 +18,10 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  */
@@ -142,7 +145,14 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     @Override
     public int getCost(SQLDigest digest) {
-        return cost;
+        cost = 100;
+        for (IRealization realization : this.getRealizations()) {
+            if (realization.isCapable(digest))
+                cost = Math.min(cost, realization.getCost(digest));
+        }
+
+        // Make hybrid always win its children
+        return cost - 1;
     }
 
     @Override
