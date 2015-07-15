@@ -86,7 +86,8 @@ target
 logs
 
 # package file and folder
+dist
 tomcat
 lib
 webapp/app/components/*
-/commit_SHA1
+commit.sha1

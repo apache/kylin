@@ -29,13 +29,18 @@ fi
 
 #package tar.gz
 echo 'package tar.gz'
-rm -rf kylin-${version}
-mkdir kylin-${version}
-cp -r lib bin conf tomcat examples/sample_cube commit_SHA1 kylin-${version}
-find kylin-${version} -type d -exec chmod 755 {} \;
-find kylin-${version} -type f -exec chmod 644 {} \;
-find kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
+rm -rf dist/kylin-${version}
+mkdir dist/kylin-${version}
+# copy files
+cp -r lib bin conf dist/tomcat examples/sample_cube commit.sha1 dist/kylin-${version}
+# copy license files
+cp LICENSE README.md NOTICE DISCLAIMER  dist/kylin-${version}
+
+find dist/kylin-${version} -type d -exec chmod 755 {} \;
+find dist/kylin-${version} -type f -exec chmod 644 {} \;
+find dist/kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
+cd dist
 tar -cvzf kylin-${version}.tar.gz kylin-${version}
 rm -rf kylin-${version}
 
-echo "Package ready kylin-${version}.tar.gz"
+echo "Package ready dist/kylin-${version}.tar.gz"
