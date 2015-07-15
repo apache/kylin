@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import com.codahale.metrics.annotation.Metered;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -56,7 +55,6 @@ public class TableController extends BasicController {
      */
     @RequestMapping(value = "", method = {RequestMethod.GET})
     @ResponseBody
-    @Metered(name = "listSourceTables")
     public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = false) String project) {
         long start = System.currentTimeMillis();
         List<TableDesc> tables = null;

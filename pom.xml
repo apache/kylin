@@ -86,12 +86,6 @@
         <!-- Calcite Version -->
         <calcite.version>1.3.0-incubating</calcite.version>
 
-        <!-- Metrics Codahale Version -->
-        <metrics.version>3.0.1</metrics.version>
-
-        <!-- Quartz Version -->
-        <quartz.version>2.2.1</quartz.version>
-
         <!-- Curator.version Version -->
         <curator.version>2.6.0</curator.version>
 
@@ -470,7 +464,6 @@
                         <packagingExcludes>
                             WEB-INF/lib/servlet-api-*.jar,
                             WEB-INF/lib/zookeeper-*.jar,
-                            WEB-INF/lib/metrics-*.jar
                         </packagingExcludes>
                     </configuration>
                 </plugin>

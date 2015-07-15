@@ -55,7 +55,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.metrics.QueryMetrics;
 import org.apache.kylin.rest.model.ColumnMeta;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.model.SelectedColumnMeta;
@@ -221,10 +220,6 @@ public class QueryService extends BasicService {
         if (!response.getIsException() && response.getResults() != null) {
             resultRowCount = response.getResults().size();
         }
-
-        QueryMetrics.getInstance().increase("duration", duration);
-        QueryMetrics.getInstance().increase("totalScanCount", (float) totalScanCount);
-        QueryMetrics.getInstance().increase("count", (float) 1);
 
         String newLine = System.getProperty("line.separator");
         StringBuilder stringBuilder = new StringBuilder();

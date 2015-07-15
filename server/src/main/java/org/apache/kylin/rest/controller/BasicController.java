@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.NotFoundException;
-import org.apache.kylin.rest.service.MetricsService;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/1/13 Time: 10:54 PM To
@@ -41,9 +40,6 @@ import org.apache.kylin.rest.service.MetricsService;
 public class BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicController.class);
-
-    @Autowired
-    protected MetricsService metricsService;
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
