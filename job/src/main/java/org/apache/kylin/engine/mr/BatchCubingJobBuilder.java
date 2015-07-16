@@ -49,9 +49,11 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         // Phase 1: Create Flat Table
         inputSide.addStepPhase1_CreateFlatTable(result);
         
+        // Phase 2: Build Dictionary
         result.addTask(createFactDistinctColumnsStep(flatHiveTableDesc, jobId));
         result.addTask(createBuildDictionaryStep(jobId));
         
+        // Phase 3: Build Cube
         if (config.isInMemCubing()) {
             result.addTask(createSaveStatisticsStep(jobId));
             
