@@ -17,7 +17,7 @@ __Binary Package__
 
 For convenience, there's binary package also available:
 
-  * [Kylin Binary Package for Deployment](kylin-0.7.1-incubating.tar.gz)
+  * [Kylin Binary Package for Deployment](kylin-0.7.2-incubating.tar.gz)
   * [Installation Guide](../docs/install)
   * Generate binary package from source, please refer to this [guide](../docs/howto/howto_package.html)
     
