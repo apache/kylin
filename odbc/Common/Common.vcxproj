@@ -68,24 +68,24 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(CPPREST_HOME)\Release\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\Win32\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(CPPREST_HOME)\Release\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\Release64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(CPPREST_HOME)\Release\include;C:\Program Files %28x86%29\Visual Leak Detector\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\Win32\Debug;C:\Program Files %28x86%29\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);C:\Program Files %28x86%29\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(CPPREST_HOME)\Release\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\Debug64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
