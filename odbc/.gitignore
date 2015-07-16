@@ -34,3 +34,5 @@
 *.suo
 
 
+/UpgradeLog.*
+/_UpgradeReport_files*

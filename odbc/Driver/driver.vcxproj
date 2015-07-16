@@ -96,12 +96,12 @@
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\Win32\Release;$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\Release64;$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
   </PropertyGroup>
@@ -110,12 +110,12 @@
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common\;C:\Program Files %28x86%29\Visual Leak Detector\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\Common\$(Platform)\$(Configuration)\;C:\Program Files %28x86%29\Visual Leak Detector\lib\Win32;$(CPPREST_HOME)\Binaries\Win32\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration)\;C:\Program Files %28x86%29\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\Debug64;$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
   </PropertyGroup>
