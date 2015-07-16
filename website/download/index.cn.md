@@ -15,7 +15,7 @@ __二进制包__
 
 预打包的二进制包以方便部署：
 
-  * [Kylin 二进制包](kylin-0.7.1-incubating.tar.gz)
+  * [Kylin 二进制包](kylin-0.7.2-incubating.tar.gz)
   * [Installation Guide](../docs/install)
   * 如何从源文件生成二进制包，请参考这篇[教程](http://kylin.incubator.apache.org/docs/howto/howto_package.html)
 
