@@ -22,6 +22,8 @@
 *.a
 *.lib
 
+*.exe
+
 # Executables
 *.out
 *.app
@@ -36,3 +38,7 @@
 
 /UpgradeLog.*
 /_UpgradeReport_files*
+/ipch*
+*.unsuccessfulbuild
+*.successfulbuild
+*.lastbuildstate
