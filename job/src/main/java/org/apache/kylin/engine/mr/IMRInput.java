@@ -23,25 +23,47 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.TableDesc;
 
+/**
+ * Any ITableSource that wishes to serve as input of MapReduce build engine must adapt to this interface.
+ */
 public interface IMRInput {
 
+    /** Return a helper to participate in batch cubing job flow. */
     public IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg);
 
+    /** Return an InputFormat that reads from specified table. */
     public IMRTableInputFormat getTableInputFormat(TableDesc table);
     
+    /**
+     * Utility that configures mapper to read from a table.
+     */
     public interface IMRTableInputFormat {
         
+        /** Configure the InputFormat of given job. */
         public void configureJob(Job job);
         
+        /** Parse a mapper input object into column values. */
         public String[] parseMapperInput(Object mapperInput);
     }
     
+    /**
+     * Participate the batch cubing flow as the input side. Responsible for creating
+     * intermediate flat table (Phase 1) and clean up if necessary (Phase 4).
+     * 
+     * - Phase 1: Create Flat Table
+     * - Phase 2: Build Dictionary
+     * - Phase 3: Build Cube
+     * - Phase 4: Update Metadata & Cleanup
+     */
     public interface IMRBatchCubingInputSide {
         
+        /** Add step that creates an intermediate flat table as defined by CubeJoinedFlatTableDesc */
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow);
         
+        /** Add step that does necessary clean up, like delete the intermediate flat table */
         public void addStepPhase4_UpdateMetadataAndCleanup(DefaultChainedExecutable jobFlow);
         
+        /** Return an InputFormat that reads from the intermediate flat table */
         public IMRTableInputFormat getFlatTableInputFormat();
     }
 }
