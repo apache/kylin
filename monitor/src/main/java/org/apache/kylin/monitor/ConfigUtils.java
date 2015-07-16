@@ -61,6 +61,9 @@ public class ConfigUtils {
     public static final String QUERY_LOG_PARSE_RESULT_TABLE = "query.log.parse.result.table";
     public static final String DEFAULT_QUERY_LOG_PARSE_RESULT_TABLE = "kylin_query_log";
 
+    public static final String HIVE_JDBC_CON_USERNAME = "kylin.hive.jdbc.connection.username";
+    public static final String HIVE_JDBC_CON_PASSWD = "kylin.hive.jdbc.connection.password";
+
     public static final String DEPLOY_ENV = "deploy.env";
 
 
@@ -203,6 +206,15 @@ public class ConfigUtils {
 
     public String getDeployEnv(){
         return this.monitorConfig.getProperty(DEPLOY_ENV);
+    }
+
+
+    public String getHiveJdbcConUserName() {
+        return this.monitorConfig.getProperty(HIVE_JDBC_CON_USERNAME);
+    }
+
+    public String getHiveJdbcConPasswd() {
+        return this.monitorConfig.getProperty(HIVE_JDBC_CON_PASSWD);
     }
 
 

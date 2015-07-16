@@ -83,7 +83,10 @@ public class HiveJdbcClient {
 
         String CON_URL = monitorConfig.getHiveJdbcConUrl();
 
-        Connection con = DriverManager.getConnection(CON_URL, "", "");
+        String USER_NAME = monitorConfig.getHiveJdbcConUserName();
+        String PASSWD = monitorConfig.getHiveJdbcConPasswd();
+
+        Connection con = DriverManager.getConnection(CON_URL, USER_NAME, PASSWD);
         Statement stmt = con.createStatement();
         ResultSet res = null;
 
