@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
@@ -574,33 +575,72 @@ public class CubeService extends BasicService {
         }
     }
 
-    public void mergeCubeOnNewSegmentReady(String cubeName) {
-
-        logger.debug("on mergeCubeOnNewSegmentReady: " + cubeName);
+    public void updateOnNewSegmentReady(String cubeName) {
+        logger.debug("on updateOnNewSegmentReady: " + cubeName);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String serverMode = kylinConfig.getServerMode();
-
         logger.debug("server mode: " + serverMode);
         if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
-            logger.debug("This is the job engine node, will check whether auto merge is needed on cube " + cubeName);
-            CubeSegment newSeg;
-            CubeInstance cube = getCubeManager().getCube(cubeName);
-            if (cube.needAutoMerge()) {
-                synchronized (CubeService.class) {
-                    try {
-                        newSeg = getCubeManager().autoMergeCubeSegments(cube);
-                        if (newSeg != null) {
-                            newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd(), true);
-                            logger.debug("Will submit merge job on " + newSeg);
-                            DefaultChainedExecutable job = BuildEngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
-                            getExecutableManager().addJob(job);
-                        } else {
-                            logger.debug("Not ready for merge on cube " + cubeName);
-                        }
+            keepCubeRetention(cubeName);
+            mergeCubeSegment(cubeName);
+        }
 
-                    } catch (IOException e) {
-                        logger.error("Failed to auto merge cube " + cubeName, e);
+    }
+
+    private void keepCubeRetention(String cubeName) {
+        CubeInstance cube = getCubeManager().getCube(cubeName);
+        if (cube.getRetentionRange() > 0) {
+            synchronized (CubeService.class) {
+                cube = getCubeManager().getCube(cubeName);
+                List<CubeSegment> readySegs = cube.getSegment(SegmentStatusEnum.READY);
+                long currentRange = 0;
+                int position = readySegs.size() - 1;
+                while (position >= 0) {
+                    currentRange += (readySegs.get(position).getDateRangeEnd() - readySegs.get(position).getDateRangeStart());
+                    if (currentRange >= cube.getRetentionRange()) {
+                        break;
                     }
+
+                    position--;
+                }
+
+                List<CubeSegment> toRemoveSegs = Lists.newArrayList();
+                for (int i = 0; i < position; i++) {
+                    toRemoveSegs.add(readySegs.get(i));
+                }
+
+                if (toRemoveSegs.size() > 0) {
+                    CubeBuilder cubeBuilder = new CubeBuilder(cube);
+                    cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]));
+                    try {
+                        this.getCubeManager().updateCube(cubeBuilder);
+                    } catch (IOException e) {
+                        logger.error("Failed to remove old segment from cube " + cubeName, e);
+                    }
+
+                }
+            }
+        }
+    }
+
+    private void mergeCubeSegment(String cubeName) {
+        CubeInstance cube = getCubeManager().getCube(cubeName);
+        if (cube.needAutoMerge()) {
+            synchronized (CubeService.class) {
+                try {
+                    cube = getCubeManager().getCube(cubeName);
+                    CubeSegment newSeg = getCubeManager().autoMergeCubeSegments(cube);
+                    if (newSeg != null) {
+                        newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd(), true);
+                        logger.debug("Will submit merge job on " + newSeg);
+                        DefaultChainedExecutable job = BuildEngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
+                        getExecutableManager().addJob(job);
+                    } else {
+                        logger.debug("Not ready for merge on cube " + cubeName);
+                    }
+
+                } catch (IOException e) {
+                    logger.error("Failed to auto merge cube " + cubeName, e);
                 }
             }
         }

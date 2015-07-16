@@ -722,9 +722,6 @@ public class CubeManager implements IRealizationProvider {
 
         // check first segment start time
         CubeSegment firstSeg = tobe.get(0);
-        if (strictChecking && firstSeg.getDateRangeStart() != partDesc.getPartitionDateStart()) {
-            throw new IllegalStateException("For " + cube + ", the first segment, " + firstSeg + ", must start at " + partDesc.getPartitionDateStart());
-        }
         firstSeg.validate();
 
         for (int i = 0, j = 1; j < tobe.size(); ) {

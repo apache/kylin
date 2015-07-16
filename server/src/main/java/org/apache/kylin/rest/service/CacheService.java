@@ -79,7 +79,7 @@ public class CacheService extends BasicService {
                     getProjectManager().clearL2Cache();
                     //clean query related cache first
                     super.cleanDataCache(newCube.getUuid());
-                    cubeService.mergeCubeOnNewSegmentReady(cacheKey);
+                    cubeService.updateOnNewSegmentReady(cacheKey);
                     break;
                 case CUBE_DESC:
                     getCubeDescManager().reloadCubeDescLocal(cacheKey);
