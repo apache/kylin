@@ -83,6 +83,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("auto_merge_time_ranges")
     private long[] autoMergeTimeRanges;
 
+    @JsonProperty("retention_range")
+    private long retentionRange = 0;
+
     private String projectName;
 
     private static final int COST_WEIGHT_DIMENSION = 1;
@@ -422,5 +425,13 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
             return false;
 
         return autoMergeTimeRanges != null && autoMergeTimeRanges.length > 0;
+    }
+
+    public long getRetentionRange() {
+        return retentionRange;
+    }
+
+    public void setRetentionRange(long retentionRange) {
+        this.retentionRange = retentionRange;
     }
 }
