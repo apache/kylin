@@ -57,10 +57,14 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>Debug\</OutDir>
     <IntDir>Debug\</IntDir>
+    <IncludePath>C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Visual Leak Detector\lib\Win$(PlatformArchitecture);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)</OutDir>
+    <IncludePath>C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Visual Leak Detector\lib\Win$(PlatformArchitecture);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

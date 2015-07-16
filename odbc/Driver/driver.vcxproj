@@ -95,13 +95,13 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration);C:\Program Files (x86)\Visual Leak Detector\lib\Win$(PlatformArchitecture);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration);C:\Program Files (x86)\Visual Leak Detector\lib\Win$(PlatformArchitecture);$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
   </PropertyGroup>
@@ -109,13 +109,13 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common\;C:\Program Files %28x86%29\Visual Leak Detector\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration)\;C:\Program Files %28x86%29\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration);C:\Program Files (x86)\Visual Leak Detector\lib\Win$(PlatformArchitecture);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CPPREST_HOME)\Release\include;$(SolutionDir)\Common;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(CPPREST_HOME)\Binaries\$(Platform)\$(Configuration);$(SolutionDir)\Common\$(Platform)\$(Configuration);C:\Program Files (x86)\Visual Leak Detector\lib\Win$(PlatformArchitecture);$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\Intermediate\</IntDir>
   </PropertyGroup>
