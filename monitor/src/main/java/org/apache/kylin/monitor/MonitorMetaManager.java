@@ -65,20 +65,11 @@ public class MonitorMetaManager {
      * @unused
      */
     public static void init() throws Exception {
-        MonitorMetaManager.TABLE_NAME = MonitorMetaManager.getMetadataUrlPrefix();
+        MonitorMetaManager.TABLE_NAME = monitorConfig.getMetadataUrlPrefix();
         logger.info("Monitor Metadata Table :"+MonitorMetaManager.TABLE_NAME);
         logger.info("init monitor metadata,create table if not exist");
         MonitorMetaManager.creatTable(TABLE_NAME, new String[]{COLUMN_FAMILY});
     }
-
-    public static String getMetadataUrlPrefix() {
-        String hbaseMetadataUrl = monitorConfig.getMetadataUrl();
-        String defaultPrefix = "kylin_metadata";
-        int cut = hbaseMetadataUrl.indexOf('@');
-        String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
-        return tmp;
-    }
-
 
     /*
      * mark query file as read after parsing

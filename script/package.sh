@@ -51,6 +51,7 @@ version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpress
 echo "kylin version: ${version}"
 export version
 
+mkdir -p dist
 #commit id
 cat << EOF > dist/commit.sha1
 EOF

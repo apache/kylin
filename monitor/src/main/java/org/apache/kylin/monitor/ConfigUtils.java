@@ -172,12 +172,24 @@ public class ConfigUtils {
         return this.monitorConfig.getProperty(KYLIN_METADATA_URL);
     }
 
+    public  String getMetadataUrlPrefix() {
+        String hbaseMetadataUrl = getMetadataUrl();
+        String defaultPrefix = "kylin_metadata";
+        int cut = hbaseMetadataUrl.indexOf('@');
+        String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
+        return tmp;
+    }
+
     public String getExtLogBaseDir() {
         return this.monitorConfig.getProperty(KYLIN_EXT_LOG_BASE_DIR);
     }
 
     public String getKylinHdfsWorkingDir() {
-        return this.monitorConfig.getProperty(KYLIN_HDFS_WORKING_DIR);
+        String root =  this.monitorConfig.getProperty(KYLIN_HDFS_WORKING_DIR);
+        if (!root.endsWith("/")) {
+            root += "/";
+        }
+        return root + getMetadataUrlPrefix();
     }
     public String getQueryLogParseResultDir() {
         return this.getKylinHdfsWorkingDir()+"/performance/query/";
