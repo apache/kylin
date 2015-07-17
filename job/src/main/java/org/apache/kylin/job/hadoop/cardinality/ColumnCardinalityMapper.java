@@ -33,7 +33,7 @@ import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
-import org.apache.kylin.engine.mr.MRBatchCubingEngine;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.MetadataManager;
@@ -62,7 +62,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
         
         String tableName = conf.get(BatchConstants.TABLE_NAME);
         tableDesc = MetadataManager.getInstance(config).getTableDesc(tableName);
-        tableInputFormat = MRBatchCubingEngine.getTableInputFormat(tableDesc);
+        tableInputFormat = MRUtil.getTableInputFormat(tableDesc);
     }
 
     @Override

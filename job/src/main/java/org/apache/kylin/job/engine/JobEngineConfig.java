@@ -35,10 +35,6 @@ public class JobEngineConfig {
     public static String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
     public static String HIVE_CONF_FILENAME = "kylin_hive_conf";
 
-    public boolean isInMemCubing() {
-        return config.isCubingInMem();
-    }
-    
     private static File getJobConfig(String fileName) {
         String path = System.getProperty(KylinConfig.KYLIN_CONF);
         if (StringUtils.isNotEmpty(path)) {

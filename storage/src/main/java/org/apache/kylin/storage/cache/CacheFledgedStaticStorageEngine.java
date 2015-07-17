@@ -9,7 +9,7 @@ import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.SimpleTupleIterator;
 import org.apache.kylin.metadata.tuple.TeeTupleIterator;
-import org.apache.kylin.storage.ICachableStorageEngine;
+import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.util.List;
 public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorageEngine {
     private static final Logger logger = LoggerFactory.getLogger(CacheFledgedStaticStorageEngine.class);
 
-    public CacheFledgedStaticStorageEngine(ICachableStorageEngine underlyingStorage) {
+    public CacheFledgedStaticStorageEngine(ICachableStorageQuery underlyingStorage) {
         super(underlyingStorage);
     }
 

@@ -29,8 +29,8 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.cache.CacheFledgedDynamicStorageEngine;
 import org.apache.kylin.storage.cache.CacheFledgedStaticStorageEngine;
-import org.apache.kylin.storage.hbase.CubeStorageEngine;
-import org.apache.kylin.storage.hbase.InvertedIndexStorageEngine;
+import org.apache.kylin.storage.hbase.CubeStorageQuery;
+import org.apache.kylin.storage.hbase.InvertedIndexStorageQuery;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridStorageEngine;
 
@@ -39,20 +39,21 @@ import com.google.common.base.Preconditions;
 /**
  * @author xjiang
  */
-public class StorageEngineFactory {
+public class StorageFactory {
+    
     private static boolean allowStorageLayerCache = true;
 
-    public static IStorageQuery getStorageEngine(IRealization realization) {
+    public static IStorageQuery createQuery(IRealization realization) {
 
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
-            ICachableStorageEngine ret = new InvertedIndexStorageEngine((IIInstance) realization);
+            ICachableStorageQuery ret = new InvertedIndexStorageQuery((IIInstance) realization);
             if (allowStorageLayerCache) {
                 return wrapWithCache(ret, realization);
             } else {
                 return ret;
             }
         } else if (realization.getType() == RealizationType.CUBE) {
-            ICachableStorageEngine ret = new CubeStorageEngine((CubeInstance) realization);
+            ICachableStorageQuery ret = new CubeStorageQuery((CubeInstance) realization);
             if (allowStorageLayerCache) {
                 return wrapWithCache(ret, realization);
             } else {
@@ -63,7 +64,7 @@ public class StorageEngineFactory {
         }
     }
 
-    private static IStorageQuery wrapWithCache(ICachableStorageEngine underlyingStorageEngine, IRealization realization) {
+    private static IStorageQuery wrapWithCache(ICachableStorageQuery underlyingStorageEngine, IRealization realization) {
         if (underlyingStorageEngine.isDynamic()) {
             return new CacheFledgedDynamicStorageEngine(underlyingStorageEngine, getPartitionCol(realization));
         } else {
@@ -80,4 +81,5 @@ public class StorageEngineFactory {
         Preconditions.checkArgument(partitionColRef != null, "getPartitionDateColumnRef for " + realization + " is null");
         return partitionColRef;
     }
+    
 }

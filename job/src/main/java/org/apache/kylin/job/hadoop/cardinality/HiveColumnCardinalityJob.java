@@ -30,7 +30,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
-import org.apache.kylin.engine.mr.MRBatchCubingEngine;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 
@@ -77,7 +77,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             job.getConfiguration().set("dfs.block.size", "67108864");
 
             // Mapper
-            IMRTableInputFormat tableInputFormat = MRBatchCubingEngine.getTableInputFormat(table);
+            IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table);
             tableInputFormat.configureJob(job);
 
             job.setMapperClass(ColumnCardinalityMapper.class);

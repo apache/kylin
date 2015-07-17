@@ -18,21 +18,43 @@
 
 package org.apache.kylin.storage.hbase;
 
-import org.apache.kylin.engine.mr.IMRJobFlowParticipant;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMROutput;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public class HBaseMROutput implements IMROutput {
 
     @Override
-    public IMRJobFlowParticipant createBuildFlowParticipant() {
-        // TODO Auto-generated method stub
-        return null;
+    public IMRBatchCubingOutputSide getBatchCubingOutputSide(final CubeSegment seg) {
+        return new IMRBatchCubingOutputSide() {
+            HBaseMRSteps steps = new HBaseMRSteps(seg);
+
+            @Override
+            public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow, String cuboidRootPath) {
+                steps.addSaveCuboidToHTableSteps(jobFlow, cuboidRootPath);
+            }
+
+            @Override
+            public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
+                // nothing to do
+            }
+        };
     }
 
     @Override
-    public IMRJobFlowParticipant createMergeFlowParticipant() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    public IMRBatchMergeOutputSide getBatchMergeOutputSide(final CubeSegment seg) {
+        return new IMRBatchMergeOutputSide() {
+            HBaseMRSteps steps = new HBaseMRSteps(seg);
 
+            @Override
+            public void addStepPhase2_BuildCube(DefaultChainedExecutable jobFlow, String cuboidRootPath) {
+                steps.addSaveCuboidToHTableSteps(jobFlow, cuboidRootPath);
+            }
+
+            @Override
+            public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow) {
+                jobFlow.addTask(steps.createMergeGCStep());
+            }
+        };
+    }
 }

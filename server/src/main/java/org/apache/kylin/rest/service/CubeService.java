@@ -34,7 +34,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -162,7 +162,7 @@ public class CubeService extends BasicService {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         cube.setOwner(owner);
 
-        CubeBuilder cubeBuilder = new CubeBuilder(cube).setOwner(owner).setCost(cost);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube).setOwner(owner).setCost(cost);
 
         return getCubeManager().updateCube(cubeBuilder);
     }
@@ -357,7 +357,7 @@ public class CubeService extends BasicService {
         cube.setStatus(RealizationStatusEnum.DISABLED);
 
         try {
-            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
             cubeBuilder.setStatus(RealizationStatusEnum.DISABLED);
             return getCubeManager().updateCube(cubeBuilder);
         } catch (IOException e) {
@@ -397,7 +397,7 @@ public class CubeService extends BasicService {
 
         try {
 
-            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
             cubeBuilder.setStatus(RealizationStatusEnum.READY);
             return getCubeManager().updateCube(cubeBuilder);
         } catch (IOException e) {
@@ -548,7 +548,7 @@ public class CubeService extends BasicService {
                 getExecutableManager().discardJob(cubingJob.getId());
             }
         }
-        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
         return CubeManager.getInstance(getConfig()).updateCube(cubeBuilder);
     }
@@ -610,7 +610,7 @@ public class CubeService extends BasicService {
                 }
 
                 if (toRemoveSegs.size() > 0) {
-                    CubeBuilder cubeBuilder = new CubeBuilder(cube);
+                    CubeUpdate cubeBuilder = new CubeUpdate(cube);
                     cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]));
                     try {
                         this.getCubeManager().updateCube(cubeBuilder);

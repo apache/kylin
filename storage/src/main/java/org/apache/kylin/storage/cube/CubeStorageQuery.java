@@ -25,7 +25,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.storage.ICachableStorageEngine;
+import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.DerivedFilterTranslator;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -36,16 +36,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 
-public class CubeStorageEngine implements ICachableStorageEngine {
+public class CubeStorageQuery implements ICachableStorageQuery {
 
-    private static final Logger logger = LoggerFactory.getLogger(CubeStorageEngine.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeStorageQuery.class);
 
     private static final long MEM_BUDGET_PER_QUERY = 3L * 1024 * 1024 * 1024; // 3G
 
     private final CubeInstance cubeInstance;
     private final CubeDesc cubeDesc;
 
-    public CubeStorageEngine(CubeInstance cube) {
+    public CubeStorageQuery(CubeInstance cube) {
         this.cubeInstance = cube;
         this.cubeDesc = cube.getDescriptor();
     }

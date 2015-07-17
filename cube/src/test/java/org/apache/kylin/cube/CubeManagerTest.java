@@ -94,7 +94,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
         cube.setAutoMergeTimeRanges(new long[] {2000, 6000});
-        mgr.updateCube(new CubeBuilder(cube));
+        mgr.updateCube(new CubeUpdate(cube));
 
         assertTrue(cube.needAutoMerge());
 
@@ -109,7 +109,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeSegment seg2 = mgr.appendSegments(cube, 2000);
         seg2.setStatus(SegmentStatusEnum.READY);
 
-        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
 
         mgr.updateCube(cubeBuilder);
 
@@ -140,7 +140,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
         cube.setAutoMergeTimeRanges(new long[] {2000, 6000});
-        mgr.updateCube(new CubeBuilder(cube));
+        mgr.updateCube(new CubeUpdate(cube));
 
         assertTrue(cube.needAutoMerge());
 
@@ -155,7 +155,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeSegment seg3 = mgr.appendSegments(cube, 2000, 4000, false, false);
         seg3.setStatus(SegmentStatusEnum.READY);
 
-        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToAddSegs(seg3);
         cubeBuilder.setToUpdateSegs(seg1);
 
@@ -172,7 +172,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeSegment seg4 = mgr.appendSegments(cube, 4000, 8000, false, false);
         seg4.setStatus(SegmentStatusEnum.READY);
 
-        cubeBuilder = new CubeBuilder(cube);
+        cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToAddSegs(seg4);
 
         mgr.updateCube(cubeBuilder);

@@ -1,4 +1,4 @@
-package org.apache.kylin.job.hadoop.cubev2;
+package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -6,14 +6,13 @@ import java.util.BitSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.job.inmemcubing.ICuboidWriter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
@@ -23,7 +22,7 @@ import org.apache.kylin.storage.gridtable.GTRecord;
 public class MapContextGTRecordWriter implements ICuboidWriter {
 
     private static final Log logger = LogFactory.getLog(MapContextGTRecordWriter.class);
-    protected MapContext<?, ?, ImmutableBytesWritable, Text> mapContext;
+    protected MapContext<?, ?, ByteArrayWritable, ByteArrayWritable> mapContext;
     private Long lastCuboidId;
     protected CubeSegment cubeSegment;
     protected CubeDesc cubeDesc;
@@ -34,11 +33,11 @@ public class MapContextGTRecordWriter implements ICuboidWriter {
     private byte[] keyBuf;
     private int[] measureColumnsIndex;
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-    private ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
-    private Text outputValue = new Text();
+    private ByteArrayWritable outputKey = new ByteArrayWritable();
+    private ByteArrayWritable outputValue = new ByteArrayWritable();
     private long cuboidRowCount = 0;
 
-    public MapContextGTRecordWriter(MapContext<?, ?, ImmutableBytesWritable, Text> mapContext, CubeDesc cubeDesc, CubeSegment cubeSegment) {
+    public MapContextGTRecordWriter(MapContext<?, ?, ByteArrayWritable, ByteArrayWritable> mapContext, CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.mapContext = mapContext;
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;

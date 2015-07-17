@@ -16,27 +16,19 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.cubev2;
+package org.apache.kylin.engine.mr.steps;
 
 import org.apache.commons.cli.Options;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
-import org.apache.kylin.engine.mr.MRBatchCubingEngine;
+import org.apache.kylin.engine.mr.IMROutput2.IMRStorageOutputFormat;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -56,21 +48,13 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
         try {
             options.addOption(OPTION_JOB_NAME);
+            options.addOption(OPTION_JOB_FLOW_ID);
             options.addOption(OPTION_CUBE_NAME);
             options.addOption(OPTION_SEGMENT_NAME);
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_OUTPUT_PATH);
-            options.addOption(OPTION_NCUBOID_LEVEL);
-            options.addOption(OPTION_INPUT_FORMAT);
-            options.addOption(OPTION_HTABLE_NAME);
-            options.addOption(OPTION_STATISTICS_OUTPUT);
             parseOptions(options, args);
 
-            Path input = new Path(getOptionValue(OPTION_INPUT_PATH));
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
-            String htableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
 
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
@@ -79,41 +63,31 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());
-            FileInputFormat.setInputPaths(job, input);
-
+            
             setJobClasspath(job);
-
-            DataModelDesc.RealizationCapacity realizationCapacity = cube.getDescriptor().getModel().getCapacity();
-            job.getConfiguration().set(BatchConstants.CUBE_CAPACITY, realizationCapacity.toString());
-
-            // set Mapper
-            IMRTableInputFormat flatTableInputFormat = MRBatchCubingEngine.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
-            flatTableInputFormat.configureJob(job);
-            job.setMapperClass(InMemCuboidMapper.class);
-            job.setMapOutputKeyClass(ImmutableBytesWritable.class);
-            job.setMapOutputValueClass(Text.class);
-            FileOutputFormat.setOutputPath(job, output);
+            
+            // add metadata to distributed cache
+            attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
             long timeout = 1000*60*60L; // 1 hour
             job.getConfiguration().set("mapred.task.timeout", String.valueOf(timeout));
-            Configuration conf = HBaseConfiguration.create(getConf());
+            
+            // set input
+            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
+            flatTableInputFormat.configureJob(job);
+            
+            // set mapper
+            job.setMapperClass(InMemCuboidMapper.class);
+            job.setMapOutputKeyClass(ByteArrayWritable.class);
+            job.setMapOutputValueClass(ByteArrayWritable.class);
+            
+            // set output
+            IMRStorageOutputFormat storageOutputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getStorageOutputFormat();
+            storageOutputFormat.configureOutput(InMemCuboidReducer.class, getOptionValue(OPTION_JOB_FLOW_ID), job);
 
-            // add metadata to distributed cache
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
-
-            HTable htable = new HTable(conf, htableName);
-            HFileOutputFormat.configureIncrementalLoad(job, htable);
-
-
-            // set Reducer; This need be after configureIncrementalLoad, to overwrite the default reducer class
-            job.setReducerClass(InMemCuboidReducer.class);
-            job.setOutputKeyClass(ImmutableBytesWritable.class);
-            job.setOutputValueClass(KeyValue.class);
-
-            this.deletePath(job.getConfiguration(), output);
             return waitForCompletion(job);
         } catch (Exception e) {
             logger.error("error in CuboidJob", e);

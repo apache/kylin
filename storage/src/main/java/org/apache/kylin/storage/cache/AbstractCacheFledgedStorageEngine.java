@@ -10,7 +10,7 @@ import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
 import org.apache.kylin.metadata.tuple.TeeTupleItrListener;
-import org.apache.kylin.storage.ICachableStorageEngine;
+import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.IStorageQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +24,10 @@ public abstract class AbstractCacheFledgedStorageEngine implements IStorageQuery
     protected static CacheManager CACHE_MANAGER;
 
     protected boolean queryCacheExists;
-    protected ICachableStorageEngine underlyingStorage;
+    protected ICachableStorageQuery underlyingStorage;
     protected StreamSQLDigest streamSQLDigest;
 
-    public AbstractCacheFledgedStorageEngine(ICachableStorageEngine underlyingStorage) {
+    public AbstractCacheFledgedStorageEngine(ICachableStorageQuery underlyingStorage) {
         this.underlyingStorage = underlyingStorage;
         this.makeCacheIfNecessary(underlyingStorage.getStorageUUID());
     }

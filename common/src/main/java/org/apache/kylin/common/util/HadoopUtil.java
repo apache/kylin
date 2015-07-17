@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -140,7 +141,6 @@ public class HadoopUtil {
     }
 
     /**
-     * 
      * @param table the identifier of hive table, in format <db_name>.<table_name>
      * @return a string array with 2 elements: {"db_name", "table_name"}
      */
@@ -151,4 +151,12 @@ public class HadoopUtil {
 
         return new String[] { database, tableName };
     }
+
+    public static void deletePath(Configuration conf, Path path) throws IOException {
+        FileSystem fs = FileSystem.get(conf);
+        if (fs.exists(path)) {
+            fs.delete(path, true);
+        }
+    }
+
 }

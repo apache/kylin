@@ -172,7 +172,7 @@ public class CubeManager implements IRealizationProvider {
         if (dictInfo != null) {
             cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
-            CubeBuilder cubeBuilder = new CubeBuilder(cubeSeg.getCubeInstance());
+            CubeUpdate cubeBuilder = new CubeUpdate(cubeSeg.getCubeInstance());
             cubeBuilder.setToUpdateSegs(cubeSeg);
             updateCube(cubeBuilder);
         }
@@ -211,7 +211,7 @@ public class CubeManager implements IRealizationProvider {
         SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 
         cubeSeg.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
-        CubeBuilder cubeBuilder = new CubeBuilder(cubeSeg.getCubeInstance());
+        CubeUpdate cubeBuilder = new CubeUpdate(cubeSeg.getCubeInstance());
         cubeBuilder.setToUpdateSegs(cubeSeg);
         updateCube(cubeBuilder);
 
@@ -248,13 +248,13 @@ public class CubeManager implements IRealizationProvider {
         CubeInstance cube = CubeInstance.create(cubeName, projectName, desc);
         cube.setOwner(owner);
 
-        updateCube(new CubeBuilder(cube));
+        updateCube(new CubeUpdate(cube));
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
         return cube;
     }
 
-    public CubeInstance updateCube(CubeBuilder cubeBuilder) throws IOException {
+    public CubeInstance updateCube(CubeUpdate cubeBuilder) throws IOException {
         return updateCube(cubeBuilder, 0);
     }
 
@@ -283,7 +283,7 @@ public class CubeManager implements IRealizationProvider {
         return true;
     }
 
-    private CubeInstance updateCube(CubeBuilder cubeBuilder, int retry) throws IOException {
+    private CubeInstance updateCube(CubeUpdate cubeBuilder, int retry) throws IOException {
         if (cubeBuilder == null || cubeBuilder.getCubeInstance() == null)
             throw new IllegalStateException();
 
@@ -385,7 +385,7 @@ public class CubeManager implements IRealizationProvider {
 
         validateNewSegments(cube, mergeSegment);
 
-        CubeBuilder cubeBuilder = new CubeBuilder(cube).setToAddSegs(appendSegment, mergeSegment);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube).setToAddSegs(appendSegment, mergeSegment);
         updateCube(cubeBuilder);
 
         return new Pair<CubeSegment, CubeSegment>(appendSegment, mergeSegment);
@@ -414,7 +414,7 @@ public class CubeManager implements IRealizationProvider {
 
         if (saveChange) {
 
-            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
             cubeBuilder.setToAddSegs(newSegment);
             updateCube(cubeBuilder);
         }
@@ -425,7 +425,7 @@ public class CubeManager implements IRealizationProvider {
         checkNoBuildingSegment(cube);
 
         CubeSegment newSegment = newSegment(cube, startDate, endDate);
-        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToAddSegs(newSegment);
         updateCube(cubeBuilder);
 
@@ -456,7 +456,7 @@ public class CubeManager implements IRealizationProvider {
 
         validateNewSegments(cube, false, newSegment);
 
-        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToAddSegs(newSegment);
         updateCube(cubeBuilder);
 
@@ -684,7 +684,7 @@ public class CubeManager implements IRealizationProvider {
 
         logger.info("Promoting cube " + cube + ", new segments " + Arrays.toString(newSegments) + ", to remove segments " + toRemoveSegs);
 
-        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()])).setToUpdateSegs(newSegments).setStatus(RealizationStatusEnum.READY);
         updateCube(cubeBuilder);
     }

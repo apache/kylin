@@ -21,7 +21,6 @@ package org.apache.kylin.metadata.measure;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 
-import org.apache.hadoop.io.Text;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 
@@ -62,10 +61,6 @@ public class MeasureCodec {
 
     public DataTypeSerializer getSerializer(int idx) {
         return serializers[idx];
-    }
-
-    public void decode(Text bytes, Object[] result) {
-        decode(ByteBuffer.wrap(bytes.getBytes(), 0, bytes.getLength()), result);
     }
 
     public void decode(ByteBuffer buf, Object[] result) {

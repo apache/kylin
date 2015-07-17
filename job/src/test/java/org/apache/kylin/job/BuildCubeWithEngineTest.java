@@ -38,7 +38,7 @@ import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -268,7 +268,7 @@ public class BuildCubeWithEngineTest {
     private void clearSegment(String cubeName) throws Exception {
         CubeInstance cube = cubeManager.getCube(cubeName);
         // remove all existing segments
-        CubeBuilder cubeBuilder = new CubeBuilder(cube);
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
         cubeManager.updateCube(cubeBuilder);
     }

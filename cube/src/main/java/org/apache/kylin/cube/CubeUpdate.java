@@ -21,8 +21,9 @@ package org.apache.kylin.cube;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 
 /**
+ * Hold changes to a cube so that they can be applied as one unit.
  */
-public class CubeBuilder {
+public class CubeUpdate {
     private CubeInstance cubeInstance;
     private CubeSegment[] toAddSegs = null;
     private CubeSegment[] toRemoveSegs = null;
@@ -31,7 +32,7 @@ public class CubeBuilder {
     private String owner;
     private int cost = -1;
 
-    public CubeBuilder(CubeInstance cubeInstance) {
+    public CubeUpdate(CubeInstance cubeInstance) {
         this.cubeInstance = cubeInstance;
     }
 
@@ -39,7 +40,7 @@ public class CubeBuilder {
         return cubeInstance;
     }
 
-    public CubeBuilder setCubeInstance(CubeInstance cubeInstance) {
+    public CubeUpdate setCubeInstance(CubeInstance cubeInstance) {
         this.cubeInstance = cubeInstance;
         return this;
     }
@@ -48,7 +49,7 @@ public class CubeBuilder {
         return toAddSegs;
     }
 
-    public CubeBuilder setToAddSegs(CubeSegment... toAddSegs) {
+    public CubeUpdate setToAddSegs(CubeSegment... toAddSegs) {
         this.toAddSegs = toAddSegs;
         return this;
     }
@@ -57,7 +58,7 @@ public class CubeBuilder {
         return toRemoveSegs;
     }
 
-    public CubeBuilder setToRemoveSegs(CubeSegment... toRemoveSegs) {
+    public CubeUpdate setToRemoveSegs(CubeSegment... toRemoveSegs) {
         this.toRemoveSegs = toRemoveSegs;
         return this;
     }
@@ -66,7 +67,7 @@ public class CubeBuilder {
         return toUpdateSegs;
     }
 
-    public CubeBuilder setToUpdateSegs(CubeSegment... toUpdateSegs) {
+    public CubeUpdate setToUpdateSegs(CubeSegment... toUpdateSegs) {
         this.toUpdateSegs = toUpdateSegs;
         return this;
     }
@@ -75,7 +76,7 @@ public class CubeBuilder {
         return status;
     }
 
-    public CubeBuilder setStatus(RealizationStatusEnum status) {
+    public CubeUpdate setStatus(RealizationStatusEnum status) {
         this.status = status;
         return this;
     }
@@ -84,7 +85,7 @@ public class CubeBuilder {
         return owner;
     }
 
-    public CubeBuilder setOwner(String owner) {
+    public CubeUpdate setOwner(String owner) {
         this.owner = owner;
         return this;
     }
@@ -93,7 +94,7 @@ public class CubeBuilder {
         return cost;
     }
 
-    public CubeBuilder setCost(int cost) {
+    public CubeUpdate setCost(int cost) {
         this.cost = cost;
         return this;
     }

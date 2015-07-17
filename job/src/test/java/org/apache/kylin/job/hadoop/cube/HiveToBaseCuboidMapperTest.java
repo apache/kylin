@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -33,7 +34,6 @@ import org.apache.kylin.job.constant.BatchConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -47,7 +47,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
  */
 public class HiveToBaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
-    MapDriver<Text, Text, Text, Text> mapDriver;
+    MapDriver<Text, Object, Text, Text> mapDriver;
     String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
 
     @Before
@@ -104,7 +104,7 @@ public class HiveToBaseCuboidMapperTest extends LocalFileMetadataTestCase {
     private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String m1, String m2, String m3) {
         MeasureCodec codec = new MeasureCodec(measures);
         Object[] values = new Object[measures.size()];
-        codec.decode(valueBytes, values);
+        codec.decode(ByteBuffer.wrap(valueBytes.getBytes(), 0, valueBytes.getLength()), values);
         assertTrue(new BigDecimal(m1).equals(values[0]));
         assertTrue(new BigDecimal(m2).equals(values[1]));
         assertTrue(new BigDecimal(m3).equals(values[2]));

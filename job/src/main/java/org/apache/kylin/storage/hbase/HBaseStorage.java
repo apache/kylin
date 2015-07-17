@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase;
 
 import org.apache.kylin.engine.mr.IMROutput;
+import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
@@ -36,9 +37,10 @@ public class HBaseStorage implements IStorage {
     public <I> I adaptToBuildEngine(Class<I> engineInterface) {
         if (engineInterface == IMROutput.class) {
             return (I) new HBaseMROutput();
+        } else if (engineInterface == IMROutput2.class) {
+            return (I) new HBaseMROutput2();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
     }
-
 }

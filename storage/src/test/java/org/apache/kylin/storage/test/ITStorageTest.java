@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.StorageEngineFactory;
+import org.apache.kylin.storage.StorageFactory;
 import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
 import org.junit.*;
 
@@ -60,7 +60,7 @@ public class ITStorageTest extends HBaseMetadataTestCase {
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
         cube = cubeMgr.getCube("TEST_KYLIN_CUBE_WITHOUT_SLR_EMPTY");
         Assert.assertNotNull(cube);
-        storageEngine = StorageEngineFactory.getStorageEngine(cube);
+        storageEngine = StorageFactory.createQuery(cube);
         String url = KylinConfig.getInstanceFromEnv().getStorageUrl();
         context = new StorageContext();
         context.setConnUrl(url);

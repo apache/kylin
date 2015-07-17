@@ -29,4 +29,7 @@ public interface IBatchCubingEngine {
     /** Merge multiple small segments into a big one. */
     public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter);
     
+    public Class<?> getSourceInterface();
+    
+    public Class<?> getStorageInterface();
 }

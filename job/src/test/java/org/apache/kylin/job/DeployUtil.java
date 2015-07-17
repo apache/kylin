@@ -29,7 +29,7 @@ import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HiveClient;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
@@ -68,7 +68,7 @@ public class DeployUtil {
         // update cube desc signature.
         for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
             cube.getDescriptor().setSignature(cube.getDescriptor().calculateSignature());
-            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
             CubeManager.getInstance(config()).updateCube(cubeBuilder);
         }
     }

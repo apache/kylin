@@ -7,7 +7,7 @@ import org.apache.kylin.metadata.tuple.CompoundTupleIterator;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.StorageEngineFactory;
+import org.apache.kylin.storage.StorageFactory;
 import org.apache.kylin.storage.tuple.TupleInfo;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class HybridStorageEngine implements IStorageQuery {
         this.realizations = hybridInstance.getRealizations();
         storageEngines = new IStorageQuery[realizations.length];
         for (int i = 0; i < realizations.length; i++) {
-            storageEngines[i] = StorageEngineFactory.getStorageEngine(realizations[i]);
+            storageEngines[i] = StorageFactory.createQuery(realizations[i]);
         }
     }
 
