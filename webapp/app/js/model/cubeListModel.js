@@ -46,7 +46,7 @@ KylinApp.service('CubeList',function(CubeService,$q,AccessService){
             });
             _cubes = _.filter(_cubes,function(cube){return cube.name!=undefined});
             _this.cubes = _this.cubes.concat(_cubes);
-            defer.resolve(_this.cubes.length);
+            defer.resolve(_cubes.length);
         },function(){
             defer.reject("Failed to load cubes");
         });

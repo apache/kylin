@@ -22,6 +22,7 @@ KylinApp
     .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,jobConfig,JobList) {
 
         $scope.jobList = JobList;
+        JobList.removeAll();
         $scope.jobConfig = jobConfig;
         $scope.cubeName = null;
         $scope.projects = [];
@@ -70,7 +71,6 @@ KylinApp
             };
             $scope.state.loading = true;
 
-            var defer = $q.defer();
             return JobList.list(jobRequest).then(function(resp){
                 $scope.state.loading = false;
                 if (angular.isDefined($scope.state.selectedJob)) {
