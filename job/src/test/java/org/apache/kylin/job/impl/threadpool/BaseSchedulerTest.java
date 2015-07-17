@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import akka.actor.Deploy;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
