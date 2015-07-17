@@ -33,7 +33,7 @@ public class StreamingMonitor {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamingMonitor.class);
 
-    public void checkCountAll(List<String> receivers, String host, String authorization, String tableName) {
+    public void checkCountAll(List<String> receivers, String host, String authorization, String projectName, String tableName) {
         String title = "checkCountAll job(host:" + host + " tableName:" + tableName + ") ";
         StringBuilder stringBuilder = new StringBuilder();
         String url = host + "/kylin/api/query";
@@ -42,7 +42,7 @@ public class StreamingMonitor {
 
             request.addRequestHeader("Authorization", "Basic " + authorization);
             request.addRequestHeader("Content-Type", "application/json");
-            String query = String.format("{\"sql\":\"select count(*) from %s\",\"offset\":0,\"limit\":50000,\"acceptPartial\":true,\"project\":\"default\"}", tableName);
+            String query = String.format("{\"sql\":\"select count(*) from %s\",\"offset\":0,\"limit\":50000,\"acceptPartial\":true,\"project\":\"%s\"}", tableName, projectName);
             request.setRequestEntity(new ByteArrayRequestEntity(query.getBytes()));
 
             int statusCode = new HttpClient().executeMethod(request);
