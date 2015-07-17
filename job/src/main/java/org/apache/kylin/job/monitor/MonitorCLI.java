@@ -23,6 +23,7 @@ public class MonitorCLI {
         String tableName = null;
         String authorization = null;
         String cubeName = null;
+        String projectName = "default";
         while (i < args.length) {
             String argName = args[i];
             switch (argName) {
@@ -41,6 +42,9 @@ public class MonitorCLI {
                 case "-cubeName":
                     cubeName = args[++i];
                     break;
+                case "-projectName":
+                    projectName = args[++i];
+                    break;
                 default:
                     throw new RuntimeException("invalid argName:" + argName);
             }
@@ -53,7 +57,7 @@ public class MonitorCLI {
             Preconditions.checkNotNull(host);
             Preconditions.checkNotNull(authorization);
             Preconditions.checkNotNull(tableName);
-            streamingMonitor.checkCountAll(receivers, host, authorization, tableName);
+            streamingMonitor.checkCountAll(receivers, host, authorization, projectName, tableName);
         }
         if (cubeName != null) {
             logger.info(String.format("check cube cubeName:%s receivers:%s", cubeName, StringUtils.join(receivers, ";")));
