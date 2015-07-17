@@ -16,19 +16,18 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.cubev2;
+package org.apache.kylin.engine.mr.steps;
 
-import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.mapreduce.TableMapper;
-import org.apache.hadoop.hbase.mapreduce.TableSplit;
-import org.apache.hadoop.io.Text;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -36,12 +35,14 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.cube.kv.RowValueDecoder;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.engine.mr.ByteArrayWritable;
+import org.apache.kylin.engine.mr.IMROutput2.IMRStorageInputFormat;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.measure.MeasureCodec;
@@ -51,18 +52,16 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * @author shaoshi
  */
-public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritable, Text> {
+public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, ByteArrayWritable, ByteArrayWritable> {
 
-    private static final Logger logger = LoggerFactory.getLogger(MergeCuboidFromHBaseMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(MergeCuboidFromStorageMapper.class);
+    
     private KylinConfig config;
     private String cubeName;
     private String segmentName;
@@ -70,24 +69,18 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
     private CubeInstance cube;
     private CubeDesc cubeDesc;
     private CubeSegment mergedCubeSegment;
-    private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
-    // life cycle
+    private CubeSegment sourceCubeSegment; // Must be unique during a mapper's life cycle
+    private IMRStorageInputFormat storageInputFormat;
 
-    //    private Text outputKey = new Text();
-    private ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
-
+    private ByteArrayWritable outputKey = new ByteArrayWritable();
     private byte[] newKeyBuf;
     private RowKeySplitter rowKeySplitter;
 
     private HashMap<TblColRef, Boolean> dictsNeedMerging = new HashMap<TblColRef, Boolean>();
 
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-
-    private Text outputValue = new Text();
-    private RowValueDecoder[] rowValueDecoders;
-    private boolean simpleFullCopy = false;
-    private Object[] result;
     private MeasureCodec codec;
+    private ByteArrayWritable outputValue = new ByteArrayWritable();
 
     private Boolean checkNeedMerging(TblColRef col) throws IOException {
         Boolean ret = dictsNeedMerging.get(col);
@@ -104,69 +97,47 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
         }
     }
 
-    private CubeSegment findSegmentWithHTable(String htable, CubeInstance cubeInstance) {
-        for (CubeSegment segment : cubeInstance.getSegments()) {
-            String segmentHtable = segment.getStorageLocationIdentifier();
-            if (segmentHtable != null && segmentHtable.equalsIgnoreCase(htable)) {
-                return segment;
-            }
-        }
-
-        throw new IllegalStateException("No merging segment's storage location identifier equals " + htable);
-
-    }
-
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        HadoopUtil.setCurrentConfiguration(context.getConfiguration());
+        super.bindCurrentConfiguration(context.getConfiguration());
+        config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
-
-        config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         cubeManager = CubeManager.getInstance(config);
         cube = cubeManager.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
         mergedCubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+        storageInputFormat = MRUtil.getBatchMergeInputSide2(mergedCubeSegment).getStorageInputFormat();
 
         newKeyBuf = new byte[256];// size will auto-grow
 
-        TableSplit currentSplit = (TableSplit) context.getInputSplit();
-        byte[] tableName = currentSplit.getTableName();
-        String htableName = Bytes.toString(tableName);
-        // decide which source segment
-        logger.info("htable:" + htableName);
-        sourceCubeSegment = findSegmentWithHTable(htableName, cube);
+        sourceCubeSegment = storageInputFormat.findSourceSegment(context, cube);
         logger.info(sourceCubeSegment.toString());
 
         this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
 
-        List<RowValueDecoder> valueDecoderList = Lists.newArrayList();
-        List<InMemKeyValueCreator> keyValueCreators = Lists.newArrayList();
         List<MeasureDesc> measuresDescs = Lists.newArrayList();
-        int startPosition = 0;
         for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                valueDecoderList.add(new RowValueDecoder(colDesc));
-                keyValueCreators.add(new InMemKeyValueCreator(colDesc, startPosition));
-                startPosition += colDesc.getMeasures().length;
                 for (MeasureDesc measure : colDesc.getMeasures()) {
                     measuresDescs.add(measure);
                 }
             }
         }
-
-        rowValueDecoders = valueDecoderList.toArray(new RowValueDecoder[valueDecoderList.size()]);
-
-        simpleFullCopy = (keyValueCreators.size() == 1);
-        result = new Object[measuresDescs.size()];
         codec = new MeasureCodec(measuresDescs);
     }
 
     @Override
-    public void map(ImmutableBytesWritable key, Result value, Context context) throws IOException, InterruptedException {
-        long cuboidID = rowKeySplitter.split(key.get(), key.get().length);
+    public void map(Object inKey, Object inValue, Context context) throws IOException, InterruptedException {
+        Pair<ByteArrayWritable, Object[]> pair = storageInputFormat.parseMapperInput(inKey, inValue);
+        ByteArrayWritable key = pair.getFirst();
+        Object[] value = pair.getSecond();
+        
+        Preconditions.checkState(key.offset() == 0);
+        
+        long cuboidID = rowKeySplitter.split(key.array(), key.length());
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidID);
 
         SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();
@@ -217,25 +188,9 @@ public class MergeCuboidFromHBaseMapper extends TableMapper<ImmutableBytesWritab
         outputKey.set(newKey, 0, newKey.length);
 
         valueBuf.clear();
-        if (simpleFullCopy) {
-            // simple case, should only 1 hbase column
-            for (Cell cell : value.rawCells()) {
-                valueBuf.put(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
-            }
-        } else {
-            int position = 0;
-            for (int i = 0; i < rowValueDecoders.length; i++) {
-                rowValueDecoders[i].decode(value, false);
-                Object[] measureValues = rowValueDecoders[i].getValues();
-
-                for (int j = 0; j < measureValues.length; j++) {
-                    result[position++] = measureValues[j];
-                }
-            }
-            codec.encode(result, valueBuf);
-        }
-
+        codec.encode(value, valueBuf);
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
+        
         context.write(outputKey, outputValue);
     }
 

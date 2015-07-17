@@ -12,7 +12,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.SimpleTupleIterator;
-import org.apache.kylin.storage.ICachableStorageEngine;
+import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.cache.CacheFledgedDynamicStorageEngine;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.TsConditionExtractor;
@@ -87,7 +87,7 @@ public class DynamicCacheTest {
         final AtomicInteger underlyingSEHitCount = new AtomicInteger(0);
         final List<Integer> returnedRowPerSearch = Lists.newArrayList();
 
-        CacheFledgedDynamicStorageEngine dynamicCache = new CacheFledgedDynamicStorageEngine(new ICachableStorageEngine() {
+        CacheFledgedDynamicStorageEngine dynamicCache = new CacheFledgedDynamicStorageEngine(new ICachableStorageQuery() {
             @Override
             public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
                 Range<Long> tsRagneInQuery = TsConditionExtractor.extractTsCondition(partitionCol, sqlDigest.filter);

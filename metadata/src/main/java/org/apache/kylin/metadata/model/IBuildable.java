@@ -16,25 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source;
+package org.apache.kylin.metadata.model;
 
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.metadata.model.IBuildable;
-import org.apache.kylin.metadata.model.TableDesc;
+public interface IBuildable {
 
-public class TableSourceFactory {
-
-    private static ITableSource dft = (ITableSource) ClassUtil.newInstance("org.apache.kylin.source.hive.HiveTableSource");
+    public int getSourceType();
     
-    public static ReadableTable createReadableTable(TableDesc table) {
-        return dft.createReadableTable(table);
-    }
+    public int getEngineType();
     
-    public static <T> T createEngineAdapter(IBuildable buildable, Class<T> engineInterface) {
-        return dft.adaptToBuildEngine(engineInterface);
-    }
-    
-    public static <T> T createEngineAdapter(TableDesc tableDesc, Class<T> engineInterface) {
-        return dft.adaptToBuildEngine(engineInterface);
-    }
+    public int getStorageType();
 }

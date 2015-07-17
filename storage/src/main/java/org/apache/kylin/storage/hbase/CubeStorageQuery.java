@@ -48,7 +48,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.storage.ICachableStorageEngine;
+import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -60,9 +60,9 @@ import java.util.*;
 /**
  * @author xjiang, yangli9
  */
-public class CubeStorageEngine implements ICachableStorageEngine {
+public class CubeStorageQuery implements ICachableStorageQuery {
 
-    private static final Logger logger = LoggerFactory.getLogger(CubeStorageEngine.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeStorageQuery.class);
 
     private static final int MERGE_KEYRANGE_THRESHOLD = 100;
     private static final long MEM_BUDGET_PER_QUERY = 3L * 1024 * 1024 * 1024; // 3G
@@ -71,7 +71,7 @@ public class CubeStorageEngine implements ICachableStorageEngine {
     private final CubeDesc cubeDesc;
     private final String uuid;
 
-    public CubeStorageEngine(CubeInstance cube) {
+    public CubeStorageQuery(CubeInstance cube) {
         this.cubeInstance = cube;
         this.cubeDesc = cube.getDescriptor();
         this.uuid = cube.getUuid();

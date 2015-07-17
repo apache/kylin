@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr;
+package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +30,6 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.job.cmd.ShellCmdOutput;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -42,18 +41,15 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 /**
- * Drop the resources that is no longer needed, including intermediate hive table (after cube build) and hbase tables (after cube merge)
+ * Drop HBase tables that is no longer needed
  */
-@Deprecated // only exists for backward compatibility
-public class GarbageCollectionStep extends AbstractExecutable {
+public class MergeGCStep extends AbstractExecutable {
 
     private static final String OLD_HTABLES = "oldHTables";
 
-    private static final String OLD_HIVE_TABLE = "oldHiveTable";
+    private static final Logger logger = LoggerFactory.getLogger(MergeGCStep.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(GarbageCollectionStep.class);
-
-    public GarbageCollectionStep() {
+    public MergeGCStep() {
         super();
     }
 
@@ -61,21 +57,6 @@ public class GarbageCollectionStep extends AbstractExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
 
         StringBuffer output = new StringBuffer();
-
-        final String hiveTable = this.getOldHiveTable();
-        if (StringUtils.isNotEmpty(hiveTable)) {
-            final String dropHiveCMD = "hive -e \"DROP TABLE IF EXISTS  " + hiveTable + ";\"";
-            ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
-            try {
-                context.getConfig().getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
-                output.append("Hive table " + hiveTable + " is dropped. \n");
-            } catch (IOException e) {
-                logger.error("job:" + getId() + " execute finished with exception", e);
-                output.append(shellCmdOutput.getOutput()).append("\n").append(e.getLocalizedMessage());
-                return new ExecuteResult(ExecuteResult.State.ERROR, output.toString());
-            }
-        }
-
 
         List<String> oldTables = getOldHTables();
         if (oldTables != null && oldTables.size() > 0) {
@@ -116,7 +97,6 @@ public class GarbageCollectionStep extends AbstractExecutable {
             }
         }
 
-
         return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
     }
 
@@ -136,14 +116,6 @@ public class GarbageCollectionStep extends AbstractExecutable {
         } else {
             return Collections.emptyList();
         }
-    }
-
-    public void setOldHiveTable(String hiveTable) {
-        setParam(OLD_HIVE_TABLE, hiveTable);
-    }
-
-    private String getOldHiveTable() {
-        return getParam(OLD_HIVE_TABLE);
     }
 
 }

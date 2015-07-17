@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.cubev2;
+package org.apache.kylin.engine.mr.steps;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

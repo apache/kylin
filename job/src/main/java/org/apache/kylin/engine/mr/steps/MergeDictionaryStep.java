@@ -16,13 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr;
+package org.apache.kylin.engine.mr.steps;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -64,7 +64,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
             makeDictForNewSegment(conf, cube, newSegment, mergingSegments);
             makeSnapshotForNewSegment(cube, newSegment, mergingSegments);
 
-            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
             cubeBuilder.setToUpdateSegs(newSegment);
             mgr.updateCube(cubeBuilder);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");

@@ -125,7 +125,7 @@ public class HiveMRInput implements IMRInput {
         }
 
         @Override
-        public void addStepPhase4_UpdateMetadataAndCleanup(DefaultChainedExecutable jobFlow) {
+        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
             GarbageCollectionStep step = new GarbageCollectionStep();
             step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
             step.setOldHiveTable(flatHiveTableDesc.getTableName());

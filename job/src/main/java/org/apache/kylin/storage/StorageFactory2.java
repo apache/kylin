@@ -16,25 +16,19 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source;
+package org.apache.kylin.storage;
 
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.model.IBuildable;
-import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.storage.hbase.HBaseStorage;
 
-public class TableSourceFactory {
-
-    private static ITableSource dft = (ITableSource) ClassUtil.newInstance("org.apache.kylin.source.hive.HiveTableSource");
+/**
+ */
+public class StorageFactory2 {
     
-    public static ReadableTable createReadableTable(TableDesc table) {
-        return dft.createReadableTable(table);
-    }
+    private static final IStorage dft = new HBaseStorage();
     
     public static <T> T createEngineAdapter(IBuildable buildable, Class<T> engineInterface) {
         return dft.adaptToBuildEngine(engineInterface);
     }
-    
-    public static <T> T createEngineAdapter(TableDesc tableDesc, Class<T> engineInterface) {
-        return dft.adaptToBuildEngine(engineInterface);
-    }
+
 }

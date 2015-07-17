@@ -19,6 +19,7 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.hadoop.hbase.KeyValue;
@@ -84,10 +85,9 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
             outputValue = keyValueCreators.get(0).create(key, value.getBytes(), 0, value.getLength());
             context.write(outputKey, outputValue);
 
-        } else { // normal (complex) case that distributes measures to multiple
-                 // HBase columns
+        } else { // normal (complex) case that distributes measures to multiple HBase columns
 
-            inputCodec.decode(value, inputMeasures);
+            inputCodec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), inputMeasures);
 
             for (int i = 0; i < n; i++) {
                 outputValue = keyValueCreators.get(i).create(key, inputMeasures);

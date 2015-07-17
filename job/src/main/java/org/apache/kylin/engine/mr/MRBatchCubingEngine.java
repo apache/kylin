@@ -18,15 +18,9 @@
 
 package org.apache.kylin.engine.mr;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.IBatchCubingEngine;
-import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
-import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.TableSourceFactory;
 
 public class MRBatchCubingEngine implements IBatchCubingEngine {
 
@@ -40,25 +34,14 @@ public class MRBatchCubingEngine implements IBatchCubingEngine {
         return new BatchMergeJobBuilder(mergeSegment, submitter).build();
     }
     
-    public static IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
-        TableDesc tableDesc = getTableDesc(seg.getCubeDesc().getFactTable());
-        return getMRInput(tableDesc).getBatchCubingInputSide(seg);
+    @Override
+    public Class<?> getSourceInterface() {
+        return IMRInput.class;
     }
 
-    public static IMRTableInputFormat getTableInputFormat(String tableName) {
-        return getTableInputFormat(getTableDesc(tableName));
-    }
-
-    public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc) {
-        return getMRInput(tableDesc).getTableInputFormat(tableDesc);
-    }
-
-    private static IMRInput getMRInput(TableDesc tableDesc) {
-        return TableSourceFactory.createEngineAdapter(tableDesc, IMRInput.class);
-    }
-
-    private static TableDesc getTableDesc(String tableName) {
-        return MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(tableName);
+    @Override
+    public Class<?> getStorageInterface() {
+        return IMROutput.class;
     }
 
 }

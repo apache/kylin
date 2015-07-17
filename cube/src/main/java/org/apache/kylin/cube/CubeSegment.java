@@ -23,10 +23,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
+import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -37,7 +39,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware {
+public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, IBuildable {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -343,5 +345,20 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware {
 
     public static String getStatisticsResourcePath(String cubeName, String cubeSegmentId) {
         return ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + cubeSegmentId + ".seq";
+    }
+
+    @Override
+    public int getSourceType() {
+        return 0;
+    }
+
+    @Override
+    public int getEngineType() {
+        return 0;
+    }
+
+    @Override
+    public int getStorageType() {
+        return 0;
     }
 }

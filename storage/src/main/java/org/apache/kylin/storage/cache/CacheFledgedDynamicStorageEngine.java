@@ -12,7 +12,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigestUtil;
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
 import org.apache.kylin.metadata.tuple.*;
-import org.apache.kylin.storage.ICachableStorageEngine;
+import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.TsConditionExtractor;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -30,7 +30,7 @@ public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorag
 
     private Range<Long> ts;
 
-    public CacheFledgedDynamicStorageEngine(ICachableStorageEngine underlyingStorage, TblColRef partitionColRef) {
+    public CacheFledgedDynamicStorageEngine(ICachableStorageQuery underlyingStorage, TblColRef partitionColRef) {
         super(underlyingStorage);
         this.partitionColRef = partitionColRef;
 

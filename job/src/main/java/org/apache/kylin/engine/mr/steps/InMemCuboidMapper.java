@@ -1,4 +1,4 @@
-package org.apache.kylin.job.hadoop.cubev2;
+package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.cube.CubeInstance;
@@ -25,8 +23,9 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
-import org.apache.kylin.engine.mr.MRBatchCubingEngine;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.inmemcubing.DoggedCubeBuilder;
@@ -37,7 +36,7 @@ import com.google.common.collect.Maps;
 
 /**
  */
-public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ImmutableBytesWritable, Text> {
+public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArrayWritable, ByteArrayWritable> {
 
     private static final Log logger = LogFactory.getLog(InMemCuboidMapper.class);
     private CubeInstance cube;
@@ -61,7 +60,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, Immutab
         cubeDesc = cube.getDescriptor();
         String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
         cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
-        flatTableInputFormat = MRBatchCubingEngine.getBatchCubingInputSide(cubeSegment).getFlatTableInputFormat();
+        flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSegment).getFlatTableInputFormat();
 
         Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
 

@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author xjiang
  */
 public class BytesSplitter {
     private static final Logger logger = LoggerFactory.getLogger(BytesSplitter.class);
@@ -78,6 +77,14 @@ public class BytesSplitter {
         split.length = length;
 
         return bufferSize;
+    }
+    
+    public void setBuffers(byte[][] buffers) {
+        for (int i = 0; i < buffers.length; i++) {
+            splitBuffers[i].value = buffers[i];
+            splitBuffers[i].length = buffers[i].length;
+        }
+        this.bufferSize = buffers.length;
     }
 
     public byte inferByteRowDelimiter(byte[] bytes, int byteLen, int expectedSplits) throws IOException {

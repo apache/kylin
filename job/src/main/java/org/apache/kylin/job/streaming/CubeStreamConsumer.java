@@ -29,7 +29,7 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -45,7 +45,6 @@ import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.cube.FactDistinctColumnsReducer;
-import org.apache.kylin.job.hadoop.cubev2.InMemKeyValueCreator;
 import org.apache.kylin.job.hadoop.hbase.CubeHTableUtil;
 import org.apache.kylin.job.inmemcubing.ICuboidWriter;
 import org.apache.kylin.job.inmemcubing.InMemCubeBuilder;
@@ -54,6 +53,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable.TableSignature;
 import org.apache.kylin.storage.cube.CuboidToGridTableMapping;
 import org.apache.kylin.storage.gridtable.GTRecord;
+import org.apache.kylin.storage.hbase.InMemKeyValueCreator;
 import org.apache.kylin.streaming.MicroStreamBatch;
 import org.apache.kylin.streaming.MicroStreamBatchConsumer;
 import org.slf4j.Logger;
@@ -340,7 +340,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
     //TODO: should we use cubeManager.promoteNewlyBuiltSegments?
     private void commitSegment(CubeSegment cubeSegment) throws IOException {
         cubeSegment.setStatus(SegmentStatusEnum.READY);
-        CubeBuilder cubeBuilder = new CubeBuilder(cubeSegment.getCubeInstance());
+        CubeUpdate cubeBuilder = new CubeUpdate(cubeSegment.getCubeInstance());
         cubeBuilder.setToAddSegs(cubeSegment);
         CubeManager.getInstance(kylinConfig).updateCube(cubeBuilder);
     }

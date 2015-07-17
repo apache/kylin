@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr;
+package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +28,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;

@@ -26,6 +26,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 /**
  */
 public class KylinMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
+    
     protected void bindCurrentConfiguration(Configuration conf) {
         HadoopUtil.setCurrentConfiguration(conf);
     }

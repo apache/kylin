@@ -48,22 +48,22 @@ public interface IMRInput {
     
     /**
      * Participate the batch cubing flow as the input side. Responsible for creating
-     * intermediate flat table (Phase 1) and clean up if necessary (Phase 4).
+     * intermediate flat table (Phase 1) and clean up any leftover (Phase 4).
      * 
      * - Phase 1: Create Flat Table
-     * - Phase 2: Build Dictionary
-     * - Phase 3: Build Cube
+     * - Phase 2: Build Dictionary (with FlatTableInputFormat)
+     * - Phase 3: Build Cube (with FlatTableInputFormat)
      * - Phase 4: Update Metadata & Cleanup
      */
     public interface IMRBatchCubingInputSide {
+        
+        /** Return an InputFormat that reads from the intermediate flat table */
+        public IMRTableInputFormat getFlatTableInputFormat();
         
         /** Add step that creates an intermediate flat table as defined by CubeJoinedFlatTableDesc */
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow);
         
         /** Add step that does necessary clean up, like delete the intermediate flat table */
-        public void addStepPhase4_UpdateMetadataAndCleanup(DefaultChainedExecutable jobFlow);
-        
-        /** Return an InputFormat that reads from the intermediate flat table */
-        public IMRTableInputFormat getFlatTableInputFormat();
+        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
     }
 }

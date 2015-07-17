@@ -26,7 +26,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -411,7 +411,7 @@ public class CubeController extends BasicController {
         cubeService.getCubeManager().validateNewSegments(cube, segment);
         try {
 
-            CubeBuilder cubeBuilder = new CubeBuilder(cube);
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
             cubeBuilder.setToAddSegs(segment);
 
             cubeService.getCubeManager().updateCube(cubeBuilder);

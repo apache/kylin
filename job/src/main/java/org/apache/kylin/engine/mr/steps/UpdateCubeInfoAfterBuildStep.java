@@ -16,14 +16,15 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr;
+package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 
-import org.apache.kylin.cube.CubeBuilder;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -87,7 +88,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             if (segmentReady) {
                 cubeManager.promoteNewlyBuiltSegments(cube, segment);
             } else {
-                CubeBuilder cubeBuilder = new CubeBuilder(cube);
+                CubeUpdate cubeBuilder = new CubeUpdate(cube);
                 cubeBuilder.setToUpdateSegs(segment);
                 cubeManager.updateCube(cubeBuilder);
             }

@@ -1,21 +1,18 @@
-package org.apache.kylin.job.hadoop.cubev2;
-
-import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.io.Text;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
-import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.metadata.model.MeasureDesc;
+package org.apache.kylin.storage.hbase;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
-/**
- */
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.Text;
+import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.model.MeasureDesc;
+
+import com.google.common.collect.Lists;
+
 public class InMemKeyValueCreator {
     byte[] cfBytes;
     byte[] qBytes;
@@ -72,6 +69,5 @@ public class InMemKeyValueCreator {
     public KeyValue create(Text key, byte[] value, int voffset, int vlen) {
         return create(key.getBytes(), 0, key.getLength(), value, voffset, vlen);
     }
-
 
 }
