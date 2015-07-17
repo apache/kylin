@@ -22,8 +22,6 @@ import org.apache.kylin.job.*;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
-import org.apache.kylin.job.spark.SparkExecutable;
-import org.apache.kylin.job.spark.SparkHelloWorld;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -99,16 +97,4 @@ public class ITDefaultSchedulerTest extends BaseSchedulerTest {
         System.out.println(job);
     }
 
-    @Test
-    public void testSparkExecutable() throws Exception {
-        DefaultChainedExecutable job = new DefaultChainedExecutable();
-        SparkExecutable task = new SparkExecutable();
-        task.setClassName(SparkHelloWorld.class.getName());
-        job.addTask(task);
-        jobService.addJob(job);
-        waitForJobFinish(job.getId());
-        assertEquals(ExecutableState.SUCCEED, job.getStatus());
-        final Output output = jobService.getOutput(task.getId());
-        assertTrue(output.getVerboseMsg().contains("hello kylin-spark"));
-    }
 }

@@ -569,6 +569,7 @@
         <module>jdbc</module>
         <module>invertedindex</module>
         <module>streaming</module>
+        <module>spark</module>
     </modules>
 
     <profiles>
