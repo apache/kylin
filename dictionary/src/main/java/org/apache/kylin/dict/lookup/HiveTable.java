@@ -73,6 +73,11 @@ public class HiveTable implements ReadableTable {
         }
     }
 
+    @Override
+    public boolean exists() throws IOException {
+        return true;
+    }
+
     private String computeHDFSLocation() throws Exception {
 
         String override = KylinConfig.getInstanceFromEnv().getOverrideHiveTableLocation(hiveTable);

@@ -30,6 +30,16 @@ public class JobBuildRequest {
 
     private String buildType;
 
+    public boolean isForceMergeEmptySegment() {
+        return forceMergeEmptySegment;
+    }
+
+    public void setForceMergeEmptySegment(boolean forceMergeEmptySegment) {
+        this.forceMergeEmptySegment = forceMergeEmptySegment;
+    }
+
+    private boolean forceMergeEmptySegment = false;
+
     public long getStartTime() {
         return startTime;
     }

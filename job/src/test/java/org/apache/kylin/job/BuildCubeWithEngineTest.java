@@ -200,6 +200,10 @@ public class BuildCubeWithEngineTest {
         List<String> result = Lists.newArrayList();
         result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
         result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));
+
+        // empty segment
+        long date4 = f.parse("2050-01-01").getTime();
+        result.add(buildSegment("test_kylin_cube_with_slr_empty", date3, date4));
         return result;
     }
 

@@ -35,6 +35,8 @@ public interface ReadableTable {
     /** Used to detect table modifications mainly. Return null in case table does not exist. */
     public TableSignature getSignature() throws IOException;
 
+    public boolean exists() throws IOException;
+
     public interface TableReader extends Closeable {
 
         /** Move to the next row, return false if no more record. */
@@ -91,6 +93,7 @@ public interface ReadableTable {
         public long getLastModifiedTime() {
             return lastModifiedTime;
         }
+
 
         @Override
         public int hashCode() {
