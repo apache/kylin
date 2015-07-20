@@ -115,7 +115,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         cube.getSegments().remove(merge);
         
         // try merge at start/end at middle of segments
-        CubeSegment merge2 = mgr.mergeSegments(cube, 500, 1500, false);
+        CubeSegment merge2 = mgr.mergeSegments(cube, 500, 1500, true);
         assertEquals(3, cube.getSegments().size());
         assertEquals(0, merge2.getDateRangeStart());
         assertEquals(2000, merge2.getDateRangeEnd());
