@@ -99,7 +99,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         seg2.setStatus(SegmentStatusEnum.READY);
         
         // merge first and second
-        CubeSegment merge = mgr.mergeSegments(cube, 0, 2000, false);
+        CubeSegment merge = mgr.mergeSegments(cube, 0, 2000, true);
 
         assertEquals(3, cube.getSegments().size());
         assertEquals(0, merge.getDateRangeStart());
