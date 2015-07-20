@@ -34,7 +34,7 @@ since: v0.6
 *   `PUT http://localhost:7070/kylin/api/cubes/{cube_name}/rebuild`
 *   For put request body detail please refer to [service doc](rest_api.html). 
     *   `startTime` and `endTime` should be utc timestamp.
-    *   `buildType` can be `BUILD` or `MERGE`. `BUILD` is for building a new segment or refreshing an existing segment. `MERGE` is for merging multiple existing segments into one bigger segment.
+    *   `buildType` can be `BUILD` ,`MERGE` or `REFRESH`. `BUILD` is for building a new segment, `REFRESH` for refreshing an existing segment. `MERGE` is for merging multiple existing segments into one bigger segment.
 *   This method will return a newly created job instance, in which the uuid is the identity of job to track job status.
 *   Example
 {% highlight Groff markup %}
