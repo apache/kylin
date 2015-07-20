@@ -54,6 +54,7 @@ public class Client {
         QueryParser queryParser = new QueryParser();
         HiveJdbcClient jdbcClient = new HiveJdbcClient();
         try {
+            MonitorMetaManager.init();
             queryParser.start();
             jdbcClient.start();
         } catch (Exception e) {

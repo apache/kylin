@@ -191,6 +191,10 @@ public class MonitorMetaManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        logger.info("update table ["+tableName+"]");
+        logger.info("rowKey ["+rowKey+"]");
+        logger.info("column family ["+family+"]");
+        logger.info("value ["+value+"]");
         logger.info("end insert data ......");
     }
 
