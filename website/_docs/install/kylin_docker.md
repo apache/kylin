@@ -41,5 +41,6 @@ Use `admin/admin` to login. Make sure HBase is running.
 #Kylin Dashboard
 http://<container_ip>:7070
 {% endhighlight %}
-The default credentials to login are: `ADMIN:KYLIN`. The cluster is pre-populated with sample data and is ready to build cubes as shown [here](https://github.com/KylinOLAP/Kylin/wiki/Kylin-Cube-Creation-Tutorial).
+The default credentials to login are: `ADMIN:KYLIN`. 
+The cluster is pre-populated with sample data and is ready to build cubes as shown [here](../tutorial/create_cube.html).
   

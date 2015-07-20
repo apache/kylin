@@ -13,11 +13,9 @@ since: v0.7.1
 > * Please always select Fact Table first, then add lookup tables with correct join condition (defined join type in cube)
 > * Do not try to join between fact tables or lookup tables;
 > * You can try to use high cardinality dimensions like seller id as Tableau Filter, but the engine will only return limited seller id in Tableau's filter now.
-> 
-> More detail information or any issue, please contact Kylin Team: `kylinolap@gmail.com`
 
 ### Step 1. Install ODBC Driver
-Refer to wiki page [Kylin ODBC Driver Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-ODBC-Driver-Tutorial).
+Refer to wiki page [Kylin ODBC Driver Tutorial](./odbc.html).
 
 ### Step 2. Connect to Kylin Server
 > We recommended to use Connect Using Driver instead of Using DSN since Tableau team will not manage your DSN on Tableau Servers.
@@ -30,7 +28,7 @@ Enter your Sever location and credentials: server host, port, username and passw
 
 ![]( /images/Kylin-and-Tableau-Tutorial/2 serverhost.jpg)
 
-Click "Connect" to get the list of projects that you have permission to access. See details about permission in [Kylin Cube Permission Grant Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-Cube-Permission-Grant-Tutorial). Then choose the project you want to connect in the drop down list. 
+Click "Connect" to get the list of projects that you have permission to access. See details about permission in [Kylin Cube Permission Grant Tutorial](./acl.html). Then choose the project you want to connect in the drop down list. 
 
 ![]( /images/Kylin-and-Tableau-Tutorial/3 project.jpg)
 

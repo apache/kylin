@@ -19,11 +19,8 @@ __二进制包__
   * [Installation Guide](../docs/install)
   * 如何从源文件生成二进制包，请参考这篇[教程](http://kylin.incubator.apache.org/docs/howto/howto_package.html)
 
-<!--
 __ODBC 驱动__
 
 Apache Kylin ODBC驱动:
 
-  * [Kylin ODBC Driver](KylinODBC.zip)
-
--->
+  * [Kylin ODBC Driver](KylinODBCDriver.zip)

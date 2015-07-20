@@ -21,14 +21,11 @@ For convenience, there's binary package also available:
   * [Installation Guide](../docs/install)
   * Generate binary package from source, please refer to this [guide](../docs/howto/howto_package.html)
     
-<!--
 __ODBC Driver__
 
 And ODBC Driver could be find here:
 
-  * [Kylin ODBC Driver](KylinODBC.zip)
-  * _ODBC Driver's source sode avaliable with 0.8 branch_
--->
+  * [Kylin ODBC Driver](KylinODBCDriver.zip)
 
 __Development Version (v0.7.x)__
 
