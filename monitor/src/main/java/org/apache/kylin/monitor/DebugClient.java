@@ -52,6 +52,7 @@ public class DebugClient {
         HiveJdbcClient jdbcClient = new HiveJdbcClient();
 
         try {
+            MonitorMetaManager.init();
             queryParser.start();
             jdbcClient.start();
         } catch (Exception e) {
