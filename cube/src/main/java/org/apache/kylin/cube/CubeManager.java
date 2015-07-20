@@ -152,9 +152,11 @@ public class CubeManager implements IRealizationProvider {
 
         DictionaryManager dictMgr = getDictionaryManager();
         DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
-        cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
-        saveResource(cubeSeg.getCubeInstance());
+        if (dictInfo != null) {
+            cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
+            saveResource(cubeSeg.getCubeInstance());
+        }
 
         return dictInfo;
     }
@@ -294,12 +296,25 @@ public class CubeManager implements IRealizationProvider {
         return newSegment;
     }
 
-    public CubeSegment mergeSegments(CubeInstance cube, final long startDate, final long endDate) throws IOException {
+    public CubeSegment mergeSegments(CubeInstance cube, final long startDate, final long endDate, boolean forceMergeEmptySeg) throws IOException {
         checkNoBuildingSegment(cube);
         checkCubeIsPartitioned(cube);
 
         Pair<Long, Long> range = alignMergeRange(cube, startDate, endDate);
         CubeSegment newSegment = newSegment(cube, range.getFirst(), range.getSecond());
+        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSegment);
+
+        if (forceMergeEmptySeg == false) {
+            List<String> emptySegment = Lists.newArrayList();
+            for (CubeSegment seg : mergingSegments) {
+                if (seg.getSizeKB() == 0) {
+                    emptySegment.add(seg.getName());
+                }
+            }
+            if (emptySegment.size() > 0) {
+                throw new IllegalArgumentException("Empty cube segment found, couldn't merge unless 'forceMergeEmptySegment' set to true: " + emptySegment);
+            }
+        }
 
         validateNewSegments(cube, newSegment);
         cube.getSegments().add(newSegment);

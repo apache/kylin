@@ -59,12 +59,21 @@ public class FileTable implements ReadableTable {
 
     @Override
     public TableSignature getSignature() throws IOException {
+        if (!exists())
+            throw new IllegalStateException("Table not exists :" + path);
+
         try {
             Pair<Long, Long> sizeAndLastModified = getSizeAndLastModified(path);
             return new TableSignature(path, sizeAndLastModified.getFirst(), sizeAndLastModified.getSecond());
         } catch (FileNotFoundException ex) {
             return null;
         }
+    }
+
+    @Override
+    public boolean exists() throws IOException {
+        FileSystem fs = HadoopUtil.getFileSystem(path);
+        return fs.exists(new Path(path));
     }
 
     @Override
