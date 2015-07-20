@@ -42,5 +42,5 @@ After Kylin started you can visit <http://your_hostname:7070/kylin>. The usernam
 
 1. [Quick play with a sample cube](../tutorial/kylin_sample.html)
 2. [Create and Build your own cube](../tutorial/create_cube.html)
-3. [Kylin Web Tutorial](../tutorial/web.md)
+3. [Kylin Web Tutorial](../tutorial/web.html)
 

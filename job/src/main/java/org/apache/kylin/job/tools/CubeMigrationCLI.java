@@ -31,6 +31,7 @@ import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -209,6 +210,7 @@ public class CubeMigrationCLI {
         CubeDesc cubeDesc = cube.getDescriptor();
         metaResource.add(cube.getResourcePath());
         metaResource.add(cubeDesc.getResourcePath());
+        metaResource.add(DataModelDesc.concatResourcePath(cubeDesc.getModelName()));
 
         for (String table : cubeDesc.getModel().getAllTables()) {
             metaResource.add(TableDesc.concatResourcePath(table.toUpperCase()));
@@ -386,7 +388,7 @@ public class CubeMigrationCLI {
             Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
             ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
             project.removeRealization(RealizationType.CUBE, cubeName);
-            project.removeRealization(RealizationType.CUBE, cubeName);
+            project.addRealizationEntry(RealizationType.CUBE, cubeName);
             dstStore.putResource(projectResPath, project, projectSerializer);
             logger.info("Project instance for " + projectName + " is corrected");
             break;
