@@ -7,13 +7,9 @@ version: v0.7.2
 since: v0.6
 ---
 
-Off-Hadoop-CLI installation is usually for **development use**.
-
-Developers want to run kylin test cases or applications at their development machine. The scenario is depicted at [https://github.com/KylinOLAP/Kylin#off-hadoop-cli-installation](https://github.com/KylinOLAP/Kylin#off-hadoop-cli-installation).
-
+Developers want to run kylin test cases or applications at their development machine. 
 
 By following this tutorial, you will be able to build kylin test cubes by running a specific test case, and you can further run other test cases against the cubes having been built.
-
 
 ## Environment on the Hadoop CLI
 

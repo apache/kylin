@@ -17,36 +17,34 @@ Please follow  installation & tutorial to start with Kylin.
 
 Advanced Topics
 -------  
-####Connectivity
-1.[How to use kylin remote jdbc driver](docs/Tutorial/How to use kylin remote jdbc driver.md)
+###Connectivity
+1.[How to use kylin remote jdbc driver](docs/howto/howto_jdbc.html)
 
 2.[SQL Reference](https://github.com/apache/incubator-calcite/blob/master/doc/reference.md)
 
-####REST
+###REST API
 
-1.[Kylin Restful API List](docs/REST/Kylin Restful API List.md)
+1.[Kylin Restful API List](docs/development/rest_api.html)
 
-2.[Build Cube with Restful API](docs/REST/Build Cube with Restful API.md)
+2.[Build Cube with Restful API](docs/development/build_api.html)
 
-3.[How to consume Kylin REST API in javascript](docs/REST/How to consume Kylin REST API in javascript.md)
+3.[How to consume Kylin REST API in javascript](docs/development/javascript_api.html)
 
-####Operations
-1.[Kylin Metadata Store](docs/Operations/Kylin Metadata Store.md)
+###Operations
+1.[Kylin Metadata Store](docs/development/new_metadata.html)
 
-2.[Export Kylin HBase data](docs/Operations/Export Kylin HBase data.md)
+2.[Export Kylin HBase data](docs/howto/howto_backup.html)
 
-3.[Advanced settings of Kylin environment](docs/Operations/Advanced settings of Kylin environment.md)
+3.[Advanced settings of Kylin environment](docs/install/advance_settings.html)
 
-####Test
+###Test
 
-1.[Run Kylin test case with HBase Mini Cluster](docs/Test/Run Kylin test case with HBase Mini Cluster.md)
+1.[Run Kylin test case with HBase Mini Cluster](docs/development/test_minicluster.html)
 
 
-####Technial Details
+###Technial Details
 
-1.[New meta data model structure](docs/TechInside/New meta data model structure.md)
-
-2.[Job Engine Design](docs/JobEngine/Design.md)
+1.[New meta data model structure](docs/development/new_metadata.html)
 
 
 ## Disclaimer

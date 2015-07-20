@@ -25,11 +25,11 @@ since: v0.7.1
 
 ## Installation
 1. Uninstall existing Kylin ODBC first, if you already installled it before
-2. Download the attached driver installer at [KylinOLAP/odbc-driver/exe](https://github.com/KylinOLAP/odbc-driver/tree/master/exe), run it.
+2. Download ODBC Driver from [download](../../download/).
    * For 32 bit Tableau Desktop: Please install KylinODBCDriver (x86).exe
    * For 64 bit Tableau Desktop: Please install KylinODBCDriver (x64).exe
 
 3. Both drivers already be installed on Tableau Server, you properly should be able to publish to there without issues
 
 ## Bug Report
-Open github issue here
+Please open Apache Kylin JIRA to report bug, or send to dev mailing list.
