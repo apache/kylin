@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.MetadataManager;
@@ -51,6 +52,7 @@ public class CacheService extends BasicService {
                 break;
             case CUBE_DESC:
                 getCubeDescManager().reloadCubeDesc(cacheKey);
+                Cuboid.reloadCache(cacheKey);
                 break;
             case PROJECT:
                 getProjectManager().reloadProject(cacheKey);
@@ -76,6 +78,7 @@ public class CacheService extends BasicService {
             case ALL:
                 MetadataManager.clearCache();
                 CubeDescManager.clearCache();
+                Cuboid.clearCache();
                 CubeManager.clearCache();
                 IIDescManager.clearCache();
                 IIManager.clearCache();
