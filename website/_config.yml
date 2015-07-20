@@ -16,16 +16,17 @@
 #
 
 # Site settings
-title: kylin.io
+title: Apache Kylin
 email: dev@kylin.incubator.apache.org
 description: Apache Kylin Home
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://kylin.incubator.apache.org" # the base hostname & protocol for your site
+url: "http://127.0.0.1" # the base hostname & protocol for your site
 twitter_username: ApacheKylin
 
 encoding: UTF-8
 timezone: America/Dawson 
 
+exclude: ["README.md", "Rakefile", "*.scss", "*.haml", "*.sh"]
 include: [_docs]
 
 # Build settings
