@@ -406,6 +406,7 @@ public class CubeManager implements IRealizationProvider {
     public void removeCubeCacheLocal(String cubeName) {
         cubeMap.removeLocal(cubeName);
         usedStorageLocation.removeAll(cubeName);
+        Cuboid.clearCache(cubeName);
     }
 
     public LookupStringTable getLookupTable(CubeSegment cubeSegment, DimensionDesc dim) {
