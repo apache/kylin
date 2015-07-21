@@ -31,7 +31,6 @@ import org.apache.kylin.engine.mr.IMROutput2.IMRStorageOutputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +86,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             // set output
             IMRStorageOutputFormat storageOutputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getStorageOutputFormat();
             storageOutputFormat.configureOutput(InMemCuboidReducer.class, getOptionValue(OPTION_JOB_FLOW_ID), job);
-
+            
             return waitForCompletion(job);
         } catch (Exception e) {
             logger.error("error in CuboidJob", e);
