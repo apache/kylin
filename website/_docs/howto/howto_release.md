@@ -11,7 +11,7 @@ _This guide is for Apache Kylin Committers only._
 _Shell commands is on Mac OS X as sample._  
 _For people in China, please aware using proxy to avoid potential firewall issue._  
 
-# Setup Account  
+## Setup Account  
 Make sure you have avaliable account and privlidge for following applications:
 
 * Apache account: [https://id.apache.org](https://id.apache.org/)    
@@ -20,7 +20,7 @@ Make sure you have avaliable account and privlidge for following applications:
 * Apache Nexus (maven repo): [https://repository.apache.org](https://repository.apache.org)  
 * Apache Kylin dist repo: [https://dist.apache.org/repos/dist/dev/incubator/kylin](https://dist.apache.org/repos/dist/dev/incubator/kylin)  
 
-# Setup PGP signing keys  
+## Setup PGP signing keys  
 Follow instructions at [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) to create a key pair  
 Install gpg (On Mac OS X as sample):  
 `brew install gpg and gpg --gen-key`
@@ -56,13 +56,21 @@ For example:
 
 Commit your changes.
 
-# Prepare artifacts for release  
+## Prepare artifacts for release  
 __Before you start:__
 
 * Set up signing keys as described above.
 * Make sure you are using JDK 1.7 (not 1.8).
 * Make sure you are working on right release version number.
 * Make sure that every “resolved” JIRA case (including duplicates) has a fix version assigned.
+
+__Verify licenses__  
+Run Apache RAT to check licenses issue:  
+{% highlight bash %}
+mvn -Papache-release clean rat:rat
+{% endhighlight %}
+
+Fix license issue if any.
 
 __Making a snapshot__  
 {% highlight bash %}
@@ -76,14 +84,6 @@ $ mvn clean
 $ mvn -Papache-release -Dgpg.passphrase=${GPG_PASSPHRASE} install
 {% endhighlight %}
 When the dry-run has succeeded, change install to deploy.
-
-__Verify licenses__  
-Run Apache RAT to check licenses issue:  
-{% highlight bash %}
-mvn -Papache-release clean rat:rat
-{% endhighlight %}
-
-Fix license issue if any.
 
 __Making a release__
 
@@ -156,12 +156,12 @@ $ pushd ~/dist/dev
 $ svn co https://dist.apache.org/repos/dist/dev/incubator/kylin
 $ popd
 
-# Move the files into a directory
+## Move the files into a directory
 $ cd target
 $ mkdir ~/dist/dev/kylin/apache-kylin-X.Y.Z-incubating-rcN
 $ mv apache-kylin-* ~/dist/dev/kylin/apache-kylin-X.Y.Z-incubating-rcN
 
-# Check in
+## Check in
 $ cd ~/dist/dev/kylin
 $ svn add apache-kylin-X.Y.Z-incubating-rcN
 $ svn commit -m 'Upload release artifacts to staging'
@@ -188,17 +188,20 @@ $ git reset --hard HEAD
 
 # Validate a release
 {% highlight bash %}
+# Check unit test
+$ mvn test
+
 # Check that the signing key (e.g. 2AD3FAE3) is pushed
 $ gpg --recv-keys key
 
 # Check keys
 $ curl -O https://dist.apache.org/repos/dist/release/incubator/kylin/KEYS
 
-# Sign/check md5 and sha1 hashes
-# (Assumes your O/S has 'md5' and 'sha1' commands.)
+## Sign/check md5 and sha1 hashes
+ _(Assumes your O/S has 'md5' and 'sha1' commands.)_
 function checkHash() {
   cd "$1"
-  for i in *.{zip,pom,gz}; do
+  for i in *.{zip,gz}; do
     if [ ! -f $i ]; then
       continue
     fi
@@ -227,8 +230,7 @@ function checkHash() {
 $ checkHash apache-kylin-X.Y.Z-incubating-rcN
 {% endhighlight %}
 
-
-# Apache voting process  
+## Apache voting process  
 
 __Vote on Apache Kylin dev mailing list__  
 Release vote on dev list:  
@@ -386,7 +388,7 @@ Thanks everyone. We’ll now roll the release out to the mirrors.
 Luke Han, on behalf of Apache Kylin PPMC
 {% endhighlight %}
 
-# Publishing a release  
+## Publishing a release  
 After a successful release vote, we need to push the release
 out to mirrors, and other tasks.
 
@@ -439,12 +441,10 @@ svn commit -m 'Remove old release'
 The old releases will remain available in the
 [release archive](http://archive.apache.org/dist/incubator/kylin/).
 
-
-
 Release same version in JIRA, check [Change Log](https://issues.apache.org/jira/browse/KYLIN/?selectedTab=com.atlassian.jira.jira-projects-plugin:changelog-panel) for the latest released version.
 
-# Publishing the web site
-_TBD_
+## Publishing the web site  
+Refer to [How to document](howto_docs.html) for more detail.
 
 # Thanks  
 This guide drafted with reference from [Apache Calcite](http://calcite.incubator.apache.org) Howto doc, Thank you very much.
