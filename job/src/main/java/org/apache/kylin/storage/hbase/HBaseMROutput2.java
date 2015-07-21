@@ -23,7 +23,11 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CreateFlag;
+import org.apache.hadoop.fs.FileContext;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
@@ -36,6 +40,10 @@ import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableMapper;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Reader;
+import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -44,6 +52,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -173,7 +182,7 @@ public class HBaseMROutput2 implements IMROutput2 {
             TableSplit currentSplit = (TableSplit) context.getInputSplit();
             byte[] tableName = currentSplit.getTableName();
             String htableName = Bytes.toString(tableName);
-            
+
             // decide which source segment
             for (CubeSegment segment : cubeInstance.getSegments()) {
                 String segmentHtable = segment.getStorageLocationIdentifier();
@@ -206,7 +215,7 @@ public class HBaseMROutput2 implements IMROutput2 {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static class HBaseOutputFormat implements IMRStorageOutputFormat {
         final CubeSegment seg;
-        
+
         final List<InMemKeyValueCreator> keyValueCreators = Lists.newArrayList();
         final ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
 
@@ -215,7 +224,7 @@ public class HBaseMROutput2 implements IMROutput2 {
         }
 
         @Override
-        public void configureOutput(Class<? extends Reducer> cls, String jobFlowId, Job job) throws IOException {
+        public void configureOutput(Class<? extends Reducer> reducer, String jobFlowId, Job job) throws IOException {
             Path hfilePath = new Path(new HBaseMRSteps(seg).getHFilePath(jobFlowId));
             FileOutputFormat.setOutputPath(job, hfilePath);
 
@@ -225,10 +234,10 @@ public class HBaseMROutput2 implements IMROutput2 {
             HFileOutputFormat.configureIncrementalLoad(job, htable);
 
             // set Reducer; This need be after configureIncrementalLoad, to overwrite the default reducer class
-            job.setReducerClass(cls);
+            job.setReducerClass(reducer);
 
-            job.setOutputKeyClass(ImmutableBytesWritable.class);
-            job.setOutputValueClass(KeyValue.class);
+            // kylin uses ByteArrayWritable instead of ImmutableBytesWritable as mapper output key
+            rewriteTotalOrderPartitionerFile(job);
 
             HadoopUtil.deletePath(job.getConfiguration(), hfilePath);
         }
@@ -244,13 +253,44 @@ public class HBaseMROutput2 implements IMROutput2 {
                     }
                 }
             }
-            
+
             outputKey.set(key.array(), key.offset(), key.length());
-            
+
             KeyValue outputValue;
             for (int i = 0; i < keyValueCreators.size(); i++) {
                 outputValue = keyValueCreators.get(i).create(key.array(), key.offset(), key.length(), value);
                 context.write(outputKey, outputValue);
+            }
+        }
+
+        private void rewriteTotalOrderPartitionerFile(Job job) throws IOException {
+            Configuration conf = job.getConfiguration();
+            String partitionsFile = TotalOrderPartitioner.getPartitionFile(conf);
+            if (StringUtils.isBlank(partitionsFile))
+                throw new IllegalStateException("HFileOutputFormat.configureIncrementalLoad don't configure TotalOrderPartitioner any more?");
+
+            Path partitionsPath = new Path(partitionsFile);
+
+            // read in partition file in ImmutableBytesWritable
+            List<ByteArrayWritable> keys = Lists.newArrayList();
+            Reader reader = new SequenceFile.Reader(conf, Reader.file(partitionsPath));
+            try {
+                ImmutableBytesWritable key = new ImmutableBytesWritable();
+                while (reader.next(key, NullWritable.get())) {
+                    keys.add(new ByteArrayWritable(key.copyBytes()));
+                }
+            } finally {
+                reader.close();
+            }
+
+            // write out again in ByteArrayWritable
+            Writer writer = SequenceFile.createWriter(conf, Writer.file(partitionsPath), Writer.keyClass(ByteArrayWritable.class), Writer.valueClass(NullWritable.class));
+            try {
+                for (ByteArrayWritable key : keys) {
+                    writer.append(key, NullWritable.get());
+                }
+            } finally {
+                writer.close();
             }
         }
 

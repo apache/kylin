@@ -141,7 +141,7 @@ public class ByteArrayWritable implements WritableComparable<ByteArrayWritable> 
         return sb.length() > 0 ? sb.substring(1) : "";
     }
 
-    /** A Comparator optimized for ImmutableBytesWritable.
+    /** A Comparator optimized for ByteArrayWritable.
      */
     public static class Comparator extends WritableComparator {
         private BytesWritable.Comparator comparator = new BytesWritable.Comparator();
