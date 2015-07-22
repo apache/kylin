@@ -79,6 +79,9 @@ public class StreamingConfig extends RootPersistentEntity {
     @JsonProperty("parserName")
     private String parserName;
 
+    @JsonProperty("margin")
+    private long margin;
+
 
     public List<KafkaClusterConfig> getKafkaClusterConfigs() {
         return kafkaClusterConfigs;
@@ -147,6 +150,14 @@ public class StreamingConfig extends RootPersistentEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public long getMargin() {
+        return margin;
+    }
+
+    public void setMargin(long margin) {
+        this.margin = margin;
     }
 
     @Override
