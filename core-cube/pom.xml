@@ -20,9 +20,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kylin-cube</artifactId>
+    <artifactId>kylin-core-cube</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Cube</name>
+    <name>Kylin:Core-Cube</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
@@ -34,7 +34,7 @@
 
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-common</artifactId>
+            <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
             <version>${project.parent.version}</version>
@@ -43,12 +43,12 @@
         <!--Kylin Jar -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-metadata</artifactId>
+            <artifactId>kylin-core-metadata</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-dictionary</artifactId>
+            <artifactId>kylin-core-dictionary</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 

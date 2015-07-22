@@ -37,7 +37,7 @@
 
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-common</artifactId>
+            <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
             <version>${project.parent.version}</version>
@@ -46,7 +46,7 @@
         <!--Kylin Jar -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-cube</artifactId>
+            <artifactId>kylin-core-cube</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 

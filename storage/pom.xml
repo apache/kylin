@@ -32,7 +32,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-common</artifactId>
+            <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
             <version>${project.parent.version}</version>
@@ -40,7 +40,7 @@
 
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-cube</artifactId>
+            <artifactId>kylin-core-cube</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -136,10 +136,10 @@
                             </transformers>
                             <artifactSet>
                                 <includes>
-                                    <include>org.apache.kylin:kylin-common</include>
-                                    <include>org.apache.kylin:kylin-metadata</include>
-                                    <include>org.apache.kylin:kylin-dictionary</include>
-                                    <include>org.apache.kylin:kylin-cube</include>
+                                    <include>org.apache.kylin:kylin-core-common</include>
+                                    <include>org.apache.kylin:kylin-core-metadata</include>
+                                    <include>org.apache.kylin:kylin-core-dictionary</include>
+                                    <include>org.apache.kylin:kylin-core-cube</include>
                                     <include>org.apache.kylin:kylin-storage</include>
                                     <include>org.apache.kylin:kylin-invertedindex</include>
                                     <include>com.ning:compress-lzf</include>

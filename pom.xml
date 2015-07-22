@@ -558,10 +558,10 @@
 
     <modules>
         <module>atopcalcite</module>
-        <module>common</module>
-        <module>metadata</module>
-        <module>dictionary</module>
-        <module>cube</module>
+        <module>core-common</module>
+        <module>core-metadata</module>
+        <module>core-dictionary</module>
+        <module>core-cube</module>
         <module>job</module>
         <module>storage</module>
         <module>query</module>

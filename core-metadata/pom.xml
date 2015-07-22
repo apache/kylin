@@ -20,9 +20,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kylin-dictionary</artifactId>
+    <artifactId>kylin-core-metadata</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Dictionary</name>
+    <name>Kylin:Core-Metadata</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
@@ -34,25 +34,27 @@
     </properties>
 
     <dependencies>
-
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-common</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <artifactId>kylin-core-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
-        <!--Kylin Jar -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-metadata</artifactId>
+            <artifactId>kylin-core-common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
             <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -102,11 +104,7 @@
             <version>${hive-hcatalog.version}</version>
             <scope>provided</scope>
           </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-testing-util</artifactId>
@@ -123,6 +121,40 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
+    <!--
+        <build>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <configuration>
+                        <appendAssemblyId>true</appendAssemblyId>
+                        <descriptors>
+                            <descriptor>
+                                src/main/assembly/assemble.xml
+                            </descriptor>
+                        </descriptors>
+
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+     -->
 </project>
