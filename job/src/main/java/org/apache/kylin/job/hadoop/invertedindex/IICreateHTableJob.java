@@ -32,7 +32,6 @@ import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
@@ -41,6 +40,7 @@ import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.tools.DeployCoprocessorCLI;
 import org.apache.kylin.job.tools.LZOSupportnessChecker;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 
 /**
  * @author George Song (ysong1)
@@ -128,7 +128,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
 
     public static void main(String[] args) throws Exception {
         IICreateHTableJob job = new IICreateHTableJob();
-        job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
+        job.setConf(HBaseConnection.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
         ToolRunner.run(job, args);
     }
 }

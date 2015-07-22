@@ -20,10 +20,13 @@ package org.apache.kylin.job.hadoop.dict;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cli.DictionaryGeneratorCLI;
+import org.apache.kylin.dict.DistinctColumnValuesProvider;
+import org.apache.kylin.engine.mr.DFSFileTable;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.ReadableTable;
 
 /**
  * @author ysong1
@@ -44,13 +47,18 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
             options.addOption(OPTION_INPUT_PATH);
             parseOptions(options, args);
 
-            String cubeName = getOptionValue(OPTION_CUBE_NAME);
-            String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
-            String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
+            final String cubeName = getOptionValue(OPTION_CUBE_NAME);
+            final String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
+            final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
 
             KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-            DictionaryGeneratorCLI.processSegment(config, cubeName, segmentName, factColumnsInputPath);
+            DictionaryGeneratorCLI.processSegment(config, cubeName, segmentName, new DistinctColumnValuesProvider() {
+                @Override
+                public ReadableTable getDistinctValuesFor(TblColRef col) {
+                    return new DFSFileTable(factColumnsInputPath + "/" + col.getName(), -1);
+                }
+            });
         } catch (Exception e) {
             printUsage(options);
             throw e;
@@ -58,7 +66,7 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
 
         return returnCode;
     }
-
+    
     public static void main(String[] args) throws Exception {
         int exitCode = ToolRunner.run(new CreateDictionaryJob(), args);
         System.exit(exitCode);

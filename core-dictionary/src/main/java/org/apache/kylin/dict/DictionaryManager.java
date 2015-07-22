@@ -18,23 +18,14 @@
 
 package org.apache.kylin.dict;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.dict.lookup.FileTable;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataType;
@@ -195,11 +186,11 @@ public class DictionaryManager {
         }
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, String dict, TblColRef col, String factColumnsPath) throws IOException {
+    public DictionaryInfo buildDictionary(DataModelDesc model, String dict, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
 
         logger.info("building dictionary for " + col);
 
-        Object[] tmp = decideSourceData(model, dict, col, factColumnsPath);
+        Object[] tmp = decideSourceData(model, dict, col, factTableValueProvider);
         String srcTable = (String) tmp[0];
         String srcCol = (String) tmp[1];
         int srcColIdx = (Integer) tmp[2];
@@ -232,22 +223,12 @@ public class DictionaryManager {
      * 4. ReadableTable object
      */
 
-    public Object[] decideSourceData(DataModelDesc model, String dict, TblColRef col, String factColumnsPath) throws IOException {
+    public Object[] decideSourceData(DataModelDesc model, String dict, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
         String srcTable;
         String srcCol;
         int srcColIdx;
         ReadableTable table;
         MetadataManager metaMgr = MetadataManager.getInstance(config);
-
-        // case of full table (dict on fact table)
-        if (model == null) {
-            srcTable = col.getTable();
-            srcCol = col.getName();
-            srcColIdx = col.getColumnDesc().getZeroBasedIndex();
-            int nColumns = metaMgr.getTableDesc(col.getTable()).getColumnCount();
-            table = new FileTable(factColumnsPath + "/" + col.getName(), nColumns);
-            return new Object[] { srcTable, srcCol, srcColIdx, table };
-        }
 
         // Decide source data of dictionary:
         // 1. If 'useDict' specifies pre-defined data set, use that
@@ -255,68 +236,27 @@ public class DictionaryManager {
 
         // Note FK on fact table is supported by scan the related PK on lookup table
 
-        //String useDict = cube.getRowkey().getDictionary(col);
-
         // normal case, source from lookup table
         if ("true".equals(dict) || "string".equals(dict) || "number".equals(dict) || "any".equals(dict)) {
             // FK on fact table and join type is inner, use PK from lookup instead
             if (model.isFactTable(col.getTable())) {
                 TblColRef pkCol = model.findPKByFK(col, "inner");
                 if (pkCol != null)
-                    col = pkCol; // scan the counterparty PK on lookup table
-                // instead
+                    col = pkCol; // scan the counterparty PK on lookup table instead
             }
             srcTable = col.getTable();
             srcCol = col.getName();
             srcColIdx = col.getColumnDesc().getZeroBasedIndex();
             if (model.isFactTable(col.getTable())) {
-                table = new FileTable(factColumnsPath + "/" + col.getName(), -1);
+                table = factTableValueProvider.getDistinctValuesFor(col);
             } else {
                 table = TableSourceFactory.createReadableTable(metaMgr.getTableDesc(col.getTable()));
             }
         }
-        // otherwise could refer to a data set, e.g. common_indicators.txt
-        // (LEGACY PATH, since distinct values are collected from fact table)
-        else {
-            String dictDataSetPath = unpackDataSet(this.config.getTempHDFSDir(), dict);
-            if (dictDataSetPath == null)
-                throw new IllegalArgumentException("Unknown dictionary data set '" + dict + "', referred from " + col);
-            srcTable = "PREDEFINED";
-            srcCol = dict;
-            srcColIdx = 0;
-            table = new FileTable(dictDataSetPath, -1);
-        }
+        else
+            throw new IllegalArgumentException("Unknown dictionary value: " + dict);
 
         return new Object[] { srcTable, srcCol, srcColIdx, table };
-    }
-
-    private String unpackDataSet(String tempHDFSDir, String dataSetName) throws IOException {
-
-        InputStream in = this.getClass().getResourceAsStream("/org/apache/kylin/dict/" + dataSetName + ".txt");
-        if (in == null) // data set resource not found
-            return null;
-
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        IOUtils.copy(in, buf);
-        in.close();
-        byte[] bytes = buf.toByteArray();
-
-        Path tmpDataSetPath = new Path(tempHDFSDir + "/dict/temp_dataset/" + dataSetName + "_" + bytes.length + ".txt");
-
-        FileSystem fs = HadoopUtil.getFileSystem(tempHDFSDir);
-        boolean writtenNewFile = false;
-        if (fs.exists(tmpDataSetPath) == false || fs.getFileStatus(tmpDataSetPath).getLen() != bytes.length) {
-            fs.mkdirs(tmpDataSetPath.getParent());
-            FSDataOutputStream out = fs.create(tmpDataSetPath);
-            IOUtils.copy(new ByteArrayInputStream(bytes), out);
-            out.close();
-            writtenNewFile = true;
-        }
-
-        String qualifiedPath = tmpDataSetPath.makeQualified(fs.getUri(), new Path("/")).toString();
-        if (writtenNewFile)
-            logger.info("Dictionary temp data set file written to " + qualifiedPath);
-        return qualifiedPath;
     }
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {

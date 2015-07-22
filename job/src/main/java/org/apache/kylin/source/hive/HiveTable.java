@@ -21,9 +21,8 @@ package org.apache.kylin.source.hive;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HiveClient;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.dict.lookup.FileTable;
+import org.apache.kylin.engine.mr.DFSFileTable;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ReadableTable;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ public class HiveTable implements ReadableTable {
     public TableSignature getSignature() throws IOException {
         try {
             String path = computeHDFSLocation();
-            Pair<Long, Long> sizeAndLastModified = FileTable.getSizeAndLastModified(path);
+            Pair<Long, Long> sizeAndLastModified = DFSFileTable.getSizeAndLastModified(path);
             long size = sizeAndLastModified.getFirst();
             long lastModified = sizeAndLastModified.getSecond();
 

@@ -2,9 +2,9 @@ package org.apache.kylin.rest.security;
 
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.UserService;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.h2.util.StringUtils;
 
 import java.io.IOException;

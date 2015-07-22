@@ -18,12 +18,6 @@
 
 package org.apache.kylin.common.util;
 
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.Writable;
-
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
@@ -374,19 +368,6 @@ public class BytesUtil {
         return array;
     }
 
-    public static byte[] toBytes(Writable writable) {
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            DataOutputStream out = new DataOutputStream(bout);
-            writable.write(out);
-            out.close();
-            bout.close();
-            return bout.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static String toReadableText(byte[] array) {
         if (array == null)
             return null;
@@ -410,13 +391,10 @@ public class BytesUtil {
     }
 
     public static String toHex(byte[] array) {
-        return toHex(new ImmutableBytesWritable(array));
+        return toHex(array, 0, array.length);
     }
 
-    public static String toHex(ImmutableBytesWritable bytes) {
-        byte[] array = bytes.get();
-        int offset = bytes.getOffset();
-        int length = bytes.getLength();
+    public static String toHex(byte[] array, int offset, int length) {
         StringBuilder sb = new StringBuilder(length * 4);
         for (int i = 0; i < length; i++) {
             int b = array[offset + i];

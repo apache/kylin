@@ -29,10 +29,8 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.token.TokenUtil;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
-
-import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.Bytes;
 
 /**
  * @author yangli9
@@ -46,7 +44,7 @@ public class PingHBaseCLI {
 
         System.out.println("Hello friend.");
 
-        Configuration hconf = HadoopUtil.newHBaseConfiguration(metadataUrl);
+        Configuration hconf = HBaseConnection.newHBaseConfiguration(metadataUrl);
         if (User.isHBaseSecurityEnabled(hconf)) {
             try {
                 System.out.println("--------------Getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());

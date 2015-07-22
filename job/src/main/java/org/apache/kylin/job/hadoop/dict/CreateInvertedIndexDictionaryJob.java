@@ -21,13 +21,15 @@ package org.apache.kylin.job.hadoop.dict;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.dict.DistinctColumnValuesProvider;
+import org.apache.kylin.engine.mr.DFSFileTable;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.ReadableTable;
 
 /**
- * @author ysong1
- * 
  */
 public class CreateInvertedIndexDictionaryJob extends AbstractHadoopJob {
 
@@ -40,14 +42,19 @@ public class CreateInvertedIndexDictionaryJob extends AbstractHadoopJob {
             options.addOption(OPTION_INPUT_PATH);
             parseOptions(options, args);
 
-            String iiname = getOptionValue(OPTION_II_NAME);
-            String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            final String iiname = getOptionValue(OPTION_II_NAME);
+            final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
+            final KylinConfig config = KylinConfig.getInstanceFromEnv();
 
             IIManager mgr = IIManager.getInstance(config);
             IIInstance ii = mgr.getII(iiname);
 
-            mgr.buildInvertedIndexDictionary(ii.getFirstSegment(), factColumnsInputPath);
+            mgr.buildInvertedIndexDictionary(ii.getFirstSegment(), new DistinctColumnValuesProvider() {
+                @Override
+                public ReadableTable getDistinctValuesFor(TblColRef col) {
+                    return new DFSFileTable(factColumnsInputPath + "/" + col.getName(), -1);
+                }
+            });
             return 0;
         } catch (Exception e) {
             printUsage(options);

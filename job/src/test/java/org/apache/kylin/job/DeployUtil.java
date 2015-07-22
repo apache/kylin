@@ -19,6 +19,7 @@
 package org.apache.kylin.job;
 
 import com.google.common.collect.Lists;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -27,7 +28,6 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.HiveClient;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
@@ -40,6 +40,7 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.hive.HiveClient;
 import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.StreamingConfig;
 import org.apache.kylin.streaming.TimedJsonStreamParser;

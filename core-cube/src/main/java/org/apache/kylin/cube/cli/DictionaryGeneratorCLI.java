@@ -23,11 +23,11 @@ import java.io.IOException;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -35,14 +35,14 @@ public class DictionaryGeneratorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGeneratorCLI.class);
 
-    public static void processSegment(KylinConfig config, String cubeName, String segmentName, String factColumnsPath) throws IOException {
+    public static void processSegment(KylinConfig config, String cubeName, String segmentName, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeSegment segment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
-        processSegment(config, segment, factColumnsPath);
+        processSegment(config, segment, factTableValueProvider);
     }
 
-    private static void processSegment(KylinConfig config, CubeSegment cubeSeg, String factColumnsPath) throws IOException {
+    private static void processSegment(KylinConfig config, CubeSegment cubeSeg, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
         for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
@@ -50,7 +50,7 @@ public class DictionaryGeneratorCLI {
             for (TblColRef col : dim.getColumnRefs()) {
                 if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
                     logger.info("Building dictionary for " + col);
-                    cubeMgr.buildDictionary(cubeSeg, col, factColumnsPath);
+                    cubeMgr.buildDictionary(cubeSeg, col, factTableValueProvider);
                 }
             }
 
@@ -60,8 +60,7 @@ public class DictionaryGeneratorCLI {
                 logger.info("Building snapshot of " + dim.getTable());
                 cubeMgr.buildSnapshotTable(cubeSeg, dim.getTable());
                 logger.info("Checking snapshot of " + dim.getTable());
-                cubeMgr.getLookupTable(cubeSeg, dim); // load the table for
-                                                      // sanity check
+                cubeMgr.getLookupTable(cubeSeg, dim); // load the table for sanity check
             }
         }
     }

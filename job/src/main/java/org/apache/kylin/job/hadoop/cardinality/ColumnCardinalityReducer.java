@@ -25,10 +25,9 @@ import java.util.*;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.common.mr.KylinReducer;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.engine.mr.KylinReducer;
 
 /**
  * @author Jack

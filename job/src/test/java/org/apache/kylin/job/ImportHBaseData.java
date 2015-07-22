@@ -27,15 +27,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
-
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.HBaseConnection;
-import org.apache.kylin.common.persistence.HBaseResourceStore;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.HBaseMiniclusterHelper;
 import org.apache.kylin.common.util.SSHClient;
-import org.apache.kylin.common.util.TarGZUtil;
+import org.apache.kylin.job.tools.TarGZUtil;
+import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hbase.HBaseMiniclusterHelper;
+import org.apache.kylin.storage.hbase.HBaseResourceStore;
 
 public class ImportHBaseData {
 

@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,8 +63,12 @@ abstract public class ResourceStore {
     public static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
 
     static {
-        knownImpl.add(HBaseResourceStore.class);
-        knownImpl.add(FileResourceStore.class);
+        try {
+            knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hbase.HBaseResourceStore", ResourceStore.class));
+            knownImpl.add(FileResourceStore.class);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static ResourceStore getStore(KylinConfig kylinConfig) {
@@ -99,9 +104,9 @@ abstract public class ResourceStore {
 
     // ============================================================================
 
-    KylinConfig kylinConfig;
+    final protected KylinConfig kylinConfig;
 
-    ResourceStore(KylinConfig kylinConfig) {
+    public ResourceStore(KylinConfig kylinConfig) {
         this.kylinConfig = kylinConfig;
     }
 

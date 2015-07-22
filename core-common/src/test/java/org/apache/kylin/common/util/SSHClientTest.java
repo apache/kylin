@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.hadoop.fs.FileUtil;
+import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.junit.After;
 import org.junit.Before;
@@ -80,7 +80,9 @@ public class SSHClientTest extends LocalFileMetadataTestCase {
             return;
 
         SSHClient ssh = new SSHClient(this.hostname, this.port, this.username, this.password);
-        File tmpFile = FileUtil.createLocalTempFile(new File("/tmp/test_scp"), "temp_", false);
+        File tmpFile = File.createTempFile("test_scp", "", new File("/tmp"));
+        tmpFile.deleteOnExit();
+        FileUtils.write(tmpFile, "test_scp");
         ssh.scpFileToRemote(tmpFile.getAbsolutePath(), "/tmp");
     }
 }
