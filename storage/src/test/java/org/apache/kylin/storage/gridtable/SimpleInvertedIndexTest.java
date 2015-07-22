@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -32,6 +31,7 @@ import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.serializer.StringSerializer;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -57,7 +57,7 @@ public class SimpleInvertedIndexTest {
         GTRowBlock.Writer writer = mockBlock.getWriter();
         GTRecord record = new GTRecord(info);
         for (int i = 0; i < 10; i++) {
-            record.setValues(i < 9 ? "" + i : null, "", "", new LongWritable(0), new BigDecimal(0));
+            record.setValues(i < 9 ? "" + i : null, "", "", new LongMutable(0), new BigDecimal(0));
             for (int j = 0; j < info.getRowBlockSize(); j++) {
                 writer.append(record);
             }

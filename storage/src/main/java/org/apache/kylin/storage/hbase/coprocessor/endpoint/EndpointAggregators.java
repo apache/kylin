@@ -21,21 +21,21 @@ package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.invertedindex.index.RawTableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -114,7 +114,7 @@ public class EndpointAggregators {
     final transient FixedLenMeasureCodec[] measureSerializers;
     final transient Object[] metricValues;
 
-    final LongWritable ONE = new LongWritable(1);
+    final LongMutable ONE = new LongMutable(1);
 
     private EndpointAggregators(String[] funcNames, String[] dataTypes, MetricInfo[] metricInfos, TableRecordInfoDigest tableInfo) {
         this.funcNames = funcNames;

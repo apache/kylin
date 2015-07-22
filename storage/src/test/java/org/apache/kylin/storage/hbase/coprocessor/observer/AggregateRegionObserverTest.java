@@ -18,16 +18,25 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.observer;
 
-import com.google.common.collect.Lists;
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -38,16 +47,7 @@ import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverAggregators.H
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -91,7 +91,7 @@ public class AggregateRegionObserverTest {
     private Cell newCell(byte[] key, HCol col, String decimal, int number) {
         Object[] values = number == Integer.MIN_VALUE ? //
         new Object[] { new BigDecimal(decimal) } //
-                : new Object[] { new BigDecimal(decimal), new LongWritable(number) };
+                : new Object[] { new BigDecimal(decimal), new LongMutable(number) };
         buf.clear();
         col.measureCodec.encode(values, buf);
 

@@ -24,11 +24,9 @@ import java.util.List;
 
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
-import org.apache.hadoop.hive.serde2.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.measure.DoubleMutable;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 
@@ -123,14 +121,10 @@ public class Tuple implements ITuple {
     }
 
     private Object convertWritableToJava(Object o) {
-        if (o instanceof LongWritable)
-            o = ((LongWritable) o).get();
-        else if (o instanceof IntWritable)
-            o = ((IntWritable) o).get();
-        else if (o instanceof DoubleWritable)
-            o = ((DoubleWritable) o).get();
-        else if (o instanceof FloatWritable)
-            o = ((FloatWritable) o).get();
+        if (o instanceof LongMutable)
+            o = ((LongMutable) o).get();
+        else if (o instanceof DoubleMutable)
+            o = ((DoubleMutable) o).get();
         return o;
     }
 

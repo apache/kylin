@@ -23,8 +23,6 @@ import static org.junit.Assert.*;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -41,8 +39,8 @@ public class MeasureCodecTest {
         MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16") };
         MeasureCodec codec = new MeasureCodec(descs);
 
-        DoubleWritable d = new DoubleWritable(1.0);
-        LongWritable l = new LongWritable(2);
+        DoubleMutable d = new DoubleMutable(1.0);
+        LongMutable l = new LongMutable(2);
         BigDecimal b = new BigDecimal("333.1234");
         HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(16);
         hllc.add("1234567");

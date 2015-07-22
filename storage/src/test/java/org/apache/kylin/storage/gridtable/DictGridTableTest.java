@@ -27,7 +27,6 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.dict.Dictionary;
@@ -41,6 +40,7 @@ import org.apache.kylin.metadata.filter.ExtractTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -299,16 +299,16 @@ public class DictGridTableTest {
         GTRecord r = new GTRecord(table.getInfo());
         GTBuilder builder = table.rebuild();
 
-        builder.write(r.setValues("2015-01-14", "30", "Yang", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-14", "30", "Luke", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-15", "20", "Dong", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-15", "20", "Jason", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-15", "30", "Xu", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-16", "20", "Mahone", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-16", "20", "Qianhao", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-16", "30", "George", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-16", "30", "Shaofeng", new LongWritable(10), new BigDecimal("10.5")));
-        builder.write(r.setValues("2015-01-17", "10", "Kejia", new LongWritable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-14", "30", "Yang", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-14", "30", "Luke", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-15", "20", "Dong", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-15", "20", "Jason", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-15", "30", "Xu", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-16", "20", "Mahone", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-16", "20", "Qianhao", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-16", "30", "George", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-16", "30", "Shaofeng", new LongMutable(10), new BigDecimal("10.5")));
+        builder.write(r.setValues("2015-01-17", "10", "Kejia", new LongMutable(10), new BigDecimal("10.5")));
         builder.close();
 
         return table;
