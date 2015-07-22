@@ -24,8 +24,8 @@ In such cases, assuming you're on the hadoop CLI(or sandbox) where you deployed 
 
 {% highlight Groff markup %}
 mkdir ~/meta_dump
-
-hbase  org.apache.hadoop.util.RunJar  PATH_TO_KYLIN_JOB_JAR_FOLDER/kylin-job-x.x.x-SNAPSHOT-job.jar com.kylinolap.common.persistence.ResourceTool  copy PATH_TO_KYLIN_CONFIG/kylin.properties ~/meta_dump
+export KYLIN_HOME=PATH_TO_KYLIN_HOME
+hbase org.apache.hadoop.util.RunJar $KYLIN_HOME/lib/kylin-job-x.x.x.jar com.kylinolap.common.persistence.ResourceTool download ~/meta_dump
 {% endhighlight %}
 
 to dump your metadata to your local folder ~/meta_dump.
@@ -34,15 +34,29 @@ to dump your metadata to your local folder ~/meta_dump.
 
 In case you find your metadata store messed up, and you want to restore to a previous backup:
 
-first clean up the metadata store:
+Firstly, reset the metadata store:
 
 {% highlight Groff markup %}
-hbase  org.apache.hadoop.util.RunJar PATH_TO_KYLIN_JOB_JAR_FOLDER/kylin-job-x.x.x-SNAPSHOT-job.jar com.kylinolap.common.persistence.ResourceTool  reset 
+hbase  org.apache.hadoop.util.RunJar $KYLIN_HOME/lib/kylin-job-x.x.x.jar com.kylinolap.common.persistence.ResourceTool  reset
 {% endhighlight %}
 
-then upload the backup metadata in ~/meta_dump to Kylin's metadata store:
+Then upload the backup metadata in ~/meta_dump to Kylin's metadata store:
 
 {% highlight Groff markup %}
-hbase  org.apache.hadoop.util.RunJar  PATH_TO_KYLIN_JOB_JAR_FOLDER/kylin-job-x.x.x-SNAPSHOT-job.jar com.kylinolap.common.persistence.ResourceTool  copy ~/meta_dump PATH_TO_KYLIN_CONFIG/kylin.properties
+hbase org.apache.hadoop.util.RunJar  $KYLIN_HOME/lib/kylin-job-x.x.x.jar com.kylinolap.common.persistence.ResourceTool  copy ~/meta_dump PATH_TO_KYLIN_CONFIG/kylin.properties
 {% endhighlight %}
 
+# Cleanup unused resources from Metadata Store (available since 0.7.3)
+As time goes on, some resources like dictionary, table snapshots became useless (as the cube segment be dropped or merged), but they still take space there; You can run command to find and cleanup them from metadata store:
+
+Firstly, run a check, this is safe as it will not change anything:
+{% highlight Groff markup %}
+hbase org.apache.hadoop.util.RunJar $KYLIN_HOME/lib/kylin-job-x.x.x.jar org.apache.kylin.job.hadoop.cube.MetadataCleanupJob
+{% endhighlight %}
+
+The resources that will be dropped will be listed;
+
+Next, add the "--delete true" parameter to cleanup those resources; before this, make sure you have made a backup of the metadata store;
+{% highlight Groff markup %}
+hbase org.apache.hadoop.util.RunJar $KYLIN_HOME/lib/kylin-job-x.x.x.jar org.apache.kylin.job.hadoop.cube.MetadataCleanupJob --delete true
+{% endhighlight %}
