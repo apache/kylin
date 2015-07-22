@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.common.util.Bytes;
-import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,13 +118,13 @@ public class BytesSplitter {
             throw new IOException("No delimiter found");
     }
 
-    public int detectDelim(Text value, int expectedParts) {
+    public int detectDelim(byte[] array, int arrayLen, int expectedParts) {
         for (int i = 0; i < COMMON_DELIMS.length; i++) {
-            int nParts = split(value.getBytes(), value.getLength(), (byte) COMMON_DELIMS[i]);
+            int nParts = split(array, arrayLen, (byte) COMMON_DELIMS[i]);
             if (nParts == expectedParts)
                 return COMMON_DELIMS[i];
         }
-        throw new RuntimeException("Cannot detect delimeter from first line -- " + value.toString() + " -- expect " + expectedParts + " columns");
+        throw new RuntimeException("Cannot detect delimeter from first line -- " + Bytes.toString(array, 0, arrayLen) + " -- expect " + expectedParts + " columns");
     }
 
     @Override

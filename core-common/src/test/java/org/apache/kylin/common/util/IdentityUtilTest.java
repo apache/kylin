@@ -1,11 +1,11 @@
 package org.apache.kylin.common.util;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.collections.CollectionUtils;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -19,9 +19,6 @@ public class IdentityUtilTest {
         List<String> c1 = Lists.newArrayList(s1);
         List<String> c2 = Lists.newArrayList(s2);
         List<String> c3 = Lists.newArrayList(s2);
-
-        Assert.assertTrue(CollectionUtils.isEqualCollection(c1,c2));
-        Assert.assertTrue(CollectionUtils.isEqualCollection(c3,c2));
 
         Assert.assertFalse(IdentityUtils.collectionReferenceEquals(c1,c2));
         Assert.assertTrue(IdentityUtils.collectionReferenceEquals(c3,c2));

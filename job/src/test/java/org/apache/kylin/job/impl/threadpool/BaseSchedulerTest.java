@@ -19,14 +19,14 @@
 package org.apache.kylin.job.impl.threadpool;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.lock.ZookeeperJobLock;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.manager.ExecutableManager;
+import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.ZookeeperJobLock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;

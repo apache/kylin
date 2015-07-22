@@ -19,8 +19,8 @@
 package org.apache.kylin.storage.hbase;
 
 import com.google.common.collect.Range;
+
 import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.realization.SQLDigest;

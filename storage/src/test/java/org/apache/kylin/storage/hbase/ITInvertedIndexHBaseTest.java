@@ -18,14 +18,13 @@
 
 package org.apache.kylin.storage.hbase;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
@@ -39,7 +38,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -60,7 +59,7 @@ public class ITInvertedIndexHBaseTest extends HBaseMetadataTestCase {
         this.seg = ii.getFirstSegment();
 
         String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-        Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
+        Configuration hconf = HBaseConnection.newHBaseConfiguration(hbaseUrl);
         hconn = HConnectionManager.createConnection(hconf);
 
         this.info = new TableRecordInfo(seg);
@@ -102,6 +101,7 @@ public class ITInvertedIndexHBaseTest extends HBaseMetadataTestCase {
         return records;
     }
 
+    @SuppressWarnings("unused")
     private void dump(Iterable<TableRecord> records) {
         for (TableRecord rec : records) {
             byte[] x = rec.getBytes();

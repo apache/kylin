@@ -19,7 +19,6 @@
 package org.apache.kylin.storage.test;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -31,6 +30,7 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageFactory;
+import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
 import org.junit.*;
 

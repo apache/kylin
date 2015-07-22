@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.junit.*;
 
 import java.io.File;

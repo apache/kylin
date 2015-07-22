@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
@@ -45,6 +44,7 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.lookup.LookupBytesTable;
+import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.MetadataManager;

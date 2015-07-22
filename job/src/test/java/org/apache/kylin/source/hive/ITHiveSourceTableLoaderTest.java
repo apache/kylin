@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.source.hive.HiveSourceTableLoader;
+import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

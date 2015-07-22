@@ -22,7 +22,7 @@ package org.apache.kylin.jdbc;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.*;

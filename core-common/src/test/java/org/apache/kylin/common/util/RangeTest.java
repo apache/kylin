@@ -9,6 +9,7 @@ import com.google.common.collect.Ranges;
 
 /**
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class RangeTest {
 
     @Test

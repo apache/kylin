@@ -18,10 +18,10 @@
 
 package org.apache.kylin.job;
 
-import org.apache.kylin.common.lock.JobLock;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.Executable;
+import org.apache.kylin.job.lock.JobLock;
 
 /**
  */

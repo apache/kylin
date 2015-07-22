@@ -23,24 +23,21 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.io.Text;
 import org.junit.Test;
 
 /**
- * @author ysong1
- * 
  */
 public class RandomSamplerTest {
 
     @Test
     public void test() {
-        RandomSampler<Text> s = new RandomSampler<Text>();
-        List<Text> data = new ArrayList<Text>();
+        RandomSampler<String> s = new RandomSampler<String>();
+        List<String> data = new ArrayList<String>();
         for (int i = 0; i < 1000; i++) {
-            data.add(new Text(String.valueOf(i)));
+            data.add(String.valueOf(i));
         }
 
-        List<Text> result = s.sample(data, 50);
+        List<String> result = s.sample(data, 50);
         System.out.println(result);
         assertEquals(50, result.size());
     }

@@ -18,12 +18,6 @@
 
 package org.apache.kylin.job.hadoop.invertedindex;
 
-import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IIManager;
-import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,7 +25,13 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 
 /**
  * @author ysong1
@@ -76,7 +76,7 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
 
     public static void main(String[] args) throws Exception {
         IIBulkLoadJob job = new IIBulkLoadJob();
-        job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
+        job.setConf(HBaseConnection.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
         int exitCode = ToolRunner.run(job, args);
         System.exit(exitCode);
     }

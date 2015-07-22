@@ -39,7 +39,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
-import org.apache.kylin.dict.lookup.FileTableReader;
+import org.apache.kylin.engine.mr.DFSFileTableReader;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.gridtable.GTRecord;
 import org.junit.AfterClass;
@@ -133,7 +133,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             distinctSets[i] = new TreeSet<String>();
 
         // get distinct values on each column
-        FileTableReader reader = new FileTableReader(flatTable, nColumns);
+        DFSFileTableReader reader = new DFSFileTableReader(flatTable, nColumns);
         while (count > 0 && reader.next()) {
             String[] row = reader.getRow();
             for (int i = 0; i < nColumns; i++)
@@ -183,7 +183,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
     private static List<byte[]> readValueList(String flatTable, int nColumns, int c) throws IOException {
         List<byte[]> result = Lists.newArrayList();
-        FileTableReader reader = new FileTableReader(flatTable, nColumns);
+        DFSFileTableReader reader = new DFSFileTableReader(flatTable, nColumns);
         while (reader.next()) {
             String[] row = reader.getRow();
             if (row[c] != null) {

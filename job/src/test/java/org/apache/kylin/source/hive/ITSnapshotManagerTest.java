@@ -20,7 +20,6 @@ package org.apache.kylin.source.hive;
 
 import static org.junit.Assert.*;
 
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.metadata.MetadataManager;
@@ -28,6 +27,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableReader;
 import org.apache.kylin.source.TableSourceFactory;
+import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

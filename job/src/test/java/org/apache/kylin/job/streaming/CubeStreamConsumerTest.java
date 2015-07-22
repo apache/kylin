@@ -1,16 +1,17 @@
 package org.apache.kylin.job.streaming;
 
 import com.google.common.collect.Lists;
+
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.DeployUtil;
+import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.apache.kylin.streaming.StreamBuilder;
 import org.apache.kylin.streaming.StreamMessage;
 import org.junit.Before;

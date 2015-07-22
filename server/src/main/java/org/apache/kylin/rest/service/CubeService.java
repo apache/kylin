@@ -29,11 +29,10 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import com.google.common.collect.Lists;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HBaseRegionSizeCalculator;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -42,6 +41,7 @@ import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.BuildEngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -64,6 +64,8 @@ import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.source.hive.HiveSourceTableLoader;
+import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hbase.HBaseRegionSizeCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -444,7 +446,7 @@ public class CubeService extends BasicService {
 
         // Get HBase storage conf.
         String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-        Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
+        Configuration hconf = HBaseConnection.newHBaseConfiguration(hbaseUrl);
 
         HTable table = null;
         HBaseResponse hr = null;

@@ -20,6 +20,7 @@ package org.apache.kylin.invertedindex;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -30,6 +31,7 @@ import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -130,7 +132,7 @@ public class IIManager implements IRealizationProvider {
         return result;
     }
 
-    public void buildInvertedIndexDictionary(IISegment iiSeg, String factColumnsPath) throws IOException {
+    public void buildInvertedIndexDictionary(IISegment iiSeg, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
         logger.info("Start building ii dictionary");
         DictionaryManager dictMgr = getDictionaryManager();
         IIDesc iiDesc = iiSeg.getIIInstance().getDescriptor();
@@ -140,7 +142,7 @@ public class IIManager implements IRealizationProvider {
                 continue;
             }
 
-            DictionaryInfo dict = dictMgr.buildDictionary(iiDesc.getModel(), "true", column, factColumnsPath);
+            DictionaryInfo dict = dictMgr.buildDictionary(iiDesc.getModel(), "true", column, factTableValueProvider);
             iiSeg.putDictResPath(column, dict.getResourcePath());
         }
         updateII(iiSeg.getIIInstance());

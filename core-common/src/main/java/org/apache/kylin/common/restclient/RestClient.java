@@ -19,6 +19,7 @@
 package org.apache.kylin.common.restclient;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,8 +32,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.kylin.common.util.Bytes;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
+import org.apache.kylin.common.util.JsonUtil;
 
 /**
  * @author yangli9
@@ -111,16 +111,14 @@ public class RestClient {
         try {
             int code = client.executeMethod(request);
             String msg = Bytes.toString(request.getResponseBody());
-            JSONObject obj = new JSONObject(msg);
-            msg = obj.getString("config");
+            Map<String, String> map = JsonUtil.readValueAsMap(msg);
+            msg = map.get("config");
 
             if (code != 200)
                 throw new IOException("Invalid response " + code + " with cache wipe url " + url + "\n" + msg);
 
             return msg;
-
-        } catch (JSONException e) {
-            throw new IOException("Error when parsing json response from REST");
+            
         } finally {
             request.releaseConnection();
         }

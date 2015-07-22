@@ -27,11 +27,12 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.source.hive.HiveClient;
 import org.datanucleus.store.types.backed.HashMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.HiveClient;
+
 import org.apache.kylin.common.util.JsonUtil;
 
 /**

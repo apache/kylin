@@ -40,6 +40,8 @@
             <artifactId>kylin-core-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+
+        <!-- Env & Test -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>
@@ -47,9 +49,6 @@
             <scope>test</scope>
             <version>${project.parent.version}</version>
         </dependency>
-
-        <!-- Env & Test -->
-
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
