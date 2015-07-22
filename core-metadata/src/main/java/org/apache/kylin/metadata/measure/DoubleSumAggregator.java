@@ -18,15 +18,11 @@
 
 package org.apache.kylin.metadata.measure;
 
-import org.apache.hadoop.io.DoubleWritable;
-
 /**
- * @author yangli9
- * 
  */
-public class DoubleSumAggregator extends MeasureAggregator<DoubleWritable> {
+public class DoubleSumAggregator extends MeasureAggregator<DoubleMutable> {
 
-    DoubleWritable sum = new DoubleWritable();
+    DoubleMutable sum = new DoubleMutable();
 
     @Override
     public void reset() {
@@ -34,12 +30,12 @@ public class DoubleSumAggregator extends MeasureAggregator<DoubleWritable> {
     }
 
     @Override
-    public void aggregate(DoubleWritable value) {
+    public void aggregate(DoubleMutable value) {
         sum.set(sum.get() + value.get());
     }
 
     @Override
-    public DoubleWritable getState() {
+    public DoubleMutable getState() {
         return sum;
     }
 

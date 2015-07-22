@@ -18,15 +18,11 @@
 
 package org.apache.kylin.metadata.measure;
 
-import org.apache.hadoop.io.DoubleWritable;
-
 /**
- * @author yangli9
- * 
  */
-public class DoubleMinAggregator extends MeasureAggregator<DoubleWritable> {
+public class DoubleMinAggregator extends MeasureAggregator<DoubleMutable> {
 
-    DoubleWritable min = null;
+    DoubleMutable min = null;
 
     @Override
     public void reset() {
@@ -34,15 +30,15 @@ public class DoubleMinAggregator extends MeasureAggregator<DoubleWritable> {
     }
 
     @Override
-    public void aggregate(DoubleWritable value) {
+    public void aggregate(DoubleMutable value) {
         if (min == null)
-            min = new DoubleWritable(value.get());
+            min = new DoubleMutable(value.get());
         else if (min.get() > value.get())
             min.set(value.get());
     }
 
     @Override
-    public DoubleWritable getState() {
+    public DoubleMutable getState() {
         return min;
     }
 

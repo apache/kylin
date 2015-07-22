@@ -18,15 +18,11 @@
 
 package org.apache.kylin.metadata.measure;
 
-import org.apache.hadoop.io.LongWritable;
-
 /**
- * @author yangli9
- * 
  */
-public class LongSumAggregator extends MeasureAggregator<LongWritable> {
+public class LongSumAggregator extends MeasureAggregator<LongMutable> {
 
-    LongWritable sum = new LongWritable();
+    LongMutable sum = new LongMutable();
 
     @Override
     public void reset() {
@@ -34,12 +30,12 @@ public class LongSumAggregator extends MeasureAggregator<LongWritable> {
     }
 
     @Override
-    public void aggregate(LongWritable value) {
+    public void aggregate(LongMutable value) {
         sum.set(sum.get() + value.get());
     }
 
     @Override
-    public LongWritable getState() {
+    public LongMutable getState() {
         return sum;
     }
 

@@ -63,14 +63,14 @@ abstract public class ResourceStore {
     public static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
 
     static {
+        knownImpl.add(FileResourceStore.class);
         try {
             knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hbase.HBaseResourceStore", ResourceStore.class));
-            knownImpl.add(FileResourceStore.class);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            logger.warn(e.toString());
         }
     }
-
+    
     public static ResourceStore getStore(KylinConfig kylinConfig) {
         ResourceStore r = CACHE.get(kylinConfig);
         List<Throwable> es = new ArrayList<Throwable>();

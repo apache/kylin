@@ -18,18 +18,18 @@
 
 package org.apache.kylin.metadata.measure.fixedlen;
 
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.DataType;
 
-public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
+public class FixedPointLongCodec extends FixedLenMeasureCodec<LongMutable> {
 
     private static final int SIZE = 8;
     // number of digits after decimal point
     int scale;
     DataType type;
     // avoid massive object creation
-    LongWritable current = new LongWritable();
+    LongMutable current = new LongMutable();
 
     public FixedPointLongCodec(DataType type) {
         this.type = type;
@@ -80,7 +80,7 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
     }
 
     @Override
-    public LongWritable valueOf(String value) {
+    public LongMutable valueOf(String value) {
         if (value == null)
             current.set(0L);
         else
@@ -97,13 +97,13 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
     }
 
     @Override
-    public LongWritable read(byte[] buf, int offset) {
+    public LongMutable read(byte[] buf, int offset) {
         current.set(BytesUtil.readLong(buf, offset, SIZE));
         return current;
     }
 
     @Override
-    public void write(LongWritable v, byte[] buf, int offset) {
+    public void write(LongMutable v, byte[] buf, int offset) {
         BytesUtil.writeLong(v == null ? 0 : v.get(), buf, offset, SIZE);
     }
 }

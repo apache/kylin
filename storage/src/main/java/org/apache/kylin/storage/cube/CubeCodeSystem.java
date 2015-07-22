@@ -13,7 +13,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.apache.kylin.metadata.serializer.DataTypeSerializer;
+import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
 import org.apache.kylin.storage.gridtable.GTInfo;
 import org.apache.kylin.storage.gridtable.IGTCodeSystem;
 import org.apache.kylin.storage.gridtable.IGTComparator;

@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.serializer;
+package org.apache.kylin.metadata.measure.serializer;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;

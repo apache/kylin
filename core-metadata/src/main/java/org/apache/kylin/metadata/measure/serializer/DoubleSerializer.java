@@ -16,43 +16,41 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.serializer;
+package org.apache.kylin.metadata.measure.serializer;
 
 import java.nio.ByteBuffer;
 
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.metadata.measure.DoubleMutable;
 import org.apache.kylin.metadata.model.DataType;
 
 /**
- * @author yangli9
- * 
  */
-public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
+public class DoubleSerializer extends DataTypeSerializer<DoubleMutable> {
 
     // be thread-safe and avoid repeated obj creation
-    private ThreadLocal<DoubleWritable> current = new ThreadLocal<DoubleWritable>();
+    private ThreadLocal<DoubleMutable> current = new ThreadLocal<DoubleMutable>();
 
     public DoubleSerializer(DataType type) {
     }
 
     @Override
-    public void serialize(DoubleWritable value, ByteBuffer out) {
+    public void serialize(DoubleMutable value, ByteBuffer out) {
         out.putDouble(value.get());
     }
 
-    private DoubleWritable current() {
-        DoubleWritable d = current.get();
+    private DoubleMutable current() {
+        DoubleMutable d = current.get();
         if (d == null) {
-            d = new DoubleWritable();
+            d = new DoubleMutable();
             current.set(d);
         }
         return d;
     }
     
     @Override
-    public DoubleWritable deserialize(ByteBuffer in) {
-        DoubleWritable d = current();
+    public DoubleMutable deserialize(ByteBuffer in) {
+        DoubleMutable d = current();
         d.set(in.getDouble());
         return d;
     }
@@ -68,8 +66,8 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleWritable> {
     }
     
     @Override
-    public DoubleWritable valueOf(byte[] value) {
-        DoubleWritable d = current();
+    public DoubleMutable valueOf(byte[] value) {
+        DoubleMutable d = current();
         if (value == null)
             d.set(0d);
         else

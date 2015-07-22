@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.apache.kylin.metadata.serializer.DataTypeSerializer;
+import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 /**

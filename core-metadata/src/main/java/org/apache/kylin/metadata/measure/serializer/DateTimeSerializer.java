@@ -1,37 +1,37 @@
-package org.apache.kylin.metadata.serializer;
+package org.apache.kylin.metadata.measure.serializer;
 
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.common.util.DateFormat;
 
-public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
+public class DateTimeSerializer extends DataTypeSerializer<LongMutable> {
     
     // be thread-safe and avoid repeated obj creation
-    private ThreadLocal<LongWritable> current = new ThreadLocal<LongWritable>();
+    private ThreadLocal<LongMutable> current = new ThreadLocal<LongMutable>();
 
     public DateTimeSerializer(DataType type) {
     }
 
     @Override
-    public void serialize(LongWritable value, ByteBuffer out) {
+    public void serialize(LongMutable value, ByteBuffer out) {
         out.putLong(value.get());
     }
 
-    private LongWritable current() {
-        LongWritable l = current.get();
+    private LongMutable current() {
+        LongMutable l = current.get();
         if (l == null) {
-            l = new LongWritable();
+            l = new LongMutable();
             current.set(l);
         }
         return l;
     }
     
     @Override
-    public LongWritable deserialize(ByteBuffer in) {
-        LongWritable l = current();
+    public LongMutable deserialize(ByteBuffer in) {
+        LongMutable l = current();
         l.set(in.getLong());
         return l;
     }
@@ -47,8 +47,8 @@ public class DateTimeSerializer extends DataTypeSerializer<LongWritable> {
     }
 
     @Override
-    public LongWritable valueOf(byte[] value) {
-        LongWritable l = current();
+    public LongMutable valueOf(byte[] value) {
+        LongMutable l = current();
         if (value == null)
             l.set(0L);
         else
