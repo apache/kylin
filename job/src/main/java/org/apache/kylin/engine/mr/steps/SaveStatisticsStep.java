@@ -39,7 +39,6 @@ import org.apache.kylin.job.execution.ExecuteResult;
 /**
  * Save the cube segment statistic to Kylin metadata store
  *
- * @author shaoshi
  */
 public class SaveStatisticsStep extends AbstractExecutable {
 
@@ -70,9 +69,11 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 // put the statistics to metadata store
                 String statisticsFileName = newSegment.getStatisticsResourcePath();
                 rs.putResource(statisticsFileName, is, System.currentTimeMillis());
+                fs.delete(statisticsFilePath, false);
             } finally {
                 IOUtils.closeStream(is);
             }
+
 
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
