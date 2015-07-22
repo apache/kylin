@@ -1,4 +1,4 @@
-package org.apache.kylin.metadata.serializer;
+package org.apache.kylin.metadata.measure.serializer;
 
 import java.nio.ByteBuffer;
 

@@ -21,8 +21,8 @@ package org.apache.kylin.metadata.measure;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 
+import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.serializer.DataTypeSerializer;
 
 /**
  * @author yangli9

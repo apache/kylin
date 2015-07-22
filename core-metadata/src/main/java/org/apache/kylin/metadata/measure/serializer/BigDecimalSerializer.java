@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.serializer;
+package org.apache.kylin.metadata.measure.serializer;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;

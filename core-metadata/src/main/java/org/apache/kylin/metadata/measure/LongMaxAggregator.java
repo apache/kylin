@@ -18,15 +18,11 @@
 
 package org.apache.kylin.metadata.measure;
 
-import org.apache.hadoop.io.LongWritable;
-
 /**
- * @author yangli9
- * 
  */
-public class LongMaxAggregator extends MeasureAggregator<LongWritable> {
+public class LongMaxAggregator extends MeasureAggregator<LongMutable> {
 
-    LongWritable max = null;
+    LongMutable max = null;
 
     @Override
     public void reset() {
@@ -34,15 +30,15 @@ public class LongMaxAggregator extends MeasureAggregator<LongWritable> {
     }
 
     @Override
-    public void aggregate(LongWritable value) {
+    public void aggregate(LongMutable value) {
         if (max == null)
-            max = new LongWritable(value.get());
+            max = new LongMutable(value.get());
         else if (max.get() < value.get())
             max.set(value.get());
     }
 
     @Override
-    public LongWritable getState() {
+    public LongMutable getState() {
         return max;
     }
 

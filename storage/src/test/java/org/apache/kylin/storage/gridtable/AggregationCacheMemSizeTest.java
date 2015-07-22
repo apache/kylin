@@ -23,14 +23,14 @@ import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.metadata.measure.BigDecimalSumAggregator;
 import org.apache.kylin.metadata.measure.DoubleSumAggregator;
+import org.apache.kylin.metadata.measure.DoubleMutable;
 import org.apache.kylin.metadata.measure.HLLCAggregator;
 import org.apache.kylin.metadata.measure.LongSumAggregator;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.junit.Test;
 
@@ -86,7 +86,7 @@ public class AggregationCacheMemSizeTest {
 
     private LongSumAggregator newLongAggr() {
         LongSumAggregator aggr = new LongSumAggregator();
-        aggr.aggregate(new LongWritable(10));
+        aggr.aggregate(new LongMutable(10));
         return aggr;
     }
 
@@ -103,7 +103,7 @@ public class AggregationCacheMemSizeTest {
 
     private DoubleSumAggregator newDoubleAggr() {
         DoubleSumAggregator aggr = new DoubleSumAggregator();
-        aggr.aggregate(new DoubleWritable(10));
+        aggr.aggregate(new DoubleMutable(10));
         return aggr;
     }
 

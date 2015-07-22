@@ -18,15 +18,13 @@
 
 package org.apache.kylin.metadata.measure;
 
-import org.apache.hadoop.io.DoubleWritable;
-
 /**
  * @author yangli9
  * 
  */
-public class DoubleMaxAggregator extends MeasureAggregator<DoubleWritable> {
+public class DoubleMaxAggregator extends MeasureAggregator<DoubleMutable> {
 
-    DoubleWritable max = null;
+    DoubleMutable max = null;
 
     @Override
     public void reset() {
@@ -34,15 +32,15 @@ public class DoubleMaxAggregator extends MeasureAggregator<DoubleWritable> {
     }
 
     @Override
-    public void aggregate(DoubleWritable value) {
+    public void aggregate(DoubleMutable value) {
         if (max == null)
-            max = new DoubleWritable(value.get());
+            max = new DoubleMutable(value.get());
         else if (max.get() < value.get())
             max.set(value.get());
     }
 
     @Override
-    public DoubleWritable getState() {
+    public DoubleMutable getState() {
         return max;
     }
 

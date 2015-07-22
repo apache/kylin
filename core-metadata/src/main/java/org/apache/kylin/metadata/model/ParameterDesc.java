@@ -21,11 +21,12 @@ package org.apache.kylin.metadata.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.hadoop.util.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  */
@@ -79,7 +80,7 @@ public class ParameterDesc {
             for (int i = 0; i < values.length; i++)
                 values[i] = values[i].toUpperCase();
             Arrays.sort(values);
-            value = StringUtils.join(",", values);
+            value = StringUtils.join(values, ",");
         }
     }
 

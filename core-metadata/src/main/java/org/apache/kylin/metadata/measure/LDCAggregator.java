@@ -18,20 +18,15 @@
 
 package org.apache.kylin.metadata.measure;
 
-import org.apache.hadoop.io.LongWritable;
-
 /**
  * Long Distinct Count
- * 
- * @author xjiang
- * 
  */
-public class LDCAggregator extends MeasureAggregator<LongWritable> {
+public class LDCAggregator extends MeasureAggregator<LongMutable> {
 
-    private static LongWritable ZERO = new LongWritable(0);
+    private static LongMutable ZERO = new LongMutable(0);
 
     private HLLCAggregator hllAgg = null;
-    private LongWritable state = new LongWritable(0);
+    private LongMutable state = new LongMutable(0);
 
     @SuppressWarnings("rawtypes")
     public void setDependentAggregator(MeasureAggregator agg) {
@@ -43,11 +38,11 @@ public class LDCAggregator extends MeasureAggregator<LongWritable> {
     }
 
     @Override
-    public void aggregate(LongWritable value) {
+    public void aggregate(LongMutable value) {
     }
 
     @Override
-    public LongWritable getState() {
+    public LongMutable getState() {
         if (hllAgg == null) {
             return ZERO;
         } else {

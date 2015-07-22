@@ -1,5 +1,6 @@
-package org.apache.kylin.metadata.serializer;
+package org.apache.kylin.metadata.measure.serializer;
 
+import org.apache.kylin.metadata.measure.serializer.BigDecimalSerializer;
 import org.apache.kylin.metadata.model.DataType;
 import org.junit.BeforeClass;
 import org.junit.Test;
