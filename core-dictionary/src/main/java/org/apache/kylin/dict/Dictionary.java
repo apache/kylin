@@ -18,11 +18,11 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.hadoop.io.Writable;
-import org.apache.kylin.common.util.BytesUtil;
-
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+
+import org.apache.kylin.common.persistence.Writable;
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -67,7 +67,7 @@ abstract public class Dictionary<T> implements Writable {
     /**
      * @return true if each entry of this dict is contained by the dict in param
      */
-    abstract public boolean containedBy(Dictionary another);
+    abstract public boolean containedBy(Dictionary<?> another);
 
     /**
      * Convenient form of <code>getIdFromValue(value, 0)</code>
