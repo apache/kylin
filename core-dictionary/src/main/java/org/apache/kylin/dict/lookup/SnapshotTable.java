@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.dict.Dictionary;
@@ -35,6 +34,7 @@ import org.apache.kylin.source.ReadableTable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -100,11 +100,11 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     }
 
     public String getResourcePath() {
-        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new Path(signature.getPath()).getName() + "/" + uuid + ".snapshot";
+        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new File(signature.getPath()).getName() + "/" + uuid + ".snapshot";
     }
 
     public String getResourceDir() {
-        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new Path(signature.getPath()).getName();
+        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new File(signature.getPath()).getName();
     }
 
     @Override

@@ -174,7 +174,7 @@ public class DateStrDictionary extends Dictionary<String> {
     }
 
     @Override
-    public boolean containedBy(Dictionary other) {
+    public boolean containedBy(Dictionary<?> other) {
         return this.equals(other);
     }
 

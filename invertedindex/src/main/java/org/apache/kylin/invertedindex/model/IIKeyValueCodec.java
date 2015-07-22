@@ -20,8 +20,10 @@ package org.apache.kylin.invertedindex.model;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionarySerializer;
@@ -72,7 +74,8 @@ public class IIKeyValueCodec implements KeyValueCodec {
         if (dictionary == null) {
             return new IIRow(key, value, new ImmutableBytesWritable(BytesUtil.EMPTY_BYTE_ARRAY));
         } else {
-            return new IIRow(key, value, DictionarySerializer.serialize(dictionary));
+            ByteArray bytes = DictionarySerializer.serialize(dictionary);
+            return new IIRow(key, value, new ImmutableBytesWritable(bytes.array(), bytes.offset(), bytes.length()));
         }
     }
 
@@ -196,7 +199,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
                         } else {
                             final ImmutableBytesWritable dictBytes = row.getDictionary();
                             if (dictBytes.getLength() != 0) {
-                                final Dictionary<?> dictionary = DictionarySerializer.deserialize(dictBytes);
+                                final Dictionary<?> dictionary = DictionarySerializer.deserialize(new ByteArray(dictBytes.get(), dictBytes.getOffset(), dictBytes.getLength()));
                                 CompressedValueContainer c = new CompressedValueContainer(dictionary.getSizeOfId(), dictionary.getMaxId() - dictionary.getMinId() + 1, 0);
                                 c.fromBytes(row.getValue());
                                 valueContainers[curCol] = c;
