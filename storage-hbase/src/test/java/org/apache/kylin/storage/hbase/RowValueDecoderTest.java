@@ -16,26 +16,28 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.cube.kv;
+package org.apache.kylin.storage.hbase;
+
+import static org.junit.Assert.*;
+
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author George Song (ysong1)
@@ -63,7 +65,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         BigDecimal sum = new BigDecimal("333.1234567");
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");
-        LongWritable count = new LongWritable(2);
+        LongMutable count = new LongMutable(2);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
         codec.encode(new Object[] { sum, min, max, count }, buf);
 

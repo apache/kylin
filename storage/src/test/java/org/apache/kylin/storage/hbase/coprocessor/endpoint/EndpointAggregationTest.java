@@ -18,17 +18,21 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -152,8 +156,8 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
         long sumTotal = 0;
         long minTotal = 0;
         for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
-            sumTotal += ((LongWritable) entry.getValue()[0].getState()).get();
-            minTotal += ((LongWritable) entry.getValue()[1].getState()).get();
+            sumTotal += ((LongMutable) entry.getValue()[0].getState()).get();
+            minTotal += ((LongMutable) entry.getValue()[1].getState()).get();
 
         }
         assertEquals(3020800, sumTotal);

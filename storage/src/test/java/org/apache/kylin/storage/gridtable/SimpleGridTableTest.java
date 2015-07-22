@@ -24,8 +24,8 @@ import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.storage.gridtable.memstore.GTSimpleMemStore;
 import org.junit.Test;
 
@@ -86,7 +86,7 @@ public class SimpleGridTableTest {
             Object[] v = r.getValues();
             assertTrue(((String) v[0]).startsWith("2015-"));
             assertTrue(((String) v[2]).equals("Food"));
-            assertTrue(((LongWritable) v[3]).get() == 10);
+            assertTrue(((LongMutable) v[3]).get() == 10);
             assertTrue(((BigDecimal) v[4]).doubleValue() == 10.5);
             System.out.println(r);
         }
@@ -104,19 +104,19 @@ public class SimpleGridTableTest {
             Object[] v = r.getValues();
             switch (i) {
             case 0:
-                assertTrue(((LongWritable) v[3]).get() == 20);
+                assertTrue(((LongMutable) v[3]).get() == 20);
                 assertTrue(((BigDecimal) v[4]).doubleValue() == 21.0);
                 break;
             case 1:
-                assertTrue(((LongWritable) v[3]).get() == 30);
+                assertTrue(((LongMutable) v[3]).get() == 30);
                 assertTrue(((BigDecimal) v[4]).doubleValue() == 31.5);
                 break;
             case 2:
-                assertTrue(((LongWritable) v[3]).get() == 40);
+                assertTrue(((LongMutable) v[3]).get() == 40);
                 assertTrue(((BigDecimal) v[4]).doubleValue() == 42.0);
                 break;
             case 3:
-                assertTrue(((LongWritable) v[3]).get() == 10);
+                assertTrue(((LongMutable) v[3]).get() == 10);
                 assertTrue(((BigDecimal) v[4]).doubleValue() == 10.5);
                 break;
             default:

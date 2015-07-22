@@ -16,15 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.cube.kv;
+package org.apache.kylin.storage.hbase;
 
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.metadata.measure.DoubleMutable;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -34,7 +32,6 @@ import java.util.BitSet;
 import java.util.Collection;
 
 /**
- * @author xjiang
  */
 public class RowValueDecoder implements Cloneable {
 
@@ -84,14 +81,10 @@ public class RowValueDecoder implements Cloneable {
         for (int i = 0; i < mapredObjs.length; i++) {
             Object o = mapredObjs[i];
 
-            if (o instanceof LongWritable)
-                o = ((LongWritable) o).get();
-            else if (o instanceof IntWritable)
-                o = ((IntWritable) o).get();
-            else if (o instanceof DoubleWritable)
-                o = ((DoubleWritable) o).get();
-            else if (o instanceof FloatWritable)
-                o = ((FloatWritable) o).get();
+            if (o instanceof LongMutable)
+                o = ((LongMutable) o).get();
+            else if (o instanceof DoubleMutable)
+                o = ((DoubleMutable) o).get();
 
             results[i] = o;
         }
