@@ -18,26 +18,24 @@
 
 package org.apache.kylin.engine.mr;
 
-import java.util.List;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.IMROutput2.IMRBatchCubingOutputSide2;
 import org.apache.kylin.engine.mr.steps.MergeCuboidFromStorageJob;
 import org.apache.kylin.engine.mr.steps.MergeStatisticsStep;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.util.List;
 
 public class BatchMergeJobBuilder2 extends JobBuilderSupport {
 
-    private final IMRBatchCubingOutputSide2 outputSide;
+    private final IMROutput2.IMRBatchMergeOutputSide2 outputSide;
     
     public BatchMergeJobBuilder2(CubeSegment mergeSegment, String submitter) {
         super(mergeSegment, submitter);
-        this.outputSide = MRUtil.getBatchCubingOutputSide2(seg);
+        this.outputSide = MRUtil.getBatchMergeOutputSide2(seg);
     }
 
     public CubingJob build() {
@@ -56,16 +54,16 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
         // Phase 1: Merge Dictionary
         result.addTask(createMergeDictionaryStep(mergingSegmentIds));
         result.addTask(createMergeStatisticsStep(seg, mergingSegmentIds, getStatisticsPath(jobId)));
-        outputSide.addStepPhase2_BuildDictionary(result);
+        outputSide.addStepPhase1_MergeDictionary(result);
 
         // Phase 2: Merge Cube
         String formattedTables = StringUtil.join(mergingHTables, ",");
         result.addTask(createMergeCuboidDataFromStorageStep(formattedTables, jobId));
-        outputSide.addStepPhase3_BuildCube(result);
+        outputSide.addStepPhase2_BuildCube(result);
 
         // Phase 3: Update Metadata & Cleanup
         result.addTask(createUpdateCubeInfoAfterMergeStep(mergingSegmentIds, jobId));
-        outputSide.addStepPhase4_Cleanup(result);
+        outputSide.addStepPhase3_Cleanup(result);
 
         return result;
     }
