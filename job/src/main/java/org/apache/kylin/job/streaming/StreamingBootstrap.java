@@ -129,13 +129,13 @@ public class StreamingBootstrap {
                 final List<Pair<Long, Long>> gaps = StreamingMonitor.findGaps(streamingConfig.getCubeName());
                 logger.info("all gaps:" + StringUtils.join(gaps, ","));
                 for (Pair<Long, Long> gap : gaps) {
-                    startOneOffCubeStreaming(streamingConfig, gap.getFirst(), gap.getSecond(), bootstrapConfig.getMargin());
+                    startOneOffCubeStreaming(streamingConfig, gap.getFirst(), gap.getSecond(), streamingConfig.getMargin());
                 }
             } else {
                 if (bootstrapConfig.isOneOff()) {
                     Preconditions.checkArgument(bootstrapConfig.getStart() != 0);
                     Preconditions.checkArgument(bootstrapConfig.getEnd() != 0);
-                    startOneOffCubeStreaming(streamingConfig, bootstrapConfig.getStart(), bootstrapConfig.getEnd(), bootstrapConfig.getMargin());
+                    startOneOffCubeStreaming(streamingConfig, bootstrapConfig.getStart(), bootstrapConfig.getEnd(), streamingConfig.getMargin());
                 } else {
                     startCubeStreaming(streamingConfig);
                 }

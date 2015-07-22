@@ -100,7 +100,6 @@ public class BuildCubeWithStreamTest {
             BootstrapConfig bootstrapConfig = new BootstrapConfig();
             bootstrapConfig.setStart(start);
             bootstrapConfig.setEnd(start + batchInterval);
-            bootstrapConfig.setMargin(0);
             bootstrapConfig.setOneOff(true);
             bootstrapConfig.setPartitionId(0);
             bootstrapConfig.setStreaming(streamingName);
