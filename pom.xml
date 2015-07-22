@@ -68,6 +68,7 @@
         <commons-daemon.version>1.0.15</commons-daemon.version>
         <commons-httpclient.version>3.1</commons-httpclient.version>
         <commons-collections4.version>4.0</commons-collections4.version>
+        <commons-email.version>1.1</commons-email.version>
 
         <!-- Spark -->
         <spark.version>1.4.0</spark.version>
@@ -78,6 +79,7 @@
         <slf4j.version>1.6.4</slf4j.version>
         <jackson.version>2.2.3</jackson.version>
         <guava.version>12.0</guava.version>
+        <reflections.version>0.9.9-RC1</reflections.version>
         <jsch.version>0.1.51</jsch.version>
         <xerces.version>2.9.1</xerces.version>
         <xalan.version>2.7.1</xalan.version>
@@ -363,9 +365,19 @@
                 <version>${commons-collections4.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-email</artifactId>
+                <version>${commons-email.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.reflections</groupId>
+                <artifactId>reflections</artifactId>
+                <version>${reflections.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jcraft</groupId>
@@ -562,6 +574,11 @@
         <module>core-metadata</module>
         <module>core-dictionary</module>
         <module>core-cube</module>
+        <module>core-job</module>
+        <module>core-storage</module>
+        <module>engine-mr</module>
+        <module>source-hive</module>
+        <module>storage-hbase</module>
         <module>job</module>
         <module>storage</module>
         <module>query</module>
