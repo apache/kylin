@@ -58,26 +58,28 @@ abstract public class ResourceStore {
     public static final String CUBE_STATISTICS_ROOT = "/cube_statistics";
 
 
-    private static ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
+    private static final ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
-    public static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
-
-    static {
-        knownImpl.add(FileResourceStore.class);
-        try {
-            knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hbase.HBaseResourceStore", ResourceStore.class));
-        } catch (ClassNotFoundException e) {
-            logger.warn(e.toString());
-        }
-    }
+    private static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
     
+    private static ArrayList<Class<? extends ResourceStore>> getKnownImpl() {
+        if (knownImpl.isEmpty()) {
+            knownImpl.add(FileResourceStore.class);
+            try {
+                knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hbase.HBaseResourceStore", ResourceStore.class));
+            } catch (Throwable e) {
+                logger.warn("Failed to load ResourceStore impl class", e);
+            }
+        }
+        return knownImpl;
+    }
+
     public static ResourceStore getStore(KylinConfig kylinConfig) {
         ResourceStore r = CACHE.get(kylinConfig);
         List<Throwable> es = new ArrayList<Throwable>();
         if (r == null) {
             logger.info("Using metadata url " + kylinConfig.getMetadataUrl() + " for resource store");
-            for (Class<? extends ResourceStore> cls : knownImpl) {
-
+            for (Class<? extends ResourceStore> cls : getKnownImpl()) {
                 try {
                     r = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
                 } catch (Exception e) {
