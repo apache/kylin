@@ -18,28 +18,56 @@
 
 package org.apache.kylin.jdbc;
 
+import java.io.IOException;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.TimeZone;
 
-import net.hydromatic.avatica.AvaticaPrepareResult;
-import net.hydromatic.avatica.AvaticaResultSet;
-import net.hydromatic.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.AvaticaParameter;
+import org.apache.calcite.avatica.AvaticaResultSet;
+import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.Meta.Frame;
+import org.apache.calcite.avatica.Meta.Signature;
+import org.apache.calcite.avatica.MetaImpl;
+import org.apache.kylin.jdbc.IRemoteClient.QueryResult;
 
-import org.apache.kylin.jdbc.KylinPrepare.PrepareResult;
-
-/**
- * Kylin query result set
- * 
- * @author xduo
- * 
- */
 public class KylinResultSet extends AvaticaResultSet {
 
-    public KylinResultSet(AvaticaStatement statement, AvaticaPrepareResult prepareResult, ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
-        super(statement, prepareResult, resultSetMetaData, timeZone);
+    public KylinResultSet(AvaticaStatement statement, Signature signature, ResultSetMetaData resultSetMetaData, TimeZone timeZone, Frame firstFrame) {
+        super(statement, signature, resultSetMetaData, timeZone, firstFrame);
     }
 
-    public KylinPrepare.PrepareResult getPrepareResult() {
-        return (PrepareResult) prepareResult;
+    @Override
+    protected AvaticaResultSet execute() throws SQLException {
+        
+        // skip execution if result is already there (case of meta data lookup)
+        if (this.firstFrame != null) {
+            return super.execute();
+        }
+        
+        String sql = signature.sql;
+        List<AvaticaParameter> params = signature.parameters;
+        List<Object> paramValues = null;
+        if (params != null && params.size() > 0) {
+            paramValues = ((KylinPreparedStatement) statement).getParameterValues2();
+        }
+        
+        IRemoteClient client = ((KylinConnection) statement.connection).getRemoteClient();
+        QueryResult result;
+        try {
+            result = client.executeQuery(sql, params, paramValues);
+        } catch (IOException e) {
+            throw new SQLException(e);
+        }
+        
+        columnMetaDataList.clear();
+        columnMetaDataList.addAll(result.columnMeta);
+        
+        cursor = MetaImpl.createCursor(signature.cursorFactory, result.iterable);
+        return super.execute2(cursor, columnMetaDataList);
     }
+    
+    
+
 }

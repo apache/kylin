@@ -18,15 +18,15 @@
 
 package org.apache.kylin.jdbc;
 
+import org.apache.kylin.jdbc.Driver;
+
 /**
- * @author xduo
- * 
  */
 public class DummyDriver extends Driver {
 
     @Override
     protected String getFactoryClassName(JdbcVersion jdbcVersion) {
-        return "org.apache.kylin.jdbc.DummyJdbc41Factory";
+        return DummyJdbcFactory.class.getName();
     }
 
 }

@@ -192,6 +192,11 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void close() {
         IOUtils.closeQuietly(table);
         logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
@@ -239,7 +244,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         for (FunctionDesc measure : measures) {
-            info.setField(measure.getRewriteFieldName(), null, measure.getSQLType(), index++);
+            info.setField(measure.getRewriteFieldName(), null, measure.getSQLType().getName(), index++);
         }
 
         return info;
@@ -307,6 +312,11 @@ public class EndpointTupleIterator implements ITupleIterator {
             index++;
 
             return makeTuple(this.tableRecord, this.measureValues);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
 
         @Override

@@ -207,9 +207,9 @@ public class CubeService extends BasicService {
         if (project == null) {
             return false;
         }
-        for (RealizationEntry projectDataModel : project.getRealizationEntries()) {
-            if (projectDataModel.getType() == RealizationType.CUBE) {
-                CubeInstance cube = getCubeManager().getCube(projectDataModel.getRealization());
+        for (RealizationEntry projectRealization : project.getRealizationEntries()) {
+            if (projectRealization != null && projectRealization.getType() == RealizationType.CUBE) {
+                CubeInstance cube = getCubeManager().getCube(projectRealization.getRealization());
                 assert cube != null;
                 if (cube.equals(target)) {
                     return true;

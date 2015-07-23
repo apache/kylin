@@ -54,7 +54,7 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
     public void testCRUD() throws IOException {
         IIDescManager mgr = IIDescManager.getInstance(getTestConfig());
 
-        String newDescName = "Copy of " + TEST_II_DESC_NAME;
+        String newDescName = "Copy_of_" + TEST_II_DESC_NAME;
 
         try {
             IIDesc testRecord = mgr.getIIDesc(newDescName);

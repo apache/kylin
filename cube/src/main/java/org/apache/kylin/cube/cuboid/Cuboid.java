@@ -290,6 +290,14 @@ public class Cuboid implements Comparable<Cuboid> {
         return requirePostAggregation;
     }
 
+    public static void clearCache() {
+        CUBOID_CACHE.clear();
+    }
+
+    public static void reloadCache(String cubeDescName) {
+        CUBOID_CACHE.remove(cubeDescName);
+    }
+
     @Override
     public String toString() {
         return "Cuboid [id=" + id + "]";

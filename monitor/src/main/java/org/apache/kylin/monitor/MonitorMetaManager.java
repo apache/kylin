@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,20 +65,11 @@ public class MonitorMetaManager {
      * @unused
      */
     public static void init() throws Exception {
-        MonitorMetaManager.TABLE_NAME = MonitorMetaManager.getMetadataUrlPrefix();
+        MonitorMetaManager.TABLE_NAME = monitorConfig.getMetadataUrlPrefix();
         logger.info("Monitor Metadata Table :"+MonitorMetaManager.TABLE_NAME);
         logger.info("init monitor metadata,create table if not exist");
         MonitorMetaManager.creatTable(TABLE_NAME, new String[]{COLUMN_FAMILY});
     }
-
-    public static String getMetadataUrlPrefix() {
-        String hbaseMetadataUrl = monitorConfig.getMetadataUrl();
-        String defaultPrefix = "kylin_metadata";
-        int cut = hbaseMetadataUrl.indexOf('@');
-        String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
-        return tmp;
-    }
-
 
     /*
      * mark query file as read after parsing
@@ -200,6 +191,10 @@ public class MonitorMetaManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        logger.info("update table ["+tableName+"]");
+        logger.info("rowKey ["+rowKey+"]");
+        logger.info("column family ["+family+"]");
+        logger.info("value ["+value+"]");
         logger.info("end insert data ......");
     }
 

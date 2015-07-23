@@ -122,6 +122,11 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
     }
 
     @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void close() {
         context.setTotalScanCount(scanCount);
         segmentIterator.close();

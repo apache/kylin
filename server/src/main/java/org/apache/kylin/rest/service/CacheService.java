@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.MetadataManager;
@@ -28,6 +29,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.storage.hybrid.HybridManager;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -45,16 +47,19 @@ public class CacheService extends BasicService {
             switch (cacheType) {
             case CUBE:
                 getCubeManager().loadCubeCache(cacheKey);
+                getHybridManager().reloadHybridInstanceByChild(RealizationType.CUBE, cacheKey);
                 cleanProjectCacheByRealization(RealizationType.CUBE, cacheKey);
                 break;
             case CUBE_DESC:
                 getCubeDescManager().reloadCubeDesc(cacheKey);
+                Cuboid.reloadCache(cacheKey);
                 break;
             case PROJECT:
                 getProjectManager().reloadProject(cacheKey);
                 break;
             case INVERTED_INDEX:
                 getIIManager().loadIICache(cacheKey);
+                getHybridManager().reloadHybridInstanceByChild(RealizationType.INVERTED_INDEX, cacheKey);
                 cleanProjectCacheByRealization(RealizationType.INVERTED_INDEX, cacheKey);
                 break;
             case INVERTED_INDEX_DESC:
@@ -73,9 +78,11 @@ public class CacheService extends BasicService {
             case ALL:
                 MetadataManager.clearCache();
                 CubeDescManager.clearCache();
+                Cuboid.clearCache();
                 CubeManager.clearCache();
                 IIDescManager.clearCache();
                 IIManager.clearCache();
+                HybridManager.clearCache();
                 RealizationRegistry.clearCache();
                 ProjectManager.clearCache();
                 BasicService.resetOLAPDataSources();

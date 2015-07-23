@@ -423,7 +423,7 @@ public class KylinTestBase {
         int count = executeQuery(sql, true);
 
         if (debug) {
-            System.clearProperty("optiq.debug");
+            System.clearProperty("calcite.debug");
         }
         return count;
     }

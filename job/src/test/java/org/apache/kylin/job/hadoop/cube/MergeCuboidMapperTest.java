@@ -18,6 +18,8 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -27,12 +29,6 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -42,12 +38,15 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.TrieDictionary;
-import org.apache.kylin.dict.lookup.TableSignature;
+import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
-
-import static org.junit.Assert.assertTrue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author honma
@@ -72,7 +71,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         signature.setLastModifiedTime(System.currentTimeMillis());
         signature.setPath("fake_common_dict");
 
-        DictionaryInfo newDictInfo = new DictionaryInfo("", "", 0, "string", signature, "");
+        DictionaryInfo newDictInfo = new DictionaryInfo("", "", 0, "string", signature);
 
         List<byte[]> values = new ArrayList<byte[]>();
         values.add(new byte[] { 101, 101, 101 });
@@ -121,7 +120,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
             signature.setLastModifiedTime(System.currentTimeMillis());
             signature.setPath("fake_dict_for" + lfn.getName() + segment.getName());
 
-            DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumn().getName(), lfn.getColumn().getZeroBasedIndex(), "string", signature, "");
+            DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumn().getName(), lfn.getColumn().getZeroBasedIndex(), "string", signature);
 
             List<byte[]> values = new ArrayList<byte[]>();
             values.add(new byte[] { 97, 97, 97 });
@@ -157,7 +156,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-        CubeSegment newSeg = cubeManager.mergeSegments(cube, 0L, 1386835200000L);
+        CubeSegment newSeg = cubeManager.mergeSegments(cube, 0L, 1386835200000L, false);
         String segmentName = newSeg.getName();
 
         final Dictionary<?> dictionary = cubeManager.getDictionary(newSeg, lfn);

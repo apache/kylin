@@ -29,18 +29,18 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.7.2-incubating-SNAPSHOT</version>
+    <version>0.7.3-incubating-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
-
 
     <properties>
         <!-- General Properties -->
         <javaVersion>1.7</javaVersion>
         <maven-model.version>3.1.1</maven-model.version>
         <maven-release.version>2.5.1</maven-release.version>
-        <maven-assembly.version>2.4</maven-assembly.version>
+        <maven-assembly.version>2.5.5</maven-assembly.version>
+        <maven-license.plugin.version>2.6</maven-license.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -83,15 +83,8 @@
         <!-- REST Service -->
         <spring.framework.version>3.1.2.RELEASE</spring.framework.version>
 
-        <!-- Optiq Version -->
-        <optiq.version>0.9.2-incubating</optiq.version>
-        <linq4j.version>0.4</linq4j.version>
-
-        <!-- Metrics Codahale Version -->
-        <metrics.version>3.0.1</metrics.version>
-
-        <!-- Quartz Version -->
-        <quartz.version>2.2.1</quartz.version>
+        <!-- Calcite Version -->
+        <calcite.version>1.3.0-incubating</calcite.version>
 
         <!-- Curator.version Version -->
         <curator.version>2.6.0</curator.version>
@@ -102,7 +95,7 @@
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
         <sonar.language>java</sonar.language>
         <sonar.jacoco.excludes>
-            org/apache/kylin/**/tools/**:**/*CLI.java:net/hydromatic/optiq/**:org/eigenbase/sql2rel/**
+            org/apache/kylin/**/tools/**:**/*CLI.java
         </sonar.jacoco.excludes>
 
     </properties>
@@ -248,21 +241,21 @@
                 <version>${yarn.version}</version>
             </dependency>
 
-            <!-- optiq dependencies -->
+            <!-- Calcite dependencies -->
             <dependency>
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-core</artifactId>
-                <version>${optiq.version}</version>
+                <version>${calcite.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-avatica</artifactId>
-                <version>${optiq.version}</version>
+                <version>${calcite.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.hydromatic</groupId>
-                <artifactId>linq4j</artifactId>
-                <version>${linq4j.version}</version>
+                <groupId>org.apache.calcite</groupId>
+                <artifactId>calcite-linq4j</artifactId>
+                <version>${calcite.version}</version>
             </dependency>
 
             <!-- Other dependencies -->
@@ -388,17 +381,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz</artifactId>
-                <version>${quartz.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz-jobs</artifactId>
-                <version>${quartz.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-framework</artifactId>
                 <version>${curator.version}</version>
@@ -441,6 +423,9 @@
                         <target>${javaVersion}</target>
                     </configuration>
                 </plugin>
+
+
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
@@ -474,7 +459,13 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.0.2</version>
+                    <version>2.6</version>
+                    <configuration>
+                        <packagingExcludes>
+                            WEB-INF/lib/servlet-api-*.jar,
+                            WEB-INF/lib/zookeeper-*.jar,
+                        </packagingExcludes>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -537,13 +528,76 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!-- utility plugins -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>${maven-assembly.version}</version>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.15</version>
+                </plugin>
+
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <!--
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>${maven-license.plugin.version}</version>
+                <configuration>
+                    <header>License-Header.txt</header>
+                    <licenseName>apache_v2</licenseName>
+                    <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                    <canUpdateCopyright>true</canUpdateCopyright>
+                    <canUpdateDescription>true</canUpdateDescription>
+                    <excludes>
+                        <exclude>**/*.diff</exclude>
+                        <exclude>*.patch</exclude>
+                        <exclude>**/*.log</exclude>
+                        <exclude>**/*.data</exclude>
+                        <exclude>**/README.*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <!-- Checkstyle Plugin -->
+            <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>validate</id>
+                            <phase>validate</phase>
+                            <configuration>
+                                <configLocation>src/main/config/checkstyle/checkstyle.xml</configLocation>
+                                <suppressionsLocation>src/main/config/checkstyle/suppressions.xml</suppressionsLocation>
+                                <consoleOutput>true</consoleOutput>
+                                <headerLocation>src/main/config/checkstyle/checkstyle-java-header.txt</headerLocation>
+                                <failOnViolation>true</failOnViolation>
+                                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            </configuration>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+        </plugins>
+
     </build>
 
     <modules>
@@ -603,7 +657,13 @@
                             <argLine>-Xms1G -Xmx4G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
                         </configuration>
                     </plugin>
-
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -663,6 +723,14 @@
             <id>apache-release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+
                     <!-- Override the parent assembly execution to customize the assembly
               descriptor and final name. -->
                     <plugin>
@@ -675,11 +743,11 @@
                                     <goal>single</goal>
                                 </goals>
                                 <configuration>
+                                    <tarLongFileMode>posix</tarLongFileMode>
                                     <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <appendAssemblyId>true</appendAssemblyId>
                                     <descriptor>src/main/config/assemblies/source-assembly.xml</descriptor>
                                     <finalName>apache-kylin-${project.version}-src</finalName>
-                                    <tarLongFileMode>gnu</tarLongFileMode>
                                 </configuration>
                             </execution>
                         </executions>
@@ -729,6 +797,7 @@
                         <configuration>
                             <numUnapprovedLicenses>0</numUnapprovedLicenses>
                             <excludes>
+                                <exclude>DEPENDENCIES</exclude>
                                 <exclude>.idea/**</exclude>
                                 <exclude>.git/**</exclude>
                                 <exclude>.settings/**</exclude>
@@ -742,6 +811,10 @@
                                 <exclude>**/*.snapshot</exclude>
                                 <exclude>**/*.pdf</exclude>
                                 <exclude>**/*.log</exclude>
+
+                                <exclude>**/.checkstyle</exclude>
+                                <!--Job's Test Data-->
+                                <exclude>**/src/test/resources/data/**</exclude>
 
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
@@ -820,6 +893,12 @@
 
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <skipCheck>true</skipCheck>
+            </properties>
         </profile>
     </profiles>
 </project>

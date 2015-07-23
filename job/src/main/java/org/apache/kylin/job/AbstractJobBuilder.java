@@ -60,6 +60,7 @@ public abstract class AbstractJobBuilder {
 
     protected AbstractExecutable createIntermediateHiveTableStep(IJoinedFlatTableDesc intermediateTableDesc, String jobId) {
 
+        final String useDatabaseHql = "USE " + engineConfig.getConfig().getHiveDatabaseForIntermediateTable() + ";";
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobId);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobId), jobId);
         String insertDataHqls;
@@ -73,6 +74,7 @@ public abstract class AbstractJobBuilder {
         ShellExecutable step = new ShellExecutable();
         StringBuffer buf = new StringBuffer();
         buf.append("hive -e \"");
+        buf.append(useDatabaseHql + "\n");
         buf.append(dropTableHql + "\n");
         buf.append(createTableHql + "\n");
         buf.append(insertDataHqls + "\n");

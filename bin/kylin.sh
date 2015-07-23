@@ -36,7 +36,7 @@ then
 
 
 
-    useSandbox=`cat ${KYLIN_HOME}/conf/kylin.properties | grep 'kylin.sandbox' | awk -F '=' '{print $2}'`
+    useSandbox=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.sandbox`
     spring_profile="default"
     if [ "$useSandbox" = "true" ]
         then spring_profile="sandbox"

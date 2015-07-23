@@ -1,0 +1,54 @@
+- title: Getting Started
+  docs:
+  - index
+  - release_notes
+  - gettingstarted/faq
+  - gettingstarted/events
+  - gettingstarted/terminology
+
+- title: Installation
+  docs:
+  - install/index
+  - install/hadoop_env
+  - install/manual_install_guide
+  - install/kylin_cluster
+  - install/advance_settings
+  - install/kylin_docker
+
+- title: Tutorial
+  docs:
+  - tutorial/kylin_sample
+  - tutorial/create_cube
+  - tutorial/cube_build_job
+  - tutorial/acl
+  - tutorial/web
+  - tutorial/tableau
+  - tutorial/odbc
+
+- title: How To
+  docs:
+  - howto/howto_contribute
+  - howto/howto_jdbc
+  - howto/howto_javascript
+  - howto/howto_backup
+  - howto/howto_upgrade
+  - howto/howto_docs
+  - howto/howto_release
+
+
+- title: Development
+  docs:
+  - development/dev_env
+  - development/metadata_store
+  - development/new_metadata
+  - development/rest_api
+  - development/build_api
+  - development/javascript_api
+  - development/web_tech
+  - development/test_minicluster
+  
+
+
+- title: Meta
+  docs:
+  - history

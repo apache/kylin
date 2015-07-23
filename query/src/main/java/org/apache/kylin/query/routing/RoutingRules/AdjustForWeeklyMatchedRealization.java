@@ -18,12 +18,6 @@
 
 package org.apache.kylin.query.routing.RoutingRules;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kylin.cube.CubeCapabilityChecker;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -34,9 +28,15 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
+import org.apache.kylin.storage.hybrid.HybridInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 /**
- * Created by Hongbin Ma(Binmahone) on 1/5/15.
  */
 public class AdjustForWeeklyMatchedRealization extends RoutingRule {
     private static final Logger logger = LoggerFactory.getLogger(AdjustForWeeklyMatchedRealization.class);
@@ -45,6 +45,13 @@ public class AdjustForWeeklyMatchedRealization extends RoutingRule {
     public void apply(List<IRealization> realizations, OLAPContext olapContext) {
         if (realizations.size() > 0) {
             IRealization first = realizations.get(0);
+
+            if (first instanceof HybridInstance) {
+                HybridInstance hybrid = (HybridInstance) first;
+
+                if (hybrid.getRealizations()[0] instanceof CubeInstance)
+                    first = hybrid.getRealizations()[0];
+            }
 
             if (first instanceof CubeInstance) {
                 CubeInstance cube = (CubeInstance) first;

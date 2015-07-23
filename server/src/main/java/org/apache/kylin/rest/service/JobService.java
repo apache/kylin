@@ -123,7 +123,7 @@ public class JobService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, String submitter) throws IOException, JobException {
+    public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, boolean forceMergeEmptySeg, String submitter) throws IOException, JobException {
 
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
         for (CubingJob job : cubingJobs) {
@@ -145,7 +145,7 @@ public class JobService extends BasicService {
                 job = builder.buildJob(newSeg);
             }
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
-            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate);
+            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);
             job = builder.mergeJob(newSeg);
         } else if (buildType == CubeBuildTypeEnum.REFRESH) {
             CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate);

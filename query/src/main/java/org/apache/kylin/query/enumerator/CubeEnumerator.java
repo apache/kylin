@@ -22,14 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import net.hydromatic.linq4j.Enumerator;
-import net.hydromatic.optiq.DataContext;
-import net.hydromatic.optiq.jdbc.OptiqConnection;
-
-import org.eigenbase.reltype.RelDataTypeField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.apache.calcite.DataContext;
+import org.apache.calcite.jdbc.CalciteConnection;
+import org.apache.calcite.linq4j.Enumerator;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.storage.IStorageEngine;
 import org.apache.kylin.storage.StorageEngineFactory;
@@ -39,7 +37,6 @@ import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 
 /**
- * @author xjiang
  */
 public class CubeEnumerator implements Enumerator<Object[]> {
 
@@ -104,7 +101,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
             this.fieldIndexes = new int[size];
             for (int i = 0; i < size; i++) {
                 String field = fields.get(i);
-                RelDataTypeField relField = olapContext.olapRowType.getField(field, true);
+                RelDataTypeField relField = olapContext.olapRowType.getField(field, true, false);
                 if (relField != null) {
                     fieldIndexes[i] = relField.getIndex();
                 } else {
@@ -135,11 +132,9 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         // bind dynamic variables
         bindVariable(olapContext.filter);
 
-
-
         // query storage engine
         IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization);
-        ITupleIterator iterator = storageEngine.search(olapContext.storageContext,olapContext.getSQLDigest());
+        ITupleIterator iterator = storageEngine.search(olapContext.storageContext, olapContext.getSQLDigest());
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
         }
@@ -147,7 +142,6 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         this.fieldIndexes = null;
         return iterator;
     }
-
 
     private void bindVariable(TupleFilter filter) {
         if (filter == null) {
@@ -172,7 +166,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     }
 
     private void setConnectionProperties() {
-        OptiqConnection conn = (OptiqConnection) optiqContext.getQueryProvider();
+        CalciteConnection conn = (CalciteConnection) optiqContext.getQueryProvider();
         Properties connProps = conn.getProperties();
 
         String propThreshold = connProps.getProperty(OLAPQuery.PROP_SCAN_THRESHOLD);

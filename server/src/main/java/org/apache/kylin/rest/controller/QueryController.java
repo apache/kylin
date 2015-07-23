@@ -18,25 +18,14 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.model.SelectedColumnMeta;
@@ -54,16 +43,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import com.codahale.metrics.annotation.Timed;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Handle query requests.
@@ -86,7 +77,6 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/query", method = RequestMethod.POST)
     @ResponseBody
-    @Timed(name = "query")
     public SQLResponse query(@RequestBody SQLRequest sqlRequest) {
         return doQuery(sqlRequest);
     }
@@ -94,14 +84,12 @@ public class QueryController extends BasicController {
     // TODO should be just "prepare" a statement, get back expected ResultSetMetaData
     @RequestMapping(value = "/query/prestate", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
-    @Timed(name = "query")
     public SQLResponse prepareQuery(@RequestBody PrepareSqlRequest sqlRequest) {
         return doQuery(sqlRequest);
     }
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
     @ResponseBody
-    @Timed(name = "saveQuery")
     public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
@@ -111,7 +99,6 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    @Timed(name = "removeQuery")
     public void removeQuery(@PathVariable String id) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         queryService.removeQuery(creator, id);
@@ -119,7 +106,6 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.GET)
     @ResponseBody
-    @Timed(name = "getQueries")
     public List<Query> getQueries() throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         return queryService.getQueries(creator);
@@ -127,7 +113,6 @@ public class QueryController extends BasicController {
 
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET)
     @ResponseBody
-    @Timed(name = "downloadResult")
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
         SQLResponse result = doQuery(sqlRequest);
         response.setContentType("text/" + format + ";charset=utf-8");
@@ -198,30 +183,36 @@ public class QueryController extends BasicController {
         SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
         try {
             if (null == sqlResponse) {
+                long start = System.currentTimeMillis();
                 sqlResponse = queryService.query(sqlRequest);
+                long duration = System.currentTimeMillis() - start;
 
                 long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
                 long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
-                if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                if (!sqlResponse.getIsException() && (duration > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
                     cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                 }
             }
 
             checkQueryAuth(sqlResponse);
-
-            return sqlResponse;
-        } catch (AccessDeniedException ade) {
-            // Access exception is bind with each user, it will not be cached
-            logger.error("Exception when execute sql", ade);
-            throw new ForbiddenException(ade.getLocalizedMessage());
+            
         } catch (Throwable e) { // calcite may throw AssertError
-            SQLResponse exceptionRes = new SQLResponse(null, null, 0, true, e.getMessage());
-            Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-            exceptionCache.put(new Element(sqlRequest, exceptionRes));
-
             logger.error("Exception when execute sql", e);
-            throw new InternalErrorException(QueryUtil.makeErrorMsgUserFriendly(e.getLocalizedMessage()));
+            String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
+            
+            sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
+
+            // Access exception is bind with each user, it will not be cached
+            if ((e instanceof AccessDeniedException) == false) {
+                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                exceptionCache.put(new Element(sqlRequest, sqlResponse));
+            }
         }
+        
+        if (sqlResponse.getIsException())
+            throw new InternalErrorException(sqlResponse.getExceptionMessage());
+        else
+            return sqlResponse;
     }
 
     private SQLResponse searchQueryInCache(SQLRequest sqlRequest) {

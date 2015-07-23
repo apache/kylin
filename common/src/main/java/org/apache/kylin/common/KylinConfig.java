@@ -63,6 +63,8 @@ public class KylinConfig {
 
     public static final String KYLIN_TMP_HDFS_DIR = "kylin.tmp.hdfs.dir";
 
+    public static final String HIVE_DATABASE_FOR_INTERMEDIATE_TABLE = "kylin.job.hive.database.for.intermediatetable";
+
     public static final String HIVE_TABLE_LOCATION_PREFIX = "hive.table.location.";
 
     public static final String KYLIN_JOB_REMOTE_CLI_PASSWORD = "kylin.job.remote.cli.password";
@@ -279,7 +281,11 @@ public class KylinConfig {
     }
 
     public String getHdfsWorkingDirectory() {
-        return getRequired(KYLIN_HDFS_WORKING_DIR);
+        String root = getRequired(KYLIN_HDFS_WORKING_DIR);
+        if (!root.endsWith("/")) {
+            root += "/";
+        }
+        return root + getMetadataUrlPrefix();
     }
 
     public String getKylinJobLogDir() {
@@ -419,6 +425,10 @@ public class KylinConfig {
 
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
+    }
+    
+    public int getTableSnapshotMaxMB() {
+        return Integer.parseInt(getOptional("kylin.table.snapshot.max_mb", "300"));
     }
     
     public int getScanThreshold() {
@@ -611,6 +621,10 @@ public class KylinConfig {
     public void setStorageUrl(String storageUrl) {
         kylinConfig.setProperty(KYLIN_STORAGE_URL, storageUrl);
         this.storageUrl = storageUrl;
+    }
+
+    public String getHiveDatabaseForIntermediateTable() {
+        return this.getOptional(HIVE_DATABASE_FOR_INTERMEDIATE_TABLE, "default");
     }
 
     public void setRunAsRemoteCommand(String v) {

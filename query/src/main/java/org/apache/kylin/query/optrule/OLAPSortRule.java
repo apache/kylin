@@ -18,35 +18,32 @@
 
 package org.apache.kylin.query.optrule;
 
+import org.apache.calcite.plan.Convention;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.core.Sort;
 import org.apache.kylin.query.relnode.OLAPRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SortRel;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelTraitSet;
-
 import org.apache.kylin.query.relnode.OLAPSortRel;
 
 /**
- * @author xjiang
- * 
  */
 public class OLAPSortRule extends ConverterRule {
 
     public static final OLAPSortRule INSTANCE = new OLAPSortRule();
 
     public OLAPSortRule() {
-        super(SortRel.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPSortRule");
+        super(Sort.class, Convention.NONE, OLAPRel.CONVENTION, "OLAPSortRule");
     }
 
     @Override
     public RelNode convert(RelNode rel) {
-        final SortRel sort = (SortRel) rel;
+        final Sort sort = (Sort) rel;
         if (sort.offset != null || sort.fetch != null) {
             return null;
         }
         final RelTraitSet traitSet = sort.getTraitSet().replace(OLAPRel.CONVENTION);
-        final RelNode input = sort.getChild();
+        final RelNode input = sort.getInput();
         return new OLAPSortRel(rel.getCluster(), traitSet, convert(input, input.getTraitSet().replace(OLAPRel.CONVENTION)), sort.getCollation(), sort.offset, sort.fetch);
     }
 

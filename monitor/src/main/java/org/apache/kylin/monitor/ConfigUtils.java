@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,6 +60,9 @@ public class ConfigUtils {
     public static final String KYLIN_MONITOR_CONF_PROP_FILE = "kylin.properties";
     public static final String QUERY_LOG_PARSE_RESULT_TABLE = "query.log.parse.result.table";
     public static final String DEFAULT_QUERY_LOG_PARSE_RESULT_TABLE = "kylin_query_log";
+
+    public static final String HIVE_JDBC_CON_USERNAME = "kylin.hive.jdbc.connection.username";
+    public static final String HIVE_JDBC_CON_PASSWD = "kylin.hive.jdbc.connection.password";
 
     public static final String DEPLOY_ENV = "deploy.env";
 
@@ -169,12 +172,24 @@ public class ConfigUtils {
         return this.monitorConfig.getProperty(KYLIN_METADATA_URL);
     }
 
+    public  String getMetadataUrlPrefix() {
+        String hbaseMetadataUrl = getMetadataUrl();
+        String defaultPrefix = "kylin_metadata";
+        int cut = hbaseMetadataUrl.indexOf('@');
+        String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
+        return tmp;
+    }
+
     public String getExtLogBaseDir() {
         return this.monitorConfig.getProperty(KYLIN_EXT_LOG_BASE_DIR);
     }
 
     public String getKylinHdfsWorkingDir() {
-        return this.monitorConfig.getProperty(KYLIN_HDFS_WORKING_DIR);
+        String root =  this.monitorConfig.getProperty(KYLIN_HDFS_WORKING_DIR);
+        if (!root.endsWith("/")) {
+            root += "/";
+        }
+        return root + getMetadataUrlPrefix();
     }
     public String getQueryLogParseResultDir() {
         return this.getKylinHdfsWorkingDir()+"/performance/query/";
@@ -203,6 +218,15 @@ public class ConfigUtils {
 
     public String getDeployEnv(){
         return this.monitorConfig.getProperty(DEPLOY_ENV);
+    }
+
+
+    public String getHiveJdbcConUserName() {
+        return this.monitorConfig.getProperty(HIVE_JDBC_CON_USERNAME);
+    }
+
+    public String getHiveJdbcConPasswd() {
+        return this.monitorConfig.getProperty(HIVE_JDBC_CON_PASSWD);
     }
 
 

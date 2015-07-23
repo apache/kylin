@@ -12,9 +12,5 @@
       "type": "CUBE",
       "realization": "test_kylin_cube_without_slr_left_join_empty"
     }
-  ],
-  "cubes": [
-    "test_kylin_cube_with_slr_left_join_empty",
-    "test_kylin_cube_without_slr_left_join_empty"
   ]
 }

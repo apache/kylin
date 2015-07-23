@@ -29,13 +29,18 @@ echo "version ${version}"
 echo "copy lib file"
 rm -rf lib
 mkdir lib
-cp server/target/kylin-server-${version}.war tomcat/webapps/kylin.war
+# copy war file
+cp server/target/kylin-server-${version}.war dist/tomcat/webapps/kylin.war
+# copy job jar
 cp job/target/kylin-job-${version}-job.jar lib/kylin-job-${version}.jar
+# copy coprocessor jar
 cp storage/target/kylin-storage-${version}-coprocessor.jar lib/kylin-coprocessor-${version}.jar
+# copy jdbc driver
 cp jdbc/target/kylin-jdbc-${version}.jar lib/kylin-jdbc-${version}.jar
+# copy monitor jar
 cp monitor/target/kylin-monitor-${version}.jar lib/kylin-monitor-${version}.jar
 # Copied file becomes 000 for some env (e.g. my Cygwin)
-chmod 644 tomcat/webapps/kylin.war
+chmod 644 dist/tomcat/webapps/kylin.war
 chmod 644 lib/kylin-job-${version}.jar
 chmod 644 lib/kylin-coprocessor-${version}.jar
 chmod 644 lib/kylin-jdbc-${version}.jar
@@ -52,5 +57,5 @@ cd webapp/dist
 for f in * .[^.]*
 do
     echo "Adding $f to war"
-    jar -uf ../../tomcat/webapps/kylin.war $f
+    jar -uf ../../dist/tomcat/webapps/kylin.war $f
 done

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,7 @@ public class JobController extends BasicController implements InitializingBean {
                 public void run() {
                     try {
                         DefaultScheduler scheduler = DefaultScheduler.getInstance();
-                        scheduler.init(new JobEngineConfig(kylinConfig));
+                        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
                         if (!scheduler.hasStarted()) {
                             logger.error("scheduler has not been started");
                             System.exit(1);
