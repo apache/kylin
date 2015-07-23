@@ -23,11 +23,10 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kylin.common.util.Bytes;
@@ -83,7 +82,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private MemoryBudgetController memBudget;
     private Thread[] taskThreads;
     private Throwable[] taskThreadExceptions;
-    private LinkedBlockingQueue<CuboidTask> taskPending;
+    private TreeSet<CuboidTask> taskPending;
     private AtomicInteger taskCuboidCompleted = new AtomicInteger(0);
 
     private CuboidResult baseResult;
@@ -195,7 +194,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         logger.info("In Mem Cube Build start, " + cubeDesc.getName());
 
         // multiple threads to compute cuboid in parallel
-        taskPending = new LinkedBlockingQueue<>();
+        taskPending = new TreeSet<CuboidTask>();
         taskCuboidCompleted.set(0);
         taskThreads = prepareTaskThreads();
         taskThreadExceptions = new Throwable[taskThreadCount];
@@ -293,8 +292,12 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             try {
                 while (!isAllCuboidDone()) {
                     CuboidTask task = null;
-                    while (task == null && taskHasNoException()) {
-                        task = taskPending.poll(15, TimeUnit.SECONDS);
+                    synchronized (taskPending) {
+                        while (task == null && taskHasNoException()) {
+                            task = taskPending.pollFirst();
+                            if (task == null)
+                                taskPending.wait(60000);
+                        }
                     }
                     // if task error occurs
                     if (task == null)
@@ -328,8 +331,13 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private void addChildTasks(CuboidResult parent) {
         List<Long> children = cuboidScheduler.getSpanningCuboid(parent.cuboidId);
-        for (Long child : children) {
-            taskPending.add(new CuboidTask(parent, child));
+        if (!children.isEmpty()) {
+            synchronized (taskPending) {
+                for (Long child : children) {
+                    taskPending.add(new CuboidTask(parent, child));
+                }
+                taskPending.notifyAll();
+            }
         }
     }
 
