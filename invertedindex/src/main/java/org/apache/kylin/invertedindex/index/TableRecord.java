@@ -18,13 +18,13 @@
 
 package org.apache.kylin.invertedindex.index;
 
+import java.util.Arrays;
+
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.common.util.DateFormat;
-
-import java.util.Arrays;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.metadata.measure.LongMutable;
 
 /**
  * TableRecord extends RawTableRecord by decorating it with a TableRecordInfo.
@@ -107,7 +107,7 @@ public class TableRecord implements Cloneable {
 
     public void setValueString(int col, String value) {
         if (rawRecord.isMetric(col)) {
-            LongWritable v = rawRecord.codec(col).valueOf(value);
+            LongMutable v = rawRecord.codec(col).valueOf(value);
             setValueMetrics(col, v);
         } else {
             final Dictionary<String> dict = info.dict(col);
@@ -143,7 +143,7 @@ public class TableRecord implements Cloneable {
         rawRecord.getValueBytes(col, bytes);
     }
 
-    private void setValueMetrics(int col, LongWritable value) {
+    private void setValueMetrics(int col, LongMutable value) {
         rawRecord.setValueMetrics(col, value);
     }
 
