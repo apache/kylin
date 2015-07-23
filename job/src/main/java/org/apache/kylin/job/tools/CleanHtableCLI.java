@@ -28,8 +28,7 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 
 /**
  */

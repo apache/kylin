@@ -40,6 +40,11 @@
             <artifactId>kylin-engine-mr</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-invertedindex</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
 
         <!-- Env & Test -->
         <dependency>
@@ -79,6 +84,12 @@
                     <artifactId>jsp-api</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.mrunit</groupId>
+            <artifactId>mrunit</artifactId>
+            <classifier>hadoop2</classifier>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

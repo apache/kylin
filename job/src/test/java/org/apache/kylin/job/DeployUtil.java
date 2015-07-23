@@ -18,7 +18,13 @@
 
 package org.apache.kylin.job;
 
-import com.google.common.collect.Lists;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -29,11 +35,10 @@ import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
-import org.apache.kylin.job.hadoop.hive.SqlHiveDataTypeMapping;
 import org.apache.kylin.job.streaming.KafkaDataLoader;
 import org.apache.kylin.job.streaming.StreamingTableDataGenerator;
 import org.apache.kylin.metadata.MetadataManager;
@@ -49,8 +54,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class DeployUtil {
     @SuppressWarnings("unused")
@@ -262,7 +266,7 @@ public class DeployUtil {
             if (i > 0) {
                 ddl.append(",");
             }
-            ddl.append(col.getName() + " " + SqlHiveDataTypeMapping.getHiveDataType((col.getDatatype())) + "\n");
+            ddl.append(col.getName() + " " + getHiveDataType((col.getDatatype())) + "\n");
         }
 
         ddl.append(")" + "\n");
@@ -272,4 +276,10 @@ public class DeployUtil {
         return new String[] { dropsql, ddl.toString() };
     }
 
+    private static String getHiveDataType(String javaDataType) {
+        String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
+        hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
+
+        return hiveDataType.toLowerCase();
+    }
 }

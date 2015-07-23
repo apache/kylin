@@ -31,7 +31,7 @@ import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.engine.mr.KylinReducer;
-import org.apache.kylin.job.constant.BatchConstants;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 
 /**
  * @author yangli9

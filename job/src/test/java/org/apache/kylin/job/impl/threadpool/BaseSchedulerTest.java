@@ -26,7 +26,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
-import org.apache.kylin.storage.hbase.ZookeeperJobLock;
+import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;

@@ -44,6 +44,11 @@
             <version>${project.parent.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.n3twork.druid</groupId>
+            <artifactId>extendedset</artifactId>
+        </dependency>
+
         <!-- Env & Test -->
         <dependency>
             <groupId>org.apache.kylin</groupId>

@@ -3,7 +3,7 @@ package org.apache.kylin.job.spark;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.job.tools.OptionsHelper;
+import org.apache.kylin.job.common.OptionsHelper;
 
 import java.io.Serializable;
 
