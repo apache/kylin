@@ -248,7 +248,7 @@ public class DictionaryManager {
             srcCol = col.getName();
             srcColIdx = col.getColumnDesc().getZeroBasedIndex();
             if (model.isFactTable(col.getTable())) {
-                table = factTableValueProvider.getDistinctValuesFor(col);
+                table = (factTableValueProvider == null) ? null : factTableValueProvider.getDistinctValuesFor(col);
             } else {
                 table = TableSourceFactory.createReadableTable(metaMgr.getTableDesc(col.getTable()));
             }
