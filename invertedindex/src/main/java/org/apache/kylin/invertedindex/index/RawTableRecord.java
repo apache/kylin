@@ -18,14 +18,14 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import java.util.Arrays;
+
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.hadoop.io.LongWritable;
-
-import java.util.Arrays;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.metadata.measure.LongMutable;
+import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 
 /**
  */
@@ -52,7 +52,7 @@ public class RawTableRecord implements Cloneable {
         return digest.isMetrics(col);
     }
 
-    public FixedLenMeasureCodec<LongWritable> codec(int col) {
+    public FixedLenMeasureCodec<LongMutable> codec(int col) {
         return digest.codec(col);
     }
 
@@ -76,7 +76,7 @@ public class RawTableRecord implements Cloneable {
         return BytesUtil.readUnsigned(buf, digest.offset(col), digest.length(col));
     }
 
-    public void setValueMetrics(int col, LongWritable value) {
+    public void setValueMetrics(int col, LongMutable value) {
         digest.codec(col).write(value, buf, digest.offset(col));
     }
 

@@ -18,15 +18,16 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import com.google.common.base.Objects;
-import org.apache.hadoop.io.LongWritable;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import com.google.common.base.Objects;
 
 /**
  */
@@ -40,7 +41,7 @@ public class TableRecordInfoDigest {
     private int[] dictMaxIds;// max id for each of the dict
     private int[] lengths;// length of each encoded dict
     private boolean[] isMetric;// whether it's metric or dict
-    private FixedLenMeasureCodec[] measureCodecs;
+    private FixedLenMeasureCodec<?>[] measureCodecs;
 
 
     public TableRecordInfoDigest(int nColumns, int byteFormLen, //
@@ -124,9 +125,9 @@ public class TableRecordInfoDigest {
 
     // metrics go with fixed-len codec
     @SuppressWarnings("unchecked")
-    public FixedLenMeasureCodec<LongWritable> codec(int col) {
+    public FixedLenMeasureCodec<LongMutable> codec(int col) {
         // yes, all metrics are long currently
-        return measureCodecs[col];
+        return (FixedLenMeasureCodec<LongMutable>) measureCodecs[col];
     }
 
     public static byte[] serialize(TableRecordInfoDigest o) {
