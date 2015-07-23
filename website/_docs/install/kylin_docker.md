@@ -26,10 +26,10 @@ Once the container is pulled you are ready to start playing with Kylin. Get the 
  $ source ambari-functions
 {% endhighlight %}
 {% highlight Groff markup %}
- $ kylin-deploy-cluster 3
+ $ kylin-deploy-cluster 1
 {% endhighlight %}
 
-You can specify the number of nodes you'd like to have in your cluster (3 in this case). Once we installed all the necessary Hadoop
+You can specify the number of nodes you'd like to have in your cluster (1 in this case). Once we installed all the necessary Hadoop
 services we'll build Kylin on top of it and then you can reach the UI on: 
 {% highlight Groff markup %}
 #Ambari Dashboard
@@ -39,7 +39,7 @@ Use `admin/admin` to login. Make sure HBase is running.
 
 {% highlight Groff markup %}
 #Kylin Dashboard
-http://<container_ip>:7070
+http://<container_ip>:7070/kylin
 {% endhighlight %}
 The default credentials to login are: `ADMIN:KYLIN`. 
 The cluster is pre-populated with sample data and is ready to build cubes as shown [here](../tutorial/create_cube.html).

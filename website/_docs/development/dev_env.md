@@ -20,8 +20,8 @@ Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoo
 In Hortonworks sandbox, ambari helps to launch hadoop:
 
 {% highlight Groff markup %}
-	ambari-agent start
-	ambari-server start
+ambari-agent start
+ambari-server start
 {% endhighlight %}
 	
 With both command successfully run you can go to ambari home page at <http://yoursandboxip:8080> (user:admin,password:admin) to check everything's status. By default ambari disables Hbase, you'll need manually start the `Hbase` service.
@@ -48,7 +48,7 @@ The latest maven can be found at <http://maven.apache.org/download.cgi>, we crea
 First clone the Kylin project to your local:
 
 {% highlight Groff markup %}
-	git clone https://github.com/KylinOLAP/Kylin.git
+	git clone https://github.com/apache/incubator-kylin.git
 {% endhighlight %}
 	
 Install Kylin artifacts to the maven repo
@@ -76,7 +76,7 @@ An alternative to the host replacement is updating your `hosts` file to resolve 
 Run a end-to-end cube building test
  
 {% highlight Groff markup %}
-	mvn test -Dtest=com.kylinolap.job.BuildCubeWithEngineTest -DfailIfNoTests=false
+	mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false
 {% endhighlight %}
 	
 Run other tests, the end-to-end cube building test is exclueded
@@ -87,7 +87,14 @@ Run other tests, the end-to-end cube building test is exclueded
 
 ### Launch Kylin Web Server
 
-In your Eclipse IDE, launch `com.kylinolap.rest.DebugTomcat` with specifying VM arguments "-Dspring.profiles.active=sandbox". (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
+Make a copy from webapp/app/WEB-INF to server/src/main/webapp/WEB-INF
+{% highlight Groff markup %}
+	cp -r  webapp/app/WEB-INF server/src/main/webapp
+{% endhighlight %}
+
+In IDE, launch `org.apache.kylin.rest.DebugTomcat`. (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
 
 Check Kylin Web available at http://localhost:7070/kylin (user:ADMIN,password:KYLIN)
+
+For IntelliJ IDEA users, need modify "server/kylin-server.iml" file, replace all "PROVIDED" to "COMPILE", otherwise an "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" error may be thrown;
 
