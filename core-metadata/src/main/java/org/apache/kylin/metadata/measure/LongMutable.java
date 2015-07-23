@@ -18,23 +18,50 @@
 
 package org.apache.kylin.metadata.measure;
 
-public class LongMutable {
+public class LongMutable implements Comparable<LongMutable> {
 
     private long v;
-    
+
     public LongMutable() {
         this(0);
     }
-    
+
     public LongMutable(long v) {
         set(v);
     }
-    
+
     public long get() {
         return v;
     }
-    
+
     public void set(long v) {
         this.v = v;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof LongMutable)) {
+            return false;
+        }
+        LongMutable other = (LongMutable) o;
+        return this.v == other.v;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) v;
+    }
+
+    @Override
+    public int compareTo(LongMutable o) {
+        long thisValue = this.v;
+        long thatValue = o.v;
+        return (thisValue < thatValue ? -1 : (thisValue == thatValue ? 0 : 1));
+    }
+
+    @Override
+    public String toString() {
+        return Long.toString(v);
+    }
+
 }
