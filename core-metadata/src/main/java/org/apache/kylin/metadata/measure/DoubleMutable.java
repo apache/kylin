@@ -18,23 +18,48 @@
 
 package org.apache.kylin.metadata.measure;
 
-public class DoubleMutable {
+public class DoubleMutable implements Comparable<DoubleMutable> {
 
     private double v;
-    
+
     public DoubleMutable() {
         this(0);
     }
-    
+
     public DoubleMutable(double v) {
         set(v);
     }
-    
+
     public double get() {
         return v;
     }
-    
+
     public void set(double v) {
         this.v = v;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof DoubleMutable)) {
+            return false;
+        }
+        DoubleMutable other = (DoubleMutable) o;
+        return this.v == other.v;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) Double.doubleToLongBits(v);
+    }
+
+    @Override
+    public int compareTo(DoubleMutable o) {
+        return (v < o.v ? -1 : (v == o.v ? 0 : 1));
+    }
+
+    @Override
+    public String toString() {
+        return Double.toString(v);
+    }
+
 }
