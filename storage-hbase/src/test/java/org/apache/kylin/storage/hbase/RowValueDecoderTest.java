@@ -35,6 +35,7 @@ import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

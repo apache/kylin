@@ -1,7 +1,7 @@
 package org.apache.kylin.job.spark;
 
 import org.apache.commons.cli.Options;
-import org.apache.kylin.job.tools.OptionsHelper;
+import org.apache.kylin.job.common.OptionsHelper;
 
 /**
  */

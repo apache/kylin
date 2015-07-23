@@ -35,11 +35,11 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.RegionScannerAdapter;
 import org.apache.kylin.storage.hbase.ResultScannerAdapter;
-import org.apache.kylin.storage.hbase.RowValueDecoder;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.kylin.storage.hbase.coprocessor.FilterDecorator;
+import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

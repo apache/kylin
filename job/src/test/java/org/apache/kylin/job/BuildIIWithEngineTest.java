@@ -39,7 +39,7 @@ import org.apache.kylin.job.invertedindex.IIJobBuilder;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
-import org.apache.kylin.storage.hbase.ZookeeperJobLock;
+import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.junit.*;
 
 import java.io.File;
