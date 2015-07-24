@@ -19,6 +19,7 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public class MetadataCleanupJob extends AbstractHadoopJob {
 
@@ -91,7 +93,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     public void cleanup() throws Exception {
         CubeManager cubeManager = CubeManager.getInstance(config);
 
-        List<String> activeResourceList = Lists.newArrayList();
+        Set<String> activeResourceList = Sets.newHashSet();
         for (org.apache.kylin.cube.CubeInstance cube : cubeManager.listAllCubes()) {
             for (org.apache.kylin.cube.CubeSegment segment : cube.getSegments()) {
                 activeResourceList.addAll(segment.getSnapshotPaths());

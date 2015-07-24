@@ -74,6 +74,10 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         // update cube info
         result.addTask(createUpdateCubeInfoAfterBuildStep(seg, intermediateHiveTableStepId, baseCuboidStepId, convertCuboidToHfileStep.getId(), jobId));
 
+        final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(seg.getCubeDesc(), seg);
+        final String hiveIntermediateTable = this.getIntermediateHiveTableName(intermediateTableDesc, jobId);
+        result.addTask(createGarbageCollectionStep(seg, null, hiveIntermediateTable, null));
+        
         return result;
     }
 
@@ -97,12 +101,15 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
         List<String> mergingSegmentIds = Lists.newArrayList();
         List<String> mergingCuboidPaths = Lists.newArrayList();
+        List<String> mergingHTables = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
-            if (merging.equals(appendSegment))
+            mergingHTables.add(merging.getStorageLocationIdentifier());
+            if (merging.equals(appendSegment)) {
                 mergingCuboidPaths.add(appendRootPath + "*");
-            else
+            } else {
                 mergingCuboidPaths.add(getPathToMerge(merging));
+            }
         }
 
         // merge cuboid
@@ -113,6 +120,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(mergeSegment, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
+        result.addTask(createGarbageCollectionStep(mergeSegment, mergingHTables, null, mergingCuboidPaths));
         
         return result;
     }
@@ -128,9 +136,11 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
         List<String> mergingSegmentIds = Lists.newArrayList();
         List<String> mergingCuboidPaths = Lists.newArrayList();
+        List<String> mergingHTables = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
             mergingCuboidPaths.add(getPathToMerge(merging));
+            mergingHTables.add(merging.getStorageLocationIdentifier());
         }
 
         // merge cuboid
@@ -141,7 +151,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(seg, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
-
+        result.addTask(createGarbageCollectionStep(seg, mergingHTables, null, mergingCuboidPaths));
         return result;
     }
 
@@ -441,5 +451,15 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         result.setCubingJobId(jobId);
         return result;
     }
+
+    private GarbageCollectionStep createGarbageCollectionStep(CubeSegment seg, List<String> oldHtables, String hiveIntermediateTable, List<String> oldHdsfPaths) {
+        GarbageCollectionStep result = new GarbageCollectionStep();
+        result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
+        result.setOldHTables(oldHtables);
+        result.setOldHiveTable(hiveIntermediateTable);
+        result.setOldHdsfPaths(oldHdsfPaths);
+        return result;
+    }
+
 
 }
