@@ -29,6 +29,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableSignature;
@@ -190,17 +191,24 @@ public class DictionaryManager {
 
         logger.info("building dictionary for " + col);
 
-        Object[] tmp = decideSourceData(model, dict, col, factTableValueProvider);
-        String srcTable = (String) tmp[0];
-        String srcCol = (String) tmp[1];
-        int srcColIdx = (Integer) tmp[2];
-        ReadableTable inpTable = (ReadableTable) tmp[3];
+        TblColRef srcCol = decideSourceData(model, dict, col);
+        String srcTable = srcCol.getTable();
+        String srcColName = srcCol.getName();
+        int srcColIdx = srcCol.getColumnDesc().getZeroBasedIndex();
+        
+        ReadableTable inpTable;
+        if (model.isFactTable(srcTable)) {
+            inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
+        } else {
+            TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(srcTable);
+            inpTable = TableSourceFactory.createReadableTable(tableDesc);
+        }
 
         TableSignature inputSig = inpTable.getSignature();
         if (inputSig == null) // table does not exists
             return null;
 
-        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inputSig);
+        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcColName, srcColIdx, col.getDatatype(), inputSig);
 
         String dupDict = checkDupByInfo(dictInfo);
         if (dupDict != null) {
@@ -215,28 +223,10 @@ public class DictionaryManager {
     }
 
     /**
-     * Get column origin
-     *
-     * @return 1. source table name
-     * 2. column name
-     * 3. column cardinal in source table
-     * 4. ReadableTable object
+     * Decide a dictionary's source data, leverage PK-FK relationship.
      */
-
-    public Object[] decideSourceData(DataModelDesc model, String dict, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
-        String srcTable;
-        String srcCol;
-        int srcColIdx;
-        ReadableTable table;
-        MetadataManager metaMgr = MetadataManager.getInstance(config);
-
-        // Decide source data of dictionary:
-        // 1. If 'useDict' specifies pre-defined data set, use that
-        // 2. Otherwise find a lookup table to scan through
-
+    public TblColRef decideSourceData(DataModelDesc model, String dict, TblColRef col) throws IOException {
         // Note FK on fact table is supported by scan the related PK on lookup table
-
-        // normal case, source from lookup table
         if ("true".equals(dict) || "string".equals(dict) || "number".equals(dict) || "any".equals(dict)) {
             // FK on fact table and join type is inner, use PK from lookup instead
             if (model.isFactTable(col.getTable())) {
@@ -244,19 +234,10 @@ public class DictionaryManager {
                 if (pkCol != null)
                     col = pkCol; // scan the counterparty PK on lookup table instead
             }
-            srcTable = col.getTable();
-            srcCol = col.getName();
-            srcColIdx = col.getColumnDesc().getZeroBasedIndex();
-            if (model.isFactTable(col.getTable())) {
-                table = (factTableValueProvider == null) ? null : factTableValueProvider.getDistinctValuesFor(col);
-            } else {
-                table = TableSourceFactory.createReadableTable(metaMgr.getTableDesc(col.getTable()));
-            }
+            return col;
         }
         else
             throw new IllegalArgumentException("Unknown dictionary value: " + dict);
-
-        return new Object[] { srcTable, srcCol, srcColIdx, table };
     }
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {

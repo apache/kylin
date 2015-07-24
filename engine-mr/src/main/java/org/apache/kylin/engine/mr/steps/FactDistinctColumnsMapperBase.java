@@ -62,7 +62,7 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
             if (!rowKey.isUseDictionary(col))
                 continue;
 
-            String scanTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+            String scanTable = dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col).getTable();
             if (cubeDesc.getModel().isFactTable(scanTable)) {
                 factDictCols.add(i);
             }
