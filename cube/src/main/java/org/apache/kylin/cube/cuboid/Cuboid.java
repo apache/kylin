@@ -93,6 +93,10 @@ public class Cuboid implements Comparable<Cuboid> {
         return cube.getRowkey().getFullMask();
     }
 
+    public static void clearCache(String cubeName){
+        Cuboid.CUBOID_CACHE.remove(cubeName);
+    }
+    
     // Breadth-First-Search
     private static long translateToValidCuboid(CubeDesc cube, long cuboidID) {
         if (Cuboid.isValid(cube, cuboidID)) {

@@ -21,6 +21,7 @@ package org.apache.kylin.cube;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.KylinConfig;
@@ -29,6 +30,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
@@ -413,11 +415,13 @@ public class CubeManager implements IRealizationProvider {
         final String cubeName = cube.getName().toUpperCase();
         cubeMap.remove(cubeName);
         usedStorageLocation.removeAll(cubeName);
+        Cuboid.clearCache(cubeName);
     }
 
     public void removeCubeCacheLocal(String cubeName) {
         cubeMap.removeLocal(cubeName);
         usedStorageLocation.removeAll(cubeName);
+        Cuboid.clearCache(cubeName);
     }
 
     public LookupStringTable getLookupTable(CubeSegment cubeSegment, DimensionDesc dim) {
