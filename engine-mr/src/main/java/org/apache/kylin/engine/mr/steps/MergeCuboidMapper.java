@@ -76,7 +76,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         else {
             ret = cubeDesc.getRowkey().isUseDictionary(col);
             if (ret) {
-                String dictTable = (String) DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
+                String dictTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col).getTable();
                 ret = cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
             }
             dictsNeedMerging.put(col, ret);
