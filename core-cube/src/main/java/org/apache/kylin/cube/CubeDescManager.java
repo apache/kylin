@@ -25,6 +25,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
 import org.apache.kylin.cube.model.validation.ValidateContext;
@@ -117,6 +118,7 @@ public class CubeDescManager {
 
         // Here replace the old one
         cubeDescMap.putLocal(ndesc.getName(), ndesc);
+        Cuboid.reloadCache(name);
         return ndesc;
     }
 
@@ -180,11 +182,13 @@ public class CubeDescManager {
         String path = cubeDesc.getResourcePath();
         getStore().deleteResource(path);
         cubeDescMap.remove(cubeDesc.getName());
+        Cuboid.reloadCache(cubeDesc.getName());
     }
 
     // remove cubeDesc
     public void removeLocalCubeDesc(String name) throws IOException {
         cubeDescMap.removeLocal(name);
+        Cuboid.reloadCache(name);
     }
 
     private void reloadAllCubeDesc() throws IOException {
