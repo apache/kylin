@@ -77,7 +77,7 @@ public class DebugTomcat {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         File devJobJar = findFile("../job/target", "kylin-job-.*-SNAPSHOT-job.jar");
         if (devJobJar != null) {
-            conf.overrideKylinJobJarPath(devJobJar.getAbsolutePath());
+            conf.overrideMRJobJarPath(devJobJar.getAbsolutePath());
         }
         File devCoprocessorJar = findFile("../storage/target", "kylin-storage-.*-SNAPSHOT-coprocessor.jar");
         if (devCoprocessorJar != null) {

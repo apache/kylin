@@ -34,10 +34,9 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.kylin.job.streaming.KafkaDataLoader;
 import org.apache.kylin.job.streaming.StreamingTableDataGenerator;
@@ -79,18 +78,17 @@ public class DeployUtil {
     }
 
     public static void overrideJobJarLocations() {
-        Pair<File, File> files = getJobJarFiles();
-        File jobJar = files.getFirst();
-        File coprocessorJar = files.getSecond();
+        File jobJar = getJobJarFile();
+        File coprocessorJar = getCoprocessorJarFile();
 
-        config().overrideKylinJobJarPath(jobJar.getAbsolutePath());
+        config().overrideMRJobJarPath(jobJar.getAbsolutePath());
         config().overrideCoprocessorLocalJar(coprocessorJar.getAbsolutePath());
+        config().overrideSparkJobJarPath(getSparkJobJarFile().getAbsolutePath());
     }
 
     public static void deployJobJars() throws IOException {
-        Pair<File, File> files = getJobJarFiles();
-        File originalJobJar = files.getFirst();
-        File originalCoprocessorJar = files.getSecond();
+        File originalJobJar = getJobJarFile();
+        File originalCoprocessorJar = getCoprocessorJarFile();
 
         String jobJarPath = config().getKylinJobJarPath();
         if (StringUtils.isEmpty(jobJarPath)) {
@@ -114,19 +112,26 @@ public class DeployUtil {
         cmdExec.copyFile(coprocessorJarRenamedAsTarget.getAbsolutePath(), targetCoprocessorJar.getParent());
     }
 
-    private static Pair<File, File> getJobJarFiles() {
-        String version;
+    private static String getPomVersion() {
         try {
             MavenXpp3Reader pomReader = new MavenXpp3Reader();
             Model model = pomReader.read(new FileReader("../pom.xml"));
-            version = model.getVersion();
+            return model.getVersion();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
 
-        File jobJar = new File("../job/target", "kylin-job-" + version + "-job.jar");
-        File coprocessorJar = new File("../storage/target", "kylin-storage-" + version + "-coprocessor.jar");
-        return new Pair<File, File>(jobJar, coprocessorJar);
+    private static File getJobJarFile() {
+        return new File("../job/target", "kylin-job-" + getPomVersion() + "-job.jar");
+    }
+
+    private static File getCoprocessorJarFile() {
+        return new File("../storage/target", "kylin-storage-" + getPomVersion() + "-coprocessor.jar");
+    }
+
+    private static File getSparkJobJarFile() {
+        return new File("../spark/target", "kylin-spark-" + getPomVersion() + "-job.jar");
     }
 
     private static void execCliCommand(String cmd) throws IOException {

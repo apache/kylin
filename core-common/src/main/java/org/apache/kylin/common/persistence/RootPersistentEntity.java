@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.persistence;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -40,7 +41,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author yangli9
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-abstract public class RootPersistentEntity implements AclEntity {
+abstract public class RootPersistentEntity implements AclEntity, Serializable {
 
     static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss z";
     static FastDateFormat format = FastDateFormat.getInstance(DATE_PATTERN);
