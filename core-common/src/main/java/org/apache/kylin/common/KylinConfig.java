@@ -99,6 +99,8 @@ public class KylinConfig {
 
     public static final String KYLIN_HDFS_WORKING_DIR = "kylin.hdfs.working.dir";
 
+    public static final String HIVE_DATABASE_FOR_INTERMEDIATE_TABLE = "kylin.job.hive.database.for.intermediatetable";
+    
     public static final String HIVE_PASSWORD = "hive.password";
 
     public static final String HIVE_USER = "hive.user";
@@ -655,6 +657,11 @@ public class KylinConfig {
     public void setStorageUrl(String storageUrl) {
         kylinConfig.setProperty(KYLIN_STORAGE_URL, storageUrl);
         this.storageUrl = storageUrl;
+    }
+
+
+    public String getHiveDatabaseForIntermediateTable() {
+        return this.getOptional(HIVE_DATABASE_FOR_INTERMEDIATE_TABLE, "default");
     }
 
     public void setRunAsRemoteCommand(String v) {
