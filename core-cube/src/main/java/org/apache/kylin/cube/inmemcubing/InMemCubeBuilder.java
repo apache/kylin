@@ -158,7 +158,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         }
     }
 
-    ConcurrentNavigableMap<Long, CuboidResult> build(BlockingQueue<List<String>> input) throws IOException {
+    public ConcurrentNavigableMap<Long, CuboidResult> build(BlockingQueue<List<String>> input) throws IOException {
         final ConcurrentNavigableMap<Long, CuboidResult> result = new ConcurrentSkipListMap<Long, CuboidResult>();
         build(input, new ICuboidCollector() {
             @Override
@@ -171,22 +171,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     interface ICuboidCollector {
         void collect(CuboidResult result);
-    }
-
-    static class CuboidResult {
-        public long cuboidId;
-        public GridTable table;
-        public int nRows;
-        public long timeSpent;
-        public int aggrCacheMB;
-
-        public CuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
-            this.cuboidId = cuboidId;
-            this.table = table;
-            this.nRows = nRows;
-            this.timeSpent = timeSpent;
-            this.aggrCacheMB = aggrCacheMB;
-        }
     }
 
     private void build(BlockingQueue<List<String>> input, ICuboidCollector collector) throws IOException {

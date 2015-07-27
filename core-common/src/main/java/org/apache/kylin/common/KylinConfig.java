@@ -90,6 +90,8 @@ public class KylinConfig {
 
     public static final String KYLIN_JOB_JAR = "kylin.job.jar";
 
+    public static final String KYLIN_JOB_JAR_SPARK = "kylin.job.jar.spark";
+
     public static final String COPROCESSOR_LOCAL_JAR = "kylin.coprocessor.local.jar";
 
     public static final String KYLIN_JOB_LOG_DIR = "kylin.job.log.dir";
@@ -317,13 +319,31 @@ public class KylinConfig {
         return getFileName(kylinHome + File.separator + "lib", JOB_JAR_NAME_PATTERN);
     }
 
-    public void overrideKylinJobJarPath(String path) {
+    public String getKylinSparkJobJarPath() {
+        final String jobJar = getOptional(KYLIN_JOB_JAR_SPARK);
+        if (StringUtils.isNotEmpty(jobJar)) {
+            return jobJar;
+        }
+        String kylinHome = getKylinHome();
+        if (StringUtils.isEmpty(kylinHome)) {
+            return "";
+        }
+        return getFileName(kylinHome + File.separator + "lib", SPARK_JOB_JAR_NAME_PATTERN);
+    }
+
+    public void overrideMRJobJarPath(String path) {
         logger.info("override " + KYLIN_JOB_JAR + " to " + path);
         System.setProperty(KYLIN_JOB_JAR, path);
     }
 
+    public void overrideSparkJobJarPath(String path) {
+        logger.info("override " + KYLIN_JOB_JAR_SPARK + " to " + path);
+        System.setProperty(KYLIN_JOB_JAR_SPARK, path);
+    }
+
     private static final Pattern COPROCESSOR_JAR_NAME_PATTERN = Pattern.compile("kylin-coprocessor-(.+)\\.jar");
     private static final Pattern JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-job-(.+)\\.jar");
+    private static final Pattern SPARK_JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-spark-(.+)\\.jar");
 
     public String getCoprocessorLocalJar() {
         final String coprocessorJar = getOptional(COPROCESSOR_LOCAL_JAR);

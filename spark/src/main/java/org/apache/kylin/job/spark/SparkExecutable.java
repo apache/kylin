@@ -25,7 +25,13 @@ public class SparkExecutable extends AbstractExecutable {
     private String formatArgs() {
         StringBuilder stringBuilder = new StringBuilder();
         for (Map.Entry<String, String> entry : getParams().entrySet()) {
-            stringBuilder.append("-").append(entry.getKey()).append(" ").append(entry.getValue()).append(" ");
+            StringBuilder tmp = new StringBuilder();
+            tmp.append("-").append(entry.getKey()).append(" ").append(entry.getValue()).append(" ");
+            if (entry.getKey().equals(CLASS_NAME)) {
+                stringBuilder.insert(0, tmp);
+            } else {
+                stringBuilder.append(tmp);
+            }
         }
         if (stringBuilder.length() > 0) {
             return stringBuilder.substring(0, stringBuilder.length() - 1).toString();
@@ -43,7 +49,7 @@ public class SparkExecutable extends AbstractExecutable {
             String cmd = String.format("%s/bin/spark-submit --class \"org.apache.kylin.job.spark.SparkEntry\" --master %s %s %s",
                     config.getSparkHome(),
                     config.getSparkMaster(),
-                    config.getKylinJobJarPath(),
+                    config.getKylinSparkJobJarPath(),
                     formatArgs());
             logger.info("cmd:" + cmd);
             final StringBuilder output = new StringBuilder();
@@ -52,6 +58,7 @@ public class SparkExecutable extends AbstractExecutable {
                 public void log(String message) {
                     output.append(message);
                     output.append("\n");
+                    logger.info(message);
                 }
             });
             return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
