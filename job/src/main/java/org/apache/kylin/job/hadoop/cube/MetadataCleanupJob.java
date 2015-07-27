@@ -107,33 +107,37 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         for (String resourceRoot : new String[]{ResourceStore.SNAPSHOT_RESOURCE_ROOT}) {
             ArrayList<String> snapshotTables = getStore().listResources(resourceRoot);
 
-            for (String snapshotTable : snapshotTables) {
-                ArrayList<String> snapshotNames = getStore().listResources(snapshotTable);
-                if (snapshotNames != null)
-                    for (String snapshot : snapshotNames) {
-                        if (!activeResourceList.contains(snapshot)) {
-                            if (isOlderThanThreshold(getStore().getResourceTimestamp(snapshot)))
-                                toDeleteResource.add(snapshot);
+            if (snapshotTables != null) {
+                for (String snapshotTable : snapshotTables) {
+                    ArrayList<String> snapshotNames = getStore().listResources(snapshotTable);
+                    if (snapshotNames != null)
+                        for (String snapshot : snapshotNames) {
+                            if (!activeResourceList.contains(snapshot)) {
+                                if (isOlderThanThreshold(getStore().getResourceTimestamp(snapshot)))
+                                    toDeleteResource.add(snapshot);
+                            }
                         }
-                    }
+                }
             }
         }
 
         // three level resources, only dictionaries
         ArrayList<String> dictTables = getStore().listResources(ResourceStore.DICT_RESOURCE_ROOT);
 
-        for (String table : dictTables) {
-            ArrayList<String> tableColNames = getStore().listResources(table);
-            if (tableColNames != null)
-                for (String tableCol : tableColNames) {
-                    ArrayList<String> dictionaries = getStore().listResources(tableCol);
-                    if (dictionaries != null)
-                        for (String dict : dictionaries)
-                            if (!activeResourceList.contains(dict)) {
-                                if (isOlderThanThreshold(getStore().getResourceTimestamp(dict)))
-                                    toDeleteResource.add(dict);
-                            }
-                }
+        if (dictTables != null) {
+            for (String table : dictTables) {
+                ArrayList<String> tableColNames = getStore().listResources(table);
+                if (tableColNames != null)
+                    for (String tableCol : tableColNames) {
+                        ArrayList<String> dictionaries = getStore().listResources(tableCol);
+                        if (dictionaries != null)
+                            for (String dict : dictionaries)
+                                if (!activeResourceList.contains(dict)) {
+                                    if (isOlderThanThreshold(getStore().getResourceTimestamp(dict)))
+                                        toDeleteResource.add(dict);
+                                }
+                    }
+            }
         }
 
 
