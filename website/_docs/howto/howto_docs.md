@@ -118,7 +118,7 @@ Then access http://127.0.0.1:4000 in your browser.
 
 ### Setup
 
-1. `cd docs/website`
+1. `cd website`
 2. `svn co https://svn.apache.org/repos/asf/incubator/kylin/site _site`
 3. `sudo apt-get install rubygems ruby2.1-dev zlib1g-dev` (linux)
 4. `sudo gem install bundler github-pages jekyll`
