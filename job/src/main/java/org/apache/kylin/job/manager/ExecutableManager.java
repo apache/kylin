@@ -18,7 +18,6 @@
 
 package org.apache.kylin.job.manager;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -33,7 +32,6 @@ import org.apache.kylin.job.execution.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.List;
@@ -85,7 +83,7 @@ public class ExecutableManager {
         executableOutputPO.setUuid(executable.getId());
         executableDao.addJobOutput(executableOutputPO);
         if (executable instanceof DefaultChainedExecutable) {
-            for (AbstractExecutable subTask: ((DefaultChainedExecutable) executable).getTasks()) {
+            for (AbstractExecutable subTask : ((DefaultChainedExecutable) executable).getTasks()) {
                 addJobOutput(subTask);
             }
         }
@@ -146,13 +144,16 @@ public class ExecutableManager {
 
     public List<AbstractExecutable> getAllExecutables() {
         try {
-            return Lists.transform(executableDao.getJobs(), new Function<ExecutablePO, AbstractExecutable>() {
-                @Nullable
-                @Override
-                public AbstractExecutable apply(ExecutablePO input) {
-                        return parseTo(input);
+            List<AbstractExecutable> ret = Lists.newArrayList();
+            for (ExecutablePO po : executableDao.getJobs()) {
+                try {
+                    AbstractExecutable ae = parseTo(po);
+                    ret.add(ae);
+                } catch (IllegalArgumentException e) {
+                    logger.error("error parsing one executabePO: ", e);
                 }
-            });
+            }
+            return ret;
         } catch (PersistentException e) {
             logger.error("error get All Jobs", e);
             throw new RuntimeException(e);
@@ -305,7 +306,7 @@ public class ExecutableManager {
             List<ExecutablePO> tasks = executablePO.getTasks();
             if (tasks != null && !tasks.isEmpty()) {
                 Preconditions.checkArgument(result instanceof ChainedExecutable);
-                for (ExecutablePO subTask: tasks) {
+                for (ExecutablePO subTask : tasks) {
                     ((ChainedExecutable) result).addTask(parseTo(subTask));
                 }
             }

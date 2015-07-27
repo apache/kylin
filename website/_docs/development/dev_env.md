@@ -13,7 +13,7 @@ By following this tutorial, you will be able to build kylin test cubes by runnin
 
 ## Environment on the Hadoop CLI
 
-Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox, like <http://hortonworks.com/products/hortonworks-sandbox/>. In the following tutorial we'll go with **Hortonworks Sandbox 2.2**. 
+Off-Hadoop-CLI installation requires you having a hadoop CLI machine (or a hadoop sandbox) as well as your local develop machine. To make things easier we strongly recommend you starting with running Kylin on a hadoop sandbox, like <http://hortonworks.com/products/hortonworks-sandbox/>. In the following tutorial we'll go with **Hortonworks Sandbox 2.2.4**. It is recommended that you provide enough memory to your sandbox, 8G or more is preferred.
 
 ### Start Hadoop
 
@@ -37,10 +37,10 @@ For other hadoop distribution, basically start the hadoop cluster, make sure HDF
 The latest maven can be found at <http://maven.apache.org/download.cgi>, we create a symbolic so that `mvn` can be run anywhere.
 
 {% highlight Groff markup %}
-	cd ~
-	wget http://xenia.sote.hu/ftp/mirrors/www.apache.org/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz
-	tar -xzvf apache-maven-3.2.5-bin.tar.gz
-	ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
+cd ~
+wget http://xenia.sote.hu/ftp/mirrors/www.apache.org/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz
+tar -xzvf apache-maven-3.2.5-bin.tar.gz
+ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 {% endhighlight %}
 
 ### Compile
@@ -73,28 +73,34 @@ An alternative to the host replacement is updating your `hosts` file to resolve 
 
 ### Run unit tests
 
-Run a end-to-end cube building test
+Run a end-to-end cube building test, these special test cases will populate some sample cubes in your metadata store and build them ready.
+It might take a while (maybe one hour), please keep patient.
  
 {% highlight Groff markup %}
-	mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false
+
+mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false -P sandbox
+mvn test -Dtest=org.apache.kylin.job.BuildIIWithEngineTest -DfailIfNoTests=false -P sandbox
+	
 {% endhighlight %}
 	
 Run other tests, the end-to-end cube building test is exclueded
 
 {% highlight Groff markup %}
-	mvn test
+
+	mvn test -fae -P sandbox
+
 {% endhighlight %}
 
 ### Launch Kylin Web Server
 
-Make a copy from webapp/app/WEB-INF to server/src/main/webapp/WEB-INF
+Copy server/src/main/webapp/WEB-INF to webapp/app/WEB-INF 
+
 {% highlight Groff markup %}
-	cp -r  webapp/app/WEB-INF server/src/main/webapp
+cp -r server/src/main/webapp/WEB-INF webapp/app/WEB-INF 
 {% endhighlight %}
 
-In IDE, launch `org.apache.kylin.rest.DebugTomcat`. (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
+In IDE, launch `org.apache.kylin.rest.DebugTomcat` with working directory set to the /server folder. (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
 
 Check Kylin Web available at http://localhost:7070/kylin (user:ADMIN,password:KYLIN)
 
 For IntelliJ IDEA users, need modify "server/kylin-server.iml" file, replace all "PROVIDED" to "COMPILE", otherwise an "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" error may be thrown;
-
