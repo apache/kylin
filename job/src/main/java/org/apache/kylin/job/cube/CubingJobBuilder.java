@@ -102,6 +102,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         List<String> mergingSegmentIds = Lists.newArrayList();
         List<String> mergingCuboidPaths = Lists.newArrayList();
         List<String> mergingHTables = Lists.newArrayList();
+        List<String> toDeletePaths = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
             mergingHTables.add(merging.getStorageLocationIdentifier());
@@ -110,6 +111,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             } else {
                 mergingCuboidPaths.add(getPathToMerge(merging));
             }
+            toDeletePaths.add(getJobWorkingDir(merging.getLastBuildJobID()));
         }
 
         // merge cuboid
@@ -120,7 +122,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(mergeSegment, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
-        result.addTask(createGarbageCollectionStep(mergeSegment, mergingHTables, null, mergingCuboidPaths));
+        result.addTask(createGarbageCollectionStep(mergeSegment, mergingHTables, null, toDeletePaths));
         
         return result;
     }
@@ -137,10 +139,12 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         List<String> mergingSegmentIds = Lists.newArrayList();
         List<String> mergingCuboidPaths = Lists.newArrayList();
         List<String> mergingHTables = Lists.newArrayList();
+        List<String> toDeletePaths = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
             mergingCuboidPaths.add(getPathToMerge(merging));
             mergingHTables.add(merging.getStorageLocationIdentifier());
+            toDeletePaths.add(getJobWorkingDir(merging.getLastBuildJobID()));
         }
 
         // merge cuboid
@@ -151,7 +155,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(seg, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
-        result.addTask(createGarbageCollectionStep(seg, mergingHTables, null, mergingCuboidPaths));
+        result.addTask(createGarbageCollectionStep(seg, mergingHTables, null, toDeletePaths));
         return result;
     }
 

@@ -87,7 +87,7 @@ public class GarbageCollectionStep extends AbstractExecutable {
             final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
             ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
             context.getConfig().getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
-            output.append("Hive table " + hiveTable + " is dropped. \n");
+            output.append("Dropped Hive table " + hiveTable + " \n");
         }
 
     }
@@ -109,11 +109,11 @@ public class GarbageCollectionStep extends AbstractExecutable {
                                 admin.disableTable(table);
                             }
                             admin.deleteTable(table);
-                            logger.debug("Dropped htable: " + table);
-                            output.append("HBase table " + table + " is dropped. \n");
+                            logger.debug("Dropped HBase table " + table);
+                            output.append("Dropped HBase table " + table + " \n");
                         } else {
-                            logger.debug("Skip htable: " + table);
-                            output.append("Skip htable: " + table + ". \n");
+                            logger.debug("Skipped HBase table " + table);
+                            output.append("Skipped HBase table " + table + " \n");
                         }
                     }
                 }
@@ -142,11 +142,11 @@ public class GarbageCollectionStep extends AbstractExecutable {
                 Path oldPath = new Path(path);
                 if (fileSystem.exists(oldPath)) {
                     fileSystem.delete(oldPath, true);
-                    logger.debug("Deleted path: " + path);
-                    output.append("Deleted path:  " + path + " \n");
+                    logger.debug("Dropped HDFS path: " + path);
+                    output.append("Dropped HDFS path  \"" + path + "\" \n");
                 } else {
-                    logger.debug("Path not exists: " + path);
-                    output.append("Path not exists: " + path + " \n");
+                    logger.debug("HDFS path not exists: " + path);
+                    output.append("HDFS path not exists: \"" + path + "\" \n");
                 }
             }
 
