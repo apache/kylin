@@ -24,12 +24,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -176,11 +176,13 @@ public class CubeDescManager {
         String path = cubeDesc.getResourcePath();
         getStore().deleteResource(path);
         cubeDescMap.remove(cubeDesc.getName());
+        Cuboid.reloadCache(cubeDesc.getName());
     }
 
     // remove cubeDesc
     public void removeLocalCubeDesc(String name) throws IOException {
         cubeDescMap.removeLocal(name);
+        Cuboid.reloadCache(name);
     }
 
     private void reloadAllCubeDesc() throws IOException {
