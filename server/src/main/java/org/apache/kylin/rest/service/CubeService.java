@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,6 +34,8 @@ import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.common.HadoopShellExecutable;
 import org.apache.kylin.job.cube.CubingJob;
+import org.apache.kylin.job.cube.CubingJobBuilder;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -559,5 +562,77 @@ public class CubeService extends BasicService {
     }
 
 
+    public void updateOnNewSegmentReady(String cubeName) {
+        logger.debug("on updateOnNewSegmentReady: " + cubeName);
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String serverMode = kylinConfig.getServerMode();
+        logger.debug("server mode: " + serverMode);
+        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
+            keepCubeRetention(cubeName);
+            mergeCubeSegment(cubeName);
+        }
+
+    }
+
+    private void keepCubeRetention(String cubeName) {
+        CubeInstance cube = getCubeManager().getCube(cubeName);
+        if (cube.getRetentionRange() > 0) {
+            synchronized (CubeService.class) {
+                cube = getCubeManager().getCube(cubeName);
+                List<CubeSegment> readySegs = cube.getSegment(SegmentStatusEnum.READY);
+                long currentRange = 0;
+                int position = readySegs.size() - 1;
+                while (position >= 0) {
+                    currentRange += (readySegs.get(position).getDateRangeEnd() - readySegs.get(position).getDateRangeStart());
+                    if (currentRange >= cube.getRetentionRange()) {
+                        break;
+                    }
+
+                    position--;
+                }
+
+                List<CubeSegment> toRemoveSegs = Lists.newArrayList();
+                for (int i = 0; i < position; i++) {
+                    toRemoveSegs.add(readySegs.get(i));
+                }
+
+                if (toRemoveSegs.size() > 0) {
+                    cube.getSegments().removeAll(toRemoveSegs);
+                    try {
+                        this.getCubeManager().updateCube(cube);
+                    } catch (IOException e) {
+                        logger.error("Failed to remove old segment from cube " + cubeName, e);
+                    }
+
+                }
+            }
+        }
+    }
+
+    private void mergeCubeSegment(String cubeName) {
+        CubeInstance cube = getCubeManager().getCube(cubeName);
+        if (cube.needAutoMerge()) {
+            synchronized (CubeService.class) {
+                try {
+                    cube = getCubeManager().getCube(cubeName);
+                    CubeSegment newSeg = getCubeManager().autoMergeCubeSegments(cube);
+                    if (newSeg != null) {
+                        newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd(), true);
+                        logger.debug("Will submit merge job on " + newSeg);
+                        CubingJobBuilder builder = new CubingJobBuilder(new JobEngineConfig(getConfig()));
+                        builder.setSubmitter("SYSTEM");
+                        CubingJob job = builder.mergeJob(newSeg);
+                        getExecutableManager().addJob(job);
+                    } else {
+                        logger.debug("Not ready for merge on cube " + cubeName);
+                    }
+
+                } catch (IOException e) {
+                    logger.error("Failed to auto merge cube " + cubeName, e);
+                }
+            }
+        }
+
+    }
 
 }

@@ -545,9 +545,6 @@ public class CubeManager implements IRealizationProvider {
 
         // check first segment start time
         CubeSegment firstSeg = tobe.get(0);
-        if (firstSeg.getDateRangeStart() != partDesc.getPartitionDateStart()) {
-            throw new IllegalStateException("For " + cube + ", the first segment, " + firstSeg + ", must start at " + partDesc.getPartitionDateStart());
-        }
         firstSeg.validate();
 
         for (int i = 0, j = 1; j < tobe.size(); ) {
@@ -647,6 +644,69 @@ public class CubeManager implements IRealizationProvider {
             logger.error("Error during load cube instance " + path, e);
             return null;
         }
+    }
+
+    public CubeSegment autoMergeCubeSegments(CubeInstance cube) throws IOException {
+        if (!cube.needAutoMerge()) {
+            logger.debug("Cube " + cube.getName() + " doesn't need auto merge");
+            return null;
+        }
+
+        if (cube.getBuildingSegments().size() > 0) {
+            logger.debug("Cube " + cube.getName() + " has bulding segment, will not trigger merge at this moment");
+            return null;
+        }
+
+        List<CubeSegment> readySegments = Lists.newArrayList(cube.getSegment(SegmentStatusEnum.READY));
+
+        if (readySegments.size() == 0) {
+            logger.debug("Cube " + cube.getName() + " has no ready segment to merge");
+            return null;
+        }
+
+        long[] timeRanges = cube.getAutoMergeTimeRanges();
+        Arrays.sort(timeRanges);
+
+        CubeSegment newSeg = null;
+        for (int i = timeRanges.length - 1; i >= 0; i--) {
+            long toMergeRange = timeRanges[i];
+            long currentRange = 0;
+            long lastEndTime = 0;
+            List<CubeSegment> toMergeSegments = Lists.newArrayList();
+            for (CubeSegment segment : readySegments) {
+                long thisSegmentRange = segment.getDateRangeEnd() - segment.getDateRangeStart();
+
+                if (thisSegmentRange >= toMergeRange) {
+                    // this segment and its previous segments will not be merged
+                    toMergeSegments.clear();
+                    currentRange = 0;
+                    lastEndTime = segment.getDateRangeEnd();
+                    continue;
+                }
+
+                if (segment.getDateRangeStart() != lastEndTime && toMergeSegments.isEmpty() == false) {
+                    // gap exists, give up the small segments before the gap;
+                    toMergeSegments.clear();
+                    currentRange = 0;
+                }
+
+                currentRange += thisSegmentRange;
+                if (currentRange < toMergeRange) {
+                    toMergeSegments.add(segment);
+                    lastEndTime = segment.getDateRangeEnd();
+                } else {
+                    // merge
+                    toMergeSegments.add(segment);
+
+                    newSeg = newSegment(cube, toMergeSegments.get(0).getDateRangeStart(), segment.getDateRangeEnd());
+                    // only one merge job be created here
+                    return newSeg;
+                }
+            }
+
+        }
+
+        return null;
     }
 
     private MetadataManager getMetadataManager() {
