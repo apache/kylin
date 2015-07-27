@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr.steps;
 
 import com.google.common.collect.Lists;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -34,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  */
@@ -48,7 +50,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
 
     private KylinConfig config = null;
 
-    public static final long TIME_THREADSHOLD = 2 * 26 * 3600 * 1000l; // 2 days
+    public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000l; // 2 days
 
     /*
      * (non-Javadoc)
@@ -94,7 +96,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     public void cleanup() throws Exception {
         CubeManager cubeManager = CubeManager.getInstance(config);
 
-        List<String> activeResourceList = Lists.newArrayList();
+        Set<String> activeResourceList = Sets.newHashSet();
         for (org.apache.kylin.cube.CubeInstance cube : cubeManager.listAllCubes()) {
             for (org.apache.kylin.cube.CubeSegment segment : cube.getSegments()) {
                 activeResourceList.addAll(segment.getSnapshotPaths());

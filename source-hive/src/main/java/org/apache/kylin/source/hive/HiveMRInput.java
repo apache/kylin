@@ -101,6 +101,7 @@ public class HiveMRInput implements IMRInput {
         
         public static AbstractExecutable createFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId) {
 
+            final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatTableDesc);
             final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
             String insertDataHqls;
@@ -147,7 +148,9 @@ public class HiveMRInput implements IMRInput {
 
             final String hiveTable = this.getOldHiveTable();
             if (StringUtils.isNotEmpty(hiveTable)) {
-                final String dropHiveCMD = "hive -e \"DROP TABLE IF EXISTS  " + hiveTable + ";\"";
+                final String dropSQL = "USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";"
+                        + " DROP TABLE IF EXISTS  " + hiveTable + ";";
+                final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
                 ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
                 try {
                     context.getConfig().getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
