@@ -111,15 +111,17 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         for (String resourceRoot : new String[]{ResourceStore.SNAPSHOT_RESOURCE_ROOT, ResourceStore.CUBE_STATISTICS_ROOT}) {
             ArrayList<String> snapshotTables = getStore().listResources(resourceRoot);
 
-            for (String snapshotTable : snapshotTables) {
-                ArrayList<String> snapshotNames = getStore().listResources(snapshotTable);
-                if (snapshotNames != null)
-                    for (String snapshot : snapshotNames) {
-                        if (!activeResourceList.contains(snapshot)) {
-                            if (isOlderThanThreshold(getStore().getResourceTimestamp(snapshot)))
-                                toDeleteResource.add(snapshot);
+            if (snapshotTables != null) {
+                for (String snapshotTable : snapshotTables) {
+                    ArrayList<String> snapshotNames = getStore().listResources(snapshotTable);
+                    if (snapshotNames != null)
+                        for (String snapshot : snapshotNames) {
+                            if (!activeResourceList.contains(snapshot)) {
+                                if (isOlderThanThreshold(getStore().getResourceTimestamp(snapshot)))
+                                    toDeleteResource.add(snapshot);
+                            }
                         }
-                    }
+                }
             }
         }
 
