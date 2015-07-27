@@ -30,6 +30,7 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hybrid.HybridManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -41,12 +42,16 @@ import java.util.List;
 @Component("cacheService")
 public class CacheService extends BasicService {
 
+    @Autowired
+    private CubeService cubeService;
+    
     public void rebuildCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "rebuild cache type: " + cacheType + " name:" + cacheKey;
         try {
             switch (cacheType) {
             case CUBE:
                 getCubeManager().loadCubeCache(cacheKey);
+                cubeService.updateOnNewSegmentReady(cacheKey);
                 getHybridManager().reloadHybridInstanceByChild(RealizationType.CUBE, cacheKey);
                 cleanProjectCacheByRealization(RealizationType.CUBE, cacheKey);
                 break;
