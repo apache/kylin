@@ -18,10 +18,10 @@
 
 package org.apache.kylin.job.common;
 
-import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +80,7 @@ public class HadoopCmdOutput {
     public String getHdfsBytesRead() {
         return hdfsBytesRead;
     }
-    
+
     public void updateJobCounter() {
         try {
             Counters counters = job.getCounters();
@@ -99,6 +99,10 @@ public class HadoopCmdOutput {
         } catch (Exception e) {
             log.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());
+
+            mapInputRecords = "0";
+            hdfsBytesWritten = "0";
+            hdfsBytesRead = "0";
         }
     }
 
