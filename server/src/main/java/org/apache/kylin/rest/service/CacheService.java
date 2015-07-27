@@ -57,7 +57,6 @@ public class CacheService extends BasicService {
                 break;
             case CUBE_DESC:
                 getCubeDescManager().reloadCubeDesc(cacheKey);
-                Cuboid.reloadCache(cacheKey);
                 break;
             case PROJECT:
                 getProjectManager().reloadProject(cacheKey);
@@ -83,7 +82,6 @@ public class CacheService extends BasicService {
             case ALL:
                 MetadataManager.clearCache();
                 CubeDescManager.clearCache();
-                Cuboid.clearCache();
                 CubeManager.clearCache();
                 IIDescManager.clearCache();
                 IIManager.clearCache();
