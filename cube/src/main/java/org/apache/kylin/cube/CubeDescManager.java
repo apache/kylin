@@ -84,6 +84,7 @@ public class CubeDescManager {
 
     public static void clearCache() {
         CACHE.clear();
+        Cuboid.clearCache();
     }
 
     private CubeDescManager(KylinConfig config) throws IOException {
@@ -113,6 +114,7 @@ public class CubeDescManager {
 
         // Here replace the old one
         cubeDescMap.putLocal(ndesc.getName(), ndesc);
+        Cuboid.reloadCache(ndesc.getName());
         return ndesc;
     }
 
