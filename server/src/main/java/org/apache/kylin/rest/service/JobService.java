@@ -18,16 +18,15 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.kylin.cube.CubeUpdate;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.BuildEngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
@@ -50,11 +49,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author ysong1
@@ -181,7 +177,7 @@ public class JobService extends BasicService {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(cubeJob.getCubeName());
-        result.setRelatedSegment(cubeJob.getSegmentId());
+        result.setRelatedSegment(cubeJob.getSegmentIds());
         result.setLastModified(cubeJob.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
@@ -206,7 +202,7 @@ public class JobService extends BasicService {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(cubeJob.getCubeName());
-        result.setRelatedSegment(cubeJob.getSegmentId());
+        result.setRelatedSegment(cubeJob.getSegmentIds());
         result.setLastModified(output.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
@@ -295,16 +291,17 @@ public class JobService extends BasicService {
         //        for (BuildCubeJob cubeJob: listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING))) {
         //            getExecutableManager().stopJob(cubeJob.getId());
         //        }
-        final String segmentId = job.getRelatedSegment();
         CubeInstance cubeInstance = getCubeManager().getCube(job.getRelatedCube());
-        final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-        if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
-            // Remove this segments
-            CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
-            cubeBuilder.setToRemoveSegs(segment);
-            getCubeManager().updateCube(cubeBuilder);
+        final String segmentIds = job.getRelatedSegment();
+        for (String segmentId: StringUtils.split(segmentIds)) {
+            final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
+            if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
+                // Remove this segments
+                CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
+                cubeBuilder.setToRemoveSegs(segment);
+                getCubeManager().updateCube(cubeBuilder);
+            }
         }
-
         getExecutableManager().discardJob(job.getId());
         return job;
     }

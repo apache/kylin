@@ -18,12 +18,7 @@
 
 package org.apache.kylin.engine.mr;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -31,12 +26,15 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.ExecutableContext;
-import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.execution.*;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+
 
 /**
  */
@@ -83,11 +81,15 @@ public class CubingJob extends DefaultChainedExecutable {
         return getParam(CUBE_INSTANCE_NAME);
     }
 
+    void setSegmentIds(List<String> segmentIds) {
+        setParam(SEGMENT_ID, StringUtils.join(segmentIds, ","));
+    }
+    
     void setSegmentId(String segmentId) {
         setParam(SEGMENT_ID, segmentId);
     }
 
-    public String getSegmentId() {
+    public String getSegmentIds() {
         return getParam(SEGMENT_ID);
     }
 
