@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -180,7 +181,7 @@ public class JobService extends BasicService {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(cubeJob.getCubeName());
-        result.setRelatedSegment(cubeJob.getSegmentId());
+        result.setRelatedSegment(cubeJob.getSegmentIds());
         result.setLastModified(cubeJob.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
@@ -205,7 +206,7 @@ public class JobService extends BasicService {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(cubeJob.getCubeName());
-        result.setRelatedSegment(cubeJob.getSegmentId());
+        result.setRelatedSegment(cubeJob.getSegmentIds());
         result.setLastModified(output.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
@@ -295,12 +296,14 @@ public class JobService extends BasicService {
         //            getExecutableManager().stopJob(cubeJob.getId());
         //        }
 
-        final String segmentId = job.getRelatedSegment();
+        final String[] segmentIds = StringUtils.split(job.getRelatedSegment(), ",");
         CubeInstance cubeInstance = getCubeManager().getCube(job.getRelatedCube());
-        final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-        if (segment.getStatus() == SegmentStatusEnum.NEW) {
-            cubeInstance.getSegments().remove(segment);
-            getCubeManager().updateCube(cubeInstance);
+        for (String segmentId : segmentIds) {
+            final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
+            if (segment.getStatus() == SegmentStatusEnum.NEW) {
+                cubeInstance.getSegments().remove(segment);
+                getCubeManager().updateCube(cubeInstance);
+            }
         }
         getExecutableManager().discardJob(job.getId());
         return job;

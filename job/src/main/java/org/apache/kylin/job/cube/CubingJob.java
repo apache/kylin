@@ -21,7 +21,10 @@ package org.apache.kylin.job.cube;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.List;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.kylin.job.common.MapReduceExecutable;
@@ -55,11 +58,15 @@ public class CubingJob extends DefaultChainedExecutable {
         return getParam(CUBE_INSTANCE_NAME);
     }
 
+    void setSegmentIds(List<String> segmentIds) {
+        setParam(SEGMENT_ID, StringUtils.join(segmentIds, ","));
+    }
+
     void setSegmentId(String segmentId) {
         setParam(SEGMENT_ID, segmentId);
     }
-
-    public String getSegmentId() {
+    
+    public String getSegmentIds() {
         return getParam(SEGMENT_ID);
     }
 
@@ -125,4 +132,5 @@ public class CubingJob extends DefaultChainedExecutable {
     public void setMapReduceWaitTime(long t) {
         addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
+
 }
