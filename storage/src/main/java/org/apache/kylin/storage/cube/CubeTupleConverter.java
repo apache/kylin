@@ -18,26 +18,28 @@
 
 package org.apache.kylin.storage.cube;
 
+import com.google.common.collect.Lists;
+import org.apache.kylin.common.util.Array;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
+import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.tuple.Tuple;
+import org.apache.kylin.storage.tuple.TupleInfo;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.kylin.common.util.Array;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
-import org.apache.kylin.dict.lookup.LookupStringTable;
-import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.tuple.Tuple;
-import org.apache.kylin.storage.tuple.TupleInfo;
-
-import com.google.common.collect.Lists;
-
+/**
+ * convert GTRecord to tuple
+ */
 public class CubeTupleConverter {
 
     final CubeSegment cubeSeg;
@@ -58,7 +60,7 @@ public class CubeTupleConverter {
         this.derivedColFillers = Lists.newArrayList();
 
         List<TblColRef> cuboidDims = cuboid.getColumns();
-        List<MeasureDesc> cuboidMeasures = cuboid.getCube().getMeasures();
+        CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
 
         nSelectedDims = selectedDimensions.size();
         gtColIdx = new int[selectedDimensions.size() + selectedMetrics.size()];
@@ -68,32 +70,26 @@ public class CubeTupleConverter {
         int iii = 0;
 
         // pre-calculate dimension index mapping to tuple
-        for (int i = 0; i < cuboidDims.size(); i++) {
-            TblColRef col = cuboidDims.get(i);
-            if (selectedDimensions.contains(col)) {
-                gtColIdx[iii] = i;
-                tupleIdx[iii] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
-                iii++;
-            }
+        for (TblColRef dim : selectedDimensions) {
+            int i = mapping.getIndexOf(dim);
+            gtColIdx[iii] = i;
+            tupleIdx[iii] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
+            iii++;
         }
 
-        // pre-calculate metrics index mapping to tuple
-        for (int i = 0; i < cuboidMeasures.size(); i++) {
-            FunctionDesc aggrFunc = cuboidMeasures.get(i).getFunction();
-            if (contains(selectedMetrics, aggrFunc)) {
-                gtColIdx[iii] = cuboidDims.size() + i;
-                // a rewrite metrics is identified by its rewrite field name
-                if (aggrFunc.needRewrite()) {
-                    String rewriteFieldName = aggrFunc.getRewriteFieldName();
-                    tupleIdx[iii] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
-                }
-                // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
-                else {
-                    TblColRef col = aggrFunc.getParameter().getColRefs().get(0);
-                    tupleIdx[iii] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
-                }
-                iii++;
+        for (FunctionDesc metric : selectedMetrics) {
+            int i = mapping.getIndexOf(metric);
+            gtColIdx[iii] = i;
+            if (metric.needRewrite()) {
+                String rewriteFieldName = metric.getRewriteFieldName();
+                tupleIdx[iii] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
             }
+            // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
+            else {
+                TblColRef col = metric.getParameter().getColRefs().get(0);
+                tupleIdx[iii] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
+            }
+            iii++;
         }
 
         // prepare derived columns and filler
@@ -107,18 +103,6 @@ public class CubeTupleConverter {
                 }
             }
         }
-    }
-
-    private boolean contains(Set<FunctionDesc> selectedMetrics, FunctionDesc aggrFunc) {
-        if (aggrFunc.isCountDistinct()) {
-            // need special attention for count distinct and its holistic version, they are equals() but not exactly the same
-            for (FunctionDesc selected : selectedMetrics) {
-                if (selected.equals(aggrFunc) && selected.isHolisticCountDistinct() == aggrFunc.isHolisticCountDistinct())
-                    return true;
-            }
-            return false;
-        } else
-            return selectedMetrics.contains(aggrFunc);
     }
 
     public void translateResult(GTRecord record, Tuple tuple) {

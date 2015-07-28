@@ -1,11 +1,11 @@
 package org.apache.kylin.gridtable;
 
+import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.gridtable.IGTStore.IGTStoreScanner;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
-import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.gridtable.IGTStore.IGTStoreScanner;
 
 public class GTRawScanner implements IGTScanner {
 
@@ -22,8 +22,8 @@ public class GTRawScanner implements IGTScanner {
 
     public GTRawScanner(GTInfo info, IGTStore store, GTScanRequest req) throws IOException {
         this.info = info;
-        this.selectedColBlocks = info.selectColumnBlocks(req.getColumns());
-        this.storeScanner = store.scan(req.getPkStart(), req.getPkEnd(), selectedColBlocks, req);
+        this.selectedColBlocks = req.getSelectedColBlocks();
+        this.storeScanner = store.scan(req);
         this.oneRecord = new GTRecord(info);
     }
 

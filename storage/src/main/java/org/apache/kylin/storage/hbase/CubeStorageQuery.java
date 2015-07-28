@@ -405,6 +405,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         logger.info("READY segs count: " + segs.size());
 
         // build row key range for each cube segment
+        StringBuilder sb = new StringBuilder("hbasekeyrange trace: ");
         for (CubeSegment cubeSeg : segs) {
 
             // consider derived (lookup snapshot), filter on dimension may
@@ -420,10 +421,15 @@ public class CubeStorageQuery implements ICachableStorageQuery {
                 scanRanges.add(rowKeyRange);
             }
 
+            sb.append(scanRanges.size() + "=>");
             List<HBaseKeyRange> mergedRanges = mergeOverlapRanges(scanRanges);
+            sb.append(mergedRanges.size() + "=>");
             mergedRanges = mergeTooManyRanges(mergedRanges);
+            sb.append(mergedRanges.size() + ", ");
             result.addAll(mergedRanges);
         }
+
+        logger.info(sb.toString());
 
         logger.info("hbasekeyrange count: " + result.size());
         dropUnhitSegments(result);

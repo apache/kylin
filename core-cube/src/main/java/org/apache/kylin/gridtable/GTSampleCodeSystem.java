@@ -1,11 +1,10 @@
 package org.apache.kylin.gridtable;
 
-import java.nio.ByteBuffer;
-
-import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
+
+import java.nio.ByteBuffer;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 /**
@@ -24,7 +23,7 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
 
     public GTSampleCodeSystem() {
     }
-    
+
     @Override
     public void init(GTInfo info) {
         this.info = info;
@@ -34,23 +33,12 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
             this.serializers[i] = DataTypeSerializer.create(info.colTypes[i]);
         }
 
-        this.comparator = new IGTComparator() {
-            @Override
-            public boolean isNull(ByteArray code) {
-                // all 0xff is null
-                byte[] array = code.array();
-                for (int i = 0, j = code.offset(), n = code.length(); i < n; i++, j++) {
-                    if (array[j] != (byte) 0xff)
-                        return false;
-                }
-                return true;
-            }
+        this.comparator = new DefaultGTComparator();
+    }
 
-            @Override
-            public int compare(ByteArray code1, ByteArray code2) {
-                return code1.compareTo(code2);
-            }
-        };
+    @Override
+    public IGTCodeSystem trim() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -73,7 +61,7 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     @Override
     public MeasureAggregator<?>[] newMetricsAggregators(ImmutableBitSet columns, String[] aggrFunctions) {
         assert columns.trueBitCount() == aggrFunctions.length;
-        
+
         MeasureAggregator<?>[] result = new MeasureAggregator[aggrFunctions.length];
         for (int i = 0; i < result.length; i++) {
             int col = columns.trueBitAt(i);

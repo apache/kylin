@@ -1,11 +1,14 @@
-
 // usage:
 // protoc  --java_out=./storage/src/main/java  ./storage/src/main/java/org/apache/kylin/storage/hbase/coprocessor/endpoint/protobuf/II.proto
 
 option java_package = "org.apache.kylin.storage.hbase.coprocessor.endpoint.generated";
+
 option java_outer_classname = "IIProtos";
+
 option java_generic_services = true;
+
 option java_generate_equals_and_hash = true;
+
 option optimize_for = SPEED;
 
 message IIRequest {
@@ -17,30 +20,28 @@ message IIRequest {
 }
 
 message IIResponseInternal {
-  message IIRow {
-    required bytes columns = 1;
-    optional bytes measures = 2;
-  }
-  //all entries in this struct be optional to conveniently add more entries in the future
-  message Stats {
-    optional int32 myShard = 1;
-    optional int64 latestDataTime = 2;
-    optional int64 serviceStartTime = 3;
-    optional int64 serviceEndTime = 4;
-    optional int32 scannedSlices = 5;
-  }
-  repeated IIRow rows = 1;
-  required Stats stats = 2;
+    message IIRow {
+        required bytes columns = 1;
+        optional bytes measures = 2;
+    }
+    //all entries in this struct be optional to conveniently add more entries in the future
+    message Stats {
+        optional int32 myShard = 1;
+        optional int64 latestDataTime = 2;
+        optional int64 serviceStartTime = 3;
+        optional int64 serviceEndTime = 4;
+        optional int32 scannedSlices = 5;
+    }
+    repeated IIRow rows = 1;
+    required Stats stats = 2;
 }
 
-message IIResponse
-{
+message IIResponse {
     required bytes blob = 1;
 }
 
 
 
 service RowsService {
-  rpc getRows(IIRequest)
-    returns (IIResponse);
+    rpc getRows (IIRequest) returns (IIResponse);
 }

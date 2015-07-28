@@ -34,14 +34,7 @@ public class GridTable implements Closeable {
 
     public IGTScanner scan(GTScanRequest req) throws IOException {
         IGTScanner result = new GTRawScanner(info, store, req);
-        
-        if (req.hasFilterPushDown()) {
-            result = new GTFilterScanner(result, req);
-        }
-        if (req.hasAggregation()) {
-            result = new GTAggregateScanner(result, req);
-        }
-        return result;
+        return req.decorateScanner(result);
     }
 
     public GTInfo getInfo() {

@@ -18,23 +18,17 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.kylin.common.util.Bytes;
-
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.model.RowKeyDesc.AggrGroupMask;
 import org.apache.kylin.cube.model.RowKeyDesc.HierarchyMask;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author George Song (ysong1)
@@ -203,7 +197,7 @@ public class Cuboid implements Comparable<Cuboid> {
         leftover = cuboidWithoutMandatory & rowkey.getTailMask();
         return leftover == 0 || leftover == rowkey.getTailMask();
     }
-    
+
     // ============================================================================
 
     private CubeDesc cube;
@@ -212,6 +206,8 @@ public class Cuboid implements Comparable<Cuboid> {
     private final byte[] idBytes;
     private final boolean requirePostAggregation;
     private List<TblColRef> dimensionColumns;
+
+    private volatile CuboidToGridTableMapping cuboidToGridTableMapping = null;
 
     // will translate the cuboidID if it is not valid
     private Cuboid(CubeDesc cube, long originalID, long validID) {
@@ -338,4 +334,10 @@ public class Cuboid implements Comparable<Cuboid> {
         }
     }
 
+    public CuboidToGridTableMapping getCuboidToGridTableMapping() {
+        if (cuboidToGridTableMapping == null) {
+            cuboidToGridTableMapping = new CuboidToGridTableMapping(this);
+        }
+        return cuboidToGridTableMapping;
+    }
 }

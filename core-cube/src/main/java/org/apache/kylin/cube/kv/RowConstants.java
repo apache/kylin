@@ -18,11 +18,6 @@
 
 package org.apache.kylin.cube.kv;
 
-/**
- * 
- * @author xjiang
- * 
- */
 public class RowConstants {
 
     // row key fixed length place holder

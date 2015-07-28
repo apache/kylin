@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.cache.CacheFledgedDynamicStorageEngine;
 import org.apache.kylin.storage.cache.CacheFledgedStaticStorageEngine;
-import org.apache.kylin.storage.hbase.CubeStorageQuery;
+import org.apache.kylin.storage.cube.CubeStorageQuery;
 import org.apache.kylin.storage.hbase.InvertedIndexStorageQuery;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridStorageEngine;

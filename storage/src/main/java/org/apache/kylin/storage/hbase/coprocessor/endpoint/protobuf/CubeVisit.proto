@@ -1,0 +1,33 @@
+// usage:
+// protoc  --java_out=./storage/src/main/java  ./storage/src/main/java/org/apache/kylin/storage/hbase/coprocessor/endpoint/protobuf/CubeVisit.proto
+
+option java_package = "org.apache.kylin.storage.hbase.coprocessor.endpoint.generated";
+
+option java_outer_classname = "CubeVisitProtos";
+
+option java_generic_services = true;
+
+option java_generate_equals_and_hash = true;
+
+option optimize_for = SPEED;
+
+message CubeVisitRequest {
+    required bytes gtScanRequest = 1;
+    required bytes hbaseRawScan = 2;
+}
+
+message CubeVisitResponse {
+    //all entries in this struct be optional to conveniently add more entries in the future
+    message Stats {
+        optional int64 serviceStartTime = 1;
+        optional int64 serviceEndTime = 2;
+        optional int32 scannedRowCount = 3;
+        optional int32 aggregatedRowCount = 4;
+    }
+    required bytes compressedRows = 1;
+    required Stats stats = 2;
+}
+
+service CubeVisitService {
+    rpc visitCube (CubeVisitRequest) returns (CubeVisitResponse);
+}

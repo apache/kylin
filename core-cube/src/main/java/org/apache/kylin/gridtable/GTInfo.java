@@ -16,6 +16,7 @@ public class GTInfo {
     }
 
     String tableName;
+
     IGTCodeSystem codeSystem;
 
     // column schema
@@ -38,12 +39,18 @@ public class GTInfo {
     private GTInfo() {
     }
 
-    public String getTableName() {
-        return tableName;
+    public IGTCodeSystem trimCodeSystemForCoprocessor() {
+        IGTCodeSystem originalCodeSystem = this.codeSystem;
+        codeSystem = this.codeSystem.trim();
+        return originalCodeSystem;
     }
 
-    public IGTCodeSystem getCodeSystem() {
-        return codeSystem;
+    public void setIGTCodeSystem(IGTCodeSystem codeSystem) {
+        this.codeSystem = codeSystem;
+    }
+
+    public String getTableName() {
+        return tableName;
     }
 
     public int getColumnCount() {

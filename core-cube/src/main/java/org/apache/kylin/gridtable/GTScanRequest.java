@@ -1,5 +1,6 @@
 package org.apache.kylin.gridtable;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -11,10 +12,10 @@ import com.google.common.collect.Sets;
 
 public class GTScanRequest {
 
-    // basic
     private GTInfo info;
     private GTScanRange range;
     private ImmutableBitSet columns;
+    private ImmutableBitSet selectedColBlocks;
 
     // optional filtering
     private TupleFilter filterPushDown;
@@ -23,6 +24,9 @@ public class GTScanRequest {
     private ImmutableBitSet aggrGroupBy;
     private ImmutableBitSet aggrMetrics;
     private String[] aggrMetricsFuncs;
+
+    // hint to storage behavior
+    private boolean allowPreAggregation = true;
 
     public GTScanRequest(GTInfo info) {
         this(info, null, null, null);
@@ -33,16 +37,16 @@ public class GTScanRequest {
         this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
         this.columns = columns;
         this.filterPushDown = filterPushDown;
-        validate();
+        validate(info);
     }
 
     public GTScanRequest(GTInfo info, GTScanRange range, ImmutableBitSet aggrGroupBy, ImmutableBitSet aggrMetrics, //
             String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
-        this(info, range, null, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown);
+        this(info, range, null, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, true);
     }
 
     public GTScanRequest(GTInfo info, GTScanRange range, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
-            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
+            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, boolean allowPreAggregation) {
         this.info = info;
         this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
         this.columns = dimensions;
@@ -52,10 +56,12 @@ public class GTScanRequest {
         this.aggrMetrics = aggrMetrics;
         this.aggrMetricsFuncs = aggrMetricsFuncs;
 
-        validate();
+        this.allowPreAggregation = allowPreAggregation;
+
+        validate(info);
     }
 
-    private void validate() {
+    private void validate(GTInfo info) {
         if (range == null)
             range = new GTScanRange(null, null);
 
@@ -74,12 +80,14 @@ public class GTScanRequest {
         if (columns == null)
             columns = info.colAll;
 
+        this.selectedColBlocks = info.selectColumnBlocks(columns);
+
         if (hasFilterPushDown()) {
-            validateFilterPushDown();
+            validateFilterPushDown(info);
         }
     }
 
-    private void validateFilterPushDown() {
+    private void validateFilterPushDown(GTInfo info) {
         if (hasFilterPushDown() == false)
             return;
 
@@ -107,10 +115,22 @@ public class GTScanRequest {
         }
     }
 
+    public IGTScanner decorateScanner(IGTScanner scanner) throws IOException {
+        IGTScanner result = scanner;
+        if (this.hasFilterPushDown()) {
+            result = new GTFilterScanner(result, this);
+        }
+        if (this.allowPreAggregation && this.hasAggregation()) {
+            result = new GTAggregateScanner(result, this);
+        }
+        return result;
+    }
+
     public boolean hasFilterPushDown() {
         return filterPushDown != null;
     }
 
+    //TODO BUG?  select sum() from fact, no aggr by
     public boolean hasAggregation() {
         return aggrGroupBy != null && aggrMetrics != null && aggrMetricsFuncs != null;
     }
@@ -125,6 +145,10 @@ public class GTScanRequest {
 
     public GTRecord getPkEnd() {
         return range.pkEnd;
+    }
+
+    public ImmutableBitSet getSelectedColBlocks() {
+        return selectedColBlocks;
     }
 
     public ImmutableBitSet getColumns() {

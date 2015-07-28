@@ -21,15 +21,13 @@ package org.apache.kylin.common.util;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.util.Bytes;
-
 /**
  * @author yangli9
  */
 public class ByteArray implements Comparable<ByteArray>, Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     public static final ByteArray EMPTY = new ImmutableByteArray();
 
     public static ByteArray allocate(int length) {
@@ -160,13 +158,13 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
         else
             return Bytes.toStringBinary(data, offset, length);
     }
-    
+
     // ============================================================================
-    
+
     public static class ImmutableByteArray extends ByteArray {
 
         private static final long serialVersionUID = 1L;
-        
+
         public ImmutableByteArray() {
             super();
         }

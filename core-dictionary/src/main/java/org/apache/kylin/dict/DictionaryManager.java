@@ -282,7 +282,7 @@ public class DictionaryManager {
         if (dictInfos == null || dictInfos.isEmpty()) {
             return null;
         }
-        //Collections.sort(dictInfos);
+        Collections.sort(dictInfos);
 
         final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.get(0), dictInfos.get(dictInfos.size() - 1), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 

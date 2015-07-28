@@ -1,12 +1,6 @@
 package org.apache.kylin.gridtable;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.SortedMap;
-
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.measure.HLLCAggregator;
@@ -15,7 +9,12 @@ import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.SortedMap;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class GTAggregateScanner implements IGTScanner {
@@ -36,6 +35,7 @@ public class GTAggregateScanner implements IGTScanner {
             throw new IllegalStateException();
 
         this.info = inputScanner.getInfo();
+        //TODO bug? what if multiple metrics on same column? and what is this?
         this.dimensions = req.getColumns().andNot(req.getAggrMetrics());
         this.groupBy = req.getAggrGroupBy();
         this.metrics = req.getAggrMetrics();
