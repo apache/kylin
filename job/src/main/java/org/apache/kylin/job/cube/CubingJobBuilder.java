@@ -85,6 +85,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         checkPreconditions(appendSegment, mergeSegment);
 
         CubingJob result = initialJob(mergeSegment, "BUILD");
+        result.setSegmentIds(Lists.newArrayList(new String[]{appendSegment.getUuid(), mergeSegment.getUuid()}));
         final String jobId = result.getId();
         final String appendRootPath = getJobWorkingDir(jobId) + "/" + appendSegment.getCubeInstance().getName() + "/append_cuboid/";
         final String mergedRootPath = getJobWorkingDir(jobId) + "/" + appendSegment.getCubeInstance().getName() + "/cuboid/";
