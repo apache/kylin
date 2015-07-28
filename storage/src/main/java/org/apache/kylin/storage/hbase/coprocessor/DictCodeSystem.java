@@ -37,6 +37,7 @@ public class DictCodeSystem implements IFilterCodeSystem<String> {
         return tupleValue.compareTo(constValue);
     }
 
+    //TODO: should use ISO-8859-1 rather than UTF8
     @Override
     public void serialize(String value, ByteBuffer buffer) {
         BytesUtil.writeUTFString(value, buffer);

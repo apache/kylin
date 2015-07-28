@@ -1,11 +1,8 @@
 package org.apache.kylin.storage.cube;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -32,9 +29,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
+import java.util.*;
 
 public class CubeStorageQuery implements ICachableStorageQuery {
 
@@ -82,7 +77,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         Set<TblColRef> singleValuesD = findSingleValueColumns(filter);
         boolean isExactAggregation = isExactAggregation(cuboid, groups, filterDimsD, singleValuesD, derivedPostAggregation);
         context.setExactAggregation(isExactAggregation);
-        
+
         if (isExactAggregation) {
             metrics = replaceHolisticCountDistinct(metrics);
         }
@@ -92,17 +87,17 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
         setThreshold(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
         // TODO enable coprocessor
-//        setCoprocessor(groupsCopD, valueDecoders, context); // enable coprocessor if beneficial
+        //        setCoprocessor(groupsCopD, valueDecoders, context); // enable coprocessor if beneficial
         setLimit(filter, context);
 
         List<CubeScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
-            scanners.add(new CubeScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD));
+            scanners.add(new CubeScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation));
         }
-        
+
         if (scanners.isEmpty())
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
-        
+
         return new SequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo);
     }
 
@@ -122,7 +117,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             dimensions.add(column);
         }
     }
-    
+
     private FunctionDesc findAggrFuncFromCubeDesc(FunctionDesc aggrFunc) {
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
             if (measure.getFunction().equals(aggrFunc))
@@ -232,7 +227,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
                 result.add(metric);
                 continue;
             }
-            
+
             FunctionDesc holisticVersion = null;
             for (MeasureDesc measure : cubeDesc.getMeasures()) {
                 FunctionDesc measureFunc = measure.getFunction();
@@ -349,7 +344,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             context.enableLimit();
         }
     }
-    
+
     // ============================================================================
 
     @Override
@@ -361,7 +356,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     public String getStorageUUID() {
         return cubeInstance.getUuid();
     }
-
 
     @Override
     public boolean isDynamic() {

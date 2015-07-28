@@ -1,5 +1,6 @@
 package org.apache.kylin.common.util;
 
+import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 public class ImmutableBitSet {
@@ -22,7 +23,7 @@ public class ImmutableBitSet {
     public ImmutableBitSet(int indexFrom, int indexTo) {
         this(newBitSet(indexFrom, indexTo));
     }
-    
+
     private static BitSet newBitSet(int indexFrom, int indexTo) {
         BitSet set = new BitSet(indexTo);
         set.set(indexFrom, indexTo);
@@ -48,7 +49,7 @@ public class ImmutableBitSet {
     public int trueBitAt(int i) {
         return arr[i];
     }
-    
+
     /** return the bit's index among true bits */
     public int trueBitIndexOf(int bitIndex) {
         for (int i = 0; i < arr.length; i++) {
@@ -65,7 +66,7 @@ public class ImmutableBitSet {
     public ImmutableBitSet set(int bitIndex) {
         return set(bitIndex, true);
     }
-    
+
     public ImmutableBitSet set(int bitIndex, boolean value) {
         if (set.get(bitIndex) == value) {
             return this;
@@ -75,13 +76,13 @@ public class ImmutableBitSet {
             return new ImmutableBitSet(mutable);
         }
     }
-    
+
     public ImmutableBitSet or(ImmutableBitSet another) {
         BitSet mutable = mutable();
         mutable.or(another.set);
         return new ImmutableBitSet(mutable);
     }
-    
+
     public ImmutableBitSet andNot(ImmutableBitSet another) {
         BitSet mutable = mutable();
         mutable.andNot(another.set);
@@ -105,7 +106,7 @@ public class ImmutableBitSet {
         ImmutableBitSet other = (ImmutableBitSet) obj;
         return this.set.equals(other.set);
     }
-    
+
     @Override
     public String toString() {
         return set.toString();
@@ -127,5 +128,24 @@ public class ImmutableBitSet {
 
     public boolean isEmpty() {
         return set.isEmpty();
+    }
+
+    // SerDer
+    // ============================================================================
+    public static final Serializer SERIALIZER = new Serializer();
+
+    public static class Serializer implements BytesSerializer<ImmutableBitSet> {
+
+        @Override
+        public void serialize(ImmutableBitSet value, ByteBuffer out) {
+            BytesUtil.writeByteArray(value.set.toByteArray(), out);
+        }
+
+        @Override
+        public ImmutableBitSet deserialize(ByteBuffer in) {
+            byte[] bytes = BytesUtil.readByteArray(in);
+            return new ImmutableBitSet(BitSet.valueOf(bytes));
+        }
+
     }
 }

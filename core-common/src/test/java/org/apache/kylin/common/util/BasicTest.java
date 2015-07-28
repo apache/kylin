@@ -18,14 +18,6 @@
 
 package org.apache.kylin.common.util;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.TreeMultiset;
-import org.apache.commons.configuration.ConfigurationException;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
@@ -33,6 +25,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.IdentityHashMap;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.TreeMultiset;
 
 /**
 * <p/>
@@ -62,13 +63,28 @@ public class BasicTest {
     }
 
     @Test
+    public void testxx() {
+        byte[] temp = new byte[] { 1, 2, 3 };
+
+        ByteBuffer buffer = ByteBuffer.allocateDirect(3);
+        buffer.put((byte) 1);
+        buffer.put((byte) 1);
+        buffer.put((byte) 1);
+        buffer.put((byte) 1);
+        System.out.println(buffer.position());
+        System.out.println(buffer.limit());
+        System.out.println(buffer.capacity());
+
+    }
+
+    @Test
     public void test0() throws Exception {
+
         TreeMultiset<Long> xx = TreeMultiset.create();
         xx.add(2L);
         xx.add(1L);
         xx.add(1L);
-        for(Long hi : xx)
-        {
+        for (Long hi : xx) {
             System.out.println(hi);
         }
         System.out.println(Long.MAX_VALUE);

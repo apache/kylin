@@ -18,17 +18,17 @@
 
 package org.apache.kylin.storage.tuple;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
-
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.measure.DoubleMutable;
 import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author xjiang
@@ -60,7 +60,13 @@ public class Tuple implements ITuple {
     public ITuple makeCopy() {
         Tuple ret = new Tuple(this.info);
         for (int i = 0; i < this.values.length; ++i) {
-            ret.values[i] = this.values[i];
+            if (this.values[i] == null) {
+                ret.values[i] = null;
+            } else if (this.values[i] instanceof HyperLogLogPlusCounter) {
+                ret.values[i] = new HyperLogLogPlusCounter((HyperLogLogPlusCounter) this.values[i]);
+            } else {
+                ret.values[i] = this.values[i];
+            }
         }
         return ret;
     }
@@ -188,8 +194,10 @@ public class Tuple implements ITuple {
             return Double.valueOf(strValue);
         } else if ("decimal".equals(dataTypeName)) {
             return new BigDecimal(strValue);
-        } else if ("float".equals(dataTypeName)){
+        } else if ("float".equals(dataTypeName)) {
             return Float.valueOf(strValue);
+        } else if ("boolean".equals(dataTypeName)) {
+            return Boolean.valueOf(strValue);
         } else {
             return strValue;
         }

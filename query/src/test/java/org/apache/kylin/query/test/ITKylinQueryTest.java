@@ -95,7 +95,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query10.sql";
+        String queryFileName = "src/test/resources/query/sql/query44.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
@@ -107,7 +107,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleExecuteQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query53.sql";
+        String queryFileName = "src/test/resources/query/sql/query58.sql";
 
         File sqlFile = new File(queryFileName);
         String sql = getTextFromFile(sqlFile);

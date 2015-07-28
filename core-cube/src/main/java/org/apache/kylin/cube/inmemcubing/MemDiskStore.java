@@ -17,23 +17,6 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import static org.apache.kylin.common.util.MemoryBudgetController.*;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
-import java.util.NoSuchElementException;
-
-import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryConsumer;
 import org.apache.kylin.common.util.MemoryBudgetController.NotEnoughBudgetException;
@@ -44,6 +27,14 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
+import java.util.NoSuchElementException;
+
+import static org.apache.kylin.common.util.MemoryBudgetController.ONE_MB;
 
 public class MemDiskStore implements IGTStore, Closeable {
 
@@ -107,7 +98,7 @@ public class MemDiskStore implements IGTStore, Closeable {
     }
 
     @Override
-    public IGTStoreScanner scan(GTRecord pkStart, GTRecord pkEnd, ImmutableBitSet selectedColBlocks, GTScanRequest additionalPushDown) throws IOException {
+    public IGTStoreScanner scan( GTScanRequest scanRequest) throws IOException {
         synchronized (lock) {
             return new Reader();
         }

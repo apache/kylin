@@ -34,6 +34,7 @@ import org.junit.BeforeClass;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+
 /**
  */
 public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {

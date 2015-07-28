@@ -40,6 +40,10 @@
             <artifactId>kylin-storage-hbase</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo-shaded</artifactId>
+        </dependency>
 
         <!-- Env & Test -->
         <dependency>
@@ -115,6 +119,8 @@
 
     </dependencies>
 
+   
+
     <build>
         <plugins>
             <plugin>
@@ -143,7 +149,10 @@
                                     <include>org.apache.kylin:kylin-invertedindex</include>
                                     <include>com.ning:compress-lzf</include>
                                     <include>com.n3twork.druid:extendedset</include>
-                                    <include>net.sf.trove4j:*</include>
+                                    <include>com.esotericsoftware:kryo-shaded</include>
+                                    <include>com.esotericsoftware:minlog</include>
+                                    <include>org.objenesis:objenesis</include>
+                                    
                                     <!-- include>com.fasterxml.jackson.core:*</include -->
                                     <!-- include>org.apache.commons:commons-lang3</include -->
                                     <!-- include>commons-configuration:*</include -->

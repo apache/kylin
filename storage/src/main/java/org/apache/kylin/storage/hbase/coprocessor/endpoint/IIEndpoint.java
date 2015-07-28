@@ -79,6 +79,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
     private Scan prepareScan(IIProtos.IIRequest request, HRegion region) throws IOException {
         Scan scan = new Scan();
+        
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES);
 

@@ -18,6 +18,16 @@
 
 package org.apache.kylin.storage.hbase.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -46,12 +56,6 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Matcher;
-
 /**
  * @author yangli9
  */
@@ -59,8 +63,9 @@ public class DeployCoprocessorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
-    public static final String OBSERVER_CLS_NAME = "org.apache.kylin.storage.hbase.coprocessor.observer.AggregateRegionObserver";
-    public static final String ENDPOINT_CLS_NAMAE = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
+    public static final String CubeObserverClass = "org.apache.kylin.storage.hbase.coprocessor.observer.AggregateRegionObserver";
+    public static final String CubeEndpointClass = "org.apache.kylin.storage.hbase.coprocessor.endpoint.CubeVisitService";
+    public static final String IIEndpointClass = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
 
     public static void main(String[] args) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -115,8 +120,9 @@ public class DeployCoprocessorCLI {
 
     public static void addCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
         logger.info("Add coprocessor on " + desc.getNameAsString());
-        desc.addCoprocessor(ENDPOINT_CLS_NAMAE, hdfsCoprocessorJar, 1000, null);
-        desc.addCoprocessor(OBSERVER_CLS_NAME, hdfsCoprocessorJar, 1001, null);
+        desc.addCoprocessor(IIEndpointClass, hdfsCoprocessorJar, 1000, null);
+        desc.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
+        desc.addCoprocessor(CubeObserverClass, hdfsCoprocessorJar, 1002, null);
     }
 
     public static void resetCoprocessor(String tableName, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
@@ -125,11 +131,14 @@ public class DeployCoprocessorCLI {
 
         logger.info("Unset coprocessor on " + tableName);
         HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-        while (desc.hasCoprocessor(OBSERVER_CLS_NAME)) {
-            desc.removeCoprocessor(OBSERVER_CLS_NAME);
+        while (desc.hasCoprocessor(CubeObserverClass)) {
+            desc.removeCoprocessor(CubeObserverClass);
         }
-        while (desc.hasCoprocessor(ENDPOINT_CLS_NAMAE)) {
-            desc.removeCoprocessor(ENDPOINT_CLS_NAMAE);
+        while (desc.hasCoprocessor(CubeEndpointClass)) {
+            desc.removeCoprocessor(CubeEndpointClass);
+        }
+        while (desc.hasCoprocessor(IIEndpointClass)) {
+            desc.removeCoprocessor(IIEndpointClass);
         }
 
         addCoprocessorOnHTable(desc, hdfsCoprocessorJar);
@@ -277,9 +286,9 @@ public class DeployCoprocessorCLI {
                 String jarPath = valueMatcher.group(1).trim();
                 String clsName = valueMatcher.group(2).trim();
 
-                if (OBSERVER_CLS_NAME.equals(clsName)) {
-                    result.add(jarPath);
-                }
+                //if (CubeObserverClass.equals(clsName)) {
+                result.add(jarPath);
+                //}
             }
         }
 

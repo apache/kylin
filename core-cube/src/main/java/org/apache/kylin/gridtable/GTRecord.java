@@ -14,19 +14,30 @@ public class GTRecord implements Comparable<GTRecord> {
 
     private ImmutableBitSet maskForEqualHashComp;
 
-    public GTRecord(GTInfo info, ImmutableBitSet maskForEqualHashComp) {
+    public GTRecord(GTInfo info, ImmutableBitSet maskForEqualHashComp, ByteArray[] cols) {
         this.info = info;
+        this.cols = cols;
+        this.maskForEqualHashComp = maskForEqualHashComp;
+    }
+
+    public GTRecord(GTInfo info, ImmutableBitSet maskForEqualHashComp) {
         this.cols = new ByteArray[info.getColumnCount()];
-        for (int i = 0; i < cols.length; i++) {
+        for (int i = 0; i < this.cols.length; i++) {
             if (maskForEqualHashComp.get(i)) {
                 this.cols[i] = new ByteArray();
             }
         }
+        this.info = info;
         this.maskForEqualHashComp = maskForEqualHashComp;
+
     }
 
     public GTRecord(GTInfo info) {
         this(info, info.colAll);
+    }
+
+    public GTRecord(GTInfo info, ByteArray[] cols) {
+        this(info, info.colAll, cols);
     }
 
     public GTInfo getInfo() {
@@ -35,6 +46,10 @@ public class GTRecord implements Comparable<GTRecord> {
 
     public ByteArray get(int i) {
         return cols[i];
+    }
+
+    public ByteArray[] getInternal() {
+        return cols;
     }
 
     public void set(int i, ByteArray data) {
@@ -50,7 +65,7 @@ public class GTRecord implements Comparable<GTRecord> {
     /** set record to the codes of specified values, reuse given space to hold the codes */
     public GTRecord setValues(ImmutableBitSet selectedCols, ByteArray space, Object... values) {
         assert selectedCols.cardinality() == values.length;
-        
+
         ByteBuffer buf = space.asBuffer();
         int pos = buf.position();
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
@@ -71,7 +86,7 @@ public class GTRecord implements Comparable<GTRecord> {
     /** decode and return the values of this record */
     public Object[] getValues(ImmutableBitSet selectedCols, Object[] result) {
         assert selectedCols.cardinality() == result.length;
-        
+
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
             int c = selectedCols.trueBitAt(i);
             if (cols[c] == null || cols[c].array() == null) {
@@ -182,7 +197,7 @@ public class GTRecord implements Comparable<GTRecord> {
     public String toString() {
         return toString(maskForEqualHashComp);
     }
-    
+
     public String toString(ImmutableBitSet selectedColumns) {
         Object[] values = new Object[selectedColumns.cardinality()];
         getValues(selectedColumns, values);
@@ -214,6 +229,19 @@ public class GTRecord implements Comparable<GTRecord> {
         buf.setLength(pos);
     }
 
+    /** write data to given buffer, like serialize, UNLIKE other export this will put a prefix indicating null or not*/
+    public void exportAllColumns(ByteBuffer buf) {
+        for (int i = 0; i < info.colAll.trueBitCount(); i++) {
+            int c = info.colAll.trueBitAt(i);
+            if (cols[c] == null || cols[c].array() == null) {
+                buf.put((byte) 0);
+            } else {
+                buf.put((byte) 1);
+                buf.put(cols[c].array(), cols[c].offset(), cols[c].length());
+            }
+        }
+    }
+
     /** write data to given buffer, like serialize */
     public void exportColumns(ImmutableBitSet selectedCols, ByteBuffer buf) {
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
@@ -228,7 +256,6 @@ public class GTRecord implements Comparable<GTRecord> {
         }
     }
 
-
     /** write data to given buffer, like serialize */
     public void exportColumnBlock(int c, ByteBuffer buf) {
         exportColumns(info.colBlocks[c], buf);
@@ -242,6 +269,24 @@ public class GTRecord implements Comparable<GTRecord> {
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
     public void loadCellBlock(int c, ByteBuffer buf) {
         loadColumns(info.colBlocks[c], buf);
+    }
+
+    /** change pointers to point to data in given buffer, UNLIKE deserialize */
+    public void loadAllColumns(ByteBuffer buf) {
+        int pos = buf.position();
+        for (int i = 0; i < info.colAll.trueBitCount(); i++) {
+            int c = info.colAll.trueBitAt(i);
+
+            byte exist = buf.get();
+            pos++;
+
+            if (exist == 1) {
+                int len = info.codeSystem.codeLength(c, buf);
+                cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
+                pos += len;
+                buf.position(pos);
+            }
+        }
     }
 
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
@@ -260,9 +305,9 @@ public class GTRecord implements Comparable<GTRecord> {
     public static ByteArray exportScanKey(GTRecord rec) {
         if (rec == null)
             return null;
-        
+
         GTInfo info = rec.getInfo();
-        
+
         BitSet selectedColumns = new BitSet();
         int len = 0;
         for (int i = 0; i < info.primaryKey.trueBitCount(); i++) {
@@ -273,7 +318,7 @@ public class GTRecord implements Comparable<GTRecord> {
             selectedColumns.set(c);
             len += rec.cols[c].length();
         }
-        
+
         if (selectedColumns.cardinality() == 0)
             return null;
 
@@ -281,5 +326,5 @@ public class GTRecord implements Comparable<GTRecord> {
         rec.exportColumns(new ImmutableBitSet(selectedColumns), buf);
         return buf;
     }
-    
+
 }

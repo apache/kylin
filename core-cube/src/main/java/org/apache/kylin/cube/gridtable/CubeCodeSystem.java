@@ -6,17 +6,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.gridtable.DefaultGTComparator;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
+import org.apache.kylin.metadata.measure.serializer.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,20 +33,35 @@ public class CubeCodeSystem implements IGTCodeSystem {
     // ============================================================================
 
     private GTInfo info;
+
     private Map<Integer, Dictionary> dictionaryMap; // column index ==> dictionary of column
     private Map<Integer, Integer> fixLenMap; // column index ==> fixed length of column
     private Map<Integer, Integer> dependentMetricsMap;
-    private IGTComparator comparator;
     private DataTypeSerializer[] serializers;
+    private IGTComparator comparator;
 
     public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap) {
-        this(dictionaryMap, Collections.<Integer, Integer>emptyMap(), Collections.<Integer, Integer>emptyMap());
+        this(dictionaryMap, Collections.<Integer, Integer> emptyMap(), Collections.<Integer, Integer> emptyMap());
     }
-            
+
     public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap, Map<Integer, Integer> fixLenMap, Map<Integer, Integer> dependentMetricsMap) {
         this.dictionaryMap = dictionaryMap;
         this.fixLenMap = fixLenMap;
         this.dependentMetricsMap = dependentMetricsMap;
+    }
+
+    public IGTCodeSystem trim() {
+        DataTypeSerializer[] newSerializers = new DataTypeSerializer[serializers.length];
+
+        for (int i = 0; i < serializers.length; i++) {
+            if (serializers[i] instanceof DictionarySerializer) {
+                newSerializers[i] = new TrimmedDictionarySerializer(serializers[i].maxLength());
+            } else {
+                newSerializers[i] = serializers[i];
+            }
+        }
+
+        return new TrimmedCubeCodeSystem(info, dependentMetricsMap, newSerializers, comparator);
     }
 
     @Override
@@ -68,23 +84,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
             }
         }
 
-        this.comparator = new IGTComparator() {
-            @Override
-            public boolean isNull(ByteArray code) {
-                // all 0xff is null
-                byte[] array = code.array();
-                for (int i = 0, j = code.offset(), n = code.length(); i < n; i++, j++) {
-                    if (array[j] != Dictionary.NULL)
-                        return false;
-                }
-                return true;
-            }
-
-            @Override
-            public int compare(ByteArray code1, ByteArray code2) {
-                return code1.compareTo(code2);
-            }
-        };
+        this.comparator = new DefaultGTComparator();
     }
 
     @Override
@@ -109,46 +109,32 @@ public class CubeCodeSystem implements IGTCodeSystem {
 
     @Override
     public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
-        // this is a bit too complicated, but encoding only happens once at build time, so it is OK
         DataTypeSerializer serializer = serializers[col];
-        try {
-            if (serializer instanceof DictionarySerializer) {
-                ((DictionarySerializer) serializer).serializeWithRounding(value, roundingFlag, buf);
-            } else {
-                serializer.serialize(value, buf);
+        if (serializer instanceof DictionarySerializer) {
+            ((DictionarySerializer) serializer).serializeWithRounding(value, roundingFlag, buf);
+        } else {
+            if ((!(serializer instanceof StringSerializer || serializer instanceof FixLenSerializer)) && (value instanceof String)) {
+                value = serializer.valueOf((String) value);
             }
-        } catch (ClassCastException ex) {
-            // try convert string into a correct object type
-            try {
-                if (value instanceof String) {
-                    Object converted = serializer.valueOf((String) value);
-                    if ((converted instanceof String) == false) {
-                        encodeColumnValue(col, converted, roundingFlag, buf);
-                        return;
-                    }
-                }
-            } catch (Throwable e) {
-                logger.error("Fail to encode value '" + value + "'", e);
-            }
-            throw ex;
+            serializer.serialize(value, buf);
         }
     }
 
     @Override
     public Object decodeColumnValue(int col, ByteBuffer buf) {
-       return serializers[col].deserialize(buf);
+        return serializers[col].deserialize(buf);
     }
 
     @Override
     public MeasureAggregator<?>[] newMetricsAggregators(ImmutableBitSet columns, String[] aggrFunctions) {
         assert columns.trueBitCount() == aggrFunctions.length;
-        
+
         MeasureAggregator<?>[] result = new MeasureAggregator[aggrFunctions.length];
         for (int i = 0; i < result.length; i++) {
             int col = columns.trueBitAt(i);
             result[i] = MeasureAggregator.create(aggrFunctions[i], info.getColumnType(col).toString());
         }
-        
+
         // deal with holistic distinct count
         if (dependentMetricsMap != null) {
             for (Integer child : dependentMetricsMap.keySet()) {
@@ -156,15 +142,50 @@ public class CubeCodeSystem implements IGTCodeSystem {
                     Integer parent = dependentMetricsMap.get(child);
                     if (columns.get(parent) == false)
                         throw new IllegalStateException();
-                    
+
                     int childIdx = columns.trueBitIndexOf(child);
                     int parentIdx = columns.trueBitIndexOf(parent);
                     result[childIdx].setDependentAggregator(result[parentIdx]);
                 }
             }
         }
-        
+
         return result;
+    }
+
+    static class TrimmedDictionarySerializer extends DataTypeSerializer {
+
+        final int fieldSize;
+
+        public TrimmedDictionarySerializer(int fieldSize) {
+            this.fieldSize = fieldSize;
+
+        }
+
+        @Override
+        public int peekLength(ByteBuffer in) {
+            return fieldSize;
+        }
+
+        @Override
+        public int maxLength() {
+            return fieldSize;
+        }
+
+        @Override
+        public Object valueOf(byte[] value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void serialize(Object value, ByteBuffer out) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object deserialize(ByteBuffer in) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     static class DictionarySerializer extends DataTypeSerializer {
@@ -217,7 +238,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
         FixLenSerializer(int fixLen) {
             this.fixLen = fixLen;
         }
-        
+
         private byte[] currentBuf() {
             byte[] buf = current.get();
             if (buf == null) {
@@ -254,11 +275,11 @@ public class CubeCodeSystem implements IGTCodeSystem {
             while (tail > 0 && (buf[tail - 1] == RowConstants.ROWKEY_PLACE_HOLDER_BYTE || buf[tail - 1] == Dictionary.NULL)) {
                 tail--;
             }
-            
+
             if (tail == 0) {
                 return buf[0] == Dictionary.NULL ? null : "";
             }
-            
+
             return Bytes.toString(buf, 0, tail);
         }
 
