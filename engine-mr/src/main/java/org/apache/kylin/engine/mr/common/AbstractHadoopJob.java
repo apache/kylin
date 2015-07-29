@@ -286,6 +286,16 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
     }
 
+    protected void cleanupTempConfFile(Configuration conf) {
+        String tempMetaFileString = conf.get("tmpfiles");
+        if (tempMetaFileString != null) {
+            File tempMetaFile = new File(tempMetaFileString);
+            if (tempMetaFile.exists()) {
+                tempMetaFile.getParentFile().delete();
+            }
+        }
+    }
+
     private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList) throws IOException {
         ResourceStore from = ResourceStore.getStore(kylinConfig);
         KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());

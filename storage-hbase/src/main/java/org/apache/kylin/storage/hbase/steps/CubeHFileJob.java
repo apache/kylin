@@ -95,6 +95,9 @@ public class CubeHFileJob extends AbstractHadoopJob {
             logger.error("error in CubeHFileJob", e);
             printUsage(options);
             throw e;
+        } finally {
+            if (job != null)
+                cleanupTempConfFile(job.getConfiguration());
         }
     }
 

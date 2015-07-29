@@ -94,6 +94,9 @@ public class MergeCuboidJob extends CuboidJob {
             logger.error("error in MergeCuboidJob", e);
             printUsage(options);
             throw e;
+        } finally {
+            if (job != null)
+                cleanupTempConfFile(job.getConfiguration());
         }
     }
 
