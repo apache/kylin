@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # pack webapp into kylin.war so that we have a all-in-one war
 dir=$(dirname ${0})

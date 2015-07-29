@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 hbase_classpath=`hbase classpath`
 arr=(`echo $hbase_classpath | cut -d ":"  --output-delimiter=" " -f 1-`)

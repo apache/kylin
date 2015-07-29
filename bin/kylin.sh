@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 dir=$(dirname ${0})
 source ${dir}/check-env.sh
