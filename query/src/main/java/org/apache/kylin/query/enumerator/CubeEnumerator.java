@@ -46,7 +46,8 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     private final DataContext optiqContext;
     private final Object[] current;
     private ITupleIterator cursor;
-    private int[] fieldIndexes;
+    private int[] fieldIndexes;    
+    private List<String> tupleFieldsSnapshot;
 
     public CubeEnumerator(OLAPContext olapContext, DataContext optiqContext) {
         this.olapContext = olapContext;
@@ -95,7 +96,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     private Object[] convertCurrentRow(ITuple tuple) {
 
         // build field index map
-        if (this.fieldIndexes == null) {
+        if (tupleFieldsSnapshot != tuple.getAllFields()) { // note != for fast comparison
             List<String> fields = tuple.getAllFields();
             int size = fields.size();
             this.fieldIndexes = new int[size];
@@ -108,6 +109,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
                     fieldIndexes[i] = -1;
                 }
             }
+            tupleFieldsSnapshot = tuple.getAllFields();
         }
 
         // set field value
@@ -140,6 +142,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         }
 
         this.fieldIndexes = null;
+        this.tupleFieldsSnapshot = null;
         return iterator;
     }
 
