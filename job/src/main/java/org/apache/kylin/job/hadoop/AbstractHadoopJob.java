@@ -229,7 +229,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         File metaDir = new File(tmp, "meta");
         metaDir.mkdirs();
-        metaDir.getParentFile().deleteOnExit();
 
         // write kylin.properties
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -254,6 +253,16 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         // hadoop distributed cache
         conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+    }
+
+    protected void cleanupTempConfFile(Configuration conf) {
+        String tempMetaFileString = conf.get("tmpfiles");
+        if (tempMetaFileString != null) {
+            File tempMetaFile = new File(tempMetaFileString);
+            if (tempMetaFile.exists()) {
+                tempMetaFile.getParentFile().delete();
+            }
+        }
     }
 
     protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
