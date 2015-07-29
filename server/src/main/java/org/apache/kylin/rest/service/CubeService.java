@@ -235,6 +235,7 @@ public class CubeService extends BasicService {
             }
 
             CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
+            cube = getCubeManager().updateCube(cube);
 
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
