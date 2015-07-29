@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  */
-public class ITDefaultSchedulerTest extends BaseSchedulerTest {
+public class DefaultSchedulerTest extends BaseSchedulerTest {
 
     @Test
     public void testSingleTaskJob() throws Exception {
