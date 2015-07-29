@@ -316,14 +316,14 @@ public class CubeMetadataUpgrade {
             return result;
 
         if (count > 1) {
-            errorMsgs.add("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
+            errorMsgs.add("There are more than 1 table named with '" + table + "' in different database; ");
         }
 
         if (count == 0) {
-            errorMsgs.add("There is no table named with '" + table + "'");
+            errorMsgs.add("No table definition for '" + table + "'; any project, cube refers it should remove the reference;");
         }
-
-        return result;
+        
+        return null;
     }
 
     private void upgradeProjectInstance() {
@@ -351,7 +351,9 @@ public class CubeMetadataUpgrade {
 
                 Set<String> tables = Sets.newHashSet();
                 for (String table : oldPrj.getTables()) {
-                    tables.add(this.appendDBName(table));
+                    String tb = this.appendDBName(table);
+                    if (tb != null)
+                        tables.add(this.appendDBName(tb));
                 }
                 newPrj.setTables(tables);
 
@@ -467,8 +469,8 @@ public class CubeMetadataUpgrade {
                 for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
                     if (lookupDesc.getJoin() != null) {
                         JoinDesc join = lookupDesc.getJoin();
-                        for (int i=0; i< join.getForeignKey().length; i++) {
-                            pkToFK.put(lookupDesc.getTable() + "/" +join.getPrimaryKey()[i], dataModelDesc.getFactTable() + "/" +join.getForeignKey()[i]);
+                        for (int i = 0; i < join.getForeignKey().length; i++) {
+                            pkToFK.put(lookupDesc.getTable() + "/" + join.getPrimaryKey()[i], dataModelDesc.getFactTable() + "/" + join.getForeignKey()[i]);
                         }
                     }
                 }
@@ -487,7 +489,7 @@ public class CubeMetadataUpgrade {
 
                         }
                     }
-                    for(Pair<String, String> dict: newDictionaries) {
+                    for (Pair<String, String> dict : newDictionaries) {
                         newSeg.getDictionaries().put(dict.getFirst(), dict.getSecond());
                         updated = true;
                     }
