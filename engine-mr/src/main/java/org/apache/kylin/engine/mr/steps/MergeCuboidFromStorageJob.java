@@ -84,6 +84,9 @@ public class MergeCuboidFromStorageJob extends CuboidJob {
             logger.error("error in MergeCuboidFromHBaseJob", e);
             printUsage(options);
             throw e;
+        } finally {
+            if (job != null)
+                cleanupTempConfFile(job.getConfiguration());
         }
 
     }
