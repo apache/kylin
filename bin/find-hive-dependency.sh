@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 hive_env=`hive -e set | grep 'env:CLASSPATH'`
 

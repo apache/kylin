@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 dir=$(dirname ${0})
 source ${dir}/check-env.sh
 job_jar=`find ${KYLIN_HOME}/lib/ -name kylin-job*.jar`

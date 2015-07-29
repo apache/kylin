@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #by source
 
 if [ -z "$KYLIN_HOME" ]
