@@ -121,6 +121,8 @@ public class MergeStatisticsStep extends AbstractExecutable {
                     throw e;
                 } finally {
                     IOUtils.closeStream(reader);
+                    if (tempFile != null)
+                        tempFile.delete();
                 }
             }
             averageSamplingPercentage = averageSamplingPercentage / this.getMergingSegmentIds().size();
