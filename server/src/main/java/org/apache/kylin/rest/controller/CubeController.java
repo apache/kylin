@@ -283,7 +283,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "", method = {RequestMethod.POST})
     @ResponseBody
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
-        //Update Model 
+        //Update Model
         MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modelDesc = deserializeDataModelDesc(cubeRequest);
         if (modelDesc == null || StringUtils.isEmpty(modelDesc.getName())) {
@@ -380,6 +380,7 @@ public class CubeController extends BasicController {
 
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeRequest.getCubeName());
+            cube.setRetentionRange(desc.getRetentionRange());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
 
@@ -450,6 +451,7 @@ public class CubeController extends BasicController {
         try {
             logger.debug("Saving cube " + cubeRequest.getCubeDescData());
             desc = JsonUtil.readValue(cubeRequest.getCubeDescData(), CubeDesc.class);
+//            desc.setRetentionRange(cubeRequest.getRetentionRange());
         } catch (JsonParseException e) {
             logger.error("The cube definition is not valid.", e);
             updateRequest(cubeRequest, false, e.getMessage());

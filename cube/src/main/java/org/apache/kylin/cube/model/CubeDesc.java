@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.util.Base64;
@@ -114,6 +115,10 @@ public class CubeDesc extends RootPersistentEntity {
     private String signature;
     @JsonProperty("notify_list")
     private List<String> notifyList;
+    /*
+     * this field will not be serialized ,can be deserialized to front javascript
+     */
+    private  long retentionRange;
 
     private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
@@ -763,4 +768,13 @@ public class CubeDesc extends RootPersistentEntity {
         this.nullStrings = nullStrings;
     }
 
+    @JsonProperty
+    public long getRetentionRange() {
+        return retentionRange;
+    }
+
+    @JsonIgnore
+    public void setRetentionRange(long retentionRange) {
+        this.retentionRange = retentionRange;
+    }
 }
