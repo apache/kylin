@@ -41,11 +41,6 @@
             <artifactId>kylin-core-dictionary</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-dictionary</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>com.n3twork.druid</groupId>
