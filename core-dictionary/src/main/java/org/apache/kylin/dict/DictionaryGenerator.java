@@ -21,11 +21,7 @@ package org.apache.kylin.dict;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -60,7 +56,7 @@ public class DictionaryGenerator {
         }
     }
 
-    public static Dictionary<?> buildDictionaryFromValueList(DataType dataType, Collection<byte[]> values) {
+    public static Dictionary<?> buildDictionaryFromValueList(DataType dataType, Iterable<byte[]> values) {
         Preconditions.checkNotNull(dataType, "dataType cannot be null");
         Dictionary dict;
         int baseId = 0; // always 0 for now
@@ -90,7 +86,7 @@ public class DictionaryGenerator {
         logger.debug("Dictionary value samples: " + buf.toString());
         logger.debug("Dictionary cardinality " + dict.getSize());
         if (dict instanceof TrieDictionary && dict.getSize() > DICT_MAX_CARDINALITY) {
-            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + values.size());
+            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + dict.getSize());
         }
         return dict;
     }
@@ -131,7 +127,7 @@ public class DictionaryGenerator {
         return dict;
     }
 
-    private static Dictionary buildDateDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildDateDict(Iterable<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         final int BAD_THRESHOLD = 0;
         String matchPattern = null;
 
@@ -165,7 +161,7 @@ public class DictionaryGenerator {
         throw new IllegalStateException("Unrecognized datetime value");
     }
 
-    private static Dictionary buildStringDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildStringDict(Iterable<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
             if (value == null)
@@ -178,7 +174,7 @@ public class DictionaryGenerator {
         return builder.build(baseId);
     }
 
-    private static Dictionary buildNumberDict(Collection<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildNumberDict(Iterable<byte[]> values, int baseId, int nSamples, ArrayList samples) {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         for (byte[] value : values) {
             if (value == null)

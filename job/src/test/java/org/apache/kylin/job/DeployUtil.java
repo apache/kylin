@@ -131,7 +131,7 @@ public class DeployUtil {
     }
 
     private static File getSparkJobJarFile() {
-        return new File("../spark/target", "kylin-spark-" + getPomVersion() + "-job.jar");
+        return new File("../engine-spark/target", "kylin-engine-spark-" + getPomVersion() + "-job.jar");
     }
 
     private static void execCliCommand(String cmd) throws IOException {

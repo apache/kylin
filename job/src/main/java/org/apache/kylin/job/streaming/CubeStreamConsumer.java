@@ -108,7 +108,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         localStream.close();
 
         final Map<TblColRef, Dictionary<?>> dictionaryMap = CubingUtils.buildDictionary(cubeInstance, parsedStreamMessages);
-        Map<TblColRef, Dictionary<?>> realDictMap = writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);
+        Map<TblColRef, Dictionary<?>> realDictMap = CubingUtils.writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);
 
         InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), realDictMap);
         final HTableInterface hTable = createHTable(cubeSegment);
@@ -120,32 +120,6 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         commitSegment(cubeSegment);
 
         logger.info("Consumed {} messages out of {} raw messages", totalConsumedMessageCount, totalRawMessageCount);
-    }
-
-    private Map<TblColRef, Dictionary<?>> writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<?>> dictionaryMap, long startOffset, long endOffset) {
-        Map<TblColRef, Dictionary<?>> realDictMap = Maps.newHashMap();
-
-        for (Map.Entry<TblColRef, Dictionary<?>> entry : dictionaryMap.entrySet()) {
-            final TblColRef tblColRef = entry.getKey();
-            final Dictionary<?> dictionary = entry.getValue();
-            TableSignature signature = new TableSignature();
-            signature.setLastModifiedTime(System.currentTimeMillis());
-            signature.setPath(String.format("streaming_%s_%s", startOffset, endOffset));
-            signature.setSize(endOffset - startOffset);
-            DictionaryInfo dictInfo = new DictionaryInfo(tblColRef.getTable(), tblColRef.getName(), tblColRef.getColumnDesc().getZeroBasedIndex(), tblColRef.getDatatype(), signature);
-            logger.info("writing dictionary for TblColRef:" + tblColRef.toString());
-            DictionaryManager dictionaryManager = DictionaryManager.getInstance(kylinConfig);
-            try {
-                DictionaryInfo realDict = dictionaryManager.trySaveNewDict(dictionary, dictInfo);
-                cubeSegment.putDictResPath(tblColRef, realDict.getResourcePath());
-                realDictMap.put(tblColRef, realDict.getDictionaryObject());
-            } catch (IOException e) {
-                logger.error("error save dictionary for column:" + tblColRef, e);
-                throw new RuntimeException("error save dictionary for column:" + tblColRef, e);
-            }
-        }
-
-        return realDictMap;
     }
 
     //TODO: should we use cubeManager.promoteNewlyBuiltSegments?

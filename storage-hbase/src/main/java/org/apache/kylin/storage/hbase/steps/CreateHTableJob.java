@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -64,6 +66,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import javax.annotation.Nullable;
 
 /**
  */
@@ -105,17 +109,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
             byte[][] splitKeys;
             if (statistics_enabled) {
-                List<Integer> rowkeyColumnSize = Lists.newArrayList();
-                long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-                Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-                List<TblColRef> columnList = baseCuboid.getColumns();
 
-                for (int i = 0; i < columnList.size(); i++) {
-                    logger.info("Rowkey column " + i + " length " + cubeSegment.getColumnLength(columnList.get(i)));
-                    rowkeyColumnSize.add(cubeSegment.getColumnLength(columnList.get(i)));
-                }
-
-                splitKeys = getSplitsFromCuboidStatistics(conf, kylinConfig, rowkeyColumnSize, cubeSegment);
+                final Map<Long, Long> cuboidSizeMap = getCubeRowCountMapFromCuboidStatistics(cubeSegment, kylinConfig, conf);
+                splitKeys = getSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment);
             } else {
                 splitKeys = getSplits(conf, partitionFilePath);
             }
@@ -163,19 +159,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
         return retValue.length == 0 ? null : retValue;
     }
-
-    @SuppressWarnings("deprecation")
-    public static byte[][] getSplitsFromCuboidStatistics(Configuration conf, KylinConfig kylinConfig, List<Integer> rowkeyColumnSize, CubeSegment cubeSegment) throws IOException {
-
-        CubeDesc cubeDesc = cubeSegment.getCubeDesc();
-        DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
-        int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.toString());
-
-        logger.info("Cube capacity " + cubeCapacity.toString() + ", chosen cut for HTable is " + cut + "GB");
-
-        Map<Long, Long> cuboidSizeMap = Maps.newHashMap();
-        long totalSizeInM = 0;
-
+    
+    public static Map<Long, Long> getCubeRowCountMapFromCuboidStatistics(CubeSegment cubeSegment, KylinConfig kylinConfig, Configuration conf) throws IOException {
         ResourceStore rs = ResourceStore.getStore(kylinConfig);
         String fileKey = cubeSegment.getStatisticsResourcePath();
         InputStream is = rs.getResource(fileKey);
@@ -189,7 +174,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(is);
             IOUtils.closeStream(tempFileStream);
         }
-
+        
+        Map<Long, Long> cuboidSizeMap = Maps.newHashMap();
         FileSystem fs = HadoopUtil.getFileSystem("file:///" + tempFile.getAbsolutePath());
         SequenceFile.Reader reader = null;
         try {
@@ -215,19 +201,56 @@ public class CreateHTableJob extends AbstractHadoopJob {
         } finally {
             IOUtils.closeStream(reader);
         }
+        return cuboidSizeMap;
+    }
+    
+    public static Map<Long, Long> getCubeRowCountMapFromCuboidStatistics(Map<Long, HyperLogLogPlusCounter> counterMap, final int samplingPercentage) throws IOException {
+        Preconditions.checkArgument(samplingPercentage > 0);
+        return Maps.transformValues(counterMap, new Function<HyperLogLogPlusCounter, Long>() {
+            @Nullable
+            @Override
+            public Long apply(HyperLogLogPlusCounter input) {
+                return input.getCountEstimate() * 100 / samplingPercentage;
+            }
+        });
+    }
+    
+    public static byte[][] getSplitsFromCuboidStatistics(final Map<Long, Long> cubeRowCountMap, KylinConfig kylinConfig, CubeSegment cubeSegment) throws IOException {
+
+        final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
+
+        final List<Integer> rowkeyColumnSize = Lists.newArrayList();
+        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+        List<TblColRef> columnList = baseCuboid.getColumns();
+
+        for (int i = 0; i < columnList.size(); i++) {
+            logger.info("Rowkey column " + i + " length " + cubeSegment.getColumnLength(columnList.get(i)));
+            rowkeyColumnSize.add(cubeSegment.getColumnLength(columnList.get(i)));
+        }
+        
+        DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
+        int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.toString());
+
+        logger.info("Cube capacity " + cubeCapacity.toString() + ", chosen cut for HTable is " + cut + "GB");
+
+        long totalSizeInM = 0;
 
         List<Long> allCuboids = Lists.newArrayList();
-        allCuboids.addAll(cuboidSizeMap.keySet());
+        allCuboids.addAll(cubeRowCountMap.keySet());
         Collections.sort(allCuboids);
 
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        for (long cuboidId : allCuboids) {
-            long cuboidSize = estimateCuboidStorageSize(cubeDesc, cuboidId, cuboidSizeMap.get(cuboidId), baseCuboidId, rowkeyColumnSize);
-            cuboidSizeMap.put(cuboidId, cuboidSize);
+        Map<Long, Long> cubeSizeMap = Maps.transformEntries(cubeRowCountMap, new Maps.EntryTransformer<Long, Long, Long>() {
+            @Override
+            public Long transformEntry(@Nullable Long key, @Nullable Long value) {
+                return estimateCuboidStorageSize(cubeDesc, key, value, baseCuboidId, rowkeyColumnSize);
+            }
+        });
+        for (Long cuboidSize : cubeSizeMap.values()) {
             totalSizeInM += cuboidSize;
         }
-
-        int nRegion = Math.round((float) totalSizeInM / ((float) cut * 1024l));
+        
+        int nRegion = Math.round((float) totalSizeInM / (cut * 1024L));
         nRegion = Math.max(kylinConfig.getHBaseRegionCutMin(), nRegion);
         nRegion = Math.min(kylinConfig.getHBaseRegionCutMax(), nRegion);
 
@@ -245,7 +268,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         int cuboidCount = 0;
         for (int i = 0; i < allCuboids.size(); i++) {
             long cuboidId = allCuboids.get(i);
-            if (size >= mbPerRegion || (size + cuboidSizeMap.get(cuboidId)) >= mbPerRegion * 1.2) {
+            if (size >= mbPerRegion || (size + cubeSizeMap.get(cuboidId)) >= mbPerRegion * 1.2) {
                 // if the size already bigger than threshold, or it will exceed by 20%, cut for next region
                 regionSplit.add(cuboidId);
                 logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboids < " + cuboidId + " (" + cuboidCount + ") cuboids");
@@ -253,7 +276,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 cuboidCount = 0;
                 regionIndex++;
             }
-            size += cuboidSizeMap.get(cuboidId);
+            size += cubeSizeMap.get(cuboidId);
             cuboidCount++;
         }
 

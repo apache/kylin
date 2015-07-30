@@ -9,7 +9,7 @@
         <version>0.8.1-incubating-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kylin-spark</artifactId>
+    <artifactId>kylin-engine-spark</artifactId>
 
     <name>Kylin:Spark</name>
     <url>http://maven.apache.org</url>
@@ -21,7 +21,13 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-job</artifactId>
+            <artifactId>kylin-storage-hbase</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-job</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 

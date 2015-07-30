@@ -29,8 +29,7 @@ import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
@@ -38,12 +37,14 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import java.io.*;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author yangli9
  */
-public class KylinConfig {
+public class KylinConfig implements Serializable {
 
     public static final String KYLIN_STORAGE_URL = "kylin.storage.url";
 
@@ -270,10 +271,7 @@ public class KylinConfig {
         return config;
     }
 
-    private PropertiesConfiguration kylinConfig = new PropertiesConfiguration();
-
-    private String metadataUrl;
-    private String storageUrl;
+    private volatile Properties properties = new Properties();
 
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
         CliCommandExecutor exec = new CliCommandExecutor();
@@ -286,7 +284,7 @@ public class KylinConfig {
     // ============================================================================
 
     public String getStorageUrl() {
-        return storageUrl;
+        return getOptional(KYLIN_STORAGE_URL);
     }
 
     public String getHiveUrl() {
@@ -349,7 +347,7 @@ public class KylinConfig {
 
     private static final Pattern COPROCESSOR_JAR_NAME_PATTERN = Pattern.compile("kylin-coprocessor-(.+)\\.jar");
     private static final Pattern JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-job-(.+)\\.jar");
-    private static final Pattern SPARK_JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-spark-(.+)\\.jar");
+    private static final Pattern SPARK_JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-engine-spark-(.+)\\.jar");
 
     public String getCoprocessorLocalJar() {
         final String coprocessorJar = getOptional(COPROCESSOR_LOCAL_JAR);
@@ -523,20 +521,21 @@ public class KylinConfig {
 
     private String getOptional(String prop) {
         final String property = System.getProperty(prop);
-        return property != null ? property : kylinConfig.getString(prop);
+        return property != null ? property : properties.getProperty(prop);
     }
 
     private String[] getOptionalStringArray(String prop) {
         final String property = System.getProperty(prop);
-        if (!StringUtils.isBlank(property))
+        if (!StringUtils.isBlank(property)) {
             return property.split("\\s*,\\s*");
-
-        return kylinConfig.getStringArray(prop);
+        } else {
+            return new String[]{};
+        }
     }
 
     private String getOptional(String prop, String dft) {
         final String property = System.getProperty(prop);
-        return property != null ? property : kylinConfig.getString(prop, dft);
+        return property != null ? property : properties.getProperty(prop, dft);
     }
 
     private String getRequired(String prop) {
@@ -544,7 +543,7 @@ public class KylinConfig {
         if (property != null) {
             return property;
         }
-        String r = kylinConfig.getString(prop);
+        String r = properties.getProperty(prop);
         if (StringUtils.isEmpty(r)) {
             throw new IllegalArgumentException("missing '" + prop + "' in conf/kylin_instance.properties");
         }
@@ -552,28 +551,24 @@ public class KylinConfig {
     }
 
     void reloadKylinConfig(InputStream is) {
-        PropertiesConfiguration config = new PropertiesConfiguration();
+        Properties newProperties = new Properties();
         try {
-            config.load(is);
-        } catch (ConfigurationException e) {
+            newProperties.load(is);
+        } catch (IOException e) {
             throw new RuntimeException("Cannot load kylin config.", e);
         } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
-                logger.error("Failed to close inputstream.", e);
-            }
+            IOUtils.closeQuietly(is);
         }
-        this.kylinConfig = config;
-        this.metadataUrl = getOptional(KYLIN_METADATA_URL);
-        this.storageUrl = getOptional(KYLIN_STORAGE_URL);
+        this.properties = newProperties;
     }
 
     public void writeProperties(File file) throws IOException {
+        FileOutputStream fos = null;
         try {
-            kylinConfig.save(file);
-        } catch (ConfigurationException ex) {
-            throw new IOException("Error writing KylinConfig to " + file, ex);
+            fos = new FileOutputStream(file);
+            properties.store(fos, file.getAbsolutePath());
+        } finally {
+            IOUtils.closeQuietly(fos);
         }
     }
 
@@ -587,11 +582,7 @@ public class KylinConfig {
     }
 
     public void printProperties() throws IOException {
-        try {
-            kylinConfig.save(System.out);
-        } catch (ConfigurationException ex) {
-            throw new IOException("Error printing KylinConfig", ex);
-        }
+        properties.list(System.out);
     }
 
     private static File getKylinProperties() {
@@ -621,26 +612,36 @@ public class KylinConfig {
 
         File overrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
         if (overrideFile.exists()) {
+            FileInputStream fis = null;
+            FileInputStream fis2 = null;
             try {
-                PropertiesConfiguration conf = new PropertiesConfiguration();
-                conf.load(propFile);
-                PropertiesConfiguration override = new PropertiesConfiguration();
-                override.load(overrideFile);
-                conf.copy(override);
+                fis = new FileInputStream(propFile);
+                fis2 = new FileInputStream(overrideFile);
+                Properties conf = new Properties();
+                conf.load(fis);
+                Properties override = new Properties();
+                override.load(fis2);
+                for (Map.Entry<Object, Object> entries : override.entrySet()) {
+                    conf.setProperty(entries.getKey().toString(), entries.getValue().toString());
+                }
                 ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                conf.save(bout);
+                conf.store(bout, "output");
                 return new ByteArrayInputStream(bout.toByteArray());
-            } catch (ConfigurationException e) {
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } finally {
+                IOUtils.closeQuietly(fis);
+                IOUtils.closeQuietly(fis2);
+            }
+        } else {
+            try {
+                return new FileInputStream(propFile);
+            } catch (FileNotFoundException e) {
+                logger.error("this should not happen");
                 throw new RuntimeException(e);
             }
         }
 
-        try {
-            return new FileInputStream(propFile);
-        } catch (FileNotFoundException e) {
-            logger.error("this should not happen");
-            throw new RuntimeException(e);
-        }
 
     }
 
@@ -659,7 +660,7 @@ public class KylinConfig {
     }
 
     public String getMetadataUrl() {
-        return metadataUrl;
+        return getOptional(KYLIN_METADATA_URL);
     }
 
     public String getMetadataUrlPrefix() {
@@ -676,13 +677,11 @@ public class KylinConfig {
     }
 
     public void setMetadataUrl(String metadataUrl) {
-        kylinConfig.setProperty(KYLIN_METADATA_URL, metadataUrl);
-        this.metadataUrl = metadataUrl;
+        properties.setProperty(KYLIN_METADATA_URL, metadataUrl);
     }
 
     public void setStorageUrl(String storageUrl) {
-        kylinConfig.setProperty(KYLIN_STORAGE_URL, storageUrl);
-        this.storageUrl = storageUrl;
+        properties.setProperty(KYLIN_STORAGE_URL, storageUrl);
     }
 
     public String getHiveDatabaseForIntermediateTable() {
@@ -690,23 +689,23 @@ public class KylinConfig {
     }
 
     public void setRunAsRemoteCommand(String v) {
-        kylinConfig.setProperty(KYLIN_JOB_RUN_AS_REMOTE_CMD, v);
+        properties.setProperty(KYLIN_JOB_RUN_AS_REMOTE_CMD, v);
     }
 
     public void setRemoteHadoopCliHostname(String v) {
-        kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_HOSTNAME, v);
+        properties.setProperty(KYLIN_JOB_REMOTE_CLI_HOSTNAME, v);
     }
 
     public void setRemoteHadoopCliUsername(String v) {
-        kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_USERNAME, v);
+        properties.setProperty(KYLIN_JOB_REMOTE_CLI_USERNAME, v);
     }
 
     public void setRemoteHadoopCliPassword(String v) {
-        kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_PASSWORD, v);
+        properties.setProperty(KYLIN_JOB_REMOTE_CLI_PASSWORD, v);
     }
 
     public String getProperty(String key, String defaultValue) {
-        return kylinConfig.getString(key, defaultValue);
+        return properties.getProperty(key, defaultValue);
     }
 
     /**
@@ -717,26 +716,21 @@ public class KylinConfig {
      */
     public void setProperty(String key, String value) {
         logger.info("Kylin Config was updated with " + key + " : " + value);
-        kylinConfig.setProperty(key, value);
+        properties.setProperty(key, value);
     }
 
     public String getConfigAsString() throws IOException {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            kylinConfig.save(baos);
-            String content = baos.toString();
-            return content;
-        } catch (ConfigurationException ex) {
-            throw new IOException("Error writing KylinConfig to String", ex);
-        }
+        final StringWriter stringWriter = new StringWriter();
+        properties.list(new PrintWriter(stringWriter));
+        return stringWriter.toString();
     }
 
     public String getSparkHome() {
-        return kylinConfig.getString(SPARK_HOME);
+        return properties.getProperty(SPARK_HOME);
     }
 
     public String getSparkMaster() {
-        return kylinConfig.getString(SPARK_MASTER);
+        return properties.getProperty(SPARK_MASTER);
     }
 
     public int getHBaseRegionCut(String capacity) {
