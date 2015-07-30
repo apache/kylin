@@ -19,6 +19,7 @@
 package org.apache.kylin.common.hll;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -36,7 +37,7 @@ import com.google.common.hash.Hashing;
  * 
  * @author yangli9
  */
-public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter> {
+public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLogLogPlusCounter> {
 
     private final int p;
     private final int m;

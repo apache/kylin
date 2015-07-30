@@ -54,21 +54,17 @@ import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.cube.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.dict.DictionaryInfo;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.engine.streaming.StreamingBatch;
 import org.apache.kylin.engine.streaming.StreamingBatchBuilder;
 import org.apache.kylin.engine.streaming.StreamingMessage;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.source.ReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  */
@@ -139,44 +135,22 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
         final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
         final Map<TblColRef, Dictionary<?>> dictionaryMap;
         try {
-            dictionaryMap = CubingUtils.buildDictionary(cubeInstance, Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
-                @Nullable
-                @Override
-                public List<String> apply(@Nullable StreamingMessage input) {
-                    return input.getData();
-                }
-            }));
-            Map<TblColRef, Dictionary<?>> realDictMap = writeDictionary((CubeSegment) buildable, dictionaryMap, streamingBatch.getTimeRange().getFirst(), streamingBatch.getTimeRange().getSecond());
+            dictionaryMap = CubingUtils.buildDictionary(cubeInstance,
+                    Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
+                        @Nullable
+                        @Override
+                        public List<String> apply(@Nullable StreamingMessage input) {
+                            return input.getData();
+                        }
+                    }));
+            Map<TblColRef, Dictionary<?>> realDictMap = CubingUtils.writeDictionary((CubeSegment) buildable,
+                    dictionaryMap,
+                    streamingBatch.getTimeRange().getFirst(),
+                    streamingBatch.getTimeRange().getSecond());
             return realDictMap;
         } catch (IOException e) {
             throw new RuntimeException("failed to build dictionary", e);
         }
-    }
-
-    private Map<TblColRef, Dictionary<?>> writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<?>> dictionaryMap, long startOffset, long endOffset) {
-        Map<TblColRef, Dictionary<?>> realDictMap = Maps.newHashMap();
-
-        for (Map.Entry<TblColRef, Dictionary<?>> entry : dictionaryMap.entrySet()) {
-            final TblColRef tblColRef = entry.getKey();
-            final Dictionary<?> dictionary = entry.getValue();
-            ReadableTable.TableSignature signature = new ReadableTable.TableSignature();
-            signature.setLastModifiedTime(System.currentTimeMillis());
-            signature.setPath(String.format("streaming_%s_%s", startOffset, endOffset));
-            signature.setSize(endOffset - startOffset);
-            DictionaryInfo dictInfo = new DictionaryInfo(tblColRef.getTable(), tblColRef.getName(), tblColRef.getColumnDesc().getZeroBasedIndex(), tblColRef.getDatatype(), signature);
-            logger.info("writing dictionary for TblColRef:" + tblColRef.toString());
-            DictionaryManager dictionaryManager = DictionaryManager.getInstance(KylinConfig.getInstanceFromEnv());
-            try {
-                DictionaryInfo realDict = dictionaryManager.trySaveNewDict(dictionary, dictInfo);
-                cubeSegment.putDictResPath(tblColRef, realDict.getResourcePath());
-                realDictMap.put(tblColRef, realDict.getDictionaryObject());
-            } catch (IOException e) {
-                logger.error("error save dictionary for column:" + tblColRef, e);
-                throw new RuntimeException("error save dictionary for column:" + tblColRef, e);
-            }
-        }
-
-        return realDictMap;
     }
 
     @Override

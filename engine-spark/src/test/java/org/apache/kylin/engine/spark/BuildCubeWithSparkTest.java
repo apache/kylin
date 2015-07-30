@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.spark;
+package org.apache.kylin.engine.spark;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,6 +27,9 @@ import java.util.TimeZone;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
@@ -35,14 +38,16 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.spark.SparkBatchCubingEngine;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
+import org.apache.kylin.job.lock.MockJobLock;
 import org.apache.kylin.job.manager.ExecutableManager;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.junit.After;
@@ -88,22 +93,20 @@ public class BuildCubeWithSparkTest {
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         DeployUtil.initCliWorkDir();
-        //        DeployUtil.deployMetadata();
+        DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
+        for (String jobId : jobService.getAllJobIds()) {
+            jobService.deleteJob(jobId);
+        }
         scheduler = DefaultScheduler.getInstance();
-        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
+        scheduler.init(new JobEngineConfig(kylinConfig), new MockJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
         cubeManager = CubeManager.getInstance(kylinConfig);
-        for (String jobId : jobService.getAllJobIds()) {
-            if (jobService.getJob(jobId) instanceof CubingJob) {
-                jobService.deleteJob(jobId);
-            }
-        }
 
     }
 
@@ -114,24 +117,18 @@ public class BuildCubeWithSparkTest {
 
     @Test
     public void test() throws Exception {
-        //        DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_left_join_empty");
-        //        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        //        assertTrue(new File(kylinConfig.getKylinSparkJobJarPath()).exists());
-        //        assertTrue(new File(kylinConfig.getSparkHome()).exists());
-        //        final SparkExecutable sparkExecutable = new SparkExecutable();
-        //        sparkExecutable.setClassName(SparkCountDemo.class.getName());
-        //        jobService.addJob(sparkExecutable);
-        //        waitForJob(sparkExecutable.getId());
-        //        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(sparkExecutable.getId()).getState());
         final CubeSegment segment = createSegment();
-        System.out.println(segment.getName());
-        final DefaultChainedExecutable cubingJob = new SparkBatchCubingEngine().createBatchCubingJob(segment, "BuildCubeWithSpark");
+        String confPath = new File(AbstractKylinTestCase.SANDBOX_TEST_DATA).getAbsolutePath();
+        KylinConfig.getInstanceFromEnv().getCoprocessorLocalJar();
+        String coprocessor = KylinConfig.getInstanceFromEnv().getCoprocessorLocalJar();
+        logger.info("confPath location:" + confPath);
+        logger.info("coprocessor location:" + coprocessor);
+        final DefaultChainedExecutable cubingJob = new SparkBatchCubingEngine(confPath, coprocessor).createBatchCubingJob(segment, "BuildCubeWithSpark");
         jobService.addJob(cubingJob);
         waitForJob(cubingJob.getId());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(cubingJob.getId()).getState());
-
     }
-
+    
     private void clearSegment(String cubeName) throws Exception {
         CubeInstance cube = cubeManager.getCube(cubeName);
         // remove all existing segments
