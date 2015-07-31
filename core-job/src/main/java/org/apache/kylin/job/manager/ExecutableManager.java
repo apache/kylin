@@ -311,7 +311,8 @@ public class ExecutableManager {
             }
             return result;
         } catch (ReflectiveOperationException e) {
-            throw new IllegalArgumentException("cannot parse this job:" + executablePO.getId(), e);
+            logger.error("cannot parse this job:" + executablePO.getId(), e);
+            return null;
         }
     }
 

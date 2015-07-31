@@ -30,8 +30,16 @@ elif [ $1 == "reset" ]
 then
 
     hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool  reset
+    
+elif [ $1 == "clean" ]
+then
+
+    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.engine.mr.steps.MetadataCleanupJob "${@:2}"
 
 else
-    echo "usage: metastore.sh backup or metastore.sh restore PATH_TO_LOCAL_META"
+    echo "usage: metastore.sh backup"
+    echo "       metastore.sh reset"
+    echo "       metastore.sh restore PATH_TO_LOCAL_META"
+    echo "       metastore.sh clean [--delete true]"
     exit 1
 fi

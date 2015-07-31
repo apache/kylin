@@ -125,7 +125,11 @@ public class MergeDictionaryStep extends AbstractExecutable {
                 logger.info("Including fact table dictionary of segment : " + segment);
                 if (segment.getDictResPath(col) != null) {
                     DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
-                    dictInfos.add(dictInfo);
+                    if (dictInfo != null) {
+                        dictInfos.add(dictInfo);
+                    } else {
+                        logger.warn("Failed to load DictionaryInfo from " + segment.getDictResPath(col));
+                    }
                 }
             }
             mergeDictionaries(dictMgr, newSeg, dictInfos, col);
