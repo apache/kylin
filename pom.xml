@@ -577,7 +577,9 @@
         <module>core-job</module>
         <module>core-storage</module>
         <module>engine-mr</module>
+        <module>engine-streaming</module>
         <module>source-hive</module>
+        <module>source-kafka</module>
         <module>storage-hbase</module>
         <module>job</module>
         <module>storage</module>
