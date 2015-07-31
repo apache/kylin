@@ -23,6 +23,7 @@ package org.apache.kylin.cube.cuboid;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.model.RowKeyDesc.AggrGroupMask;
@@ -195,5 +196,19 @@ public class CuboidScheduler {
         }
 
         return Long.bitCount(cuboid);
+    }
+
+    public List<Long> getAllCuboidIds() {
+        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDef);
+        List<Long> result = Lists.newArrayList();
+        getSubCuboidIds(baseCuboidId, result);
+        return result;
+    }
+
+    private void getSubCuboidIds(long parentCuboidId, List<Long> result) {
+        result.add(parentCuboidId);
+        for (Long cuboidId : getSpanningCuboid(parentCuboidId)) {
+            getSubCuboidIds(cuboidId, result);
+        }
     }
 }

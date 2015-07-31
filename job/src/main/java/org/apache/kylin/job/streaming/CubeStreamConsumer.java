@@ -40,6 +40,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
+import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.DictionaryInfo;
@@ -105,7 +106,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final CubeSegment cubeSegment = cubeManager.appendSegments(cubeManager.getCube(cubeName), microStreamBatch.getTimestamp().getFirst(), microStreamBatch.getTimestamp().getSecond(), false, false);
         long start = System.currentTimeMillis();
-        final Map<Long, HyperLogLogPlusCounter> samplingResult = sampling(cubeInstance.getDescriptor(), parsedStreamMessages);
+        final Map<Long, HyperLogLogPlusCounter> samplingResult = CubingUtils.sampling(cubeInstance.getDescriptor(), parsedStreamMessages);
         logger.info(String.format("sampling of %d messages cost %d ms", parsedStreamMessages.size(), (System.currentTimeMillis() - start)));
 
         final Configuration conf = HadoopUtil.getCurrentConfiguration();
@@ -113,7 +114,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         FactDistinctColumnsReducer.writeCuboidStatistics(conf, outputPath, samplingResult, 100);
         ResourceStore.getStore(kylinConfig).putResource(cubeSegment.getStatisticsResourcePath(), FileSystem.getLocal(conf).open(new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION)), 0);
 
-        final Map<TblColRef, Dictionary<?>> dictionaryMap = buildDictionary(cubeInstance, parsedStreamMessages);
+        final Map<TblColRef, Dictionary<?>> dictionaryMap = CubingUtils.buildDictionary(cubeInstance, parsedStreamMessages);
         Map<TblColRef, Dictionary<?>> realDictMap = writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);
 
         InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), realDictMap);
@@ -229,135 +230,12 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         }
     }
 
-    private Map<TblColRef, Dictionary<?>> buildDictionary(final CubeInstance cubeInstance, List<List<String>> recordList) throws IOException {
-        final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor().listDimensionColumnsExcludingDerived();
-        final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
-        int index = 0;
-        for (TblColRef column : columnsNeedToBuildDictionary) {
-            tblColRefMap.put(index++, column);
-        }
-
-        HashMap<TblColRef, Dictionary<?>> result = Maps.newHashMap();
-
-        HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
-        for (List<String> row : recordList) {
-            for (int i = 0; i < row.size(); i++) {
-                String cell = row.get(i);
-                if (tblColRefMap.containsKey(i)) {
-                    valueMap.put(tblColRefMap.get(i), cell);
-                }
-            }
-        }
-        for (TblColRef tblColRef : valueMap.keySet()) {
-            final Collection<byte[]> bytes = Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
-                @Nullable
-                @Override
-                public byte[] apply(String input) {
-                    return input == null ? null : input.getBytes();
-                }
-            });
-            final Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), bytes);
-            result.put(tblColRef, dict);
-        }
-        return result;
-    }
-
-    private Map<Long, HyperLogLogPlusCounter> sampling(CubeDesc cubeDesc, List<List<String>> streams) {
-        CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
-        final int rowkeyLength = cubeDesc.getRowkey().getRowKeyColumns().length;
-        final List<Long> allCuboidIds = getAllCuboidIds(cubeDesc);
-        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        final Map<Long, Integer[]> allCuboidsBitSet = Maps.newHashMap();
-
-        Lists.transform(allCuboidIds, new Function<Long, Integer[]>() {
-            @Nullable
-            @Override
-            public Integer[] apply(@Nullable Long cuboidId) {
-                BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
-                Integer[] result = new Integer[bitSet.cardinality()];
-
-                long mask = Long.highestOneBit(baseCuboidId);
-                int position = 0;
-                for (int i = 0; i < rowkeyLength; i++) {
-                    if ((mask & cuboidId) > 0) {
-                        result[position] = i;
-                        position++;
-                    }
-                    mask = mask >> 1;
-                }
-                return result;
-            }
-        });
-        final Map<Long, HyperLogLogPlusCounter> result = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
-        for (Long cuboidId : allCuboidIds) {
-            result.put(cuboidId, new HyperLogLogPlusCounter(14));
-            BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
-            Integer[] cuboidBitSet = new Integer[bitSet.cardinality()];
-
-            long mask = Long.highestOneBit(baseCuboidId);
-            int position = 0;
-            for (int i = 0; i < rowkeyLength; i++) {
-                if ((mask & cuboidId) > 0) {
-                    cuboidBitSet[position] = i;
-                    position++;
-                }
-                mask = mask >> 1;
-            }
-            allCuboidsBitSet.put(cuboidId, cuboidBitSet);
-        }
-
-        HashFunction hf = Hashing.murmur3_32();
-        ByteArray[] row_hashcodes = new ByteArray[rowkeyLength];
-        for (int i = 0; i < rowkeyLength; i++) {
-            row_hashcodes[i] = new ByteArray();
-        }
-        for (List<String> row : streams) {
-            //generate hash for each row key column
-            for (int i = 0; i < rowkeyLength; i++) {
-                Hasher hc = hf.newHasher();
-                final String cell = row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]);
-                if (cell != null) {
-                    row_hashcodes[i].set(hc.putString(cell).hash().asBytes());
-                } else {
-                    row_hashcodes[i].set(hc.putInt(0).hash().asBytes());
-                }
-            }
-
-            for (Map.Entry<Long, HyperLogLogPlusCounter> longHyperLogLogPlusCounterEntry : result.entrySet()) {
-                Long cuboidId = longHyperLogLogPlusCounterEntry.getKey();
-                HyperLogLogPlusCounter counter = longHyperLogLogPlusCounterEntry.getValue();
-                Hasher hc = hf.newHasher();
-                final Integer[] cuboidBitSet = allCuboidsBitSet.get(cuboidId);
-                for (int position = 0; position < cuboidBitSet.length; position++) {
-                    hc.putBytes(row_hashcodes[cuboidBitSet[position]].array());
-                }
-                counter.add(hc.hash().asBytes());
-            }
-        }
-        return result;
-    }
-
     //TODO: should we use cubeManager.promoteNewlyBuiltSegments?
     private void commitSegment(CubeSegment cubeSegment) throws IOException {
         cubeSegment.setStatus(SegmentStatusEnum.READY);
         CubeUpdate cubeBuilder = new CubeUpdate(cubeSegment.getCubeInstance());
         cubeBuilder.setToAddSegs(cubeSegment);
         CubeManager.getInstance(kylinConfig).updateCube(cubeBuilder);
-    }
-
-    private List<Long> getAllCuboidIds(CubeDesc cubeDesc) {
-        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        List<Long> result = Lists.newArrayList();
-        CuboidScheduler cuboidScheduler = new CuboidScheduler(cubeDesc);
-        getSubCuboidIds(cuboidScheduler, baseCuboidId, result);
-        return result;
-    }
-
-    private void getSubCuboidIds(CuboidScheduler cuboidScheduler, long parentCuboidId, List<Long> result) {
-        result.add(parentCuboidId);
-        for (Long cuboidId : cuboidScheduler.getSpanningCuboid(parentCuboidId)) {
-            getSubCuboidIds(cuboidScheduler, cuboidId, result);
-        }
     }
 
     private HTableInterface createHTable(final CubeSegment cubeSegment) throws Exception {
