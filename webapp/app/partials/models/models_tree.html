@@ -18,31 +18,56 @@
 
 <div class="tree-border">
     <div class="row">
-        <div class="col-xs-7">
-            <h3 class="text-info">Models</h3>
-        </div>
+        <!--<div class="col-xs-7">-->
+            <!--<h3 class="text-info">Models</h3>-->
+        <!--</div>-->
+      <!--<div class="col-xs-5" style="padding-left: 0px;margin-top: 20px;">-->
+        <!--<div class="pull-right">-->
+        <!--<a href="models/add" class="btn btn-primary  btn-xs" tooltip="Create Model" ng-if="userService.hasRole('ROLE_MODELER')"><i class="fa fa-plus"></i> Model</a>-->
+        <!--</div>-->
+        <!--<div class="pull-right" style="margin-right: 3px;">-->
+            <!--&lt;!&ndash;<a class="btn btn-xs btn-primary" href='models/add' tooltip="Create Model"  ng-if="userService.hasRole('ROLE_MODELER')"><i class="fa fa-plus"></i></a>&ndash;&gt;-->
+            <!--<a href="cubes/add" ng-if="userService.hasRole('ROLE_ADMIN')" class="btn btn-primary  btn-xs"><i class="fa fa-plus"></i> Cube</a>-->
+        <!--</div>-->
+      <!--</div>-->
+      <div class="col-xs-12" style="margin-top:10px;">
+        <!--<i class="fa fa-plus fa-2x" style="color:green;"> New</i>-->
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
+          <i class="fa fa-plus fa-2x" style="color:#2e8965;"> New<span class="caret"></span></i>
+          <!--<i> New </i> <span class="caret"></span>-->
+        </a>
+        <ul class="dropdown-menu">
+          <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+            <a href="cubes/add" ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-cube"></i>New Cube</a>
+          </li>
+          <li ng-if="userService.hasRole('ROLE_ADMIN')">
+            <a href="models/add"  ng-if="userService.hasRole('ROLE_MODELER')"><i class="fa fa-star"></i> New Model</a>
+          </li>
+        </ul>
+      </div>
 
-        <!--button-->
-        <div class="col-xs-5" style="padding-left: 0px;margin-top: 20px;">
-            <div class="pull-right">
-                <a class="btn btn-xs btn-primary" href='models/add' tooltip="Create Model"  ng-if="userService.hasRole('ROLE_MODELER')"><i class="fa fa-plus"></i></a>
-            </div>
-        </div>
     </div>
     <!--<div class="space-4 box-header with-border"></div>-->
     <!--tree-->
-    <div style="width:100%; height:{{window}}px; overflow:auto;">
-        <abn-tree
-                tree-data         = "modelsManager.modelTreeData"
-                tree-control      = "my_tree"
-                icon-leaf         = "fa fa-cubes"
-                icon-expand       = "fa fa-star"
-                icon-collapse     = "fa fa-star-o"
-                expand-level      = "2"
-                initial-selection = "">
-            </abn-tree>
+    <div style="width:100%; height:{{window}}px; overflow:auto;margin-top: 20px;" ng-controller="ModelsCtrl">
+
+        <ul class="list-group models-tree">
+          <li class="list-group-item" ng-repeat="model in modelsManager.models">
+            <span class="strong"><a style="cursor: pointer" ng-click="openModal(model)">{{model.name}}</a></span>
+            <!--<a  class="pull-right btn btn-info btn-xs" ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="dropModel(modelsManager.selectedModel)"><span class="glyphicon glyphicon-remove"></span></a>-->
+            <!--<a  class="pull-right btn btn-primary btn-xs" href="models/edit/{{model.name}}" style="margin-right: 8px;" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)"><span class="glyphicon glyphicon-edit"></span></a>-->
+
+            <div class="pull-right" showonhoverparent style="display:none;">
+
+              <a href="models/edit/{{model.name}}"  ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-pencil fa-lg fa-fw"></span></a>
+              <a ng-click="dropModel(modelsManager.selectedModel)" style="cursor:pointer;margin-right: 8px;" ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
+            </div>
+
+          </li>
+        </ul>
+
         <div ng-if="modelsManager.loading==true||tableModel.loading==true"><i class="fa fa-2x fa-spinner fa-spin"></i> Loading..</div>
-        <div no-result ng-if="modelsManager.loading==false&&tableModel.loading==false&&modelsManager.modelTreeData.length==0"></div>
+        <div no-result ng-if="modelsManager.loading==false&&tableModel.loading==false&&modelsManager.models.length==0"></div>
 
     </div>
 </div>

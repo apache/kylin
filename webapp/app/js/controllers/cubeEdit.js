@@ -19,18 +19,25 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,MetaModel,TableModel,ModelDescService,modelsManager,cubesManager) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,MetaModel,TableModel,ModelDescService,modelsManager,cubesManager,ProjectModel) {
     $scope.cubeConfig = cubeConfig;
 
-    // when add cube will transfer model Name
-    var modelName = $routeParams.modelName;
+  $scope.metaModel ={};
+  $scope.modelsManager = modelsManager;
 
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.cubeMode = absUrl.indexOf("/cubes/add")!=-1?'addNewCube':absUrl.indexOf("/cubes/edit")!=-1?'editExistCube':'default';
 
+  if($scope.cubeMode=="addNewCube"&&!ProjectModel.getSelectedProject()){
+    SweetAlert.swal('Oops...', 'Please select your project first.', 'warning');
+    $location.path("/models");
+    return;
+  }
 
-    $scope.getColumnsByTable = function (tableName) {
+
+
+  $scope.getColumnsByTable = function (tableName) {
         var temp = [];
         angular.forEach(TableModel.selectProjectTables, function (table) {
             if (table.name == tableName) {
@@ -106,32 +113,31 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     //fetch cube info and model info in edit model
     // ~ init
     if ($scope.isEdit = !!$routeParams.cubeName) {
-        CubeDescService.get({cube_name: $routeParams.cubeName}, function (detail) {
+        CubeDescService.query({cube_name: $routeParams.cubeName}, function (detail) {
             if (detail.length > 0) {
-                cubesManager.cubeMetaFrame = detail[0];
-                cubesManager.cubeMetaFrame = detail[0];
+                $scope.cubeMetaFrame = detail[0];
                 $scope.metaModel = {};
 
                 //get model from API when page refresh
                 if(!modelsManager.getModels().length){
-                    ModelDescService.get({model_name: cubesManager.cubeMetaFrame.model_name}, function (_model) {
+                    ModelDescService.query({model_name: $scope.cubeMetaFrame.model_name}, function (_model) {
                         $scope.metaModel.model = _model;
                     });
                 }
-                $scope.metaModel.model=modelsManager.getModel(cubesManager.cubeMetaFrame.model_name);
+                $scope.metaModel.model=modelsManager.getModel($scope.cubeMetaFrame.model_name);
 
-                $scope.state.cubeSchema = angular.toJson(cubesManager.cubeMetaFrame, true);
+                $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
             }
         });
 
     } else {
-//        cubesManager.cubeMetaFrame = CubeDescModel.createNew();
-        cubesManager.cubeMetaFrame = CubeDescModel.createNew();
+//        $scope.cubeMetaFrame = CubeDescModel.createNew();
+        $scope.cubeMetaFrame = CubeDescModel.createNew();
         $scope.metaModel ={
-            model : modelsManager.getModel(modelName)
+            model : modelsManager.getModel($scope.cubeMetaFrame.model_name)
         }
-        cubesManager.cubeMetaFrame.model_name = modelName;
-        $scope.state.cubeSchema = angular.toJson(cubesManager.cubeMetaFrame, true);
+        //$scope.cubeMetaFrame.model_name = modelName;
+        $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     }
 
 
@@ -156,18 +162,18 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
         //use cubedesc name as model name
         if($scope.metaModel.model.name===""||angular.isUndefined($scope.metaModel.model.name)){
-            $scope.metaModel.model.name = cubesManager.cubeMetaFrame.name;
+            $scope.metaModel.model.name = $scope.cubeMetaFrame.name;
         }
 
         //set model ref for cubeDesc
-        if(cubesManager.cubeMetaFrame.model_name===""||angular.isUndefined(cubesManager.cubeMetaFrame.model_name)){
-            cubesManager.cubeMetaFrame.model_name = cubesManager.cubeMetaFrame.name;
+        if($scope.cubeMetaFrame.model_name===""||angular.isUndefined($scope.cubeMetaFrame.model_name)){
+            $scope.cubeMetaFrame.model_name = $scope.cubeMetaFrame.name;
         }
 
-        $scope.state.project = cubesManager.cubeMetaFrame.project;
-//        delete cubesManager.cubeMetaFrame.project;
+        $scope.state.project = ProjectModel.getSelectedProject();;
+//        delete $scope.cubeMetaFrame.project;
 
-        $scope.state.cubeSchema = angular.toJson(cubesManager.cubeMetaFrame, true);
+        $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     };
 
     $scope.cubeResultTmpl = function (notification) {
@@ -205,7 +211,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                             $location.path("/models");
                         } else {
                             $scope.saveCubeRollBack();
-                            cubesManager.cubeMetaFrame.project = $scope.state.project;
+                            $scope.cubeMetaFrame.project = $scope.state.project;
                                 var message =request.message;
                                 var msg = !!(message) ? message : 'Failed to take action.';
                                 MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
@@ -235,7 +241,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
                         } else {
                             $scope.saveCubeRollBack();
-                            cubesManager.cubeMetaFrame.project = $scope.state.project;
+                            $scope.cubeMetaFrame.project = $scope.state.project;
                             var message =request.message;
                             var msg = !!(message) ? message : 'Failed to take action.';
                             MessageService.sendMsg($scope.cubeResultTmpl({'text':msg,'schema':$scope.state.cubeSchema}), 'error', {}, true, 'top_center');
@@ -275,7 +281,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     $scope.updateMandatory = function(rowkey_column){
         if(!rowkey_column.mandatory){
-            angular.forEach(cubesManager.cubeMetaFrame.rowkey.aggregation_groups, function (group, index) {
+            angular.forEach($scope.cubeMetaFrame.rowkey.aggregation_groups, function (group, index) {
                    var index = group.indexOf(rowkey_column.column);
                    if(index>-1){
                        group.splice(index,1);
@@ -290,7 +296,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         var tmpRowKeyColumns = [];
         var tmpAggregationItems = [];//put all aggregation item
         var hierarchyItemArray = [];//put all hierarchy items
-        angular.forEach(cubesManager.cubeMetaFrame.dimensions, function (dimension, index) {
+        angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
 
           // build fk_pk map
           angular.forEach($scope.metaModel.model.lookups, function (_lookup, index) {
@@ -373,7 +379,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 
         //rm mandatory column from aggregation item
-        angular.forEach(cubesManager.cubeMetaFrame.rowkey.rowkey_columns,function(value,index){
+        angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(value,index){
                 if(value.mandatory){
                     tmpAggregationItems = _.filter(tmpAggregationItems,function(item){
                            return item!=value.column;
@@ -381,16 +387,16 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
                 }
         });
 
-        var rowkeyColumns = cubesManager.cubeMetaFrame.rowkey.rowkey_columns;
+        var rowkeyColumns = $scope.cubeMetaFrame.rowkey.rowkey_columns;
         var newRowKeyColumns = sortSharedData(rowkeyColumns,tmpRowKeyColumns);
         var increasedColumns = increasedColumn(rowkeyColumns,tmpRowKeyColumns);
         newRowKeyColumns = newRowKeyColumns.concat(increasedColumns);
 
         //! here get the latest rowkey_columns
-        cubesManager.cubeMetaFrame.rowkey.rowkey_columns = newRowKeyColumns;
+        $scope.cubeMetaFrame.rowkey.rowkey_columns = newRowKeyColumns;
 
         if($scope.cubeMode==="editExistCube") {
-            var aggregationGroups = cubesManager.cubeMetaFrame.rowkey.aggregation_groups;
+            var aggregationGroups = $scope.cubeMetaFrame.rowkey.aggregation_groups;
             // rm unused item from group,will only rm when [edit] dimension
             angular.forEach(aggregationGroups, function (group, index) {
                 if (group) {
@@ -422,7 +428,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if($scope.cubeMode==="addNewCube"){
 
           if(!tmpAggregationItems.length) {
-              cubesManager.cubeMetaFrame.rowkey.aggregation_groups=[];
+              $scope.cubeMetaFrame.rowkey.aggregation_groups=[];
               return;
           }
 
@@ -447,7 +453,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           //hierarchyItems
           var increasedDataGroups = sliceGroupItemToGroups(unHierarchyItems);
           if(!hierarchyItemArray.length){
-              cubesManager.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
+              $scope.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
               return;
           };
 
@@ -495,7 +501,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
               }
           }
             //! here get the latest aggregation groups,only effect when add newCube
-            cubesManager.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
+            $scope.cubeMetaFrame.rowkey.aggregation_groups = increasedDataGroups;
         }
     }
 
@@ -575,10 +581,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     // ~ private methods
     function generateColumnFamily() {
-        cubesManager.cubeMetaFrame.hbase_mapping.column_family = [];
+        $scope.cubeMetaFrame.hbase_mapping.column_family = [];
         var colFamily = ColFamily();
         var normalMeasures = [], distinctCountMeasures=[];
-        angular.forEach(cubesManager.cubeMetaFrame.measures, function (measure, index) {
+        angular.forEach($scope.cubeMetaFrame.measures, function (measure, index) {
             if(measure.function.expression === 'COUNT_DISTINCT'){
                 distinctCountMeasures.push(measure);
             }else{
@@ -590,7 +596,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             angular.forEach(normalMeasures, function(normalM, index){
                 nmcf.columns[0].measure_refs.push(normalM.name);
             });
-            cubesManager.cubeMetaFrame.hbase_mapping.column_family.push(nmcf);
+            $scope.cubeMetaFrame.hbase_mapping.column_family.push(nmcf);
         }
 
         if (distinctCountMeasures.length > 0){
@@ -598,7 +604,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             angular.forEach(distinctCountMeasures, function(dcm, index){
                 dccf.columns[0].measure_refs.push(dcm.name);
             });
-            cubesManager.cubeMetaFrame.hbase_mapping.column_family.push(dccf);
+            $scope.cubeMetaFrame.hbase_mapping.column_family.push(dccf);
         }
     }
 
@@ -621,8 +627,16 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         }
     });
 
+
+  //dimensions options is depend on the model input when add cube
+  $scope.$watch('cubeMetaFrame.model_name', function (newValue, oldValue) {
+    if(!newValue){
+      return;
+    }
+    $scope.metaModel.model=modelsManager.getModel(newValue);
+  });
     $scope.$on('DimensionsEdited', function (event) {
-        if (cubesManager.cubeMetaFrame) {
+        if ($scope.cubeMetaFrame) {
             reGenerateRowKey();
         }
     });

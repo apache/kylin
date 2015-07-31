@@ -74,7 +74,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     if ($scope.isEdit = !!$routeParams.modelName) {
 
         var modelName = $routeParams.modelName;
-        ModelDescService.get({model_name: modelName}, function (model) {
+        ModelDescService.query({model_name: modelName}, function (model) {
                     if (model) {
                         modelsManager.selectedModel = model;
                         modelsManager.selectedModel.project = ProjectModel.getProjectByCubeModel(modelName);

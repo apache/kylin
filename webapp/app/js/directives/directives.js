@@ -117,6 +117,20 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
         scope.text = (!!!attrs.text) ? 'No Result.' : attrs.text;
       }
     };
+  }).directive('showonhoverparent',
+  function() {
+    return {
+      link : function(scope, element, attrs) {
+        element.parent().bind('mouseenter', function(e) {
+          e.stopPropagation();
+          element.show();
+        });
+        element.parent().bind('mouseleave', function(e) {
+          e.stopPropagation();
+          element.hide();
+        });
+      }
+    };
   })
   .directive('typeahead', function ($timeout, $filter) {
     return {

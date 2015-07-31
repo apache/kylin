@@ -18,6 +18,6 @@
 
 KylinApp.factory('ModelDescService', ['$resource', function ($resource, config) {
     return $resource(Config.service.url + 'model/:model_name/:propName/:propValue/:action', {}, {
-        get: {method: 'GET', params: {}, isArray: false}
+        query: {method: 'GET', params: {}, isArray: false}
     });
 }])

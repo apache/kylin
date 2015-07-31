@@ -20,6 +20,7 @@
 
 KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager) {
 
+    $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
     $scope.newDimension = null;
@@ -38,19 +39,13 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.curStep = $scope.wizardSteps[0];
 
 
-  if(!$scope.metaModel){
-    $scope.metaModel = {
-      model:modelsManager.getModel(cubesManager.cubeMetaFrame.model_name)
-    }
-  }
-
 
   // ~ init
     if (!$scope.state) {
         $scope.state = {mode: "view"};
     }
 
-    $scope.$watch('cubesManager.cubeMetaFrame', function (newValue, oldValue) {
+    $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
         if(!newValue){
             return;
         }
@@ -74,8 +69,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     $scope.saveNewMeasure = function () {
-        if (cubesManager.cubeMetaFrame.measures.indexOf($scope.newMeasure) === -1) {
-            cubesManager.cubeMetaFrame.measures.push($scope.newMeasure);
+        if ($scope.cubeMetaFrame.measures.indexOf($scope.newMeasure) === -1) {
+            $scope.cubeMetaFrame.measures.push($scope.newMeasure);
         }
         $scope.newMeasure = null;
     };
@@ -131,7 +126,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     }
 
     $scope.addNewRowkeyColumn = function () {
-        cubesManager.cubeMetaFrame.rowkey.rowkey_columns.push({
+        $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
             "column": "",
             "length": 0,
             "dictionary": "true",
@@ -140,7 +135,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     $scope.addNewAggregationGroup = function () {
-        cubesManager.cubeMetaFrame.rowkey.aggregation_groups.push([]);
+        $scope.cubeMetaFrame.rowkey.aggregation_groups.push([]);
     };
 
     $scope.refreshAggregationGroup = function (list, index, aggregation_groups) {
@@ -206,6 +201,32 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     }
 
+  $scope.$watch('cube.detail', function (newValue, oldValue) {
+    if (!newValue) {
+      return;
+    }
+    if (newValue && $scope.state.mode === "view") {
+      $scope.cubeMetaFrame = newValue;
+
+      // when viw state,each cubeSchema has its own metaModel
+      $scope.metaModel = {
+        model: {}
+      }
+      $scope.metaModel.model=modelsManager.getModel($scope.cubeMetaFrame.model_name);
+
+    }
+  });
+
+  $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
+    if (!newValue) {
+      return;
+    }
+    if ($scope.cubeMode == "editExistCube" && newValue && !newValue.project) {
+      initProject();
+    }
+
+  });
+
     $scope.checkCubeForm = function(){
         if(!$scope.curStep.form){
             return true;
@@ -240,7 +261,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.check_cube_dimension = function(){
         var errors = [];
-        if(!cubesManager.cubeMetaFrame.dimensions.length){
+        if(!$scope.cubeMetaFrame.dimensions.length){
             errors.push("Dimension can't be null");
         }
         var errorInfo = "";
@@ -256,7 +277,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     $scope.check_cube_measure = function(){
-        var _measures = cubesManager.cubeMetaFrame.measures;
+        var _measures = $scope.cubeMetaFrame.measures;
         var errors = [];
         if(!_measures||!_measures.length){
             errors.push("Please define your metrics.");
@@ -288,7 +309,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.check_cube_setting = function(){
         var errors = [];
 
-        angular.forEach(cubesManager.cubeMetaFrame.rowkey.aggregation_groups,function(group){
+        angular.forEach($scope.cubeMetaFrame.rowkey.aggregation_groups,function(group){
             if(!group.length){
                 errors.push("Each aggregation group can't be empty.");
             }
@@ -332,7 +353,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                     TableModel.aceSrcTbLoaded();
                 }
 
-                cubesManager.cubeMetaFrame.project = projName;
+                $scope.cubeMetaFrame.project = projName;
             }
 
             angular.forEach($scope.projects, function (project, index) {

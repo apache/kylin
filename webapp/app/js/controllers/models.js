@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,modelsManager,cubesManager,TableModel) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,modelsManager,cubesManager,TableModel,$animate) {
 
         //tree data
 
@@ -49,7 +49,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 
             queryParam.projectName = $scope.projectModel.selectedProject;
 
-            modelsManager.generatorTreeData(queryParam).then(function(resp){
+            modelsManager.list(queryParam).then(function(resp){
               modelsManager.loading = false;
             });
 
@@ -76,5 +76,62 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         $scope.status.isopen = !$scope.status.isopen;
     };
 
+  $scope.hideSideBar = false;
+  $scope.toggleModelSideBar = function(){
+    $scope.hideSideBar = !$scope.hideSideBar;
+  }
+
+  $scope.dropModel = function (model) {
+
+    SweetAlert.swal({
+      title: '',
+      text: "Are you sure to drop this model?",
+      type: '',
+      showCancelButton: true,
+      confirmButtonColor: '#DD6B55',
+      confirmButtonText: "Yes",
+      closeOnConfirm: true
+    }, function(isConfirm) {
+      if(isConfirm){
+
+        loadingRequest.show();
+        ModelService.drop({modelId: model.name}, {}, function (result) {
+          loadingRequest.hide();
+//                    CubeList.removeCube(cube);
+          SweetAlert.swal('Success!', 'Model drop is done successfully', 'success');
+          location.reload();
+        },function(e){
+          loadingRequest.hide();
+          if(e.data&& e.data.exception){
+            var message =e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          }else{
+            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+          }
+        });
+      }
 
     });
+  };
+
+  $scope.openModal = function (model) {
+    $scope.modelsManager.selectedModel = model;
+    $modal.open({
+      templateUrl: 'modelDetail.html',
+      controller:ModelDetailModalCtrl,
+      resolve: {
+        scope: function () {
+          return $scope;
+        }
+      }
+    });
+  };
+
+  var ModelDetailModalCtrl = function ($scope,$location, $modalInstance,scope) {
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    };
+  };
+
+});

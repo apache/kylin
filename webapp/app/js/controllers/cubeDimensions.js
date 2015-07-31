@@ -115,7 +115,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
 
     // Check column status: selected or disabled based on current cube dimensions.
     $scope.initColumnStatus = function () {
-        angular.forEach(cubesManager.cubeMetaFrame.dimensions, function (dim) {
+        angular.forEach($scope.cubeMetaFrame.dimensions, function (dim) {
             var cols = dimCols(dim);
 
             angular.forEach(cols, function (colName) {
@@ -190,7 +190,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
         return types;
     };
 
-    var dimList = cubesManager.cubeMetaFrame.dimensions;
+    var dimList = $scope.cubeMetaFrame.dimensions;
 
     // Open add/edit dimension modal.
     $scope.openDimModal = function (dimType) {
@@ -418,7 +418,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
     // Check whether there is column conflicts.
     $scope.dimConflicts = [];
 
-    $scope.$watch('cubesManager.cubeMetaFrame.dimensions', function (newVal, oldVal) {
+    $scope.$watch('cubeMetaFrame.dimensions', function (newVal, oldVal) {
         if (!newVal || !newVal.length) {
             return;
         }

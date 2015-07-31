@@ -30,7 +30,7 @@
 
 <div class="row models-main"  style="padding-top:10px;">
     <!--table_tree-->
-    <div class="col-xs-3">
+    <div class="col-xs-3 cube-models-cntnr" ng-hide="hideSideBar">
         <tabset class="nav-tabs-custom">
             <tab heading="Models" select="toggleTab(true);">
                 <div ng-include src="'partials/models/models_tree.html'"></div>
@@ -40,8 +40,12 @@
             </tab>
         </tabset>
     </div>
-    <div  ng-if="showModels&&!modelsManager.cubeSelected"  class="col-xs-9 models-main">
-        <div ng-include src="'partials/models/model_detail.html'"></div>
+    <div  ng-if="showModels&&!modelsManager.cubeSelected"  class="models-main" ng-class="hideSideBar?'col-xs-12':'col-xs-9'">
+
+      <a href="javascript:void(0);" ng-click="toggleModelSideBar()"><i class="fa fa-reorder fa-2x"></i></a>
+
+        <div ng-include src="'partials/cubes/cubes.html'"></div>
+
     </div>
     <div  ng-if="showModels&&modelsManager.cubeSelected"  class="col-xs-9 models-main">
         <div ng-include src="'partials/cubes/cube_detail.html'"></div>
@@ -58,3 +62,4 @@
 <div ng-include="'partials/jobs/job_refresh.html'"></div>
 <div ng-include="'partials/jobs/job_merge.html'"></div>
 <div ng-include="'partials/projects/project_create.html'"></div>
+<div ng-include="'partials/models/model_detail.html'"></div>
