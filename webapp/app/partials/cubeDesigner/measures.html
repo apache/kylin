@@ -18,7 +18,7 @@
 
 <!-- Measures Summary -->
 <ng-form name="forms.cube_measure_form">
-    <div class="dataTables_wrapper form-inline no-footer" ng-if="cubesManager.cubeMetaFrame.measures.length > 0">
+    <div class="dataTables_wrapper form-inline no-footer" ng-if="cubeMetaFrame.measures.length > 0">
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
@@ -32,7 +32,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="measure in cubesManager.cubeMetaFrame.measures | filter: state.measureFilter track by $index">
+                    <tr ng-repeat="measure in cubeMetaFrame.measures | filter: state.measureFilter track by $index">
                         <td>
                             <!--ID -->
                             <b>{{measure.id = ($index + 1)}}</b>
@@ -63,7 +63,7 @@
                                 <i class="fa fa-pencil"></i>
                             </button>
                             <!--Remove Button -->
-                            <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubesManager.cubeMetaFrame.measures, measure)">
+                            <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.measures, measure)">
                                 <i class="fa fa-trash-o"></i>
                             </button>
                         </td>

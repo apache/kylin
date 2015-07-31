@@ -16,13 +16,13 @@
  * limitations under the License.
 */
 
-KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessService,ProjectModel,$log,CubeDescService,SweetAlert,cubesManager){
+KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessService,ProjectModel,$log){
     var _this = this;
     this.models=[];
+    this.modelNameList = [];
 
     //tracking models loading status
     this.loading = false;
-    this.modelTreeData = [];
     this.selectedModel={};
 
     this.cubeModel={};
@@ -51,6 +51,8 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
                     }).$promise
                 );
 
+              _this.modelNameList.push(model.name);
+
                 model.project = ProjectModel.getProjectByCubeModel(model.name);
             });
             $q.all(cubeDetail,modelPermission).then(
@@ -68,66 +70,14 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
     };
 
     //generator tree data info
-    this.generatorTreeData = function(queryParam){
-      _this.loading = true;
-        var defer = $q.defer();
-        _this.list(queryParam).then(function(resp){
-            _this.modelTreeData = [];
-            angular.forEach(_this.models,function(model){
-                var _model = {
-                    label:model.name,
-                    noLeaf:true,
-                    data:model,
-                    onSelect:function(branch){
-                        // set selected model
-                        _this.selectedModel = branch.data;
-                        _this.cubeSelected = false;
-                    }
-                };
-                var _children = [];
-                angular.forEach(model.cubes,function(cube){
-                    _children.push(
-                        {
-                            label:cube.name,
-                            data:cube,
-                            onSelect:function(branch){
-                                $log.info("cube selected:"+branch.data.name);
-                                _this.cubeSelected = true;
-                                cubesManager.currentCube = branch.data;
-                                _this.listAccess(cubesManager.currentCube, 'CubeInstance');
-
-                                CubeDescService.get({cube_name: cube.name}, {}, function (detail) {
-                                    if (detail.length > 0&&detail[0].hasOwnProperty("name")) {
-                                        cubesManager.currentCube.detail = detail[0];
-                                        cubesManager.cubeMetaFrame = detail[0];
-                                        _this.cubeModel = _this.getModelByCube(cubesManager.currentCube.name);
-                                    }else{
-                                        SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
-                                    }
-                                }, function (e) {
-                                    if(e.data&& e.data.exception){
-                                        var message =e.data.exception;
-                                        var msg = !!(message) ? message : 'Failed to take action.';
-                                        SweetAlert.swal('Oops...', msg, 'error');
-                                    }else{
-                                        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-                                    }
-                                });
-                                // set selecte model
-                            }
-                        }
-                    );
-                });
-                if(_children.length){
-                    _model.children = _children;
-                }
-                _this.modelTreeData.push(_model);
-            });
-            _this.modelTreeData = _.sortBy(_this.modelTreeData, function (i) { return i.label.toLowerCase(); });
-            defer.resolve(_this.modelTreeData);
-        });
-        return defer.promise;
-    };
+    //this.generatorTreeData = function(queryParam){
+    //  _this.loading = true;
+    //    var defer = $q.defer();
+    //    _this.list(queryParam).then(function(resp){
+    //        defer.resolve(_this.modelTreeData);
+    //    });
+    //    return defer.promise;
+    //};
 
 
     this.removemodels = function(models){
@@ -158,7 +108,7 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
     this.removeAll = function(){
         _this.models = [];
         _this.selectedModel = {};
-        _this.modelTreeData = [];
+        _this.modelNameList = [];
     };
 
     this.listAccess = function (entity, type) {

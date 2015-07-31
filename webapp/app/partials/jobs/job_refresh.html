@@ -24,11 +24,11 @@
         <div ng-if="metaModel.model.partition_desc.partition_date_column" class="row">
             <div class="col-md-2"></div>
             <div class="col-md-8">
-                <div ng-if="!!!(cubesManager.currentCube.segments) || cubesManager.currentCube.segments.length == 0">
+                <div ng-if="!!!(cube.segments) || cube.segments.length == 0">
                     <span class="text-info">No Segment to refresh.</span>
                 </div>
-                <div ng-if="cubesManager.currentCube.segments.length > 0" class="row">
-                    <table class="table table-striped list" ng-if="(cubesManager.currentCube.segments|filter: {status: 'NEW'}).length == 0">
+                <div ng-if="cube.segments.length > 0" class="row">
+                    <table class="table table-striped list" ng-if="(cube.segments|filter: {status: 'NEW'}).length == 0">
                         <tbody>
                         <tr>
                             <td>PARTITION DATE COLUMN</td>
@@ -38,8 +38,8 @@
                             <td>MERGE START SEGMENT</td>
                             <td>
                                 <select ng-model="selectedSegment"
-                                        ng-init="selectedSegment=cubesManager.currentCube.segments[0];segmentSelected(selectedSegment);"
-                                        ng-options="segment as segment.name for segment in cubesManager.currentCube.segments"
+                                        ng-init="selectedSegment=cube.segments[0];segmentSelected(selectedSegment);"
+                                        ng-options="segment as segment.name for segment in cube.segments"
                                         ng-change="segmentSelected(selectedSegment)">
                                 </select>
                             </td>
@@ -70,7 +70,7 @@
                         </tbody>
                     </table>
 
-                    <div ng-if="(cubesManager.currentCube.segments|filter: {status: 'NEW'}).length > 0">
+                    <div ng-if="(cube.segments|filter: {status: 'NEW'}).length > 0">
                         <span class="text-warning">There exists a build request of this cube, the job may be running or error. If you need a new build, please wait for its complete or discard it.</span>
                     </div>
                 </div>

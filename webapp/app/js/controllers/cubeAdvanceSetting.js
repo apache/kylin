@@ -22,7 +22,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.cubesManager = cubesManager;
 
     //convert some undefined or null value
-    angular.forEach(cubesManager.cubeMetaFrame.rowkey.rowkey_columns,function(rowkey){
+    angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(rowkey){
             if(!rowkey.dictionary){
                 rowkey.dictionary = "false";
             }

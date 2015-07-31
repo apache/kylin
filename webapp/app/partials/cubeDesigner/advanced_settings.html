@@ -22,7 +22,7 @@
         <div class="form-group">
             <h4 style="margin-left:42px">Aggregation Groups</h4>
             <table style="margin-left:42px; width:92%"
-                   ng-if="cubesManager.cubeMetaFrame.rowkey.aggregation_groups.length > 0"
+                   ng-if="cubeMetaFrame.rowkey.aggregation_groups.length > 0"
                    class="table table-hover list">
                 <tr class="row">
                     <th class="col-xs-1">ID</th>
@@ -30,7 +30,7 @@
                     <th ng-if="state.mode=='edit'" class="col-xs-1"></th>
                 </tr>
 
-                <tr ng-repeat="aggregation_groups in cubesManager.cubeMetaFrame.rowkey.aggregation_groups" class="row">
+                <tr ng-repeat="aggregation_groups in cubeMetaFrame.rowkey.aggregation_groups" class="row">
                     <td class="col-xs-1">
                         <!-- ID -->
                         <b>{{($index + 1)}}</b>
@@ -39,15 +39,15 @@
                         <!-- Dimensions -->
                         <select ng-if="state.mode=='edit'" style="width: 100%"
                                 ng-model="aggregation_groups"  chosen multiple
-                                ng-change="refreshAggregationGroup(cubesManager.cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
-                                ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubesManager.cubeMetaFrame.rowkey.rowkey_columns">
+                                ng-change="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
+                                ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubeMetaFrame.rowkey.rowkey_columns">
                             <option value=""></option>
                         </select>
                         <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">{{aggregation_groups}}</p>
                     </td>
                     <td ng-if="state.mode=='edit'" class="col-xs-1">
                         <button class="btn btn-xs btn-info"
-                                ng-click="removeElement(cubesManager.cubeMetaFrame.rowkey.aggregation_groups, aggregation_groups)"><i
+                                ng-click="removeElement(cubeMetaFrame.rowkey.aggregation_groups, aggregation_groups)"><i
                                 class="fa fa-minus"></i>
                         </button>
                     </td>
@@ -65,7 +65,7 @@
         <div class="form-group">
             <h4 style="margin-left:42px">Rowkeys</h4>
             <table style="margin-left:42px; width:92%"
-                   ng-if="cubesManager.cubeMetaFrame.rowkey.rowkey_columns.length > 0"
+                   ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
                    class="table table-hover list"
                     >
                <thead>
@@ -79,9 +79,9 @@
                     </tr>
                </thead>
 
-                <tbody ui-sortable="state.mode=='edit'" ng-model="cubesManager.cubeMetaFrame.rowkey.rowkey_columns">
+                <tbody ui-sortable="state.mode=='edit'" ng-model="cubeMetaFrame.rowkey.rowkey_columns">
 
-                    <tr  ng-repeat="rowkey_column in cubesManager.cubeMetaFrame.rowkey.rowkey_columns" ng-class="state.mode=='edit'?'sort-item':''">
+                    <tr  ng-repeat="rowkey_column in cubeMetaFrame.rowkey.rowkey_columns" ng-class="state.mode=='edit'?'sort-item':''">
 
                         <td>
                             <!-- ID -->
@@ -134,7 +134,7 @@
 
                         <td ng-if="state.mode=='edit'">
                             <button class="btn btn-xs btn-info"
-                                    ng-click="removeElement(cubesManager.cubeMetaFrame.rowkey.rowkey_columns, rowkey_column)"><i
+                                    ng-click="removeElement(cubeMetaFrame.rowkey.rowkey_columns, rowkey_column)"><i
                                     class="fa fa-minus"></i>
                             </button>
                         </td>

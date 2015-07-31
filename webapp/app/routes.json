@@ -16,7 +16,7 @@
         }
     },
     {
-        "url": "/cubes/add/:modelName",
+        "url": "/cubes/add/",
         "params": {
             "templateUrl": "partials/cubes/cube_edit.html",
             "tab": "models",

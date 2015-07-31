@@ -18,109 +18,92 @@
 
 <div ng-controller="CubeCtrl" class="nav-tabs-custom" style="margin-top:40px;">
     <ul class="nav nav-tabs">
-        <li class="{{(!cubesManager.currentCube.visiblePage || cubesManager.currentCube.visiblePage=='metadata')? 'active':''}}">
-            <a href="" ng-click="cubesManager.currentCube.visiblePage='metadata'">Grid</a>
+        <li class="{{(!cube.visiblePage || cube.visiblePage=='metadata')? 'active':''}}">
+            <a href="" ng-click="cube.visiblePage='metadata'">Grid</a>
         </li>
-        <!--<li class="{{cubesManager.currentCube.visiblePage=='graph'? 'active':''}}">-->
-            <!--<a href="" ng-click="cubesManager.currentCube.visiblePage='graph';buildGraph(cubesManager.currentCube);">Visualization</a>-->
+        <!--<li class="{{cube.visiblePage=='graph'? 'active':''}}">-->
+            <!--<a href="" ng-click="cube.visiblePage='graph';buildGraph(cube);">Visualization</a>-->
         <!--</li>-->
-        <li class="{{cubesManager.currentCube.visiblePage=='sql'? 'active':''}}">
-            <a href="" ng-click="cubesManager.currentCube.visiblePage='sql';getCubeSql(cubesManager.currentCube)">SQL</a>
+        <li class="{{cube.visiblePage=='sql'? 'active':''}}">
+            <a href="" ng-click="cube.visiblePage='sql';getCubeSql(cube)">SQL</a>
         </li>
-        <li class="{{cubesManager.currentCube.visiblePage=='json'? 'active':''}}"
-            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cubesManager.currentCube, 16) && !newAccess">
-            <a href="" ng-click="cubesManager.currentCube.visiblePage='json';">JSON(Cube)</a>
+        <li class="{{cube.visiblePage=='json'? 'active':''}}"
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
+            <a href="" ng-click="cube.visiblePage='json';">JSON(Cube)</a>
         </li>
-      <!--<li class="{{cubesManager.currentCube.visiblePage=='json_model'? 'active':''}}"-->
+      <!--<li class="{{cube.visiblePage=='json_model'? 'active':''}}"-->
           <!--ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">-->
-        <!--<a href="" ng-click="cubesManager.currentCube.visiblePage='json_model';">JSON(Model)</a>-->
+        <!--<a href="" ng-click="cube.visiblePage='json_model';">JSON(Model)</a>-->
       <!--</li>-->
-        <li class="{{cubesManager.currentCube.visiblePage=='access'? 'active':''}}">
-            <a href="" ng-click="cubesManager.currentCube.visiblePage='access';listAccess(cubesManager.currentCube, 'CubeInstance');">Access</a>
+        <li class="{{cube.visiblePage=='access'? 'active':''}}">
+            <a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>
         </li>
-        <li class="{{cubesManager.currentCube.visiblePage=='notification'? 'active':''}}"
-            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cubesManager.currentCube, 16) && !newAccess">
-            <a href="" ng-click="cubesManager.currentCube.visiblePage='notification';getNotifyListString(cubesManager.currentCube);">Notification</a>
+        <li class="{{cube.visiblePage=='notification'? 'active':''}}"
+            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
+            <a href="" ng-click="cube.visiblePage='notification';getNotifyListString(cube);">Notification</a>
         </li>
-        <li class="{{cubesManager.currentCube.visiblePage=='hbase'? 'active':''}}"
+        <li class="{{cube.visiblePage=='hbase'? 'active':''}}"
             ng-if="userService.hasRole('ROLE_ADMIN')">
-            <a href="" ng-click="cubesManager.currentCube.visiblePage='hbase';getHbaseInfo(cubesManager.currentCube)">HBase</a>
-        </li>
-        <li class="dropdown" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cubesManager.currentCube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
-            <a class="dropdown-toggle highlight-bule" data-toggle="dropdown" href="#" aria-expanded="true">
-                <i class="fa fa-cubes">Action</i> <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu">
-                <li ng-if="cubesManager.currentCube.status=='DISABLED' && userService.hasRole('ROLE_ADMIN') ">
-                    <a ng-click="dropCube(cubesManager.currentCube)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
-                <li ng-if="cubesManager.currentCube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cubesManager.currentCube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
-                    <a href="cubes/edit/{{cubesManager.currentCube.name}}">Edit</a></li>
-                <li><a ng-click="startJobSubmit(cubesManager.currentCube);">Build</a></li>
-                <li><a ng-click="startRefresh(cubesManager.currentCube)">Refresh</a></li>
-                <li><a ng-click="startMerge(cubesManager.currentCube)">Merge</a></li>
-                <li ng-if="cubesManager.currentCube.status!='DISABLED'"><a ng-click="disable(cubesManager.currentCube)">Disable</a></li>
-                <li ng-if="cubesManager.currentCube.status=='DISABLED'"><a ng-click="enable(cubesManager.currentCube)">Enable</a></li>
-                <li ng-if="cubesManager.currentCube.status=='DISABLED'"><a ng-click="purge(cubesManager.currentCube)">Purge</a></li>
-            </ul>
+            <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">HBase</a>
         </li>
 
     </ul>
 
-    <div class="cube-detail" ng-if="!cubesManager.currentCube.visiblePage || cubesManager.currentCube.visiblePage=='metadata'">
+    <div class="cube-detail" ng-if="!cube.visiblePage || cube.visiblePage=='metadata'">
         <div ng-include="'partials/cubes/cube_schema.html'" ng-controller="CubeSchemaCtrl"
-             ng-init="state={mode:'view', cubeName:cubesManager.currentCube.name}"></div>
+             ng-init="state={mode:'view', cubeName:cube.name}"></div>
     </div>
 
-    <div ng-show="cubesManager.currentCube.visiblePage=='sql'" class="cube-detail">
-        <div ng-if="cubesManager.currentCube.sql">
-            <pre style="background-color: white;border: 0px">{{cubesManager.currentCube.sql}}</pre>
+    <div ng-show="cube.visiblePage=='sql'" class="cube-detail">
+        <div ng-if="cube.sql">
+            <pre style="background-color: white;border: 0px">{{cube.sql}}</pre>
         </div>
 
-        <div ng-if="!cubesManager.currentCube.sql">
+        <div ng-if="!cube.sql">
             <span calss="text-info">No SQL GENERATED.</span>
         </div>
     </div>
 
-    <div ng-show="cubesManager.currentCube.visiblePage=='json'" class="cube-detail">
+    <div ng-show="cube.visiblePage=='json'" class="cube-detail">
         <pre ng-if="!state.jsonEdit"
-             style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(cubesManager.currentCube.detail), true)}}</pre>
+             style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(cube.detail), true)}}</pre>
     </div>
 
-    <!--<div ng-show="cubesManager.currentCube.visiblePage=='json_model'" class="cube-detail">-->
+    <!--<div ng-show="cube.visiblePage=='json_model'" class="cube-detail">-->
           <!--<pre ng-if="!state.jsonEdit"-->
                <!--style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(model), true)}}</pre>-->
     <!--</div>-->
-    <!--<div ng-show="cubesManager.currentCube.visiblePage=='graph'" id="cube_graph_{{cubesManager.currentCube.name}}" class="cube-detail cube_graph">-->
+    <!--<div ng-show="cube.visiblePage=='graph'" id="cube_graph_{{cube.name}}" class="cube-detail cube_graph">-->
     <!--</div>-->
 
-    <div class="cube-detail" ng-if="cubesManager.currentCube.visiblePage=='access'">
+    <div class="cube-detail" ng-if="cube.visiblePage=='access'">
         <div class="row">
             <div class="col-xs-1"></div>
             <div class="col-xs-10">
-                <div ng-include src="'partials/common/access.html'" ng-init="entity=cubesManager.currentCube;type='CubeInstance';"></div>
+                <div ng-include src="'partials/common/access.html'" ng-init="entity=cube;type='CubeInstance';"></div>
             </div>
             <div class="col-xs-1"></div>
         </div>
     </div>
 
-    <div class="cube-detail" ng-show="cubesManager.currentCube.visiblePage=='notification'">
+    <div class="cube-detail" ng-show="cube.visiblePage=='notification'">
         <div style="margin: 15px;">
             <form>
                 <h5>Notification List(Common Separated)</h5>
                 <div class="form-group">
-                    <input ng-model="cubesManager.currentCube.notifyListString" class="form-control" placeholder="Notification List..." />
+                    <input ng-model="cube.notifyListString" class="form-control" placeholder="Notification List..." />
                 </div>
                 <div class="form-group">
-                    <button class="btn btn-primary btn-sm" ng-click="updateNotifyList(cubesManager.currentCube)">Save</button>
+                    <button class="btn btn-primary btn-sm" ng-click="updateNotifyList(cube)">Save</button>
                 </div>
                 <div class="space-4"></div>
             </form>
         </div>
     </div>
 
-    <div class="cube-detail" ng-show="cubesManager.currentCube.visiblePage=='hbase'">
+    <div class="cube-detail" ng-show="cube.visiblePage=='hbase'">
         <div style="margin: 15px;">
-            <div ng-repeat="table in cubesManager.currentCube.hbase">
+            <div ng-repeat="table in cube.hbase">
                 <h5><b>HTable:</b> {{table.tableName}}</h5>
                 <ul>
                     <li>Region Count: <span class="red">{{table.regionCount}}</span></li>
@@ -129,11 +112,11 @@
                     <li>End Time: <span class="red">{{table.dateRangeEnd | reverseToGMT0}}</span></li>
                 </ul>
             </div>
-            <div ng-if="cubesManager.currentCube.hbase">
+            <div ng-if="cube.hbase">
                 <div class="hr hr8 hr-double hr-dotted"></div>
-                <h5><b>Total Size:</b> <span class="red">{{cubesManager.currentCube.totalSize | bytes:2}}</span></h5>
+                <h5><b>Total Size:</b> <span class="red">{{cube.totalSize | bytes:2}}</span></h5>
             </div>
-            <div ng-if="cubesManager.currentCube.hbase.length == 0">
+            <div ng-if="cube.hbase.length == 0">
                 <h5>No HBase Info.</h5>
             </div>
         </div>

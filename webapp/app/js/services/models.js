@@ -19,6 +19,7 @@
 KylinApp.factory('ModelService', ['$resource', function ($resource, config) {
     return $resource(Config.service.url + 'models/:modelId/:propName/:propValue/:action', {}, {
         list: {method: 'GET', params: {}, isArray: true},
+        'get': {method: 'GET',isArray:true},
         drop: {method: 'DELETE', params: {}, isArray: false},
         save: {method: 'POST', params: {}, isArray: false},
         update: {method: 'PUT', params: {}, isArray: false}

@@ -17,7 +17,11 @@
 -->
 
 <!--show detail when exist models-->
-<div ng-controller="CubeModelCtrl" class="nav-tabs-custom" style="margin-top:40px;">
+<script type="text/ng-template" id="modelDetail.html">
+  <div class="modal-header">
+  </div>
+
+<div  class="modal-body nav-tabs-custom" height ng-controller="CubeModelCtrl" style="margin-top:40px;">
     <ul ng-show="modelsManager.selectedModel.name" class="nav nav-tabs">
         <li class="{{(!modelsManager.selectedModel.visiblePage || modelsManager.selectedModel.visiblePage=='metadata')? 'active':''}}">
             <a href="" ng-click="modelsManager.selectedModel.visiblePage='metadata'">Grid</a>
@@ -59,5 +63,10 @@
           <pre ng-if="!state.jsonEdit"
                style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(modelsManager.selectedModel), true)}}</pre>
     </div>
-
 </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-warning" ng-click="cancel()">Close</button>
+  </div>
+
+</script>

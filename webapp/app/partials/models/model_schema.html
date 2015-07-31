@@ -40,7 +40,6 @@
                 <div class="row">
                     <div class="col-xs-8" style="display:block;">
                         <div>
-                            <a href="models" class="pull-left"><i class="fa fa-arrow-left"></i> Back to My Models</a>
                         </div>
                     </div>
                     <div class="col-xs-4 pull-right">
@@ -64,7 +63,7 @@
 </div>
 
 <!--show create model tip when no models list-->
-<div ng-show="state.mode=='view'&&!modelsManager.modelTreeData.length" style="margin-top:40px;">
+<div ng-show="state.mode=='view'&&!modelsManager.models.length" style="margin-top:40px;">
     <div class="box box-primary">
         <div class="box-header with-border">
             <i class="fa fa-bullhorn"></i>
@@ -79,7 +78,7 @@
 </div>
 
 <!--show select model tip when models not empty and no model selected-->
-<div ng-show="state.mode=='view'&&!!modelsManager.modelTreeData.length&&!modelsManager.selectedModel.name" style="margin-top:40px;">
+<div ng-show="state.mode=='view'&&!!modelsManager.models.length&&!modelsManager.selectedModel.name" style="margin-top:40px;">
     <div class="box box-primary">
         <div class="box-header with-border">
             <i class="fa fa-bullhorn"></i>
