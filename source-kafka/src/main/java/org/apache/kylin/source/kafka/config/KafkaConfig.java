@@ -47,9 +47,9 @@ import java.util.List;
 /**
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class StreamingConfig extends RootPersistentEntity {
+public class KafkaConfig extends RootPersistentEntity {
 
-    public static Serializer<StreamingConfig> SERIALIZER = new JsonSerializer<StreamingConfig>(StreamingConfig.class);
+    public static Serializer<KafkaConfig> SERIALIZER = new JsonSerializer<KafkaConfig>(KafkaConfig.class);
 
     @JsonProperty("name")
     private String name;
@@ -69,12 +69,6 @@ public class StreamingConfig extends RootPersistentEntity {
 
     @JsonProperty("bufferSize")
     private int bufferSize;
-
-    @JsonProperty("iiName")
-    private String iiName;
-
-    @JsonProperty("cubeName")
-    private String cubeName;
 
     @JsonProperty("parserName")
     private String parserName;
@@ -128,22 +122,6 @@ public class StreamingConfig extends RootPersistentEntity {
         this.topic = topic;
     }
 
-    public String getCubeName() {
-        return cubeName;
-    }
-
-    public void setCubeName(String cubeName) {
-        this.cubeName = cubeName;
-    }
-
-    public String getIiName() {
-        return iiName;
-    }
-
-    public void setIiName(String iiName) {
-        this.iiName = iiName;
-    }
-
     public String getName() {
         return name;
     }
@@ -161,7 +139,7 @@ public class StreamingConfig extends RootPersistentEntity {
     }
 
     @Override
-    public StreamingConfig clone() {
+    public KafkaConfig clone() {
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             SERIALIZER.serialize(this, new DataOutputStream(baos));

@@ -39,5 +39,4 @@ public interface IStreamingInput {
 
     StreamingBatch getBatchWithTimeWindow(String streamingConfig, int id, long startTime, long endTime);
 
-    StreamingBatch getBatchWithOffset(String streamingConfig, int id, long offset, long length);
 }

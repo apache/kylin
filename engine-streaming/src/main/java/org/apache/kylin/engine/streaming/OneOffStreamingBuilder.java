@@ -34,11 +34,13 @@
 package org.apache.kylin.engine.streaming;
 
 import com.google.common.base.Preconditions;
-import org.apache.kylin.engine.streaming.IStreamingInput;
-import org.apache.kylin.engine.streaming.IStreamingOutput;
-import org.apache.kylin.engine.streaming.StreamingBatch;
-import org.apache.kylin.engine.streaming.StreamingBatchBuilder;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.engine.streaming.util.StreamingUtils;
+import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.TblColRef;
+
+import java.util.Map;
 
 /**
  */
@@ -66,11 +68,12 @@ public class OneOffStreamingBuilder {
             @Override
             public void run() {
                 StreamingBatch streamingBatch = streamingInput.getBatchWithTimeWindow(streamingConfig, -1, startTime, endTime);
-                streamingBatchBuilder.build(streamingBatch);
-                //create dictionary
-                //sampling
-                //build
-                //write hbase
+                final IBuildable buildable = streamingBatchBuilder.createBuildable(streamingBatch);
+                final Map<Long, HyperLogLogPlusCounter> samplingResult = streamingBatchBuilder.sampling(streamingBatch);
+                final Map<TblColRef, Dictionary<?>> dictionaryMap = streamingBatchBuilder.buildDictionary(streamingBatch, buildable);
+                streamingBatchBuilder.build(streamingBatch, dictionaryMap, streamingOutput.getCuboidWriter(buildable));
+                streamingOutput.output(buildable, samplingResult);
+                streamingBatchBuilder.commit(buildable);
             }
         };
     }

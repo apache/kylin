@@ -33,10 +33,29 @@
  */
 package org.apache.kylin.engine.streaming;
 
+import org.apache.kylin.common.util.Pair;
+
 import java.util.List;
 
 /**
  */
-public interface StreamingBatch extends List<StreamingMessage> {
+public final class StreamingBatch {
+    
+    private final List<StreamingMessage> messages;
+    
+    private final Pair<Long, Long> timeRange;
+
+    public StreamingBatch(List<StreamingMessage> messages, Pair<Long, Long> timeRange) {
+        this.messages = messages;
+        this.timeRange = timeRange;
+    }
+
+    public List<StreamingMessage> getMessages() {
+        return messages;
+    }
+    
+    public Pair<Long, Long> getTimeRange() {
+        return timeRange;
+    }
     
 }

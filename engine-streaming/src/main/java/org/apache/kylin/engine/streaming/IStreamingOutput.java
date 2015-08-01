@@ -33,7 +33,17 @@
  */
 package org.apache.kylin.engine.streaming;
 
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
+import org.apache.kylin.metadata.model.IBuildable;
+
+import java.util.Map;
+
 /**
  */
 public interface IStreamingOutput {
+    
+    ICuboidWriter getCuboidWriter(IBuildable buildable);
+    
+    void output(IBuildable buildable, Map<Long, HyperLogLogPlusCounter> samplingResult);
 }

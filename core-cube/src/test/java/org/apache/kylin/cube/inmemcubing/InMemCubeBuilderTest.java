@@ -204,5 +204,10 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             if (verbose)
                 System.out.println(record.toString());
         }
+
+        @Override
+        public void flush() {
+            
+        }
     }
 }
