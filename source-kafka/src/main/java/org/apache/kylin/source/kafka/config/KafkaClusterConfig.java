@@ -23,22 +23,22 @@ public class KafkaClusterConfig extends RootPersistentEntity {
     private List<BrokerConfig> brokerConfigs;
 
     @JsonBackReference
-    private StreamingConfig streamingConfig;
+    private KafkaConfig kafkaConfig;
 
     public int getBufferSize() {
-        return streamingConfig.getBufferSize();
+        return kafkaConfig.getBufferSize();
     }
 
     public String getTopic() {
-        return streamingConfig.getTopic();
+        return kafkaConfig.getTopic();
     }
 
     public int getTimeout() {
-        return streamingConfig.getTimeout();
+        return kafkaConfig.getTimeout();
     }
 
     public int getMaxReadCount() {
-        return streamingConfig.getMaxReadCount();
+        return kafkaConfig.getMaxReadCount();
     }
 
     public List<BrokerConfig> getBrokerConfigs() {

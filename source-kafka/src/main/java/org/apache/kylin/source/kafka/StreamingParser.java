@@ -31,35 +31,22 @@
  *
  * /
  */
-package org.apache.kylin.engine.streaming;
 
-import java.util.AbstractList;
-import java.util.List;
+package org.apache.kylin.source.kafka;
+
+import kafka.message.MessageAndOffset;
+import org.apache.kylin.engine.streaming.StreamingMessage;
 
 /**
  */
-public class SinglePartitionBatch extends AbstractList<StreamingMessage> implements StreamingBatch {
+public interface StreamingParser {
+
+    /**
+     * @param kafkaMessage
+     * @return StreamingMessage must not be NULL
+     */
+    StreamingMessage parse(MessageAndOffset kafkaMessage);
     
-    private final int partitionId;
+    boolean filter(StreamingMessage streamingMessage);
     
-    private final List<StreamingMessage> data;
-
-    public SinglePartitionBatch(int partitionId, List<StreamingMessage> data) {
-        this.partitionId = partitionId;
-        this.data = data;
-    }
-
-    @Override
-    public int size() {
-        return data.size();
-    }
-
-    @Override
-    public StreamingMessage get(int index) {
-        return data.get(index);
-    }
-
-    public int getPartitionId() {
-        return partitionId;
-    }
 }

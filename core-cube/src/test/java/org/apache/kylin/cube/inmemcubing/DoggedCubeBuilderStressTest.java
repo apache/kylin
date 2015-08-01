@@ -93,5 +93,10 @@ public class DoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
         @Override
         public void write(long cuboidId, GTRecord record) throws IOException {
         }
+
+        @Override
+        public void flush() {
+            
+        }
     }
 }

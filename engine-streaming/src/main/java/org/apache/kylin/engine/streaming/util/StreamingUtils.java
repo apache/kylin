@@ -33,23 +33,33 @@
  */
 package org.apache.kylin.engine.streaming.util;
 
-import org.apache.kylin.engine.streaming.IStreamingInput;
-import org.apache.kylin.engine.streaming.IStreamingOutput;
-import org.apache.kylin.engine.streaming.StreamingBatchBuilder;
+import com.google.common.base.Preconditions;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.engine.streaming.*;
+import org.apache.kylin.engine.streaming.cube.StreamingCubeBuilder;
 
 /**
  */
 public class StreamingUtils {
     
-    public static IStreamingInput getStreamingInput(String streamingConfig) {
-        throw new UnsupportedOperationException("not implemented yet");
+    public static IStreamingInput getStreamingInput(String streaming) {
+        return (IStreamingInput) ClassUtil.newInstance("org.apache.kylin.source.kafka.KafkaStreamingInput");
     }
     
-    public static IStreamingOutput getStreamingOutput(String streamingConfig) {
-        throw new UnsupportedOperationException("not implemented yet");
+    public static IStreamingOutput getStreamingOutput(String streaming) {
+        return (IStreamingOutput) ClassUtil.newInstance("org.apache.kylin.storage.hbase.HBaseStreamingOutput");
     }
     
-    public static StreamingBatchBuilder getMicroBatchBuilder(String streamingConfig) {
-        throw new UnsupportedOperationException("not implemented yet");
+    public static StreamingBatchBuilder getMicroBatchBuilder(String streaming) {
+        final StreamingConfig streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(streaming);
+        Preconditions.checkNotNull(streamingConfig);
+        if (streamingConfig.getCubeName() != null) {
+            return new StreamingCubeBuilder(streamingConfig.getCubeName());
+        } else if (streamingConfig.getIiName() != null) {
+            throw new UnsupportedOperationException("not implemented yet");
+        } else {
+            throw new UnsupportedOperationException("StreamingConfig is not valid");
+        }
     }
 }

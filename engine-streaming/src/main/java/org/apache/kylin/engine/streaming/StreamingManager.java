@@ -32,7 +32,7 @@
  * /
  */
 
-package org.apache.kylin.source.kafka;
+package org.apache.kylin.engine.streaming;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +43,6 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.source.kafka.config.StreamingConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

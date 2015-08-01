@@ -9,8 +9,7 @@ import kafka.javaapi.PartitionMetadata;
 import kafka.message.MessageAndOffset;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.streaming.StreamingMessage;
-import org.apache.kylin.source.kafka.KafkaStreamingMessage;
-import org.apache.kylin.source.kafka.Parser;
+import org.apache.kylin.source.kafka.StreamingParser;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,12 +75,12 @@ public final class KafkaUtils {
         throw new IllegalStateException(String.format("try to get timestamp of topic: %s, partitionId: %d, offset: %d, failed to get StreamMessage from kafka", topic, partitionId, offset));
     }
 
-    public static long findClosestOffsetWithDataTimestamp(KafkaClusterConfig kafkaClusterConfig, int partitionId, long timestamp, Parser parser) {
+    public static long findClosestOffsetWithDataTimestamp(KafkaClusterConfig kafkaClusterConfig, int partitionId, long timestamp, StreamingParser streamingParser) {
         Pair<Long, Long> firstAndLast = getFirstAndLastOffset(kafkaClusterConfig, partitionId);
         final String topic = kafkaClusterConfig.getTopic();
 
         logger.info(String.format("topic: %s, partitionId: %d, try to find closest offset with timestamp: %d between offset {%d, %d}", topic, partitionId, timestamp, firstAndLast.getFirst(), firstAndLast.getSecond()));
-        final long result = binarySearch(kafkaClusterConfig, partitionId, firstAndLast.getFirst(), firstAndLast.getSecond(), timestamp, parser);
+        final long result = binarySearch(kafkaClusterConfig, partitionId, firstAndLast.getFirst(), firstAndLast.getSecond(), timestamp, streamingParser);
         logger.info(String.format("topic: %s, partitionId: %d, found offset: %d", topic, partitionId, result));
         return result;
     }
@@ -94,14 +93,14 @@ public final class KafkaUtils {
         return Pair.newPair(earliestOffset, latestOffset);
     }
 
-    private static long binarySearch(KafkaClusterConfig kafkaClusterConfig, int partitionId, long startOffset, long endOffset, long targetTimestamp, Parser parser) {
+    private static long binarySearch(KafkaClusterConfig kafkaClusterConfig, int partitionId, long startOffset, long endOffset, long targetTimestamp, StreamingParser streamingParser) {
         Map<Long, Long> cache = Maps.newHashMap();
 
         while (startOffset < endOffset) {
             long midOffset = startOffset + ((endOffset - startOffset) >> 1);
-            long startTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, startOffset, parser, cache);
-            long endTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, endOffset, parser, cache);
-            long midTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, midOffset, parser, cache);
+            long startTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, startOffset, streamingParser, cache);
+            long endTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, endOffset, streamingParser, cache);
+            long midTimestamp = getDataTimestamp(kafkaClusterConfig, partitionId, midOffset, streamingParser, cache);
             // hard to ensure these 2 conditions
             //            Preconditions.checkArgument(startTimestamp <= midTimestamp);
             //            Preconditions.checkArgument(midTimestamp <= endTimestamp);
@@ -124,33 +123,26 @@ public final class KafkaUtils {
         return startOffset;
     }
 
-    private static long getDataTimestamp(KafkaClusterConfig kafkaClusterConfig, int partitionId, long offset, Parser parser, Map<Long, Long> cache) {
+    private static long getDataTimestamp(KafkaClusterConfig kafkaClusterConfig, int partitionId, long offset, StreamingParser streamingParser, Map<Long, Long> cache) {
         if (cache.containsKey(offset)) {
             return cache.get(offset);
         } else {
-            long t = getDataTimestamp(kafkaClusterConfig, partitionId, offset, parser);
+            long t = getDataTimestamp(kafkaClusterConfig, partitionId, offset, streamingParser);
             cache.put(offset, t);
             return t;
         }
     }
 
-    public static long getDataTimestamp(KafkaClusterConfig kafkaClusterConfig, int partitionId, long offset, Parser parser) {
+    public static long getDataTimestamp(KafkaClusterConfig kafkaClusterConfig, int partitionId, long offset, StreamingParser streamingParser) {
         final String topic = kafkaClusterConfig.getTopic();
         final MessageAndOffset messageAndOffset = getKafkaMessage(kafkaClusterConfig, partitionId, offset);
         final ByteBuffer payload = messageAndOffset.message().payload();
         byte[] bytes = new byte[payload.limit()];
         payload.get(bytes);
-        final StreamingMessage streamingMessage = parser.parse(new KafkaStreamingMessage(messageAndOffset.offset(), bytes));
+        final StreamingMessage streamingMessage = streamingParser.parse(messageAndOffset);
         logger.debug(String.format("The timestamp of topic: %s, partitionId: %d, offset: %d is: %d", topic, partitionId, offset, streamingMessage.getTimestamp()));
         return streamingMessage.getTimestamp();
 
     }
 
-    public static void main(String[] args) {
-        if (args == null || args.length == 0) {
-        }
-
-        if ("calculatemargin".equals(args[0])) {
-        }
-    }
 }

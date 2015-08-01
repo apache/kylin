@@ -48,6 +48,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable.TableSignature;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hbase.HBaseCuboidWriter;
 import org.apache.kylin.storage.hbase.steps.CubeHTableUtil;
 import org.apache.kylin.storage.hbase.steps.InMemKeyValueCreator;
 import org.apache.kylin.streaming.MicroStreamBatch;
@@ -69,7 +70,6 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
     private final KylinConfig kylinConfig;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    private static final int BATCH_PUT_THRESHOLD = 10000;
     private int totalConsumedMessageCount = 0;
     private int totalRawMessageCount = 0;
 
@@ -111,7 +111,7 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
 
         InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), realDictMap);
         final HTableInterface hTable = createHTable(cubeSegment);
-        final CubeStreamRecordWriter gtRecordWriter = new CubeStreamRecordWriter(cubeDesc, hTable);
+        final HBaseCuboidWriter gtRecordWriter = new HBaseCuboidWriter(cubeDesc, hTable);
 
         executorService.submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, gtRecordWriter)).get();
         gtRecordWriter.flush();
@@ -145,82 +145,6 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         }
 
         return realDictMap;
-    }
-
-    private class CubeStreamRecordWriter implements ICuboidWriter {
-        final List<InMemKeyValueCreator> keyValueCreators;
-        final int nColumns;
-        final HTableInterface hTable;
-        private final ByteBuffer byteBuffer;
-        private final CubeDesc cubeDesc;
-        private List<Put> puts = Lists.newArrayList();
-
-        private CubeStreamRecordWriter(CubeDesc cubeDesc, HTableInterface hTable) {
-            this.keyValueCreators = Lists.newArrayList();
-            this.cubeDesc = cubeDesc;
-            int startPosition = 0;
-            for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
-                for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                    keyValueCreators.add(new InMemKeyValueCreator(colDesc, startPosition));
-                    startPosition += colDesc.getMeasures().length;
-                }
-            }
-            this.nColumns = keyValueCreators.size();
-            this.hTable = hTable;
-            this.byteBuffer = ByteBuffer.allocate(1 << 20);
-        }
-
-        private byte[] copy(byte[] array, int offset, int length) {
-            byte[] result = new byte[length];
-            System.arraycopy(array, offset, result, 0, length);
-            return result;
-        }
-
-        private ByteBuffer createKey(Long cuboidId, GTRecord record) {
-            byteBuffer.clear();
-            byteBuffer.put(Bytes.toBytes(cuboidId));
-            final int cardinality = BitSet.valueOf(new long[] { cuboidId }).cardinality();
-            for (int i = 0; i < cardinality; i++) {
-                final ByteArray byteArray = record.get(i);
-                byteBuffer.put(byteArray.array(), byteArray.offset(), byteArray.length());
-            }
-            return byteBuffer;
-        }
-
-        @Override
-        public void write(long cuboidId, GTRecord record) throws IOException {
-            final ByteBuffer key = createKey(cuboidId, record);
-            final CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(Cuboid.findById(cubeDesc, cuboidId));
-            final ImmutableBitSet bitSet = new ImmutableBitSet(mapping.getDimensionCount(), mapping.getColumnCount());
-            for (int i = 0; i < nColumns; i++) {
-                final KeyValue keyValue = keyValueCreators.get(i).create(key.array(), 0, key.position(), record.getValues(bitSet, new Object[bitSet.cardinality()]));
-                final Put put = new Put(copy(key.array(), 0, key.position()));
-                byte[] family = copy(keyValue.getFamilyArray(), keyValue.getFamilyOffset(), keyValue.getFamilyLength());
-                byte[] qualifier = copy(keyValue.getQualifierArray(), keyValue.getQualifierOffset(), keyValue.getQualifierLength());
-                byte[] value = copy(keyValue.getValueArray(), keyValue.getValueOffset(), keyValue.getValueLength());
-                put.add(family, qualifier, value);
-                puts.add(put);
-            }
-            if (puts.size() >= BATCH_PUT_THRESHOLD) {
-                flush();
-            }
-        }
-
-        public final void flush() {
-            try {
-                if (!puts.isEmpty()) {
-                    long t = System.currentTimeMillis();
-                    if (hTable != null) {
-                        hTable.put(puts);
-                        hTable.flushCommits();
-                    }
-                    logger.info("commit total " + puts.size() + " puts, totally cost:" + (System.currentTimeMillis() - t) + "ms");
-                    puts.clear();
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     //TODO: should we use cubeManager.promoteNewlyBuiltSegments?
