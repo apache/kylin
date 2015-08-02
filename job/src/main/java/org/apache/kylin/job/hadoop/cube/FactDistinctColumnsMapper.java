@@ -19,8 +19,6 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.util.Bytes;
@@ -35,26 +33,18 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.RowKeyDesc;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.hadoop.hive.CubeJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author yangli9
  */
 public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ShortWritable, Text> {
 
-    private String cubeName;
-    private CubeInstance cube;
-    private CubeDesc cubeDesc;
-    private int[] factDictCols;
-
     private CubeJoinedFlatTableDesc intermediateTableDesc;
+    private int[] factDictColRowKeyIndexes;
 
     private ShortWritable outputKey = new ShortWritable();
     private Text outputValue = new Text();
@@ -69,31 +59,16 @@ public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRec
         Configuration conf = context.getConfiguration();
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(conf);
-        cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
-        cube = CubeManager.getInstance(config).getCube(cubeName);
-        cubeDesc = cube.getDescriptor();
+        String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
+        CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
+        CubeDesc cubeDesc = cube.getDescriptor();
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
 
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-        List<TblColRef> columns = baseCuboid.getColumns();
-
-        ArrayList<Integer> factDictCols = new ArrayList<Integer>();
-        RowKeyDesc rowkey = cubeDesc.getRowkey();
-        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        for (int i = 0; i < columns.size(); i++) {
-            TblColRef col = columns.get(i);
-            if (rowkey.isUseDictionary(col) == false)
-                continue;
-
-            String scanTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
-            if (cubeDesc.getModel().isFactTable(scanTable)) {
-                factDictCols.add(i);
-            }
+        String[] rowKeyIndexes = conf.get(BatchConstants.CFG_FACT_DICT_COLUMN_ROWKEY_INDEXES).split(",");
+        factDictColRowKeyIndexes = new int[rowKeyIndexes.length];
+        for (int i = 0; i < rowKeyIndexes.length; i++) {
+            factDictColRowKeyIndexes[i] = Integer.parseInt(rowKeyIndexes[i]);
         }
-        this.factDictCols = new int[factDictCols.size()];
-        for (int i = 0; i < factDictCols.size(); i++)
-            this.factDictCols[i] = factDictCols.get(i);
 
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
     }
@@ -105,7 +80,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRec
 
             int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
             HCatFieldSchema fieldSchema = null;
-            for (int i : factDictCols) {
+            for (int i : factDictColRowKeyIndexes) {
                 outputKey.set((short) i);
                 fieldSchema = schema.get(flatTableIndexes[i]);
                 Object fieldValue = record.get(fieldSchema.getName(), schema);
