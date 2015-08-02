@@ -32,6 +32,9 @@ public interface BatchConstants {
     public static final String CFG_II_NAME = "ii.name";
     public static final String CFG_II_SEGMENT_NAME = "ii.segment.name";
 
+    public static final String CFG_FACT_DICT_COLUMN_NAMES = "fact.dict.column.names";
+    public static final String CFG_FACT_DICT_COLUMN_ROWKEY_INDEXES = "fact.dict.column.rowkey.indexes";
+
     public static final String INPUT_DELIM = "input.delim";
 
     public static final String OUTPUT_PATH = "output.path";
