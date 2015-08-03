@@ -18,8 +18,10 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.observer;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -42,10 +44,8 @@ import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -68,7 +68,7 @@ public class ObserverEnabler {
         CoprocessorFilter filter = CoprocessorFilter.fromFilter(segment, tupleFiler);
         CoprocessorProjector projector = CoprocessorProjector.makeForObserver(segment, cuboid, groupBy);
         ObserverAggregators aggrs = ObserverAggregators.fromValueDecoders(rowValueDecoders);
-        
+
         boolean localCoprocessor = KylinConfig.getInstanceFromEnv().getQueryRunLocalCoprocessor() || BackdoorToggles.getRunLocalCoprocessor();
 
         if (localCoprocessor) {

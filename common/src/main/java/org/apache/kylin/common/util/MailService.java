@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
-
 import org.apache.kylin.common.KylinConfig;
 
 /**
@@ -94,7 +93,7 @@ public class MailService {
             email.getMailSession();
 
         } catch (EmailException e) {
-            logger.error(e.getLocalizedMessage(),e);
+            logger.error(e.getLocalizedMessage(), e);
             return false;
         }
 

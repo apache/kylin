@@ -18,11 +18,10 @@
 
 package org.apache.kylin.invertedindex;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -35,9 +34,11 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author honma
@@ -83,7 +84,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
 
     private String projectName;
 
-
     public long getAllocatedEndDate() {
         if (null == segments || segments.size() == 0) {
             return 0;
@@ -103,7 +103,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
 
         return segments.get(0).getDateRangeStart();
     }
-
 
     public IIDesc getDescriptor() {
         return IIDescManager.getInstance(config).getIIDesc(descName);
@@ -243,7 +242,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return result;
     }
 
-
     public IISegment getSegment(String name, SegmentStatusEnum status) {
         for (IISegment segment : segments) {
             if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
@@ -258,7 +256,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         this.segments = segments;
     }
 
-
     public long getCreateTimeUTC() {
         return createTimeUTC;
     }
@@ -266,7 +263,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     public void setCreateTimeUTC(long createTimeUTC) {
         this.createTimeUTC = createTimeUTC;
     }
-
 
     @Override
     public boolean isCapable(SQLDigest digest) {

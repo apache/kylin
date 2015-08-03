@@ -21,23 +21,23 @@ package org.apache.kylin.storage.hbase;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.kylin.common.util.Pair;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.kv.RowKeyColumnOrder;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.CubeDesc.DeriveType;
 import org.apache.kylin.dict.lookup.LookupStringTable;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9

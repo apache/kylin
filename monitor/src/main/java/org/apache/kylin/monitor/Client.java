@@ -16,38 +16,33 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.monitor;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
 import java.io.File;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Created by jiazhong on 2015/5/7.
  */
 public class Client {
 
-
     static {
         //set monitor log path
         String KYLIN_HOME = ConfigUtils.getKylinHome();
         String CATALINA_HOME = null;
-        if(!StringUtils.isEmpty(KYLIN_HOME)){
-            CATALINA_HOME = ConfigUtils.getKylinHome() + File.separator + "tomcat"+File.separator;
-            System.out.println("will use "+CATALINA_HOME+"/logs to put monitor log");
-        }else{
+        if (!StringUtils.isEmpty(KYLIN_HOME)) {
+            CATALINA_HOME = ConfigUtils.getKylinHome() + File.separator + "tomcat" + File.separator;
+            System.out.println("will use " + CATALINA_HOME + "/logs to put monitor log");
+        } else {
             CATALINA_HOME = "";
             System.out.println("will use default path to put monitor log");
         }
         //log4j config will use this
-        System.setProperty("CATALINA_HOME",CATALINA_HOME);
+        System.setProperty("CATALINA_HOME", CATALINA_HOME);
     }
     final static Logger logger = Logger.getLogger(Client.class);
-
-
 
     public static void main(String[] args) {
         logger.info("monitor client start parsing...");
@@ -58,7 +53,7 @@ public class Client {
             queryParser.start();
             jdbcClient.start();
         } catch (Exception e) {
-            logger.info("Exception",e);
+            logger.info("Exception", e);
         }
     }
 }

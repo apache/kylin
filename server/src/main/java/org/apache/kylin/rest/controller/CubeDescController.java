@@ -20,6 +20,8 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.rest.service.CubeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -27,9 +29,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.model.CubeDesc;
 
 /**
  * @author xduo
@@ -54,7 +53,7 @@ public class CubeDescController {
     @ResponseBody
     public CubeDesc[] getCube(@PathVariable String cubeName) {
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-        if (cubeInstance == null){
+        if (cubeInstance == null) {
             return null;
         }
         CubeDesc cSchema = cubeInstance.getDescriptor();

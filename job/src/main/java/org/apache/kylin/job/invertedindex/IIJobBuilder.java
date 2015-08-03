@@ -23,8 +23,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import com.google.common.base.Preconditions;
-
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.AbstractJobBuilder;
 import org.apache.kylin.job.common.HadoopShellExecutable;
@@ -40,6 +38,8 @@ import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.job.hadoop.invertedindex.IIDistinctColumnsJob;
 import org.apache.kylin.job.hadoop.invertedindex.InvertedIndexJob;
 import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Created by shaoshi on 1/15/15.

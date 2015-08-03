@@ -20,9 +20,9 @@ package org.apache.kylin.job.hadoop.cube;
 
 import java.io.IOException;
 
-import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.kylin.common.mr.KylinMapper;
 
 /**
  * @author ysong1

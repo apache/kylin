@@ -27,14 +27,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.query.schema.OLAPSchema;
+import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.metadata.filter.TupleFilter;
 
 /**
  */

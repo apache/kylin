@@ -151,7 +151,7 @@ public class QueryUtil {
 
     public static String makeErrorMsgUserFriendly(Throwable e) {
         String msg = e.getMessage();
-        
+
         // pick ParseException error message if possible
         Throwable cause = e;
         while (cause != null) {
@@ -161,7 +161,7 @@ public class QueryUtil {
             }
             cause = cause.getCause();
         }
-        
+
         return makeErrorMsgUserFriendly(msg);
     }
 
@@ -169,7 +169,7 @@ public class QueryUtil {
         try {
             // make one line
             errorMsg = errorMsg.replaceAll("\\s", " ");
-            
+
             // move cause to be ahead of sql, calcite creates the message pattern below
             Pattern pattern = Pattern.compile("error while executing SQL \"(.*)\":(.*)");
             Matcher matcher = pattern.matcher(errorMsg);

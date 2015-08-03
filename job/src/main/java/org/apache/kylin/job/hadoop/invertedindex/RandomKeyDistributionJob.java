@@ -28,11 +28,10 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.job.constant.BatchConstants;
 
 /**
  * @author ysong1
@@ -64,7 +63,7 @@ public class RandomKeyDistributionJob extends AbstractHadoopJob {
             job = Job.getInstance(getConf(), jobName);
 
             setJobClasspath(job);
-            
+
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));

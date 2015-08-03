@@ -20,21 +20,21 @@ package org.apache.kylin.job.hadoop.invertedindex;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.cmd.ICommandOutput;
 import org.apache.kylin.job.cmd.ShellCmd;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.hadoop.hive.IJoinedFlatTableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/30/14.
@@ -70,7 +70,7 @@ public class IIFlattenHiveJob extends AbstractHadoopJob {
             buf.append(createTableHql + "\n");
             buf.append(insertDataHqls + "\n");
             buf.append("\"");
-            
+
             System.out.println(buf.toString());
             System.out.println("========================");
 
@@ -78,7 +78,7 @@ public class IIFlattenHiveJob extends AbstractHadoopJob {
             ICommandOutput output = cmd.execute();
             System.out.println(output.getOutput());
             System.out.println(output.getExitCode());
-            
+
             return 0;
         } catch (Exception e) {
             printUsage(options);

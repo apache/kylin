@@ -23,7 +23,7 @@ import java.util.Iterator;
 /**
  * @author xjiang
  */
-public interface ITupleIterator extends Iterator<ITuple>  {
+public interface ITupleIterator extends Iterator<ITuple> {
     public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
         @Override
         public boolean hasNext() {

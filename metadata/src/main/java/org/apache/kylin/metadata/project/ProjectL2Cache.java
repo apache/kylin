@@ -24,7 +24,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.*;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.slf4j.Logger;
@@ -89,7 +93,6 @@ class ProjectL2Cache {
         TableCache tableCache = getCache(project).tables.get(table);
         if (tableCache == null)
             return false;
-
 
         for (ColumnDesc colDesc : tableCache.exposedColumns) {
             if (colDesc.getName().equals(col))

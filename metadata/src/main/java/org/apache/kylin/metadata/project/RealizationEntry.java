@@ -18,9 +18,10 @@
 
 package org.apache.kylin.metadata.project;
 
+import org.apache.kylin.metadata.realization.RealizationType;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  * Created by qianzhou on 12/5/14.
@@ -52,13 +53,17 @@ public class RealizationEntry {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         RealizationEntry entry = (RealizationEntry) o;
 
-        if (realization != null ? !realization.equalsIgnoreCase(entry.realization) : entry.realization != null) return false;
-        if (type != entry.type) return false;
+        if (realization != null ? !realization.equalsIgnoreCase(entry.realization) : entry.realization != null)
+            return false;
+        if (type != entry.type)
+            return false;
 
         return true;
     }

@@ -55,7 +55,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
 
-
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
  */

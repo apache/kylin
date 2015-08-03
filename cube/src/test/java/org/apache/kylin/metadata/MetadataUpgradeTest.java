@@ -20,15 +20,6 @@ package org.apache.kylin.metadata;
 
 import java.util.List;
 
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.project.ProjectManager;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -37,6 +28,13 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Test the data model upgrade
@@ -63,8 +61,8 @@ public class MetadataUpgradeTest extends LocalFileMetadataTestCase {
         MetadataManager.getInstance(config).reload();
         CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
-//        CubeManager cubeManager = CubeManager.getInstance(config);
-//        ProjectManager.getInstance(config);
+        //        CubeManager cubeManager = CubeManager.getInstance(config);
+        //        ProjectManager.getInstance(config);
 
     }
 
@@ -73,23 +71,22 @@ public class MetadataUpgradeTest extends LocalFileMetadataTestCase {
 
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         TableDesc fact = metaMgr.getTableDesc("default.test_kylin_fact");
-        
+
         @SuppressWarnings("deprecation")
         String oldResLocation = fact.getResourcePathV1();
         String newResLocation = fact.getResourcePath();
-        
+
         ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-        
+
         Assert.assertTrue(store.exists(newResLocation));
         Assert.assertTrue(!store.exists(oldResLocation));
-        
-        
+
         String oldExdResLocation = TableDesc.concatExdResourcePath("test_kylin_fact".toUpperCase());
         String newExdResLocation = TableDesc.concatExdResourcePath("default.test_kylin_fact".toUpperCase());
-        
+
         Assert.assertTrue(store.exists(newExdResLocation));
         Assert.assertTrue(!store.exists(oldExdResLocation));
-        
+
     }
 
     private void checkCubeDesc(String descName) {

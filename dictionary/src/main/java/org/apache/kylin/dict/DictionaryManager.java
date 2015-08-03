@@ -164,7 +164,7 @@ public class DictionaryManager {
             logger.info("Use one of the merging dictionaries directly");
             return dicts.get(0);
         }
-        
+
         Dictionary<?> newDict = DictionaryGenerator.mergeDictionaries(newDictInfo, dicts);
         return trySaveNewDict(newDict, newDictInfo);
     }

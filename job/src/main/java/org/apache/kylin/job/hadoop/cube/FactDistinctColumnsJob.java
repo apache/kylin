@@ -21,8 +21,6 @@ package org.apache.kylin.job.hadoop.cube;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -47,6 +45,9 @@ import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -83,7 +84,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             System.out.println("Starting: " + job.getJobName());
 
             setJobClasspath(job);
-            
+
             setupMapper(intermediateTable);
             setupReducer(output);
 
@@ -128,12 +129,11 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
     }
 
     private void setupMapper(String intermediateTable) throws IOException {
-//        FileInputFormat.setInputPaths(job, input);
+        //        FileInputFormat.setInputPaths(job, input);
 
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
-        HCatInputFormat.setInput(job, dbTableNames[0],
-                dbTableNames[1]);
-        
+        HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
+
         job.setInputFormatClass(HCatInputFormat.class);
         job.setMapperClass(FactDistinctColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);

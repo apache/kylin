@@ -24,9 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -36,6 +33,9 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * Created by qianzhou on 1/7/15.
@@ -57,7 +57,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeInstance cube = cubeManager.getCube(getCubeName());
-        
+
         CubeSegment mergedSegment = cube.getSegmentById(getSegmentId());
         if (mergedSegment == null) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there is no segment with id:" + getSegmentId());
@@ -78,14 +78,14 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
             sourceCount += segment.getInputRecords();
             sourceSize += segment.getInputRecordsSize();
         }
-        
+
         // update segment info
         mergedSegment.setSizeKB(cubeSize);
         mergedSegment.setInputRecords(sourceCount);
         mergedSegment.setInputRecordsSize(sourceSize);
         mergedSegment.setLastBuildJobID(getCubingJobId());
         mergedSegment.setLastBuildTime(System.currentTimeMillis());
-        
+
         try {
             cubeManager.promoteNewlyBuiltSegments(cube, mergedSegment);
             return new ExecuteResult(ExecuteResult.State.SUCCEED);
@@ -120,7 +120,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         if (ids != null) {
             final String[] splitted = StringUtils.split(ids, ",");
             ArrayList<String> result = Lists.newArrayListWithExpectedSize(splitted.length);
-            for (String id: splitted) {
+            for (String id : splitted) {
                 result.add(id);
             }
             return result;

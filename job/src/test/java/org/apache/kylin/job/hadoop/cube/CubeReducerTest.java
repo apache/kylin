@@ -18,7 +18,8 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -31,16 +32,15 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
-import org.apache.kylin.job.constant.BatchConstants;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.job.constant.BatchConstants;
+import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author George Song (ysong1)

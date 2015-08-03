@@ -20,7 +20,6 @@ package org.apache.kylin.job.hadoop.dict;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cli.DictionaryGeneratorCLI;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;

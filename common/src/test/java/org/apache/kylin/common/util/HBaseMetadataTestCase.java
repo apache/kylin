@@ -59,5 +59,5 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
         String useSandbox = System.getProperty("useSandbox");
         return Boolean.parseBoolean(useSandbox);
     }
-    
+
 }

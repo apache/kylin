@@ -18,6 +18,10 @@
 
 package org.apache.kylin.rest;
 
+import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
@@ -27,10 +31,6 @@ import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.util.ClasspathUtil;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 public class DebugTomcat {
 
     public static void setupDebugEnv() {
@@ -39,13 +39,13 @@ public class DebugTomcat {
             ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
             System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
             overrideDevJobJarLocations();
-            
+
             System.setProperty("spring.profiles.active", "testing");
-            
+
             //avoid log permission issue
             if (System.getProperty("catalina.home") == null)
-                System.setProperty("catalina.home", "."); 
-            
+                System.setProperty("catalina.home", ".");
+
             if (System.getProperty("hdp.version") == null)
                 System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
 
@@ -98,12 +98,12 @@ public class DebugTomcat {
 
     public static void main(String[] args) throws Exception {
         setupDebugEnv();
-        
+
         int port = 7070;
         if (args.length >= 1) {
             port = Integer.parseInt(args[0]);
         }
-        
+
         String webBase = new File("../webapp/app").getAbsolutePath();
         if (new File(webBase, "WEB-INF").exists() == false) {
             throw new RuntimeException("In order to launch Kylin web app from IDE, please copy server/src/main/webapp/WEB-INF to  webapp/app/WEB-INF");

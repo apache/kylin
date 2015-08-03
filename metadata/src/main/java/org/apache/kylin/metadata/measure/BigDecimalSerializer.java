@@ -23,7 +23,6 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.Bytes;
-
 import org.apache.kylin.common.util.BytesUtil;
 
 /**

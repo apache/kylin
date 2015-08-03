@@ -18,34 +18,35 @@
 
 package org.apache.kylin.cube;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.HierarchyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.v1.CubeDesc;
 import org.apache.kylin.cube.model.v1.CubePartitionDesc;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.metadata.model.PartitionDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class CubeDescUpgrader {
 
@@ -84,7 +85,7 @@ public class CubeDescUpgrader {
         for (LookupDesc lookupDesc : modelDesc.getLookups()) {
             if (lookupDesc.getJoin() != null) {
                 JoinDesc join = lookupDesc.getJoin();
-                for (int i=0; i< join.getForeignKey().length; i++) {
+                for (int i = 0; i < join.getForeignKey().length; i++) {
                     pkToFK.put(join.getPrimaryKey()[i], join.getForeignKey()[i]);
                 }
             }
@@ -101,13 +102,12 @@ public class CubeDescUpgrader {
         }
 
         for (String[] aggregationGroup : rowKey.getAggregationGroups()) {
-            for (int i=0; i< aggregationGroup.length; i++) {
+            for (int i = 0; i < aggregationGroup.length; i++) {
                 if (pkToFK.containsKey(aggregationGroup[i])) {
                     aggregationGroup[i] = pkToFK.get(aggregationGroup[i]);
                 }
             }
         }
-
 
     }
 
@@ -155,7 +155,7 @@ public class CubeDescUpgrader {
                 //column on fact table
                 newDim = newDimensionDesc(dim, dimId++, dim.getName());
                 newDimensions.add(newDim);
-                newDim.setColumn(new String[]{dim.getColumn()});
+                newDim.setColumn(new String[] { dim.getColumn() });
                 needNameSuffix = true;
             } else if (ArrayUtils.isEmpty(dim.getDerived()) && ArrayUtils.isEmpty(dim.getHierarchy())) {
                 // user defines a lookup table, but didn't use any column other than the pk, in this case, convert to use fact table's fk
@@ -226,7 +226,6 @@ public class CubeDescUpgrader {
         dm.setLookups(lookups.toArray(new LookupDesc[lookups.size()]));
         dm.setFilterCondition(oldModel.getFilterCondition());
         updatePartitionDesc(oldModel, dm);
-
 
         if (oldModel.getCapacity() == CubeDesc.CubeCapacity.SMALL) {
             dm.setCapacity(DataModelDesc.RealizationCapacity.SMALL);

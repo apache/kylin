@@ -22,16 +22,15 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.plexus.util.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.codehaus.plexus.util.FileUtils;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Created by honma on 9/24/14.

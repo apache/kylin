@@ -24,12 +24,13 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.kylin.metadata.model.TblColRef;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import org.apache.kylin.metadata.model.TblColRef;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment> {
@@ -70,9 +71,9 @@ public class CubeSegment implements Comparable<CubeSegment> {
     @JsonProperty("snapshots")
     private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
 
-//    public CubeDesc getCubeDesc() {
-//        return getCubeInstance().getDescriptor();
-//    }
+    //    public CubeDesc getCubeDesc() {
+    //        return getCubeInstance().getDescriptor();
+    //    }
 
     /**
      * @param startDate
@@ -92,7 +93,6 @@ public class CubeSegment implements Comparable<CubeSegment> {
     }
 
     // ============================================================================
-
 
     public String getUuid() {
         return uuid;
@@ -298,12 +298,6 @@ public class CubeSegment implements Comparable<CubeSegment> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("uuid", uuid)
-                .add("create_time:", createTime)
-                .add("name", name)
-                .add("last_build_job_id", lastBuildJobID)
-                .add("status", status)
-                .toString();
+        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time:", createTime).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
     }
 }

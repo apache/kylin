@@ -28,7 +28,7 @@ public class SQLRequest {
     private Integer limit = 0;
     private boolean acceptPartial = true;
 
-    private Map<String,String> backdoorToggles;
+    private Map<String, String> backdoorToggles;
 
     public SQLRequest() {
     }
@@ -40,7 +40,6 @@ public class SQLRequest {
     public void setBackdoorToggles(Map<String, String> backdoorToggles) {
         this.backdoorToggles = backdoorToggles;
     }
-
 
     public String getProject() {
         return project;

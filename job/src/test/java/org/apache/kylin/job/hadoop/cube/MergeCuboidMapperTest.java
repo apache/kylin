@@ -18,7 +18,7 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,26 +161,26 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         final Dictionary<?> dictionary = cubeManager.getDictionary(newSeg, lfn);
         assertTrue(dictionary == null);
-//        ((TrieDictionary) dictionary).dump(System.out);
+        //        ((TrieDictionary) dictionary).dump(System.out);
 
         // hack for distributed cache
-//        File metaDir = new File("../job/meta");
-//        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), metaDir);
-//
-//        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-//        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
-//        // mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL,
-//        // "../job/meta");
-//
-//        byte[] key = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1 };
-//        byte[] value = new byte[] { 1, 2, 3 };
-//        byte[] newkey = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 2 };
-//        byte[] newvalue = new byte[] { 1, 2, 3 };
-//
-//        mapDriver.withInput(new Text(key), new Text(value));
-//        mapDriver.withOutput(new Text(newkey), new Text(newvalue));
-//        mapDriver.setMapInputPath(new Path("/apps/hdmi-prod/b_kylin/prod/kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa/vac_sw_cube_v4/cuboid/15d_cuboid"));
-//
-//        mapDriver.runTest();
+        //        File metaDir = new File("../job/meta");
+        //        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), metaDir);
+        //
+        //        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+        //        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
+        //        // mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL,
+        //        // "../job/meta");
+        //
+        //        byte[] key = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1 };
+        //        byte[] value = new byte[] { 1, 2, 3 };
+        //        byte[] newkey = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 2 };
+        //        byte[] newvalue = new byte[] { 1, 2, 3 };
+        //
+        //        mapDriver.withInput(new Text(key), new Text(value));
+        //        mapDriver.withOutput(new Text(newkey), new Text(newvalue));
+        //        mapDriver.setMapInputPath(new Path("/apps/hdmi-prod/b_kylin/prod/kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa/vac_sw_cube_v4/cuboid/15d_cuboid"));
+        //
+        //        mapDriver.runTest();
     }
 }

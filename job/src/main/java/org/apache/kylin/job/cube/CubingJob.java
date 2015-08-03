@@ -23,10 +23,8 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -49,7 +47,6 @@ public class CubingJob extends DefaultChainedExecutable {
     private static final String SEGMENT_ID = "segmentId";
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
-
     public void setCubeName(String name) {
         setParam(CUBE_INSTANCE_NAME, name);
     }
@@ -65,7 +62,7 @@ public class CubingJob extends DefaultChainedExecutable {
     void setSegmentId(String segmentId) {
         setParam(SEGMENT_ID, segmentId);
     }
-    
+
     public String getSegmentIds() {
         return getParam(SEGMENT_ID);
     }
@@ -75,17 +72,17 @@ public class CubingJob extends DefaultChainedExecutable {
         final Output output = jobService.getOutput(getId());
         String logMsg;
         switch (output.getState()) {
-            case ERROR:
-                logMsg = output.getVerboseMsg();
-                break;
-            case DISCARDED:
-                logMsg = "";
-                break;
-            case SUCCEED:
-                logMsg = "";
-                break;
-            default:
-                return null;
+        case ERROR:
+            logMsg = output.getVerboseMsg();
+            break;
+        case DISCARDED:
+            logMsg = "";
+            break;
+        case SUCCEED:
+            logMsg = "";
+            break;
+        default:
+            return null;
         }
         String content = ExecutableConstants.NOTIFY_EMAIL_TEMPLATE;
         content = content.replaceAll("\\$\\{job_name\\}", getName());
@@ -105,14 +102,14 @@ public class CubingJob extends DefaultChainedExecutable {
             logger.warn(e.getLocalizedMessage(), e);
         }
 
-        String title = "["+ state.toString() + "] - [Kylin Cube Build Job]-" + getCubeName();
+        String title = "[" + state.toString() + "] - [Kylin Cube Build Job]-" + getCubeName();
         return Pair.of(title, content);
     }
 
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         long time = 0L;
-        for (AbstractExecutable task: getTasks()) {
+        for (AbstractExecutable task : getTasks()) {
             final ExecutableState status = task.getStatus();
             if (status != ExecutableState.SUCCEED) {
                 break;

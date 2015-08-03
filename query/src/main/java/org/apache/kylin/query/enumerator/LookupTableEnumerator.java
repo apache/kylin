@@ -48,7 +48,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
 
     @SuppressWarnings("unused")
     private final static Logger logger = LoggerFactory.getLogger(LookupTableEnumerator.class);
-    
+
     public LookupTableEnumerator(OLAPContext olapContext) {
 
         //TODO: assuming LookupTableEnumerator is handled by a cube
@@ -57,7 +57,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
         if (olapContext.realization instanceof CubeInstance)
             cube = (CubeInstance) olapContext.realization;
         else if (olapContext.realization instanceof HybridInstance) {
-            final HybridInstance hybridInstance = (HybridInstance)olapContext.realization;
+            final HybridInstance hybridInstance = (HybridInstance) olapContext.realization;
             final IRealization latestRealization = hybridInstance.getLatestRealization();
             if (latestRealization instanceof CubeInstance) {
                 cube = (CubeInstance) latestRealization;

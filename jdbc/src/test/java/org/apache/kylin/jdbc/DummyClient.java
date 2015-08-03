@@ -26,8 +26,6 @@ import java.util.List;
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
-import org.apache.kylin.jdbc.IRemoteClient;
-import org.apache.kylin.jdbc.KylinConnection;
 import org.apache.kylin.jdbc.KylinMeta.KMetaCatalog;
 import org.apache.kylin.jdbc.KylinMeta.KMetaColumn;
 import org.apache.kylin.jdbc.KylinMeta.KMetaProject;
@@ -48,7 +46,7 @@ public class DummyClient implements IRemoteClient {
     @Override
     public KMetaProject retrieveMetaData(String project) throws IOException {
         List<KMetaColumn> columns = new ArrayList<KMetaColumn>();
-        
+
         KMetaTable table = new KMetaTable("dummy", "dummy", "dummy", "dummy", columns);
         List<KMetaTable> tables = new ArrayList<KMetaTable>();
         tables.add(table);
@@ -56,11 +54,11 @@ public class DummyClient implements IRemoteClient {
         KMetaSchema schema = new KMetaSchema("dummy", "dummy", tables);
         List<KMetaSchema> schemas = new ArrayList<KMetaSchema>();
         schemas.add(schema);
-        
+
         KMetaCatalog catalog = new KMetaCatalog("dummay", schemas);
         List<KMetaCatalog> catalogs = new ArrayList<KMetaCatalog>();
         catalogs.add(catalog);
-        
+
         return new KMetaProject(project, catalogs);
     }
 
@@ -69,7 +67,7 @@ public class DummyClient implements IRemoteClient {
         List<Object> data = new ArrayList<Object>();
         Object[] row = new Object[] { "foo", "bar", "tool" };
         data.add(row);
-        
+
         List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
         meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));

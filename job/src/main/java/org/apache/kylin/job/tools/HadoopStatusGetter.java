@@ -18,6 +18,8 @@
 
 package org.apache.kylin.job.tools;
 
+import java.io.IOException;
+
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -31,8 +33,6 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * Created by qianzhou on 1/20/15.
@@ -101,8 +101,6 @@ public class HadoopStatusGetter {
 
         return response;
     }
-
-
 
     private static Protocol EASY_HTTPS = null;
 

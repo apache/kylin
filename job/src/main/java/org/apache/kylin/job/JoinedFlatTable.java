@@ -150,7 +150,7 @@ public class JoinedFlatTable {
         tableAliasMap.put(dataModelDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);
 
         int i = 1;
-        for (LookupDesc lookupDesc: dataModelDesc.getLookups()) {
+        for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
             JoinDesc join = lookupDesc.getJoin();
             if (join != null) {
                 tableAliasMap.put(lookupDesc.getTable().toUpperCase(), LOOKUP_TABLE_ALAIS_PREFIX + i);

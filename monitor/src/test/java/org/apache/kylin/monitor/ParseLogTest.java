@@ -16,16 +16,15 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.monitor;
-
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * Created by jiazhong on 2015/5/27.
@@ -51,9 +50,8 @@ public class ParseLogTest {
 
     }
 
-
     @Before
-    public void before(){
+    public void before() {
         queryParser = new QueryParser();
         apiReqParser = new ApiRequestParser();
     }
@@ -68,10 +66,8 @@ public class ParseLogTest {
         queryParser.getQueryLogFiles();
     }
 
-    private void testApiReqParsing(){
+    private void testApiReqParsing() {
         apiReqParser.getRequestLogFiles();
     }
-
-
 
 }

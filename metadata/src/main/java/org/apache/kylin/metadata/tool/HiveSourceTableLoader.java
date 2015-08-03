@@ -18,9 +18,13 @@
 
 package org.apache.kylin.metadata.tool;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.kylin.common.KylinConfig;
@@ -33,8 +37,9 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Management class to sync hive table metadata with command See main method for
@@ -147,9 +152,7 @@ public class HiveSourceTableLoader {
             loadedTables.add(tableDesc.getIdentity());
         }
 
-
         return loadedTables;
     }
-
 
 }

@@ -22,8 +22,8 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  */
@@ -44,11 +44,11 @@ public interface ReadableTable {
 
         /** Get the current row. */
         public String[] getRow();
-        
+
     }
-    
+
     // ============================================================================
-    
+
     @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
     public class TableSignature {
 
@@ -93,7 +93,6 @@ public interface ReadableTable {
         public long getLastModifiedTime() {
             return lastModifiedTime;
         }
-
 
         @Override
         public int hashCode() {

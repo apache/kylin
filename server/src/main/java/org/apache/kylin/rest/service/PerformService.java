@@ -18,7 +18,10 @@
 
 package org.apache.kylin.rest.service;
 
-import au.com.bytecode.opencsv.CSVReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,9 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.*;
+import au.com.bytecode.opencsv.CSVReader;
 
 /**
  * @author jiazhong
@@ -43,37 +44,37 @@ public class PerformService extends BasicService {
     /*
      * @return all query user
      */
-    public  List<String[]> getTotalQueryUser() throws IOException {
-        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()+"/performance/metadata/total_query_user.csv";
+    public List<String[]> getTotalQueryUser() throws IOException {
+        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/performance/metadata/total_query_user.csv";
         List<String[]> res = readHdfsFile(filePath);
-        logger.info("Total Query User:"+res.get(0)[0]);
-       return  res;
+        logger.info("Total Query User:" + res.get(0)[0]);
+        return res;
     }
 
-     /*
-     * @return last 30 daily query num
-     */
-    public  List<String[]> dailyQueryCount() throws IOException {
-        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()+"/performance/metadata/last_30_daily_query_count.csv";
+    /*
+    * @return last 30 daily query num
+    */
+    public List<String[]> dailyQueryCount() throws IOException {
+        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/performance/metadata/last_30_daily_query_count.csv";
         List<String[]> res = readHdfsFile(filePath);
-       return  res;
+        return res;
     }
 
     /*
      * @return average query count every day
      */
-    public  List<String[]> avgDayQuery() throws IOException {
-        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()+"/performance/metadata/avg_day_query.csv";
+    public List<String[]> avgDayQuery() throws IOException {
+        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/performance/metadata/avg_day_query.csv";
         List<String[]> res = readHdfsFile(filePath);
-        logger.info("Avg Day Query:"+res.get(0)[0]);
-        return  res;
+        logger.info("Avg Day Query:" + res.get(0)[0]);
+        return res;
     }
 
     /*
      *@return average latency every day
      */
     public List<String[]> last30DayPercentile() throws IOException {
-        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()+"/performance/metadata/last_30_day_90_percentile_latency.csv";
+        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/performance/metadata/last_30_day_90_percentile_latency.csv";
         List<String[]> res = readHdfsFile(filePath);
         return res;
     }
@@ -82,7 +83,7 @@ public class PerformService extends BasicService {
      *@return average latency for every cube
      */
     public List<String[]> eachDayPercentile() throws IOException {
-        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()+"/performance/metadata/each_day_90_95_percentile_latency.csv";
+        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/performance/metadata/each_day_90_95_percentile_latency.csv";
         List<String[]> res = readHdfsFile(filePath);
         return res;
     }
@@ -91,11 +92,10 @@ public class PerformService extends BasicService {
      *@return average latency for every cube
      */
     public List<String[]> projectPercentile() throws IOException {
-        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()+"/performance/metadata/project_90_95_percentile_latency.csv";
+        String filePath = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/performance/metadata/project_90_95_percentile_latency.csv";
         List<String[]> res = readHdfsFile(filePath);
         return res;
     }
-
 
     private List<String[]> readHdfsFile(String filePath) throws IOException {
         List<String[]> allRows = null;
@@ -106,16 +106,14 @@ public class PerformService extends BasicService {
         try {
             fs = FileSystem.newInstance(conf);
             FSDataInputStream inputStream = fs.open(new Path(filePath));
-            reader = new CSVReader(new InputStreamReader (inputStream),'|');
+            reader = new CSVReader(new InputStreamReader(inputStream), '|');
 
             //Read all rows at once
             allRows = reader.readAll();
 
-
         } catch (IOException e) {
-            logger.info("failed to read hdfs file:",e);
-        }
-        finally {
+            logger.info("failed to read hdfs file:", e);
+        } finally {
             fs.close();
         }
         return allRows;

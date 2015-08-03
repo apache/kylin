@@ -16,16 +16,19 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.monitor;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import org.apache.log4j.Logger;
 import org.datanucleus.util.StringUtils;
-
-import java.io.IOException;
-import java.sql.*;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 /**
  * Created by jiazhong on 2015/6/17.
@@ -40,7 +43,6 @@ public class HiveJdbcClient {
 
     static String SQL_LAST_30_DAYILY_QUERY_COUNT = "SELECT REQUEST_DATE, COUNT(*) FROM  [QUERY_LOG_TABLE_NAME]  WHERE  REQUEST_DATE>=[START_DATE] AND REQUEST_DATE<[END_DATE]  GROUP BY REQUEST_DATE";
 
-
     //last 30 days
     static String SQL_90_PERCENTTILE_LAST_30_DAY = "SELECT PERCENTILE_APPROX(LOG.QUERY_LATENCY,0.9) FROM (SELECT QUERY_LATENCY FROM [QUERY_LOG_TABLE_NAME]  WHERE IS_SUCCESS='true' AND REQUEST_DATE>=[START_DATE] AND REQUEST_DATE<[END_DATE]) LOG";
 
@@ -50,12 +52,9 @@ public class HiveJdbcClient {
     //0.9,0.95 [project] percentile in last 30 days
     static String SQL_DAY_PERCENTILE_BY_PROJECT = "SELECT QUERY_PROJECT, PERCENTILE_APPROX(QUERY_LATENCY,ARRAY(0.9,0.95)) FROM  [QUERY_LOG_TABLE_NAME]  WHERE IS_SUCCESS='true' AND  REQUEST_DATE>=[START_DATE] AND REQUEST_DATE<[END_DATE]  GROUP BY QUERY_PROJECT";
 
-
-
     static String QUERY_LOG_TABLE_NAME = "KYLIN_QUERY_LOG";
 
     final static Logger logger = Logger.getLogger(HiveJdbcClient.class);
-
 
     private static String driverName = "org.apache.hive.jdbc.HiveDriver";
     private static ConfigUtils monitorConfig = ConfigUtils.getInstance();
@@ -73,7 +72,6 @@ public class HiveJdbcClient {
             e.printStackTrace();
         }
     }
-
 
     /*
      * will create external hive table for [query] log parse result csv file on hdfs
@@ -102,7 +100,7 @@ public class HiveJdbcClient {
         FileUtils.pathCheck(total_query_user_path);
         FileUtils.clearHdfsFile(total_query_user_path);
         while (res.next()) {
-            FileUtils.appendResultToHdfs(total_query_user_path, new String[]{res.getString(1)});
+            FileUtils.appendResultToHdfs(total_query_user_path, new String[] { res.getString(1) });
             logger.info("Total User:" + res.getString(1));
         }
 
@@ -114,10 +112,9 @@ public class HiveJdbcClient {
         FileUtils.pathCheck(avg_day_query_path);
         FileUtils.clearHdfsFile(avg_day_query_path);
         while (res.next()) {
-            FileUtils.appendResultToHdfs(avg_day_query_path, new String[]{res.getString(1)});
+            FileUtils.appendResultToHdfs(avg_day_query_path, new String[] { res.getString(1) });
             logger.info("avg day query:" + res.getString(1));
         }
-
 
         SQL_LAST_30_DAYILY_QUERY_COUNT = generateLast30DayilyQueryCount();
         logger.info("Running Sql (Daily Query Count):" + SQL_LAST_30_DAYILY_QUERY_COUNT);
@@ -127,10 +124,9 @@ public class HiveJdbcClient {
         FileUtils.pathCheck(last_30_daily_query_count_path);
         FileUtils.clearHdfsFile(last_30_daily_query_count_path);
         while (res.next()) {
-            FileUtils.appendResultToHdfs(last_30_daily_query_count_path, new String[]{res.getString(1),res.getString(2)});
-            logger.info("last 30 daily query count:" + res.getString(1)+","+res.getString(2));
+            FileUtils.appendResultToHdfs(last_30_daily_query_count_path, new String[] { res.getString(1), res.getString(2) });
+            logger.info("last 30 daily query count:" + res.getString(1) + "," + res.getString(2));
         }
-
 
         //90 percentile latency for all query in last 30 days
         SQL_90_PERCENTTILE_LAST_30_DAY = generateNintyPercentileSql();
@@ -141,7 +137,7 @@ public class HiveJdbcClient {
         FileUtils.pathCheck(last_30_day_90_percentile_latency);
         FileUtils.clearHdfsFile(last_30_day_90_percentile_latency);
         while (res.next()) {
-            FileUtils.appendResultToHdfs(last_30_day_90_percentile_latency, new String[]{res.getString(1)});
+            FileUtils.appendResultToHdfs(last_30_day_90_percentile_latency, new String[] { res.getString(1) });
             logger.info("last 30 day 90 percentile latency:" + res.getString(1));
         }
 
@@ -154,7 +150,7 @@ public class HiveJdbcClient {
         FileUtils.pathCheck(last_30_day_project_percentile_latency_path);
         FileUtils.clearHdfsFile(last_30_day_project_percentile_latency_path);
         while (res.next() && res.getMetaData().getColumnCount() == 2) {
-            FileUtils.appendResultToHdfs(last_30_day_project_percentile_latency_path, new String[]{res.getString(1), res.getString(2)});
+            FileUtils.appendResultToHdfs(last_30_day_project_percentile_latency_path, new String[] { res.getString(1), res.getString(2) });
             logger.info(res.getString(1) + "," + res.getString(2));
         }
 
@@ -167,8 +163,8 @@ public class HiveJdbcClient {
 
         res = stmt.executeQuery(SQL_EACH_DAY_PERCENTILE);
         while (res.next() && res.getMetaData().getColumnCount() == 3) {
-            FileUtils.appendResultToHdfs(each_day_percentile_file, new String[]{res.getString(1), res.getString(2),res.getString(3)});
-            logger.info(res.getString(1) + "," + res.getString(2)+ "," + res.getString(3));
+            FileUtils.appendResultToHdfs(each_day_percentile_file, new String[] { res.getString(1), res.getString(2), res.getString(3) });
+            logger.info(res.getString(1) + "," + res.getString(2) + "," + res.getString(3));
         }
 
     }
@@ -191,8 +187,6 @@ public class HiveJdbcClient {
         SQL_LAST_30_DAYILY_QUERY_COUNT = SQL_LAST_30_DAYILY_QUERY_COUNT.replace("[QUERY_LOG_TABLE_NAME]", QUERY_LOG_TABLE_NAME);
         return monthStasticSqlConvert(SQL_LAST_30_DAYILY_QUERY_COUNT);
     }
-
-
 
     //last 30 days
     public String generateNintyPercentileSql() {
@@ -221,6 +215,5 @@ public class HiveJdbcClient {
         String startDate = format.format(cal.getTime());
         return sql.replace("[START_DATE]", "'" + startDate + "'").replace("[END_DATE]", "'" + endDate + "'");
     }
-
 
 }

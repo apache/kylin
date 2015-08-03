@@ -28,8 +28,8 @@ public interface ISegment {
     public abstract int getColumnLength(TblColRef col);
 
     public abstract Dictionary<?> getDictionary(TblColRef col);
-    
+
     public String getName();
-    
+
     public String getUuid();
 }

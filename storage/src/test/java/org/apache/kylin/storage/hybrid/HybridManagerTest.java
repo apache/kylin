@@ -54,7 +54,6 @@ public class HybridManagerTest extends LocalFileMetadataTestCase {
 
     }
 
-
     public HybridManager getHybridManager() {
         return HybridManager.getInstance(getTestConfig());
     }

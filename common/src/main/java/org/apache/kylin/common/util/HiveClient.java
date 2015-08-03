@@ -27,9 +27,9 @@ import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
@@ -112,7 +112,6 @@ public class HiveClient {
         return metaStoreClient;
     }
 
-
     public Table getHiveTable(String database, String tableName) throws Exception {
         return getMetaStoreClient().getTable(database, tableName);
     }
@@ -158,7 +157,7 @@ public class HiveClient {
         return result;
     }
 
-    public boolean isNativeTable(String database, String tableName)  throws Exception{
+    public boolean isNativeTable(String database, String tableName) throws Exception {
         return !MetaStoreUtils.isNonNativeTable(getMetaStoreClient().getTable(database, tableName));
     }
 

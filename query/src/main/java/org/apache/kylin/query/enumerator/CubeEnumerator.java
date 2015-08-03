@@ -22,19 +22,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.linq4j.Enumerator;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.storage.IStorageEngine;
-import org.apache.kylin.storage.StorageEngineFactory;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.StorageEngineFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -46,7 +46,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     private final DataContext optiqContext;
     private final Object[] current;
     private ITupleIterator cursor;
-    private int[] fieldIndexes;    
+    private int[] fieldIndexes;
     private List<String> tupleFieldsSnapshot;
 
     public CubeEnumerator(OLAPContext olapContext, DataContext optiqContext) {

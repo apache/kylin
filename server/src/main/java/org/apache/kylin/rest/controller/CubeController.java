@@ -85,7 +85,7 @@ public class CubeController extends BasicController {
     @Autowired
     private JobService jobService;
 
-    @RequestMapping(value = "", method = {RequestMethod.GET})
+    @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam("limit") Integer limit, @RequestParam("offset") Integer offset) {
         return cubeService.getCubes(cubeName, projectName, (null == limit) ? 20 : limit, offset);
@@ -99,7 +99,7 @@ public class CubeController extends BasicController {
      * @throws UnknownHostException
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET })
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -122,7 +122,7 @@ public class CubeController extends BasicController {
      * @throws IOException
      * @throws CubeIntegrityException
      */
-    @RequestMapping(value = "/{cubeName}/notify_list", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT })
     @ResponseBody
     public void updateNotifyList(@PathVariable String cubeName, @RequestBody List<String> notifyList) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -140,7 +140,7 @@ public class CubeController extends BasicController {
 
     }
 
-    @RequestMapping(value = "/{cubeName}/cost", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
         try {
@@ -152,7 +152,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/coprocessor", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/coprocessor", method = { RequestMethod.PUT })
     @ResponseBody
     public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
         try {
@@ -170,7 +170,7 @@ public class CubeController extends BasicController {
      *
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName, @RequestParam(value = "lookupTable") String lookupTable) {
         try {
@@ -188,7 +188,7 @@ public class CubeController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/rebuild", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest jobBuildRequest) {
         try {
@@ -205,7 +205,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/disable", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance disableCube(@PathVariable String cubeName) {
         try {
@@ -223,7 +223,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/purge", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance purgeCube(@PathVariable String cubeName) {
         try {
@@ -241,7 +241,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/enable", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance enableCube(@PathVariable String cubeName) {
         try {
@@ -258,7 +258,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}", method = {RequestMethod.DELETE})
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE })
     @ResponseBody
     public void deleteCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -280,7 +280,7 @@ public class CubeController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.POST})
+    @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
         //Update Model
@@ -336,7 +336,7 @@ public class CubeController extends BasicController {
      * @throws JsonProcessingException
      * @throws IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.PUT})
+    @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
 
@@ -409,7 +409,7 @@ public class CubeController extends BasicController {
      * @return true
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/hbase", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET })
     @ResponseBody
     public List<HBaseResponse> getHBaseInfo(@PathVariable String cubeName) {
         List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
@@ -451,7 +451,7 @@ public class CubeController extends BasicController {
         try {
             logger.debug("Saving cube " + cubeRequest.getCubeDescData());
             desc = JsonUtil.readValue(cubeRequest.getCubeDescData(), CubeDesc.class);
-//            desc.setRetentionRange(cubeRequest.getRetentionRange());
+            //            desc.setRetentionRange(cubeRequest.getRetentionRange());
         } catch (JsonParseException e) {
             logger.error("The cube definition is not valid.", e);
             updateRequest(cubeRequest, false, e.getMessage());
@@ -488,7 +488,7 @@ public class CubeController extends BasicController {
      */
     private String omitMessage(List<String> errors) {
         StringBuffer buffer = new StringBuffer();
-        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext(); ) {
+        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext();) {
             String string = (String) iterator.next();
             buffer.append(string);
             buffer.append("\n");
