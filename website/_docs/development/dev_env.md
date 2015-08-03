@@ -104,3 +104,22 @@ In IDE, launch `org.apache.kylin.rest.DebugTomcat` with working directory set to
 Check Kylin Web available at http://localhost:7070/kylin (user:ADMIN,password:KYLIN)
 
 For IntelliJ IDEA users, need modify "server/kylin-server.iml" file, replace all "PROVIDED" to "COMPILE", otherwise an "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" error may be thrown;
+
+
+## Setup IDE code formatter
+
+In case you're writting code for Kylin, you should make sure that your code in expected formats.
+
+For Eclipse users, just format the code before committing the code.
+
+For intellij IDEA users, you have to do a few more steps:
+
+1. Install "Eclipse Code Formatter" and configure it as follows:
+
+	![Eclipse_Code_Formatter_Config](/images/develop/eclipse_code_formatter_config.png)
+
+2. Disable intellij IDEA's "Optimize imports on the fly"
+
+	![Disable_Optimize_On_The_Fly](/images/develop/disable_import_on_the_fly.png)
+
+3. Format the code before committing the code.
