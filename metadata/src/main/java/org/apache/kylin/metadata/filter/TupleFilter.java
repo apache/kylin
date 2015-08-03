@@ -24,9 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
+
+import com.google.common.collect.Maps;
 
 /**
  * 

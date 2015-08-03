@@ -133,7 +133,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         if (columnCount != bytesSplitter.getBufferSize()) {
             throw new IllegalArgumentException("Expect " + columnCount + " columns, but see " + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
         }
-        
+
         // TODO: check data types here
     }
 

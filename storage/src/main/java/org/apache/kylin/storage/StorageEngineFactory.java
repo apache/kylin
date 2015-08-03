@@ -20,8 +20,8 @@ package org.apache.kylin.storage;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hbase.CubeStorageEngine;
 import org.apache.kylin.storage.hbase.InvertedIndexStorageEngine;
 import org.apache.kylin.storage.hybrid.HybridInstance;

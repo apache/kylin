@@ -21,6 +21,8 @@ package org.apache.kylin.cube;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.junit.After;
 import org.junit.Assert;
@@ -28,8 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 
 /**
  * @author yangli9
@@ -60,22 +60,22 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         Assert.assertNotNull(cubeDesc);
     }
-    
+
     @Test
-    public void testSerializeMap()  throws Exception {
+    public void testSerializeMap() throws Exception {
         Map<String, String> map = Maps.newHashMap();
 
         map.put("key1", "value1");
         map.put("key2", "value2");
-        
+
         String mapStr = JsonUtil.writeValueAsString(map);
-        
+
         System.out.println(mapStr);
-        
+
         Map<?, ?> map2 = JsonUtil.readValue(mapStr, HashMap.class);
-        
+
         Assert.assertEquals(map, map2);
-        
+
     }
 
 }

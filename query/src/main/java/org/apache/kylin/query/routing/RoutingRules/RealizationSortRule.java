@@ -18,14 +18,14 @@
 
 package org.apache.kylin.query.routing.RoutingRules;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
 import org.apache.kylin.storage.hybrid.HybridInstance;
-
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  */
@@ -59,7 +59,6 @@ public class RealizationSortRule extends RoutingRule {
                 return 0;
             }
         });
-
 
     }
 

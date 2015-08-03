@@ -21,8 +21,6 @@ package org.apache.kylin.job.cube;
 import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
-
-import com.google.common.base.Preconditions;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -32,6 +30,8 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Created by qianzhou on 1/4/15.

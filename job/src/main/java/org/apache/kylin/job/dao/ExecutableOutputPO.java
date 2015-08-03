@@ -20,10 +20,11 @@ package org.apache.kylin.job.dao;
 
 import java.util.Map;
 
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 /**
  * Created by qianzhou on 12/15/14.

@@ -36,7 +36,6 @@ import org.apache.hadoop.hbase.ServerLoad;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.kylin.common.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

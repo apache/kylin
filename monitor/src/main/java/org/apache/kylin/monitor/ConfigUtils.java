@@ -16,18 +16,22 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.monitor;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Created by jiazhong on 2015/4/28.
@@ -66,9 +70,7 @@ public class ConfigUtils {
 
     public static final String DEPLOY_ENV = "deploy.env";
 
-
     public static final String HIVE_JDBC_CON_URL = "kylin.hive.jdbc.connection.url";
-
 
     public void loadMonitorParam() throws IOException {
         Properties props = new Properties();
@@ -76,7 +78,6 @@ public class ConfigUtils {
         props.load(resourceStream);
         this.monitorConfig = props;
     }
-
 
     public static InputStream getKylinPropertiesAsInputSteam() {
         File propFile = getKylinMonitorProperties();
@@ -93,7 +94,6 @@ public class ConfigUtils {
 
     }
 
-
     private static File getKylinMonitorProperties() {
         String kylinConfHome = System.getProperty(KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {
@@ -108,7 +108,7 @@ public class ConfigUtils {
             throw new RuntimeException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
 
         String path = kylinHome + File.separator + "conf";
-        logger.info("load kylin.properties file from " + kylinHome+". (from KYLIN_HOME System.env)");
+        logger.info("load kylin.properties file from " + kylinHome + ". (from KYLIN_HOME System.env)");
         return getKylinPropertiesFile(path);
 
     }
@@ -119,7 +119,7 @@ public class ConfigUtils {
             logger.warn("KYLIN_HOME was not set");
             return kylinHome;
         }
-        logger.info("KYLIN_HOME is :"+kylinHome);
+        logger.info("KYLIN_HOME is :" + kylinHome);
         return kylinHome;
     }
 
@@ -129,7 +129,6 @@ public class ConfigUtils {
         }
         return new File(path, KYLIN_MONITOR_CONF_PROP_FILE);
     }
-
 
     /*
      * get where to path log
@@ -146,8 +145,8 @@ public class ConfigUtils {
         String kylinExtLogBaseDir = getExtLogBaseDir();
         if (!StringUtils.isEmpty(kylinExtLogBaseDir)) {
             String[] extPaths = kylinExtLogBaseDir.split(",");
-            for(String path:extPaths){
-                if(!StringUtils.isEmpty(path)){
+            for (String path : extPaths) {
+                if (!StringUtils.isEmpty(path)) {
                     logger.info("Use ext log dir=" + path);
                     logDirList.add(path.trim());
                 }
@@ -156,23 +155,21 @@ public class ConfigUtils {
 
         String kylinHome = getKylinHome();
         if (!StringUtils.isEmpty(kylinHome))
-            if(logDirList.isEmpty()){
-               throw new RuntimeException("Didn't find KYLIN_CONF or KYLIN_HOME or KYLIN_EXT_LOG_BASE_DIR, please set one of them");
+            if (logDirList.isEmpty()) {
+                throw new RuntimeException("Didn't find KYLIN_CONF or KYLIN_HOME or KYLIN_EXT_LOG_BASE_DIR, please set one of them");
+            } else {
+                String path = kylinHome + File.separator + "tomcat" + File.separator + "logs";
+                logDirList.add(path);
             }
-        else{
-            String path = kylinHome + File.separator + "tomcat" + File.separator + "logs";
-            logDirList.add(path);
-        }
 
         return logDirList;
     }
 
-
-    public  String getMetadataUrl(){
+    public String getMetadataUrl() {
         return this.monitorConfig.getProperty(KYLIN_METADATA_URL);
     }
 
-    public  String getMetadataUrlPrefix() {
+    public String getMetadataUrlPrefix() {
         String hbaseMetadataUrl = getMetadataUrl();
         String defaultPrefix = "kylin_metadata";
         int cut = hbaseMetadataUrl.indexOf('@');
@@ -185,27 +182,28 @@ public class ConfigUtils {
     }
 
     public String getKylinHdfsWorkingDir() {
-        String root =  this.monitorConfig.getProperty(KYLIN_HDFS_WORKING_DIR);
+        String root = this.monitorConfig.getProperty(KYLIN_HDFS_WORKING_DIR);
         if (!root.endsWith("/")) {
             root += "/";
         }
         return root + getMetadataUrlPrefix();
     }
+
     public String getQueryLogParseResultDir() {
-        return this.getKylinHdfsWorkingDir()+"/performance/query/";
+        return this.getKylinHdfsWorkingDir() + "/performance/query/";
     }
 
     public String getQueryLogResultTable() {
         String query_log_parse_result_table = this.monitorConfig.getProperty(QUERY_LOG_PARSE_RESULT_TABLE);
-        if(!StringUtils.isEmpty(query_log_parse_result_table)){
+        if (!StringUtils.isEmpty(query_log_parse_result_table)) {
             return query_log_parse_result_table;
-        }else{
+        } else {
             return DEFAULT_QUERY_LOG_PARSE_RESULT_TABLE;
         }
     }
 
     public String getRequestLogParseResultDir() {
-        return this.getKylinHdfsWorkingDir()+"/performance/request/";
+        return this.getKylinHdfsWorkingDir() + "/performance/request/";
     }
 
     public String getHiveJdbcConUrl() {
@@ -213,13 +211,12 @@ public class ConfigUtils {
     }
 
     public String getLogParseResultMetaDir() {
-        return this.getKylinHdfsWorkingDir()+"/performance/metadata/";
+        return this.getKylinHdfsWorkingDir() + "/performance/metadata/";
     }
 
-    public String getDeployEnv(){
+    public String getDeployEnv() {
         return this.monitorConfig.getProperty(DEPLOY_ENV);
     }
-
 
     public String getHiveJdbcConUserName() {
         return this.monitorConfig.getProperty(HIVE_JDBC_CON_USERNAME);
@@ -228,7 +225,6 @@ public class ConfigUtils {
     public String getHiveJdbcConPasswd() {
         return this.monitorConfig.getProperty(HIVE_JDBC_CON_PASSWD);
     }
-
 
     public static void addClasspath(String path) throws Exception {
         File file = new File(path);

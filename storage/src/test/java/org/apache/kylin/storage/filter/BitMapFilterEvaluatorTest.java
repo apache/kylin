@@ -18,21 +18,25 @@
 
 package org.apache.kylin.storage.filter;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.metadata.filter.*;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
-
-import com.google.common.collect.Lists;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator.BitMapProvider;
-import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 public class BitMapFilterEvaluatorTest {
 

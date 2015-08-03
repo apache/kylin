@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 
 import org.apache.hadoop.io.Text;
-
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**

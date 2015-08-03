@@ -27,15 +27,14 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
-import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;

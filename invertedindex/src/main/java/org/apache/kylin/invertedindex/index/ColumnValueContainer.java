@@ -18,25 +18,26 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  * @author yangli9
  */
 public interface ColumnValueContainer {
 
-	void append(ImmutableBytesWritable valueBytes);
+    void append(ImmutableBytesWritable valueBytes);
 
-	void closeForChange();
+    void closeForChange();
 
-	int getSize();
+    int getSize();
 
-	// works only after closeForChange()
-	void getValueAt(int i, ImmutableBytesWritable valueBytes);
+    // works only after closeForChange()
+    void getValueAt(int i, ImmutableBytesWritable valueBytes);
 
-	ConciseSet getBitMap(Integer startId,Integer endId);
+    ConciseSet getBitMap(Integer startId, Integer endId);
 
-	int getMaxValueId();
+    int getMaxValueId();
 
 }

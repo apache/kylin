@@ -18,10 +18,11 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import com.google.common.collect.Maps;
+import java.util.SortedMap;
+
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 
-import java.util.SortedMap;
+import com.google.common.collect.Maps;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.

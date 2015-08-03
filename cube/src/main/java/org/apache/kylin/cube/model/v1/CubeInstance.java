@@ -22,6 +22,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,9 +33,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity {
@@ -163,10 +164,9 @@ public class CubeInstance extends RootPersistentEntity {
         }
     }
 
-//    public CubeDesc getDescriptor() {
-//        return CubeDescManager.getInstance(config).getCubeDesc(descName);
-//    }
-
+    //    public CubeDesc getDescriptor() {
+    //        return CubeDescManager.getInstance(config).getCubeDesc(descName);
+    //    }
 
     public boolean isReady() {
         return getStatus() == CubeStatusEnum.READY;
@@ -361,7 +361,7 @@ public class CubeInstance extends RootPersistentEntity {
     public long[] getDateRange() {
         List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
-            return new long[]{0L, 0L};
+            return new long[] { 0L, 0L };
         }
         long start = Long.MAX_VALUE;
         long end = Long.MIN_VALUE;
@@ -373,55 +373,55 @@ public class CubeInstance extends RootPersistentEntity {
                 end = segment.getDateRangeEnd();
             }
         }
-        return new long[]{start, end};
+        return new long[] { start, end };
     }
 
-//    private boolean appendOnHll() {
-//        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
-//        if (cubePartitionDesc == null) {
-//            return false;
-//        }
-//        if (cubePartitionDesc.getPartitionDateColumn() == null) {
-//            return false;
-//        }
-//        if (cubePartitionDesc.getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
-//            return false;
-//        }
-//        return getDescriptor().hasHolisticCountDistinctMeasures();
-//    }
+    //    private boolean appendOnHll() {
+    //        CubePartitionDesc cubePartitionDesc = getDescriptor().getCubePartitionDesc();
+    //        if (cubePartitionDesc == null) {
+    //            return false;
+    //        }
+    //        if (cubePartitionDesc.getPartitionDateColumn() == null) {
+    //            return false;
+    //        }
+    //        if (cubePartitionDesc.getCubePartitionType() != CubePartitionDesc.CubePartitionType.APPEND) {
+    //            return false;
+    //        }
+    //        return getDescriptor().hasHolisticCountDistinctMeasures();
+    //    }
 
-//    public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
-//        if (!appendOnHll()) {
-//            return false;
-//        }
-//        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
-//        if (readySegments.isEmpty()) {
-//            return false;
-//        }
-//        for (CubeSegment readySegment: readySegments) {
-//            if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
-//                //refresh build
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
+    //    public boolean appendBuildOnHllMeasure(long startDate, long endDate) {
+    //        if (!appendOnHll()) {
+    //            return false;
+    //        }
+    //        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+    //        if (readySegments.isEmpty()) {
+    //            return false;
+    //        }
+    //        for (CubeSegment readySegment: readySegments) {
+    //            if (readySegment.getDateRangeStart() == startDate && readySegment.getDateRangeEnd() == endDate) {
+    //                //refresh build
+    //                return false;
+    //            }
+    //        }
+    //        return true;
+    //    }
 
-//    public boolean needMergeImmediatelyAfterBuild(CubeSegment segment) {
-//        if (!appendOnHll()) {
-//            return false;
-//        }
-//        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
-//        if (readySegments.isEmpty()) {
-//            return false;
-//        }
-//        for (CubeSegment readySegment: readySegments) {
-//            if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
-//                //has overlap and not refresh
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
+    //    public boolean needMergeImmediatelyAfterBuild(CubeSegment segment) {
+    //        if (!appendOnHll()) {
+    //            return false;
+    //        }
+    //        List<CubeSegment> readySegments = getSegment(CubeSegmentStatusEnum.READY);
+    //        if (readySegments.isEmpty()) {
+    //            return false;
+    //        }
+    //        for (CubeSegment readySegment: readySegments) {
+    //            if (readySegment.getDateRangeEnd() > segment.getDateRangeStart()) {
+    //                //has overlap and not refresh
+    //                return true;
+    //            }
+    //        }
+    //        return false;
+    //    }
 
 }

@@ -23,6 +23,15 @@ package org.apache.kylin.job.hadoop;
  *
  */
 
+import static org.apache.hadoop.util.StringUtils.formatTime;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -56,15 +65,6 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.apache.hadoop.util.StringUtils.formatTime;
 
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {
@@ -163,7 +163,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             logger.info("The default mapred classpath is: " + classpath);
         }
 
-
         if (kylinHBaseDependency != null) {
             // yarn classpath is comma separated
             kylinHBaseDependency = kylinHBaseDependency.replace(":", ",");
@@ -180,7 +179,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
     }
 
-
     private String getDefaultMapRedClasspath() {
 
         String classpath = "";
@@ -196,7 +194,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         return classpath;
     }
-
 
     public void addInputDirs(String input, Job job) throws IOException {
         for (String inp : StringSplitter.split(input, ",")) {

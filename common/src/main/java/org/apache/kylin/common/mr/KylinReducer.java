@@ -18,9 +18,9 @@
 
 package org.apache.kylin.common.mr;
 
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.kylin.common.util.HadoopUtil;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 1/19/15.

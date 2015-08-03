@@ -17,14 +17,12 @@
 */
 package org.apache.kylin.rest.filter;
 
-import com.github.isrsal.logging.RequestWrapper;
-import com.github.isrsal.logging.ResponseWrapper;
-import com.sun.jersey.core.util.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.web.filter.OncePerRequestFilter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -33,12 +31,16 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicLong;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.github.isrsal.logging.RequestWrapper;
+import com.github.isrsal.logging.ResponseWrapper;
+import com.sun.jersey.core.util.Base64;
 
 /**
  * Created by jiazhong on 2015/4/20.
@@ -54,38 +56,38 @@ public class KylinApiFilter extends OncePerRequestFilter {
     }
 
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if(logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             long requestId = this.id.incrementAndGet();
-            request = new RequestWrapper(Long.valueOf(requestId), (HttpServletRequest)request);
-            response = new ResponseWrapper(Long.valueOf(requestId), (HttpServletResponse)response);
+            request = new RequestWrapper(Long.valueOf(requestId), (HttpServletRequest) request);
+            response = new ResponseWrapper(Long.valueOf(requestId), (HttpServletResponse) response);
         }
 
         try {
-            filterChain.doFilter((ServletRequest)request, (ServletResponse)response);
+            filterChain.doFilter((ServletRequest) request, (ServletResponse) response);
         } finally {
-            if(logger.isDebugEnabled()) {
-                this.logRequest((HttpServletRequest)request,(ResponseWrapper)response);
-//                this.logResponse((ResponseWrapper)response);
+            if (logger.isDebugEnabled()) {
+                this.logRequest((HttpServletRequest) request, (ResponseWrapper) response);
+                //                this.logResponse((ResponseWrapper)response);
             }
 
         }
 
     }
 
-    private void logRequest(HttpServletRequest request,ResponseWrapper response) {
+    private void logRequest(HttpServletRequest request, ResponseWrapper response) {
         StringBuilder msg = new StringBuilder();
         msg.append("REQUEST: ");
         HttpSession session = request.getSession(true);
-        SecurityContext context = (SecurityContext)session.getAttribute("SPRING_SECURITY_CONTEXT");
+        SecurityContext context = (SecurityContext) session.getAttribute("SPRING_SECURITY_CONTEXT");
 
-        String requester="";
-        if(context!=null){
-            Authentication authentication=  context.getAuthentication();
-            if(authentication!=null){
+        String requester = "";
+        if (context != null) {
+            Authentication authentication = context.getAuthentication();
+            if (authentication != null) {
                 requester = authentication.getName();
             }
 
-        }else {
+        } else {
             final String authorization = request.getHeader("Authorization");
             if (authorization != null && authorization.startsWith("Basic")) {
                 // Authorization: Basic base64credentials
@@ -96,24 +98,24 @@ public class KylinApiFilter extends OncePerRequestFilter {
                 requester = values[0];
             }
         }
-        msg.append("REQUESTER="+requester);
+        msg.append("REQUESTER=" + requester);
 
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         msg.append(";REQ_TIME=" + format.format(new Date()));
         msg.append(";URI=").append(request.getRequestURI());
         msg.append(";METHOD=").append(request.getMethod());
         msg.append(";QUERY_STRING=").append(request.getQueryString());
-        if(request instanceof RequestWrapper && !this.isMultipart(request)) {
-            RequestWrapper requestWrapper = (RequestWrapper)request;
+        if (request instanceof RequestWrapper && !this.isMultipart(request)) {
+            RequestWrapper requestWrapper = (RequestWrapper) request;
 
             try {
-                String e = requestWrapper.getCharacterEncoding() != null?requestWrapper.getCharacterEncoding():"UTF-8";
+                String e = requestWrapper.getCharacterEncoding() != null ? requestWrapper.getCharacterEncoding() : "UTF-8";
                 msg.append(";PAYLOAD=").append(new String(requestWrapper.toByteArray(), e));
             } catch (UnsupportedEncodingException var6) {
                 logger.warn("Failed to parse request payload", var6);
             }
         }
-        msg.append(";RESP_STATUS="+response.getStatus()).append(";");
+        msg.append(";RESP_STATUS=" + response.getStatus()).append(";");
 
         logger.debug(msg.toString());
     }

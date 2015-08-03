@@ -18,7 +18,7 @@
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;

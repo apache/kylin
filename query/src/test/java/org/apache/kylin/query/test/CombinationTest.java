@@ -22,12 +22,11 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 /**
  * Created by honma on 7/2/14.

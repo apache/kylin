@@ -18,12 +18,12 @@
 
 package org.apache.kylin.invertedindex.model;
 
-import java.util.Arrays;
 import java.util.List;
+
+import org.apache.kylin.common.util.StringUtil;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.common.util.StringUtil;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/26/14.
@@ -50,7 +50,6 @@ public class IIDimension {
     public void setColumns(String[] columns) {
         this.columns = columns;
     }
-
 
     public static void capicalizeStrings(List<IIDimension> dimensions) {
         if (dimensions != null) {

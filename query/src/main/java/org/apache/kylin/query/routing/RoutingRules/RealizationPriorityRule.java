@@ -18,13 +18,17 @@
 
 package org.apache.kylin.query.routing.RoutingRules;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.Maps;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.RoutingRule;
+
+import com.google.common.collect.Maps;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 1/5/15.

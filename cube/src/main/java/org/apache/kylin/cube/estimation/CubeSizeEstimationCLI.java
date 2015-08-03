@@ -33,9 +33,9 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.HierarchyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  * Created by honma on 9/1/14.

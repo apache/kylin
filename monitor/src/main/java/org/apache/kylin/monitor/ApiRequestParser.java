@@ -18,13 +18,11 @@
 
 package org.apache.kylin.monitor;
 
-import au.com.bytecode.opencsv.CSVWriter;
-import org.apache.commons.io.filefilter.RegexFileFilter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
-import org.apache.log4j.Logger;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -38,6 +36,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.filefilter.RegexFileFilter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.log4j.Logger;
+
+import au.com.bytecode.opencsv.CSVWriter;
+
 /**
  * @author jiazhong
  */
@@ -50,8 +55,7 @@ public class ApiRequestParser {
     final static String REQUEST_LOG_PARSE_RESULT_FILENAME = "kylin_request_log.csv";
     static String DEPLOY_ENV;
 
-
-    final static String[] KYLIN_REQUEST_CSV_HEADER = {"REQUESTER", "REQ_TIME","REQ_DATE", "URI", "METHOD", "QUERY_STRING", "PAYLOAD", "RESP_STATUS", "TARGET", "ACTION","DEPLOY_ENV"};
+    final static String[] KYLIN_REQUEST_CSV_HEADER = { "REQUESTER", "REQ_TIME", "REQ_DATE", "URI", "METHOD", "QUERY_STRING", "PAYLOAD", "RESP_STATUS", "TARGET", "ACTION", "DEPLOY_ENV" };
 
     private ConfigUtils monitorConfig;
 
@@ -106,11 +110,11 @@ public class ApiRequestParser {
 
         logger.info("Start parsing kylin api request file " + filePath + " !");
 
-//        writer config init
+        //        writer config init
         FileSystem fs = this.getHdfsFileSystem();
         org.apache.hadoop.fs.Path resultStorePath = new org.apache.hadoop.fs.Path(dPath);
         OutputStreamWriter writer = new OutputStreamWriter(fs.append(resultStorePath));
-        CSVWriter cwriter = new CSVWriter(writer,'|',CSVWriter.NO_QUOTE_CHARACTER);
+        CSVWriter cwriter = new CSVWriter(writer, '|', CSVWriter.NO_QUOTE_CHARACTER);
 
         Pattern p_available = Pattern.compile("/kylin/api/(cubes|user)+.*");
         Pattern p_request = Pattern.compile("^.*\\[.*KylinApiFilter.logRequest.*\\].*REQUEST:.*REQUESTER=(.*);REQ_TIME=(\\w+ (\\d{4}-\\d{2}-\\d{2}).*);URI=(.*);METHOD=(.*);QUERY_STRING=(.*);PAYLOAD=(.*);RESP_STATUS=(.*);$");
@@ -148,16 +152,16 @@ public class ApiRequestParser {
                             //add action
                             if (m_uri.group(1).equals("cubes")) {
                                 switch (m_request.group(5)) {
-                                    case "DELETE":
-                                        groups.add("drop");
-                                        break;
-                                    case "POST":
-                                        groups.add("save");
-                                        break;
-                                    default:
-                                        //add parse action
-                                        groups.add(m_uri.group(3));
-                                        break;
+                                case "DELETE":
+                                    groups.add("drop");
+                                    break;
+                                case "POST":
+                                    groups.add("save");
+                                    break;
+                                default:
+                                    //add parse action
+                                    groups.add(m_uri.group(3));
+                                    break;
                                 }
                             }
 
@@ -168,7 +172,6 @@ public class ApiRequestParser {
                         cwriter.writeNext(recordArray);
                     }
                 }
-
 
             }
         } catch (IOException ex) {
@@ -191,7 +194,7 @@ public class ApiRequestParser {
             fs = this.getHdfsFileSystem();
             org.apache.hadoop.fs.Path resultStorePath = new org.apache.hadoop.fs.Path(dPath);
             writer = new OutputStreamWriter(fs.append(resultStorePath));
-            cwriter = new CSVWriter(writer,'|',CSVWriter.NO_QUOTE_CHARACTER);
+            cwriter = new CSVWriter(writer, '|', CSVWriter.NO_QUOTE_CHARACTER);
             cwriter.writeNext(record);
 
         } catch (IOException e) {
@@ -206,7 +209,7 @@ public class ApiRequestParser {
     public List<File> getRequestLogFiles() {
         List<File> logFiles = new ArrayList<File>();
 
-//        String request_log_file_pattern = monitorConfig.getRequestLogFilePattern();
+        //        String request_log_file_pattern = monitorConfig.getRequestLogFilePattern();
 
         List<String> request_log_dir_list = monitorConfig.getLogBaseDir();
         FileFilter filter = new RegexFileFilter(REQUEST_LOG_FILE_PATTERN);
@@ -227,7 +230,7 @@ public class ApiRequestParser {
 
     public FileSystem getHdfsFileSystem() throws IOException {
         Configuration conf = new Configuration();
-//        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+        //        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
         FileSystem fs = null;
         try {
             fs = FileSystem.get(conf);

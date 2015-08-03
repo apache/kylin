@@ -24,7 +24,6 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.RoutingRules.RealizationPriorityRule;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;

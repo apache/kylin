@@ -22,11 +22,10 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import org.apache.kylin.common.util.ClassUtil;
 
 /**
  * Created by honma on 9/18/14.

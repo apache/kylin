@@ -27,12 +27,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Created by lukhan on 1/2/14.

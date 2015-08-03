@@ -18,10 +18,12 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.MetadataManager;
@@ -33,9 +35,6 @@ import org.apache.kylin.storage.hybrid.HybridManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.List;
-
 /**
  * Created by qianzhou on 1/19/15.
  */
@@ -44,7 +43,7 @@ public class CacheService extends BasicService {
 
     @Autowired
     private CubeService cubeService;
-    
+
     public void rebuildCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "rebuild cache type: " + cacheType + " name:" + cacheKey;
         try {

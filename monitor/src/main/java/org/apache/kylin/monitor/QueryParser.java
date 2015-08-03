@@ -18,13 +18,11 @@
 
 package org.apache.kylin.monitor;
 
-import au.com.bytecode.opencsv.CSVWriter;
-import org.apache.commons.io.filefilter.RegexFileFilter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
-import org.apache.log4j.Logger;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -32,9 +30,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.io.filefilter.RegexFileFilter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.log4j.Logger;
+
+import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * @author jiazhong
@@ -46,9 +55,9 @@ public class QueryParser {
     final static String QUERY_LOG_FILE_PATTERN = "kylin_query.log.(\\d{4}-\\d{2}-\\d{2})$";
     final static String QUERY_LOG_PARSE_RESULT_FILENAME = "kylin_query_log.csv";
     static String QUERY_PARSE_RESULT_PATH = null;
-    static  String DEPLOY_ENV;
+    static String DEPLOY_ENV;
 
-    final static String[] KYLIN_QUERY_CSV_HEADER = {"REQ_TIME","REQ_DATE", "SQL", "USER", "IS_SUCCESS", "LATENCY", "PROJECT", "REALIZATION NAMES", "CUBOID IDS", "TOTAL SCAN COUNT", "RESULT ROW COUNT", "ACCEPT PARTIAL", "IS PARTIAL RESULT", "HIT CACHE", "MESSAGE","DEPLOY_ENV"};
+    final static String[] KYLIN_QUERY_CSV_HEADER = { "REQ_TIME", "REQ_DATE", "SQL", "USER", "IS_SUCCESS", "LATENCY", "PROJECT", "REALIZATION NAMES", "CUBOID IDS", "TOTAL SCAN COUNT", "RESULT ROW COUNT", "ACCEPT PARTIAL", "IS PARTIAL RESULT", "HIT CACHE", "MESSAGE", "DEPLOY_ENV" };
 
     private ConfigUtils monitorConfig;
 
@@ -108,11 +117,11 @@ public class QueryParser {
 
         logger.info("Start parsing file " + filePath + " !");
 
-//        writer config init
+        //        writer config init
         FileSystem fs = this.getHdfsFileSystem();
         org.apache.hadoop.fs.Path resultStorePath = new org.apache.hadoop.fs.Path(dPath);
         OutputStreamWriter writer = new OutputStreamWriter(fs.append(resultStorePath));
-        CSVWriter cwriter = new CSVWriter(writer,'|',CSVWriter.NO_QUOTE_CHARACTER);
+        CSVWriter cwriter = new CSVWriter(writer, '|', CSVWriter.NO_QUOTE_CHARACTER);
 
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
         Pattern p_query_start = Pattern.compile("^\\[.*\\]:\\[(.*),.*\\]\\[.*\\]\\[.*QueryService.logQuery.*\\].*");
@@ -145,14 +154,14 @@ public class QueryParser {
                     m_query_body.reset(query_body);
                     logger.info("parsing query...");
                     logger.info(query_body);
-//                    skip group(8) and group(14)
+                    //                    skip group(8) and group(14)
                     if (m_query_body.find()) {
                         ArrayList<String> groups = new ArrayList<String>();
                         int grp_count = m_query_body.groupCount();
                         for (int i = 1; i <= grp_count; i++) {
                             if (i != 8 && i != 14) {
                                 String grp_item = m_query_body.group(i);
-                                grp_item = grp_item ==null?"":grp_item.trim();
+                                grp_item = grp_item == null ? "" : grp_item.trim();
                                 groups.add(grp_item);
                             }
                         }
@@ -161,7 +170,7 @@ public class QueryParser {
                         groups.set(0, format.format(new Date(start_time)));
                         groups.add(DEPLOY_ENV);
                         String[] recordArray = groups.toArray(new String[groups.size()]);
-//                        write to hdfs
+                        //                        write to hdfs
                         cwriter.writeNext(recordArray);
 
                     }
@@ -192,7 +201,7 @@ public class QueryParser {
             fs = this.getHdfsFileSystem();
             org.apache.hadoop.fs.Path resultStorePath = new org.apache.hadoop.fs.Path(dPath);
             writer = new OutputStreamWriter(fs.append(resultStorePath));
-            cwriter = new CSVWriter(writer,'|',CSVWriter.NO_QUOTE_CHARACTER);
+            cwriter = new CSVWriter(writer, '|', CSVWriter.NO_QUOTE_CHARACTER);
 
             cwriter.writeNext(record);
 
@@ -204,7 +213,6 @@ public class QueryParser {
             fs.close();
         }
     }
-
 
     /*
      * get all query log files
@@ -229,13 +237,12 @@ public class QueryParser {
         return logFiles;
     }
 
-
     /*
      * get hdfs fileSystem
      */
     public FileSystem getHdfsFileSystem() throws IOException {
         Configuration conf = new Configuration();
-//        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+        //        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
         FileSystem fs = null;
         try {
             fs = FileSystem.get(conf);

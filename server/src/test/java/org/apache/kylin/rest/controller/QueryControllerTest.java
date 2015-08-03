@@ -20,16 +20,15 @@ package org.apache.kylin.rest.controller;
 
 import net.sf.ehcache.CacheManager;
 
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.service.QueryService;
 
 /**
  * @author xduo

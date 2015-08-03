@@ -18,7 +18,7 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,16 +35,8 @@ import java.util.concurrent.Future;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.kylin.common.lock.ZookeeperJobLock;
-import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.google.common.collect.Lists;
-
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -52,13 +44,20 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.invertedindex.IIJob;
 import org.apache.kylin.job.invertedindex.IIJobBuilder;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 /**
  * 
@@ -116,7 +115,7 @@ public class BuildIIWithEngineTest {
         iiManager = IIManager.getInstance(kylinConfig);
         jobEngineConfig = new JobEngineConfig(kylinConfig);
         for (String jobId : jobService.getAllJobIds()) {
-            if(jobService.getJob(jobId) instanceof IIJob){
+            if (jobService.getJob(jobId) instanceof IIJob) {
                 jobService.deleteJob(jobId);
             }
         }
@@ -135,7 +134,7 @@ public class BuildIIWithEngineTest {
             ii.setStatus(RealizationStatusEnum.READY);
             iiManager.updateII(ii);
         }
-       backup();
+        backup();
     }
 
     @Test

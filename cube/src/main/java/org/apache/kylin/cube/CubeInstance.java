@@ -88,9 +88,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @JsonProperty("retention_range")
     private long retentionRange = 0;
-    
+
     private String projectName;
-    
+
     public List<CubeSegment> getBuildingSegments() {
         List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
         if (null != segments) {

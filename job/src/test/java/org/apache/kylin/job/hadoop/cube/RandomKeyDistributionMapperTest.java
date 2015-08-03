@@ -18,7 +18,7 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,11 +28,10 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.invertedindex.RandomKeyDistributionMapper;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author ysong1

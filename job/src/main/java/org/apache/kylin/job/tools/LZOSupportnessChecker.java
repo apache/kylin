@@ -18,11 +18,11 @@
 
 package org.apache.kylin.job.tools;
 
+import java.io.File;
+
 import org.apache.hadoop.hbase.util.CompressionTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 /**
  * Created by honma on 10/21/14.

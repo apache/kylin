@@ -18,18 +18,25 @@
 
 package org.apache.kylin.cube;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
@@ -46,14 +53,17 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.metadata.realization.*;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
+import org.apache.kylin.metadata.realization.IRealizationProvider;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 /**
  * @author yangli9
@@ -285,7 +295,6 @@ public class CubeManager implements IRealizationProvider {
 
         return newSegment;
     }
-
 
     public CubeSegment refreshSegment(CubeInstance cube, long startDate, long endDate) throws IOException {
         checkNoBuildingSegment(cube);
@@ -550,7 +559,7 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment firstSeg = tobe.get(0);
         firstSeg.validate();
 
-        for (int i = 0, j = 1; j < tobe.size(); ) {
+        for (int i = 0, j = 1; j < tobe.size();) {
             CubeSegment is = tobe.get(i);
             CubeSegment js = tobe.get(j);
             js.validate();

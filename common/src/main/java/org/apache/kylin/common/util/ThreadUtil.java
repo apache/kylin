@@ -18,7 +18,6 @@
 
 package org.apache.kylin.common.util;
 
-
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;

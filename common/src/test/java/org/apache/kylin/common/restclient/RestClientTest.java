@@ -18,9 +18,9 @@
 
 package org.apache.kylin.common.restclient;
 
-import org.junit.Test;
-
 import java.io.IOException;
+
+import org.junit.Test;
 
 public class RestClientTest {
 

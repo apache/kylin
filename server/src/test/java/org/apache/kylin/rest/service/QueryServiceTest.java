@@ -22,14 +22,13 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
 
+import org.apache.kylin.job.exception.JobException;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.apache.kylin.job.exception.JobException;
-import org.apache.kylin.metadata.project.ProjectInstance;
 
 /**
  * @author xduo

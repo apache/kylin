@@ -68,7 +68,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
             IIInstance ii = getII(iiname);
             short sharding = ii.getDescriptor().getSharding();
-            
+
             setJobClasspath(job);
 
             setupMapper(intermediateTable);
@@ -105,9 +105,8 @@ public class InvertedIndexJob extends AbstractHadoopJob {
     private void setupMapper(String intermediateTable) throws IOException {
 
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
-        HCatInputFormat.setInput(job, dbTableNames[0],
-                dbTableNames[1]);
-        
+        HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
+
         job.setInputFormatClass(HCatInputFormat.class);
 
         job.setMapperClass(InvertedIndexMapper.class);

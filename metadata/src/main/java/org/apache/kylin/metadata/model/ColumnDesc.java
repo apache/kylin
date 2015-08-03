@@ -18,10 +18,11 @@
 
 package org.apache.kylin.metadata.model;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Column Metadata from Source. All name should be uppercase.

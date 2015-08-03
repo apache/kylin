@@ -16,17 +16,23 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.monitor;
+
+import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.log4j.Logger;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Created by jiazhong on 2015/5/25.
@@ -42,9 +48,7 @@ public class MonitorMetaManager {
     final static String ROW_KEY_QUERY_READING_FILE = "/performance/query_log_file_reading";
     final static String ROW_KEY_QUERY_READING_FILE_LINE = "/performance/query_log_file_reading";
 
-
     final static String ROW_KEY_API_REQ_LOG_READ_FILES = "/performance/api_req_log_files_already_read";
-
 
     final static Logger logger = Logger.getLogger(MonitorMetaManager.class);
 
@@ -59,16 +63,15 @@ public class MonitorMetaManager {
         conf = HBaseConfiguration.create();
     }
 
-
     /*
      * meta data initialize
      * @unused
      */
     public static void init() throws Exception {
         MonitorMetaManager.TABLE_NAME = monitorConfig.getMetadataUrlPrefix();
-        logger.info("Monitor Metadata Table :"+MonitorMetaManager.TABLE_NAME);
+        logger.info("Monitor Metadata Table :" + MonitorMetaManager.TABLE_NAME);
         logger.info("init monitor metadata,create table if not exist");
-        MonitorMetaManager.creatTable(TABLE_NAME, new String[]{COLUMN_FAMILY});
+        MonitorMetaManager.creatTable(TABLE_NAME, new String[] { COLUMN_FAMILY });
     }
 
     /*
@@ -76,28 +79,27 @@ public class MonitorMetaManager {
      */
     public static void markQueryFileAsRead(String filename) throws IOException {
         String read_query_log_file = MonitorMetaManager.getReadQueryLogFiles();
-        if(StringUtils.isEmpty(read_query_log_file)){
-            read_query_log_file =  filename;
-        }else{
+        if (StringUtils.isEmpty(read_query_log_file)) {
+            read_query_log_file = filename;
+        } else {
             read_query_log_file = read_query_log_file.concat(",").concat(filename);
         }
-        MonitorMetaManager.updateData(TABLE_NAME, ROW_KEY_QUERY_READ_FILES, COLUMN_FAMILY,COLUMN, read_query_log_file);
+        MonitorMetaManager.updateData(TABLE_NAME, ROW_KEY_QUERY_READ_FILES, COLUMN_FAMILY, COLUMN, read_query_log_file);
     }
 
     /*
      * mark reading file for tracking
      */
     public static void markQueryReadingFile(String query_reading_file) throws IOException {
-        MonitorMetaManager.updateData(TABLE_NAME, ROW_KEY_QUERY_READING_FILE, COLUMN_FAMILY,COLUMN, query_reading_file);
+        MonitorMetaManager.updateData(TABLE_NAME, ROW_KEY_QUERY_READING_FILE, COLUMN_FAMILY, COLUMN, query_reading_file);
     }
 
     /*
      * mark reading line for tracking
      */
     public static void markQueryReadingLine(String line_num) throws IOException {
-        MonitorMetaManager.updateData(TABLE_NAME, ROW_KEY_QUERY_READING_FILE_LINE, COLUMN_FAMILY,COLUMN, line_num);
+        MonitorMetaManager.updateData(TABLE_NAME, ROW_KEY_QUERY_READING_FILE_LINE, COLUMN_FAMILY, COLUMN, line_num);
     }
-
 
     /*
      * get has been read file name list
@@ -114,7 +116,6 @@ public class MonitorMetaManager {
         return getListWithRowkey(TABLE_NAME, ROW_KEY_QUERY_READ_FILES);
     }
 
-
     /*
      * get has been read file
     */
@@ -127,10 +128,9 @@ public class MonitorMetaManager {
             }
 
         }
-        fileList = fileList==null?"":fileList;
+        fileList = fileList == null ? "" : fileList;
         return fileList;
     }
-
 
     /*
      * mark api req log file as read after parsing
@@ -142,9 +142,8 @@ public class MonitorMetaManager {
         } else {
             read_api_req_log_files = read_api_req_log_files.concat(",").concat(filename);
         }
-        MonitorMetaManager.updateData(TABLE_NAME, ROW_KEY_API_REQ_LOG_READ_FILES, COLUMN_FAMILY,COLUMN, read_api_req_log_files);
+        MonitorMetaManager.updateData(TABLE_NAME, ROW_KEY_API_REQ_LOG_READ_FILES, COLUMN_FAMILY, COLUMN, read_api_req_log_files);
     }
-
 
     /*
      * get has been read log file name list
@@ -160,7 +159,6 @@ public class MonitorMetaManager {
     public static String getReadApiReqLogFiles() throws IOException {
         return getListWithRowkey(TABLE_NAME, ROW_KEY_API_REQ_LOG_READ_FILES);
     }
-
 
     /*
      * create table in hbase
@@ -182,7 +180,7 @@ public class MonitorMetaManager {
     /*
      * update cell in hbase
      */
-    public static void updateData(String tableName, String rowKey, String family,String column, String value) throws IOException {
+    public static void updateData(String tableName, String rowKey, String family, String column, String value) throws IOException {
         HTable table = new HTable(conf, Bytes.toBytes(tableName));
         Put put = new Put(rowKey.getBytes());
         put.add(family.getBytes(), column.getBytes(), value.getBytes());
@@ -191,10 +189,10 @@ public class MonitorMetaManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        logger.info("update table ["+tableName+"]");
-        logger.info("rowKey ["+rowKey+"]");
-        logger.info("column family ["+family+"]");
-        logger.info("value ["+value+"]");
+        logger.info("update table [" + tableName + "]");
+        logger.info("rowKey [" + rowKey + "]");
+        logger.info("column family [" + family + "]");
+        logger.info("value [" + value + "]");
         logger.info("end insert data ......");
     }
 
@@ -207,6 +205,5 @@ public class MonitorMetaManager {
         Result result = table.get(get);
         return result;
     }
-
 
 }

@@ -21,12 +21,11 @@ package org.apache.kylin.job.hadoop.invertedindex;
 import java.io.IOException;
 import java.util.HashSet;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-
 import org.apache.kylin.common.mr.KylinReducer;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 
 /**
  * @author yangli9

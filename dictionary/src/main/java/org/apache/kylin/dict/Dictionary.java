@@ -22,7 +22,6 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.hadoop.io.Writable;
-
 import org.apache.kylin.common.util.BytesUtil;
 
 /**

@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * 
  */
 public class DataType {
-    
+
     public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|binary" //
             + "|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" //
             + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc" //
@@ -144,7 +144,6 @@ public class DataType {
                     throw new IllegalArgumentException("bad data type -- " + datatype + ", too many precision/scale parts");
             }
         }
-
 
         // FIXME 256 for unknown string precision
         if ((name.equals("char") || name.equals("varchar")) && precision == -1) {

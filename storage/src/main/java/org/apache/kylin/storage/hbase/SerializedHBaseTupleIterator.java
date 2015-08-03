@@ -25,17 +25,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.hbase.client.HConnection;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.kv.RowValueDecoder;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.storage.StorageContext;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * @author xjiang

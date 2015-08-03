@@ -18,9 +18,16 @@
 
 package org.apache.kylin.job;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -48,25 +55,32 @@ import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.cube.CubingJob;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.hadoop.cube.*;
+import org.apache.kylin.job.hadoop.cube.BaseCuboidJob;
+import org.apache.kylin.job.hadoop.cube.CubeHFileJob;
+import org.apache.kylin.job.hadoop.cube.FactDistinctColumnsJob;
+import org.apache.kylin.job.hadoop.cube.MergeCuboidJob;
+import org.apache.kylin.job.hadoop.cube.NDCuboidJob;
+import org.apache.kylin.job.hadoop.cube.RangeKeyDistributionJob;
 import org.apache.kylin.job.hadoop.dict.CreateDictionaryJob;
 import org.apache.kylin.job.hadoop.hbase.BulkLoadJob;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.*;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * This is the utility class to migrate the Kylin metadata format from v1 to v2;
@@ -87,7 +101,6 @@ public class CubeMetadataUpgrade {
         KylinConfig.destoryInstance();
         System.setProperty(KylinConfig.KYLIN_CONF, newMetadataUrl);
         KylinConfig.getInstanceFromEnv().setMetadataUrl(newMetadataUrl);
-
 
         config = KylinConfig.getInstanceFromEnv();
         store = getStore();
@@ -160,7 +173,6 @@ public class CubeMetadataUpgrade {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
         if (toDeleteResource.size() > 0) {
             logger.info("The following resources is never needed, will be dropped, number :" + toDeleteResource.size());
@@ -322,7 +334,7 @@ public class CubeMetadataUpgrade {
         if (count == 0) {
             errorMsgs.add("No table definition for '" + table + "'; any project, cube refers it should remove the reference;");
         }
-        
+
         return null;
     }
 
@@ -397,7 +409,6 @@ public class CubeMetadataUpgrade {
                 } else if (cubeInstance.getStatus() == CubeStatusEnum.READY) {
                     newInstance.setStatus(RealizationStatusEnum.READY);
                 }
-
 
                 List<org.apache.kylin.cube.CubeSegment> newSegments = Lists.newArrayList();
                 // segment
@@ -510,11 +521,9 @@ public class CubeMetadataUpgrade {
         return MetadataManager.getInstance(config);
     }
 
-
     private CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(config);
     }
-
 
     private ResourceStore getStore() {
         return ResourceStore.getStore(config);
@@ -531,7 +540,7 @@ public class CubeMetadataUpgrade {
                 upgradeJobInstance(path);
             }
 
-            for (String folder : new String[]{ResourceStore.JOB_PATH_ROOT, ResourceStore.JOB_OUTPUT_PATH_ROOT}) {
+            for (String folder : new String[] { ResourceStore.JOB_PATH_ROOT, ResourceStore.JOB_OUTPUT_PATH_ROOT }) {
                 for (String res : getStore().listResources(folder)) {
                     getStore().deleteResource(res);
                 }
@@ -546,38 +555,38 @@ public class CubeMetadataUpgrade {
 
     private ExecutableState parseState(JobStatusEnum state) {
         switch (state) {
-            case NEW:
-            case PENDING:
-                return ExecutableState.READY;
-            case RUNNING:
-                return ExecutableState.RUNNING;
-            case FINISHED:
-                return ExecutableState.SUCCEED;
-            case ERROR:
-                return ExecutableState.ERROR;
-            case DISCARDED:
-                return ExecutableState.DISCARDED;
-            default:
-                return ExecutableState.DISCARDED;
+        case NEW:
+        case PENDING:
+            return ExecutableState.READY;
+        case RUNNING:
+            return ExecutableState.RUNNING;
+        case FINISHED:
+            return ExecutableState.SUCCEED;
+        case ERROR:
+            return ExecutableState.ERROR;
+        case DISCARDED:
+            return ExecutableState.DISCARDED;
+        default:
+            return ExecutableState.DISCARDED;
         }
     }
 
     private ExecutableState parseState(JobStepStatusEnum state) {
         switch (state) {
-            case NEW:
-            case PENDING:
-            case WAITING:
-                return ExecutableState.READY;
-            case RUNNING:
-                return ExecutableState.RUNNING;
-            case FINISHED:
-                return ExecutableState.SUCCEED;
-            case ERROR:
-                return ExecutableState.ERROR;
-            case DISCARDED:
-                return ExecutableState.DISCARDED;
-            default:
-                return ExecutableState.DISCARDED;
+        case NEW:
+        case PENDING:
+        case WAITING:
+            return ExecutableState.READY;
+        case RUNNING:
+            return ExecutableState.RUNNING;
+        case FINISHED:
+            return ExecutableState.SUCCEED;
+        case ERROR:
+            return ExecutableState.ERROR;
+        case DISCARDED:
+            return ExecutableState.DISCARDED;
+        default:
+            return ExecutableState.DISCARDED;
         }
 
     }
@@ -635,83 +644,82 @@ public class CubeMetadataUpgrade {
     private AbstractExecutable parseToExecutable(JobInstance.JobStep step) {
         AbstractExecutable result;
         switch (step.getCmdType()) {
-            case SHELL_CMD_HADOOP: {
-                ShellExecutable executable = new ShellExecutable();
-                executable.setCmd(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADOOP_FACTDISTINCT: {
-                MapReduceExecutable executable = new MapReduceExecutable();
-                executable.setMapReduceJobClass(FactDistinctColumnsJob.class);
-                executable.setMapReduceParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADOOP_BASECUBOID: {
-                MapReduceExecutable executable = new MapReduceExecutable();
-                executable.setMapReduceJobClass(BaseCuboidJob.class);
-                executable.setMapReduceParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADOOP_NDCUBOID: {
-                MapReduceExecutable executable = new MapReduceExecutable();
-                executable.setMapReduceJobClass(NDCuboidJob.class);
-                executable.setMapReduceParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION: {
-                MapReduceExecutable executable = new MapReduceExecutable();
-                executable.setMapReduceJobClass(RangeKeyDistributionJob.class);
-                executable.setMapReduceParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADOOP_CONVERTHFILE: {
-                MapReduceExecutable executable = new MapReduceExecutable();
-                executable.setMapReduceJobClass(CubeHFileJob.class);
-                executable.setMapReduceParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADOOP_MERGECUBOID: {
-                MapReduceExecutable executable = new MapReduceExecutable();
-                executable.setMapReduceJobClass(MergeCuboidJob.class);
-                executable.setMapReduceParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADOOP_NO_MR_DICTIONARY: {
-                HadoopShellExecutable executable = new HadoopShellExecutable();
-                executable.setName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY);
-                executable.setJobClass(CreateDictionaryJob.class);
-                executable.setJobParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE: {
-                HadoopShellExecutable executable = new HadoopShellExecutable();
-                executable.setJobClass(CreateHTableJob.class);
-                executable.setJobParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            case JAVA_CMD_HADOOP_NO_MR_BULKLOAD: {
-                HadoopShellExecutable executable = new HadoopShellExecutable();
-                executable.setJobClass(BulkLoadJob.class);
-                executable.setJobParams(step.getExecCmd());
-                result = executable;
-                break;
-            }
-            default:
-                throw new RuntimeException("invalid step type:" + step.getCmdType());
+        case SHELL_CMD_HADOOP: {
+            ShellExecutable executable = new ShellExecutable();
+            executable.setCmd(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADOOP_FACTDISTINCT: {
+            MapReduceExecutable executable = new MapReduceExecutable();
+            executable.setMapReduceJobClass(FactDistinctColumnsJob.class);
+            executable.setMapReduceParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADOOP_BASECUBOID: {
+            MapReduceExecutable executable = new MapReduceExecutable();
+            executable.setMapReduceJobClass(BaseCuboidJob.class);
+            executable.setMapReduceParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADOOP_NDCUBOID: {
+            MapReduceExecutable executable = new MapReduceExecutable();
+            executable.setMapReduceJobClass(NDCuboidJob.class);
+            executable.setMapReduceParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION: {
+            MapReduceExecutable executable = new MapReduceExecutable();
+            executable.setMapReduceJobClass(RangeKeyDistributionJob.class);
+            executable.setMapReduceParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADOOP_CONVERTHFILE: {
+            MapReduceExecutable executable = new MapReduceExecutable();
+            executable.setMapReduceJobClass(CubeHFileJob.class);
+            executable.setMapReduceParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADOOP_MERGECUBOID: {
+            MapReduceExecutable executable = new MapReduceExecutable();
+            executable.setMapReduceJobClass(MergeCuboidJob.class);
+            executable.setMapReduceParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADOOP_NO_MR_DICTIONARY: {
+            HadoopShellExecutable executable = new HadoopShellExecutable();
+            executable.setName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY);
+            executable.setJobClass(CreateDictionaryJob.class);
+            executable.setJobParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE: {
+            HadoopShellExecutable executable = new HadoopShellExecutable();
+            executable.setJobClass(CreateHTableJob.class);
+            executable.setJobParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        case JAVA_CMD_HADOOP_NO_MR_BULKLOAD: {
+            HadoopShellExecutable executable = new HadoopShellExecutable();
+            executable.setJobClass(BulkLoadJob.class);
+            executable.setJobParams(step.getExecCmd());
+            result = executable;
+            break;
+        }
+        default:
+            throw new RuntimeException("invalid step type:" + step.getCmdType());
         }
         result.setName(step.getName());
         return result;
     }
-
 
     public static void main(String[] args) {
 

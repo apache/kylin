@@ -57,14 +57,14 @@ public class HiveTable implements ReadableTable {
             Pair<Long, Long> sizeAndLastModified = FileTable.getSizeAndLastModified(path);
             long size = sizeAndLastModified.getFirst();
             long lastModified = sizeAndLastModified.getSecond();
-            
+
             // for non-native hive table, cannot rely on size & last modified on HDFS
             if (getHiveClient().isNativeTable(database, hiveTable) == false) {
                 lastModified = System.currentTimeMillis(); // assume table is ever changing
             }
 
             return new TableSignature(path, size, lastModified);
-            
+
         } catch (Exception e) {
             if (e instanceof IOException)
                 throw (IOException) e;

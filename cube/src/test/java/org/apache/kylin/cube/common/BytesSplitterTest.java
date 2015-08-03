@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube.common;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.kylin.common.util.BytesSplitter;
 import org.junit.Test;

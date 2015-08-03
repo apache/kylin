@@ -18,9 +18,10 @@
 
 package org.apache.kylin.metadata.project;
 
+import org.apache.kylin.metadata.realization.IRealization;
+
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import org.apache.kylin.metadata.realization.IRealization;
 
 /**
  * @author xduo

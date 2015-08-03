@@ -16,16 +16,16 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.monitor;
 
-import au.com.bytecode.opencsv.CSVWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * Created by jiazhong on 2015/6/18.
@@ -35,7 +35,7 @@ public class FileUtils {
     final static Logger logger = Logger.getLogger(FileUtils.class);
 
     public static boolean pathCheck(String filePath) throws IOException {
-        logger.info("checking file:"+filePath);
+        logger.info("checking file:" + filePath);
         FileSystem fs = null;
         try {
             Configuration conf = new Configuration();
@@ -52,7 +52,6 @@ public class FileUtils {
         }
         return true;
     }
-
 
     /*
     * write parse result to hdfs
@@ -102,7 +101,7 @@ public class FileUtils {
      */
     public static FileSystem getHdfsFileSystem() throws IOException {
         Configuration conf = new Configuration();
-//        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+        //        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
         FileSystem fs = null;
         try {
             fs = FileSystem.newInstance(conf);

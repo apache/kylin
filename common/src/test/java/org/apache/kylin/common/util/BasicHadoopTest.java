@@ -18,6 +18,9 @@
 
 package org.apache.kylin.common.util;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -27,9 +30,6 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Created by honma on 11/11/14.

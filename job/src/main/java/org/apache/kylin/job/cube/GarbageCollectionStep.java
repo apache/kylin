@@ -18,7 +18,11 @@
 
 package org.apache.kylin.job.cube;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,10 +42,7 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Drop the resources that is no longer needed, including intermediate hive table (after cube build) and hbase tables (after cube merge)
@@ -82,8 +83,7 @@ public class GarbageCollectionStep extends AbstractExecutable {
     private void dropHiveTable(ExecutableContext context) throws IOException {
         final String hiveTable = this.getOldHiveTable();
         if (StringUtils.isNotEmpty(hiveTable)) {
-            final String dropSQL = "USE " + KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable() + ";"
-                    + " DROP TABLE IF EXISTS  " + hiveTable + ";";
+            final String dropSQL = "USE " + KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable() + ";" + " DROP TABLE IF EXISTS  " + hiveTable + ";";
             final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
             ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
             context.getConfig().getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
@@ -138,7 +138,7 @@ public class GarbageCollectionStep extends AbstractExecutable {
             for (String path : oldHdfsPaths) {
                 if (path.endsWith("*"))
                     path = path.substring(0, path.length() - 1);
-                
+
                 Path oldPath = new Path(path);
                 if (fileSystem.exists(oldPath)) {
                     fileSystem.delete(oldPath, true);
@@ -160,7 +160,6 @@ public class GarbageCollectionStep extends AbstractExecutable {
     private List<String> getOldHTables() {
         return getArrayParam(OLD_HTABLES);
     }
-
 
     public void setOldHdsfPaths(List<String> paths) {
         setArrayParam(OLD_HDFS_PATHS, paths);

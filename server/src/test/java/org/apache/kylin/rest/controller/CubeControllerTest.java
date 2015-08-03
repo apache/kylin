@@ -18,8 +18,10 @@
 
 package org.apache.kylin.rest.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.List;
+
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -32,9 +34,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 
 /**
  * @author xduo
@@ -106,7 +107,6 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeRequest.setCubeDescData(cubeDescWriter.toString());
         cubeRequest.setModelDescData(modelDescWriter.toString());
         cubeRequest = cubeController.saveCubeDesc(cubeRequest);
-
 
         DataModelDesc model = modelController.getModel(newModelName);
         Assert.assertNotNull(model);

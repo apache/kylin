@@ -18,14 +18,10 @@
 
 package org.apache.kylin.jdbc;
 
-import org.apache.kylin.jdbc.IRemoteClient;
-import org.apache.kylin.jdbc.KylinConnection;
-import org.apache.kylin.jdbc.KylinJdbcFactory;
-
 /**
  */
 public class DummyJdbcFactory extends KylinJdbcFactory {
-    
+
     public DummyJdbcFactory() {
         super(4, 1);
     }
@@ -35,5 +31,4 @@ public class DummyJdbcFactory extends KylinJdbcFactory {
         return new DummyClient(conn);
     }
 
-    
 }

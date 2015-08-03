@@ -18,8 +18,11 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -31,10 +34,8 @@ import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class MetadataCleanupJob extends AbstractHadoopJob {
 
@@ -104,7 +105,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         List<String> toDeleteResource = Lists.newArrayList();
 
         // two level resources, snapshot tables and cube statistics
-        for (String resourceRoot : new String[]{ResourceStore.SNAPSHOT_RESOURCE_ROOT}) {
+        for (String resourceRoot : new String[] { ResourceStore.SNAPSHOT_RESOURCE_ROOT }) {
             ArrayList<String> snapshotTables = getStore().listResources(resourceRoot);
 
             if (snapshotTables != null) {
@@ -139,7 +140,6 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
                     }
             }
         }
-
 
         if (toDeleteResource.size() > 0) {
             logger.info("The following resources have no reference, will be cleaned from metadata store: \n");

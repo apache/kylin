@@ -21,8 +21,8 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CreateProjectRequest;
 import org.apache.kylin.rest.request.UpdateProjectRequest;

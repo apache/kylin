@@ -18,15 +18,14 @@
 
 package org.apache.kylin.job;
 
+import static org.junit.Assert.assertTrue;
+
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
+import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.MetadataManager;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by honma on 6/19/14.

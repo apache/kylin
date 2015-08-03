@@ -41,7 +41,6 @@ import org.apache.kylin.job.hadoop.hive.IntermediateColumnDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * @author yangli9
  */
@@ -74,7 +73,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.TABLE_COLUMNS, getColumns(ii));
 
             setJobClasspath(job);
-            
+
             setupMapper();
             setupReducer(output);
 
@@ -103,7 +102,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         String tableName = job.getConfiguration().get(BatchConstants.TABLE_NAME);
         String[] dbTableNames = HadoopUtil.parseHiveTableName(tableName);
 
-        log.info("setting hcat input format, db name {} , table name {}", dbTableNames[0],dbTableNames[1]);
+        log.info("setting hcat input format, db name {} , table name {}", dbTableNames[0], dbTableNames[1]);
 
         HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
 

@@ -21,14 +21,15 @@ package org.apache.kylin.cube.model.v1;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.model.HierarchyDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To

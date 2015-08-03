@@ -46,26 +46,26 @@ public class ResourceTool {
 
         String cmd = args[0];
         switch (cmd) {
-            case "reset":
-                reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig.createInstanceFromUri(args[1]));
-                break;
-            case "copy":
-                copy(args[1], args[2]);
-                break;
-            case "list":
-                list(args[1], args[2]);
-                break;
-            case "download":
-                copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
-                break;
-            case "upload":
-                copy(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv());
-                break;
-            case "remove":
-                remove(KylinConfig.getInstanceFromEnv(), args[1]);
-                break;
-            default:
-                System.out.println("Unknown cmd: " + cmd);
+        case "reset":
+            reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig.createInstanceFromUri(args[1]));
+            break;
+        case "copy":
+            copy(args[1], args[2]);
+            break;
+        case "list":
+            list(args[1], args[2]);
+            break;
+        case "download":
+            copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
+            break;
+        case "upload":
+            copy(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv());
+            break;
+        case "remove":
+            remove(KylinConfig.getInstanceFromEnv(), args[1]);
+            break;
+        default:
+            System.out.println("Unknown cmd: " + cmd);
         }
     }
 

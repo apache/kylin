@@ -24,16 +24,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
-
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.mr.KylinMapper;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowConstants;
 
 /**
@@ -46,10 +45,10 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, HCatRecord, IntWr
     public static final String DEFAULT_DELIM = ",";
 
     private int counter = 0;
-    
+
     private HCatSchema schema = null;
     private int columnSize = 0;
-    
+
     @Override
     protected void setup(Context context) throws IOException {
         super.publishConfiguration(context.getConfiguration());
@@ -67,7 +66,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, HCatRecord, IntWr
             fieldValue = value.get(field.getName(), schema);
             if (fieldValue == null)
                 fieldValue = "NULL";
-            
+
             if (counter < 5 && m < 10) {
                 System.out.println("Get row " + counter + " column '" + field.getName() + "'  value: " + fieldValue);
             }

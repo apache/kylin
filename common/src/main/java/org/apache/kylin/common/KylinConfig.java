@@ -18,7 +18,17 @@
 
 package org.apache.kylin.common;
 
-import com.google.common.collect.Sets;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.SortedSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
@@ -28,10 +38,7 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.SortedSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -426,15 +433,15 @@ public class KylinConfig {
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
     }
-    
+
     public int getTableSnapshotMaxMB() {
         return Integer.parseInt(getOptional("kylin.table.snapshot.max_mb", "300"));
     }
-    
+
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
-    
+
     public boolean getQueryRunLocalCoprocessor() {
         return Boolean.parseBoolean(getOptional("kylin.query.run.local.coprocessor", "false"));
     }

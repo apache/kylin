@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,7 +128,7 @@ public class BytesSplitter {
         for (int i = 0; i < bufferSize; i++) {
             if (i > 0)
                 buf.append(", ");
-            
+
             buf.append(Bytes.toString(splitBuffers[i].value, 0, splitBuffers[i].length));
         }
         return buf.toString();

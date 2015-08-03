@@ -18,13 +18,6 @@
 
 package org.apache.kylin.common.restclient;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +26,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 /**
  * Broadcast kylin event out

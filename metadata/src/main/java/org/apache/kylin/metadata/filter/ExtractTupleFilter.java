@@ -18,12 +18,11 @@
 
 package org.apache.kylin.metadata.filter;
 
-import org.apache.kylin.metadata.tuple.ITuple;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * 

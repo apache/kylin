@@ -18,18 +18,17 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.MetadataManager;
 
 /**
  * @author yangli9

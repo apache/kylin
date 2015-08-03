@@ -18,18 +18,17 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 
 /**
  * @author George Song (ysong1)

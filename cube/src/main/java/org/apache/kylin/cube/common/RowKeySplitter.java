@@ -18,9 +18,8 @@
 
 package org.apache.kylin.cube.common;
 
-import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.common.util.Bytes;
-
+import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;

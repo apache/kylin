@@ -18,8 +18,6 @@
 
 package org.apache.kylin.jdbc;
 
-import org.apache.kylin.jdbc.Driver;
-
 /**
  */
 public class DummyDriver extends Driver {

@@ -20,8 +20,9 @@ package org.apache.kylin.invertedindex.index;
 
 import java.util.Iterator;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  * Within a partition (per timestampGranularity), records are further sliced

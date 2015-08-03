@@ -42,7 +42,7 @@ public class OLAPLimitRule extends RelOptRule {
         if (sort.offset == null && sort.fetch == null) {
             return;
         }
-        
+
         RelTraitSet origTraitSet = sort.getTraitSet();
         RelTraitSet traitSet = origTraitSet.replace(OLAPRel.CONVENTION).simplify();
 

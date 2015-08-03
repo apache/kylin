@@ -18,20 +18,19 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.observer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
-
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author yangli9

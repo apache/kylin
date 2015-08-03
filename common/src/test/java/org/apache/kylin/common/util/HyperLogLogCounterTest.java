@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.junit.Assert;
 import org.junit.Test;
@@ -213,7 +212,7 @@ public class HyperLogLogCounterTest {
         ha.add(a, 1, 3);
         hb.add(b);
 
-        Assert.assertTrue(ha.getCountEstimate()==hb.getCountEstimate());
+        Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
     }
 
     private HyperLogLogPlusCounter newHLLC() {

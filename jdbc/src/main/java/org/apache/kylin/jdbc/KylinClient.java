@@ -146,7 +146,7 @@ public class KylinClient implements IRemoteClient {
             }
             list.add(schema);
         }
-        
+
         List<KMetaCatalog> result = new ArrayList<KMetaCatalog>();
         for (List<KMetaSchema> catSchemas : catalogMap.values()) {
             String catalog = catSchemas.get(0).tableCatalog;
@@ -166,7 +166,7 @@ public class KylinClient implements IRemoteClient {
             }
             list.add(table);
         }
-        
+
         List<KMetaSchema> result = new ArrayList<KMetaSchema>();
         for (List<KMetaTable> schemaTables : schemaMap.values()) {
             String catalog = schemaTables.get(0).tableCat;

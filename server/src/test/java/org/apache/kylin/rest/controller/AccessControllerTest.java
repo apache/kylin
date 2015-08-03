@@ -21,15 +21,14 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.service.AccessService;
+import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.apache.kylin.rest.request.AccessRequest;
-import org.apache.kylin.rest.service.ServiceTestBase;
 
 /**
  * @author xduo

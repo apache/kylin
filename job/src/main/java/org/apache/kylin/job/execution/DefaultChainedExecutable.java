@@ -21,11 +21,12 @@ package org.apache.kylin.job.execution;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.manager.ExecutableManager;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Created by qianzhou on 12/16/14.
@@ -36,7 +37,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     protected final ExecutableManager jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-    public DefaultChainedExecutable(){
+    public DefaultChainedExecutable() {
         super();
     }
 
@@ -74,7 +75,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             List<? extends Executable> jobs = getTasks();
             boolean allSucceed = true;
             boolean hasError = false;
-            for (Executable task: jobs) {
+            for (Executable task : jobs) {
                 final ExecutableState status = task.getStatus();
                 if (status == ExecutableState.ERROR) {
                     hasError = true;

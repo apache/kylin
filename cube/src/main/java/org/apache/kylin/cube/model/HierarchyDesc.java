@@ -18,10 +18,11 @@
 
 package org.apache.kylin.cube.model;
 
+import org.apache.kylin.metadata.model.TblColRef;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:46 AM To

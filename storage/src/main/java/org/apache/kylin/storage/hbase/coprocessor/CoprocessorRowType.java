@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import com.google.common.collect.Maps;
-
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.CubeSegment;
@@ -35,6 +33,8 @@ import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.Maps;
 
 /**
  * @author yangli9

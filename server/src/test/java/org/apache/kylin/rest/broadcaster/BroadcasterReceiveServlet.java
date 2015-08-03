@@ -46,6 +46,7 @@ public class BroadcasterReceiveServlet extends HttpServlet {
     }
 
     private static final Pattern PATTERN = Pattern.compile("/(.+)/(.+)/(.+)");
+
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         handle(req, resp);

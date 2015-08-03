@@ -18,17 +18,16 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import static org.junit.Assert.*;
-
-import org.apache.kylin.job.SelfStopExecutable;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.kylin.job.BaseTestExecutable;
 import org.apache.kylin.job.ErrorTestExecutable;
 import org.apache.kylin.job.FailedTestExecutable;
+import org.apache.kylin.job.SelfStopExecutable;
 import org.apache.kylin.job.SucceedTestExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.junit.Test;
 
 /**
  * Created by qianzhou on 12/19/14.
@@ -59,6 +58,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task2.getId()).getState());
     }
+
     @Test
     public void testSucceedAndFailed() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();
@@ -72,6 +72,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
         assertEquals(ExecutableState.ERROR, jobService.getOutput(task2.getId()).getState());
     }
+
     @Test
     public void testSucceedAndError() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();

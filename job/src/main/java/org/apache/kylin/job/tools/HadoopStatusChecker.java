@@ -18,15 +18,15 @@
 
 package org.apache.kylin.job.tools;
 
-import org.apache.kylin.job.constant.JobStepStatusEnum;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
+import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * @author xduo

@@ -18,6 +18,9 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -28,9 +31,6 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.junit.After;
 import org.junit.Before;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 /**
  * Created by qianzhou on 12/26/14.

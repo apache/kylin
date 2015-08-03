@@ -18,9 +18,19 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
@@ -43,18 +53,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.supercsv.io.CsvListWriter;
 import org.supercsv.io.ICsvListWriter;
 import org.supercsv.prefs.CsvPreference;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Handle query requests.
@@ -195,11 +201,11 @@ public class QueryController extends BasicController {
             }
 
             checkQueryAuth(sqlResponse);
-            
+
         } catch (Throwable e) { // calcite may throw AssertError
             logger.error("Exception when execute sql", e);
             String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
-            
+
             sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
 
             // Access exception is bind with each user, it will not be cached
@@ -208,7 +214,7 @@ public class QueryController extends BasicController {
                 exceptionCache.put(new Element(sqlRequest, sqlResponse));
             }
         }
-        
+
         if (sqlResponse.getIsException())
             throw new InternalErrorException(sqlResponse.getExceptionMessage());
         else

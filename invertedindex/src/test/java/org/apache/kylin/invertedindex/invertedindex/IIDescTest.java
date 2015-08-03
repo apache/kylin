@@ -18,6 +18,8 @@
 
 package org.apache.kylin.invertedindex.invertedindex;
 
+import java.io.IOException;
+
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.invertedindex.IIDescManager;
@@ -27,9 +29,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-
 
 /**
  * Created by shaoshi on 1/30/15.
@@ -68,5 +67,3 @@ public class IIDescTest extends LocalFileMetadataTestCase {
         Assert.assertEquals(iiDesc, desc2);
     }
 }
-
-
