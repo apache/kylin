@@ -1,9 +1,8 @@
 ---
-layout: default
-title: Development
+layout: dev
+title: Development Quick Guide
 permalink: /development/index.html
 ---
-## Apache Kylin Development Guide
 
 ### Source Code  
 Apache Kylin source code is version controlled using Git version control:

@@ -1,10 +1,8 @@
 ---
-layout: docs
+layout: dev
 title:  "REST API"
 categories: development
-permalink: /docs/development/rest_api.html
-version: v0.7.2
-since: v0.6
+permalink: /development/rest_api.html
 ---
 
 ## Kylin Restful API List
