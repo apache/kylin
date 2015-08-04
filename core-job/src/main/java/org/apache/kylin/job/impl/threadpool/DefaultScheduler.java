@@ -65,40 +65,44 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         @Override
         synchronized public void run() {
-            // logger.debug("Job Fetcher is running...");
-            Map<String, Executable> runningJobs = context.getRunningJobs();
-            if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
-                logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
-                return;
-            }
+            try {
+                // logger.debug("Job Fetcher is running...");
+                Map<String, Executable> runningJobs = context.getRunningJobs();
+                if (runningJobs.size() >= jobEngineConfig.getMaxConcurrentJobLimit()) {
+                    logger.warn("There are too many jobs running, Job Fetch will wait until next schedule time");
+                    return;
+                }
 
-            int nRunning = 0, nReady = 0, nOthers = 0;
-            for (final String id : executableManager.getAllJobIds()) {
-                if (runningJobs.containsKey(id)) {
-                    // logger.debug("Job id:" + id + " is already running");
-                    nRunning++;
-                    continue;
+                int nRunning = 0, nReady = 0, nOthers = 0;
+                for (final String id : executableManager.getAllJobIds()) {
+                    if (runningJobs.containsKey(id)) {
+                        // logger.debug("Job id:" + id + " is already running");
+                        nRunning++;
+                        continue;
+                    }
+                    final Output output = executableManager.getOutput(id);
+                    if ((output.getState() != ExecutableState.READY)) {
+                        // logger.debug("Job id:" + id + " not runnable");
+                        nOthers++;
+                        continue;
+                    }
+                    nReady++;
+                    AbstractExecutable executable = executableManager.getJob(id);
+                    String jobDesc = executable.toString();
+                    logger.info(jobDesc + " prepare to schedule");
+                    try {
+                        context.addRunningJob(executable);
+                        jobPool.execute(new JobRunner(executable));
+                        logger.info(jobDesc + " scheduled");
+                    } catch (Exception ex) {
+                        context.removeRunningJob(executable);
+                        logger.warn(jobDesc + " fail to schedule", ex);
+                    }
                 }
-                final Output output = executableManager.getOutput(id);
-                if ((output.getState() != ExecutableState.READY)) {
-                    // logger.debug("Job id:" + id + " not runnable");
-                    nOthers++;
-                    continue;
-                }
-                nReady++;
-                AbstractExecutable executable = executableManager.getJob(id);
-                String jobDesc = executable.toString();
-                logger.info(jobDesc + " prepare to schedule");
-                try {
-                    context.addRunningJob(executable);
-                    jobPool.execute(new JobRunner(executable));
-                    logger.info(jobDesc + " scheduled");
-                } catch (Exception ex) {
-                    context.removeRunningJob(executable);
-                    logger.warn(jobDesc + " fail to schedule", ex);
-                }
+                logger.info("Job Fetcher: " + nRunning + " running, " + runningJobs.size() + " actual running, " + nReady + " ready, " + nOthers + " others");
+            } catch (Exception e) {
+                logger.warn("Job Fetcher caught a exception " + e);
             }
-            logger.info("Job Fetcher: " + nRunning + " running, " + runningJobs.size() + " actual running, " + nReady + " ready, " + nOthers + " others");
         }
     }
 
