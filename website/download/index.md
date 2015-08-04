@@ -33,8 +33,8 @@ __Development Version (v0.7.3)__
 Here's latest development version binary package:
 
   * [kylin-v0.7.3-incubating-SNAPSHOT](kylin-0.7.3-incubating-SNAPSHOT.tar.gz)
-  * Updated Date: 2015-07-15
-  * Commit ID: ce1554646b2cbee54626978ddc32464770b99217
+  * Updated Date: 2015-08-04
+  * Commit ID: a880dd4fb6e4443d2bcad0d57db3ae09bac65c4d
 
 
 
