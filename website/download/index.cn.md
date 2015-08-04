@@ -36,6 +36,6 @@ __开发版本二进制包(v0.7.3)__
 最新的开发版二进制包:
 
   * [kylin-v0.7.3-incubating-SNAPSHOT](kylin-0.7.3-incubating-SNAPSHOT.tar.gz)
-  * 更新日期: 2015-07-15
-  * Commit ID: ce1554646b2cbee54626978ddc32464770b99217
+  * 更新日期: 2015-08-03
+  * Commit ID: a880dd4fb6e4443d2bcad0d57db3ae09bac65c4d
 
