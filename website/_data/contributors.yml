@@ -1,0 +1,90 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to you under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Database of contributors to Apache Kylin.
+- name: George Song (宋轶)
+  apacheId: yisong
+  githubId: songyi10011001
+  org: eBay
+  role: PMC
+- name: Henry Saputra
+  apacheId: hsaputra
+  githubId: hsaputra
+  org: 
+  role: Mentor
+- name: Hongbin Ma (马洪宾)
+  apacheId: mahongbin
+  githubId: binmahone
+  org: 
+  role: PMC
+- name: Jason Zhong (仲俭)
+  apacheId: zhongjian
+  githubId: janzhongi
+  org: 
+  role: PMC
+- name: Julian Hyde
+  apacheId: jhyde
+  githubId: julianhyde
+  org: 
+  role: Mentor
+- name: Luke Han (韩卿) 
+  apacheId: lukehan
+  githubId: lukehan
+  org: 
+  role: PMC
+- name: Owen O'Malley
+  apacheId: omalley
+  githubId: omalley
+  org: 
+  role: Mentor
+- name: P. Taylor Goetz
+  apacheId: ptgoetz
+  githubId: ptgoetz
+  org: 
+  role: Mentor
+- name: Qianhao Zhou (周千昊)
+  apacheId: qhzhou
+  githubId: qhzhou
+  org: 
+  role: PMC
+- name: Ted Dunning
+  apacheId: tdunning
+  githubId: tdunning
+  org: 
+  role: Champion
+  avatar: https://www.mapr.com/sites/default/files/otherpageimages/ted-circle-80.png
+- name: Shaofeng Shi (史少峰) 
+  apacheId: shaofengshi
+  githubId: shaofengshi
+  org: 
+  role: PMC
+- name: Xiaodong Duo (朵晓东)
+  apacheId: xduo
+  githubId: xduo
+  org: 
+  role: PMC
+- name: Xu Jiang (蒋旭)
+  apacheId: jiangxu
+  githubId: jiangxuchina
+  org: 
+  role: PMC
+- name: Yang Li (李扬)
+  apacheId: liyang
+  githubId: liyang-gmt8
+  org: 
+  role: PMC
+
+
+
