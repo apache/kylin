@@ -1,10 +1,8 @@
 ---
-layout: docs
+layout: dev
 title:  "Kylin web front end summary"
 categories: development
-permalink: /docs/development/web_tech.html
-version: v0.7.2
-since: v0.6
+permalink: /development/web_tech.html
 ---
 
 ### Project Dependencies

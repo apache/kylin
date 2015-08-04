@@ -1,10 +1,8 @@
 ---
-layout: docs
+layout: dev
 title:  Setup Development Env
 categories: development
-permalink: /docs/development/dev_env.html
-version: v0.7.2
-since: v0.6
+permalink: /development/dev_env.html
 ---
 
 Developers want to run kylin test cases or applications at their development machine. 
