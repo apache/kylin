@@ -23,7 +23,7 @@ package org.apache.kylin.engine.mr.common;
  *
  */
 
-import static org.apache.hadoop.util.StringUtils.*;
+import static org.apache.hadoop.util.StringUtils.formatTime;
 
 import java.io.File;
 import java.io.IOException;
@@ -171,7 +171,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             logger.info("The default mapred classpath is: " + classpath);
         }
 
-
         if (kylinHBaseDependency != null) {
             // yarn classpath is comma separated
             kylinHBaseDependency = kylinHBaseDependency.replace(":", ",");
@@ -188,7 +187,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
     }
 
-
     private String getDefaultMapRedClasspath() {
 
         String classpath = "";
@@ -204,7 +202,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         return classpath;
     }
-
 
     public void addInputDirs(String input, Job job) throws IOException {
         for (String inp : StringSplitter.split(input, ",")) {
@@ -245,16 +242,16 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpList.add(table.getResourcePath());
         attachKylinPropsAndMetadata(dumpList, conf);
     }
-    
+
     protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        
+
         // write cube / model_desc / cube_desc / dict / table
         ArrayList<String> dumpList = new ArrayList<String>();
         dumpList.add(cube.getResourcePath());
         dumpList.add(cube.getDescriptor().getModel().getResourcePath());
         dumpList.add(cube.getDescriptor().getResourcePath());
-        
+
         for (String tableName : cube.getDescriptor().getModel().getAllTables()) {
             TableDesc table = metaMgr.getTableDesc(tableName);
             dumpList.add(table.getResourcePath());
@@ -262,7 +259,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         for (CubeSegment segment : cube.getSegments()) {
             dumpList.addAll(segment.getDictionaryPaths());
         }
-        
+
         attachKylinPropsAndMetadata(dumpList, conf);
     }
 
@@ -283,7 +280,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+        String hdfsMetaDir = "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        logger.info("HDFS meta dir is: " + hdfsMetaDir);
+        conf.set("tmpfiles", hdfsMetaDir);
     }
 
     protected void cleanupTempConfFile(Configuration conf) {
@@ -306,6 +305,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 throw new IllegalStateException("No resource found at -- " + path);
             long ts = from.getResourceTimestamp(path);
             to.putResource(path, in, ts);
+            in.close();
             //The following log is duplicate with in ResourceStore
             //log.info("Dumped resource " + path + " to " + metaDir.getAbsolutePath());
         }

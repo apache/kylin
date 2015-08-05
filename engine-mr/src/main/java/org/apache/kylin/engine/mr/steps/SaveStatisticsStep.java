@@ -69,9 +69,9 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 // put the statistics to metadata store
                 String statisticsFileName = newSegment.getStatisticsResourcePath();
                 rs.putResource(statisticsFileName, is, System.currentTimeMillis());
-                fs.delete(statisticsFilePath, false);
             } finally {
                 IOUtils.closeStream(is);
+                fs.delete(statisticsFilePath, false);
             }
 
 
