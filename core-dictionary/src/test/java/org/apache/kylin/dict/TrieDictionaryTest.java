@@ -139,8 +139,8 @@ public class TrieDictionaryTest {
         baseId = new Random().nextInt(100);
         TrieDictionary<String> dict2 = b.build(baseId);
 
-        assertEquals(true,dict.containedBy(dict2));
-        assertEquals(false,dict2.containedBy(dict));
+        assertEquals(true, dict2.contains(dict));
+        assertEquals(false, dict.contains(dict2));
     }
 
 

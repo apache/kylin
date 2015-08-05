@@ -481,14 +481,14 @@ public class TrieDictionary<T> extends Dictionary<T> {
     }
 
     @Override
-    public boolean containedBy(Dictionary other) {
-        if (this.getSize() > other.getSize()) {
+    public boolean contains(Dictionary other) {
+        if (other.getSize() > this.getSize()) {
             return false;
         }
 
-        for (int i = getMinId(); i <= getMaxId(); ++i) {
-            T v = this.getValueFromId(i);
-            if (!other.containsValue(v)) {
+        for (int i = other.getMinId(); i <= other.getMaxId(); ++i) {
+            T v = (T) other.getValueFromId(i);
+            if (!this.containsValue(v)) {
                 return false;
             }
         }

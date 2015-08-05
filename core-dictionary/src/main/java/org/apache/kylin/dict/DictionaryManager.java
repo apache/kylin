@@ -18,12 +18,10 @@
 
 package org.apache.kylin.dict;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataManager;
@@ -37,7 +35,13 @@ import org.apache.kylin.source.TableSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class DictionaryManager {
 
@@ -67,14 +71,24 @@ public class DictionaryManager {
     // ============================================================================
 
     private KylinConfig config;
-    private ConcurrentHashMap<String, DictionaryInfo> dictCache; // resource
+    private LoadingCache<String, DictionaryInfo> dictCache; // resource
 
     // path ==>
     // DictionaryInfo
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
-        dictCache = new ConcurrentHashMap<String, DictionaryInfo>();
+        this.dictCache = CacheBuilder.newBuilder().weakValues().expireAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, DictionaryInfo>() {
+            @Override
+            public DictionaryInfo load(String key) throws Exception {
+                DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
+                if (dictInfo == null) {
+                    return NONE_INDICATOR;
+                } else {
+                    return dictInfo;
+                }
+            }
+        });
     }
 
     public Dictionary<?> getDictionary(String resourcePath) throws IOException {
@@ -82,15 +96,17 @@ public class DictionaryManager {
         return dictInfo == null ? null : dictInfo.getDictionaryObject();
     }
 
-    public DictionaryInfo getDictionaryInfo(String resourcePath) throws IOException {
-        DictionaryInfo dictInfo = dictCache.get(resourcePath);
-        if (dictInfo == null) {
-            dictInfo = load(resourcePath, true);
-            if (dictInfo == null)
-                dictInfo = NONE_INDICATOR;
-            dictCache.put(resourcePath, dictInfo);
+    public DictionaryInfo getDictionaryInfo(final String resourcePath) throws IOException {
+        try {
+            DictionaryInfo result = dictCache.get(resourcePath);
+            if (result == NONE_INDICATOR) {
+                return null;
+            } else {
+                return result;
+            }
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e.getCause());
         }
-        return dictInfo == NONE_INDICATOR ? null : dictInfo;
     }
 
     /**
@@ -99,20 +115,23 @@ public class DictionaryManager {
      */
     public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
 
+        newDictInfo.setCardinality(newDict.getSize());
         newDictInfo.setDictionaryObject(newDict);
         newDictInfo.setDictionaryClass(newDict.getClass().getName());
 
-        DictionaryInfo largestDict = findLargestDict(newDictInfo);
-        if (largestDict != null) {
-            if (newDict.containedBy(largestDict.getDictionaryObject())) {
-                logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDict.getResourcePath());
-                return largestDict;
-            } else if (largestDict.getDictionaryObject().containedBy(newDict)) {
+        DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
+        if (largestDictInfo != null) {
+            largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
+            Dictionary<?> largestDictObject = largestDictInfo.getDictionaryObject();
+            if (newDict.contains(largestDictObject)) {
                 logger.info("dictionary content " + newDict + " is by far the largest, save it");
                 return saveNewDict(newDictInfo);
+            } else if (largestDictObject.contains(newDict)) {
+                logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDictInfo.getResourcePath());
+                return largestDictInfo;
             } else {
                 logger.info("merge dict and save...");
-                return mergeDictionary(Lists.newArrayList(newDictInfo, largestDict));
+                return mergeDictionary(Lists.newArrayList(newDictInfo, largestDictInfo));
             }
         } else {
             logger.info("first dict of this column, save it directly");
@@ -182,7 +201,6 @@ public class DictionaryManager {
             return dicts.get(0);
         } else {
             Dictionary<?> newDict = DictionaryGenerator.mergeDictionaries(DataType.getInstance(newDictInfo.getDataType()), dicts);
-            newDictInfo.setCardinality(newDict.getSize());
             return trySaveNewDict(newDict, newDictInfo);
         }
     }
@@ -217,8 +235,6 @@ public class DictionaryManager {
         }
 
         Dictionary<?> dictionary = DictionaryGenerator.buildDictionary(dictInfo, inpTable);
-        dictInfo.setCardinality(dictionary.getSize());
-
         return trySaveNewDict(dictionary, dictInfo);
     }
 
@@ -260,7 +276,7 @@ public class DictionaryManager {
         return null;
     }
 
-    private DictionaryInfo findLargestDict(DictionaryInfo dictInfo) throws IOException {
+    private DictionaryInfo findLargestDictInfo(DictionaryInfo dictInfo) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         ArrayList<String> dictInfos = store.listResources(dictInfo.getResourceDir());
         if (dictInfos == null || dictInfos.isEmpty()) {
@@ -268,7 +284,7 @@ public class DictionaryManager {
         }
         //Collections.sort(dictInfos);
 
-        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.get(0), dictInfos.get(dictInfos.size() - 1), DictionaryInfo.class, DictionaryInfoSerializer.FULL_SERIALIZER);
+        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.get(0), dictInfos.get(dictInfos.size() - 1), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         DictionaryInfo largestDict = null;
         for (DictionaryInfo dictionaryInfo : allResources) {
@@ -277,7 +293,7 @@ public class DictionaryManager {
                 continue;
             }
 
-            if (largestDict.getDictionaryObject().getSize() < dictionaryInfo.getDictionaryObject().getSize()) {
+            if (largestDict.getCardinality() < dictionaryInfo.getCardinality()) {
                 largestDict = dictionaryInfo;
             }
         }
@@ -287,7 +303,7 @@ public class DictionaryManager {
     public void removeDictionary(String resourcePath) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         store.deleteResource(resourcePath);
-        dictCache.remove(resourcePath);
+        dictCache.invalidate(resourcePath);
     }
 
     public void removeDictionaries(String srcTable, String srcCol) throws IOException {
