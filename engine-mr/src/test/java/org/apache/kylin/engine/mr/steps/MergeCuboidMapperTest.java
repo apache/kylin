@@ -80,7 +80,6 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         values.add(new byte[] { 101, 101, 101 });
         values.add(new byte[] { 102, 102, 102 });
         Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(DataType.getInstance(newDictInfo.getDataType()), values);
-        newDictInfo.setCardinality(dict.getSize());
         dictionaryManager.trySaveNewDict(dict, newDictInfo);
         ((TrieDictionary) dict).dump(System.out);
 
@@ -133,7 +132,6 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
             else
                 values.add(new byte[] { 98, 98, 98 });
             Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(DataType.getInstance(newDictInfo.getDataType()), values);
-            newDictInfo.setCardinality(dict.getSize());
             dictionaryManager.trySaveNewDict(dict, newDictInfo);
             ((TrieDictionary) dict).dump(System.out);
 

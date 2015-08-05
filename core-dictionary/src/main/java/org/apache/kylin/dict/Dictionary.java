@@ -67,7 +67,7 @@ abstract public class Dictionary<T> implements Writable {
     /**
      * @return true if each entry of this dict is contained by the dict in param
      */
-    abstract public boolean containedBy(Dictionary<?> another);
+    abstract public boolean contains(Dictionary<?> another);
 
     /**
      * Convenient form of <code>getIdFromValue(value, 0)</code>
