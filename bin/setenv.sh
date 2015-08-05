@@ -18,6 +18,7 @@
 #
 
 # uncomment following to for it to take effect
+export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -XX:MaxPermSize=128M"
 # export KYLIN_JVM_SETTINGS="-Xms16g -Xmx16g -XX:MaxPermSize=512m -XX:NewSize=3g -XX:MaxNewSize=3g -XX:SurvivorRatio=4 -XX:+CMSClassUnloadingEnabled -XX:+CMSParallelRemarkEnabled -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:CMSInitiatingOccupancyFraction=70 -XX:+DisableExplicitGC"
 
 # uncomment following to for it to take effect
