@@ -137,8 +137,8 @@ public class FactTableGenerator {
             }
 
             // reopen the stream
-            tableStream.close();
             tableReader.close();
+            tableStream.close();
             tableStream = null;
             tableReader = null;
 
