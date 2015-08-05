@@ -105,10 +105,12 @@ public class ResourceTool {
             if (matchExclude(path) == false) {
                 InputStream content = src.getResource(path);
                 long ts = src.getResourceTimestamp(path);
-                if (content != null)
+                if (content != null) {
                     dst.putResource(path, content, ts);
-                else
+                    content.close();
+                } else {
                     System.out.println("Null inputstream for " + path);
+                }
             }
         }
         // case of folder
