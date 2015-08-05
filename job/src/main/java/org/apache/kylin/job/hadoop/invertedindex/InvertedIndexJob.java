@@ -80,8 +80,10 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         } catch (Exception e) {
             printUsage(options);
             throw e;
+        } finally {
+            if (job != null)
+                cleanupTempConfFile(job.getConfiguration());
         }
-
     }
 
     private IIInstance getII(String iiName) {

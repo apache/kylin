@@ -249,7 +249,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+        String hdfsMetaDir = "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        logger.info("HDFS meta dir is: " + hdfsMetaDir);
+        conf.set("tmpfiles", hdfsMetaDir);
+        
     }
 
     protected void cleanupTempConfFile(Configuration conf) {
@@ -293,7 +296,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+        String hdfsMetaDir = "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        logger.info("HDFS meta dir is: " + hdfsMetaDir);
+        conf.set("tmpfiles", hdfsMetaDir);
     }
 
     private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList) throws IOException {
