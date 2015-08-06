@@ -61,6 +61,7 @@ public class FunctionDesc {
         }
     }
 
+    //MHB ??? hll why not rewrite
     public boolean needRewrite() {
         return !isSum() && !isHolisticCountDistinct() && !isDimensionAsMetric();
     }
