@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.hbase;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -40,10 +40,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author George Song (ysong1)
- * 
- */
 public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
     @Before
@@ -67,8 +63,9 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");
         LongMutable count = new LongMutable(2);
+        LongMutable item_count = new LongMutable(100);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        codec.encode(new Object[] { sum, min, max, count }, buf);
+        codec.encode(new Object[] { sum, min, max, count ,item_count}, buf);
 
         buf.flip();
         byte[] valueBytes = new byte[buf.limit()];
@@ -84,7 +81,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         rowValueDecoder.decode(valueBytes);
         Object[] measureValues = rowValueDecoder.getValues();
         //BigDecimal.ROUND_HALF_EVEN in BigDecimalSerializer
-        assertEquals("[333.1235, 333.1111, 333.2000, 2]", Arrays.toString(measureValues));
+        assertEquals("[333.1235, 333.1111, 333.2000, 2, 100]", Arrays.toString(measureValues));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -97,8 +94,9 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");
         LongWritable count = new LongWritable(2);
+        LongMutable item_count = new LongMutable(100);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        codec.encode(new Object[] { sum, min, max, count }, buf);
+        codec.encode(new Object[] { sum, min, max, count ,item_count}, buf);
 
     }
 }

@@ -18,8 +18,16 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Text;
@@ -28,24 +36,15 @@ import org.apache.hadoop.mrunit.types.Pair;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.engine.mr.steps.CuboidReducer;
-import org.apache.kylin.engine.mr.steps.NDCuboidMapper;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import javax.annotation.Nullable;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-
-import static org.junit.Assert.*;
-
-/**
- * @author George Song (ysong1)
- */
+@Ignore
 public class NDCuboidMapperTest extends LocalFileMetadataTestCase {
     MapReduceDriver<Text, Text, Text, Text, Text, Text> mapReduceDriver;
     String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;

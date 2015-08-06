@@ -7,7 +7,9 @@
       "id": 1,
       "name": "DEFAULT.STREAMING_TABLE.SITE",
       "table": "DEFAULT.STREAMING_TABLE",
-      "column": ["SITE"],
+      "column": [
+        "SITE"
+      ],
       "derived": null,
       "hierarchy": false
     },
@@ -15,7 +17,9 @@
       "id": 2,
       "name": "DEFAULT.STREAMING_TABLE.ITM",
       "table": "DEFAULT.STREAMING_TABLE",
-      "column": ["ITM"],
+      "column": [
+        "ITM"
+      ],
       "derived": null,
       "hierarchy": false
     },
