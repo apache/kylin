@@ -632,7 +632,6 @@
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclude>**/SnapshotManagerTest.java</exclude>
                                 <exclude>**/HiveTableReaderTest.java</exclude>
@@ -694,7 +693,6 @@
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                             </excludes>
                             <systemProperties>
@@ -761,7 +759,6 @@
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclude>**/SnapshotManagerTest.java</exclude>
                                 <exclude>**/HiveTableReaderTest.java</exclude>

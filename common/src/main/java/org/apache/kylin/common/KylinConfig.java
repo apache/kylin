@@ -109,14 +109,6 @@ public class KylinConfig {
 
     public static final String HIVE_URL = "hive.url";
     /**
-     * Key string to specify the kylin evn: prod, dev, qa
-     */
-    public static final String KYLIN_ENV = "KYLIN_ENV";
-    /**
-     * Default Kylin conf path
-     */
-    public static final String KYLIN_CONF_DEFAULT = "/etc/kylin";
-    /**
      * Kylin properties file
      */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
