@@ -25,28 +25,25 @@ Advanced Topics
 2.[SQL Reference](http://calcite.incubator.apache.org/)
 
 ### REST API
+1.[Kylin Restful API List](/development/rest_api.html)
 
-1.[Kylin Restful API List](development/rest_api.html)
+2.[Build Cube with Restful API](/development/build_api.html)
 
-2.[Build Cube with Restful API](development/build_api.html)
-
-3.[How to consume Kylin REST API in javascript](development/javascript_api.html)
+3.[How to consume Kylin REST API in javascript](/development/javascript_api.html)
 
 ### Operations
-1.[Kylin Metadata Store](development/new_metadata.html)
+1.[Kylin Metadata Store](/development/new_metadata.html)
 
 2.[Export Kylin HBase data](howto/howto_backup.html)
 
 3.[Advanced settings of Kylin environment](install/advance_settings.html)
 
 ### Test
-
-1.[Run Kylin test case with HBase Mini Cluster](development/test_minicluster.html)
+1.[Run Kylin test case with HBase Mini Cluster](/development/test_minicluster.html)
 
 
 ### Technical Details
-
-1.[New meta data model structure](development/new_metadata.html)
+1.[New meta data model structure](/development/new_metadata.html)
 
 
 
