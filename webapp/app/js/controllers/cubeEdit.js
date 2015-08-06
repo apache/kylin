@@ -170,9 +170,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             $scope.cubeMetaFrame.model_name = $scope.cubeMetaFrame.name;
         }
 
-        $scope.state.project = ProjectModel.getSelectedProject();;
+        $scope.state.project = ProjectModel.getSelectedProject();
 //        delete $scope.cubeMetaFrame.project;
-
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     };
 

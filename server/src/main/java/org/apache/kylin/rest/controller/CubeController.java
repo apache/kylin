@@ -332,6 +332,7 @@ public class CubeController extends BasicController {
 
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeRequest.getCubeName());
+            cube.setRetentionRange(desc.getRetentionRange());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
 
