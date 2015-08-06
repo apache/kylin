@@ -159,4 +159,8 @@ KylinApp
         return $filter('date')(item, "yyyy-MM-dd HH:mm:ss");
       }
     }
+  }).filter('millisecondsToDay', function ($filter) {
+    return function (item) {
+      return item/86400000;
+    }
   });
