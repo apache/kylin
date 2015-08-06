@@ -159,4 +159,9 @@ KylinApp
         return $filter('date')(item, "yyyy-MM-dd HH:mm:ss");
       }
     }
-  });
+  }).filter('millisecondsToDay', function ($filter) {
+    //backend store GMT+0 timezone ,by default front will show local,so convert to GMT+0 Date String format
+    return function (item) {
+        return item/86400000;
+    }
+  });;

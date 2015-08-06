@@ -59,6 +59,7 @@ public class CubeDescController {
         }
         CubeDesc cSchema = cubeInstance.getDescriptor();
         if (cSchema != null) {
+            cSchema.setRetentionRange(cubeInstance.getRetentionRange());
             return new CubeDesc[] { cSchema };
         } else {
             return null;

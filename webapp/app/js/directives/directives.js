@@ -205,6 +205,21 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
         }, 500);
       }
     }
-  })
+  }).directive('retentionFormat', function() {
+    return {
+      require: 'ngModel',
+      link: function(scope, element, attrs, ngModelController) {
+        ngModelController.$parsers.push(function(data) {
+          //convert data from view format to model format
+          return data*86400000; //converted
+        });
+
+        ngModelController.$formatters.push(function(data) {
+          //convert data from model format to view format
+          return data/86400000; //converted
+        });
+      }
+    }
+  });
 
 ;
