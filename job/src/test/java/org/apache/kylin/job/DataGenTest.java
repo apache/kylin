@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Created by honma on 6/19/14.
  */
 public class DataGenTest extends LocalFileMetadataTestCase {
 
