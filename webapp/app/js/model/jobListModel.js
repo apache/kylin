@@ -18,7 +18,7 @@
 
 KylinApp.service('JobList', function (JobService, $q) {
   var _this = this;
-  this.jobs = [];
+  this.jobs = {};
 
   this.list = function (jobRequest) {
 
@@ -35,7 +35,6 @@ KylinApp.service('JobList', function (JobService, $q) {
           _this.jobs[id] = job;
         }
       });
-      _this.jobs = _this.jobs.concat(jobs);
       defer.resolve(jobs.length);
     },function(){
       defer.reject("failed to load jobs");
@@ -46,7 +45,7 @@ KylinApp.service('JobList', function (JobService, $q) {
   };
 
   this.removeAll = function () {
-    _this.jobs = [];
+    _this.jobs = {};
   };
 
 });
