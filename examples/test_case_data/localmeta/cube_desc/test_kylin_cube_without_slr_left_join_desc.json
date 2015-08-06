@@ -1,196 +1,281 @@
 {
-  "uuid" : "9ac9b7a8-3929-4dff-b59d-2100aadc8dbf",
-  "name" : "test_kylin_cube_without_slr_left_join_desc",
-  "description" : null,
-  "dimensions" : [ {
-    "id" : 0,
-    "name" : "CAL_DT",
-    "table" : "EDW.TEST_CAL_DT",
-    "column" : null,
-    "derived" : [ "WEEK_BEG_DT" ],
-    "hierarchy" : false
-  }, {
-    "id" : 1,
-    "name" : "CATEGORY",
-    "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
-    "column" : null,
-    "derived" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER" ],
-    "hierarchy" : false
-  }, {
-    "id" : 2,
-    "name" : "CATEGORY_HIERARCHY",
-    "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
-    "column" : [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ],
-    "derived" : null,
-    "hierarchy" : true
-  }, {
-    "id" : 3,
-    "name" : "LSTG_FORMAT_NAME",
-    "table" : "DEFAULT.TEST_KYLIN_FACT",
-    "column" : [ "LSTG_FORMAT_NAME" ],
-    "derived" : null,
-    "hierarchy" : false
-  }, {
-    "id" : 4,
-    "name" : "SITE_ID",
-    "table" : "EDW.TEST_SITES",
-    "column" : null,
-    "derived" : [ "SITE_NAME", "CRE_USER" ],
-    "hierarchy" : false
-  }, {
-    "id" : 5,
-    "name" : "SELLER_TYPE_CD",
-    "table" : "EDW.TEST_SELLER_TYPE_DIM",
-    "column" : null,
-    "derived" : [ "SELLER_TYPE_DESC" ],
-    "hierarchy" : false
-  } ],
-  "measures" : [ {
-    "id" : 1,
-    "name" : "GMV_SUM",
-    "function" : {
-      "expression" : "SUM",
-      "parameter" : {
-        "type" : "column",
-        "value" : "PRICE"
-      },
-      "returntype" : "decimal(19,4)"
+  "uuid": "9ac9b7a8-3929-4dff-b59d-2100aadc8dbf",
+  "name": "test_kylin_cube_without_slr_left_join_desc",
+  "description": null,
+  "dimensions": [
+    {
+      "id": 0,
+      "name": "CAL_DT",
+      "table": "EDW.TEST_CAL_DT",
+      "column": null,
+      "derived": [
+        "WEEK_BEG_DT"
+      ],
+      "hierarchy": false
     },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 2,
-    "name" : "GMV_MIN",
-    "function" : {
-      "expression" : "MIN",
-      "parameter" : {
-        "type" : "column",
-        "value" : "PRICE"
-      },
-      "returntype" : "decimal(19,4)"
+    {
+      "id": 1,
+      "name": "CATEGORY",
+      "table": "DEFAULT.TEST_CATEGORY_GROUPINGS",
+      "column": null,
+      "derived": [
+        "USER_DEFINED_FIELD1",
+        "USER_DEFINED_FIELD3",
+        "UPD_DATE",
+        "UPD_USER"
+      ],
+      "hierarchy": false
     },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 3,
-    "name" : "GMV_MAX",
-    "function" : {
-      "expression" : "MAX",
-      "parameter" : {
-        "type" : "column",
-        "value" : "PRICE"
-      },
-      "returntype" : "decimal(19,4)"
+    {
+      "id": 2,
+      "name": "CATEGORY_HIERARCHY",
+      "table": "DEFAULT.TEST_CATEGORY_GROUPINGS",
+      "column": [
+        "META_CATEG_NAME",
+        "CATEG_LVL2_NAME",
+        "CATEG_LVL3_NAME"
+      ],
+      "derived": null,
+      "hierarchy": true
     },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 4,
-    "name" : "TRANS_CNT",
-    "function" : {
-      "expression" : "COUNT",
-      "parameter" : {
-        "type" : "constant",
-        "value" : "1"
-      },
-      "returntype" : "bigint"
+    {
+      "id": 3,
+      "name": "LSTG_FORMAT_NAME",
+      "table": "DEFAULT.TEST_KYLIN_FACT",
+      "column": [
+        "LSTG_FORMAT_NAME"
+      ],
+      "derived": null,
+      "hierarchy": false
     },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 5,
-    "name" : "SELLER_CNT_HLL",
-    "function" : {
-      "expression" : "COUNT_DISTINCT",
-      "parameter" : {
-        "type" : "column",
-        "value" : "SELLER_ID"
-      },
-      "returntype" : "hllc(10)"
+    {
+      "id": 4,
+      "name": "SITE_ID",
+      "table": "EDW.TEST_SITES",
+      "column": null,
+      "derived": [
+        "SITE_NAME",
+        "CRE_USER"
+      ],
+      "hierarchy": false
     },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 6,
-    "name" : "SELLER_CNT_LONG",
-    "function" : {
-      "expression" : "COUNT_DISTINCT",
-      "parameter" : {
-        "type" : "column",
-        "value" : "SELLER_ID"
+    {
+      "id": 5,
+      "name": "SELLER_TYPE_CD",
+      "table": "EDW.TEST_SELLER_TYPE_DIM",
+      "column": null,
+      "derived": [
+        "SELLER_TYPE_DESC"
+      ],
+      "hierarchy": false
+    }
+  ],
+  "measures": [
+    {
+      "id": 1,
+      "name": "GMV_SUM",
+      "function": {
+        "expression": "SUM",
+        "parameter": {
+          "type": "column",
+          "value": "PRICE"
+        },
+        "returntype": "decimal(19,4)"
       },
-      "returntype" : "bigint"
+      "dependent_measure_ref": null
     },
-    "dependent_measure_ref" : "SELLER_CNT_HLL"
-  }, {
-    "id" : 7,
-    "name" : "SELLER_FORMAT_CNT",
-    "function" : {
-      "expression" : "COUNT_DISTINCT",
-      "parameter" : {
-        "type" : "column",
-        "value" : "LSTG_FORMAT_NAME,SELLER_ID"
+    {
+      "id": 2,
+      "name": "GMV_MIN",
+      "function": {
+        "expression": "MIN",
+        "parameter": {
+          "type": "column",
+          "value": "PRICE"
+        },
+        "returntype": "decimal(19,4)"
       },
-      "returntype" : "hllc(10)"
+      "dependent_measure_ref": null
     },
-    "dependent_measure_ref" : null
-  } ],
-  "rowkey" : {
-    "rowkey_columns" : [ {
-      "column" : "cal_dt",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : true
-    }, {
-      "column" : "leaf_categ_id",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "meta_categ_name",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "categ_lvl2_name",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "categ_lvl3_name",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "lstg_format_name",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "lstg_site_id",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "slr_segment_cd",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    } ],
-    "aggregation_groups" : [ [ "lstg_format_name", "lstg_site_id", "slr_segment_cd" ], [ "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name", "lstg_format_name" ] ]
+    {
+      "id": 3,
+      "name": "GMV_MAX",
+      "function": {
+        "expression": "MAX",
+        "parameter": {
+          "type": "column",
+          "value": "PRICE"
+        },
+        "returntype": "decimal(19,4)"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 4,
+      "name": "TRANS_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "constant",
+          "value": "1"
+        },
+        "returntype": "bigint"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 5,
+      "name": "ITEM_COUNT_SUM",
+      "function": {
+        "expression": "SUM",
+        "parameter": {
+          "type": "column",
+          "value": "ITEM_COUNT"
+        },
+        "returntype": "bigint"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 6,
+      "name": "SELLER_CNT_HLL",
+      "function": {
+        "expression": "COUNT_DISTINCT",
+        "parameter": {
+          "type": "column",
+          "value": "SELLER_ID"
+        },
+        "returntype": "hllc(10)"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 7,
+      "name": "SELLER_CNT_LONG",
+      "function": {
+        "expression": "COUNT_DISTINCT",
+        "parameter": {
+          "type": "column",
+          "value": "SELLER_ID"
+        },
+        "returntype": "bigint"
+      },
+      "dependent_measure_ref": "SELLER_CNT_HLL"
+    },
+    {
+      "id": 8,
+      "name": "SELLER_FORMAT_CNT",
+      "function": {
+        "expression": "COUNT_DISTINCT",
+        "parameter": {
+          "type": "column",
+          "value": "LSTG_FORMAT_NAME,SELLER_ID"
+        },
+        "returntype": "hllc(10)"
+      },
+      "dependent_measure_ref": null
+    }
+  ],
+  "rowkey": {
+    "rowkey_columns": [
+      {
+        "column": "cal_dt",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": true
+      },
+      {
+        "column": "leaf_categ_id",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "meta_categ_name",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "categ_lvl2_name",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "categ_lvl3_name",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "lstg_format_name",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "lstg_site_id",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "slr_segment_cd",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      }
+    ],
+    "aggregation_groups": [
+      [
+        "lstg_format_name",
+        "lstg_site_id",
+        "slr_segment_cd"
+      ],
+      [
+        "leaf_categ_id",
+        "meta_categ_name",
+        "categ_lvl3_name",
+        "categ_lvl2_name",
+        "lstg_format_name"
+      ]
+    ]
   },
-  "last_modified" : 1422435345373,
-  "model_name" : "test_kylin_left_join_model_desc",
-  "null_string" : null,
-  "hbase_mapping" : {
-    "column_family" : [ {
-      "name" : "f1",
-      "columns" : [ {
-        "qualifier" : "m",
-        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt", "seller_cnt_long" ]
-      } ]
-    }, {
-      "name" : "f2",
-      "columns" : [ {
-        "qualifier" : "m",
-        "measure_refs" : [ "seller_cnt_hll", "seller_format_cnt" ]
-      } ]
-    } ]
+  "last_modified": 1422435345373,
+  "model_name": "test_kylin_left_join_model_desc",
+  "null_string": null,
+  "hbase_mapping": {
+    "column_family": [
+      {
+        "name": "f1",
+        "columns": [
+          {
+            "qualifier": "m",
+            "measure_refs": [
+              "gmv_sum",
+              "gmv_min",
+              "gmv_max",
+              "trans_cnt",
+              "seller_cnt_long",
+              "item_count_sum"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "f2",
+        "columns": [
+          {
+            "qualifier": "m",
+            "measure_refs": [
+              "seller_cnt_hll",
+              "seller_format_cnt"
+            ]
+          }
+        ]
+      }
+    ]
   },
-  "notify_list" : null
+  "notify_list": null
 }

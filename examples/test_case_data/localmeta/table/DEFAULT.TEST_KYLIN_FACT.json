@@ -32,7 +32,7 @@
   }, {
     "id" : "8",
     "name" : "ITEM_COUNT",
-    "datatype" : "bigint"
+    "datatype" : "int"
   }, {
     "id" : "9",
     "name" : "SELLER_ID",

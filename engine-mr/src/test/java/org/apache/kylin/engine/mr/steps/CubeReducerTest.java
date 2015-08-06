@@ -18,7 +18,8 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -35,7 +36,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.engine.mr.steps.CuboidReducer;
 import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.junit.After;
@@ -79,18 +79,18 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         Text key1 = new Text("72010ustech");
         List<Text> values1 = new ArrayList<Text>();
-        values1.add(newValueText(codec, "15.09", "15.09", "15.09", 1));
-        values1.add(newValueText(codec, "20.34", "20.34", "20.34", 1));
-        values1.add(newValueText(codec, "10", "10", "10", 1));
+        values1.add(newValueText(codec, "15.09", "15.09", "15.09", 1, 100));
+        values1.add(newValueText(codec, "20.34", "20.34", "20.34", 1, 200));
+        values1.add(newValueText(codec, "10", "10", "10", 1, 300));
 
         Text key2 = new Text("1tech");
         List<Text> values2 = new ArrayList<Text>();
-        values2.add(newValueText(codec, "15.09", "15.09", "15.09", 1));
-        values2.add(newValueText(codec, "20.34", "20.34", "20.34", 1));
+        values2.add(newValueText(codec, "15.09", "15.09", "15.09", 1, 500));
+        values2.add(newValueText(codec, "20.34", "20.34", "20.34", 1, 1000));
 
         Text key3 = new Text("0");
         List<Text> values3 = new ArrayList<Text>();
-        values3.add(newValueText(codec, "146.52", "146.52", "146.52", 4));
+        values3.add(newValueText(codec, "146.52", "146.52", "146.52", 0, 0));
 
         reduceDriver.withInput(key1, values1);
         reduceDriver.withInput(key2, values2);
@@ -98,9 +98,9 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         List<Pair<Text, Text>> result = reduceDriver.run();
 
-        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "45.43", "10", "20.34", 3));
-        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "35.43", "15.09", "20.34", 2));
-        Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"), newValueText(codec, "146.52", "146.52", "146.52", 4));
+        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "45.43", "10", "20.34", 3, 600));
+        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "35.43", "15.09", "20.34", 2, 1500));
+        Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"), newValueText(codec, "146.52", "146.52", "146.52", 0, 0));
 
         assertEquals(3, result.size());
 
@@ -109,8 +109,8 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
         assertTrue(result.contains(p3));
     }
 
-    private Text newValueText(MeasureCodec codec, String sum, String min, String max, int count) {
-        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new LongMutable(count) };
+    private Text newValueText(MeasureCodec codec, String sum, String min, String max, int count, int item_count) {
+        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new LongMutable(count), new LongMutable(item_count) };
 
         buf.clear();
         codec.encode(values, buf);

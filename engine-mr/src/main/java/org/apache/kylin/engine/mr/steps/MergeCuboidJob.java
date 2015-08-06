@@ -30,9 +30,6 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 
-/**
- * @author ysong1
- */
 public class MergeCuboidJob extends CuboidJob {
 
     @Override
