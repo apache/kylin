@@ -34,7 +34,7 @@ public class LZOSupportnessChecker {
             File temp = File.createTempFile("test", ".tmp");
             CompressionTest.main(new String[] { "file://" + temp.getAbsolutePath(), "lzo" });
         } catch (Exception e) {
-            log.warn("LZO support is disabled. Fail to compress file with lzo: " + e.toString());
+            log.info("LZO compression test encounters " + e.toString());
             return false;
         }
         return true;
