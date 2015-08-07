@@ -65,6 +65,11 @@ KylinApp
         $scope.loading = false;
         defer.resolve(resp);
         return defer.promise;
+      },function(resp){
+        $scope.loading = false;
+        defer.resolve([]);
+        SweetAlert.swal('Oops...', resp, 'error');
+        return defer.promise;
       });
     };
 
@@ -90,10 +95,6 @@ KylinApp
             cube.detail = detail[0];
             cube.model = modelsManager.getModel(cube.detail.model_name);
               defer.resolve(cube.detail);
-
-            //ModelService.get({model_name: cube.detail.model_name}, function (model) {
-            //  cube.model = model
-            //});
 
           } else {
             SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
@@ -465,12 +466,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   };
 
   $scope.updateDate = function () {
-
-
-//        if ($scope.cube.detail.partition_desc.cube_partition_type=='UPDATE_INSERT')
-//        {
-//            $scope.jobBuildRequest.startTime=$scope.formatDate($scope.jobBuildRequest.startTime);
-//        }
     $scope.jobBuildRequest.endTime = $scope.formatDate($scope.jobBuildRequest.endTime);
   };
 

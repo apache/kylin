@@ -139,6 +139,8 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
                 _this.selectedSrcDb.push(_db_node);
             }
             defer.resolve();
+        },function(e){
+          defer.reject("Failed to load tables, please check system log for details.");
         });
 
         return defer.promise;
