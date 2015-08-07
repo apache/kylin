@@ -18,7 +18,13 @@
 
 package org.apache.kylin.metadata.project;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -35,12 +41,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Lists;
 
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
@@ -361,7 +362,11 @@ public class ProjectManager {
     }
 
     public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
-        return l2Cache.listEffectiveRewriteMeasures(norm(project), factTable.toUpperCase());
+        return l2Cache.listEffectiveRewriteMeasures(norm(project), factTable.toUpperCase(), true);
+    }
+
+    public List<MeasureDesc> listEffectiveMeasures(String project, String factTable) {
+        return l2Cache.listEffectiveRewriteMeasures(norm(project), factTable.toUpperCase(), false);
     }
 
     KylinConfig getConfig() {

@@ -133,7 +133,7 @@ public class IIDesc extends RootPersistentEntity {
                 TblColRef tcr = new TblColRef(columnDesc);
                 allColumns.add(tcr);
                 allDimensions.add(tcr);
-                measureDescs.add(makeHLLMeasure(columnDesc, null));
+                measureDescs.add(makeHLLMeasure(columnDesc, "hllc10"));
             }
 
             if (!allTableNames.contains(tableDesc.getIdentity())) {
@@ -222,6 +222,10 @@ public class IIDesc extends RootPersistentEntity {
         p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
         f1.setParameter(p1);
         f1.setReturnType(returnType);
+        if (f1.getReturnDataType().isIntegerFamily()) {
+            f1.setReturnType("bigint");
+        }
+
         measureDesc.setFunction(f1);
         measureDesc.setName(func + "_" + columnName);
         return measureDesc;
@@ -334,7 +338,6 @@ public class IIDesc extends RootPersistentEntity {
     public int getSliceSize() {
         return sliceSize;
     }
-
 
     public String getSignature() {
         return signature;

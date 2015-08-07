@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.model;
 
-import org.apache.kylin.metadata.model.TblColRef;
-
 /**
  */
 public class IntermediateColumnDesc {
