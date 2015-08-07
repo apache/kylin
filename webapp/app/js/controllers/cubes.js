@@ -62,6 +62,11 @@ KylinApp
         $scope.loading = false;
         defer.resolve(resp);
         return defer.promise;
+      },function(resp){
+        $scope.loading = false;
+        defer.resolve([]);
+        SweetAlert.swal('Oops...', resp, 'error');
+        return defer.promise;
       });
     };
 
