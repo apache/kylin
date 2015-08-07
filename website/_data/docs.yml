@@ -44,10 +44,10 @@
 
 - title: How To
   docs:
-  - howto/howto_contribute
+  - howto/howto_build_cube_with_restapi
+  - howto/howto_use_restapi_in_js
+  - howto/howto_use_restapi
+  - howto/howto_backup_metadata
+  - howto/howto_backup_hbase
   - howto/howto_jdbc
-  - howto/howto_javascript
-  - howto/howto_backup
   - howto/howto_upgrade
-  - howto/howto_docs
-  - howto/howto_release

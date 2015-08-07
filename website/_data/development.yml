@@ -20,11 +20,11 @@
   dev:
   - index
   - dev_env
-  - metadata_store
+  - howto_contribute
+  - howto_docs
+  - howto_package
+  - howto_release
   - new_metadata
-  - rest_api
-  - build_api
-  - javascript_api
   - web_tech
   - test_minicluster
   

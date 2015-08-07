@@ -1,10 +1,8 @@
 ---
-layout: docs
-title:  How to Generate Binary Package
-categories: howto
-permalink: /docs/howto/howto_package.html
-version: v0.7.2
-since: v0.7.1
+layout: dev
+title:  How to Build Binary Package
+categories: development
+permalink: /development/howto_package.html
 ---
 
 ###Generate Binary Package

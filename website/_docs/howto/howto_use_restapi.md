@@ -1,8 +1,10 @@
 ---
-layout: dev
-title:  "REST API"
-categories: development
-permalink: /development/rest_api.html
+layout: docs
+title:  How to Use Restful API
+categories: howto
+permalink: /docs/howto/howto_use_restapi.html
+version: v0.8
+since: v0.7.1
 ---
 
 ## Kylin Restful API List

@@ -1,10 +1,8 @@
 ---
-layout: docs
-title:  How to write document
-categories: howto
-permalink: /docs/howto/howto_docs.html
-version: v0.7.2
-since: v0.7.2
+layout: dev
+title:  How to Write Document
+categories: development
+permalink: /development/howto_docs.html
 ---
 
 ## Before your work

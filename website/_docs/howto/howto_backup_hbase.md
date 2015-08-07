@@ -1,13 +1,13 @@
 ---
 layout: docs
-title:  Backup Kylin HBase data
+title:  How to Backup HBase Tables
 categories: howto
-permalink: /docs/howto/howto_backup.html
+permalink: /docs/howto/howto_backup_hbase.html
 version: v0.7.2
 since: v0.7.1
 ---
 
-Kylin persists all data (meta data and cube) in HBase; You may want to export the data sometimes for whatever purposes (backup, migration, troubleshotting etc); This page describes the steps to do this and also there is a Java app for you to do this easily;
+Kylin persists all data (meta data and cube) in HBase; You may want to export the data sometimes for whatever purposes (backup, migration, troubleshotting etc); This page describes the steps to do this and also there is a Java app for you to do this easily.
 
 Steps:
 

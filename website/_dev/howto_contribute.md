@@ -1,10 +1,8 @@
 ---
-layout: docs
+layout: dev
 title:  How to Contribute
-categories: howto
-permalink: /docs/howto/howto_contribute.html
-version: v0.7.2
-since: v0.7.1
+categories: development
+permalink: /development/howto_contribute.html
 ---
 
 ## Current branches
