@@ -1,17 +1,15 @@
 ---
-layout: docs
-title:  How to making a release
-categories: howto
-permalink: /docs/howto/howto_release.html
-version: v0.7.2
-since: v0.7.1
+layout: dev
+title:  How to Making a Release
+categories: development
+permalink: /development/howto_release.html
 ---
 
 _This guide is for Apache Kylin Committers only._  
 _Shell commands is on Mac OS X as sample._  
 _For people in China, please aware using proxy to avoid potential firewall issue._  
 
-## Setup Account  
+## Setup Account
 Make sure you have avaliable account and privlidge for following applications:
 
 * Apache account: [https://id.apache.org](https://id.apache.org/)    

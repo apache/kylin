@@ -1,8 +1,10 @@
 ---
-layout: dev
-title:  "Build Cube with Restful API"
-categories: development
-permalink: /development/build_api.html
+layout: docs
+title:  How to Build Cube with Restful API
+categories: howto
+permalink: /docs/howto/howto_build_cube_with_restapi.html
+version: v0.8
+since: v0.7.1
 ---
 
 ### 1.	Authentication
