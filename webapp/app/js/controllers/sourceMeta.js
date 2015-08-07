@@ -55,7 +55,8 @@ KylinApp
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
 //         will load table when enter this page,null or not
             $scope.aceSrcTbLoaded();
-
+        },function(resp){
+          SweetAlert.swal('Oops...',resp, 'error');
         });
 
 
