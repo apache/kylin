@@ -18,11 +18,12 @@
 
 package org.apache.kylin.storage.hbase;
 
+import java.io.File;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
-
-import java.io.File;
 
 /**
  * @author ysong1
@@ -58,6 +59,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
         }
 
     }
+
     public static void staticCreateTestMetadata(String kylinConfigFolder) {
 
         KylinConfig.destoryInstance();
@@ -69,7 +71,11 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
 
     public static boolean useSandbox() {
         String useSandbox = System.getProperty("useSandbox");
+        if (StringUtils.isEmpty(useSandbox)) {
+            return true;
+        }
+        
         return Boolean.parseBoolean(useSandbox);
     }
-    
+
 }

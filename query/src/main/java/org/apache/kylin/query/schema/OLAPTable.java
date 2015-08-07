@@ -52,7 +52,9 @@ import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -161,21 +163,41 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
     private List<ColumnDesc> listSourceColumns() {
         ProjectManager mgr = ProjectManager.getInstance(olapSchema.getConfig());
-        List<ColumnDesc> exposedColumns = Lists.newArrayList(mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity()));
+        List<ColumnDesc> tableColumns = Lists.newArrayList(mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity()));
 
+        List<ColumnDesc> metricColumns = Lists.newArrayList();
         List<MeasureDesc> countMeasures = mgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
         HashSet<String> metFields = new HashSet<String>();
         for (MeasureDesc m : countMeasures) {
+
             FunctionDesc func = m.getFunction();
             String fieldName = func.getRewriteFieldName();
             if (!metFields.contains(fieldName)) {
                 metFields.add(fieldName);
                 ColumnDesc fakeCountCol = func.newFakeRewriteColumn(sourceTable);
-                exposedColumns.add(fakeCountCol);
+                metricColumns.add(fakeCountCol);
             }
         }
 
-        return exposedColumns;
+        //if exist sum(x), where x is integer/short/byte
+        //to avoid overflow we upgrade x's type to long
+        HashSet<ColumnDesc> updateColumns = Sets.newHashSet();
+        for (MeasureDesc m : mgr.listEffectiveMeasures(olapSchema.getProjectName(), sourceTable.getIdentity())) {
+            if (m.getFunction().isSum()) {
+                FunctionDesc functionDesc = m.getFunction();
+                if (functionDesc.getReturnDataType() != functionDesc.getSQLType() && //
+                        functionDesc.getReturnDataType().isBigInt() && //
+                        functionDesc.getSQLType().isIntegerFamily()) {
+                    updateColumns.add(functionDesc.getParameter().getColRefs().get(0).getColumnDesc());
+                }
+            }
+        }
+        for (ColumnDesc upgrade : updateColumns) {
+            int index = tableColumns.indexOf(upgrade);
+            tableColumns.get(index).setDatatype("bigint");
+        }
+
+        return Lists.newArrayList(Iterables.concat(tableColumns, metricColumns));
     }
 
     @Override

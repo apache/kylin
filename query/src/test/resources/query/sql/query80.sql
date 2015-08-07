@@ -18,7 +18,8 @@
 
 SELECT
  min(test_cal_dt.cal_dt) as mmin
- ,max(test_cal_dt.cal_dt) as mmax
+ ,max(test_cal_dt.cal_dt) as mmax,
+  sum(test_kylin_fact.item_count) as total_items
  FROM test_kylin_fact
  inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt

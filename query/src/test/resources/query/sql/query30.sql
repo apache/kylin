@@ -16,4 +16,4 @@
 -- limitations under the License.
 --
 
-select sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact limit 50 
+select sum(price) as GMV, count(1) as TRANS_CNT ,  sum(test_kylin_fact.item_count) as total_items from test_kylin_fact limit 50 
