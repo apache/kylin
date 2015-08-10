@@ -139,15 +139,15 @@
                             <div class="col-xs-9">
                                 <div ng-repeat="joinIndex in [] | range: newLookup.join.primary_key.length">
                                     <div>
-                                        <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
-                                                ng-model="newLookup.join.primary_key[$index]"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
-                                            <option value=""></option>
-                                        </select>
-                                        <b>=</b>
                                         <select style="width: 45%" chosen data-placeholder="Fact Table Column"
                                                 ng-model="newLookup.join.foreign_key[$index]"
                                                 ng-options="columns.name as columns.name for columns in getColumnsByTable(modelsManager.selectedModel.fact_table)" >
+                                            <option value=""></option>
+                                        </select>
+                                        <b>=</b>
+                                        <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
+                                                ng-model="newLookup.join.primary_key[$index]"
+                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
                                             <option value=""></option>
                                         </select>
                                         <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete"
@@ -184,9 +184,9 @@
                             <div class="row">
                                 <div class="col-xs-12">
                                     <ol class="text-info">
-                                        <li>Pick up lookup table at first</li>
-                                        <li>Specify join relationship between chosen lookup table and fact table</li>
-                                        <li>Join Type have to be same as will be used in query</li>
+                                      <li>Pick up lookup table at first</li>
+                                      <li>Specify join relationship between fact table and chosen lookup table.</li>
+                                      <li>Join Type have to be same as will be used in query</li>
                                     </ol>
                                 </div>
                             </div>
