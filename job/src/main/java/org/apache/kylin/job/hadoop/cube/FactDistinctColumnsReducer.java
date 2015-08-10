@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -75,8 +74,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
         outputPath = conf.get(BatchConstants.OUTPUT_PATH);
         fs = FileSystem.get(conf);
 
-        String factDictColNamesStr = conf.get(BatchConstants.CFG_FACT_DICT_COLUMN_NAMES);
-        String[] factDictColNames = StringUtils.isEmpty(factDictColNamesStr) ? new String[0] : factDictColNamesStr.split(",");
+        String[] factDictColNames = conf.get(BatchConstants.CFG_FACT_DICT_COLUMN_NAMES).split(",");
         toBeExtractedColumns.addAll(Arrays.asList(factDictColNames));
     }
 
