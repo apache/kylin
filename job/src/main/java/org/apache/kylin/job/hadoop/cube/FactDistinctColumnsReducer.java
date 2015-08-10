@@ -18,13 +18,6 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -43,19 +36,18 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * @author yangli9
  */
 public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text, NullWritable, Text> {
-    private static Logger logger = LoggerFactory.getLogger(FactDistinctColumnsReducer.class);
 
-    private String outputPath;
-    private FileSystem fs;
     private List<TblColRef> columnList = new ArrayList<TblColRef>();
-    private Set<String> toBeExtractedColumns = new HashSet<String>();
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -70,18 +62,11 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
         columnList = baseCuboid.getColumns();
-
-        outputPath = conf.get(BatchConstants.OUTPUT_PATH);
-        fs = FileSystem.get(conf);
-
-        String[] factDictColNames = conf.get(BatchConstants.CFG_FACT_DICT_COLUMN_NAMES).split(",");
-        toBeExtractedColumns.addAll(Arrays.asList(factDictColNames));
     }
 
     @Override
     public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
         TblColRef col = columnList.get(key.get());
-        toBeExtractedColumns.remove(col.getName());
 
         HashSet<ByteArray> set = new HashSet<ByteArray>();
         for (Text textValue : values) {
@@ -89,6 +74,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
             set.add(value);
         }
 
+        Configuration conf = context.getConfiguration();
+        FileSystem fs = FileSystem.get(conf);
+        String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
         FSDataOutputStream out = fs.create(new Path(outputPath, col.getName()));
 
         try {
@@ -102,15 +90,4 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
 
     }
 
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        // KYLIN-921 create empty file for dimension with all nulls
-        for (String colName : toBeExtractedColumns) {
-            logger.info("create empty file for column " + colName);
-            boolean success = fs.createNewFile(new Path(outputPath, colName));
-            if (!success) {
-                throw new IOException("failed to create empty file for column " + colName);
-            }
-        }
-    }
 }
