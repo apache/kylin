@@ -80,7 +80,7 @@
                 <td>
                     <ul class="list-unstyled">
                         <li ng-repeat="pk in lookup.join.primary_key track by $index">
-                            <code>{{lookup.table + '.' + pk}} = {{modelsManager.selectedModel.fact_table + '.' + lookup.join.foreign_key[$index]}}</code>
+                            <code>{{modelsManager.selectedModel.fact_table + '.' + lookup.join.foreign_key[$index]}} = {{lookup.table + '.' + pk}}</code>
                         </li>
                     </ul>
                 </td>
