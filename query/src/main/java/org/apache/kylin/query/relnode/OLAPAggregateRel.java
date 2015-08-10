@@ -177,13 +177,15 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     }
 
     private TblColRef buildRewriteColumn(FunctionDesc aggFunc) {
-        TblColRef colRef = null;
+        TblColRef colRef;
         if (aggFunc.needRewrite()) {
             ColumnDesc column = new ColumnDesc();
             column.setName(aggFunc.getRewriteFieldName());
             TableDesc table = this.context.firstTableScan.getOlapTable().getSourceTable();
             column.setTable(table);
             colRef = new TblColRef(column);
+        } else {
+            throw new IllegalStateException("buildRewriteColumn on a aggrFunc that does not need rewrite " + aggFunc);
         }
         return colRef;
     }
