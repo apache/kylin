@@ -125,15 +125,20 @@ class ProjectL2Cache {
         return result;
     }
 
-    public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
+    public List<MeasureDesc> listEffectiveMeasures(String project, String factTable, boolean onlyRewriteMeasure) {
         Set<IRealization> realizations = getRealizationsByTable(project, factTable);
         List<MeasureDesc> result = Lists.newArrayList();
         for (IRealization r : realizations) {
             if (r.getFactTable().equalsIgnoreCase(factTable) && r.isReady()) {
                 for (MeasureDesc m : r.getMeasures()) {
                     FunctionDesc func = m.getFunction();
-                    if (func.needRewrite())
+
+                    if (onlyRewriteMeasure) {
+                        if (func.needRewrite())
+                            result.add(m);
+                    } else {
                         result.add(m);
+                    }
                 }
             }
         }
