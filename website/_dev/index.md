@@ -14,4 +14,4 @@ Mirrored to Github: [https://github.com/apache/incubator-kylin](https://github.c
 Track issues on the "Kylin" Project on the Apache JIRA ([browse](http://issues.apache.org/jira/browse/KYLIN)).
 
 ### Setup Development Env  
-Refer to this link for how to setup dev env: [Setup Development Env](/docs/development/dev_env.html)
+Refer to this link for how to setup dev env: [Setup Development Env](/development/dev_env.html)
