@@ -88,6 +88,7 @@ public class CubingJob extends DefaultChainedExecutable {
         content = content.replaceAll("\\$\\{job_name\\}", getName());
         content = content.replaceAll("\\$\\{result\\}", state.toString());
         content = content.replaceAll("\\$\\{cube_name\\}", getCubeName());
+        content = content.replaceAll("\\$\\{source_records_count\\}", getSourceRecordCount());
         content = content.replaceAll("\\$\\{start_time\\}", new Date(getStartTime()).toString());
         content = content.replaceAll("\\$\\{duration\\}", getDuration() / 60000 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", getMapReduceWaitTime() / 60000 + "mins");
@@ -130,4 +131,13 @@ public class CubingJob extends DefaultChainedExecutable {
         addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
 
+
+    public final String getSourceRecordCount() {
+        for (AbstractExecutable task : getTasks()) {
+            if (ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID.equals(task.getName())) {
+               return getExtraInfo(task.getOutput(), ExecutableConstants.SOURCE_RECORDS_COUNT);
+            }
+        }
+        return "N/A";
+    }
 }

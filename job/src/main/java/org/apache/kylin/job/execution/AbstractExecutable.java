@@ -254,6 +254,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         }
     }
 
+    public static String getExtraInfo(Output output, String key) {
+        return output.getExtra().get(key);
+    }
+
     public static long getExtraInfoAsLong(Output output, String key, long defaultValue) {
         final String str = output.getExtra().get(key);
         if (str != null) {
