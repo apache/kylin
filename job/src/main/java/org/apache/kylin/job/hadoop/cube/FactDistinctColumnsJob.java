@@ -18,43 +18,34 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.RowKeyDesc;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import java.io.IOException;
 
 /**
  * @author yangli9
  */
 public class FactDistinctColumnsJob extends AbstractHadoopJob {
     protected static final Logger log = LoggerFactory.getLogger(FactDistinctColumnsJob.class);
-    private static final Joiner joiner = Joiner.on(",");
 
     @Override
     public int run(String[] args) throws Exception {
@@ -78,7 +69,6 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             // add metadata to distributed cache
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cubeInstance = cubeMgr.getCube(cubeName);
-            CubeDesc cubeDesc = cubeInstance.getDescriptor();
 
             jobConf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
             System.out.println("Starting: " + job.getJobName());
@@ -89,31 +79,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             setupReducer(output);
 
             // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
-            attachKylinPropsAndMetadata(cubeInstance, jobConf);
-
-            // set names and row key indexes of fact table's dictionary columns in Configuration,
-            // so that mapper & reducer task can use them
-            List<String> factDictColNames = Lists.newArrayList();
-            List<Integer> factDictColRowKeyIndexes = Lists.newArrayList();
-
-            Cuboid baseCuboid = Cuboid.findById(cubeDesc, Cuboid.getBaseCuboidId(cubeDesc));
-            List<TblColRef> columns = baseCuboid.getColumns();
-
-            RowKeyDesc rowkey = cubeDesc.getRowkey();
-            DictionaryManager dictMgr = DictionaryManager.getInstance(KylinConfig.getInstanceFromEnv());
-            for (int i = 0; i < columns.size(); i++) {
-                TblColRef col = columns.get(i);
-                if (!rowkey.isUseDictionary(col))
-                    continue;
-
-                String scanTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), rowkey.getDictionary(col), col, null)[0];
-                if (cubeDesc.getModel().isFactTable(scanTable)) {
-                    factDictColNames.add(col.getName());
-                    factDictColRowKeyIndexes.add(i);
-                }
-            }
-            jobConf.set(BatchConstants.CFG_FACT_DICT_COLUMN_NAMES, joiner.join(factDictColNames));
-            jobConf.set(BatchConstants.CFG_FACT_DICT_COLUMN_ROWKEY_INDEXES, joiner.join(factDictColRowKeyIndexes));
+            attachKylinPropsAndMetadata(cubeInstance, job.getConfiguration());
 
             return waitForCompletion(job);
 
