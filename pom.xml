@@ -589,6 +589,7 @@
         <module>invertedindex</module>
         <module>streaming</module>
         <module>spark</module>
+        <module>assembly</module>
     </modules>
 
     <profiles>
