@@ -234,14 +234,6 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         Preconditions.checkNotNull(engineConfig, "jobEngineConfig cannot be null");
     }
 
-    private String getPathToMerge(CubeSegment seg) {
-        return getJobWorkingDir(seg.getLastBuildJobID()) + "/" + seg.getCubeInstance().getName() + "/cuboid/*";
-    }
-
-    private String getRowkeyDistributionOutputPath(CubeSegment seg) {
-        return engineConfig.getHdfsWorkingDirectory() + "/" + seg.getCubeInstance().getName() + "/rowkey_stats";
-    }
-
     private void appendMapReduceParameters(StringBuilder builder, CubeSegment seg) {
         try {
             String jobConf = engineConfig.getHadoopJobConfFilePath(seg.getCubeDesc().getModel().getCapacity());
@@ -264,6 +256,14 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             }
         }
         return paths;
+    }
+
+    private String getPathToMerge(CubeSegment seg) {
+        return getJobWorkingDir(seg.getLastBuildJobID()) + "/" + seg.getCubeInstance().getName() + "/cuboid/*";
+    }
+
+    private String getRowkeyDistributionOutputPath(CubeSegment seg) {
+        return getJobWorkingDir(seg.getLastBuildJobID()) + "/" + seg.getCubeInstance().getName() + "/rowkey_stats";
     }
 
     private String getFactDistinctColumnsPath(CubeSegment seg, String jobUuid) {
