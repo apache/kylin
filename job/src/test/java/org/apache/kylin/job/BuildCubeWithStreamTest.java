@@ -34,16 +34,19 @@
 
 package org.apache.kylin.job;
 
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.streaming.BootstrapConfig;
 import org.apache.kylin.job.streaming.StreamingBootstrap;
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.apache.kylin.streaming.StreamingConfig;
 import org.apache.kylin.streaming.StreamingManager;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -92,6 +96,29 @@ public class BuildCubeWithStreamTest {
     @After
     public void after() {
         HBaseMetadataTestCase.staticCleanupTestMetadata();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        backup();
+    }
+
+    private static int cleanupOldStorage() throws Exception {
+        String[] args = { "--delete", "true" };
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
+    }
+
+    private static void backup() throws Exception {
+        int exitCode = cleanupOldStorage();
+        if (exitCode == 0) {
+            exportHBaseData();
+        }
+    }
+
+    private static void exportHBaseData() throws IOException {
+        ExportHBaseData export = new ExportHBaseData();
+        export.exportTables();
     }
 
     @Test

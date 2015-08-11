@@ -34,7 +34,7 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +63,6 @@ import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.hadoop.invertedindex.IICreateHTableJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -72,7 +71,6 @@ import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.apache.kylin.streaming.StreamBuilder;
 import org.apache.kylin.streaming.StreamMessage;
 import org.apache.kylin.streaming.invertedindex.IIStreamConsumer;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -114,29 +112,6 @@ public class BuildIIWithStreamTest {
                 iiManager.updateII(ii);
             }
         }
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        backup();
-    }
-
-    private static int cleanupOldStorage() throws Exception {
-        String[] args = { "--delete", "true" };
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        return exitCode;
-    }
-
-    private static void backup() throws Exception {
-        int exitCode = cleanupOldStorage();
-        if (exitCode == 0) {
-            exportHBaseData();
-        }
-    }
-
-    private static void exportHBaseData() throws IOException {
-        ExportHBaseData export = new ExportHBaseData();
-        export.exportTables();
     }
 
     private String createIntermediateTable(IIDesc desc, KylinConfig kylinConfig) throws IOException {
@@ -196,7 +171,7 @@ public class BuildIIWithStreamTest {
         final IIDesc desc = iiManager.getII(iiName).getDescriptor();
         final String tableName = createIntermediateTable(desc, kylinConfig);
         logger.info("intermediate table name:" + tableName);
-        
+
         HiveTableReader reader = new HiveTableReader("default", tableName);
         final List<TblColRef> tblColRefs = desc.listAllColumns();
         for (TblColRef tblColRef : tblColRefs) {
@@ -212,11 +187,7 @@ public class BuildIIWithStreamTest {
         ToolRunner.run(new IICreateHTableJob(), args);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
-        final StreamBuilder streamBuilder = StreamBuilder.newLimitedSizeStreamBuilder(iiName,
-                queue,
-                new IIStreamConsumer(iiName, segment.getStorageLocationIdentifier(), segment.getIIDesc(), 0),
-                0,
-                segment.getIIDesc().getSliceSize());
+        final StreamBuilder streamBuilder = StreamBuilder.newLimitedSizeStreamBuilder(iiName, queue, new IIStreamConsumer(iiName, segment.getStorageLocationIdentifier(), segment.getIIDesc(), 0), 0, segment.getIIDesc().getSliceSize());
 
         List<String[]> sorted = getSortedRows(reader, desc.getTimestampColumn());
         int count = sorted.size();
