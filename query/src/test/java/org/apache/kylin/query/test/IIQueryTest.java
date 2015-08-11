@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.test;
 
+import java.io.File;
 import java.util.Map;
 
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -28,9 +29,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-/**
- * Created by Hongbin Ma(Binmahone) on 2/2/15.
- */
 public class IIQueryTest extends KylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
@@ -60,5 +58,6 @@ public class IIQueryTest extends KylinQueryTest {
     public void testDetailedQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
     }
+
 
 }

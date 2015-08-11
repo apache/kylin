@@ -16,7 +16,7 @@
 -- limitations under the License.
 --
 
-select lstg_format_name, sum(price) as GMV 
+select lstg_format_name, sum(price) as GMV , sum(test_kylin_fact.item_count) as total_items
  from test_kylin_fact 
  where lstg_format_name='FP-GTC' 
  group by lstg_format_name 

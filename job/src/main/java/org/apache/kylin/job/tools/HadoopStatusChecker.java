@@ -65,7 +65,7 @@ public class HadoopStatusChecker {
                 status = JobStepStatusEnum.ERROR;
                 break;
             case KILLED:
-                status = JobStepStatusEnum.ERROR;
+                status = JobStepStatusEnum.KILLED;
                 break;
             case UNDEFINED:
                 switch (result.getLeft()) {
