@@ -46,13 +46,11 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.source.ReadableTable.TableSignature;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("rawtypes")
-@Ignore
 public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(MergeCuboidMapperTest.class);

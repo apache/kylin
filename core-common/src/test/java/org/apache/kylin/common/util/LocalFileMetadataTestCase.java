@@ -25,9 +25,6 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * @author ysong1
- */
 public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
 
     @Override

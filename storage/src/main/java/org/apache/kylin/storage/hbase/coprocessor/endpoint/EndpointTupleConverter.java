@@ -64,7 +64,6 @@ public class EndpointTupleConverter {
                 int tupleIdx = aggrTupleIdx[i];
                 if (tupleIdx >= 0) {
                     Object value = measureValues.get(i);
-                    // TODO: currently in II all metrics except HLLC is returned as String
                     if (value instanceof String) {
                         String dataType = tuple.getDataTypeName(tupleIdx);
                         value = Tuple.convertOptiqCellValue((String) value, dataType);
