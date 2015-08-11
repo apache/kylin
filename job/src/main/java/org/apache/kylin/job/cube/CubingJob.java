@@ -70,16 +70,14 @@ public class CubingJob extends DefaultChainedExecutable {
     @Override
     protected Pair<String, String> formatNotifications(ExecutableState state) {
         final Output output = jobService.getOutput(getId());
-        String logMsg;
+        String logMsg = "";
         switch (output.getState()) {
         case ERROR:
             logMsg = output.getVerboseMsg();
             break;
         case DISCARDED:
-            logMsg = "";
             break;
         case SUCCEED:
-            logMsg = "";
             break;
         default:
             return null;
