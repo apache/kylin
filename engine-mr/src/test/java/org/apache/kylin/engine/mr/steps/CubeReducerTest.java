@@ -47,7 +47,6 @@ import org.junit.Test;
 public class CubeReducerTest extends LocalFileMetadataTestCase {
 
     ReduceDriver<Text, Text, Text, Text> reduceDriver;
-    String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
 
     ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
