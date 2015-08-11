@@ -57,7 +57,7 @@ public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testJob() throws Exception {
-        String input = "src/test/resources/data/base_cuboid/,src/test/resources/data/6d_cuboid/";
+        String input = "src/test/resources/data/base_cuboid/,src/test/resources/data/8d_cuboid/";
         String output = "target/test-output/key_distribution_range/";
         String jobname = "calculate_splits";
         String cubename = "test_kylin_cube_with_slr_ready";
