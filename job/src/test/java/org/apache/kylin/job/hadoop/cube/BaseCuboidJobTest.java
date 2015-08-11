@@ -30,10 +30,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author George Song (ysong1)
- * 
- */
 public class BaseCuboidJobTest extends LocalFileMetadataTestCase {
 
     private Configuration conf;
