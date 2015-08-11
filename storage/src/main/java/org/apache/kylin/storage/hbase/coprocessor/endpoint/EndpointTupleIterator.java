@@ -340,8 +340,7 @@ public class EndpointTupleIterator implements ITupleIterator {
                         String fieldName = measures.get(i).getRewriteFieldName();
                         Object value = measureValues.get(i);
                         String dataType = tuple.getDataType(fieldName);
-                        //TODO: currently in II all metrics except HLLC is returned as String
-                        if (dataType.toLowerCase().equalsIgnoreCase("hllc")) {
+                        if (value instanceof String) {
                             value = Tuple.convertOptiqCellValue((String) value, dataType);
                         }
                         tuple.setMeasureValue(fieldName, value);

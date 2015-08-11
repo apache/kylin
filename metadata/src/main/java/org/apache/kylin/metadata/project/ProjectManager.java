@@ -316,8 +316,8 @@ public class ProjectManager {
         return l2Cache.getOnlineRealizationByFactTable(norm(project), factTable.toUpperCase());
     }
 
-    public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
-        return l2Cache.listEffectiveRewriteMeasures(norm(project), factTable.toUpperCase());
+    public List<MeasureDesc> listEffectiveMeasures(String project, String factTable, boolean onlyRewriteMeasure) {
+        return l2Cache.listEffectiveMeasures(norm(project), factTable.toUpperCase(), onlyRewriteMeasure);
     }
 
     KylinConfig getConfig() {

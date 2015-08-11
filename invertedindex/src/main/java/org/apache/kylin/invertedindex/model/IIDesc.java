@@ -122,7 +122,7 @@ public class IIDesc extends RootPersistentEntity {
                 TblColRef tcr = new TblColRef(columnDesc);
                 allColumns.add(tcr);
                 allDimensions.add(tcr);
-                measureDescs.add(makeHLLMeasure(columnDesc, null));
+                measureDescs.add(makeHLLMeasure(columnDesc, "hllc10"));
             }
 
             if (!allTableNames.contains(tableDesc.getIdentity())) {

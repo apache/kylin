@@ -38,10 +38,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author George Song (ysong1)
- * 
- */
 public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
     @Before
@@ -65,8 +61,9 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");
         LongWritable count = new LongWritable(2);
+        LongWritable item_count = new LongWritable(99999);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        codec.encode(new Object[] { sum, min, max, count }, buf);
+        codec.encode(new Object[] { sum, min, max, count,item_count }, buf);
 
         buf.flip();
         byte[] valueBytes = new byte[buf.limit()];
@@ -83,8 +80,8 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         List<String> measureNames = rowValueDecoder.getNames();
         Object[] measureValues = rowValueDecoder.getValues();
 
-        assertEquals("[PRICE, MIN_PRICE_, MAX_PRICE_, COUNT__]", measureNames.toString());
-        assertEquals("[333.1234567, 333.1111111, 333.1999999, 2]", Arrays.toString(measureValues));
+        assertEquals("[PRICE, MIN_PRICE_, MAX_PRICE_, COUNT__, ITEM_COUNT]", measureNames.toString());
+        assertEquals("[333.1234567, 333.1111111, 333.1999999, 2, 99999]", Arrays.toString(measureValues));
     }
 
 }

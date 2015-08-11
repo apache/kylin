@@ -1,29 +1,31 @@
 {
-"columnConfigs":
-[
+  "columnConfigs": [
     {
-        "columnName" : "lstg_format_name",
-        "valueSet"   : 
-            [
-                "FP-GTC",
-                "FP-non GTC",
-                "ABIN",
-                "Auction",
-                "Others"
-            ],
-        "exclusive":true
+      "columnName": "lstg_format_name",
+      "valueSet": [
+        "FP-GTC",
+        "FP-non GTC",
+        "ABIN",
+        "Auction",
+        "Others"
+      ],
+      "exclusive": true
     },
-    
     {
-        "columnName" : "SELLER_ID",
-        "valueSet"   : 
-            [
-                "10000000" ,
-                "10001000"
-            ],
-        "asRange":true
+      "columnName": "SELLER_ID",
+      "valueSet": [
+        "10000000",
+        "10001000"
+      ],
+      "asRange": true
+    },
+    {
+      "columnName": "ITEM_COUNT",
+      "valueSet": [
+        "0",
+        "2000000"
+      ],
+      "asRange": true
     }
-]
-
-
+  ]
 }
