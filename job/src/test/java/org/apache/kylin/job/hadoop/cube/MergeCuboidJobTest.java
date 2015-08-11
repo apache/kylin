@@ -31,9 +31,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author ysong1
- */
 public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
 
     private Configuration conf;
@@ -68,18 +65,18 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
         FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), baseFolder);
         baseFolder.deleteOnExit();
 
-        File sixDFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "6d");
-        sixDFolder.delete();
-        sixDFolder.mkdir();
-        FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), sixDFolder);
-        sixDFolder.deleteOnExit();
+        File eightFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "8d");
+        eightFolder.delete();
+        eightFolder.mkdir();
+        FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), eightFolder);
+        eightFolder.deleteOnExit();
 
         FileUtil.fullyDelete(new File(output));
 
         // CubeManager cubeManager =
         // CubeManager.getInstanceFromEnv(getTestConfig());
 
-        String[] args = { "-input", baseFolder.getAbsolutePath() + "," + sixDFolder.getAbsolutePath(), "-cubename", cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output, "-jobname", jobname };
+        String[] args = { "-input", baseFolder.getAbsolutePath() + "," + eightFolder.getAbsolutePath(), "-cubename", cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output, "-jobname", jobname };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new MergeCuboidJob(), args));
 
     }

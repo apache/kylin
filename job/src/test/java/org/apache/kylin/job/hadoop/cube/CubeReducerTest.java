@@ -42,14 +42,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author George Song (ysong1)
- * 
- */
 public class CubeReducerTest extends LocalFileMetadataTestCase {
 
     ReduceDriver<Text, Text, Text, Text> reduceDriver;
-    String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
 
     ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
@@ -81,18 +76,18 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         Text key1 = new Text("72010ustech");
         List<Text> values1 = new ArrayList<Text>();
-        values1.add(newValueText(codec, "15.09", "15.09", "15.09", 1));
-        values1.add(newValueText(codec, "20.34", "20.34", "20.34", 1));
-        values1.add(newValueText(codec, "10", "10", "10", 1));
+        values1.add(newValueText(codec, "15.09", "15.09", "15.09", 1,22));
+        values1.add(newValueText(codec, "20.34", "20.34", "20.34", 1,23));
+        values1.add(newValueText(codec, "10", "10", "10", 1,24));
 
         Text key2 = new Text("1tech");
         List<Text> values2 = new ArrayList<Text>();
-        values2.add(newValueText(codec, "15.09", "15.09", "15.09", 1));
-        values2.add(newValueText(codec, "20.34", "20.34", "20.34", 1));
+        values2.add(newValueText(codec, "15.09", "15.09", "15.09", 1,12));
+        values2.add(newValueText(codec, "20.34", "20.34", "20.34", 1,13));
 
         Text key3 = new Text("0");
         List<Text> values3 = new ArrayList<Text>();
-        values3.add(newValueText(codec, "146.52", "146.52", "146.52", 4));
+        values3.add(newValueText(codec, "146.52", "146.52", "146.52", 4,11));
 
         reduceDriver.withInput(key1, values1);
         reduceDriver.withInput(key2, values2);
@@ -100,9 +95,9 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         List<Pair<Text, Text>> result = reduceDriver.run();
 
-        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "45.43", "10", "20.34", 3));
-        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "35.43", "15.09", "20.34", 2));
-        Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"), newValueText(codec, "146.52", "146.52", "146.52", 4));
+        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "45.43", "10", "20.34", 3,69));
+        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "35.43", "15.09", "20.34", 2,25));
+        Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"), newValueText(codec, "146.52", "146.52", "146.52", 4,11));
 
         assertEquals(3, result.size());
 
@@ -111,8 +106,8 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
         assertTrue(result.contains(p3));
     }
 
-    private Text newValueText(MeasureCodec codec, String sum, String min, String max, int count) {
-        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new LongWritable(count) };
+    private Text newValueText(MeasureCodec codec, String sum, String min, String max, int count,int itemcount) {
+        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new LongWritable(count),new LongWritable(itemcount) };
 
         buf.clear();
         codec.encode(values, buf);
