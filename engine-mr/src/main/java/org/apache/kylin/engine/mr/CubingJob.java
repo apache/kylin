@@ -124,6 +124,7 @@ public class CubingJob extends DefaultChainedExecutable {
         content = content.replaceAll("\\$\\{job_name\\}", getName());
         content = content.replaceAll("\\$\\{result\\}", state.toString());
         content = content.replaceAll("\\$\\{cube_name\\}", getCubeName());
+        content = content.replaceAll("\\$\\{source_records_count\\}", String.valueOf(findSourceRecordCount()));
         content = content.replaceAll("\\$\\{start_time\\}", new Date(getStartTime()).toString());
         content = content.replaceAll("\\$\\{duration\\}", getDuration() / 60000 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", getMapReduceWaitTime() / 60000 + "mins");
@@ -177,7 +178,7 @@ public class CubingJob extends DefaultChainedExecutable {
     public long findCubeSizeBytes() {
         return Long.parseLong(findExtraInfo(CUBE_SIZE_BYTES, "0"));
     }
-    
+
     private String findExtraInfo(String key, String dft) {
         for (AbstractExecutable child : getTasks()) {
             Output output = executableManager.getOutput(child.getId());
