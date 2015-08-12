@@ -47,7 +47,9 @@ public class FileUtils {
                 return false;
             }
         } catch (Exception e) {
-            fs.close();
+            if(fs != null) {
+                fs.close();
+            }
             logger.info("Failed to init:", e);
         }
         return true;
@@ -67,8 +69,12 @@ public class FileUtils {
         } catch (Exception e) {
             logger.info("Exception", e);
         } finally {
-            writer.close();
-            fs.close();
+            if(writer != null) {
+                writer.close();
+            }
+            if(fs != null) {
+                fs.close();
+            }
         }
     }
 
@@ -90,9 +96,15 @@ public class FileUtils {
         } catch (Exception e) {
             logger.info("Exception", e);
         } finally {
-            writer.close();
-            cwriter.close();
-            fs.close();
+            if(writer != null) {
+                writer.close();
+            }
+            if(cwriter != null) {
+                cwriter.close();
+            }
+            if(fs != null) {
+                fs.close();
+            }
         }
     }
 
@@ -106,7 +118,9 @@ public class FileUtils {
         try {
             fs = FileSystem.newInstance(conf);
         } catch (IOException e) {
-            fs.close();
+            if(fs != null) {
+                fs.close();
+            }
             logger.info("Failed to get hdfs FileSystem", e);
         }
         return fs;

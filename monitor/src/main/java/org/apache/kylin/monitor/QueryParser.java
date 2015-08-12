@@ -107,7 +107,9 @@ public class QueryParser {
                 this.writeResultToHdfs(QueryParser.QUERY_PARSE_RESULT_PATH, QueryParser.KYLIN_QUERY_CSV_HEADER);
             }
         } catch (IOException e) {
-            fs.close();
+            if(fs != null) {
+                fs.close();
+            }
             logger.info("Failed to init:", e);
         }
     }
@@ -181,9 +183,15 @@ public class QueryParser {
         } catch (IOException ex) {
             logger.info("Failed to write to hdfs:", ex);
         } finally {
-            writer.close();
-            cwriter.close();
-            fs.close();
+            if(writer != null) {
+                writer.close();
+            }
+            if(cwriter != null) {
+                cwriter.close();
+            }
+            if(fs != null) {
+                fs.close();
+            }
         }
 
         logger.info("Finish parsing file " + filePath + " !");
@@ -208,9 +216,15 @@ public class QueryParser {
         } catch (IOException e) {
             logger.info("Exception", e);
         } finally {
-            writer.close();
-            cwriter.close();
-            fs.close();
+            if(writer != null) {
+                writer.close();
+            }
+            if(cwriter != null) {
+                cwriter.close();
+            }
+            if(fs != null) {
+                fs.close();
+            }
         }
     }
 
@@ -247,7 +261,9 @@ public class QueryParser {
         try {
             fs = FileSystem.get(conf);
         } catch (IOException e) {
-            fs.close();
+            if(fs != null) {
+                fs.close();
+            }
             logger.info("Failed to get hdfs FileSystem", e);
         }
         return fs;
