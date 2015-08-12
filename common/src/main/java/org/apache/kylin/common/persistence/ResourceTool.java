@@ -33,9 +33,10 @@ public class ResourceTool {
         args = StringUtil.filterSystemArgs(args);
 
         if (args.length == 0) {
-            System.out.println("Usage: MetadataTool reset METADATA_URI");
-            System.out.println("Usage: MetadataTool copy  METADATA_URI_SRC  METADATA_URI_DST");
-            System.out.println("Usage: MetadataTool list  METADATA_URI      PATH");
+            System.out.println("Usage: MetadataTool reset");
+            System.out.println("Usage: MetadataTool list  RESOURCE_PATH");
+            System.out.println("Usage: MetadataTool download  LOCAL_DIR");
+            System.out.println("Usage: MetadataTool upload    LOCAL_DIR");
             return;
         }
 
@@ -49,11 +50,8 @@ public class ResourceTool {
         case "reset":
             reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig.createInstanceFromUri(args[1]));
             break;
-        case "copy":
-            copy(args[1], args[2]);
-            break;
         case "list":
-            list(args[1], args[2]);
+            list(KylinConfig.getInstanceFromEnv(), args[1]);
             break;
         case "download":
             copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
@@ -75,26 +73,11 @@ public class ResourceTool {
         System.out.println("" + result);
     }
 
-    private static void list(String metadataUri, String path) throws IOException {
-        KylinConfig config = KylinConfig.createInstanceFromUri(metadataUri);
-        list(config, path);
-    }
-
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
 
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
         copyR(src, dst, "/");
-    }
-
-    private static void copy(String srcUri, String dstUri) throws IOException {
-
-        System.out.println("Copy from " + srcUri + " to " + dstUri);
-
-        KylinConfig srcConfig = KylinConfig.createInstanceFromUri(srcUri);
-        KylinConfig dstConfig = KylinConfig.createInstanceFromUri(dstUri);
-        copy(srcConfig, dstConfig);
-
     }
 
     private static void copyR(ResourceStore src, ResourceStore dst, String path) throws IOException {
