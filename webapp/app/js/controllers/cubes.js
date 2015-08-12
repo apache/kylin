@@ -420,6 +420,25 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
       loadingRequest.hide();
       if (e.data && e.data.exception) {
         var message = e.data.exception;
+
+        if(message.indexOf("Empty cube segment found")!=-1){
+          var _segment = message.substring(message.indexOf(":")+1,message.length-1);
+          SweetAlert.swal({
+            title:'',
+            type:'info',
+            text: 'Empty cube segment found'+':'+_segment+', do you want to merge segments forcely ?',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            closeOnConfirm: true
+          }, function (isConfirm) {
+            if (isConfirm) {
+              $scope.jobBuildRequest.forceMergeEmptySegment = true;
+              $scope.rebuild(jobsubmit);
+            }
+          });
+          return;
+        }
+
         var msg = !!(message) ? message : 'Failed to take action.';
         SweetAlert.swal('Oops...', msg, 'error');
       } else {
@@ -464,12 +483,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   };
 
   $scope.updateDate = function () {
-
-
-//        if ($scope.cube.detail.partition_desc.cube_partition_type=='UPDATE_INSERT')
-//        {
-//            $scope.jobBuildRequest.startTime=$scope.formatDate($scope.jobBuildRequest.startTime);
-//        }
     $scope.jobBuildRequest.endTime = $scope.formatDate($scope.jobBuildRequest.endTime);
   };
 
