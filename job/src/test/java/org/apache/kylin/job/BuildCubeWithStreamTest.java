@@ -34,6 +34,10 @@
 
 package org.apache.kylin.job;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
+
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
@@ -45,17 +49,12 @@ import org.apache.kylin.job.streaming.StreamingBootstrap;
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.apache.kylin.streaming.StreamingConfig;
 import org.apache.kylin.streaming.StreamingManager;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
 
 /**
  *  for streaming cubing case "test_streaming_table"
@@ -94,14 +93,10 @@ public class BuildCubeWithStreamTest {
         DeployUtil.prepareTestDataForStreamingCube(startTime, endTime, streamingConfig);
     }
 
-    @After
-    public void after() {
-        HBaseMetadataTestCase.staticCleanupTestMetadata();
-    }
-
     @AfterClass
     public static void afterClass() throws Exception {
         backup();
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
     private static int cleanupOldStorage() throws Exception {
