@@ -33,11 +33,15 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.engine.mr.HadoopUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
 
 public class HBaseResourceStore extends ResourceStore {
+
+    private static final Logger logger = LoggerFactory.getLogger(HBaseResourceStore.class);
 
     private static final String DEFAULT_TABLE_NAME = "kylin_metadata";
     private static final String FAMILY = "f";
@@ -224,6 +228,7 @@ public class HBaseResourceStore extends ResourceStore {
             Put put = buildPut(resPath, newTS, row, content, table);
 
             boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
+            logger.info("Update row " + resPath + " from oldTs: " + oldTS + ", to newTs: " + newTS + ", operation result: " + ok);
             if (!ok) {
                 long real = getResourceTimestamp(resPath);
                 throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
