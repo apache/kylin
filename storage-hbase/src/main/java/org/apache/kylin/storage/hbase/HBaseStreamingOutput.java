@@ -66,7 +66,6 @@ public class HBaseStreamingOutput implements IStreamingOutput {
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             final Configuration conf = HadoopUtil.getCurrentConfiguration();
             final Path outputPath = new Path("file:///tmp/cuboidstatistics/" + UUID.randomUUID().toString());
-            FileSystem.getLocal(conf).deleteOnExit(outputPath);
             FactDistinctColumnsReducer.writeCuboidStatistics(conf, outputPath, samplingResult, 100);
             FSDataInputStream inputStream = null;
             try {
@@ -74,6 +73,7 @@ public class HBaseStreamingOutput implements IStreamingOutput {
                 ResourceStore.getStore(kylinConfig).putResource(cubeSegment.getStatisticsResourcePath(), inputStream, System.currentTimeMillis());
             } finally {
                 IOUtils.closeQuietly(inputStream);
+                FileSystem.getLocal(conf).delete(outputPath, false);
             }
         } catch (IOException e) {
             throw new RuntimeException("failed to write sampling result", e);
