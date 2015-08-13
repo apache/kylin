@@ -18,9 +18,9 @@
 
 package org.apache.kylin.job.execution;
 
-import org.apache.kylin.job.exception.ExecuteException;
-
 import java.util.Map;
+
+import org.apache.kylin.job.exception.ExecuteException;
 
 /**
  */

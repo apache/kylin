@@ -18,13 +18,13 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.execution.Executable;
-import org.apache.kylin.job.execution.ExecutableContext;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.job.execution.Executable;
+import org.apache.kylin.job.execution.ExecutableContext;
 
 /**
  */
@@ -37,6 +37,7 @@ public class DefaultContext implements ExecutableContext {
         this.runningJobs = runningJobs;
         this.kylinConfig = kylinConfig;
     }
+
     @Override
     public Object getSchedulerContext() {
         return null;

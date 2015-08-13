@@ -30,9 +30,9 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.engine.mr.MRUtil;
 
 /**
  * This hadoop job will scan all rows of the hive table and then calculate the cardinality on each column.
@@ -68,10 +68,10 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             job = Job.getInstance(conf, jobName);
 
             setJobClasspath(job);
-            
+
             String table = getOptionValue(OPTION_TABLE);
             job.getConfiguration().set(BatchConstants.TABLE_NAME, table);
-            
+
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             FileOutputFormat.setOutputPath(job, output);
             job.getConfiguration().set("dfs.block.size", "67108864");

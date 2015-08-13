@@ -18,8 +18,9 @@
 
 package org.apache.kylin.invertedindex.model;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.Array;
@@ -34,9 +35,8 @@ import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -105,7 +105,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
         //		return new Decoder(kvs, incompleteDigest);
     }
 
-    private static TableRecordInfoDigest createDigest(int nColumns,  boolean[] isMetric, String[] dataTypes, Dictionary<?>[] dictionaries) {
+    private static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Dictionary<?>[] dictionaries) {
         int[] dictMaxIds = new int[nColumns];
         int[] lengths = new int[nColumns];
         final boolean emptyDictionary = Array.isEmpty(dictionaries);

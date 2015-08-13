@@ -1,9 +1,10 @@
 package org.apache.kylin.metadata.filter;
 
-import com.google.common.collect.Maps;
+import java.util.IdentityHashMap;
+
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.util.IdentityHashMap;
+import com.google.common.collect.Maps;
 
 /**
  */

@@ -33,9 +33,17 @@
  */
 package org.apache.kylin.engine.streaming.cube;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.annotation.Nullable;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.CubeInstance;
@@ -44,7 +52,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.cube.inmemcubing.InMemCubeBuilder;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryInfo;
@@ -59,15 +66,9 @@ import org.apache.kylin.source.ReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -93,10 +94,10 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
             for (StreamingMessage streamingMessage : streamingBatch.getMessages()) {
                 blockingQueue.put(streamingMessage.getData());
             }
-            blockingQueue.put(Collections.<String>emptyList());
+            blockingQueue.put(Collections.<String> emptyList());
             future.get();
             cuboidWriter.flush();
-            
+
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
@@ -121,14 +122,13 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
         final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
         long start = System.currentTimeMillis();
 
-        final Map<Long, HyperLogLogPlusCounter> samplingResult = CubingUtils.sampling(cubeInstance.getDescriptor(),
-                Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
-                    @Nullable
-                    @Override
-                    public List<String> apply(@Nullable StreamingMessage input) {
-                        return input.getData();
-                    }
-                }));
+        final Map<Long, HyperLogLogPlusCounter> samplingResult = CubingUtils.sampling(cubeInstance.getDescriptor(), Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
+            @Nullable
+            @Override
+            public List<String> apply(@Nullable StreamingMessage input) {
+                return input.getData();
+            }
+        }));
         logger.info(String.format("sampling of %d messages cost %d ms", streamingBatch.getMessages().size(), (System.currentTimeMillis() - start)));
         return samplingResult;
     }
@@ -139,18 +139,14 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
         final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
         final Map<TblColRef, Dictionary<?>> dictionaryMap;
         try {
-            dictionaryMap = CubingUtils.buildDictionary(cubeInstance,
-                    Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
-                        @Nullable
-                        @Override
-                        public List<String> apply(@Nullable StreamingMessage input) {
-                            return input.getData();
-                        }
-                    }));
-            Map<TblColRef, Dictionary<?>> realDictMap = writeDictionary((CubeSegment) buildable, 
-                    dictionaryMap, 
-                    streamingBatch.getTimeRange().getFirst(),
-                    streamingBatch.getTimeRange().getSecond());
+            dictionaryMap = CubingUtils.buildDictionary(cubeInstance, Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
+                @Nullable
+                @Override
+                public List<String> apply(@Nullable StreamingMessage input) {
+                    return input.getData();
+                }
+            }));
+            Map<TblColRef, Dictionary<?>> realDictMap = writeDictionary((CubeSegment) buildable, dictionaryMap, streamingBatch.getTimeRange().getFirst(), streamingBatch.getTimeRange().getSecond());
             return realDictMap;
         } catch (IOException e) {
             throw new RuntimeException("failed to build dictionary", e);
@@ -182,7 +178,6 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
 
         return realDictMap;
     }
-
 
     @Override
     public void commit(IBuildable buildable) {

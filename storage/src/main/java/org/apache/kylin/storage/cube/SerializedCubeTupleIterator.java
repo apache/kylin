@@ -1,9 +1,9 @@
 package org.apache.kylin.storage.cube;
 
+import java.util.List;
+
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-
-import java.util.List;
 
 public class SerializedCubeTupleIterator implements ITupleIterator {
 
@@ -33,6 +33,5 @@ public class SerializedCubeTupleIterator implements ITupleIterator {
         // TODO Auto-generated method stub
 
     }
-
 
 }

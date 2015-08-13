@@ -18,7 +18,8 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.observer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -171,7 +172,7 @@ public class AggregateRegionObserverTest {
 
         MockupRegionScanner innerScanner = new MockupRegionScanner(cellsInput);
 
-        RegionScanner aggrScanner = new AggregationScanner(rowType, filter, projector, aggregators, innerScanner,ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM);
+        RegionScanner aggrScanner = new AggregationScanner(rowType, filter, projector, aggregators, innerScanner, ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM);
         ArrayList<Cell> result = Lists.newArrayList();
         boolean hasMore = true;
         while (hasMore) {

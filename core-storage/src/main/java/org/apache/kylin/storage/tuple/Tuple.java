@@ -18,17 +18,18 @@
 
 package org.apache.kylin.storage.tuple;
 
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
+
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.measure.DoubleMutable;
 import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
-
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author xjiang

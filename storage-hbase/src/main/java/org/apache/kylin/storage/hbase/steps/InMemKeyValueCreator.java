@@ -18,7 +18,6 @@ public class InMemKeyValueCreator {
     byte[] qBytes;
     long timestamp;
 
-
     MeasureCodec codec;
     Object[] colValues;
     ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
@@ -56,7 +55,6 @@ public class InMemKeyValueCreator {
 
         return create(keyBytes, keyOffset, keyLength, valueBuf.array(), 0, valueBuf.position());
     }
-
 
     public KeyValue create(byte[] keyBytes, int keyOffset, int keyLength, byte[] value, int voffset, int vlen) {
         return new KeyValue(keyBytes, keyOffset, keyLength, //

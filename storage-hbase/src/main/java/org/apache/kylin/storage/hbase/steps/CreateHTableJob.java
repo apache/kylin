@@ -164,9 +164,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         return retValue.length == 0 ? null : retValue;
     }
 
-
     @SuppressWarnings("deprecation")
-    public static byte[][] getSplitsFromCuboidStatistics(Configuration conf, KylinConfig kylinConfig,  List<Integer> rowkeyColumnSize, CubeSegment cubeSegment) throws IOException {
+    public static byte[][] getSplitsFromCuboidStatistics(Configuration conf, KylinConfig kylinConfig, List<Integer> rowkeyColumnSize, CubeSegment cubeSegment) throws IOException {
 
         CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
@@ -241,7 +240,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         List<Long> regionSplit = Lists.newArrayList();
 
-
         long size = 0;
         int regionIndex = 0;
         int cuboidCount = 0;
@@ -258,7 +256,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
             size += cuboidSizeMap.get(cuboidId);
             cuboidCount++;
         }
-
 
         byte[][] result = new byte[regionSplit.size()][];
         for (int i = 0; i < regionSplit.size(); i++) {

@@ -39,7 +39,7 @@ public abstract class CubeHBaseRPC {
     final protected Cuboid cuboid;
     final protected GTInfo fullGTInfo;
 
-    public CubeHBaseRPC(CubeSegment cubeSeg, Cuboid cuboid,GTInfo fullGTInfo) {
+    public CubeHBaseRPC(CubeSegment cubeSeg, Cuboid cuboid, GTInfo fullGTInfo) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
         this.fullGTInfo = fullGTInfo;

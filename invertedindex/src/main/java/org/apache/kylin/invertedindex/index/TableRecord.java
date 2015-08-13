@@ -51,7 +51,7 @@ public class TableRecord implements Cloneable {
     public TableRecordInfo getInfo() {
         return info;
     }
-    
+
     @Override
     public Object clone() {
         return new TableRecord(this);
@@ -116,7 +116,7 @@ public class TableRecord implements Cloneable {
                 rawRecord.setValueID(col, id);
             } else {
                 setValueStringWithoutDictionary(col, value);
-//                throw new UnsupportedOperationException("cannot set value when there is no dictionary");
+                //                throw new UnsupportedOperationException("cannot set value when there is no dictionary");
             }
         }
     }
@@ -134,7 +134,7 @@ public class TableRecord implements Cloneable {
                 return dict.getValueFromId(rawRecord.getValueID(col));
             } else {
                 return getValueStringWithoutDictionary(col);
-//                throw new UnsupportedOperationException("cannot get value when there is no dictionary");
+                //                throw new UnsupportedOperationException("cannot get value when there is no dictionary");
             }
         }
     }

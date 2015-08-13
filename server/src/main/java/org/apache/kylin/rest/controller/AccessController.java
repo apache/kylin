@@ -21,6 +21,7 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclPermissionFactory;
@@ -35,8 +36,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.common.persistence.AclEntity;
 
 /**
  * @author xduo

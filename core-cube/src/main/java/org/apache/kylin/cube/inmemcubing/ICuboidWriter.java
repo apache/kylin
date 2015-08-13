@@ -17,15 +17,15 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import org.apache.kylin.gridtable.GTRecord;
-
 import java.io.IOException;
+
+import org.apache.kylin.gridtable.GTRecord;
 
 /**
  */
 public interface ICuboidWriter {
-    
+
     void write(long cuboidId, GTRecord record) throws IOException;
-    
+
     void flush();
 }

@@ -18,11 +18,11 @@
 
 package org.apache.kylin.storage.hbase.util;
 
+import java.io.File;
+
 import org.apache.hadoop.hbase.util.CompressionTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 /**
  */

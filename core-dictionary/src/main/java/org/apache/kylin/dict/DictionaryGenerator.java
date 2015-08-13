@@ -186,7 +186,7 @@ public class DictionaryGenerator {
             String v = Bytes.toString(value);
             if (StringUtils.isBlank(v)) // empty string is null for numbers
                 continue;
-            
+
             builder.addValue(v);
             if (samples.size() < nSamples && samples.contains(v) == false)
                 samples.add(v);

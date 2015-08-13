@@ -18,10 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import com.google.common.collect.Lists;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
@@ -29,9 +29,10 @@ import org.apache.kylin.common.util.Bytes;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import com.google.common.collect.Lists;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 /**
  */
@@ -67,7 +68,7 @@ public class CubeSamplingTest {
         }
 
         //  hf = Hashing.goodFastHash(32);
-//        hf = Hashing.md5();
+        //        hf = Hashing.md5();
         hf = Hashing.murmur3_32();
 
         for (int i = 0; i < ROW_LENGTH; i++) {
@@ -76,7 +77,7 @@ public class CubeSamplingTest {
     }
 
     private void addCuboidBitSet(long cuboidId, List<Integer[]> allCuboidsBitSet) {
-        BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
+        BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
         Integer[] indice = new Integer[bitSet.cardinality()];
 
         long mask = Long.highestOneBit(baseCuboidId);

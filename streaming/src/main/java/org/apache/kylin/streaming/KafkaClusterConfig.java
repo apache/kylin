@@ -1,17 +1,20 @@
 package org.apache.kylin.streaming;
 
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import kafka.cluster.Broker;
+
+import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.persistence.Serializer;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import kafka.cluster.Broker;
-import org.apache.kylin.common.persistence.JsonSerializer;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.persistence.Serializer;
-
-import javax.annotation.Nullable;
-import java.util.List;
 
 /**
  */

@@ -29,8 +29,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder;
-import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -96,7 +94,7 @@ public class DoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
 
         @Override
         public void flush() {
-            
+
         }
     }
 }

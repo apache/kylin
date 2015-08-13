@@ -13,15 +13,14 @@ import com.google.common.collect.Ranges;
 public class RangeTest {
 
     @Test
-    public void extremeCase()
-    {
+    public void extremeCase() {
         Range r1 = Ranges.all();
         Range r2 = Ranges.all();
 
         Range a = Ranges.closedOpen(2, 5);
 
         Assert.assertTrue(RangeUtil.remove(r1, r2).equals(Lists.newArrayList()));
-        Assert.assertTrue(RangeUtil.remove(r1, a).equals(Lists.newArrayList(Ranges.lessThan(2),Ranges.atLeast(5))));
+        Assert.assertTrue(RangeUtil.remove(r1, a).equals(Lists.newArrayList(Ranges.lessThan(2), Ranges.atLeast(5))));
     }
 
     @Test
@@ -58,7 +57,6 @@ public class RangeTest {
         Range d1 = Ranges.closed(2, 3);
         Range d2 = Ranges.closed(3, 4);
         Range d3 = Ranges.closed(4, 5);
-
 
         Assert.assertTrue(RangeUtil.remove(r1, anull).equals(Lists.newArrayList(r1)));
         Assert.assertTrue(RangeUtil.remove(r1, a1).equals(Lists.newArrayList(r1)));
@@ -126,7 +124,6 @@ public class RangeTest {
         Range d2 = Ranges.closed(3, 4);
         Range d3 = Ranges.closed(4, 5);
 
-
         Assert.assertTrue(RangeUtil.remove(r1, anull).equals(Lists.newArrayList(r1)));
 
         Assert.assertTrue(RangeUtil.remove(r1, a1).equals(Lists.newArrayList(r1)));
@@ -149,7 +146,7 @@ public class RangeTest {
         Assert.assertTrue(RangeUtil.remove(r1, b8).equals(Lists.newArrayList()));
         Assert.assertTrue(RangeUtil.remove(r1, b9).equals(Lists.newArrayList()));
 
-        Assert.assertTrue(RangeUtil.remove(r1, c1).equals(Lists.newArrayList( Ranges.closedOpen(3, 5))));
+        Assert.assertTrue(RangeUtil.remove(r1, c1).equals(Lists.newArrayList(Ranges.closedOpen(3, 5))));
         Assert.assertTrue(RangeUtil.remove(r1, c2).equals(Lists.newArrayList(Ranges.openClosed(2, 3), Ranges.closedOpen(4, 5))));
         Assert.assertTrue(RangeUtil.remove(r1, c3).equals(Lists.newArrayList(Ranges.openClosed(2, 4))));
 

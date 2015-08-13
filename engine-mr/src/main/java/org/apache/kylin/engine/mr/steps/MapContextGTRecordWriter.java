@@ -79,7 +79,7 @@ public class MapContextGTRecordWriter implements ICuboidWriter {
 
     @Override
     public void flush() {
-        
+
     }
 
     private void initVariables(Long cuboidId) {
@@ -90,7 +90,7 @@ public class MapContextGTRecordWriter implements ICuboidWriter {
         }
 
         keyBuf = new byte[bytesLength];
-        dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
+        dimensions = BitSet.valueOf(new long[] { cuboidId }).cardinality();
         measureColumnsIndex = new int[measureCount];
         for (int i = 0; i < measureCount; i++) {
             measureColumnsIndex[i] = dimensions + i;

@@ -13,7 +13,6 @@ public class SparkHiveDemo extends AbstractSparkApplication {
 
     private final Options options;
 
-
     public SparkHiveDemo() {
         options = new Options();
     }

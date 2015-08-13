@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
  * @author xjiang
  */
 public class StorageFactory {
-    
+
     private static boolean allowStorageLayerCache = true;
 
     public static IStorageQuery createQuery(IRealization realization) {
@@ -81,5 +81,5 @@ public class StorageFactory {
         Preconditions.checkArgument(partitionColRef != null, "getPartitionDateColumnRef for " + realization + " is null");
         return partitionColRef;
     }
-    
+
 }

@@ -120,7 +120,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         }
         return size;
     }
-    
+
     @Override
     public String toString() {
         return "" + getCountEstimate();
@@ -215,11 +215,11 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         } else
             throw new IllegalStateException();
     }
-    
+
     public int peekLength(ByteBuffer in) {
         int mark = in.position();
         int len;
-        
+
         byte scheme = in.get();
         if (scheme == 0) { // map scheme
             int size = BytesUtil.readVInt(in);
@@ -228,11 +228,11 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         } else {
             len = in.position() - mark + m;
         }
-        
+
         in.position(mark);
         return len;
     }
-    
+
     public int maxLength() {
         return 1 + m;
     }

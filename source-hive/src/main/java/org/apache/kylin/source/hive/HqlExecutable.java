@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -31,8 +32,6 @@ import org.datanucleus.store.types.backed.HashMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
-
-import org.apache.kylin.common.util.JsonUtil;
 
 /**
  */
@@ -50,8 +49,8 @@ public class HqlExecutable extends AbstractExecutable {
         try {
             Map<String, String> configMap = getConfiguration();
             HiveClient hiveClient = new HiveClient(configMap);
-            
-            for (String hql: getHqls()) {
+
+            for (String hql : getHqls()) {
                 hiveClient.executeHQL(hql);
             }
             return new ExecuteResult(ExecuteResult.State.SUCCEED);
@@ -60,9 +59,9 @@ public class HqlExecutable extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
-    
+
     public void setConfiguration(Map<String, String> configMap) {
-        if(configMap != null) {
+        if (configMap != null) {
             String configStr = "";
             try {
                 configStr = JsonUtil.writeValueAsString(configMap);
@@ -73,22 +72,21 @@ public class HqlExecutable extends AbstractExecutable {
         }
     }
 
-
     @SuppressWarnings("unchecked")
     private Map<String, String> getConfiguration() {
         String configStr = getParam(HIVE_CONFIG);
         Map<String, String> result = null;
-        if(configStr != null) {
+        if (configStr != null) {
             try {
                 result = JsonUtil.readValue(configStr, HashMap.class);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        
+
         return result;
     }
-    
+
     public void setHqls(List<String> hqls) {
         setParam(HQL, StringUtils.join(hqls, ";"));
     }

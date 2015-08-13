@@ -18,18 +18,18 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.engine.mr.steps.RangeKeyDistributionJob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.engine.mr.steps.RangeKeyDistributionJob;
 
 /**
  * @author ysong1

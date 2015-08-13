@@ -95,11 +95,11 @@ public class ImportHBaseData {
         List<String> tablelocations = getTablesBackupLocations(importFolder);
         for (String tableLocation : tablelocations) {
             String table = tableLocation.substring(tableLocation.lastIndexOf("/") + 1);
-            
+
             if (!(table.equalsIgnoreCase(tableNameBase) || table.startsWith(HBaseMiniclusterHelper.SHARED_STORAGE_PREFIX))) {
                 continue;
             }
-            
+
             if (table.startsWith(HBaseMiniclusterHelper.SHARED_STORAGE_PREFIX)) {
                 // create the cube table; otherwise the import will fail.
                 HBaseConnection.createHTableIfNeeded(KylinConfig.getInstanceFromEnv().getStorageUrl(), table, "F1", "F2");

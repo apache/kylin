@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
-
 import org.apache.kylin.common.KylinConfig;
 
 /**
@@ -47,12 +46,7 @@ public class MailService {
     }
 
     public MailService(KylinConfig config) {
-        this("true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "false")),
-                config.getProperty(KylinConfig.MAIL_HOST, ""),
-                config.getProperty(KylinConfig.MAIL_USERNAME, ""),
-                config.getProperty(KylinConfig.MAIL_PASSWORD, ""),
-                config.getProperty(KylinConfig.MAIL_SENDER, "")
-                );
+        this("true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "false")), config.getProperty(KylinConfig.MAIL_HOST, ""), config.getProperty(KylinConfig.MAIL_USERNAME, ""), config.getProperty(KylinConfig.MAIL_PASSWORD, ""), config.getProperty(KylinConfig.MAIL_SENDER, ""));
     }
 
     public MailService(boolean enabled, String host, String username, String password, String sender) {
@@ -119,7 +113,7 @@ public class MailService {
             email.getMailSession();
 
         } catch (EmailException e) {
-            logger.error(e.getLocalizedMessage(),e);
+            logger.error(e.getLocalizedMessage(), e);
             return false;
         }
 

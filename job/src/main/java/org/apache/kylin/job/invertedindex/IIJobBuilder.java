@@ -46,7 +46,7 @@ import com.google.common.base.Preconditions;
 public final class IIJobBuilder {
 
     final JobEngineConfig engineConfig;
-    
+
     public IIJobBuilder(JobEngineConfig engineConfig) {
         this.engineConfig = engineConfig;
     }

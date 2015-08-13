@@ -1,8 +1,14 @@
 package org.apache.kylin.job.monitor;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -19,13 +25,9 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -121,14 +123,13 @@ public class StreamingMonitor {
         List<Pair<String, String>> overlaps = Lists.newArrayList();
         StringBuilder content = new StringBuilder();
         if (!gaps.isEmpty()) {
-            content.append("all gaps:").append("\n").append(
-                    StringUtils.join(Lists.transform(gaps, new Function<Pair<Long, Long>, String>() {
-                        @Nullable
-                        @Override
-                        public String apply(Pair<Long, Long> input) {
-                            return parseInterval(input);
-                        }
-                    }), "\n")).append("\n");
+            content.append("all gaps:").append("\n").append(StringUtils.join(Lists.transform(gaps, new Function<Pair<Long, Long>, String>() {
+                @Nullable
+                @Override
+                public String apply(Pair<Long, Long> input) {
+                    return parseInterval(input);
+                }
+            }), "\n")).append("\n");
         }
         if (!overlaps.isEmpty()) {
             content.append("all overlaps:").append("\n").append(StringUtils.join(overlaps, "\n")).append("\n");

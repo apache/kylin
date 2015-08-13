@@ -36,7 +36,7 @@ public class HiveTable implements ReadableTable {
 
     final private String database;
     final private String hiveTable;
-    
+
     private HiveClient hiveClient;
 
     public HiveTable(TableDesc tableDesc) {

@@ -60,18 +60,18 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
     private static final int INPUT_ROWS = 70000;
     private static final int THREADS = 4;
-    
+
     private static CubeInstance cube;
     private static String flatTable;
     private static Map<TblColRef, Dictionary<?>> dictionaryMap;
-    
+
     @BeforeClass
     public static void before() throws IOException {
         staticCreateTestMetadata();
-        
+
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
-        
+
         cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
         flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
         dictionaryMap = getDictionaryMap(cube, flatTable);
@@ -88,7 +88,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(cube.getDescriptor(), dictionaryMap);
         //DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
         cubeBuilder.setConcurrentThreads(THREADS);
-        
+
         ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -99,21 +99,21 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
                 feedData(cube, flatTable, queue, INPUT_ROWS);
                 future.get();
             }
-            
+
             // round 2, zero input
             {
                 Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
                 feedData(cube, flatTable, queue, 0);
                 future.get();
             }
-            
+
             // round 3
             {
                 Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
                 feedData(cube, flatTable, queue, INPUT_ROWS);
                 future.get();
             }
-            
+
         } catch (Exception e) {
             logger.error("stream build failed", e);
             throw new IOException("Failed to build cube ", e);
@@ -123,7 +123,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
     static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count) throws IOException, InterruptedException {
         feedData(cube, flatTable, queue, count, 0);
     }
-    
+
     static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count, long randSeed) throws IOException, InterruptedException {
         CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
         int nColumns = flatTableDesc.getColumnList().size();
@@ -150,7 +150,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         Random rand = new Random();
         if (randSeed != 0)
             rand.setSeed(randSeed);
-        
+
         // output with random data
         for (; count > 0; count--) {
             ArrayList<String> row = new ArrayList<String>(nColumns);
@@ -207,7 +207,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
         @Override
         public void flush() {
-            
+
         }
     }
 }

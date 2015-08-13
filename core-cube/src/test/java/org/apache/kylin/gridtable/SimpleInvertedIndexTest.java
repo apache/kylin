@@ -17,19 +17,13 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.*;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTInvertedIndex;
-import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTRowBlock;
-import org.apache.kylin.gridtable.UnitTestSupport;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
@@ -43,6 +37,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 public class SimpleInvertedIndexTest {
 
@@ -52,10 +47,10 @@ public class SimpleInvertedIndexTest {
     ArrayList<ConciseSet> basicResults = Lists.newArrayList();
 
     public SimpleInvertedIndexTest() {
-        
+
         info = UnitTestSupport.advancedInfo();
         TblColRef colA = info.colRef(0);
-        
+
         // block i contains value "i", the last is NULL
         index = new GTInvertedIndex(info);
         GTRowBlock mockBlock = GTRowBlock.allocate(info);
@@ -68,10 +63,10 @@ public class SimpleInvertedIndexTest {
             }
             writer.readyForFlush();
             index.add(mockBlock);
-            
+
             writer.clearForNext();
         }
-        
+
         basicFilters.add(compare(colA, FilterOperatorEnum.ISNULL));
         basicResults.add(set(9));
 
@@ -137,7 +132,7 @@ public class SimpleInvertedIndexTest {
     @Test
     public void testNotEvaluable() {
         ConciseSet all = set(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-        
+
         CompareTupleFilter notEvaluable = compare(info.colRef(1), FilterOperatorEnum.EQ, 0);
         assertEquals(all, index.filter(notEvaluable));
 
@@ -183,6 +178,5 @@ public class SimpleInvertedIndexTest {
             set.add(i);
         return set;
     }
-
 
 }

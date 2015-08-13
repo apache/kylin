@@ -1,7 +1,10 @@
 package org.apache.kylin.storage.test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.kylin.common.util.IdentityUtils;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -18,15 +21,12 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
 
 /**
  */
-public class StaticCacheTest  {
-
+public class StaticCacheTest {
 
     @Test
     public void basicTest() {

@@ -69,7 +69,7 @@ public class CubeRequest {
     public CubeRequest() {
     }
 
-    public CubeRequest( String cubeName, String cubeDescData) {
+    public CubeRequest(String cubeName, String cubeDescData) {
         this.cubeName = cubeName;
         this.cubeDescData = cubeDescData;
     }
@@ -81,7 +81,6 @@ public class CubeRequest {
     public void setCubeDescData(String cubeDescData) {
         this.cubeDescData = cubeDescData;
     }
-
 
     /**
      * @return the cubeDescName

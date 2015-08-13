@@ -33,12 +33,21 @@
  */
 package org.apache.kylin.source.kafka;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import javax.annotation.Nullable;
+
 import kafka.cluster.Broker;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.PartitionMetadata;
 import kafka.message.MessageAndOffset;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
@@ -58,10 +67,8 @@ import org.apache.kylin.source.kafka.util.KafkaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.lang.reflect.Constructor;
-import java.util.List;
-import java.util.concurrent.*;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -115,11 +122,7 @@ public class KafkaStreamingInput implements IStreamingInput {
 
         private List<Broker> replicaBrokers;
 
-        StreamingMessageProducer(KafkaClusterConfig kafkaClusterConfig,
-                                 int partitionId,
-                                 Pair<Long, Long> timeRange,
-                                 long margin,
-                                 StreamingParser streamingParser) {
+        StreamingMessageProducer(KafkaClusterConfig kafkaClusterConfig, int partitionId, Pair<Long, Long> timeRange, long margin, StreamingParser streamingParser) {
             this.kafkaClusterConfig = kafkaClusterConfig;
             this.partitionId = partitionId;
             this.streamingParser = streamingParser;
@@ -163,7 +166,7 @@ public class KafkaStreamingInput implements IStreamingInput {
                         continue;
                     }
 
-                    logger.info("fetching topic {} partition id {} offset {} leader {}", new String[]{topic, String.valueOf(partitionId), String.valueOf(offset), leadBroker.toString()});
+                    logger.info("fetching topic {} partition id {} offset {} leader {}", new String[] { topic, String.valueOf(partitionId), String.valueOf(offset), leadBroker.toString() });
 
                     final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, kafkaClusterConfig);
                     if (fetchResponse.errorCode(topic, partitionId) != 0) {
@@ -208,14 +211,13 @@ public class KafkaStreamingInput implements IStreamingInput {
     private StreamingParser getStreamingParser(KafkaConfig kafkaConfig) throws ReflectiveOperationException {
         final String cubeName = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(kafkaConfig.getName()).getCubeName();
         final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-        List<TblColRef> columns = Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(),
-                new Function<IntermediateColumnDesc, TblColRef>() {
-                    @Nullable
-                    @Override
-                    public TblColRef apply(IntermediateColumnDesc input) {
-                        return input.getColRef();
-                    }
-                });
+        List<TblColRef> columns = Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(), new Function<IntermediateColumnDesc, TblColRef>() {
+            @Nullable
+            @Override
+            public TblColRef apply(IntermediateColumnDesc input) {
+                return input.getColRef();
+            }
+        });
         if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
             Class clazz = Class.forName(kafkaConfig.getParserName());
             Constructor constructor = clazz.getConstructor(List.class);

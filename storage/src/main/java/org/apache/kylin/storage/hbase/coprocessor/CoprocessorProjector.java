@@ -97,7 +97,7 @@ public class CoprocessorProjector {
         public CoprocessorProjector deserialize(ByteBuffer in) {
             byte[] mask = BytesUtil.readByteArray(in);
             boolean hasGroupBy = BytesUtil.readVInt(in) == 1;
-            return new CoprocessorProjector(mask,hasGroupBy);
+            return new CoprocessorProjector(mask, hasGroupBy);
         }
     }
 

@@ -20,17 +20,14 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 
-import org.apache.kylin.rest.service.CubeService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.DataModelDesc;
 
 /**
  * @author jiazhong
@@ -38,8 +35,7 @@ import org.apache.kylin.metadata.model.DataModelDesc;
  */
 @Controller
 @RequestMapping(value = "/model")
-public class ModelDescController extends BasicController{
-
+public class ModelDescController extends BasicController {
 
     /**
      * Get detail information of the "Model ID"
@@ -52,10 +48,10 @@ public class ModelDescController extends BasicController{
     @RequestMapping(value = "/{model_name}", method = { RequestMethod.GET })
     @ResponseBody
     public DataModelDesc getModel(@PathVariable String model_name) {
-        MetadataManager metaManager= MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modeDesc = metaManager.getDataModelDesc(model_name);
         return modeDesc;
-            
+
     }
 
 }

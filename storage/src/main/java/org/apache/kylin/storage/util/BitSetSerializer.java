@@ -31,7 +31,7 @@ public class BitSetSerializer extends Serializer<BitSet> {
     public BitSet copy(final Kryo kryo, final BitSet original) {
         final BitSet result = new BitSet();
         final int length = original.length();
-        for(int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             result.set(i, original.get(i));
         }
         return result;
@@ -43,7 +43,7 @@ public class BitSetSerializer extends Serializer<BitSet> {
 
         output.writeInt(len, true);
 
-        for(int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             output.writeBoolean(bitSet.get(i));
         }
     }
@@ -53,7 +53,7 @@ public class BitSetSerializer extends Serializer<BitSet> {
         final int len = input.readInt(true);
         final BitSet ret = new BitSet(len);
 
-        for(int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             ret.set(i, input.readBoolean());
         }
 

@@ -16,16 +16,15 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.storage.hbase;
+
+import java.io.File;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.ClassUtil;
-
-import java.io.File;
 
 /**
  * This is a helper class for developer to directly manipulate the metadata store in sandbox

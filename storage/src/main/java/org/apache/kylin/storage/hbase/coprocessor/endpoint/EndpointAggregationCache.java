@@ -18,12 +18,12 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.coprocessor.AggregationCache;
-
-import java.util.Map;
-import java.util.Set;
 
 /**
  */

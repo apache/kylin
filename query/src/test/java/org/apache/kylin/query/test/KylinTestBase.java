@@ -18,7 +18,30 @@
 
 package org.apache.kylin.query.test;
 
-import com.google.common.io.Files;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.LogManager;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.dbunit.Assertion;
@@ -34,11 +57,7 @@ import org.dbunit.ext.h2.H2Connection;
 import org.dbunit.ext.h2.H2DataTypeFactory;
 import org.junit.Assert;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.sql.*;
-import java.util.*;
-import java.util.logging.LogManager;
+import com.google.common.io.Files;
 
 /**
  */

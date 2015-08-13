@@ -188,7 +188,7 @@ public class StreamingManager {
             } finally {
                 inputStream.close();
             }
-            
+
             return result;
         } catch (IOException e) {
             logger.error("error get offset, path:" + resPath, e);

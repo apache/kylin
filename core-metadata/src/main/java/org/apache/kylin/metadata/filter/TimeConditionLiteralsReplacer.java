@@ -1,16 +1,16 @@
 package org.apache.kylin.metadata.filter;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.model.DataType;
-import org.apache.kylin.metadata.model.TblColRef;
-
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class TimeConditionLiteralsReplacer implements TupleFilterSerializer.Decorator {
 

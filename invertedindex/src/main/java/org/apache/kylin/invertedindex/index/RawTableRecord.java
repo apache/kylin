@@ -103,7 +103,6 @@ public class RawTableRecord implements Cloneable {
         bytes.set(buf, offset(col), length(col));
     }
 
-
     @Override
     public Object clone() {
         return new RawTableRecord(this);

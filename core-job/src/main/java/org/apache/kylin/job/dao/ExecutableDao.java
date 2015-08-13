@@ -18,11 +18,14 @@
 
 package org.apache.kylin.job.dao;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.io.IOUtils;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
-import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.job.exception.PersistentException;
@@ -30,12 +33,7 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -71,6 +69,7 @@ public class ExecutableDao {
     private String pathOfJob(ExecutablePO job) {
         return pathOfJob(job.getUuid());
     }
+
     private String pathOfJob(String uuid) {
         return JOB_PATH_ROOT + "/" + uuid;
     }

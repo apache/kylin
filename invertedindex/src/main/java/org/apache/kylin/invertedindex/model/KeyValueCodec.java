@@ -34,9 +34,9 @@
 
 package org.apache.kylin.invertedindex.model;
 
-import org.apache.kylin.invertedindex.index.Slice;
-
 import java.util.Collection;
+
+import org.apache.kylin.invertedindex.index.Slice;
 
 /**
  */

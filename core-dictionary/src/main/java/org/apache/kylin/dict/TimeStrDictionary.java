@@ -1,8 +1,12 @@
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.DateFormat;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 
-import java.io.*;
+import org.apache.kylin.common.util.DateFormat;
 
 /**
  */

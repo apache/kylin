@@ -36,11 +36,11 @@ public class CubeGridTable {
         Map<TblColRef, Dictionary<?>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
         return newGTInfo(cubeSeg.getCubeDesc(), cuboidId, dictionaryMap);
     }
-    
+
     public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
         CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(cuboid);
-        
+
         Map<Integer, Dictionary> dictionaryByColIdx = Maps.newHashMap();
         Map<Integer, Integer> fixLenByColIdx = Maps.newHashMap();
 
@@ -53,8 +53,8 @@ public class CubeGridTable {
                 int len = cubeDesc.getRowkey().getColumnLength(dim);
                 if (len == 0)
                     throw new IllegalStateException();
-                
-                fixLenByColIdx.put(colIndex,  len);
+
+                fixLenByColIdx.put(colIndex, len);
             }
         }
 

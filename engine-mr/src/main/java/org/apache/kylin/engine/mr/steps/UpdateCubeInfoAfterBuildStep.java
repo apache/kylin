@@ -20,10 +20,10 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -71,7 +71,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = cubeManager.getCube(getCubeName());
         final CubeSegment segment = cube.getSegmentById(getSegmentId());
-        
+
         CubingJob cubingJob = (CubingJob) executableManager.getJob(getCubingJobId());
         long sourceCount = cubingJob.findSourceRecordCount();
         long sourceSizeBytes = cubingJob.findSourceSizeBytes();

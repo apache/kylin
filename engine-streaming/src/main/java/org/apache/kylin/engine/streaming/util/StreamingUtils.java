@@ -33,24 +33,29 @@
  */
 package org.apache.kylin.engine.streaming.util;
 
-import com.google.common.base.Preconditions;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.engine.streaming.*;
+import org.apache.kylin.engine.streaming.IStreamingInput;
+import org.apache.kylin.engine.streaming.IStreamingOutput;
+import org.apache.kylin.engine.streaming.StreamingBatchBuilder;
+import org.apache.kylin.engine.streaming.StreamingConfig;
+import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.engine.streaming.cube.StreamingCubeBuilder;
+
+import com.google.common.base.Preconditions;
 
 /**
  */
 public class StreamingUtils {
-    
+
     public static IStreamingInput getStreamingInput(String streaming) {
         return (IStreamingInput) ClassUtil.newInstance("org.apache.kylin.source.kafka.KafkaStreamingInput");
     }
-    
+
     public static IStreamingOutput getStreamingOutput(String streaming) {
         return (IStreamingOutput) ClassUtil.newInstance("org.apache.kylin.storage.hbase.HBaseStreamingOutput");
     }
-    
+
     public static StreamingBatchBuilder getMicroBatchBuilder(String streaming) {
         final StreamingConfig streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(streaming);
         Preconditions.checkNotNull(streamingConfig);

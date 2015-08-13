@@ -21,14 +21,16 @@ package org.apache.kylin.query.routing;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.kylin.query.routing.RoutingRules.*;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.routing.RoutingRules.AdjustForWeaklyMatchedRealization;
+import org.apache.kylin.query.routing.RoutingRules.RealizationSortRule;
+import org.apache.kylin.query.routing.RoutingRules.RemoveUncapableRealizationsRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.query.relnode.OLAPContext;
 
 /**
  */

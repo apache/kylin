@@ -18,15 +18,15 @@
 
 package org.apache.kylin.query.test;
 
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  */
@@ -50,8 +50,8 @@ public class ITCombinationTest extends ITKylinQueryTest {
      */
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
-//       return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
-        return Arrays.asList(new Object[][]{{"inner", "on"}, {"left", "on"}});
+        //       return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
+        return Arrays.asList(new Object[][] { { "inner", "on" }, { "left", "on" } });
     }
 
     public ITCombinationTest(String joinType, String coprocessorToggle) throws Exception {

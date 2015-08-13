@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.HashSet;
 
 import org.apache.hadoop.io.LongWritable;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.engine.mr.KylinReducer;
 
 /**
@@ -42,7 +42,7 @@ public class FactDistinctColumnsCombiner extends KylinReducer<LongWritable, Text
     @Override
     public void reduce(LongWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
-        if(key.get() >= 0) {
+        if (key.get() >= 0) {
             HashSet<ByteArray> set = new HashSet<ByteArray>();
             for (Text textValue : values) {
                 ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));

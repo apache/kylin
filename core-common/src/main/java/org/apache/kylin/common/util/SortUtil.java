@@ -1,9 +1,9 @@
 package org.apache.kylin.common.util;
 
+import java.util.Iterator;
+
 import com.google.common.base.Function;
 import com.google.common.collect.TreeMultimap;
-
-import java.util.Iterator;
 
 /**
  */

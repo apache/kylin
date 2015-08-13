@@ -1,17 +1,17 @@
 package org.apache.kylin.storage.hbase.steps;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.Text;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author George Song (ysong1)
@@ -71,7 +71,6 @@ public class KeyValueCreator {
 
         return create(keyBytes, keyOffset, keyLength, valueBuf.array(), 0, valueBuf.position());
     }
-
 
     public KeyValue create(byte[] keyBytes, int keyOffset, int keyLength, byte[] value, int voffset, int vlen) {
         return new KeyValue(keyBytes, keyOffset, keyLength, //

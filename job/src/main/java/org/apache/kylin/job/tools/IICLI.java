@@ -18,6 +18,9 @@
 
 package org.apache.kylin.job.tools;
 
+import java.io.IOException;
+import java.util.Iterator;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -35,74 +38,69 @@ import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
 
-import java.io.IOException;
-import java.util.Iterator;
-
 /**
  * @author yangli9
  */
 public class IICLI {
 
-	public static void main(String[] args) throws IOException {
-		Configuration hconf = HadoopUtil.getCurrentConfiguration();
-		IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
+    public static void main(String[] args) throws IOException {
+        Configuration hconf = HadoopUtil.getCurrentConfiguration();
+        IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-		String iiName = args[0];
-		IIInstance ii = mgr.getII(iiName);
+        String iiName = args[0];
+        IIInstance ii = mgr.getII(iiName);
 
-		String path = args[1];
-		System.out.println("Reading from " + path + " ...");
+        String path = args[1];
+        System.out.println("Reading from " + path + " ...");
 
-		TableRecordInfo info = new TableRecordInfo(ii.getFirstSegment());
-		IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
-		int count = 0;
-		for (Slice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
-			for (RawTableRecord rec : slice) {
-				System.out.printf(new TableRecord(rec, info).toString());
-				count++;
-			}
-		}
-		System.out.println("Total " + count + " records");
-	}
+        TableRecordInfo info = new TableRecordInfo(ii.getFirstSegment());
+        IIKeyValueCodec codec = new IIKeyValueCodec(info.getDigest());
+        int count = 0;
+        for (Slice slice : codec.decodeKeyValue(readSequenceKVs(hconf, path))) {
+            for (RawTableRecord rec : slice) {
+                System.out.printf(new TableRecord(rec, info).toString());
+                count++;
+            }
+        }
+        System.out.println("Total " + count + " records");
+    }
 
-	public static Iterable<IIRow> readSequenceKVs(
-			Configuration hconf, String path) throws IOException {
-		final Reader reader = new Reader(hconf,
-				SequenceFile.Reader.file(new Path(path)));
-		return new Iterable<IIRow>() {
-			@Override
-			public Iterator<IIRow> iterator() {
-				return new Iterator<IIRow>() {
-					ImmutableBytesWritable k = new ImmutableBytesWritable();
-					ImmutableBytesWritable v = new ImmutableBytesWritable();
+    public static Iterable<IIRow> readSequenceKVs(Configuration hconf, String path) throws IOException {
+        final Reader reader = new Reader(hconf, SequenceFile.Reader.file(new Path(path)));
+        return new Iterable<IIRow>() {
+            @Override
+            public Iterator<IIRow> iterator() {
+                return new Iterator<IIRow>() {
+                    ImmutableBytesWritable k = new ImmutableBytesWritable();
+                    ImmutableBytesWritable v = new ImmutableBytesWritable();
                     IIRow pair = new IIRow(k, v, null);
 
-					@Override
-					public boolean hasNext() {
-						boolean hasNext = false;
-						try {
-							hasNext = reader.next(k, v);
-						} catch (IOException e) {
-							throw new RuntimeException(e);
-						} finally {
-							if (hasNext == false) {
-								IOUtils.closeQuietly(reader);
-							}
-						}
-						return hasNext;
-					}
+                    @Override
+                    public boolean hasNext() {
+                        boolean hasNext = false;
+                        try {
+                            hasNext = reader.next(k, v);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        } finally {
+                            if (hasNext == false) {
+                                IOUtils.closeQuietly(reader);
+                            }
+                        }
+                        return hasNext;
+                    }
 
-					@Override
-					public IIRow next() {
-						return pair;
-					}
+                    @Override
+                    public IIRow next() {
+                        return pair;
+                    }
 
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException();
-					}
-				};
-			}
-		};
-	}
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
 }

@@ -21,7 +21,7 @@ package org.apache.kylin.storage;
 import org.apache.kylin.metadata.realization.IRealization;
 
 public interface IStorage {
-    
+
     public IStorageQuery createStorageQuery(IRealization realization);
 
     public <I> I adaptToBuildEngine(Class<I> engineInterface);

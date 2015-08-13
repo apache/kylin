@@ -1,12 +1,12 @@
 package org.apache.kylin.common.util;
 
-import org.apache.kylin.common.util.TimeUtil.NormalizedTimeUnit;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+
+import org.apache.kylin.common.util.TimeUtil.NormalizedTimeUnit;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  */
@@ -37,6 +37,5 @@ public class TimeUtilTest {
         Assert.assertEquals(normalizeTime(t2, NormalizedTimeUnit.HOUR), TimeUtil.getHourStart(t2));
         Assert.assertEquals(normalizeTime(t2, NormalizedTimeUnit.MINUTE), TimeUtil.getMinuteStart(t2));
     }
-
 
 }

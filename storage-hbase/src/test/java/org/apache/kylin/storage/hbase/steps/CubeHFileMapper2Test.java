@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.ByteBuffer;

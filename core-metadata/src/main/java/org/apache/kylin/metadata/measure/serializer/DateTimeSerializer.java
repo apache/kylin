@@ -3,12 +3,12 @@ package org.apache.kylin.metadata.measure.serializer;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.DataType;
-import org.apache.kylin.common.util.DateFormat;
 
 public class DateTimeSerializer extends DataTypeSerializer<LongMutable> {
-    
+
     // be thread-safe and avoid repeated obj creation
     private ThreadLocal<LongMutable> current = new ThreadLocal<LongMutable>();
 
@@ -28,7 +28,7 @@ public class DateTimeSerializer extends DataTypeSerializer<LongMutable> {
         }
         return l;
     }
-    
+
     @Override
     public LongMutable deserialize(ByteBuffer in) {
         LongMutable l = current();
@@ -40,7 +40,7 @@ public class DateTimeSerializer extends DataTypeSerializer<LongMutable> {
     public int peekLength(ByteBuffer in) {
         return 8;
     }
-    
+
     @Override
     public int maxLength() {
         return 8;

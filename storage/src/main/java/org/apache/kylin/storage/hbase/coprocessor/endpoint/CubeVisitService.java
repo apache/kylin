@@ -35,7 +35,6 @@ import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.CompressionUtils;
-import org.apache.kylin.storage.util.KryoUtils;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTRawScanner;
 import org.apache.kylin.gridtable.GTRecord;
@@ -49,6 +48,7 @@ import org.apache.kylin.storage.cube.RawScan;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Builder;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
+import org.apache.kylin.storage.util.KryoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

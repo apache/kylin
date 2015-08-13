@@ -18,6 +18,13 @@
 
 package org.apache.kylin.query.test;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.sql.DriverManager;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -32,13 +39,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
-import java.sql.DriverManager;
-import java.util.List;
-import java.util.Properties;
-
-import static org.junit.Assert.assertTrue;
 
 @Ignore("KylinQueryTest is contained by ITCombinationTest")
 public class ITKylinQueryTest extends KylinTestBase {
@@ -164,7 +164,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testStreamingTableQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_streaming",null,true);
+        execAndCompQuery("src/test/resources/query/sql_streaming", null, true);
     }
 
     @Test

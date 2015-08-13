@@ -28,9 +28,9 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.IMROutput2.IMRStorageOutputFormat;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,31 +62,31 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());
-            
+
             setJobClasspath(job);
-            
+
             // add metadata to distributed cache
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
-            long timeout = 1000*60*60L; // 1 hour
+            long timeout = 1000 * 60 * 60L; // 1 hour
             job.getConfiguration().set("mapred.task.timeout", String.valueOf(timeout));
-            
+
             // set input
             IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
             flatTableInputFormat.configureJob(job);
-            
+
             // set mapper
             job.setMapperClass(InMemCuboidMapper.class);
             job.setMapOutputKeyClass(ByteArrayWritable.class);
             job.setMapOutputValueClass(ByteArrayWritable.class);
-            
+
             // set output
             IMRStorageOutputFormat storageOutputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getStorageOutputFormat();
             storageOutputFormat.configureOutput(InMemCuboidReducer.class, getOptionValue(OPTION_JOB_FLOW_ID), job);
-            
+
             return waitForCompletion(job);
         } catch (Exception e) {
             logger.error("error in CuboidJob", e);

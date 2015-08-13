@@ -18,11 +18,12 @@
 
 package org.apache.kylin.common.util;
 
-import junit.framework.TestCase;
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+
+import junit.framework.TestCase;
+
+import org.junit.Test;
 
 /**
  * by honma
@@ -60,7 +61,6 @@ public class BytesUtilTest extends TestCase {
         testWriteReadUnsignedInt(73503300, 4);
     }
 
-
     public void testWriteReadUnsignedInt(int testInt, int length) {
         ByteArray ba = new ByteArray(new byte[length]);
         BytesUtil.writeUnsigned(testInt, length, ba.asBuffer());
@@ -77,15 +77,11 @@ public class BytesUtilTest extends TestCase {
         assertTrue(Arrays.equals(anOtherNewBytes, ba.array()));
     }
 
-
-
-    public void testReadable()
-    {
+    public void testReadable() {
         String x = "\\x00\\x00\\x00\\x00\\x00\\x01\\xFC\\xA8";
         byte[] bytes = BytesUtil.fromReadableText(x);
         String y = BytesUtil.toHex(bytes);
-        assertEquals(x,y);
+        assertEquals(x, y);
     }
-
 
 }

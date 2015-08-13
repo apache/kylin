@@ -1,9 +1,10 @@
 package org.apache.kylin.streaming;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.kylin.common.util.Pair;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -57,8 +58,7 @@ public final class MicroStreamBatch {
         this.rawMessageCount++;
     }
 
-    public final int getRawMessageCount()
-    {
+    public final int getRawMessageCount() {
         return this.rawMessageCount;
     }
 

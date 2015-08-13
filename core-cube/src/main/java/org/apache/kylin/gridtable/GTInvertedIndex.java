@@ -1,7 +1,5 @@
 package org.apache.kylin.gridtable;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +9,8 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
+
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  * A thread-safe inverted index of row blocks in memory.

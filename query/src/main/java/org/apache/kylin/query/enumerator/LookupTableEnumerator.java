@@ -18,6 +18,11 @@
 
 package org.apache.kylin.query.enumerator;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -29,11 +34,6 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.tuple.Tuple;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  */
@@ -52,7 +52,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
         if (olapContext.realization instanceof CubeInstance)
             cube = (CubeInstance) olapContext.realization;
         else if (olapContext.realization instanceof HybridInstance) {
-            final HybridInstance hybridInstance = (HybridInstance)olapContext.realization;
+            final HybridInstance hybridInstance = (HybridInstance) olapContext.realization;
             final IRealization latestRealization = hybridInstance.getLatestRealization();
             if (latestRealization instanceof CubeInstance) {
                 cube = (CubeInstance) latestRealization;

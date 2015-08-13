@@ -25,7 +25,7 @@ public interface IMROutput {
 
     /** Return a helper to participate in batch cubing job flow. */
     public IMRBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg);
-    
+
     /**
      * Participate the batch cubing flow as the output side. Responsible for saving
      * the cuboid output to storage (Phase 3).
@@ -36,7 +36,7 @@ public interface IMROutput {
      * - Phase 4: Update Metadata & Cleanup
      */
     public interface IMRBatchCubingOutputSide {
-        
+
         /**
          * Add step that saves cuboid output from HDFS to storage.
          * 
@@ -45,14 +45,14 @@ public interface IMROutput {
          * dictionary encoding; Mx is measure value serialization form.
          */
         public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow, String cuboidRootPath);
-        
+
         /** Add step that does any necessary clean up. */
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
     }
-    
+
     /** Return a helper to participate in batch merge job flow. */
     public IMRBatchMergeOutputSide getBatchMergeOutputSide(CubeSegment seg);
-    
+
     /**
      * Participate the batch cubing flow as the output side. Responsible for saving
      * the cuboid output to storage (Phase 2).
@@ -62,7 +62,7 @@ public interface IMROutput {
      * - Phase 3: Update Metadata & Cleanup
      */
     public interface IMRBatchMergeOutputSide {
-        
+
         /**
          * Add step that saves cuboid output from HDFS to storage.
          * 
@@ -71,7 +71,7 @@ public interface IMROutput {
          * dictionary encoding; Mx is measure value serialization form.
          */
         public void addStepPhase2_BuildCube(DefaultChainedExecutable jobFlow, String cuboidRootPath);
-        
+
         /** Add step that does any necessary clean up. */
         public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow);
     }

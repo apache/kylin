@@ -18,12 +18,12 @@
 
 package org.apache.kylin.common.util;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-
-import java.io.File;
-import java.io.IOException;
 
 public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
 
@@ -31,11 +31,11 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
     public void createTestMetadata() {
         staticCreateTestMetadata();
     }
-    
+
     public static void staticCreateTestMetadata() {
         staticCreateTestMetadata(LOCALMETA_TEST_DATA);
     }
-    
+
     public static void staticCreateTestMetadata(String testDataFolder) {
         KylinConfig.destoryInstance();
 

@@ -48,7 +48,6 @@ public interface ITupleIterator extends Iterator<ITuple> {
 
     void close();
 
-
     /**
      * if hasNext() returns false because there's no more data, return true
      * if hasNext() returns false because limits or threshold, return false

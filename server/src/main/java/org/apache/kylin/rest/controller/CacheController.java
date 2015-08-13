@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.IOException;
+
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.Broadcaster.EVENT;
 import org.apache.kylin.rest.service.CacheService;
@@ -29,8 +31,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.io.IOException;
 
 /**
  * CubeController is defined as Restful API entrance for UI.

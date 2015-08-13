@@ -47,11 +47,11 @@ public interface IMROutput2 {
 
     @SuppressWarnings("rawtypes")
     public interface IMRStorageInputFormat {
-        
+
         public void configureInput(Class<? extends Mapper> mapper, Class<? extends WritableComparable> outputKeyClass, Class<? extends Writable> outputValueClass, Job job) throws IOException;
-        
+
         public CubeSegment findSourceSegment(Mapper.Context context, CubeInstance cubeInstance) throws IOException;
-        
+
         public Pair<ByteArrayWritable, Object[]> parseMapperInput(Object inKey, Object inValue);
     }
 
@@ -82,7 +82,7 @@ public interface IMROutput2 {
     @SuppressWarnings("rawtypes")
     public interface IMRStorageOutputFormat {
         public void configureOutput(Class<? extends Reducer> reducer, String jobFlowId, Job job) throws IOException;
-        
+
         public void doReducerOutput(ByteArrayWritable key, Object[] value, Reducer.Context context) throws IOException, InterruptedException;
     }
 }

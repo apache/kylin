@@ -18,9 +18,18 @@
 
 package org.apache.kylin.storage.hbase;
 
-import com.google.common.collect.Lists;
+import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
@@ -42,8 +51,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.MessageFormat;
-import java.util.*;
+import com.google.common.collect.Lists;
 
 /**
  * @author xjiang
@@ -99,7 +107,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             throw new StorageException("Error when open connection to table " + tableName, t);
         }
     }
-
 
     @Override
     public boolean hasNext() {
@@ -222,7 +229,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     private List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> convertToHBasePair(List<org.apache.kylin.common.util.Pair<byte[], byte[]>> pairList) {
         List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> result = Lists.newArrayList();
-        for(org.apache.kylin.common.util.Pair pair : pairList) {
+        for (org.apache.kylin.common.util.Pair pair : pairList) {
             org.apache.hadoop.hbase.util.Pair element = new org.apache.hadoop.hbase.util.Pair(pair.getFirst(), pair.getSecond());
             result.add(element);
         }

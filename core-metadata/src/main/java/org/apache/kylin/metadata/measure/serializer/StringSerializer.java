@@ -31,7 +31,7 @@ public class StringSerializer extends DataTypeSerializer<String> {
     public String deserialize(ByteBuffer in) {
         return BytesUtil.readUTFString(in);
     }
-    
+
     @Override
     public int peekLength(ByteBuffer in) {
         return BytesUtil.peekByteArrayLength(in);

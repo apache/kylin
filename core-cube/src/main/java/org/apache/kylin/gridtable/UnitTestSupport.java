@@ -80,7 +80,7 @@ public class UnitTestSupport {
         }
         return result;
     }
-    
+
     private static String datePlus(String date, int plusDays) {
         long millis = DateFormat.stringToMillis(date);
         millis += (1000L * 3600L * 24L) * plusDays;

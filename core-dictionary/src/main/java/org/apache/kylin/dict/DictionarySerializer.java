@@ -15,7 +15,8 @@ import org.apache.kylin.common.util.ClassUtil;
  */
 public final class DictionarySerializer {
 
-    private DictionarySerializer() {}
+    private DictionarySerializer() {
+    }
 
     public static Dictionary<?> deserialize(InputStream inputStream) {
         try {

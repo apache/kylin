@@ -74,7 +74,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
         if (StringUtils.isEmpty(useSandbox)) {
             return true;
         }
-        
+
         return Boolean.parseBoolean(useSandbox);
     }
 

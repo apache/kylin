@@ -17,13 +17,12 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
 
 import org.apache.kylin.common.util.MemoryBudgetController;
-import org.apache.kylin.cube.inmemcubing.MemDiskStore;
 import org.apache.kylin.gridtable.GTBuilder;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;

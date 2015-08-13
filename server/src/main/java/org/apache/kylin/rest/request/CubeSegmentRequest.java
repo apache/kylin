@@ -81,7 +81,6 @@ public class CubeSegmentRequest {
         this.cubeSegmentData = cubeSegmentData;
     }
 
-
     /**
      * @return the cubeDescName
      */

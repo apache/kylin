@@ -1,16 +1,20 @@
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import com.google.common.collect.Sets;
+import java.util.Collection;
+import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
-import org.apache.kylin.metadata.filter.*;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.util.Collection;
-import java.util.Set;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -34,10 +38,9 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         return inevaluableColumns;
     }
 
-
     private TupleFilter replaceConstantsWithLocalDict(CompareTupleFilter oldCompareFilter, CompareTupleFilter newCompareFilter) {
         //TODO localdict: (performance issue) transalte() with roundingflag 0 will use try catch exceptions to deal with non-existing entries
-        return replaceConstantsWithGlobalDict(oldCompareFilter,newCompareFilter);
+        return replaceConstantsWithGlobalDict(oldCompareFilter, newCompareFilter);
     }
 
     private TupleFilter replaceConstantsWithGlobalDict(CompareTupleFilter oldCompareFilter, CompareTupleFilter newCompareFilter) {

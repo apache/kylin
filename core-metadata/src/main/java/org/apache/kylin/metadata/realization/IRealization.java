@@ -18,11 +18,11 @@
 
 package org.apache.kylin.metadata.realization;
 
+import java.util.List;
+
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import java.util.List;
 
 public interface IRealization {
 

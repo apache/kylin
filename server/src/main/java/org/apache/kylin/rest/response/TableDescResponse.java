@@ -21,8 +21,9 @@ package org.apache.kylin.rest.response;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.metadata.model.TableDesc;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * A response class to wrap TableDesc

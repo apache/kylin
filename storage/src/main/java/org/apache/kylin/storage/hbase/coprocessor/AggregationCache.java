@@ -18,11 +18,12 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
+
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 /**
  */

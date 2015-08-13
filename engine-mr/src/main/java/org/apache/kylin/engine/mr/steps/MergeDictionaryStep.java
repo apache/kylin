@@ -18,13 +18,19 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.DictionaryInfo;
@@ -35,8 +41,7 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.io.IOException;
-import java.util.*;
+import com.google.common.collect.Lists;
 
 public class MergeDictionaryStep extends AbstractExecutable {
 
@@ -55,12 +60,12 @@ public class MergeDictionaryStep extends AbstractExecutable {
         final CubeInstance cube = mgr.getCube(getCubeName());
         final CubeSegment newSegment = cube.getSegmentById(getSegmentId());
         final List<CubeSegment> mergingSegments = getMergingSegments(cube);
-        
+
         Collections.sort(mergingSegments);
-        
+
         try {
             checkLookupSnapshotsMustIncremental(mergingSegments);
-            
+
             makeDictForNewSegment(conf, cube, newSegment, mergingSegments);
             makeSnapshotForNewSegment(cube, newSegment, mergingSegments);
 
@@ -73,7 +78,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
-    
+
     private List<CubeSegment> getMergingSegments(CubeInstance cube) {
         List<String> mergingSegmentIds = getMergingSegmentIds();
         List<CubeSegment> result = Lists.newArrayListWithCapacity(mergingSegmentIds.size());
@@ -189,7 +194,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
         if (ids != null) {
             final String[] splitted = StringUtils.split(ids, ",");
             ArrayList<String> result = Lists.newArrayListWithExpectedSize(splitted.length);
-            for (String id: splitted) {
+            for (String id : splitted) {
                 result.add(id);
             }
             return result;

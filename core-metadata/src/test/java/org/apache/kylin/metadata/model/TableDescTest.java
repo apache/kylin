@@ -18,7 +18,6 @@
 
 package org.apache.kylin.metadata.model;
 
-
 /**
  */
 public class TableDescTest {

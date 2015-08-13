@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-
 public class LogicalTupleFilter extends TupleFilter {
 
     public LogicalTupleFilter(FilterOperatorEnum op) {

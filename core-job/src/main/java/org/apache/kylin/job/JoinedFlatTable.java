@@ -145,7 +145,7 @@ public class JoinedFlatTable {
         tableAliasMap.put(dataModelDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);
 
         int i = 1;
-        for (LookupDesc lookupDesc: dataModelDesc.getLookups()) {
+        for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
             JoinDesc join = lookupDesc.getJoin();
             if (join != null) {
                 tableAliasMap.put(lookupDesc.getTable().toUpperCase(), LOOKUP_TABLE_ALAIS_PREFIX + i);
@@ -203,7 +203,7 @@ public class JoinedFlatTable {
 
         CubeDesc cubeDesc = desc.getCubeDesc();
         DataModelDesc model = cubeDesc.getModel();
-        
+
         if (model.getFilterCondition() != null && model.getFilterCondition().equals("") == false) {
             whereBuilder.append(" (").append(model.getFilterCondition()).append(") ");
             hasCondition = true;
@@ -232,7 +232,7 @@ public class JoinedFlatTable {
     private static String colName(String canonicalColName) {
         return canonicalColName.replace(".", "_");
     }
-    
+
     private static String getHiveDataType(String javaDataType) {
         String hiveDataType = javaDataType.toLowerCase().startsWith("varchar") ? "string" : javaDataType;
         hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;

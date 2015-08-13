@@ -1,6 +1,12 @@
 package org.apache.kylin.job.dataGen;
 
-import com.google.common.collect.Maps;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.TimeUtil;
@@ -11,12 +17,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import com.google.common.collect.Maps;
 
 /**
  * data gen for II streaming, may be merged with StreamingTableDataGenerator
@@ -47,7 +48,7 @@ public class StreamingDataGenerator {
                 long ts = this.createTs(start, end);
                 values.put("minute_start", Long.toString(TimeUtil.getMinuteStart(ts)));
                 values.put("hour_start", Long.toString(TimeUtil.getHourStart(ts)));
-                values.put("day_start",Long.toString(TimeUtil.getDayStart(ts)));
+                values.put("day_start", Long.toString(TimeUtil.getDayStart(ts)));
                 values.put("itm", Integer.toString(random.nextInt(20)));
                 values.put("site", Integer.toString(random.nextInt(5)));
 

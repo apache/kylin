@@ -20,9 +20,9 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 
-import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.kylin.engine.mr.KylinMapper;
 
 /**
  * @author ysong1

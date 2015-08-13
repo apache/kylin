@@ -33,14 +33,15 @@
  */
 package org.apache.kylin.cube.util;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.cube.CubeInstance;
@@ -52,9 +53,14 @@ import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.*;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 /**
  */
@@ -71,7 +77,7 @@ public class CubingUtils {
             @Nullable
             @Override
             public Integer[] apply(@Nullable Long cuboidId) {
-                BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
+                BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
                 Integer[] result = new Integer[bitSet.cardinality()];
 
                 long mask = Long.highestOneBit(baseCuboidId);
@@ -167,7 +173,5 @@ public class CubingUtils {
         }
         return result;
     }
-
-
 
 }

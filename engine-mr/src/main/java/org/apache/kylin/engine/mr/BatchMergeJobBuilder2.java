@@ -18,8 +18,7 @@
 
 package org.apache.kylin.engine.mr;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.util.List;
 
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
@@ -28,12 +27,13 @@ import org.apache.kylin.engine.mr.steps.MergeCuboidFromStorageJob;
 import org.apache.kylin.engine.mr.steps.MergeStatisticsStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class BatchMergeJobBuilder2 extends JobBuilderSupport {
 
     private final IMROutput2.IMRBatchMergeOutputSide2 outputSide;
-    
+
     public BatchMergeJobBuilder2(CubeSegment mergeSegment, String submitter) {
         super(mergeSegment, submitter);
         this.outputSide = MRUtil.getBatchMergeOutputSide2(seg);

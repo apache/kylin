@@ -40,19 +40,19 @@ public class KylinResultSet extends AvaticaResultSet {
 
     @Override
     protected AvaticaResultSet execute() throws SQLException {
-        
+
         // skip execution if result is already there (case of meta data lookup)
         if (this.firstFrame != null) {
             return super.execute();
         }
-        
+
         String sql = signature.sql;
         List<AvaticaParameter> params = signature.parameters;
         List<Object> paramValues = null;
         if (params != null && params.size() > 0) {
             paramValues = ((KylinPreparedStatement) statement).getParameterValues2();
         }
-        
+
         IRemoteClient client = ((KylinConnection) statement.connection).getRemoteClient();
         QueryResult result;
         try {
@@ -60,14 +60,12 @@ public class KylinResultSet extends AvaticaResultSet {
         } catch (IOException e) {
             throw new SQLException(e);
         }
-        
+
         columnMetaDataList.clear();
         columnMetaDataList.addAll(result.columnMeta);
-        
+
         cursor = MetaImpl.createCursor(signature.cursorFactory, result.iterable);
         return super.execute2(cursor, columnMetaDataList);
     }
-    
-    
 
 }

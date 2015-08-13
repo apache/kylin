@@ -18,13 +18,13 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import com.google.common.base.Objects;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import java.util.Iterator;
+
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.dict.Dictionary;
 
-import java.util.Iterator;
-import java.util.Map;
+import com.google.common.base.Objects;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  * Within a partition (per timestampGranularity), records are further sliced

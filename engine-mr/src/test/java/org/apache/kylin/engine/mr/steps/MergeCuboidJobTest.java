@@ -18,7 +18,7 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
@@ -26,11 +26,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 
 public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
 

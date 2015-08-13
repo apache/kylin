@@ -21,8 +21,8 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CreateProjectRequest;
 import org.apache.kylin.rest.request.UpdateProjectRequest;
@@ -89,7 +89,7 @@ public class ProjectController extends BasicController {
         ProjectInstance updatedProj = null;
         try {
             ProjectInstance currentProject = projectService.getProjectManager().getProject(projectRequest.getFormerProjectName());
-            updatedProj = projectService.updateProject(projectRequest,currentProject);
+            updatedProj = projectService.updateProject(projectRequest, currentProject);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -104,7 +104,7 @@ public class ProjectController extends BasicController {
         try {
 
             ProjectInstance project = projectService.getProjectManager().getProject(projectName);
-            projectService.deleteProject(projectName,project);
+            projectService.deleteProject(projectName, project);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to delete project. " + " Caused by: " + e.getMessage(), e);

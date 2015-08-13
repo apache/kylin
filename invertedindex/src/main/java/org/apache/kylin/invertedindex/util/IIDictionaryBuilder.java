@@ -34,23 +34,26 @@
 
 package org.apache.kylin.invertedindex.util;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
+import java.util.Collection;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
 
 /**
  */
 public final class IIDictionaryBuilder {
 
-    private IIDictionaryBuilder(){}
+    private IIDictionaryBuilder() {
+    }
 
     public static Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) {
         HashMultimap<TblColRef, String> valueMap = HashMultimap.create();

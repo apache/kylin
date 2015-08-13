@@ -18,11 +18,11 @@
 
 package org.apache.kylin.cube.model;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Arrays;
 
 /**
  */

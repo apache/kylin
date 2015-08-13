@@ -49,7 +49,7 @@ public class KylinConnection extends AvaticaConnection {
 
     protected KylinConnection(UnregisteredDriver driver, KylinJdbcFactory factory, String url, Properties info) throws SQLException {
         super(driver, factory, url, info);
-        
+
         String odbcUrl = url;
         odbcUrl = odbcUrl.replace(Driver.CONNECT_STRING_PREFIX + "//", "");
         String[] temps = odbcUrl.split("/");
@@ -60,7 +60,7 @@ public class KylinConnection extends AvaticaConnection {
         this.project = temps[1];
 
         logger.debug("Kylin base url " + this.baseUrl + ", project name " + this.project);
-        
+
         this.remoteClient = factory.newRemoteClient(this);
 
         try {
@@ -69,32 +69,32 @@ public class KylinConnection extends AvaticaConnection {
             throw new SQLException(e);
         }
     }
-    
+
     String getBaseUrl() {
         return baseUrl;
     }
-    
+
     String getProject() {
         return project;
     }
-    
+
     Properties getConnectionProperties() {
         return info;
     }
-    
+
     @Override
     public AvaticaStatement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         return super.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
     }
-    
+
     public boolean getAutoCommit() throws SQLException {
-        if(meta.connectionSync(handle, new ConnectionPropertiesImpl()).isAutoCommit() == null)
+        if (meta.connectionSync(handle, new ConnectionPropertiesImpl()).isAutoCommit() == null)
             setAutoCommit(true);
         return super.getAutoCommit();
     }
 
     public boolean isReadOnly() throws SQLException {
-        if(meta.connectionSync(handle, new ConnectionPropertiesImpl()).isReadOnly() == null)
+        if (meta.connectionSync(handle, new ConnectionPropertiesImpl()).isReadOnly() == null)
             setReadOnly(true);
         return super.isReadOnly();
     }
@@ -104,7 +104,7 @@ public class KylinConnection extends AvaticaConnection {
         Meta.Signature sig = mockPreparedSignature(sql);
         return factory().newPreparedStatement(this, null, sig, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
-    
+
     // TODO add restful API to prepare SQL, get back expected ResultSetMetaData
     Signature mockPreparedSignature(String sql) {
         List<AvaticaParameter> params = new ArrayList<AvaticaParameter>();
@@ -116,8 +116,8 @@ public class KylinConnection extends AvaticaConnection {
         }
 
         ArrayList<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
-        Map<String, Object> internalParams = Collections.<String, Object>emptyMap();
-        
+        Map<String, Object> internalParams = Collections.<String, Object> emptyMap();
+
         return new Meta.Signature(columns, sql, params, internalParams, CursorFactory.ARRAY);
     }
 

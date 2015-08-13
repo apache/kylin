@@ -1,13 +1,12 @@
 package org.apache.kylin.gridtable;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
-
 import java.util.NavigableMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.kylin.common.util.ByteArray;
 
 import com.google.common.collect.Maps;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 public class GTInvertedIndexOfColumn {
 

@@ -156,7 +156,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         }
         return null;
     }
-    
+
     private TblColRef translateRexInputRef(RexInputRef inputRef, ColumnRowType inputColumnRowType, String fieldName, Set<TblColRef> sourceCollector) {
         int index = inputRef.getIndex();
         // check it for rewrite count

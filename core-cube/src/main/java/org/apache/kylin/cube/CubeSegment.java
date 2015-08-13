@@ -18,11 +18,11 @@
 
 package org.apache.kylin.cube;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -32,11 +32,11 @@ import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, IBuildable {
@@ -178,7 +178,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
     public void setLastBuildJobID(String lastBuildJobID) {
         this.lastBuildJobID = lastBuildJobID;
     }
-
 
     public long getCreateTimeUTC() {
         return createTimeUTC;
@@ -329,7 +328,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
     public String toString() {
         return Objects.toStringHelper(this).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
     }
-
 
     public void setDictionaries(ConcurrentHashMap<String, String> dictionaries) {
         this.dictionaries = dictionaries;

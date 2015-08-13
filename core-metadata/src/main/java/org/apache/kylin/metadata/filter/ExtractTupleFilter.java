@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-
 /**
  * 
  * @author xjiang

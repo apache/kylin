@@ -24,9 +24,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.metadata.model.DataType;
+
+import com.google.common.collect.Maps;
 
 /**
  * @author yangli9
@@ -56,7 +57,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
     public static DataTypeSerializer<?> create(String dataType) {
         return create(DataType.getInstance(dataType));
     }
-    
+
     public static DataTypeSerializer<?> create(DataType type) {
         if (type.isHLLC()) {
             return new HLLCSerializer(type);
@@ -72,16 +73,16 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
             throw new RuntimeException(e); // never happen
         }
     }
-    
+
     /** peek into buffer and return the length of serialization */
     abstract public int peekLength(ByteBuffer in);
-    
+
     /** return the max number of bytes to the longest serialization */
     abstract public int maxLength();
-    
+
     /** convert from String to obj (string often come as byte[] in mapred) */
     abstract public T valueOf(byte[] value);
-    
+
     /** convert from String to obj */
     public T valueOf(String value) {
         try {

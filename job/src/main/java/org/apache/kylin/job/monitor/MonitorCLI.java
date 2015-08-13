@@ -1,12 +1,13 @@
 package org.apache.kylin.job.monitor;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -27,26 +28,26 @@ public class MonitorCLI {
         while (i < args.length) {
             String argName = args[i];
             switch (argName) {
-                case "-receivers":
-                    receivers = Lists.newArrayList(StringUtils.split(args[++i], ";"));
-                    break;
-                case "-host":
-                    host = args[++i];
-                    break;
-                case "-tableName":
-                    tableName = args[++i];
-                    break;
-                case "-authorization":
-                    authorization = args[++i];
-                    break;
-                case "-cubeName":
-                    cubeName = args[++i];
-                    break;
-                case "-projectName":
-                    projectName = args[++i];
-                    break;
-                default:
-                    throw new RuntimeException("invalid argName:" + argName);
+            case "-receivers":
+                receivers = Lists.newArrayList(StringUtils.split(args[++i], ";"));
+                break;
+            case "-host":
+                host = args[++i];
+                break;
+            case "-tableName":
+                tableName = args[++i];
+                break;
+            case "-authorization":
+                authorization = args[++i];
+                break;
+            case "-cubeName":
+                cubeName = args[++i];
+                break;
+            case "-projectName":
+                projectName = args[++i];
+                break;
+            default:
+                throw new RuntimeException("invalid argName:" + argName);
             }
             i++;
         }

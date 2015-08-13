@@ -65,7 +65,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         LongMutable count = new LongMutable(2);
         LongMutable item_count = new LongMutable(100);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        codec.encode(new Object[] { sum, min, max, count ,item_count}, buf);
+        codec.encode(new Object[] { sum, min, max, count, item_count }, buf);
 
         buf.flip();
         byte[] valueBytes = new byte[buf.limit()];
@@ -96,7 +96,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         LongWritable count = new LongWritable(2);
         LongMutable item_count = new LongMutable(100);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        codec.encode(new Object[] { sum, min, max, count ,item_count}, buf);
+        codec.encode(new Object[] { sum, min, max, count, item_count }, buf);
 
     }
 }

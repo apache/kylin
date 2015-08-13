@@ -1,9 +1,10 @@
 package org.apache.kylin.cube.gridtable;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -14,10 +15,10 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class CuboidToGridTableMapping {
 
@@ -37,7 +38,7 @@ public class CuboidToGridTableMapping {
         this.cuboid = cuboid;
         init();
     }
-    
+
     private void init() {
         int gtColIdx = 0;
         gtDataTypes = Lists.newArrayList();
@@ -129,11 +130,11 @@ public class CuboidToGridTableMapping {
         else
             return -1;
     }
-    
+
     public List<TblColRef> getCuboidDimensionsInGTOrder() {
         return cuboid.getColumns();
     }
-    
+
     public Map<Integer, Integer> getDependentMetricsMap() {
         Map<Integer, Integer> result = Maps.newHashMap();
         List<MeasureDesc> measures = cuboid.getCube().getMeasures();
@@ -153,7 +154,7 @@ public class CuboidToGridTableMapping {
                     throw new IllegalStateException("Cannot find dependent measure: " + child.getDependentMeasureRef());
             }
         }
-        return result.isEmpty() ? Collections.<Integer, Integer>emptyMap() : result;
+        return result.isEmpty() ? Collections.<Integer, Integer> emptyMap() : result;
     }
 
     public static MeasureDesc[] getMeasureSequenceOnGridTable(CubeDesc cube) {

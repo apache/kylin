@@ -1,10 +1,10 @@
 package org.apache.kylin.gridtable;
 
+import java.nio.ByteBuffer;
+
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
-
-import java.nio.ByteBuffer;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 /**

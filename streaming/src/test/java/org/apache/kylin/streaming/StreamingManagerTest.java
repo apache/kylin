@@ -34,23 +34,23 @@
 
 package org.apache.kylin.streaming;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import junit.framework.TestCase;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.fail;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -95,7 +95,7 @@ public class StreamingManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void testMultiOffset() {
         final String streaming = "kafka_multi_test";
-        List<Integer> partitions = Lists.newArrayList(Lists.asList(0, 1, new Integer[]{2, 3}));
+        List<Integer> partitions = Lists.newArrayList(Lists.asList(0, 1, new Integer[] { 2, 3 }));
         assertEquals(0, streamingManager.getOffset("kafka_multi_test", partitions).size());
 
         for (int i = 0; i < 10; i++) {

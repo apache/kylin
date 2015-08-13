@@ -18,16 +18,16 @@
 
 package org.apache.kylin.engine.mr.common;
 
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.hadoop.mapreduce.Counters;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.TaskCounter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.kylin.job.constant.ExecutableConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author xduo
@@ -80,7 +80,7 @@ public class HadoopCmdOutput {
     public String getHdfsBytesRead() {
         return hdfsBytesRead;
     }
-    
+
     public void updateJobCounter() {
         try {
             Counters counters = job.getCounters();

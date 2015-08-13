@@ -18,6 +18,10 @@
 
 package org.apache.kylin.metadata;
 
+import static org.apache.kylin.metadata.MetadataManager.getInstance;
+
+import java.util.List;
+
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -25,10 +29,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.apache.kylin.metadata.MetadataManager.getInstance;
 
 /**
  */
@@ -70,6 +70,6 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
     public void testDataModel() throws Exception {
         DataModelDesc modelDesc = getInstance(getTestConfig()).getDataModelDesc("test_kylin_left_join_model_desc");
 
-        Assert.assertTrue(modelDesc.getDimensions().size()>0);
+        Assert.assertTrue(modelDesc.getDimensions().size() > 0);
     }
 }

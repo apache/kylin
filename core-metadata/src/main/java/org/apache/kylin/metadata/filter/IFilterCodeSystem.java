@@ -15,7 +15,7 @@ import java.util.Comparator;
  * @author yangli9
  */
 public interface IFilterCodeSystem<T> extends Comparator<T> {
-    
+
     /** if given code represents the NULL value */
     boolean isNull(T code);
 
@@ -27,5 +27,5 @@ public interface IFilterCodeSystem<T> extends Comparator<T> {
 
     /** read code from buffer */
     T deserialize(ByteBuffer buf);
-    
+
 }

@@ -18,6 +18,14 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -29,8 +37,6 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.tuple.TupleInfo;
-
-import java.util.*;
 
 /**
  */
@@ -124,8 +130,7 @@ public class OLAPContext {
         return sqlDigest;
     }
 
-    public void resetSQLDigest()
-    {
+    public void resetSQLDigest() {
         this.sqlDigest = null;
     }
 

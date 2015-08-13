@@ -73,7 +73,7 @@ public class KylinMeta extends MetaImpl {
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     public void closeStatement(StatementHandle h) {
         // nothing to do

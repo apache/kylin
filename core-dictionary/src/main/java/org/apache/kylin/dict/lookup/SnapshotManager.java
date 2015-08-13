@@ -22,14 +22,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author yangli9
@@ -104,19 +104,19 @@ public class SnapshotManager {
 
         return trySaveNewSnapshot(snapshot);
     }
-    
+
     public SnapshotTable rebuildSnapshot(ReadableTable table, TableDesc tableDesc, String overwriteUUID) throws IOException {
         SnapshotTable snapshot = new SnapshotTable(table);
         snapshot.setUuid(overwriteUUID);
-        
+
         snapshot.takeSnapshot(table, tableDesc);
-        
+
         SnapshotTable existing = getSnapshotTable(snapshot.getResourcePath());
         snapshot.setLastModified(existing.getLastModified());
-        
+
         save(snapshot);
         snapshotCache.put(snapshot.getResourcePath(), snapshot);
-        
+
         return snapshot;
     }
 

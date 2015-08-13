@@ -1,11 +1,11 @@
 package org.apache.kylin.gridtable;
 
-import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.gridtable.IGTStore.IGTStoreScanner;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.gridtable.IGTStore.IGTStoreScanner;
 
 public class GTRawScanner implements IGTScanner {
 

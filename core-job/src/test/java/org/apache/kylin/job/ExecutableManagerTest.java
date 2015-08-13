@@ -18,24 +18,24 @@
 
 package org.apache.kylin.job;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.job.BaseTestExecutable;
-import org.apache.kylin.job.SucceedTestExecutable;
 import org.apache.kylin.job.exception.IllegalStateTranferException;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ChainedExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
 
 /**
  */
@@ -48,7 +48,7 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
         createTestMetadata();
         service = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-        for (String jobId: service.getAllJobIds()) {
+        for (String jobId : service.getAllJobIds()) {
             System.out.println("deleting " + jobId);
             service.deleteJob(jobId);
         }
@@ -106,14 +106,12 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
     }
 
     @Test(expected = IllegalStateTranferException.class)
-    public void testInvalidStateTransfer(){
+    public void testInvalidStateTransfer() {
         SucceedTestExecutable job = new SucceedTestExecutable();
         service.addJob(job);
         service.updateJobOutput(job.getId(), ExecutableState.RUNNING, null, null);
         service.updateJobOutput(job.getId(), ExecutableState.STOPPED, null, null);
     }
-
-
 
     private static void assertJobEqual(Executable one, Executable another) {
         assertEquals(one.getClass(), another.getClass());

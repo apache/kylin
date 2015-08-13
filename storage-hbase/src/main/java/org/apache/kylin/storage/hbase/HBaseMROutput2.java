@@ -163,7 +163,7 @@ public class HBaseMROutput2 implements IMROutput2 {
         public void configureInput(Class<? extends Mapper> mapper, Class<? extends WritableComparable> outputKeyClass, Class<? extends Writable> outputValueClass, Job job) throws IOException {
             Configuration conf = job.getConfiguration();
             HBaseConfiguration.merge(conf, HBaseConfiguration.create(conf));
-            
+
             List<Scan> scans = new ArrayList<Scan>();
             for (String htable : htables) {
                 Scan scan = new Scan();

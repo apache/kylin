@@ -32,7 +32,7 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
 
     // be thread-safe and avoid repeated obj creation
     private ThreadLocal<HyperLogLogPlusCounter> current = new ThreadLocal<HyperLogLogPlusCounter>();
-    
+
     private int precision;
 
     public HLLCSerializer(DataType type) {
@@ -56,7 +56,7 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
         }
         return hllc;
     }
-    
+
     @Override
     public HyperLogLogPlusCounter deserialize(ByteBuffer in) {
         HyperLogLogPlusCounter hllc = current();
@@ -72,7 +72,7 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
     public int peekLength(ByteBuffer in) {
         return current().peekLength(in);
     }
-    
+
     @Override
     public int maxLength() {
         return current().maxLength();

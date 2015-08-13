@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +45,7 @@ public class ModelService extends BasicService {
     private AccessService accessService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<DataModelDesc> listAllModels(final String modelName, final String projectName) throws IOException{
+    public List<DataModelDesc> listAllModels(final String modelName, final String projectName) throws IOException {
         List<DataModelDesc> models = null;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
@@ -69,12 +68,12 @@ public class ModelService extends BasicService {
         return filterModels;
     }
 
-    public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit, final Integer offset) throws IOException{
+    public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit, final Integer offset) throws IOException {
 
         List<DataModelDesc> modelDescs;
         modelDescs = listAllModels(modelName, projectName);
 
-        if(limit==null || offset == null){
+        if (limit == null || offset == null) {
             return modelDescs;
         }
 
@@ -85,21 +84,19 @@ public class ModelService extends BasicService {
         return modelDescs.subList(offset, offset + limit);
     }
 
-
     public DataModelDesc createModelDesc(String projectName, DataModelDesc desc) throws IOException {
         if (getMetadataManager().getDataModelDesc(desc.getName()) != null) {
             throw new InternalErrorException("The model named " + desc.getName() + " already exists");
         }
         DataModelDesc createdDesc = null;
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-        createdDesc = getMetadataManager().createDataModelDesc(desc,projectName,owner);
+        createdDesc = getMetadataManager().createDataModelDesc(desc, projectName, owner);
 
         accessService.init(createdDesc, AclPermission.ADMINISTRATION);
         ProjectInstance project = getProjectManager().getProject(projectName);
         accessService.inherit(createdDesc, project);
         return createdDesc;
     }
-
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public DataModelDesc updateModelAndDesc(DataModelDesc desc) throws IOException {
@@ -108,22 +105,21 @@ public class ModelService extends BasicService {
         return desc;
     }
 
-
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public void dropModel(DataModelDesc desc) throws IOException {
 
         //check cube desc exist
-        List<CubeDesc>  cubeDescs = getCubeDescManager().listAllDesc();
-        for(CubeDesc cubeDesc:cubeDescs){
-            if(cubeDesc.getModelName().equals(desc.getName())){
+        List<CubeDesc> cubeDescs = getCubeDescManager().listAllDesc();
+        for (CubeDesc cubeDesc : cubeDescs) {
+            if (cubeDesc.getModelName().equals(desc.getName())) {
                 throw new InternalErrorException("Model referenced by cube,drop cubes under model and try again.");
             }
         }
 
         //check II desc exist
         List<IIDesc> iiDescs = getIIDescManager().listAllDesc();
-        for(IIDesc iidesc:iiDescs){
-            if(iidesc.getModelName().equals(desc.getName())){
+        for (IIDesc iidesc : iiDescs) {
+            if (iidesc.getModelName().equals(desc.getName())) {
                 throw new InternalErrorException("Model referenced by IIDesc.");
             }
         }

@@ -18,6 +18,11 @@
 
 package org.apache.kylin.cube;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -33,11 +38,6 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manager class for CubeDesc; extracted from #CubeManager
@@ -97,7 +97,7 @@ public class CubeDescManager {
         return cubeDescMap.get(name);
     }
 
-    public List<CubeDesc> listAllDesc(){
+    public List<CubeDesc> listAllDesc() {
         return new ArrayList<CubeDesc>(cubeDescMap.values());
     }
 
@@ -125,7 +125,7 @@ public class CubeDescManager {
     private CubeDesc loadCubeDesc(String path) throws IOException {
         ResourceStore store = getStore();
         CubeDesc ndesc = store.getResource(path, CubeDesc.class, CUBE_DESC_SERIALIZER);
-        
+
         if (StringUtils.isBlank(ndesc.getName())) {
             throw new IllegalStateException("CubeDesc name must not be blank");
         }
@@ -135,7 +135,7 @@ public class CubeDescManager {
         if (ndesc.getError().isEmpty() == false) {
             throw new IllegalStateException("Cube desc at " + path + " has issues: " + ndesc.getError());
         }
-        
+
         return ndesc;
     }
 

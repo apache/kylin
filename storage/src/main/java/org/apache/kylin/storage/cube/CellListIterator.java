@@ -24,5 +24,5 @@ import java.util.List;
 
 import org.apache.hadoop.hbase.Cell;
 
-public interface CellListIterator extends Iterator<List<Cell>>, Closeable{
+public interface CellListIterator extends Iterator<List<Cell>>, Closeable {
 }

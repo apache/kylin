@@ -18,18 +18,23 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metadata.MetadataConstants;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Sets;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.MetadataConstants;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DataModelDesc extends RootPersistentEntity {
@@ -64,12 +69,10 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
-
     /**
      * Error messages during resolving json metadata
      */
     private List<String> errors = new ArrayList<String>();
-
 
     public String getName() {
         return name;
@@ -149,7 +152,7 @@ public class DataModelDesc extends RootPersistentEntity {
             if (join == null)
                 continue;
 
-            if(joinType != null && !joinType.equals(join.getType()))
+            if (joinType != null && !joinType.equals(join.getType()))
                 continue;
 
             int find = ArrayUtils.indexOf(join.getForeignKeyColumns(), fk);
@@ -261,6 +264,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public List<String> getError() {
         return this.errors;
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -277,7 +281,6 @@ public class DataModelDesc extends RootPersistentEntity {
 
         return true;
     }
-
 
     @Override
     public int hashCode() {

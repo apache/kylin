@@ -17,7 +17,9 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -25,13 +27,6 @@ import java.util.BitSet;
 import java.util.List;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.gridtable.GTBuilder;
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.GridTable;
-import org.apache.kylin.gridtable.IGTScanner;
-import org.apache.kylin.gridtable.UnitTestSupport;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
 import org.apache.kylin.metadata.measure.LongMutable;
 import org.junit.Test;
@@ -149,7 +144,7 @@ public class SimpleGridTableTest {
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
         return builder;
     }
-    
+
     static void rebuildViaAppend(GridTable table) throws IOException {
         List<GTRecord> data = UnitTestSupport.mockupData(table.getInfo(), 10);
         GTBuilder builder;

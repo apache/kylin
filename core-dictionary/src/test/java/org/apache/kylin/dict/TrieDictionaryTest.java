@@ -18,12 +18,28 @@
 
 package org.apache.kylin.dict;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Random;
+import java.util.TreeSet;
+
 import org.junit.Test;
-
-import java.io.*;
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 public class TrieDictionaryTest {
 
@@ -119,8 +135,7 @@ public class TrieDictionaryTest {
     }
 
     @Test
-    public void dictionaryContainTest()
-    {
+    public void dictionaryContainTest() {
         ArrayList<String> str = new ArrayList<String>();
         str.add("part");
         str.add("part"); // meant to be dup
@@ -142,7 +157,6 @@ public class TrieDictionaryTest {
         assertEquals(true, dict2.contains(dict));
         assertEquals(false, dict.contains(dict2));
     }
-
 
     @Test
     public void englishWordsTest() throws Exception {

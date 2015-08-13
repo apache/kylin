@@ -1,19 +1,22 @@
 package org.apache.kylin.job.streaming;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
+import java.util.List;
+import java.util.Properties;
+
+import javax.annotation.Nullable;
+
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.streaming.BrokerConfig;
 import org.apache.kylin.streaming.KafkaClusterConfig;
 import org.apache.kylin.streaming.StreamingConfig;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Properties;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 
 /**
  * Load prepared data into kafka(for test use)

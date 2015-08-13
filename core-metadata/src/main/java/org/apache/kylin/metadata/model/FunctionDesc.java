@@ -18,11 +18,11 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.Collection;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Collection;
 
 /**
  */
@@ -158,7 +158,7 @@ public class FunctionDesc {
         this.returnType = returnType;
         this.initReturnDataType();
     }
-    
+
     // Jackson does not provide object post-processing currently
     public void initReturnDataType() {
         this.returnDataType = DataType.getInstance(returnType);

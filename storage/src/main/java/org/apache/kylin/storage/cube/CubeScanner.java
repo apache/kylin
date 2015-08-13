@@ -11,7 +11,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.storage.util.KryoUtils;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
@@ -28,6 +27,7 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.util.KryoUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -69,7 +69,7 @@ public class CubeScanner implements IGTScanner {
         trimmedInfoBytes = KryoUtils.serialize(info);
         info.setIGTCodeSystem(origin);
         GTInfo trimmedInfo = KryoUtils.deserialize(this.trimmedInfoBytes, GTInfo.class);
-        
+
         for (GTScanRange range : scanRanges) {
             scanRequests.add(new GTScanRequest(trimmedInfo, range, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate));
         }

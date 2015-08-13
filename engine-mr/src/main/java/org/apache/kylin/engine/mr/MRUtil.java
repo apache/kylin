@@ -43,13 +43,13 @@ public class MRUtil {
     public static IMRBatchCubingOutputSide2 getBatchCubingOutputSide2(CubeSegment seg) {
         return StorageFactory2.createEngineAdapter(seg, IMROutput2.class).getBatchCubingOutputSide(seg);
     }
-    
+
     public static IMRBatchMergeInputSide2 getBatchMergeInputSide2(CubeSegment seg) {
         return StorageFactory2.createEngineAdapter(seg, IMROutput2.class).getBatchMergeInputSide(seg);
     }
-    
+
     public static IMRBatchMergeOutputSide2 getBatchMergeOutputSide2(CubeSegment seg) {
         return StorageFactory2.createEngineAdapter(seg, IMROutput2.class).getBatchMergeOutputSide(seg);
     }
-    
+
 }

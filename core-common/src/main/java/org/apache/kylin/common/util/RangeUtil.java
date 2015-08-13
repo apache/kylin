@@ -1,10 +1,14 @@
 package org.apache.kylin.common.util;
 
-import com.google.common.collect.*;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableMap;
+
+import com.google.common.collect.BoundType;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
+import com.google.common.collect.Ranges;
 
 /**
  */

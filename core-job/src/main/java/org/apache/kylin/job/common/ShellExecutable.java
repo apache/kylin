@@ -23,15 +23,15 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.kylin.common.util.Pair;
-
-import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.Logger;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -50,7 +50,7 @@ public class ShellExecutable extends AbstractExecutable {
             final ShellExecutableLogger logger = new ShellExecutableLogger();
             final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd(), logger);
             executableManager.addJobInfo(getId(), logger.getInfo());
-            return new ExecuteResult(result.getFirst() == 0? ExecuteResult.State.SUCCEED: ExecuteResult.State.FAILED, result.getSecond());
+            return new ExecuteResult(result.getFirst() == 0 ? ExecuteResult.State.SUCCEED : ExecuteResult.State.FAILED, result.getSecond());
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());

@@ -57,7 +57,7 @@ public class ClassUtil {
     @SuppressWarnings("unchecked")
     public static <T> Class<? extends T> forName(String name, Class<T> clz) throws ClassNotFoundException {
         String origName = name;
-        
+
         Class<? extends T> result = (Class<? extends T>) forNameCache.get(origName);
         if (result == null) {
             name = forRenamedClass(name);

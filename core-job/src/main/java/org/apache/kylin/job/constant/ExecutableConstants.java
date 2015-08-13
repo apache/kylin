@@ -22,7 +22,8 @@ package org.apache.kylin.job.constant;
  */
 public final class ExecutableConstants {
 
-    private ExecutableConstants(){}
+    private ExecutableConstants() {
+    }
 
     public static final String YARN_APP_ID = "yarn_application_id";
 
@@ -32,9 +33,6 @@ public final class ExecutableConstants {
     public static final String SOURCE_RECORDS_COUNT = "source_records_count";
     public static final String SOURCE_RECORDS_SIZE = "source_records_size";
     public static final String GLOBAL_LISTENER_NAME = "ChainListener";
-
-
-
 
     public static final int DEFAULT_SCHEDULER_INTERVAL_SECONDS = 60;
 
@@ -58,7 +56,7 @@ public final class ExecutableConstants {
     public static final String STEP_NAME_MERGE_CUBOID = "Merge Cuboid Data";
     public static final String STEP_NAME_UPDATE_CUBE_INFO = "Update Cube Info";
     public static final String STEP_NAME_GARBAGE_COLLECTION = "Garbage Collection";
-    
+
     public static final String STEP_NAME_BUILD_II = "Build Inverted Index";
     public static final String STEP_NAME_CONVERT_II_TO_HFILE = "Convert Inverted Index Data to HFile";
 

@@ -34,7 +34,7 @@ public class TupleInfo {
 
     private final Map<String, Integer> fieldMap;
     private final Map<TblColRef, Integer> columnMap;
-    
+
     private final List<String> fields;
     private final List<TblColRef> columns;
     private final List<String> dataTypeNames;
@@ -63,7 +63,7 @@ public class TupleInfo {
     public int getFieldIndex(String fieldName) {
         return fieldMap.get(fieldName);
     }
-    
+
     public boolean hasField(String fieldName) {
         return fieldMap.containsKey(fieldName);
     }
@@ -92,7 +92,7 @@ public class TupleInfo {
             columns.set(index, col);
         else
             columns.add(index, col);
-        
+
         if (dataTypeNames.size() > index)
             dataTypeNames.set(index, col.getType().getName());
         else

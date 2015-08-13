@@ -40,16 +40,15 @@ public class AggrKey implements Comparable<AggrKey> {
         this.hashcode = hashcode;
     }
 
-    private int calculateHash()
-    {
+    private int calculateHash() {
         int hash = 1;
         for (int i = 0; i < groupByMaskSet.length; i++) {
             byte t = data[offset + groupByMaskSet[i]];
-            if(t!= RowConstants.ROWKEY_PLACE_HOLDER_BYTE) {
+            if (t != RowConstants.ROWKEY_PLACE_HOLDER_BYTE) {
                 hash = (31 * hash) + t;
             }
         }
-        return hash; 
+        return hash;
     }
 
     public byte[] get() {

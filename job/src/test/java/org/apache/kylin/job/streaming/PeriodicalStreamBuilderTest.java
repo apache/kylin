@@ -1,23 +1,34 @@
 package org.apache.kylin.job.streaming;
 
-import com.google.common.collect.Lists;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.TimeUtil;
-import org.apache.kylin.streaming.*;
+import org.apache.kylin.streaming.MicroStreamBatch;
+import org.apache.kylin.streaming.MicroStreamBatchConsumer;
+import org.apache.kylin.streaming.ParsedStreamMessage;
+import org.apache.kylin.streaming.StreamBuilder;
+import org.apache.kylin.streaming.StreamMessage;
+import org.apache.kylin.streaming.StreamParser;
+import org.apache.kylin.streaming.StreamingManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -37,7 +48,7 @@ public class PeriodicalStreamBuilderTest extends LocalFileMetadataTestCase {
     }
 
     private List<StreamMessage> prepareTestData(long start, long end, int count) {
-        double step = (double)(end - start) / (count - 1);
+        double step = (double) (end - start) / (count - 1);
         long ts = start;
         int offset = 0;
         ArrayList<StreamMessage> result = Lists.newArrayList();
@@ -47,8 +58,8 @@ public class PeriodicalStreamBuilderTest extends LocalFileMetadataTestCase {
         }
         result.add(new StreamMessage(offset++, String.valueOf(end).getBytes()));
         assertEquals(count, result.size());
-        assertEquals(start+"", new String(result.get(0).getRawData()));
-        assertEquals(end+"", new String(result.get(count - 1).getRawData()));
+        assertEquals(start + "", new String(result.get(0).getRawData()));
+        assertEquals(end + "", new String(result.get(count - 1).getRawData()));
         return result;
     }
 
@@ -83,7 +94,7 @@ public class PeriodicalStreamBuilderTest extends LocalFileMetadataTestCase {
         streamBuilder.setStreamParser(new StreamParser() {
             @Override
             public ParsedStreamMessage parse(StreamMessage streamMessage) {
-                return new ParsedStreamMessage(Collections.<String>emptyList(), streamMessage.getOffset(), Long.parseLong(new String(streamMessage.getRawData())), true);
+                return new ParsedStreamMessage(Collections.<String> emptyList(), streamMessage.getOffset(), Long.parseLong(new String(streamMessage.getRawData())), true);
             }
         });
 

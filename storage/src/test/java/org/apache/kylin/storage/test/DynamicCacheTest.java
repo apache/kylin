@@ -1,8 +1,9 @@
 package org.apache.kylin.storage.test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.common.collect.Ranges;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.IdentityUtils;
@@ -21,9 +22,9 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.collect.Ranges;
 
 /**
  */
@@ -77,7 +78,7 @@ public class DynamicCacheTest {
         final List<FunctionDesc> aggregations = StorageMockUtils.buildAggregations();
         final TupleInfo tupleInfo = StorageMockUtils.newTupleInfo(groups, aggregations);
 
-        SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", null, null, Lists.<TblColRef> newArrayList(), groups, Lists.newArrayList(partitionCol), Lists.<TblColRef>newArrayList(), aggregations);
+        SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", null, null, Lists.<TblColRef> newArrayList(), groups, Lists.newArrayList(partitionCol), Lists.<TblColRef> newArrayList(), aggregations);
 
         ITuple aTuple = new TsOnlyTuple(partitionCol, "2011-02-01");
         ITuple bTuple = new TsOnlyTuple(partitionCol, "2012-02-01");

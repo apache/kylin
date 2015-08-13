@@ -18,6 +18,10 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ServiceTestBase;
@@ -26,10 +30,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author shaoshi
@@ -70,6 +70,6 @@ public class ITTableControllerTest extends ServiceTestBase {
         Map<String, String[]> loadResult = tableController.loadHiveTable("test_kylin_fact,TEST_CATEGORY_GROUPINGS", "default");
         Assert.assertNotNull(loadResult);
 
-        Assert.assertTrue(loadResult.get("result.loaded").length ==2);
+        Assert.assertTrue(loadResult.get("result.loaded").length == 2);
     }
 }

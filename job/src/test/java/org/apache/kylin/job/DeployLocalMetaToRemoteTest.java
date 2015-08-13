@@ -18,15 +18,19 @@
 
 package org.apache.kylin.job;
 
+import java.io.File;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
-import org.junit.*;
-
-import java.io.File;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * This test case is ONLY for dev use, it deploys local meta to sandbox

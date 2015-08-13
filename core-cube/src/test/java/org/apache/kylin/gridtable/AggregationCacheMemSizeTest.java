@@ -25,13 +25,12 @@ import java.util.TreeMap;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.gridtable.GTAggregateScanner;
 import org.apache.kylin.metadata.measure.BigDecimalSumAggregator;
-import org.apache.kylin.metadata.measure.DoubleSumAggregator;
 import org.apache.kylin.metadata.measure.DoubleMutable;
+import org.apache.kylin.metadata.measure.DoubleSumAggregator;
 import org.apache.kylin.metadata.measure.HLLCAggregator;
-import org.apache.kylin.metadata.measure.LongSumAggregator;
 import org.apache.kylin.metadata.measure.LongMutable;
+import org.apache.kylin.metadata.measure.LongSumAggregator;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.junit.Test;
 
@@ -176,7 +175,7 @@ public class AggregationCacheMemSizeTest {
         }
 
         long bytesAfter = memLeft();
-        
+
         long mapActualSize = bytesBefore - bytesAfter;
         long mapExpectSize = GTAggregateScanner.estimateSizeOfAggrCache(key, aggrs, map.size());
         System.out.println("Actual cache size: " + mapActualSize);

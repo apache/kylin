@@ -87,16 +87,22 @@ public class HBaseResponse implements Serializable {
      * @param segmentStartTime
      *            the segmentStartTime to set
      */
-    public void setDateRangeStart(long dateRangeStart) { this.dateRangeStart = dateRangeStart; }
+    public void setDateRangeStart(long dateRangeStart) {
+        this.dateRangeStart = dateRangeStart;
+    }
 
     /**
      * @return the segmentEndTime
      */
-    public long getDateRangeEnd() { return dateRangeEnd; }
+    public long getDateRangeEnd() {
+        return dateRangeEnd;
+    }
 
     /**
      * @param segmentEndTime
      *            the segmentEndTime to set
      */
-    public void setDateRangeEnd(long dateRangeEnd) { this.dateRangeEnd = dateRangeEnd; }
+    public void setDateRangeEnd(long dateRangeEnd) {
+        this.dateRangeEnd = dateRangeEnd;
+    }
 }

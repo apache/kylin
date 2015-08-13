@@ -18,20 +18,24 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import org.apache.kylin.job.*;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.ExecutableState;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.kylin.job.BaseTestExecutable;
+import org.apache.kylin.job.ErrorTestExecutable;
+import org.apache.kylin.job.FailedTestExecutable;
+import org.apache.kylin.job.SelfStopExecutable;
+import org.apache.kylin.job.SucceedTestExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.junit.Test;
 
 /**
  */
@@ -61,6 +65,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task2.getId()).getState());
     }
+
     @Test
     public void testSucceedAndFailed() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();
@@ -74,6 +79,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
         assertEquals(ExecutableState.ERROR, jobService.getOutput(task2.getId()).getState());
     }
+
     @Test
     public void testSucceedAndError() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();

@@ -145,7 +145,6 @@ public class MergeStatisticsStep extends AbstractExecutable {
         }
     }
 
-
     public void setCubeName(String cubeName) {
         this.setParam(CUBE_NAME, cubeName);
     }

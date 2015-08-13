@@ -5,5 +5,5 @@ import java.util.List;
 /**
  */
 public interface TeeTupleItrListener {
-    void notify(List<ITuple> duplicated,long createTime);
+    void notify(List<ITuple> duplicated, long createTime);
 }

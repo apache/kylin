@@ -1,17 +1,26 @@
 package org.apache.kylin.storage.test;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.kylin.metadata.filter.*;
-import org.apache.kylin.metadata.model.*;
-import org.apache.kylin.storage.tuple.TupleInfo;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.tuple.TupleInfo;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  */
 public class StorageMockUtils {
-    public static  TupleInfo newTupleInfo(List<TblColRef> groups, List<FunctionDesc> aggregations) {
+    public static TupleInfo newTupleInfo(List<TblColRef> groups, List<FunctionDesc> aggregations) {
         TupleInfo info = new TupleInfo();
         int idx = 0;
 
@@ -28,7 +37,7 @@ public class StorageMockUtils {
         return info;
     }
 
-    public static  List<TblColRef> buildGroups() {
+    public static List<TblColRef> buildGroups() {
         List<TblColRef> groups = new ArrayList<TblColRef>();
 
         TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
@@ -44,7 +53,7 @@ public class StorageMockUtils {
         return groups;
     }
 
-    public static  List<FunctionDesc> buildAggregations() {
+    public static List<FunctionDesc> buildAggregations() {
         List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
 
         TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
@@ -72,8 +81,7 @@ public class StorageMockUtils {
         return functions;
     }
 
-
-    public static  CompareTupleFilter buildTs2010Filter(TblColRef column) {
+    public static CompareTupleFilter buildTs2010Filter(TblColRef column) {
         CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
         ColumnTupleFilter columnFilter1 = new ColumnTupleFilter(column);
         compareFilter.addChild(columnFilter1);
@@ -82,7 +90,7 @@ public class StorageMockUtils {
         return compareFilter;
     }
 
-    public static  CompareTupleFilter buildTs2011Filter(TblColRef column) {
+    public static CompareTupleFilter buildTs2011Filter(TblColRef column) {
         CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.GT);
         ColumnTupleFilter columnFilter1 = new ColumnTupleFilter(column);
         compareFilter.addChild(columnFilter1);
@@ -91,7 +99,7 @@ public class StorageMockUtils {
         return compareFilter;
     }
 
-    public static  CompareTupleFilter buildFilter1(TblColRef column) {
+    public static CompareTupleFilter buildFilter1(TblColRef column) {
         CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         ColumnTupleFilter columnFilter1 = new ColumnTupleFilter(column);
         compareFilter.addChild(columnFilter1);
@@ -100,7 +108,7 @@ public class StorageMockUtils {
         return compareFilter;
     }
 
-    public static  CompareTupleFilter buildFilter2(TblColRef column) {
+    public static CompareTupleFilter buildFilter2(TblColRef column) {
         CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         ColumnTupleFilter columnFilter2 = new ColumnTupleFilter(column);
         compareFilter.addChild(columnFilter2);
@@ -110,7 +118,7 @@ public class StorageMockUtils {
     }
 
     @SuppressWarnings("unused")
-    public static  TupleFilter buildAndFilter(List<TblColRef> columns) {
+    public static TupleFilter buildAndFilter(List<TblColRef> columns) {
         CompareTupleFilter compareFilter1 = buildFilter1(columns.get(0));
         CompareTupleFilter compareFilter2 = buildFilter2(columns.get(1));
         LogicalTupleFilter andFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.AND);
@@ -120,7 +128,7 @@ public class StorageMockUtils {
     }
 
     @SuppressWarnings("unused")
-    public static  TupleFilter buildOrFilter(List<TblColRef> columns) {
+    public static TupleFilter buildOrFilter(List<TblColRef> columns) {
         CompareTupleFilter compareFilter1 = buildFilter1(columns.get(0));
         CompareTupleFilter compareFilter2 = buildFilter2(columns.get(1));
         LogicalTupleFilter logicFilter = new LogicalTupleFilter(TupleFilter.FilterOperatorEnum.OR);

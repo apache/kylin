@@ -18,9 +18,12 @@
 
 package org.apache.kylin.storage.hbase;
 
-import java.util.*;
-
-import com.google.common.collect.Range;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.cube.CubeInstance;
@@ -92,7 +95,7 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
     public boolean hasNext() {
         if (next != null)
             return true;
-        
+
         // 1. check limit
         if (context.isLimitEnabled() && scanCount >= context.getLimit()) {
             return false;

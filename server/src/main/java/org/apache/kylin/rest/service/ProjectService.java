@@ -18,6 +18,10 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -30,10 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author xduo
@@ -64,11 +64,10 @@ public class ProjectService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION') or hasPermission(#currentProject, 'MANAGEMENT')")
-    public ProjectInstance updateProject(UpdateProjectRequest projectRequest,ProjectInstance currentProject) throws IOException {
+    public ProjectInstance updateProject(UpdateProjectRequest projectRequest, ProjectInstance currentProject) throws IOException {
         String formerProjectName = projectRequest.getFormerProjectName();
         String newProjectName = projectRequest.getNewProjectName();
         String newDescription = projectRequest.getNewDescription();
-
 
         if (currentProject == null) {
             throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
@@ -99,11 +98,10 @@ public class ProjectService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public void deleteProject(String projectName,ProjectInstance project) throws IOException {
+    public void deleteProject(String projectName, ProjectInstance project) throws IOException {
         getProjectManager().dropProject(projectName);
 
         accessService.clean(project, true);
     }
-
 
 }
