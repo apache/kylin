@@ -105,9 +105,10 @@ We are using [Rouge](https://github.com/jneen/rouge) to highlight code syntax.
 check this doc's source code for more detail sample.
 
 # How to preview in your local
-You can preview in your markdown editor, to check exactly what it will looks like on website, please run Jekyll from "website" folder:  
+You can preview in your markdown editor, to check exactly what it will looks like on website, please run Jekyll from "website" folder:
+
 ```
-jekyll s
+jekyll server
 
 ```
 Then access http://127.0.0.1:4000 in your browser.
