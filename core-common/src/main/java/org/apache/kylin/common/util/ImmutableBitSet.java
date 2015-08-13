@@ -1,6 +1,5 @@
 package org.apache.kylin.common.util;
 
-import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 public class ImmutableBitSet {
@@ -128,24 +127,5 @@ public class ImmutableBitSet {
 
     public boolean isEmpty() {
         return set.isEmpty();
-    }
-
-    // SerDer
-    // ============================================================================
-    public static final Serializer SERIALIZER = new Serializer();
-
-    public static class Serializer implements BytesSerializer<ImmutableBitSet> {
-
-        @Override
-        public void serialize(ImmutableBitSet value, ByteBuffer out) {
-            BytesUtil.writeByteArray(value.set.toByteArray(), out);
-        }
-
-        @Override
-        public ImmutableBitSet deserialize(ByteBuffer in) {
-            byte[] bytes = BytesUtil.readByteArray(in);
-            return new ImmutableBitSet(BitSet.valueOf(bytes));
-        }
-
     }
 }
