@@ -18,7 +18,8 @@
 
 package org.apache.kylin.query.routing;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -26,7 +27,7 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * @author xjiang

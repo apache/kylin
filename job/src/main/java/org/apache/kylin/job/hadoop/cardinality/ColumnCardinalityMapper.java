@@ -32,10 +32,10 @@ import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
-import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
-import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.MRUtil;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -50,16 +50,16 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
     public static final String DEFAULT_DELIM = ",";
 
     private int counter = 0;
-    
+
     private TableDesc tableDesc;
     private IMRTableInputFormat tableInputFormat;
-    
+
     @Override
     protected void setup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         bindCurrentConfiguration(conf);
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
-        
+
         String tableName = conf.get(BatchConstants.TABLE_NAME);
         tableDesc = MetadataManager.getInstance(config).getTableDesc(tableName);
         tableInputFormat = MRUtil.getTableInputFormat(tableDesc);
@@ -69,13 +69,13 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
     public void map(T key, Object value, Context context) throws IOException, InterruptedException {
         ColumnDesc[] columns = tableDesc.getColumns();
         String[] values = tableInputFormat.parseMapperInput(value);
-        
+
         for (int m = 0; m < columns.length; m++) {
             String field = columns[m].getName();
             String fieldValue = values[m];
             if (fieldValue == null)
                 fieldValue = "NULL";
-            
+
             if (counter < 5 && m < 10) {
                 System.out.println("Get row " + counter + " column '" + field + "'  value: " + fieldValue);
             }

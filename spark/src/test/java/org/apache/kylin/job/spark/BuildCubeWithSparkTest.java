@@ -18,7 +18,13 @@
 
 package org.apache.kylin.job.spark;
 
-import com.google.common.collect.Lists;
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
@@ -44,13 +50,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.Lists;
 
 public class BuildCubeWithSparkTest {
 
@@ -88,7 +88,7 @@ public class BuildCubeWithSparkTest {
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         DeployUtil.initCliWorkDir();
-//        DeployUtil.deployMetadata();
+        //        DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -114,22 +114,22 @@ public class BuildCubeWithSparkTest {
 
     @Test
     public void test() throws Exception {
-//        DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_left_join_empty");
-//        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-//        assertTrue(new File(kylinConfig.getKylinSparkJobJarPath()).exists());
-//        assertTrue(new File(kylinConfig.getSparkHome()).exists());
-//        final SparkExecutable sparkExecutable = new SparkExecutable();
-//        sparkExecutable.setClassName(SparkCountDemo.class.getName());
-//        jobService.addJob(sparkExecutable);
-//        waitForJob(sparkExecutable.getId());
-//        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(sparkExecutable.getId()).getState());
+        //        DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_left_join_empty");
+        //        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        //        assertTrue(new File(kylinConfig.getKylinSparkJobJarPath()).exists());
+        //        assertTrue(new File(kylinConfig.getSparkHome()).exists());
+        //        final SparkExecutable sparkExecutable = new SparkExecutable();
+        //        sparkExecutable.setClassName(SparkCountDemo.class.getName());
+        //        jobService.addJob(sparkExecutable);
+        //        waitForJob(sparkExecutable.getId());
+        //        assertEquals(ExecutableState.SUCCEED, jobService.getOutput(sparkExecutable.getId()).getState());
         final CubeSegment segment = createSegment();
         System.out.println(segment.getName());
         final DefaultChainedExecutable cubingJob = new SparkBatchCubingEngine().createBatchCubingJob(segment, "BuildCubeWithSpark");
         jobService.addJob(cubingJob);
         waitForJob(cubingJob.getId());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(cubingJob.getId()).getState());
-        
+
     }
 
     private void clearSegment(String cubeName) throws Exception {
@@ -139,7 +139,6 @@ public class BuildCubeWithSparkTest {
         cubeBuilder.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
         cubeManager.updateCube(cubeBuilder);
     }
-
 
     private CubeSegment createSegment() throws Exception {
         String cubeName = "test_kylin_cube_with_slr_left_join_empty";

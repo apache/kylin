@@ -374,7 +374,6 @@ public class BytesUtil {
         return toHex(array);
     }
 
-
     /**
      * this method only works for hex strings
      */
@@ -402,7 +401,6 @@ public class BytesUtil {
         }
         return sb.toString();
     }
-
 
     public static void main(String[] args) throws Exception {
     }

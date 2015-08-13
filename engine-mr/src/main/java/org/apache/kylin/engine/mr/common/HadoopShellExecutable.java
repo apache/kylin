@@ -66,7 +66,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
                 result = 2;
             }
             log.append("result code:").append(result);
-            return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, log.toString()):new ExecuteResult(ExecuteResult.State.FAILED, log.toString());
+            return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, log.toString()) : new ExecuteResult(ExecuteResult.State.FAILED, log.toString());
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());

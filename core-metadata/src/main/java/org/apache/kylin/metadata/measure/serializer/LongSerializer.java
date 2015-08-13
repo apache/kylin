@@ -48,7 +48,7 @@ public class LongSerializer extends DataTypeSerializer<LongMutable> {
         }
         return l;
     }
-    
+
     @Override
     public LongMutable deserialize(ByteBuffer in) {
         LongMutable l = current();
@@ -59,14 +59,14 @@ public class LongSerializer extends DataTypeSerializer<LongMutable> {
     @Override
     public int peekLength(ByteBuffer in) {
         int mark = in.position();
-        
+
         BytesUtil.readVLong(in);
         int len = in.position() - mark;
-        
+
         in.position(mark);
         return len;
     }
-    
+
     @Override
     public int maxLength() {
         return 9; // vlong: 1 + 8

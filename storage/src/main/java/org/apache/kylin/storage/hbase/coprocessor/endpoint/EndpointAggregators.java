@@ -41,7 +41,7 @@ import com.google.common.collect.Lists;
 /**
  * @author honma
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class EndpointAggregators {
 
     private enum MetricType {
@@ -152,7 +152,6 @@ public class EndpointAggregators {
         }
         return aggrs;
     }
-
 
     /**
      * this method is heavily called at coprocessor side,

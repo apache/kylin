@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,11 +28,10 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.storage.hbase.steps.CubeHFileMapper;
 
 /**
  * @author George Song (ysong1)

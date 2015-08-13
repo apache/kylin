@@ -18,6 +18,10 @@
 
 package org.apache.kylin.invertedindex;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
@@ -25,10 +29,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  */

@@ -18,9 +18,14 @@
 
 package org.apache.kylin.dict.lookup;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -32,14 +37,9 @@ import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ReadableTable;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author yangli9
@@ -235,7 +235,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
                         // NULL_STR is tricky, but we don't want to break the current snapshots
                         if (row[j].equals(NULL_STR))
                             row[j] = null;
-                        
+
                         b.addValue(row[j]);
                     }
                 }

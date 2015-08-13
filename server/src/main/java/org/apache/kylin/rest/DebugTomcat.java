@@ -18,6 +18,10 @@
 
 package org.apache.kylin.rest;
 
+import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
@@ -26,10 +30,6 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.util.ClasspathUtil;
-
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 public class DebugTomcat {
 
@@ -41,11 +41,11 @@ public class DebugTomcat {
             overrideDevJobJarLocations();
 
             System.setProperty("spring.profiles.active", "testing");
-            
+
             //avoid log permission issue
             if (System.getProperty("catalina.home") == null)
-                System.setProperty("catalina.home", "."); 
-            
+                System.setProperty("catalina.home", ".");
+
             if (System.getProperty("hdp.version") == null)
                 System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
 

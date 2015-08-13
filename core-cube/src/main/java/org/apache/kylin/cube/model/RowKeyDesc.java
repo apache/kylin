@@ -27,12 +27,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  */
@@ -157,7 +157,6 @@ public class RowKeyDesc {
             throw new NullPointerException("Column " + col + " does not exist in row key desc");
         return desc;
     }
-
 
     public boolean isUseDictionary(int index) {
         String useDictionary = rowkeyColumns[index].getDictionary();

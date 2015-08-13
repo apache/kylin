@@ -66,7 +66,7 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
 
         return returnCode;
     }
-    
+
     public static void main(String[] args) throws Exception {
         int exitCode = ToolRunner.run(new CreateDictionaryJob(), args);
         System.exit(exitCode);

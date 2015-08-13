@@ -58,12 +58,12 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     public void remove(K key) {
         if (innerCache.containsKey(key)) {
-            cacheUpdater.updateCache(key,null,Broadcaster.EVENT.DROP,syncType,this);
+            cacheUpdater.updateCache(key, null, Broadcaster.EVENT.DROP, syncType, this);
         }
     }
 
     public void removeLocal(K key) {
-         innerCache.remove(key);
+        innerCache.remove(key);
     }
 
     public void clear() {
@@ -92,5 +92,5 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     public Set<K> keySet() {
         return innerCache.keySet();
-  }
+    }
 }

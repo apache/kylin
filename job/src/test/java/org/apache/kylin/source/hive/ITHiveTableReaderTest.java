@@ -18,12 +18,11 @@
 
 package org.apache.kylin.source.hive;
 
-import org.apache.kylin.source.hive.HiveTableReader;
+import java.io.IOException;
+
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  * This test case need the hive runtime; Please run it with sandbox;
@@ -32,7 +31,6 @@ import java.io.IOException;
  * It is in the exclude list of default profile in pom.xml
  */
 public class ITHiveTableReaderTest extends HBaseMetadataTestCase {
-
 
     @Test
     public void test() throws IOException {

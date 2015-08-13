@@ -18,22 +18,21 @@
 
 package org.apache.kylin.cube.kv;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
 
 import org.apache.kylin.common.util.Bytes;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.MetadataManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author George Song (ysong1)

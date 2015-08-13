@@ -147,7 +147,6 @@ public class PartitionDesc {
 
     }
 
-
     /**
      * Another implementation of IPartitionConditionBuilder, for the fact tables which have three partition columns "YEAR", "MONTH", and "DAY"; This
      * class will concat the three columns into yyyy-MM-dd format for query hive;
@@ -180,7 +179,6 @@ public class PartitionDesc {
                 builder.append("AND ");
             }
             builder.append(concatField + " < '" + DateFormat.formatToDateStr(endExclusive) + "'");
-
 
             return builder.toString();
         }

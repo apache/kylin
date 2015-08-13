@@ -56,9 +56,9 @@ public class StringUtil {
         }
         return buf.toString();
     }
-    
+
     public static void toUpperCaseArray(String[] source, String[] target) {
-        if(source!=null) {
+        if (source != null) {
             for (int i = 0; i < source.length; i++) {
                 if (source[i] != null) {
                     target[i] = source[i].toUpperCase();

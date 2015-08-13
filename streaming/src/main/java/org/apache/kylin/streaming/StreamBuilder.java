@@ -34,18 +34,24 @@
 
 package org.apache.kylin.streaming;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.*;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -67,22 +73,13 @@ public class StreamBuilder implements Runnable {
 
     private final int batchSize;
 
-    public static final StreamBuilder newPeriodicalStreamBuilder(String streaming,
-                                                                 List<BlockingQueue<StreamMessage>> inputs,
-                                                                 MicroStreamBatchConsumer consumer,
-                                                                 long startTimestamp,
-                                                                 long batchInterval) {
+    public static final StreamBuilder newPeriodicalStreamBuilder(String streaming, List<BlockingQueue<StreamMessage>> inputs, MicroStreamBatchConsumer consumer, long startTimestamp, long batchInterval) {
         return new StreamBuilder(streaming, inputs, consumer, startTimestamp, batchInterval);
     }
 
-    public static final StreamBuilder newLimitedSizeStreamBuilder(String streaming,
-                                                                 BlockingQueue<StreamMessage> input,
-                                                                 MicroStreamBatchConsumer consumer,
-                                                                 long startTimestamp,
-                                                                 int batchSize) {
+    public static final StreamBuilder newLimitedSizeStreamBuilder(String streaming, BlockingQueue<StreamMessage> input, MicroStreamBatchConsumer consumer, long startTimestamp, int batchSize) {
         return new StreamBuilder(streaming, input, consumer, startTimestamp, batchSize);
     }
-
 
     private StreamBuilder(String streaming, List<BlockingQueue<StreamMessage>> inputs, MicroStreamBatchConsumer consumer, long startTimestamp, long batchInterval) {
         Preconditions.checkArgument(inputs.size() > 0);

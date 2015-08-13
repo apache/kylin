@@ -9,8 +9,7 @@ import org.springframework.stereotype.Component;
 @Component("performanceService")
 public class PerformanceService {
 
-
-    public void parseQueryInfo(){
+    public void parseQueryInfo() {
 
     }
 

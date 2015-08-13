@@ -31,17 +31,12 @@ import com.google.common.collect.Multimaps;
  */
 public enum ExecutableState {
 
-    READY,
-    RUNNING,
-    ERROR,
-    STOPPED,
-    DISCARDED,
-    SUCCEED;
+    READY, RUNNING, ERROR, STOPPED, DISCARDED, SUCCEED;
 
     private static Multimap<ExecutableState, ExecutableState> VALID_STATE_TRANSFER;
 
     static {
-        VALID_STATE_TRANSFER = Multimaps.newSetMultimap(Maps.<ExecutableState, Collection<ExecutableState>>newEnumMap(ExecutableState.class), new Supplier<Set<ExecutableState>>() {
+        VALID_STATE_TRANSFER = Multimaps.newSetMultimap(Maps.<ExecutableState, Collection<ExecutableState>> newEnumMap(ExecutableState.class), new Supplier<Set<ExecutableState>>() {
             @Override
             public Set<ExecutableState> get() {
                 return new CopyOnWriteArraySet<ExecutableState>();
@@ -62,7 +57,6 @@ public enum ExecutableState {
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.DISCARDED);
         //scheduler,job
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.ERROR);
-
 
         VALID_STATE_TRANSFER.put(ExecutableState.STOPPED, ExecutableState.DISCARDED);
         VALID_STATE_TRANSFER.put(ExecutableState.STOPPED, ExecutableState.READY);

@@ -50,7 +50,12 @@ import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
-import org.apache.kylin.storage.hbase.coprocessor.*;
+import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
+import org.apache.kylin.storage.hbase.coprocessor.FilterDecorator;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +84,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
     private Scan prepareScan(IIProtos.IIRequest request, HRegion region) throws IOException {
         Scan scan = new Scan();
-        
+
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES);
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES);
 

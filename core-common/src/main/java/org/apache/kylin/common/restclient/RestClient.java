@@ -118,7 +118,7 @@ public class RestClient {
                 throw new IOException("Invalid response " + code + " with cache wipe url " + url + "\n" + msg);
 
             return msg;
-            
+
         } finally {
             request.releaseConnection();
         }

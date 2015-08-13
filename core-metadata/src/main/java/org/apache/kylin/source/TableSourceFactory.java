@@ -25,15 +25,15 @@ import org.apache.kylin.metadata.model.TableDesc;
 public class TableSourceFactory {
 
     private static ITableSource dft = (ITableSource) ClassUtil.newInstance("org.apache.kylin.source.hive.HiveTableSource");
-    
+
     public static ReadableTable createReadableTable(TableDesc table) {
         return dft.createReadableTable(table);
     }
-    
+
     public static <T> T createEngineAdapter(IBuildable buildable, Class<T> engineInterface) {
         return dft.adaptToBuildEngine(engineInterface);
     }
-    
+
     public static <T> T createEngineAdapter(TableDesc tableDesc, Class<T> engineInterface) {
         return dft.adaptToBuildEngine(engineInterface);
     }

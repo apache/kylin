@@ -6,7 +6,8 @@ import net.sf.ehcache.pool.sizeof.ReflectionSizeOf;
  */
 public final class SizeOfUtil {
 
-    private SizeOfUtil(){}
+    private SizeOfUtil() {
+    }
 
     private static final ReflectionSizeOf DEFAULT_SIZE_OF = new ReflectionSizeOf();
 

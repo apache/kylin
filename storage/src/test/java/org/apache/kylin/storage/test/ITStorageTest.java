@@ -18,6 +18,11 @@
 
 package org.apache.kylin.storage.test;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -32,12 +37,13 @@ import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
-import org.junit.*;
-
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class ITStorageTest extends HBaseMetadataTestCase {
 

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.invertedindex.index;
 
+import java.util.List;
+
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IISegment;
@@ -25,8 +27,6 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import java.util.List;
 
 /**
  * @author yangli9
@@ -102,7 +102,7 @@ public class TableRecordInfo {
 
         int byteFormLen = pos;
 
-        return new TableRecordInfoDigest(nColumns, byteFormLen,offsets, dictMaxIds, lengths, isMetric, dataTypes);
+        return new TableRecordInfoDigest(nColumns, byteFormLen, offsets, dictMaxIds, lengths, isMetric, dataTypes);
     }
 
     public TableRecord createTableRecord() {

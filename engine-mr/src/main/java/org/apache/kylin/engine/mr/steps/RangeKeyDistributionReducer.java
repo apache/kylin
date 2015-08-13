@@ -25,11 +25,11 @@ import java.util.List;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kylin.cube.model.v1.CubeDesc.CubeCapacity;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author ysong1
@@ -38,10 +38,10 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable, Text, LongWritable> {
 
     public static final long ONE_GIGA_BYTES = 1024L * 1024L * 1024L;
-    public static final int SMALL_CUT = 5;  //  5 GB per region
+    public static final int SMALL_CUT = 5; //  5 GB per region
     public static final int MEDIUM_CUT = 10; //  10 GB per region
     public static final int LARGE_CUT = 50; // 50 GB per region
-    
+
     public static final int MAX_REGION = 1000;
 
     private static final Logger logger = LoggerFactory.getLogger(RangeKeyDistributionReducer.class);
@@ -77,7 +77,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
         for (LongWritable v : values) {
             bytesRead += v.get();
         }
-        
+
         if (bytesRead >= ONE_GIGA_BYTES) {
             gbPoints.add(new Text(key));
             bytesRead = 0; // reset bytesRead
@@ -87,15 +87,15 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         int nRegion = Math.round((float) gbPoints.size() / (float) cut);
-        nRegion = Math.max(1,  nRegion);
+        nRegion = Math.max(1, nRegion);
         nRegion = Math.min(MAX_REGION, nRegion);
-        
+
         int gbPerRegion = gbPoints.size() / nRegion;
         gbPerRegion = Math.max(1, gbPerRegion);
-        
+
         System.out.println(nRegion + " regions");
         System.out.println(gbPerRegion + " GB per region");
-        
+
         for (int i = gbPerRegion; i < gbPoints.size(); i += gbPerRegion) {
             Text key = gbPoints.get(i);
             outputValue.set(i);

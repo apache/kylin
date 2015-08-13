@@ -1,14 +1,13 @@
 package org.apache.kylin.metadata.measure.serializer;
 
-import org.apache.kylin.metadata.measure.serializer.BigDecimalSerializer;
-import org.apache.kylin.metadata.model.DataType;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.kylin.metadata.model.DataType;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  */

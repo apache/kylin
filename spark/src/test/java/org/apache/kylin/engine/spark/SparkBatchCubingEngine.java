@@ -9,7 +9,7 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 public class SparkBatchCubingEngine implements IBatchCubingEngine {
     @Override
     public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
-        return new SparkCubingJobBuilder(newSegment , submitter).build();
+        return new SparkCubingJobBuilder(newSegment, submitter).build();
     }
 
     @Override

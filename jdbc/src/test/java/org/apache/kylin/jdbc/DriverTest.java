@@ -18,7 +18,7 @@
 
 package org.apache.kylin.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,7 +28,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-import org.apache.kylin.jdbc.Driver;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -130,7 +129,7 @@ public class DriverTest {
         info.put("user", "ADMIN");
         info.put("password", "KYLIN");
         Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
-        
+
         PreparedStatement state = conn.prepareStatement("select cal_dt, count(*) from test_kylin_fact where seller_id=? group by cal_dt");
         state.setLong(1, 10000001);
         ResultSet resultSet = state.executeQuery();
@@ -142,7 +141,7 @@ public class DriverTest {
     private void printResultSet(ResultSet rs) throws SQLException {
         ResultSetMetaData meta = rs.getMetaData();
         System.out.println("Data:");
-        
+
         while (rs.next()) {
             StringBuilder buf = new StringBuilder();
             buf.append("[");

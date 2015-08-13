@@ -18,7 +18,12 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.google.common.collect.Lists;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
@@ -26,11 +31,7 @@ import org.apache.kylin.invertedindex.model.IIRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import com.google.common.collect.Lists;
 
 /**
  */

@@ -52,7 +52,7 @@ public class MapReduceExecutable extends AbstractExecutable {
     private static final String KEY_MR_JOB = "MR_JOB_CLASS";
     private static final String KEY_PARAMS = "MR_JOB_PARAMS";
     private static final String KEY_COUNTER_SAVEAS = "MR_COUNTER_SAVEAS";
-    
+
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
     public MapReduceExecutable() {
@@ -135,7 +135,7 @@ public class MapReduceExecutable extends AbstractExecutable {
             while (!isDiscarded()) {
                 JobStepStatusEnum newStatus = statusChecker.checkStatus();
                 if (status == JobStepStatusEnum.KILLED) {
-                    executableManager.updateJobOutput(getId(), ExecutableState.ERROR, Collections.<String, String>emptyMap(), "killed by admin");
+                    executableManager.updateJobOutput(getId(), ExecutableState.ERROR, Collections.<String, String> emptyMap(), "killed by admin");
                     return new ExecuteResult(ExecuteResult.State.FAILED, "killed by admin");
                 }
                 if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
@@ -175,7 +175,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
         info.put(ExecutableConstants.SOURCE_RECORDS_SIZE, hadoopCmdOutput.getHdfsBytesRead());
         info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
-        
+
         String saveAs = getParam(KEY_COUNTER_SAVEAS);
         if (saveAs != null) {
             String[] saveAsNames = saveAs.split(",");
@@ -234,11 +234,11 @@ public class MapReduceExecutable extends AbstractExecutable {
     public String getMapReduceParams() {
         return getParam(KEY_PARAMS);
     }
-    
+
     public String getCounterSaveAs() {
         return getParam(KEY_COUNTER_SAVEAS);
     }
-    
+
     public void setCounterSaveAs(String value) {
         setParam(KEY_COUNTER_SAVEAS, value);
     }

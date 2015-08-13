@@ -27,7 +27,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private final TupleInfo tupleInfo;
     private final Tuple tuple;
     private final Iterator<CubeScanner> scannerIterator;
-    
+
     private CubeScanner curScanner;
     private Iterator<GTRecord> curRecordIterator;
     private CubeTupleConverter curTupleConverter;
@@ -47,7 +47,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     public boolean hasNext() {
         if (next != null)
             return true;
-        
+
         if (curScanner == null) {
             if (scannerIterator.hasNext()) {
                 curScanner = scannerIterator.next();
@@ -57,7 +57,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
                 return false;
             }
         }
-        
+
         if (curRecordIterator.hasNext()) {
             curTupleConverter.translateResult(curRecordIterator.next(), tuple);
             next = tuple;
@@ -94,12 +94,12 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     public void close() {
         if (curScanner != null)
             close(curScanner);
-        
+
         while (scannerIterator.hasNext()) {
             close(scannerIterator.next());
         }
     }
-    
+
     private void close(CubeScanner scanner) {
         try {
             scanner.close();

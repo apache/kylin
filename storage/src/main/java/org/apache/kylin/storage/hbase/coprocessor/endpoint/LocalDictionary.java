@@ -6,8 +6,6 @@ import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 
-import java.util.Map;
-
 /**
  */
 public class LocalDictionary implements IDictionaryAware {

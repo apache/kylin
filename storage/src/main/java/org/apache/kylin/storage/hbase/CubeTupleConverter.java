@@ -135,12 +135,12 @@ public class CubeTupleConverter {
 
     private IDerivedColumnFiller newDerivedColumnFiller(TblColRef[] hostCols, final DeriveInfo deriveInfo) {
         List<TblColRef> rowColumns = cuboid.getColumns();
-        
+
         final int[] hostColIdx = new int[hostCols.length];
         for (int i = 0; i < hostCols.length; i++) {
             hostColIdx[i] = rowColumns.indexOf(hostCols[i]);
         }
-        
+
         boolean needCopyDerived = false;
         final int[] derivedTupleIdx = new int[deriveInfo.columns.length];
         for (int i = 0; i < deriveInfo.columns.length; i++) {
@@ -148,10 +148,10 @@ public class CubeTupleConverter {
             derivedTupleIdx[i] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
             needCopyDerived = needCopyDerived || derivedTupleIdx[i] >= 0;
         }
-        
+
         if (needCopyDerived == false)
             return null;
-        
+
         switch (deriveInfo.type) {
         case LOOKUP:
             return new IDerivedColumnFiller() {
@@ -159,7 +159,7 @@ public class CubeTupleConverter {
                 LookupStringTable lookupTable = cubeMgr.getLookupTable(cubeSeg, deriveInfo.dimension);
                 int[] derivedColIdx = initDerivedColIdx();
                 Array<String> lookupKey = new Array<String>(new String[hostColIdx.length]);
-                
+
                 private int[] initDerivedColIdx() {
                     int[] idx = new int[deriveInfo.columns.length];
                     for (int i = 0; i < idx.length; i++) {
@@ -167,7 +167,7 @@ public class CubeTupleConverter {
                     }
                     return idx;
                 }
-                
+
                 @Override
                 public void fillDerivedColumns(List<String> rowValues, Tuple tuple) {
                     for (int i = 0; i < hostColIdx.length; i++) {

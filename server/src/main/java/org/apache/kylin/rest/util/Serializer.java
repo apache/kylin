@@ -20,10 +20,11 @@ package org.apache.kylin.rest.util;
 
 import java.io.IOException;
 
+import org.apache.kylin.common.util.JsonUtil;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import org.apache.kylin.common.util.JsonUtil;
 
 public class Serializer<T> {
     private final Class<T> type;

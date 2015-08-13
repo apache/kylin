@@ -47,7 +47,7 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleMutable> {
         }
         return d;
     }
-    
+
     @Override
     public DoubleMutable deserialize(ByteBuffer in) {
         DoubleMutable d = current();
@@ -64,7 +64,7 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleMutable> {
     public int maxLength() {
         return 8;
     }
-    
+
     @Override
     public DoubleMutable valueOf(byte[] value) {
         DoubleMutable d = current();

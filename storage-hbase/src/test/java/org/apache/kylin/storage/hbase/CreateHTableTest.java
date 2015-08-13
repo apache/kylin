@@ -18,15 +18,16 @@
 
 package org.apache.kylin.storage.hbase;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.storage.hbase.steps.CreateHTableJob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.storage.hbase.steps.CreateHTableJob;
 
 /**
  * @author George Song (ysong1)

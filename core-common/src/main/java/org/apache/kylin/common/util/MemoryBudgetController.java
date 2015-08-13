@@ -17,12 +17,13 @@
 
 package org.apache.kylin.common.util;
 
-import com.google.common.base.Preconditions;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
+import com.google.common.base.Preconditions;
 
 public class MemoryBudgetController {
 

@@ -21,8 +21,8 @@ package org.apache.kylin.metadata.model;
 public interface IBuildable {
 
     int getSourceType();
-    
+
     int getEngineType();
-    
+
     int getStorageType();
 }

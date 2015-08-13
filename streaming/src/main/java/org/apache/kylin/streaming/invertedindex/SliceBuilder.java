@@ -17,8 +17,10 @@
 
 package org.apache.kylin.streaming.invertedindex;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.index.BatchSliceMaker;
 import org.apache.kylin.invertedindex.index.Slice;
@@ -27,13 +29,11 @@ import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.util.IIDictionaryBuilder;
 import org.apache.kylin.streaming.MicroStreamBatch;
-import org.apache.kylin.streaming.StreamMessage;
-import org.apache.kylin.streaming.StreamParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.util.List;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -50,7 +50,6 @@ public final class SliceBuilder {
         this.sliceMaker = new BatchSliceMaker(desc, shard);
         this.useLocalDict = useLocalDict;
     }
-
 
     public Slice buildSlice(MicroStreamBatch microStreamBatch) {
         final Dictionary<?>[] dictionaries = useLocalDict ? IIDictionaryBuilder.buildDictionary(microStreamBatch.getStreams(), iiDesc) : new Dictionary[iiDesc.listAllColumns().size()];

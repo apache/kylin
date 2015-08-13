@@ -18,7 +18,8 @@
 
 package org.apache.kylin.job.tools;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,26 +28,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
+import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.job.hadoop.cardinality.ColumnCardinalityMapper;
 import org.apache.kylin.job.hadoop.cardinality.ColumnCardinalityReducer;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.cube.kv.RowConstants;
 
 /**
  * @author ysong1
  * 
  */
 public class ColumnCardinalityReducerTest {
-    
+
     public final static String strArr = "abc,tests,test,test,as,sts,test,tss,sets";
 
     ReduceDriver<IntWritable, BytesWritable, IntWritable, LongWritable> reduceDriver;

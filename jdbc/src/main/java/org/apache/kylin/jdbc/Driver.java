@@ -77,7 +77,7 @@ public class Driver extends UnregisteredDriver {
             throw new RuntimeException("Error occurred while registering JDBC driver " + Driver.class.getName() + ": " + e.toString());
         }
     }
-    
+
     @Override
     protected String getConnectStringPrefix() {
         return CONNECT_STRING_PREFIX;
@@ -106,35 +106,35 @@ public class Driver extends UnregisteredDriver {
         return new KylinMeta((KylinConnection) connection);
     }
 
-//    @Override
-//    protected Handler createHandler() {
-//        return new HandlerImpl() {
-//            @Override
-//            public void onConnectionInit(AvaticaConnection connection) throws SQLException {
-//                KylinConnection conn = (KylinConnection) connection;
-//                RemoteClient runner = ((KylinJdbcFactory) factory).newRemoteClient(conn);
-//                try {
-//                    runner.connect();
-//                    conn.setMetaProject(runner.getMetadata(conn.getProject()));
-//                    logger.debug("Connection inited.");
-//                } catch (ConnectionException e) {
-//                    logger.error(e.getLocalizedMessage(), e);
-//                    throw new SQLException(e.getLocalizedMessage());
-//                }
-//            }
-//
-//            public void onConnectionClose(AvaticaConnection connection) {
-//                logger.debug("Connection closed.");
-//            }
-//
-//            public void onStatementExecute(AvaticaStatement statement, ResultSink resultSink) {
-//                logger.debug("statement executed.");
-//            }
-//
-//            public void onStatementClose(AvaticaStatement statement) {
-//                logger.debug("statement closed.");
-//            }
-//        };
-//    }
+    //    @Override
+    //    protected Handler createHandler() {
+    //        return new HandlerImpl() {
+    //            @Override
+    //            public void onConnectionInit(AvaticaConnection connection) throws SQLException {
+    //                KylinConnection conn = (KylinConnection) connection;
+    //                RemoteClient runner = ((KylinJdbcFactory) factory).newRemoteClient(conn);
+    //                try {
+    //                    runner.connect();
+    //                    conn.setMetaProject(runner.getMetadata(conn.getProject()));
+    //                    logger.debug("Connection inited.");
+    //                } catch (ConnectionException e) {
+    //                    logger.error(e.getLocalizedMessage(), e);
+    //                    throw new SQLException(e.getLocalizedMessage());
+    //                }
+    //            }
+    //
+    //            public void onConnectionClose(AvaticaConnection connection) {
+    //                logger.debug("Connection closed.");
+    //            }
+    //
+    //            public void onStatementExecute(AvaticaStatement statement, ResultSink resultSink) {
+    //                logger.debug("statement executed.");
+    //            }
+    //
+    //            public void onStatementClose(AvaticaStatement statement) {
+    //                logger.debug("statement closed.");
+    //            }
+    //        };
+    //    }
 
 }

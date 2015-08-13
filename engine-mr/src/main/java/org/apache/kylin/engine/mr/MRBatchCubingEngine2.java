@@ -33,7 +33,7 @@ public class MRBatchCubingEngine2 implements IBatchCubingEngine {
     public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
         return new BatchMergeJobBuilder2(mergeSegment, submitter).build();
     }
-    
+
     @Override
     public Class<?> getSourceInterface() {
         return IMRInput.class;

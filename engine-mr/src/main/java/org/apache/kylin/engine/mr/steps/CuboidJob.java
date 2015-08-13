@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -36,16 +38,14 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * @author ysong1
@@ -62,7 +62,7 @@ public class CuboidJob extends AbstractHadoopJob {
     public int run(String[] args) throws Exception {
         if (this.mapperClass == null)
             throw new Exception("Mapper class is not set!");
-        
+
         Options options = new Options();
 
         try {
@@ -127,13 +127,12 @@ public class CuboidJob extends AbstractHadoopJob {
 
     private void configureMapperInputFormat(CubeSegment cubeSeg) throws IOException {
         String input = getOptionValue(OPTION_INPUT_PATH);
-        
+
         if (StringUtils.isBlank(input)) {
             // base cuboid case
             IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
             flatTableInputFormat.configureJob(job);
-        }
-        else {
+        } else {
             // n-dimension cuboid case
             FileInputFormat.setInputPaths(job, new Path(input));
             if (hasOption(OPTION_INPUT_FORMAT) && ("textinputformat".equalsIgnoreCase(getOptionValue(OPTION_INPUT_FORMAT)))) {

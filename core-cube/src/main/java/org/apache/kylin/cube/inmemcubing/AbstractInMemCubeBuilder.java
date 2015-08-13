@@ -40,20 +40,20 @@ abstract public class AbstractInMemCubeBuilder {
 
     final protected CubeDesc cubeDesc;
     final protected Map<TblColRef, Dictionary<?>> dictionaryMap;
-    
+
     protected int taskThreadCount = 4;
     protected int reserveMemoryMB = 100;
 
     public AbstractInMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
-        if(cubeDesc == null)
+        if (cubeDesc == null)
             throw new NullPointerException();
         if (dictionaryMap == null)
             throw new IllegalArgumentException("dictionary cannot be null");
-        
+
         this.cubeDesc = cubeDesc;
         this.dictionaryMap = dictionaryMap;
     }
-    
+
     public void setConcurrentThreads(int n) {
         this.taskThreadCount = n;
     }
@@ -74,7 +74,7 @@ abstract public class AbstractInMemCubeBuilder {
             }
         };
     }
-    
+
     abstract public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException;
 
     protected void outputCuboid(long cuboidId, GridTable gridTable, ICuboidWriter output) throws IOException {
@@ -87,6 +87,5 @@ abstract public class AbstractInMemCubeBuilder {
         scanner.close();
         logger.info("Cuboid " + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
     }
-    
 
 }

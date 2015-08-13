@@ -34,8 +34,10 @@
 
 package org.apache.kylin.streaming;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
+import java.io.IOException;
+import java.util.Properties;
+
+import javax.annotation.Nullable;
 
 import kafka.cluster.Broker;
 import kafka.javaapi.producer.Producer;
@@ -47,10 +49,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-
-import java.io.IOException;
-import java.util.Properties;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
 
 /**
  * for tests
@@ -100,7 +100,7 @@ public class OneOffStreamProducer {
                         e.printStackTrace();
                     }
                 }
-                logger.debug("totally " + count +" messages have been sent");
+                logger.debug("totally " + count + " messages have been sent");
                 stopped = true;
 
             }

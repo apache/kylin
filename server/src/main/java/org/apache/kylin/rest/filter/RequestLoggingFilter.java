@@ -1,11 +1,10 @@
 package org.apache.kylin.rest.filter;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.AbstractRequestLoggingFilter;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by jiazhong on 2015/4/14.
@@ -16,15 +15,14 @@ public class RequestLoggingFilter extends AbstractRequestLoggingFilter {
 
     @Override
     protected void beforeRequest(HttpServletRequest request, String message) {
-//        String user = SecurityContextHolder.getContext().getAuthentication().getName();
-//        logger.info("USER:"+user+"requestURI:"+request.getRequestURI());
+        //        String user = SecurityContextHolder.getContext().getAuthentication().getName();
+        //        logger.info("USER:"+user+"requestURI:"+request.getRequestURI());
     }
 
     @Override
-    protected void afterRequest(HttpServletRequest request, String message)
-    {
+    protected void afterRequest(HttpServletRequest request, String message) {
         logger.info(message);
-//        logger.info("["+"uri="+request.getRequestURI()+",user="+request.getRemoteUser()+request.get);
+        //        logger.info("["+"uri="+request.getRequestURI()+",user="+request.getRemoteUser()+request.get);
     }
 
 }

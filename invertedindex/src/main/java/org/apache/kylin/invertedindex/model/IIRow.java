@@ -34,13 +34,14 @@
 
 package org.apache.kylin.invertedindex.model;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.BytesUtil;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  */

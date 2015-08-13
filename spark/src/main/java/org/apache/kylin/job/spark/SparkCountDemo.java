@@ -23,10 +23,9 @@ public class SparkCountDemo extends AbstractSparkApplication {
 
     private Options options;
 
-
     public SparkCountDemo() {
         options = new Options();
-//        options.addOption(OPTION_INPUT_PATH);
+        //        options.addOption(OPTION_INPUT_PATH);
     }
 
     @Override
@@ -57,11 +56,7 @@ public class SparkCountDemo extends AbstractSparkApplication {
                 KeyValue value = new KeyValue(stringIntegerTuple2._1().getBytes(), "f".getBytes(), "c".getBytes(), String.valueOf(stringIntegerTuple2._2()).getBytes());
                 return new Tuple2(key, value);
             }
-        }).saveAsNewAPIHadoopFile("hdfs://10.249.65.231:8020/tmp/hfile",
-                ImmutableBytesWritable.class,
-                KeyValue.class,
-                HFileOutputFormat.class
-        );
+        }).saveAsNewAPIHadoopFile("hdfs://10.249.65.231:8020/tmp/hfile", ImmutableBytesWritable.class, KeyValue.class, HFileOutputFormat.class);
 
     }
 }

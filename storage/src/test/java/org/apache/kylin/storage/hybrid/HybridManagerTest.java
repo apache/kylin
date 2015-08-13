@@ -3,7 +3,6 @@ package org.apache.kylin.storage.hybrid;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.junit.After;
 import org.junit.Assert;

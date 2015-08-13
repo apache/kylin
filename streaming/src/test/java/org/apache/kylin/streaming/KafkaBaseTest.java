@@ -34,11 +34,11 @@
 
 package org.apache.kylin.streaming;
 
+import java.io.IOException;
+
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  */
@@ -49,6 +49,5 @@ public abstract class KafkaBaseTest {
     @BeforeClass
     public static void beforeClass() throws IOException {
     }
-
 
 }

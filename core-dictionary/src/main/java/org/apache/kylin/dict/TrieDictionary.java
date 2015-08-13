@@ -18,16 +18,21 @@
 
 package org.apache.kylin.dict;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.ref.SoftReference;
+import java.util.Arrays;
+import java.util.HashMap;
+
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.lang.ref.SoftReference;
-import java.util.Arrays;
-import java.util.HashMap;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to

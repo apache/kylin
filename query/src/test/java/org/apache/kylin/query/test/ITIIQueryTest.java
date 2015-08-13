@@ -18,7 +18,10 @@
 
 package org.apache.kylin.query.test;
 
-import com.google.common.collect.Maps;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.RoutingRules.RealizationPriorityRule;
 import org.junit.AfterClass;
@@ -27,9 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 /**
  */

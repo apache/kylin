@@ -18,6 +18,10 @@
 
 package org.apache.kylin.query.routing.RoutingRules;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.kylin.cube.CubeCapabilityChecker;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -31,10 +35,6 @@ import org.apache.kylin.query.routing.RoutingRule;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  */

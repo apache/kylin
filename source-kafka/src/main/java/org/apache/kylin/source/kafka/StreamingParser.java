@@ -35,6 +35,7 @@
 package org.apache.kylin.source.kafka;
 
 import kafka.message.MessageAndOffset;
+
 import org.apache.kylin.engine.streaming.StreamingMessage;
 
 /**
@@ -46,7 +47,7 @@ public interface StreamingParser {
      * @return StreamingMessage must not be NULL
      */
     StreamingMessage parse(MessageAndOffset kafkaMessage);
-    
+
     boolean filter(StreamingMessage streamingMessage);
-    
+
 }

@@ -33,14 +33,15 @@
  */
 package org.apache.kylin.engine.streaming;
 
-import com.google.common.base.Preconditions;
+import java.util.Map;
+
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.engine.streaming.util.StreamingUtils;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.util.Map;
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -58,7 +59,7 @@ public class OneOffStreamingBuilder {
         this.startTime = startTime;
         this.endTime = endTime;
         this.streamingConfig = Preconditions.checkNotNull(streamingConfig);
-        this.streamingInput =  Preconditions.checkNotNull(StreamingUtils.getStreamingInput(streamingConfig));
+        this.streamingInput = Preconditions.checkNotNull(StreamingUtils.getStreamingInput(streamingConfig));
         this.streamingOutput = Preconditions.checkNotNull(StreamingUtils.getStreamingOutput(streamingConfig));
         this.streamingBatchBuilder = Preconditions.checkNotNull(StreamingUtils.getMicroBatchBuilder(streamingConfig));
     }
@@ -77,7 +78,5 @@ public class OneOffStreamingBuilder {
             }
         };
     }
-
-
 
 }

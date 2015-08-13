@@ -43,7 +43,6 @@ public class TableRecordInfoDigest {
     private boolean[] isMetric;// whether it's metric or dict
     private FixedLenMeasureCodec<?>[] measureCodecs;
 
-
     public TableRecordInfoDigest(int nColumns, int byteFormLen, //
             int[] offsets, int[] dictMaxIds, int[] lengths, boolean[] isMetric, String[] metricDataTypes) {
         this.nColumns = nColumns;
@@ -103,7 +102,6 @@ public class TableRecordInfoDigest {
     public RawTableRecord createTableRecordBytes() {
         return new RawTableRecord(this);
     }
-
 
     @Override
     public int hashCode() {

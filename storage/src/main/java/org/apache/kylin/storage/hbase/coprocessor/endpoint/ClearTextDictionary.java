@@ -34,7 +34,8 @@
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
+
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
@@ -42,7 +43,7 @@ import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 /**
  */

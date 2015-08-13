@@ -15,14 +15,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class HBaseMRSteps extends JobBuilderSupport {
-    
+
     public HBaseMRSteps(CubeSegment seg) {
         super(seg, null);
     }
 
     public void addSaveCuboidToHTableSteps(DefaultChainedExecutable jobFlow, String cuboidRootPath) {
         String jobId = jobFlow.getId();
-        
+
         // calculate key distribution
         jobFlow.addTask(createRangeRowkeyDistributionStep(cuboidRootPath + "*", jobId));
         // create htable step
@@ -52,11 +52,11 @@ public class HBaseMRSteps extends JobBuilderSupport {
     public HadoopShellExecutable createCreateHTableStep(String jobId) {
         return createCreateHTableStep(jobId, false);
     }
-    
+
     public HadoopShellExecutable createCreateHTableStepWithStats(String jobId) {
         return createCreateHTableStep(jobId, true);
     }
-    
+
     private HadoopShellExecutable createCreateHTableStep(String jobId, boolean withStats) {
         HadoopShellExecutable createHtableStep = new HadoopShellExecutable();
         createHtableStep.setName(ExecutableConstants.STEP_NAME_CREATE_HBASE_TABLE);
@@ -106,7 +106,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
         return bulkLoadStep;
     }
-    
+
     public MergeGCStep createMergeGCStep() {
         MergeGCStep result = new MergeGCStep();
         result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
@@ -123,7 +123,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
         }
         return mergingHTables;
     }
-    
+
     public String getHFilePath(String jobId) {
         return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/hfile/";
     }

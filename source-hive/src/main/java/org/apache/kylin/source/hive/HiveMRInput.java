@@ -49,12 +49,12 @@ public class HiveMRInput implements IMRInput {
     public IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
         return new BatchCubingInputSide(seg);
     }
-    
+
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
         return new HiveTableInputFormat(table.getIdentity());
     }
-    
+
     public static class HiveTableInputFormat implements IMRTableInputFormat {
         final String dbName;
         final String tableName;
@@ -79,11 +79,11 @@ public class HiveMRInput implements IMRInput {
         public String[] parseMapperInput(Object mapperInput) {
             return HiveTableReader.getRowAsStringArray((HCatRecord) mapperInput);
         }
-        
+
     }
 
     public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
-        
+
         final JobEngineConfig conf;
         final CubeSegment seg;
         final CubeJoinedFlatTableDesc flatHiveTableDesc;
@@ -98,7 +98,7 @@ public class HiveMRInput implements IMRInput {
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId()));
         }
-        
+
         public static AbstractExecutable createFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId) {
 
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
@@ -137,9 +137,9 @@ public class HiveMRInput implements IMRInput {
         public IMRTableInputFormat getFlatTableInputFormat() {
             return new HiveTableInputFormat(flatHiveTableDesc.getTableName());
         }
-        
+
     }
-    
+
     public static class GarbageCollectionStep extends AbstractExecutable {
 
         @Override
@@ -148,8 +148,7 @@ public class HiveMRInput implements IMRInput {
 
             final String hiveTable = this.getOldHiveTable();
             if (StringUtils.isNotEmpty(hiveTable)) {
-                final String dropSQL = "USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";"
-                        + " DROP TABLE IF EXISTS  " + hiveTable + ";";
+                final String dropSQL = "USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";" + " DROP TABLE IF EXISTS  " + hiveTable + ";";
                 final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
                 ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
                 try {

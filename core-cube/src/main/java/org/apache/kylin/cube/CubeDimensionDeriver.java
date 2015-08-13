@@ -18,10 +18,10 @@
 
 package org.apache.kylin.cube;
 
-import org.apache.kylin.metadata.model.TblColRef;
-
 import java.util.Collection;
 import java.util.HashSet;
+
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  *

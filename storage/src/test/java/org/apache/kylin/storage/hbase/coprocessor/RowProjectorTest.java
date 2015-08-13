@@ -18,17 +18,18 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.kylin.common.util.Bytes;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.KeyValue;
+import org.apache.kylin.common.util.Bytes;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -37,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class RowProjectorTest {
 
     byte[] mask = new byte[] { (byte) 0xff, 0x00, 0x00, (byte) 0xff };
-    CoprocessorProjector sample = new CoprocessorProjector(mask,true);
+    CoprocessorProjector sample = new CoprocessorProjector(mask, true);
 
     @Test
     public void testSerialize() {

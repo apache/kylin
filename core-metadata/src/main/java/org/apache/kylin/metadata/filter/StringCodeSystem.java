@@ -10,9 +10,9 @@ import org.apache.kylin.common.util.BytesUtil;
  * @author yangli9
  */
 public class StringCodeSystem implements IFilterCodeSystem<String> {
-    
+
     public static final StringCodeSystem INSTANCE = new StringCodeSystem();
-    
+
     protected StringCodeSystem() {
         // singleton
     }
@@ -29,7 +29,7 @@ public class StringCodeSystem implements IFilterCodeSystem<String> {
 
     @Override
     public void serialize(String value, ByteBuffer buffer) {
-        BytesUtil.writeUTFString( value, buffer);
+        BytesUtil.writeUTFString(value, buffer);
     }
 
     @Override

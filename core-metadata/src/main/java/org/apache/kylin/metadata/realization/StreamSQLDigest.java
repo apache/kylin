@@ -2,8 +2,8 @@ package org.apache.kylin.metadata.realization;
 
 import java.util.Arrays;
 
-import org.apache.kylin.metadata.filter.TsConditionEraser;
 import org.apache.kylin.metadata.filter.StringCodeSystem;
+import org.apache.kylin.metadata.filter.TsConditionEraser;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -30,7 +30,6 @@ public class StreamSQLDigest {
         int nonFilterHashCode = calculateNonFilterHashCode();
         this.hashCode = 31 * nonFilterHashCode + (filterSerialized != null ? Arrays.hashCode(filterSerialized) : 0);
     }
-
 
     @Override
     public boolean equals(Object o) {

@@ -18,15 +18,15 @@
 
 package org.apache.kylin.metadata.measure.serializer;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 
 /**
  * @author yangli9
@@ -35,12 +35,12 @@ import java.nio.ByteBuffer;
 public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
 
     private static final Logger logger = LoggerFactory.getLogger(BigDecimalSerializer.class);
-    
+
     final DataType type;
     final int maxLength;
-    
+
     int avoidVerbose = 0;
-    
+
     public BigDecimalSerializer(DataType type) {
         this.type = type;
         // see serialize(): 1 byte scale, 1 byte length, assume every 2 digits takes 1 byte
@@ -76,20 +76,19 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
         return new BigDecimal(new BigInteger(bytes), scale);
     }
 
-
     @Override
     public int peekLength(ByteBuffer in) {
         int mark = in.position();
-        
+
         @SuppressWarnings("unused")
         int scale = BytesUtil.readVInt(in);
         int n = BytesUtil.readVInt(in);
         int len = in.position() - mark + n;
-        
+
         in.position(mark);
         return len;
     }
-    
+
     @Override
     public int maxLength() {
         return maxLength;

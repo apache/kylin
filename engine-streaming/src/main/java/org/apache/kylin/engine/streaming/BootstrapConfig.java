@@ -14,7 +14,6 @@ public class BootstrapConfig {
 
     private boolean fillGap;
 
-
     public boolean isOneOff() {
         return oneOff;
     }

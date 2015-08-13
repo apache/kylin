@@ -17,12 +17,11 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.cube.inmemcubing.ConcurrentDiskStore;
 import org.apache.kylin.gridtable.GTBuilder;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
@@ -52,7 +51,7 @@ public class ConcurrentDiskStoreTest {
         long end = System.currentTimeMillis();
         System.out.println("Cost " + (end - start) + " millis");
     }
-    
+
     private void verifyOneTableWriteAndRead(int readThreads) throws IOException, InterruptedException {
         ConcurrentDiskStore store = new ConcurrentDiskStore(info);
         GridTable table = new GridTable(info, store);
@@ -88,7 +87,7 @@ public class ConcurrentDiskStoreTest {
         for (int i = 0; i < nThreads; i++) {
             t[i].join();
         }
-        
+
         ((ConcurrentDiskStore) table.getStore()).close();
     }
 }

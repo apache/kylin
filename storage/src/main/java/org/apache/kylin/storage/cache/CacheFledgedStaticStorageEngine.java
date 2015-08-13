@@ -1,8 +1,10 @@
 package org.apache.kylin.storage.cache;
 
-import com.google.common.collect.Ranges;
+import java.util.List;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
+
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -15,7 +17,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.common.collect.Ranges;
 
 public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorageEngine {
     private static final Logger logger = LoggerFactory.getLogger(CacheFledgedStaticStorageEngine.class);

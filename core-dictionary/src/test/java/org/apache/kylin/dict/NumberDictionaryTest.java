@@ -18,17 +18,23 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.metadata.model.DataType;
 import org.junit.Test;
 
-import java.math.BigDecimal;
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -39,7 +45,6 @@ public class NumberDictionaryTest {
     NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec();
     Random rand = new Random();
 
-
     @Test
     public void testEmptyInput() {
         String[] ints = new String[] { "", "0", "5", "100", "13" };
@@ -47,7 +52,7 @@ public class NumberDictionaryTest {
         for (String s : ints) {
             intBytes.add((s == null) ? null : Bytes.toBytes(s));
         }
-        
+
         // check "" is treated as NULL, not a code of dictionary
         Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(DataType.getInstance("integer"), intBytes);
         assertEquals(4, dict.getSize());
@@ -56,7 +61,6 @@ public class NumberDictionaryTest {
         assertEquals(id, dict.nullId());
     }
 
-    
     @Test
     public void testNumberEncode() {
         checkCodec("12345", "00000000000012345");
@@ -110,7 +114,7 @@ public class NumberDictionaryTest {
             String dictNum = dict.getValueFromId(i);
             System.out.println(sorted.get(i) + "\t" + dictNum);
         }
-        
+
         for (int i = 0; i < sorted.size(); i++) {
             String dictNum = dict.getValueFromId(i);
             assertEquals(sorted.get(i), new BigDecimal(dictNum));

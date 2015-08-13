@@ -18,11 +18,14 @@
 
 package org.apache.kylin.common.util;
 
-import com.google.common.collect.Lists;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+
 import java.util.Comparator;
 import java.util.List;
+
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 /**
  */

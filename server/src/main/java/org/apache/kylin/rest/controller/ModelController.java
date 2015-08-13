@@ -17,10 +17,12 @@
 */
 
 package org.apache.kylin.rest.controller;
+
+import java.io.IOException;
 import java.util.Iterator;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import java.util.List;
+import java.util.UUID;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -36,11 +38,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * ModelController is defined as Restful API entrance for UI.
@@ -55,13 +62,12 @@ public class ModelController extends BasicController {
     @Autowired
     private ModelService modelService;
 
-    @RequestMapping(value = "", method = {RequestMethod.GET})
+    @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
-    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value="limit",required=false) Integer limit, @RequestParam(value="offset",required=false) Integer offset) {
-        try{
+    public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
+        try {
             return modelService.getModels(modelName, projectName, limit, offset);
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
@@ -72,7 +78,7 @@ public class ModelController extends BasicController {
      * create model
      * @throws java.io.IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.POST})
+    @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
     public ModelRequest saveModelDesc(@RequestBody ModelRequest modelRequest) {
         //Update Model
@@ -101,7 +107,7 @@ public class ModelController extends BasicController {
         return modelRequest;
     }
 
-    @RequestMapping(value = "", method = {RequestMethod.PUT})
+    @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
     public ModelRequest updateModelDesc(@RequestBody ModelRequest modelRequest) throws JsonProcessingException {
         DataModelDesc modelDesc = deserializeDataModelDesc(modelRequest);
@@ -109,10 +115,10 @@ public class ModelController extends BasicController {
             return modelRequest;
         }
         try {
-            modelDesc =  modelService.updateModelAndDesc(modelDesc);
+            modelDesc = modelService.updateModelAndDesc(modelDesc);
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
-        }  catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         }
@@ -128,7 +134,7 @@ public class ModelController extends BasicController {
         return modelRequest;
     }
 
-    @RequestMapping(value = "/{modelName}", method = {RequestMethod.DELETE})
+    @RequestMapping(value = "/{modelName}", method = { RequestMethod.DELETE })
     @ResponseBody
     public void deleteModel(@PathVariable String modelName) {
         DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);

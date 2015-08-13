@@ -76,7 +76,7 @@ public class BytesSplitter {
 
         return bufferSize;
     }
-    
+
     public void setBuffers(byte[][] buffers) {
         for (int i = 0; i < buffers.length; i++) {
             splitBuffers[i].value = buffers[i];
@@ -134,7 +134,7 @@ public class BytesSplitter {
         for (int i = 0; i < bufferSize; i++) {
             if (i > 0)
                 buf.append(", ");
-            
+
             buf.append(Bytes.toString(splitBuffers[i].value, 0, splitBuffers[i].length));
         }
         return buf.toString();

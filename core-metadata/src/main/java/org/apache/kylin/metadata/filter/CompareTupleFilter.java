@@ -18,12 +18,16 @@
 
 package org.apache.kylin.metadata.filter;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
-
-import java.nio.ByteBuffer;
-import java.util.*;
 
 /**
  * @author xjiang

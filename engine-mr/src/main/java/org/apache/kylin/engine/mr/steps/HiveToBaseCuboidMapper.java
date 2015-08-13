@@ -22,14 +22,14 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
-import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.MRUtil;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 
 /**
  * @author George Song (ysong1)
  */
 public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, Object> {
-    
+
     private IMRTableInputFormat flatTableInputFormat;
 
     @Override
@@ -44,7 +44,6 @@ public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, O
         if (counter % BatchConstants.COUNTER_MAX == 0) {
             logger.info("Handled " + counter + " records!");
         }
-        
 
         try {
             //put a record into the shared bytesSplitter

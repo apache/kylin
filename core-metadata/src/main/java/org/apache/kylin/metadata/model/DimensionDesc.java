@@ -18,11 +18,12 @@
 
 package org.apache.kylin.metadata.model;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+
 import org.apache.kylin.common.util.StringUtil;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  */

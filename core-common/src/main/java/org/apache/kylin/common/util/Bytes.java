@@ -17,7 +17,9 @@
  */
 package org.apache.kylin.common.util;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkPositionIndex;
 
 import java.io.DataInput;
 import java.io.DataOutput;

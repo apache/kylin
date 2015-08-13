@@ -18,7 +18,13 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import com.google.common.collect.Maps;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
@@ -37,13 +43,11 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.concurrent.*;
+import com.google.common.collect.Maps;
 
 /**
  */
 public class DefaultScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
-
 
     private ExecutableManager executableManager;
     private FetcherRunner fetcher;

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -36,10 +36,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.BuildEngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -236,7 +236,6 @@ public class BuildCubeWithEngineTest {
         dateStart = f.parse("2012-06-01").getTime();
         dateEnd = f.parse("2022-01-01").getTime();
         result.add(buildSegment(cubeName, dateStart, dateEnd));
-
 
         // build an empty segment which doesn't have data
         dateStart = f.parse("2022-01-01").getTime();

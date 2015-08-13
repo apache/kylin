@@ -18,6 +18,13 @@
 
 package org.apache.kylin.engine.mr;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -26,15 +33,12 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.*;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
+import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecutableState;
+import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.job.execution.Output;
 
 /**
  */
@@ -45,18 +49,18 @@ public class CubingJob extends DefaultChainedExecutable {
     public static final String SOURCE_SIZE_BYTES = "sourceSizeBytes";
     public static final String CUBE_SIZE_BYTES = "byteSizeBytes";
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
-    
+
     private static final String CUBE_INSTANCE_NAME = "cubeName";
     private static final String SEGMENT_ID = "segmentId";
-    
+
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, "BUILD", submitter, config);
     }
-    
+
     public static CubingJob createMergeJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, "MERGE", submitter, config);
     }
-    
+
     private static CubingJob initCubingJob(CubeSegment seg, String jobType, String submitter, JobEngineConfig config) {
         CubingJob result = new CubingJob();
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
@@ -72,7 +76,7 @@ public class CubingJob extends DefaultChainedExecutable {
     public CubingJob() {
         super();
     }
-    
+
     void setCubeName(String name) {
         setParam(CUBE_INSTANCE_NAME, name);
     }
@@ -84,7 +88,7 @@ public class CubingJob extends DefaultChainedExecutable {
     void setSegmentIds(List<String> segmentIds) {
         setParam(SEGMENT_ID, StringUtils.join(segmentIds, ","));
     }
-    
+
     void setSegmentId(String segmentId) {
         setParam(SEGMENT_ID, segmentId);
     }
@@ -99,23 +103,22 @@ public class CubingJob extends DefaultChainedExecutable {
         final Output output = jobService.getOutput(getId());
         String logMsg;
         state = output.getState();
-        if (state != ExecutableState.ERROR &&
-                !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString().toLowerCase())) {
+        if (state != ExecutableState.ERROR && !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString().toLowerCase())) {
             logger.info("state:" + state + " no need to notify users");
             return null;
         }
         switch (state) {
-            case ERROR:
-                logMsg = output.getVerboseMsg();
-                break;
-            case DISCARDED:
-                logMsg = "job has been discarded";
-                break;
-            case SUCCEED:
-                logMsg = "job has succeeded";
-                break;
-            default:
-                return null;
+        case ERROR:
+            logMsg = output.getVerboseMsg();
+            break;
+        case DISCARDED:
+            logMsg = "job has been discarded";
+            break;
+        case SUCCEED:
+            logMsg = "job has succeeded";
+            break;
+        default:
+            return null;
         }
         if (logMsg == null) {
             logMsg = "no error message";
@@ -139,14 +142,14 @@ public class CubingJob extends DefaultChainedExecutable {
             logger.warn(e.getLocalizedMessage(), e);
         }
 
-        String title = "["+ state.toString() + "] - [Kylin Cube Build Job]-" + getCubeName();
+        String title = "[" + state.toString() + "] - [Kylin Cube Build Job]-" + getCubeName();
         return Pair.of(title, content);
     }
 
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         long time = 0L;
-        for (AbstractExecutable task: getTasks()) {
+        for (AbstractExecutable task : getTasks()) {
             final ExecutableState status = task.getStatus();
             if (status != ExecutableState.SUCCEED) {
                 break;
@@ -166,15 +169,15 @@ public class CubingJob extends DefaultChainedExecutable {
     public void setMapReduceWaitTime(long t) {
         addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
-    
+
     public long findSourceRecordCount() {
         return Long.parseLong(findExtraInfo(SOURCE_RECORD_COUNT, "0"));
     }
-    
+
     public long findSourceSizeBytes() {
         return Long.parseLong(findExtraInfo(SOURCE_SIZE_BYTES, "0"));
     }
-    
+
     public long findCubeSizeBytes() {
         return Long.parseLong(findExtraInfo(CUBE_SIZE_BYTES, "0"));
     }

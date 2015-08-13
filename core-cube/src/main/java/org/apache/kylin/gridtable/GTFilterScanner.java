@@ -15,7 +15,7 @@ public class GTFilterScanner implements IGTScanner {
     final private IGTScanner inputScanner;
     final private TupleFilter filter;
     final private IEvaluatableTuple oneTuple; // avoid instance creation
-    
+
     private GTRecord next = null;
 
     public GTFilterScanner(IGTScanner inputScanner, GTScanRequest req) throws IOException {
@@ -55,7 +55,7 @@ public class GTFilterScanner implements IGTScanner {
     @Override
     public Iterator<GTRecord> iterator() {
         return new Iterator<GTRecord>() {
-            
+
             private Iterator<GTRecord> inputIterator = inputScanner.iterator();
 
             @Override

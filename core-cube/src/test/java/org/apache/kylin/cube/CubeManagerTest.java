@@ -18,6 +18,14 @@
 
 package org.apache.kylin.cube;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
@@ -29,12 +37,6 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.Assert.*;
 
 /**
  * @author yangli9
@@ -93,7 +95,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
-        cube.setAutoMergeTimeRanges(new long[] {2000, 6000});
+        cube.setAutoMergeTimeRanges(new long[] { 2000, 6000 });
         mgr.updateCube(new CubeUpdate(cube));
 
         assertTrue(cube.needAutoMerge());
@@ -104,7 +106,6 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         // append first
         CubeSegment seg1 = mgr.appendSegments(cube, 1000);
         seg1.setStatus(SegmentStatusEnum.READY);
-
 
         CubeSegment seg2 = mgr.appendSegments(cube, 2000);
         seg2.setStatus(SegmentStatusEnum.READY);
@@ -132,14 +133,12 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertEquals(cubePath.size() - 1, store.getAllResources(cubePath.get(1), cubePath.get(cubePath.size() - 1), CubeInstance.class, CubeManager.CUBE_SERIALIZER).size());
     }
 
-
-
     @Test
     public void testAutoMergeWithGap() throws Exception {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
-        cube.setAutoMergeTimeRanges(new long[] {2000, 6000});
+        cube.setAutoMergeTimeRanges(new long[] { 2000, 6000 });
         mgr.updateCube(new CubeUpdate(cube));
 
         assertTrue(cube.needAutoMerge());
@@ -150,7 +149,6 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         // append first
         CubeSegment seg1 = mgr.appendSegments(cube, 1000);
         seg1.setStatus(SegmentStatusEnum.READY);
-
 
         CubeSegment seg3 = mgr.appendSegments(cube, 2000, 4000, false, false);
         seg3.setStatus(SegmentStatusEnum.READY);
@@ -184,7 +182,6 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertTrue(mergedSeg != null);
         assertTrue(mergedSeg.getDateRangeStart() == 2000 && mergedSeg.getDateRangeEnd() == 8000);
 
-
         // fill the gap
 
         CubeSegment seg2 = mgr.appendSegments(cube, 1000, 2000, true, true);
@@ -197,9 +194,6 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertTrue(mergedSeg != null);
         assertTrue(mergedSeg.getDateRangeStart() == 0 && mergedSeg.getDateRangeEnd() == 8000);
     }
-
-
-
 
     public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getTestConfig());

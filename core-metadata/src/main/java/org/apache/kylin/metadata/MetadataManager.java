@@ -18,8 +18,20 @@
 
 package org.apache.kylin.metadata;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -37,13 +49,8 @@ import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Serves (and caches) metadata for Kylin instance.
@@ -148,7 +155,7 @@ public class MetadataManager {
     public TableDesc getTableDesc(String tableName) {
         if (tableName != null && tableName.indexOf(".") < 0)
             tableName = "DEFAULT." + tableName;
-        
+
         TableDesc result = srcTableMap.get(tableName.toUpperCase());
         return result;
     }
@@ -289,11 +296,11 @@ public class MetadataManager {
         return new ArrayList<DataModelDesc>(dataModelDescMap.values());
     }
 
-    public List<DataModelDesc> getModels(String projectName) throws IOException{
-        ProjectInstance projectInstance =  ProjectManager.getInstance(config).getProject(projectName);
+    public List<DataModelDesc> getModels(String projectName) throws IOException {
+        ProjectInstance projectInstance = ProjectManager.getInstance(config).getProject(projectName);
         HashSet<DataModelDesc> ret = new HashSet<>();
 
-        if (projectInstance != null&&projectInstance.getModels()!=null) {
+        if (projectInstance != null && projectInstance.getModels() != null) {
             for (String modelName : projectInstance.getModels()) {
                 DataModelDesc model = getDataModelDesc(modelName);
                 if (null != model) {
@@ -319,10 +326,8 @@ public class MetadataManager {
             }
         }
 
-
         return new ArrayList<>(ret);
     }
-
 
     private void reloadAllDataModel() throws IOException {
         ResourceStore store = getStore();
@@ -376,15 +381,15 @@ public class MetadataManager {
         removeModelCache(desc);
     }
 
-    private void removeModelCache(DataModelDesc desc){
+    private void removeModelCache(DataModelDesc desc) {
         dataModelDescMap.remove(desc.getName());
     }
 
-    public DataModelDesc createDataModelDesc(DataModelDesc desc,String projectName,String owner) throws IOException {
+    public DataModelDesc createDataModelDesc(DataModelDesc desc, String projectName, String owner) throws IOException {
         String name = desc.getName();
         if (dataModelDescMap.containsKey(name))
             throw new IllegalArgumentException("DataModelDesc '" + name + "' already exists");
-        ProjectManager.getInstance(config).updateModelToProject(name,projectName);
+        ProjectManager.getInstance(config).updateModelToProject(name, projectName);
         return saveDataModelDesc(desc);
     }
 

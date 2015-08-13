@@ -1,6 +1,12 @@
 package org.apache.kylin.gridtable;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.SortedMap;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.measure.HLLCAggregator;
@@ -9,12 +15,7 @@ import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.SortedMap;
+import com.google.common.collect.Maps;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class GTAggregateScanner implements IGTScanner {

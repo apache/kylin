@@ -18,8 +18,10 @@
 
 package org.apache.kylin.rest.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.List;
+
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.rest.request.CubeRequest;
@@ -31,9 +33,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 
 /**
  * @author xduo
@@ -105,7 +106,7 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.updateNotifyList(newCubeName, notifyList);
         cubeController.updateCubeCost(newCubeName, 80);
 
-        List<CubeInstance> cubeInstances = cubeController.getCubes(newCubeName, cube.getModelName(),"default", 1, 0);
+        List<CubeInstance> cubeInstances = cubeController.getCubes(newCubeName, cube.getModelName(), "default", 1, 0);
 
         CubeInstance cubeInstance = cubeInstances.get(0);
         Assert.assertTrue(cubeInstance.getDescriptor().getNotifyList().contains("john@example.com"));

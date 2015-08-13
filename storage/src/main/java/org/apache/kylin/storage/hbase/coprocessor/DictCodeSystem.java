@@ -14,7 +14,7 @@ import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 public class DictCodeSystem implements IFilterCodeSystem<String> {
 
     public static final DictCodeSystem INSTANCE = new DictCodeSystem();
-    
+
     private DictCodeSystem() {
         // singleton
     }
@@ -23,7 +23,7 @@ public class DictCodeSystem implements IFilterCodeSystem<String> {
     public boolean isNull(String value) {
         if (value == null)
             return true;
-        
+
         String v = value;
         for (int i = 0, n = v.length(); i < n; i++) {
             if ((byte) v.charAt(i) != Dictionary.NULL)

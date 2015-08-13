@@ -18,6 +18,8 @@
 
 package org.apache.kylin.storage.hbase;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,8 +28,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
 
 /**
  */

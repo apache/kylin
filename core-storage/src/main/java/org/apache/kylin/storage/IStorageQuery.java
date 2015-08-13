@@ -31,6 +31,4 @@ public interface IStorageQuery {
 
     ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo);
 
-
-
 }

@@ -8,7 +8,14 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.filter.*;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.StringCodeSystem;
+import org.apache.kylin.metadata.filter.TsConditionEraser;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
@@ -118,8 +125,7 @@ public class TsConditionEraserTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void negativeTest()
-    {
+    public void negativeTest() {
         TupleFilter a = mockFilter2(2000);
         TupleFilter b = mockFilter2(2001);
 
@@ -127,6 +133,6 @@ public class TsConditionEraserTest extends LocalFileMetadataTestCase {
         byte[] aBytes = TupleFilterSerializer.serialize(a, decoratorA, StringCodeSystem.INSTANCE);
         TsConditionEraser decoratorB = new TsConditionEraser(caldt, b);
         byte[] bBytes = TupleFilterSerializer.serialize(b, decoratorB, StringCodeSystem.INSTANCE);
-        Assert.assertFalse(Arrays.equals(aBytes,bBytes));
+        Assert.assertFalse(Arrays.equals(aBytes, bBytes));
     }
 }

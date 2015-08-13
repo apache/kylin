@@ -44,7 +44,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
  * 
  */
 public class FilterBaseTest {
-    
+
     @SuppressWarnings("rawtypes")
     static final IFilterCodeSystem CS = StringCodeSystem.INSTANCE;
 

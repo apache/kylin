@@ -18,15 +18,20 @@
 
 package org.apache.kylin.common.persistence;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+
+import com.google.common.collect.Lists;
 
 public class FileResourceStore extends ResourceStore {
 

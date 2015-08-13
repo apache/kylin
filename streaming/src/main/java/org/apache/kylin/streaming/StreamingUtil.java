@@ -1,19 +1,21 @@
 package org.apache.kylin.streaming;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import java.nio.ByteBuffer;
+import java.util.Iterator;
+import java.util.Map;
+
 import kafka.api.OffsetRequest;
 import kafka.cluster.Broker;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.PartitionMetadata;
 import kafka.message.MessageAndOffset;
+
 import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.Map;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 /**
  */

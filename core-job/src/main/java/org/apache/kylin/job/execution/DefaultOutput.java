@@ -18,9 +18,9 @@
 
 package org.apache.kylin.job.execution;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  */

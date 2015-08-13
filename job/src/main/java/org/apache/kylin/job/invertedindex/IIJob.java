@@ -31,7 +31,6 @@ public class IIJob extends DefaultChainedExecutable {
     private static final String II_INSTANCE_NAME = "iiName";
     private static final String SEGMENT_ID = "segmentId";
 
-
     void setIIName(String name) {
         setParam(II_INSTANCE_NAME, name);
     }

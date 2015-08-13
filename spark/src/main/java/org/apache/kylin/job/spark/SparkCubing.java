@@ -20,8 +20,9 @@ public class SparkCubing extends AbstractSparkApplication {
     public SparkCubing() {
         options = new Options();
         options.addOption(OPTION_INPUT_PATH);
-        
+
     }
+
     @Override
     protected Options getOptions() {
         return options;

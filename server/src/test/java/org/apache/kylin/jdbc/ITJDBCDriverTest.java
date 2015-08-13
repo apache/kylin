@@ -16,22 +16,28 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.jdbc;
 
-import com.google.common.collect.Lists;
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
-import java.io.File;
-import java.sql.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Properties;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -60,7 +66,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
             server.stop();
 
         File workFolder = new File("work");
-        if(workFolder.isDirectory() && workFolder.exists()) {
+        if (workFolder.isDirectory() && workFolder.exists()) {
             FileUtils.deleteDirectory(workFolder);
         }
     }
@@ -153,7 +159,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
         List<String> tableList = Lists.newArrayList();
         DatabaseMetaData dbMetadata = conn.getMetaData();
-        ResultSet resultSet = dbMetadata.getTables(null, "%", "%", new String[]{"TABLE"});
+        ResultSet resultSet = dbMetadata.getTables(null, "%", "%", new String[] { "TABLE" });
         while (resultSet.next()) {
             String schema = resultSet.getString("TABLE_SCHEM");
             String name = resultSet.getString("TABLE_NAME");
@@ -203,13 +209,11 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     }
 
-
     @Test
     public void testPreparedStatement() throws Exception {
         Connection conn = getConnection();
 
-        PreparedStatement statement = conn.prepareStatement("select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact " +
-                "where LSTG_FORMAT_NAME = ? group by LSTG_FORMAT_NAME");
+        PreparedStatement statement = conn.prepareStatement("select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact " + "where LSTG_FORMAT_NAME = ? group by LSTG_FORMAT_NAME");
 
         statement.setString(1, "FP-GTC");
 
@@ -229,8 +233,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     @Test
     public void testResultSet() throws Exception {
-        String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n" +
-                " group by LSTG_FORMAT_NAME ";
+        String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n" + " group by LSTG_FORMAT_NAME ";
 
         Connection conn = getConnection();
         Statement statement = conn.createStatement();
@@ -258,12 +261,12 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     private static class SystemPropertiesOverride {
         HashMap<String, String> backup = new HashMap<String, String>();
-        
+
         public void override(String key, String value) {
             backup.put(key, System.getProperty(key));
             System.setProperty(key, value);
         }
-        
+
         public void restore() {
             for (String key : backup.keySet()) {
                 String value = backup.get(key);

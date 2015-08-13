@@ -46,13 +46,13 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss z";
     static FastDateFormat format = FastDateFormat.getInstance(DATE_PATTERN);
     static DateFormat df = new SimpleDateFormat(DATE_PATTERN);
-  
+
     public static String formatTime(long millis) {
         return format.format(millis);
     }
-    
+
     public static long parseTime(String timeString) {
-        if(timeString == null)
+        if (timeString == null)
             return 0;
         try {
             Date dt = df.parse(timeString);

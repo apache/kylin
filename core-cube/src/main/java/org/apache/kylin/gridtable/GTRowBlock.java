@@ -174,7 +174,7 @@ public class GTRowBlock {
     public void setNumberOfRows(int nRows) {
         this.nRows = nRows;
     }
-    
+
     // ============================================================================
 
     public int exportLength() {
@@ -219,7 +219,7 @@ public class GTRowBlock {
         buf.putInt(array.length());
         buf.put(array.array(), array.offset(), array.length());
     }
-    
+
     /** read data from given input stream, like deserialize */
     public void importFrom(DataInputStream in) throws IOException {
         seqId = in.readInt();

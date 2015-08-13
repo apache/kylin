@@ -22,6 +22,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.cube.model.CubeBuildTypeEnum;
+import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.constant.JobStepCmdTypeEnum;
+import org.apache.kylin.job.constant.JobStepStatusEnum;
+import org.apache.kylin.job.engine.JobEngineConfig;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -29,12 +36,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.cube.model.CubeBuildTypeEnum;
-import org.apache.kylin.job.constant.JobStatusEnum;
-import org.apache.kylin.job.constant.JobStepCmdTypeEnum;
-import org.apache.kylin.job.constant.JobStepStatusEnum;
-import org.apache.kylin.job.engine.JobEngineConfig;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class JobInstance extends RootPersistentEntity implements Comparable<JobInstance> {
@@ -122,48 +123,48 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.status = status;
     }
 
-//    @JsonProperty("job_status")
-//    public JobStatusEnum getStatus() {
-//
-//        // JobStatusEnum finalJobStatus;
-//        int compositResult = 0;
-//
-//        // if steps status are all NEW, then job status is NEW
-//        // if steps status are all FINISHED, then job status is FINISHED
-//        // if steps status are all PENDING, then job status is PENDING
-//        // if steps status are FINISHED and PENDING, the job status is PENDING
-//        // if one of steps status is RUNNING, then job status is RUNNING
-//        // if one of steps status is ERROR, then job status is ERROR
-//        // if one of steps status is KILLED, then job status is KILLED
-//        // default status is RUNNING
-//
-//        System.out.println(this.getName());
-//
-//        for (JobStep step : this.getSteps()) {
-//            //System.out.println("step: " + step.getSequenceID() + "'s status:" + step.getStatus());
-//            compositResult = compositResult | step.getStatus().getCode();
-//        }
-//
-//        System.out.println();
-//
-//        if (compositResult == JobStatusEnum.FINISHED.getCode()) {
-//            return JobStatusEnum.FINISHED;
-//        } else if (compositResult == JobStatusEnum.NEW.getCode()) {
-//            return JobStatusEnum.NEW;
-//        } else if (compositResult == JobStatusEnum.PENDING.getCode()) {
-//            return JobStatusEnum.PENDING;
-//        } else if (compositResult == (JobStatusEnum.FINISHED.getCode() | JobStatusEnum.PENDING.getCode())) {
-//            return JobStatusEnum.PENDING;
-//        } else if ((compositResult & JobStatusEnum.ERROR.getCode()) == JobStatusEnum.ERROR.getCode()) {
-//            return JobStatusEnum.ERROR;
-//        } else if ((compositResult & JobStatusEnum.DISCARDED.getCode()) == JobStatusEnum.DISCARDED.getCode()) {
-//            return JobStatusEnum.DISCARDED;
-//        } else if ((compositResult & JobStatusEnum.RUNNING.getCode()) == JobStatusEnum.RUNNING.getCode()) {
-//            return JobStatusEnum.RUNNING;
-//        }
-//
-//        return JobStatusEnum.RUNNING;
-//    }
+    //    @JsonProperty("job_status")
+    //    public JobStatusEnum getStatus() {
+    //
+    //        // JobStatusEnum finalJobStatus;
+    //        int compositResult = 0;
+    //
+    //        // if steps status are all NEW, then job status is NEW
+    //        // if steps status are all FINISHED, then job status is FINISHED
+    //        // if steps status are all PENDING, then job status is PENDING
+    //        // if steps status are FINISHED and PENDING, the job status is PENDING
+    //        // if one of steps status is RUNNING, then job status is RUNNING
+    //        // if one of steps status is ERROR, then job status is ERROR
+    //        // if one of steps status is KILLED, then job status is KILLED
+    //        // default status is RUNNING
+    //
+    //        System.out.println(this.getName());
+    //
+    //        for (JobStep step : this.getSteps()) {
+    //            //System.out.println("step: " + step.getSequenceID() + "'s status:" + step.getStatus());
+    //            compositResult = compositResult | step.getStatus().getCode();
+    //        }
+    //
+    //        System.out.println();
+    //
+    //        if (compositResult == JobStatusEnum.FINISHED.getCode()) {
+    //            return JobStatusEnum.FINISHED;
+    //        } else if (compositResult == JobStatusEnum.NEW.getCode()) {
+    //            return JobStatusEnum.NEW;
+    //        } else if (compositResult == JobStatusEnum.PENDING.getCode()) {
+    //            return JobStatusEnum.PENDING;
+    //        } else if (compositResult == (JobStatusEnum.FINISHED.getCode() | JobStatusEnum.PENDING.getCode())) {
+    //            return JobStatusEnum.PENDING;
+    //        } else if ((compositResult & JobStatusEnum.ERROR.getCode()) == JobStatusEnum.ERROR.getCode()) {
+    //            return JobStatusEnum.ERROR;
+    //        } else if ((compositResult & JobStatusEnum.DISCARDED.getCode()) == JobStatusEnum.DISCARDED.getCode()) {
+    //            return JobStatusEnum.DISCARDED;
+    //        } else if ((compositResult & JobStatusEnum.RUNNING.getCode()) == JobStatusEnum.RUNNING.getCode()) {
+    //            return JobStatusEnum.RUNNING;
+    //        }
+    //
+    //        return JobStatusEnum.RUNNING;
+    //    }
 
     public String getName() {
         return name;
@@ -273,7 +274,6 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         return null;
     }
 
-        
     public String getSubmitter() {
         return submitter;
     }
@@ -282,15 +282,12 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         this.submitter = submitter;
     }
 
-
-
-
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class JobStep implements Comparable<JobStep> {
 
         @JsonBackReference
         private JobInstance jobInstance;
-        
+
         @JsonProperty("id")
         private String id;
 
@@ -372,8 +369,6 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         public void setStatus(JobStepStatusEnum status) {
             this.status = status;
         }
-        
-        
 
         public String getId() {
             return id;
@@ -498,7 +493,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
 
     @Override
     public int compareTo(JobInstance o) {
-        return o.lastModified<this.lastModified?-1:o.lastModified>this.lastModified?1:0;
+        return o.lastModified < this.lastModified ? -1 : o.lastModified > this.lastModified ? 1 : 0;
     }
 
 }

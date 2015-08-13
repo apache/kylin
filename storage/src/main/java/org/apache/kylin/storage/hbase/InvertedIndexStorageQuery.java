@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.hbase;
 
-import com.google.common.collect.Range;
+import java.util.ArrayList;
 
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.invertedindex.IIInstance;
@@ -32,7 +32,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import com.google.common.collect.Range;
 
 /**
  * @author yangli9

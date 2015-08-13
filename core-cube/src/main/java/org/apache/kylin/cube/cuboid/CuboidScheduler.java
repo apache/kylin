@@ -20,13 +20,20 @@ package org.apache.kylin.cube.cuboid;
 
 /** 
  */
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.collect.Lists;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.model.RowKeyDesc.AggrGroupMask;
+
+import com.google.common.collect.Lists;
 
 public class CuboidScheduler {
 
@@ -41,7 +48,7 @@ public class CuboidScheduler {
         this.max = (long) Math.pow(2, size) - 1;
         this.cache = new ConcurrentHashMap<Long, List<Long>>();
     }
-    
+
     public int getCuboidCount() {
         return getCuboidCount(Cuboid.getBaseCuboidId(cubeDef));
     }

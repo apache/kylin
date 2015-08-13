@@ -48,7 +48,7 @@ public class GTUtil {
             final Set<TblColRef> unevaluatableColumnCollector) {
 
         IFilterCodeSystem<ByteArray> filterCodeSystem = wrap(info.codeSystem.getComparator());
-        
+
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new TupleFilterSerializer.Decorator() {
             @Override
             public TupleFilter onSerialize(TupleFilter filter) {

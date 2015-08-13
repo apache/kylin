@@ -32,10 +32,10 @@ import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterBuildStep;
 import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterMergeStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-
-import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Hold reusable steps for builders.
@@ -53,15 +53,15 @@ public class JobBuilderSupport {
         this.seg = seg;
         this.submitter = submitter;
     }
-    
+
     public MapReduceExecutable createFactDistinctColumnsStep(String jobId) {
         return createFactDistinctColumnsStep(jobId, false);
     }
-    
+
     public MapReduceExecutable createFactDistinctColumnsStepWithStats(String jobId) {
         return createFactDistinctColumnsStep(jobId, true);
     }
-    
+
     private MapReduceExecutable createFactDistinctColumnsStep(String jobId, boolean withStats) {
         MapReduceExecutable result = new MapReduceExecutable();
         result.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
@@ -111,7 +111,7 @@ public class JobBuilderSupport {
         result.setMergingSegmentIds(mergingSegmentIds);
         return result;
     }
-    
+
     public UpdateCubeInfoAfterMergeStep createUpdateCubeInfoAfterMergeStep(List<String> mergingSegmentIds, String jobId) {
         UpdateCubeInfoAfterMergeStep result = new UpdateCubeInfoAfterMergeStep();
         result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
@@ -127,15 +127,15 @@ public class JobBuilderSupport {
     public String getJobWorkingDir(String jobId) {
         return getJobWorkingDir(config, jobId);
     }
-    
+
     public String getCuboidRootPath(String jobId) {
         return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/cuboid/";
     }
-    
+
     public String getCuboidRootPath(CubeSegment seg) {
         return getCuboidRootPath(seg.getLastBuildJobID());
     }
-    
+
     public void appendMapReduceParameters(StringBuilder buf, CubeSegment seg) {
         try {
             String jobConf = config.getHadoopJobConfFilePath(seg.getCubeDesc().getModel().getCapacity());
@@ -146,11 +146,10 @@ public class JobBuilderSupport {
             throw new RuntimeException(e);
         }
     }
-    
+
     public String getFactDistinctColumnsPath(String jobId) {
         return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/fact_distinct_columns";
     }
-
 
     public String getStatisticsPath(String jobId) {
         return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/statistics";

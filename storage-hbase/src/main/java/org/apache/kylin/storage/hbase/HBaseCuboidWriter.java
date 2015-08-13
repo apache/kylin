@@ -33,7 +33,11 @@
  */
 package org.apache.kylin.storage.hbase;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.BitSet;
+import java.util.List;
+
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
@@ -51,10 +55,7 @@ import org.apache.kylin.storage.hbase.steps.InMemKeyValueCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.BitSet;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -95,7 +96,7 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
     private ByteBuffer createKey(Long cuboidId, GTRecord record) {
         byteBuffer.clear();
         byteBuffer.put(Bytes.toBytes(cuboidId));
-        final int cardinality = BitSet.valueOf(new long[]{cuboidId}).cardinality();
+        final int cardinality = BitSet.valueOf(new long[] { cuboidId }).cardinality();
         for (int i = 0; i < cardinality; i++) {
             final ByteArray byteArray = record.get(i);
             byteBuffer.put(byteArray.array(), byteArray.offset(), byteArray.length());

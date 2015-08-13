@@ -190,7 +190,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
         enableIdToValueBytesCache(new EnableIdToValueBytesCacheVisitor() {
             NumberBytesCodec codec = getCodec();
             byte[] tmp = new byte[getSizeOfValue()];
-            
+
             @Override
             public byte[] getBuffer() {
                 return codec.buf;
@@ -202,14 +202,13 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
                 codec.bufOffset = 0;
                 codec.bufLen = length;
                 int numLen = codec.decodeNumber(tmp, 0);
-                
+
                 byte[] result = new byte[numLen];
                 System.arraycopy(tmp, 0, result, 0, numLen);
                 return result;
             }
         });
     }
-
 
     public static void main(String[] args) throws Exception {
         NumberDictionaryBuilder<String> b = new NumberDictionaryBuilder<String>(new StringBytesConverter());

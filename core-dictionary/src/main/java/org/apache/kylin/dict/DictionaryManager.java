@@ -18,10 +18,14 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataManager;
@@ -35,13 +39,10 @@ import org.apache.kylin.source.TableSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
 
 public class DictionaryManager {
 
@@ -213,7 +214,7 @@ public class DictionaryManager {
         String srcTable = srcCol.getTable();
         String srcColName = srcCol.getName();
         int srcColIdx = srcCol.getColumnDesc().getZeroBasedIndex();
-        
+
         ReadableTable inpTable;
         if (model.isFactTable(srcTable)) {
             inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
@@ -251,8 +252,7 @@ public class DictionaryManager {
                     col = pkCol; // scan the counterparty PK on lookup table instead
             }
             return col;
-        }
-        else
+        } else
             throw new IllegalArgumentException("Unknown dictionary value: " + dict);
     }
 

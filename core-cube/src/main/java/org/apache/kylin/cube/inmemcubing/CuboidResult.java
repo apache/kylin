@@ -1,6 +1,5 @@
 package org.apache.kylin.cube.inmemcubing;
 
-
 import org.apache.kylin.gridtable.GridTable;
 
 /**

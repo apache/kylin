@@ -73,7 +73,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
                 Path columnFamilyPath = new Path(input + cfName);
 
                 // File may have already been auto-loaded (in the case of MapR DB)
-                if(fs.exists(columnFamilyPath)) {
+                if (fs.exists(columnFamilyPath)) {
                     fs.setPermission(columnFamilyPath, permission);
                 }
             }

@@ -33,19 +33,19 @@ public interface IMRInput {
 
     /** Return an InputFormat that reads from specified table. */
     public IMRTableInputFormat getTableInputFormat(TableDesc table);
-    
+
     /**
      * Utility that configures mapper to read from a table.
      */
     public interface IMRTableInputFormat {
-        
+
         /** Configure the InputFormat of given job. */
         public void configureJob(Job job);
-        
+
         /** Parse a mapper input object into column values. */
         public String[] parseMapperInput(Object mapperInput);
     }
-    
+
     /**
      * Participate the batch cubing flow as the input side. Responsible for creating
      * intermediate flat table (Phase 1) and clean up any leftover (Phase 4).
@@ -56,13 +56,13 @@ public interface IMRInput {
      * - Phase 4: Update Metadata & Cleanup
      */
     public interface IMRBatchCubingInputSide {
-        
+
         /** Return an InputFormat that reads from the intermediate flat table */
         public IMRTableInputFormat getFlatTableInputFormat();
-        
+
         /** Add step that creates an intermediate flat table as defined by CubeJoinedFlatTableDesc */
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow);
-        
+
         /** Add step that does necessary clean up, like delete the intermediate flat table */
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
     }

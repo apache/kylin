@@ -20,14 +20,13 @@ package org.apache.kylin.cube.kv;
 
 import java.util.Arrays;
 
-import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.common.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Read/Write column values from/into bytes
@@ -73,8 +72,6 @@ public class RowKeyColumnIO {
             logger.error("Can't translate value " + Bytes.toString(src, srcOffset, srcLength) + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", defaultValue));
         }
     }
-
-
 
     public void writeColumn(TblColRef column, byte[] value, int valueLen, byte defaultValue, byte[] output, int outputOffset) {
         writeColumn(column, value, valueLen, 0, defaultValue, output, outputOffset);

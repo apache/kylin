@@ -62,7 +62,7 @@ public class MergeCuboidFromStorageJob extends CuboidJob {
             job = Job.getInstance(conf, jobName);
 
             setJobClasspath(job);
-            
+
             // add metadata to distributed cache
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
@@ -78,7 +78,7 @@ public class MergeCuboidFromStorageJob extends CuboidJob {
             // configure reducer output
             IMRStorageOutputFormat storageOutputFormat = MRUtil.getBatchMergeOutputSide2(cubeSeg).getStorageOutputFormat();
             storageOutputFormat.configureOutput(InMemCuboidReducer.class, getOptionValue(OPTION_JOB_FLOW_ID), job);
-            
+
             return waitForCompletion(job);
         } catch (Exception e) {
             logger.error("error in MergeCuboidFromHBaseJob", e);

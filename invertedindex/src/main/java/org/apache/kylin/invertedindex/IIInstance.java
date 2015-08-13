@@ -109,13 +109,12 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return segments.get(0).getDateRangeStart();
     }
 
-
     public IIDesc getDescriptor() {
         return IIDescManager.getInstance(config).getIIDesc(descName);
     }
 
     @Override
-    public DataModelDesc getDataModelDesc(){
+    public DataModelDesc getDataModelDesc() {
         return this.getDescriptor().getModel();
     }
 
@@ -253,7 +252,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return result;
     }
 
-
     public IISegment getSegment(String name, SegmentStatusEnum status) {
         for (IISegment segment : segments) {
             if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
@@ -268,7 +266,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         this.segments = segments;
     }
 
-
     public long getCreateTimeUTC() {
         return createTimeUTC;
     }
@@ -276,7 +273,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     public void setCreateTimeUTC(long createTimeUTC) {
         this.createTimeUTC = createTimeUTC;
     }
-
 
     @Override
     public boolean isCapable(SQLDigest digest) {

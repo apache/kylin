@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 public class CompressionUtils {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CompressionUtils.class);
 
-
     public static byte[] compress(byte[] data) throws IOException {
         Deflater deflater = new Deflater();
         deflater.setInput(data);
@@ -29,8 +28,8 @@ public class CompressionUtils {
         outputStream.close();
         byte[] output = outputStream.toByteArray();
 
-        logger.info("Original: " + data.length  + " bytes");
-        logger.info("Compressed: " + output.length  + " bytes");
+        logger.info("Original: " + data.length + " bytes");
+        logger.info("Compressed: " + output.length + " bytes");
         return output;
     }
 

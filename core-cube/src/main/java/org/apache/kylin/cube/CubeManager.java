@@ -299,7 +299,7 @@ public class CubeManager implements IRealizationProvider {
             while (iterator.hasNext()) {
                 CubeSegment currentSeg = iterator.next();
                 for (CubeSegment toRemoveSeg : cubeBuilder.getToRemoveSegs()) {
-                    if(currentSeg.getUuid().equals(toRemoveSeg.getUuid())) {
+                    if (currentSeg.getUuid().equals(toRemoveSeg.getUuid())) {
                         iterator.remove();
                         toRemoveResources.add(toRemoveSeg.getStatisticsResourcePath());
                     }
@@ -722,7 +722,7 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment firstSeg = tobe.get(0);
         firstSeg.validate();
 
-        for (int i = 0, j = 1; j < tobe.size(); ) {
+        for (int i = 0, j = 1; j < tobe.size();) {
             CubeSegment is = tobe.get(i);
             CubeSegment js = tobe.get(j);
             js.validate();
@@ -814,14 +814,13 @@ public class CubeManager implements IRealizationProvider {
                 usedStorageLocation.put(cubeName.toUpperCase(), segment.getStorageLocationIdentifier());
             }
 
-            logger.info("Reloaded new cube: " + cubeName + " with reference being" + cubeInstance + " having " + cubeInstance.getSegments().size() + " segments:" +
-                    StringUtils.join(Collections2.transform(cubeInstance.getSegments(), new Function<CubeSegment, String>() {
-                        @Nullable
-                        @Override
-                        public String apply(CubeSegment input) {
-                            return input.getStorageLocationIdentifier();
-                        }
-                    }), ","));
+            logger.info("Reloaded new cube: " + cubeName + " with reference being" + cubeInstance + " having " + cubeInstance.getSegments().size() + " segments:" + StringUtils.join(Collections2.transform(cubeInstance.getSegments(), new Function<CubeSegment, String>() {
+                @Nullable
+                @Override
+                public String apply(CubeSegment input) {
+                    return input.getStorageLocationIdentifier();
+                }
+            }), ","));
 
             return cubeInstance;
         } catch (Exception e) {

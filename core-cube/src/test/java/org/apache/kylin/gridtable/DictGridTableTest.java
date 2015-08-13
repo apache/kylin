@@ -17,7 +17,7 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -71,7 +71,7 @@ public class DictGridTableTest {
     private void verifyScanRangePlanner(GridTable table) {
         GTInfo info = table.getInfo();
         GTScanRangePlanner planner = new GTScanRangePlanner(info);
-        
+
         CompareTupleFilter timeComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
         CompareTupleFilter timeComp2 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-13"));
         CompareTupleFilter timeComp3 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-15"));
@@ -80,7 +80,7 @@ public class DictGridTableTest {
         CompareTupleFilter ageComp2 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "20"));
         CompareTupleFilter ageComp3 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "30"));
         CompareTupleFilter ageComp4 = compare(info.colRef(1), FilterOperatorEnum.NEQ, enc(info, 1, "30"));
-        
+
         // flatten or-and & hbase fuzzy value
         {
             LogicalTupleFilter filter = and(timeComp1, or(ageComp1, ageComp2));
@@ -89,28 +89,28 @@ public class DictGridTableTest {
             assertEquals("[1421193600000, 10]-[null, null]", r.get(0).toString());
             assertEquals("[[10], [20]]", r.get(0).hbaseFuzzyKeys.toString());
         }
-        
+
         // pre-evaluate ever false
         {
             LogicalTupleFilter filter = and(timeComp1, timeComp2);
             List<GTScanRange> r = planner.planScanRanges(filter);
             assertEquals(0, r.size());
         }
-        
+
         // pre-evaluate ever true
         {
             LogicalTupleFilter filter = or(timeComp1, ageComp4);
             List<GTScanRange> r = planner.planScanRanges(filter);
             assertEquals("[[null, null]-[null, null]]", r.toString());
         }
-        
+
         // merge overlap range
         {
             LogicalTupleFilter filter = or(timeComp1, timeComp3);
             List<GTScanRange> r = planner.planScanRanges(filter);
             assertEquals("[[null, null]-[null, null]]", r.toString());
         }
-        
+
         // merge too many ranges
         {
             LogicalTupleFilter filter = or(and(timeComp4, ageComp1), and(timeComp4, ageComp2), and(timeComp4, ageComp3));
@@ -140,10 +140,10 @@ public class DictGridTableTest {
 
         // note the unEvaluatable column 1 in filter is added to group by
         assertEquals("GTScanRequest [range=[null, null]-[null, null], columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
-        
+
         doScanAndVerify(table, req, "[1421280000000, 20, null, 20, null]");
     }
-    
+
     private void verifyScanWithEvaluatableFilter(GridTable table) throws IOException {
         GTInfo info = table.getInfo();
 
@@ -152,16 +152,16 @@ public class DictGridTableTest {
         LogicalTupleFilter filter = and(fComp1, fComp2);
 
         GTScanRequest req = new GTScanRequest(info, null, setOf(0), setOf(3), new String[] { "sum" }, filter);
-        
+
         // note the evaluatable column 1 in filter is added to returned columns but not in group by
         assertEquals("GTScanRequest [range=[null, null]-[null, null], columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 GT [\\x00]], aggrGroupBy={0}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
-        
+
         doScanAndVerify(table, req, "[1421280000000, 20, null, 30, null]", "[1421366400000, 20, null, 40, null]");
     }
 
     private void verifyConvertFilterConstants1(GridTable table) {
         GTInfo info = table.getInfo();
-        
+
         TableDesc extTable = TableDesc.mockup("ext");
         TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
         TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
@@ -169,75 +169,75 @@ public class DictGridTableTest {
         CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.EQ, "10");
         LogicalTupleFilter filter = and(fComp1, fComp2);
-        
+
         List<TblColRef> colMapping = Lists.newArrayList();
         colMapping.add(extColA);
         colMapping.add(extColB);
-        
+
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 EQ [\\x00]]", newFilter.toString());
     }
 
     private void verifyConvertFilterConstants2(GridTable table) {
         GTInfo info = table.getInfo();
-        
+
         TableDesc extTable = TableDesc.mockup("ext");
         TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
         TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
-        
+
         CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LT, "9");
         LogicalTupleFilter filter = and(fComp1, fComp2);
-        
+
         List<TblColRef> colMapping = Lists.newArrayList();
         colMapping.add(extColA);
         colMapping.add(extColB);
-        
+
         // $1<"9" round up to $1<"10"
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 LT [\\x00]]", newFilter.toString());
     }
-    
+
     private void verifyConvertFilterConstants3(GridTable table) {
         GTInfo info = table.getInfo();
-        
+
         TableDesc extTable = TableDesc.mockup("ext");
         TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
         TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
-        
+
         CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LTE, "9");
         LogicalTupleFilter filter = and(fComp1, fComp2);
-        
+
         List<TblColRef> colMapping = Lists.newArrayList();
         colMapping.add(extColA);
         colMapping.add(extColB);
-        
+
         // $1<="9" round down to FALSE
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], []]", newFilter.toString());
     }
-    
+
     private void verifyConvertFilterConstants4(GridTable table) {
         GTInfo info = table.getInfo();
-        
+
         TableDesc extTable = TableDesc.mockup("ext");
         TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
         TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
-        
+
         CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.IN, "9", "10", "15");
         LogicalTupleFilter filter = and(fComp1, fComp2);
-        
+
         List<TblColRef> colMapping = Lists.newArrayList();
         colMapping.add(extColA);
         colMapping.add(extColB);
-        
+
         // $1 in ("9", "10", "15") has only "10" left
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 IN [\\x00]]", newFilter.toString());
     }
-    
+
     private void doScanAndVerify(GridTable table, GTScanRequest req, String... verifyRows) throws IOException {
         System.out.println(req);
         IGTScanner scanner = table.scan(req);

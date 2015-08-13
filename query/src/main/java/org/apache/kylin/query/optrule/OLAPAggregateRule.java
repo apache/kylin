@@ -24,8 +24,8 @@ import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.logical.LogicalAggregate;
-import org.apache.kylin.query.relnode.OLAPRel;
 import org.apache.kylin.query.relnode.OLAPAggregateRel;
+import org.apache.kylin.query.relnode.OLAPRel;
 
 /**
  */

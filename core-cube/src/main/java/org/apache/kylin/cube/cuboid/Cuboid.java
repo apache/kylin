@@ -18,6 +18,15 @@
 
 package org.apache.kylin.cube.cuboid;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -26,9 +35,6 @@ import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.model.RowKeyDesc.AggrGroupMask;
 import org.apache.kylin.cube.model.RowKeyDesc.HierarchyMask;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author George Song (ysong1)

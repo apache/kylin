@@ -67,7 +67,6 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
 
         mgr.createIIDesc(desc);
 
-
         desc = mgr.getIIDesc(newDescName);
 
         Assert.assertNotNull(desc);
@@ -77,7 +76,6 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
         mgr.removeIIDesc(desc);
 
         Assert.assertNull(mgr.getIIDesc(newDescName));
-
 
     }
 

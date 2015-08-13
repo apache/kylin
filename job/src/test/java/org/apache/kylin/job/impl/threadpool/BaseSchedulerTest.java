@@ -18,6 +18,9 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.job.DeployUtil;
@@ -30,10 +33,6 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 
 /**
  */

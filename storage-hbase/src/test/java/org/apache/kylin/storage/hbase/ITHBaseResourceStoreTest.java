@@ -18,6 +18,16 @@
 
 package org.apache.kylin.storage.hbase;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -28,17 +38,9 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.storage.hbase.HBaseResourceStore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-
-import static org.junit.Assert.*;
 
 public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
 

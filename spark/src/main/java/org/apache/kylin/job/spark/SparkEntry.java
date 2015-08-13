@@ -1,7 +1,8 @@
 package org.apache.kylin.job.spark;
 
-import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -12,7 +13,7 @@ public final class SparkEntry {
         Preconditions.checkArgument(args.length >= 2, "-className is required");
         Preconditions.checkArgument(args[0].equals("-className"), "-className is required");
         final String className = args[1];
-        final Object o = Class.<AbstractSparkApplication>forName(className).newInstance();
+        final Object o = Class.<AbstractSparkApplication> forName(className).newInstance();
         Preconditions.checkArgument(o instanceof AbstractSparkApplication, className + " is not a subClass of AbstractSparkApplication");
         String[] appArgs = new String[args.length - 2];
         for (int i = 2; i < args.length; i++) {

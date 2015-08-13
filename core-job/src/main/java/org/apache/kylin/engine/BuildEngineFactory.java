@@ -24,9 +24,9 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public class BuildEngineFactory {
-    
+
     private static IBatchCubingEngine defaultBatchEngine;
-    
+
     public static IBatchCubingEngine defaultBatchEngine() {
         if (defaultBatchEngine == null) {
             KylinConfig conf = KylinConfig.getInstanceFromEnv();
@@ -38,15 +38,15 @@ public class BuildEngineFactory {
         }
         return defaultBatchEngine;
     }
-    
+
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
     public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
         return defaultBatchEngine().createBatchCubingJob(newSegment, submitter);
     }
-    
+
     /** Merge multiple small segments into a big one. */
     public static DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
         return defaultBatchEngine().createBatchMergeJob(mergeSegment, submitter);
     }
-    
+
 }

@@ -1,11 +1,11 @@
 package org.apache.kylin.rest.util;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.apache.kylin.rest.service.PerformanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by jiazhong on 2015/4/13.
@@ -22,6 +22,7 @@ public class PerformanceMonitorTask {
         System.out.println("The time is now " + dateFormat.format(new Date()));
     }
 
-
-    public void setPerformanceService(PerformanceService performanceService) {this.performanceService = performanceService;}
+    public void setPerformanceService(PerformanceService performanceService) {
+        this.performanceService = performanceService;
+    }
 }

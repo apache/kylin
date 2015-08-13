@@ -18,6 +18,9 @@
 
 package org.apache.kylin.invertedindex.invertedindex;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IIDescManager;
@@ -28,9 +31,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  */
@@ -45,7 +45,6 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
         cleanupTestMetadata();
     }
 
-
     @Test
     public void testGetIIsByDesc() throws IOException {
         IIManager mgr = IIManager.getInstance(getTestConfig());
@@ -54,7 +53,6 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
 
         Assert.assertTrue(iiInstances.size() > 0);
 
-
         IIInstance instance = iiInstances.get(0);
 
         Dictionary dict = mgr.getDictionary(instance.getFirstSegment(), instance.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_SITE_ID"));
@@ -62,10 +60,8 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
         Assert.assertNotNull(dict);
     }
 
-
     @Test
     public void testCreateIIInstance() throws IOException {
-
 
         IIDesc iiDesc = IIDescManager.getInstance(getTestConfig()).getIIDesc("test_kylin_ii_left_join_desc");
 
@@ -79,6 +75,5 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
 
         Assert.assertNotNull(iiMgr.getII("new ii"));
     }
-
 
 }

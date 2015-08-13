@@ -34,11 +34,12 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import com.google.common.base.Preconditions;
+import java.util.List;
+
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.invertedindex.model.IIDesc;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
 
 /**
  */

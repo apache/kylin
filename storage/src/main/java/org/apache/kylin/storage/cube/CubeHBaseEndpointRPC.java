@@ -35,7 +35,6 @@ import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.storage.util.KryoUtils;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -48,6 +47,7 @@ import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitPr
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.Builder;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitService;
+import org.apache.kylin.storage.util.KryoUtils;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

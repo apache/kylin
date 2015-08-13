@@ -1,10 +1,11 @@
 package org.apache.kylin.metadata.tuple;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Like "tee" command in linux, it effectively duplicates the underlying
@@ -29,9 +30,8 @@ public class TeeTupleIterator implements ITupleIterator {
     public void close() {
         this.underlying.close();
 
-
         for (TeeTupleItrListener listener : this.listeners) {
-            listener.notify(this.duplicatedData,this.createTime);
+            listener.notify(this.duplicatedData, this.createTime);
         }
     }
 

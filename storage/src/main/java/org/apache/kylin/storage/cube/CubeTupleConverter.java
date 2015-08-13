@@ -18,7 +18,11 @@
 
 package org.apache.kylin.storage.cube;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -32,10 +36,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import com.google.common.collect.Lists;
 
 /**
  * convert GTRecord to tuple

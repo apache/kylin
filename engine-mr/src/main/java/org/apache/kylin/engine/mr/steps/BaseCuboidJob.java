@@ -35,5 +35,5 @@ public class BaseCuboidJob extends CuboidJob {
         int exitCode = ToolRunner.run(job, args);
         System.exit(exitCode);
     }
-    
+
 }

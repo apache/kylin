@@ -61,7 +61,7 @@ import com.google.common.collect.Lists;
 public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, ByteArrayWritable, ByteArrayWritable> {
 
     private static final Logger logger = LoggerFactory.getLogger(MergeCuboidFromStorageMapper.class);
-    
+
     private KylinConfig config;
     private String cubeName;
     private String segmentName;
@@ -134,9 +134,9 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
         Pair<ByteArrayWritable, Object[]> pair = storageInputFormat.parseMapperInput(inKey, inValue);
         ByteArrayWritable key = pair.getFirst();
         Object[] value = pair.getSecond();
-        
+
         Preconditions.checkState(key.offset() == 0);
-        
+
         long cuboidID = rowKeySplitter.split(key.array(), key.length());
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidID);
 
@@ -190,7 +190,7 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
         valueBuf.clear();
         codec.encode(value, valueBuf);
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
-        
+
         context.write(outputKey, outputValue);
     }
 

@@ -24,7 +24,9 @@ import com.google.common.base.Preconditions;
  */
 public final class ExecuteResult {
 
-    public static enum State {SUCCEED, FAILED, ERROR, DISCARDED, STOPPED}
+    public static enum State {
+        SUCCEED, FAILED, ERROR, DISCARDED, STOPPED
+    }
 
     private final State state;
     private final String output;
@@ -46,7 +48,6 @@ public final class ExecuteResult {
     public boolean succeed() {
         return state == State.SUCCEED;
     }
-
 
     public String output() {
         return output;

@@ -1,20 +1,25 @@
 package org.apache.kylin.streaming;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.apache.kylin.common.util.DateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.concurrent.*;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  */
 public class OneOffStreamBuilder implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(OneOffStreamBuilder.class);
-
 
     private final String streaming;
     private final List<BlockingQueue<StreamMessage>> queues;
@@ -76,7 +81,6 @@ public class OneOffStreamBuilder implements Runnable {
             logger.error("error consume batch", e);
             throw new RuntimeException("error consume batch", e);
         }
-
 
     }
 

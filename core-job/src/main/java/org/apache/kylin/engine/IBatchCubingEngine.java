@@ -25,11 +25,11 @@ public interface IBatchCubingEngine {
 
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
     public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter);
-    
+
     /** Merge multiple small segments into a big one. */
     public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter);
-    
+
     public Class<?> getSourceInterface();
-    
+
     public Class<?> getStorageInterface();
 }

@@ -17,13 +17,15 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import org.apache.kylin.common.util.MemoryBudgetController;
-import org.apache.kylin.common.util.MemoryBudgetController.NotEnoughBudgetException;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 
-import static org.junit.Assert.*;
+import org.apache.kylin.common.util.MemoryBudgetController;
+import org.apache.kylin.common.util.MemoryBudgetController.NotEnoughBudgetException;
+import org.junit.Test;
 
 public class MemoryBudgetControllerTest {
 
@@ -44,7 +46,7 @@ public class MemoryBudgetControllerTest {
         for (int i = 0; i < n; i++) {
             assertEquals(null, mbList.get(i).data);
         }
-        
+
         // cancel a in 2 seconds
         new Thread() {
             @Override
@@ -57,7 +59,7 @@ public class MemoryBudgetControllerTest {
                 mbc.reserve(a, 0);
             }
         }.start();
-        
+
         // b will success after some wait
         long bWaitStart = System.currentTimeMillis();
         final Consumer b = new Consumer();

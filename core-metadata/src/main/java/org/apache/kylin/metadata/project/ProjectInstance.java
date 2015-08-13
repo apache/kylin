@@ -18,6 +18,18 @@
 
 package org.apache.kylin.metadata.project;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.realization.RealizationType;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,16 +37,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.metadata.realization.RealizationType;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Project is a concept in Kylin similar to schema in DBMS
@@ -87,7 +89,7 @@ public class ProjectInstance extends RootPersistentEntity {
         return project.toUpperCase();
     }
 
-    public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries,List<String> models) {
+    public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries, List<String> models) {
         ProjectInstance projectInstance = new ProjectInstance();
 
         projectInstance.updateRandomUuid();
@@ -243,20 +245,22 @@ public class ProjectInstance extends RootPersistentEntity {
     }
 
     public boolean containsModel(String modelName) {
-        return models!=null&&models.contains(modelName);
+        return models != null && models.contains(modelName);
     }
 
-    public void setModels(List<String> models) { this.models = models; }
+    public void setModels(List<String> models) {
+        this.models = models;
+    }
 
     public void addModel(String modelName) {
-        if(this.getModels()==null){
+        if (this.getModels() == null) {
             this.setModels(new ArrayList<String>());
         }
         this.getModels().add(modelName);
     }
 
-    public void removeModel(String modelName){
-        if(this.getModels()!=null) {
+    public void removeModel(String modelName) {
+        if (this.getModels() != null) {
             this.getModels().remove(modelName);
         }
     }

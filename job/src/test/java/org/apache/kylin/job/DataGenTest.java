@@ -18,14 +18,14 @@
 
 package org.apache.kylin.job;
 
+import static org.junit.Assert.assertTrue;
+
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -45,7 +45,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        String content = FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "1",null);// default  settings
+        String content = FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "1", null);// default  settings
         System.out.println(content);
         assertTrue(content.contains("FP-non GTC"));
         assertTrue(content.contains("ABIN"));

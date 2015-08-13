@@ -57,11 +57,10 @@ abstract public class ResourceStore {
     public static final String STREAMING_OUTPUT_RESOURCE_ROOT = "/streaming_output";
     public static final String CUBE_STATISTICS_ROOT = "/cube_statistics";
 
-
     private static final ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
     private static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
-    
+
     private static ArrayList<Class<? extends ResourceStore>> getKnownImpl() {
         if (knownImpl.isEmpty()) {
             knownImpl.add(FileResourceStore.class);

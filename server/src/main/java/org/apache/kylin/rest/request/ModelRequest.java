@@ -73,8 +73,6 @@ public class ModelRequest {
         this.modelDescData = modelDescData;
     }
 
-    
-    
     public String getModelDescData() {
         return modelDescData;
     }

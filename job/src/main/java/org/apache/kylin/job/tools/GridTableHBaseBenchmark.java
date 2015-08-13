@@ -100,7 +100,7 @@ public class GridTableHBaseBenchmark {
 
             int nLogicCols = colScans.size();
             int nLogicRows = colScans.get(0).getSecond() - colScans.get(0).getFirst();
-            
+
             Scan[] scans = new Scan[nLogicCols];
             ResultScanner[] scanners = new ResultScanner[nLogicCols];
             for (int i = 0; i < nLogicCols; i++) {
@@ -115,7 +115,7 @@ public class GridTableHBaseBenchmark {
                 }
                 dot(i, nLogicRows);
             }
-            
+
             stats.markEnd();
         } finally {
             IOUtils.closeQuietly(table);

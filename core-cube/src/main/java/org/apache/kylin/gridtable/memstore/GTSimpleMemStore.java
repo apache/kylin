@@ -1,14 +1,14 @@
 package org.apache.kylin.gridtable.memstore;
 
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRowBlock;
-import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.IGTStore;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.kylin.gridtable.GTInfo;
+import org.apache.kylin.gridtable.GTRowBlock;
+import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.IGTStore;
 
 public class GTSimpleMemStore implements IGTStore {
 
@@ -58,6 +58,7 @@ public class GTSimpleMemStore implements IGTStore {
         Writer(List<GTRowBlock> rowBlockList) {
             this.rowBlockList = rowBlockList;
         }
+
         @Override
         public void close() throws IOException {
         }
@@ -76,7 +77,7 @@ public class GTSimpleMemStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan( GTScanRequest scanRequest) {
+    public IGTStoreScanner scan(GTScanRequest scanRequest) {
 
         return new IGTStoreScanner() {
             Iterator<GTRowBlock> it = rowBlockList.iterator();

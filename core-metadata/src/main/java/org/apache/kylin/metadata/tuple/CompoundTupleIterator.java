@@ -1,12 +1,13 @@
 package org.apache.kylin.metadata.tuple;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
+import java.util.Iterator;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 
 /**
  */

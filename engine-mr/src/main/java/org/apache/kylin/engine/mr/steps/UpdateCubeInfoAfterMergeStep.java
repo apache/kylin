@@ -59,7 +59,7 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         if (mergedSegment == null) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there is no segment with id:" + getSegmentId());
         }
-        
+
         CubingJob cubingJob = (CubingJob) executableManager.getJob(getCubingJobId());
         long cubeSizeBytes = cubingJob.findCubeSizeBytes();
 

@@ -24,9 +24,9 @@ import org.apache.kylin.metadata.model.IBuildable;
 /**
  */
 public class StorageFactory2 {
-    
+
     private static final IStorage dft = (IStorage) ClassUtil.newInstance("org.apache.kylin.storage.hbase.HBaseStorage");
-    
+
     public static <T> T createEngineAdapter(IBuildable buildable, Class<T> engineInterface) {
         return dft.adaptToBuildEngine(engineInterface);
     }

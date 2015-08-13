@@ -42,9 +42,11 @@ public final class StringStreamParser implements StreamParser {
 
     public static final StringStreamParser instance = new StringStreamParser();
 
-    private StringStreamParser(){}
+    private StringStreamParser() {
+    }
+
     @Override
     public ParsedStreamMessage parse(StreamMessage streamMessage) {
-        return new ParsedStreamMessage(Lists.newArrayList(new String(streamMessage.getRawData()).split(",")), streamMessage.getOffset(), streamMessage.getOffset(),true);
+        return new ParsedStreamMessage(Lists.newArrayList(new String(streamMessage.getRawData()).split(",")), streamMessage.getOffset(), streamMessage.getOffset(), true);
     }
 }

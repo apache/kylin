@@ -1,6 +1,7 @@
 package org.apache.kylin.storage.hybrid;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.CompoundTupleIterator;
@@ -10,7 +11,7 @@ import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.kylin.storage.tuple.TupleInfo;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -39,6 +40,5 @@ public class HybridStorageEngine implements IStorageQuery {
         // combine tuple iterator
         return new CompoundTupleIterator(tupleIterators);
     }
-
 
 }

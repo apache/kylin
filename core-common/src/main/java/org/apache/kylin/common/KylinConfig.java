@@ -18,7 +18,17 @@
 
 package org.apache.kylin.common;
 
-import com.google.common.collect.Sets;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.SortedSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
@@ -28,10 +38,7 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.SortedSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -102,7 +109,7 @@ public class KylinConfig {
     public static final String KYLIN_HDFS_WORKING_DIR = "kylin.hdfs.working.dir";
 
     public static final String HIVE_DATABASE_FOR_INTERMEDIATE_TABLE = "kylin.job.hive.database.for.intermediatetable";
-    
+
     public static final String HIVE_PASSWORD = "hive.password";
 
     public static final String HIVE_USER = "hive.user";
@@ -137,7 +144,6 @@ public class KylinConfig {
     public static final String HBASE_REGION_CUT_SMALL = "kylin.job.hbase.region.cut.small";
     public static final String HBASE_REGION_CUT_MEDIUM = "kylin.job.hbase.region.cut.medium";
     public static final String HBASE_REGION_CUT_LARGE = "kylin.job.hbase.region.cut.large";
-
 
     public static final String SPARK_HOME = "kylin.spark.home";
     public static final String SPARK_MASTER = "kylin.spark.master";
@@ -679,7 +685,6 @@ public class KylinConfig {
         this.storageUrl = storageUrl;
     }
 
-
     public String getHiveDatabaseForIntermediateTable() {
         return this.getOptional(HIVE_DATABASE_FOR_INTERMEDIATE_TABLE, "default");
     }
@@ -729,6 +734,7 @@ public class KylinConfig {
     public String getSparkHome() {
         return kylinConfig.getString(SPARK_HOME);
     }
+
     public String getSparkMaster() {
         return kylinConfig.getString(SPARK_MASTER);
     }

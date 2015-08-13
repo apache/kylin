@@ -43,7 +43,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
     protected void setup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
-        
+
         String cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
         String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
         boolean isMerge = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_IS_MERGE));
@@ -82,14 +82,13 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
             aggs.aggregate(input);
         }
         aggs.collectStates(result);
-        
+
         storageOutputFormat.doReducerOutput(key, result, context);
-        
+
         counter++;
         if (counter % BatchConstants.COUNTER_MAX == 0) {
             logger.info("Handled " + counter + " records!");
         }
     }
-
 
 }

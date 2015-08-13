@@ -1,8 +1,8 @@
 package org.apache.kylin.rest.security;
 
-import org.apache.hadoop.hbase.client.HTableInterface;
-
 import java.io.IOException;
+
+import org.apache.hadoop.hbase.client.HTableInterface;
 
 /**
  */

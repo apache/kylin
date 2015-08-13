@@ -84,7 +84,6 @@ public class JobEngineConfig {
         return "";
     }
 
-
     public String getHiveConfFilePath() throws IOException {
         String hiveConfFile = (HIVE_CONF_FILENAME + ".xml");
 
@@ -111,7 +110,7 @@ public class JobEngineConfig {
     public String getHdfsWorkingDirectory() {
         return config.getHdfsWorkingDirectory();
     }
-    
+
     /**
      * @return the maxConcurrentJobLimit
      */

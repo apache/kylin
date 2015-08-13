@@ -1,12 +1,13 @@
 package org.apache.kylin.common.util;
 
-import com.google.common.collect.Ranges;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.google.common.collect.Ranges;
 
 /**
  */

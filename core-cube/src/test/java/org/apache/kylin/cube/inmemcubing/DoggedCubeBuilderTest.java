@@ -17,7 +17,7 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,9 +36,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder;
-import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
-import org.apache.kylin.cube.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -123,9 +120,9 @@ public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
         do {
             line1 = r1.readLine();
             line2 = r2.readLine();
-            
+
             assertEquals(line1, line2);
-            
+
         } while (line1 != null || line2 != null);
 
         r1.close();
@@ -152,7 +149,7 @@ public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
 
         @Override
         public void flush() {
-            
+
         }
 
         public void close() {

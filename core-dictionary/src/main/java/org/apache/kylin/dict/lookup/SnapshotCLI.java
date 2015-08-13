@@ -18,11 +18,11 @@ public class SnapshotCLI {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
         MetadataManager metaMgr = MetadataManager.getInstance(conf);
         SnapshotManager snapshotMgr = SnapshotManager.getInstance(conf);
-        
+
         TableDesc tableDesc = metaMgr.getTableDesc(table);
         if (tableDesc == null)
             throw new IllegalArgumentException("Not table found by " + table);
-        
+
         SnapshotTable snapshot = snapshotMgr.rebuildSnapshot(TableSourceFactory.createReadableTable(tableDesc), tableDesc, overwriteUUID);
         System.out.println("resource path updated: " + snapshot.getResourcePath());
     }
