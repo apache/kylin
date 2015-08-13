@@ -31,6 +31,7 @@ import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.AvaticaStatement;
 import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.ConnectionPropertiesImpl;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.Meta.CursorFactory;
 import org.apache.calcite.avatica.Meta.Signature;
@@ -84,6 +85,18 @@ public class KylinConnection extends AvaticaConnection {
     @Override
     public AvaticaStatement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         return super.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
+    }
+    
+    public boolean getAutoCommit() throws SQLException {
+        if(meta.connectionSync(handle, new ConnectionPropertiesImpl()).isAutoCommit() == null)
+            setAutoCommit(true);
+        return super.getAutoCommit();
+    }
+
+    public boolean isReadOnly() throws SQLException {
+        if(meta.connectionSync(handle, new ConnectionPropertiesImpl()).isReadOnly() == null)
+            setReadOnly(true);
+        return super.isReadOnly();
     }
 
     @Override
