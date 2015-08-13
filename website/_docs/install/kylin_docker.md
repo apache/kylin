@@ -16,7 +16,7 @@ With help of SequenceIQ, we have put together a fully automated method of creati
 
 ### Installation
 {% highlight Groff markup %}
-docker pull sequenceiq/kylin
+docker pull sequenceiq/kylin:0.7.2
 {% endhighlight %}
 
 Once the container is pulled you are ready to start playing with Kylin. Get the following helper functions from our Kylin GitHub [repository](https://github.com/sequenceiq/docker-kylin/blob/master/ambari-functions) - _(make sure you source it)._

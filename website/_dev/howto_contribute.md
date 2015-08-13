@@ -18,7 +18,8 @@ Here are the major branches:
 * Discuss with others in mailing list or issue comments, make sure the proposed changes fit in with what others are doing and have planned for the project
 * Make changes in your fork
 * Write unit test if no existing cover your change
-* Generate patch and attach it to relative JIRA (https://ariejan.net/2009/10/26/how-to-create-and-apply-a-patch-with-git/)
+* Generate patch and attach it to relative JIRA; Please use "git format-patch" command to generate the patch, for a detail guide you can refer to [How to create and apply a patch with Git](https://ariejan.net/2009/10/26/how-to-create-and-apply-a-patch-with-git/)
+
 
 ## Apply Patch
 * Committer will review in terms of correctness, performance, design, coding style, test coverage
