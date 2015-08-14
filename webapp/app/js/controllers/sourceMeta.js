@@ -43,6 +43,11 @@ KylinApp
     };
 
     $scope.aceSrcTbLoaded = function (forceLoad) {
+      //stop request when project invalid
+      if(!$scope.projectModel.getSelectedProject()){
+        TableModel.init();
+        return;
+      }
       if (forceLoad) {
         $httpDefaultCache.removeAll();
       }
@@ -53,11 +58,12 @@ KylinApp
         SweetAlert.swal('Oops...',resp, 'error');
       });
     };
-
+    $scope.aceSrcTbLoaded();
     $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
 //         will load table when enter this page,null or not
-      $scope.aceSrcTbLoaded();
-
+      if (newValue != oldValue || newValue == null) {
+        $scope.aceSrcTbLoaded();
+      }
     });
 
 

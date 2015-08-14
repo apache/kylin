@@ -28,6 +28,9 @@ KylinApp.service('ProjectModel', function () {
     }
   };
   this.getSelectedProject = function (project) {
+    if(this.selectedProject=="_null"){
+      return null;
+    }
     return this.selectedProject;
   };
 
