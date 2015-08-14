@@ -41,7 +41,7 @@ then
     echo "Starting backup to ${_file}"
     mkdir -p ${_file}
 
-    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool  copy ${KYLIN_HOME}/conf/kylin.properties ${_file}
+    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool download ${_file}
     echo "metadata store backed up to ${_file}"
 
 elif [ $1 == "restore" ]
@@ -49,7 +49,7 @@ then
 
     _file=$2
     echo "Starting restoring $_file"
-    hbase  org.apache.hadoop.util.RunJar  ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool  copy $_file ${KYLIN_HOME}/conf/kylin.properties
+    hbase  org.apache.hadoop.util.RunJar  ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool upload $_file
 
 elif [ $1 == "reset" ]
 then
