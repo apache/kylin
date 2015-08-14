@@ -34,7 +34,6 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -62,9 +61,14 @@ public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
         if (mergedSegment == null) {
             return new ExecuteResult(ExecuteResult.State.FAILED, "there is no segment with id:" + getSegmentId());
         }
+
+        long cubeSize = 0l;
         String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
-        Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
-        long cubeSize = Long.parseLong(cubeSizeString) / 1024;
+        if (StringUtils.isNotEmpty(cubeSizeString)) {
+            cubeSize = Long.parseLong(cubeSizeString) / 1024;
+        } else {
+            logger.warn("Can not get cube segment size.");
+        }
 
         // collect source statistics
         List<String> mergingSegmentIds = getMergingSegmentIds();
