@@ -71,6 +71,16 @@ public final class StreamingUtil {
             }
             return iterator.next();
         }
+
+        //going to fail, check start&end offset again:
+        try {
+            Pair<Long, Long> newStartEnd = getFirstAndLastOffset(kafkaClusterConfig, partitionId);
+            logger.info("Partition: {}, latest start offset: {} ,latest end offset: {}", new Object[] { partitionId, newStartEnd.getFirst(), newStartEnd.getSecond() });
+        } catch (Exception e) {
+            logger.warn("something went wrong", e);
+            //just swallow the exception
+        }
+
         throw new IllegalStateException(String.format("try to get timestamp of topic: %s, partitionId: %d, offset: %d, failed to get StreamMessage from kafka", topic, partitionId, offset));
     }
 
