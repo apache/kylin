@@ -90,7 +90,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         RegionScanner innerScanner = null;
         HRegion region = null;
         try {
-            region = env.getRegion();
+            region = (HRegion) env.getRegion();
             innerScanner = region.getScanner(buildScan());
             region.startRegionOperation();
 

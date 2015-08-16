@@ -27,7 +27,6 @@ import java.sql.SQLException;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.service.HiveInterface;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 
@@ -47,7 +46,7 @@ public class HiveMiniClusterTest extends HiveJDBCClientTest {
     public static final File HIVE_WAREHOUSE_DIR = new File(HIVE_BASE_DIR + "/warehouse");
     public static final File HIVE_TESTDATA_DIR = new File(HIVE_BASE_DIR + "/testdata");
     public static final File HIVE_HADOOP_TMP_DIR = new File(HIVE_BASE_DIR + "/hadooptmp");
-    protected HiveInterface client;
+    //protected HiveInterface client;
 
     protected MiniDFSCluster miniDFS;
     protected MiniMRCluster miniMR;
