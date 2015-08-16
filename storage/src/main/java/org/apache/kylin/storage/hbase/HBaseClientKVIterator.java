@@ -24,10 +24,11 @@ import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.invertedindex.model.IIDesc;
@@ -41,15 +42,15 @@ public class HBaseClientKVIterator implements Iterable<Pair<ImmutableBytesWritab
     byte[] family;
     byte[] qualifier;
 
-    HTableInterface table;
+    Table table;
     ResultScanner scanner;
     Iterator<Result> iterator;
 
-    public HBaseClientKVIterator(HConnection hconn, String tableName, byte[] family, byte[] qualifier) throws IOException {
+    public HBaseClientKVIterator(Connection hconn, String tableName, byte[] family, byte[] qualifier) throws IOException {
         this.family = family;
         this.qualifier = qualifier;
 
-        this.table = hconn.getTable(tableName);
+        this.table = hconn.getTable(TableName.valueOf(tableName));
         this.scanner = table.getScanner(family, qualifier);
         this.iterator = scanner.iterator();
     }
