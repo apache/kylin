@@ -36,6 +36,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -48,7 +49,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -82,11 +82,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder.withArgName("level").hasArg().isRequired(true).withDescription("N-Cuboid build level, e.g. 1, 2, 3...").create("level");
     protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("Partition file path.").create("input");
     protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName("htable name").hasArg().isRequired(true).withDescription("HTable name").create("htablename");
-    protected static final Option OPTION_KEY_COLUMN_PERCENTAGE = OptionBuilder.withArgName("rowkey column percentage").hasArg().isRequired(true).withDescription("Percentage of row key columns").create("columnpercentage");
-    protected static final Option OPTION_KEY_SPLIT_NUMBER = OptionBuilder.withArgName("key split number").hasArg().isRequired(true).withDescription("Number of key split range").create("splitnumber");
 
     protected String name;
-    protected String description;
     protected boolean isAsync = false;
     protected OptionsHelper optionsHelper = new OptionsHelper();
 
@@ -127,16 +124,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             logger.debug("Job '" + job.getJobName() + "' finished " + (job.isSuccessful() ? "successfully in " : "with failures.  Time taken ") + formatTime((System.nanoTime() - start) / 1000000L));
         }
         return retVal;
-    }
-
-    protected static void runJob(Tool job, String[] args) {
-        try {
-            int exitCode = ToolRunner.run(job, args);
-            System.exit(exitCode);
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            System.exit(5);
-        }
     }
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
@@ -222,7 +209,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
-        tmp.delete(); // we need a directory, so delete the file first
+        FileUtils.forceDelete(tmp);
 
         File metaDir = new File(tmp, "meta");
         metaDir.mkdirs();
@@ -249,29 +236,41 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        String hdfsMetaDir = "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        String hdfsMetaDir = "file://" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
         logger.info("HDFS meta dir is: " + hdfsMetaDir);
         conf.set("tmpfiles", hdfsMetaDir);
-        
+
     }
 
     protected void cleanupTempConfFile(Configuration conf) {
         String tempMetaFileString = conf.get("tmpfiles");
+        logger.info("tempMetaFileString is : " + tempMetaFileString);
         if (tempMetaFileString != null) {
-            File tempMetaFile = new File(tempMetaFileString);
-            if (tempMetaFile.exists()) {
-                tempMetaFile.getParentFile().delete();
+            if (tempMetaFileString.startsWith("file://")) {
+                tempMetaFileString = tempMetaFileString.substring("file://".length());
+                File tempMetaFile = new File(tempMetaFileString);
+                if (tempMetaFile.exists()) {
+                    try {
+                        FileUtils.forceDelete(tempMetaFile.getParentFile());
+
+                    } catch (IOException e) {
+                        logger.warn("error when deleting " + tempMetaFile, e);
+                    }
+                } else {
+                    logger.info("" + tempMetaFileString + " does not exist");
+                }
+            } else {
+                logger.info("tempMetaFileString is not starting with file:// :" + tempMetaFileString);
             }
         }
     }
 
     protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
-        tmp.delete(); // we need a directory, so delete the file first
+        FileUtils.forceDelete(tmp);
 
         File metaDir = new File(tmp, "meta");
         metaDir.mkdirs();
-        metaDir.getParentFile().deleteOnExit();
 
         // write kylin.properties
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -296,7 +295,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        String hdfsMetaDir = "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        String hdfsMetaDir = "file://" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
         logger.info("HDFS meta dir is: " + hdfsMetaDir);
         conf.set("tmpfiles", hdfsMetaDir);
     }

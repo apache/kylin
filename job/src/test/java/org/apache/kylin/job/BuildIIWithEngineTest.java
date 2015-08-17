@@ -237,6 +237,7 @@ public class BuildIIWithEngineTest {
     private void exportHBaseData() throws IOException {
         ExportHBaseData export = new ExportHBaseData();
         export.exportTables();
+        export.tearDown();
     }
 
     public static void main(String[] args) throws Exception {

@@ -60,16 +60,16 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
         String jobname = "merge_cuboid";
 
         File baseFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "base");
-        baseFolder.delete();
+        FileUtils.forceDelete(baseFolder);
         baseFolder.mkdir();
         FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), baseFolder);
-        baseFolder.deleteOnExit();
+        FileUtils.forceDeleteOnExit(baseFolder);
 
         File eightFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "8d");
-        eightFolder.delete();
+        FileUtils.forceDelete(eightFolder);
         eightFolder.mkdir();
         FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), eightFolder);
-        eightFolder.deleteOnExit();
+        FileUtils.forceDeleteOnExit(eightFolder);
 
         FileUtil.fullyDelete(new File(output));
 

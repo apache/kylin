@@ -313,7 +313,6 @@ public class CubeService extends BasicService {
      * @param cube
      * @return
      * @throws IOException
-     * @throws CubeIntegrityException
      * @throws JobException
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
@@ -339,7 +338,6 @@ public class CubeService extends BasicService {
      * Update a cube status from ready to disabled.
      *
      * @return
-     * @throws CubeIntegrityException
      * @throws IOException
      * @throws JobException
      */
@@ -528,7 +526,6 @@ public class CubeService extends BasicService {
      *
      * @throws IOException
      * @throws JobException
-     * @throws CubeIntegrityException
      */
     private void releaseAllSegments(CubeInstance cube) throws IOException, JobException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);

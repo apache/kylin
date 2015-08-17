@@ -24,6 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -43,7 +44,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.tools.ant.filters.StringInputStream;
-import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

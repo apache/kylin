@@ -115,7 +115,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
         // if still empty or null
         if (myChildren == null || myChildren.size() == 0) {
-            context.getCounter(BatchConstants.MAPREDUCE_COUTNER_GROUP_NAME, "Skipped records").increment(1L);
+            context.getCounter(BatchConstants.MAPREDUCE_COUNTER_GROUP_NAME, "Skipped records").increment(1L);
             skipCounter++;
             if (skipCounter % BatchConstants.COUNTER_MAX == 0) {
                 logger.info("Skipped " + skipCounter + " records!");
@@ -123,7 +123,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
             return;
         }
 
-        context.getCounter(BatchConstants.MAPREDUCE_COUTNER_GROUP_NAME, "Processed records").increment(1L);
+        context.getCounter(BatchConstants.MAPREDUCE_COUNTER_GROUP_NAME, "Processed records").increment(1L);
 
         handleCounter++;
         if (handleCounter % BatchConstants.COUNTER_MAX == 0) {

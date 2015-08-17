@@ -31,6 +31,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 
 /**
@@ -44,7 +45,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
-    public static final String OUTPUT_PATH = "/tmp/cardinality";
+    public static final String OUTPUT_PATH = BatchConstants.CFG_KYLIN_HDFS_TEMP_DIR + "cardinality";
 
     public HiveColumnCardinalityJob() {
     }
