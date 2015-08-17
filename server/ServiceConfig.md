@@ -4,7 +4,6 @@
 ##### kylin.server.mode Valid value: 'query', 'job' and 'all'
 
 ### Storage
-##### kylin.tmp.hdfs.dir
 ##### kylin.metadata.url
 ##### kylin.storage.url 
 ##### kylin.hdfs.working.dir

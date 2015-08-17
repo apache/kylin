@@ -140,7 +140,6 @@ public class BuildIIWithEngineTest {
                 iiManager.updateII(ii);
             }
         }
-        backup();
     }
 
     @Test
@@ -239,17 +238,6 @@ public class BuildIIWithEngineTest {
         return exitCode;
     }
 
-    private void backup() throws Exception {
-        int exitCode = cleanupOldStorage();
-        if (exitCode == 0) {
-            exportHBaseData();
-        }
-    }
-
-    private void exportHBaseData() throws IOException {
-        ExportHBaseData export = new ExportHBaseData();
-        export.exportTables();
-    }
 
     public static void main(String[] args) throws Exception {
         BuildIIWithEngineTest instance = new BuildIIWithEngineTest();

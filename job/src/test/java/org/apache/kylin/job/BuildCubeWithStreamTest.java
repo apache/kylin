@@ -115,6 +115,7 @@ public class BuildCubeWithStreamTest {
     private static void exportHBaseData() throws IOException {
         ExportHBaseData export = new ExportHBaseData();
         export.exportTables();
+        export.tearDown();
     }
 
     @Test

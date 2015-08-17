@@ -71,7 +71,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 rs.putResource(statisticsFileName, is, System.currentTimeMillis());
             } finally {
                 IOUtils.closeStream(is);
-                fs.delete(statisticsFilePath, false);
+                fs.delete(statisticsFilePath, true);
             }
 
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");

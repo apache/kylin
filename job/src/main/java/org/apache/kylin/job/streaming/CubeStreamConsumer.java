@@ -100,12 +100,12 @@ public class CubeStreamConsumer implements MicroStreamBatchConsumer {
         logger.info(String.format("sampling of %d messages cost %d ms", parsedStreamMessages.size(), (System.currentTimeMillis() - start)));
 
         final Configuration conf = HadoopUtil.getCurrentConfiguration();
-        final Path outputPath = new Path("file:///tmp/cuboidstatistics/" + UUID.randomUUID().toString());
-        FileSystem.getLocal(conf).deleteOnExit(outputPath);
+        final Path outputPath = new Path("file://" + BatchConstants.CFG_STATISTICS_LOCAL_DIR + UUID.randomUUID().toString());
         FactDistinctColumnsReducer.writeCuboidStatistics(conf, outputPath, samplingResult, 100);
         FSDataInputStream localStream = FileSystem.getLocal(conf).open(new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION));
         ResourceStore.getStore(kylinConfig).putResource(cubeSegment.getStatisticsResourcePath(), localStream, System.currentTimeMillis());
         localStream.close();
+        FileSystem.getLocal(conf).delete(outputPath, true);
 
         final Map<TblColRef, Dictionary<?>> dictionaryMap = CubingUtils.buildDictionary(cubeInstance, parsedStreamMessages);
         Map<TblColRef, Dictionary<?>> realDictMap = CubingUtils.writeDictionary(cubeSegment, dictionaryMap, startOffset, endOffset);

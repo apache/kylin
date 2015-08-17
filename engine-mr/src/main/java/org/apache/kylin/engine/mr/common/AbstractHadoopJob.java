@@ -36,6 +36,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -265,11 +266,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void attachKylinPropsAndMetadata(ArrayList<String> dumpList, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
-        tmp.delete(); // we need a directory, so delete the file first
+        FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
         File metaDir = new File(tmp, "meta");
         metaDir.mkdirs();
-        metaDir.getParentFile().deleteOnExit();
 
         // write kylin.properties
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -280,17 +280,30 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        String hdfsMetaDir = "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        String hdfsMetaDir = "file://" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
         logger.info("HDFS meta dir is: " + hdfsMetaDir);
         conf.set("tmpfiles", hdfsMetaDir);
     }
 
     protected void cleanupTempConfFile(Configuration conf) {
         String tempMetaFileString = conf.get("tmpfiles");
+        logger.info("tempMetaFileString is : " + tempMetaFileString);
         if (tempMetaFileString != null) {
-            File tempMetaFile = new File(tempMetaFileString);
-            if (tempMetaFile.exists()) {
-                tempMetaFile.getParentFile().delete();
+            if (tempMetaFileString.startsWith("file://")) {
+                tempMetaFileString = tempMetaFileString.substring("file://".length());
+                File tempMetaFile = new File(tempMetaFileString);
+                if (tempMetaFile.exists()) {
+                    try {
+                        FileUtils.forceDelete(tempMetaFile.getParentFile());
+                                
+                    } catch (IOException e) {
+                        logger.warn("error when deleting " + tempMetaFile, e);
+                    }
+                } else {
+                    logger.info("" + tempMetaFileString + " does not exist");
+                }
+            } else {
+                logger.info("tempMetaFileString is not starting with file:// :" + tempMetaFileString);
             }
         }
     }

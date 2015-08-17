@@ -130,6 +130,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             GTScanRequest scanReq = KryoUtils.deserialize(request.getGtScanRequest().toByteArray(), GTScanRequest.class);
             RawScan hbaseRawScan = KryoUtils.deserialize(request.getHbaseRawScan().toByteArray(), RawScan.class);
+            //TODO: rewrite own start/end
             Scan scan = CubeHBaseRPC.buildScan(hbaseRawScan);
 
             region = env.getRegion();

@@ -53,23 +53,12 @@ public class KylinConfig implements Serializable {
     public static final String KYLIN_REST_SERVERS = "kylin.rest.servers";
 
     public static final String KYLIN_REST_TIMEZONE = "kylin.rest.timezone";
-    /**
-     * The dir containing scripts for kylin. For example: /usr/lib/kylin/bin
-     */
-    public static final String KYLIN_SCRIPT_DIR = "kylin.script.dir";
-    /**
-     * The script file name for generating table metadat from hive. For example:
-     * generateTable.sh
-     */
-    public static final String KYLIN_SCRIPT_GEN_TABLE_META = "kylin.script.genTableMeta";
 
     public static final String KYLIN_JOB_CONCURRENT_MAX_LIMIT = "kylin.job.concurrent.max.limit";
 
     public static final String KYLIN_JOB_YARN_APP_REST_CHECK_URL = "kylin.job.yarn.app.rest.check.status.url";
 
     public static final String KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS = "kylin.job.yarn.app.rest.check.interval.seconds";
-
-    public static final String KYLIN_TMP_HDFS_DIR = "kylin.tmp.hdfs.dir";
 
     public static final String HIVE_TABLE_LOCATION_PREFIX = "hive.table.location.";
 
@@ -105,6 +94,7 @@ public class KylinConfig implements Serializable {
     public static final String KYLIN_JOB_LOG_DIR = "kylin.job.log.dir";
 
     public static final String KYLIN_JOB_CUBING_IN_MEM = "kylin.job.cubing.inMem";
+
     public static final String KYLIN_JOB_CUBING_IN_MEM_SAMPLING_PERCENT = "kylin.job.cubing.inMem.sampling.percent";
 
     public static final String KYLIN_HDFS_WORKING_DIR = "kylin.hdfs.working.dir";
@@ -116,14 +106,6 @@ public class KylinConfig implements Serializable {
     public static final String HIVE_USER = "hive.user";
 
     public static final String HIVE_URL = "hive.url";
-    /**
-     * Key string to specify the kylin evn: prod, dev, qa
-     */
-    public static final String KYLIN_ENV = "KYLIN_ENV";
-    /**
-     * Default Kylin conf path
-     */
-    public static final String KYLIN_CONF_DEFAULT = "/etc/kylin";
     /**
      * Kylin properties file
      */
@@ -256,10 +238,7 @@ public class KylinConfig implements Serializable {
 
     /**
      * Find config from environment. The Search process: 1. Check the
-     * $KYLIN_CONF/kylin.properties 2. Check the /etc/kylin/kylin.properties 3.
-     * Check the kylin.properties in classpath
-     *
-     * @return
+     * $KYLIN_CONF/kylin.properties 2. Check the $KYLIN_HOME/conf/kylin.properties
      */
     private static KylinConfig loadKylinConfig() {
         InputStream is = getKylinPropertiesAsInputSteam();
@@ -304,7 +283,7 @@ public class KylinConfig implements Serializable {
         if (!root.endsWith("/")) {
             root += "/";
         }
-        return root + getMetadataUrlPrefix();
+        return root + getMetadataUrlPrefix() + "/";
     }
 
     public String getKylinJobLogDir() {
@@ -426,10 +405,6 @@ public class KylinConfig implements Serializable {
 
     public String getOverrideHiveTableLocation(String table) {
         return getOptional(HIVE_TABLE_LOCATION_PREFIX + table.toUpperCase());
-    }
-
-    public String getTempHDFSDir() {
-        return getOptional(KYLIN_TMP_HDFS_DIR, "/tmp/kylin");
     }
 
     public String getYarnStatusCheckUrl() {
