@@ -200,6 +200,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             throw e;
         } finally {
             IOUtils.closeStream(reader);
+            tempFile.delete();
         }
         return cuboidSizeMap;
     }

@@ -54,12 +54,12 @@ public class HbaseImporter {
             return;
         }
 
-        File folder = new File("/tmp/hbase-export/");
+        File folder = File.createTempFile("hbase-import", "tmp");
         if (folder.exists()) {
-            FileUtils.deleteDirectory(folder);
+            FileUtils.forceDelete(folder);
         }
         folder.mkdirs();
-        folder.deleteOnExit();
+        FileUtils.forceDeleteOnExit(folder);
 
         //TarGZUtil.uncompressTarGZ(exportFile, folder);
         FileUtil.unTar(exportFile, folder);

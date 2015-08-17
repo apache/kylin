@@ -29,6 +29,7 @@ public class FactDistinctColumnsReducerTest {
         System.out.println(outputPath);
         Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = Maps.newHashMap();
         FactDistinctColumnsReducer.writeCuboidStatistics(conf, outputPath, cuboidHLLMap, 100);
+        FileSystem.getLocal(conf).delete(outputPath, true);
 
     }
 }
