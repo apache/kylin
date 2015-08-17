@@ -1,6 +1,6 @@
 ---
 layout: dev
-title:  "Run Kylin test case with HBase Mini Cluster"
+title:  "Run Kylin Test Case with Mini Cluster"
 categories: development
 permalink: /development/test_minicluster.html
 ---

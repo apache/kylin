@@ -1,6 +1,6 @@
 ---
 layout: dev
-title:  "New meta data model structure"
+title:  "New Metadata Model"
 categories: development
 permalink: /development/new_metadata.html
 ---
