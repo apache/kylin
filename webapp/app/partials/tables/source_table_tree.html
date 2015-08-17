@@ -39,7 +39,7 @@
                      tree-model="tableModel.selectedSrcDb"
                      options="tableModel.treeOptions"
                      on-selection="showSelected(node)"
-                     selected-node="tableModel.selectedSrcTable">
+                     selected-node="selectedNode(node)">
             {{node.name}} {{!!(node.datatype)?'(' + trimType(node.datatype) + ')' : ''}}
         </treecontrol>
     </div>

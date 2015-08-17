@@ -16,7 +16,7 @@ $.ajaxSetup({
     var request = $.ajax({
        url: "http://hostname/kylin/api/query",
        type: "POST",
-       data: '{"sql":"select count(*) from SUMMARY;","offset":0,"limit":50000,"partial":true,"project":"test"}',
+       data: '{"sql":"select count(*) from SUMMARY;","offset":0,"limit":50000,"acceptPartial":true,"project":"test"}',
        dataType: "json"
     });
     request.done(function( msg ) {
