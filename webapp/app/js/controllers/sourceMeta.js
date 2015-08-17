@@ -76,6 +76,12 @@ KylinApp
       }
     };
 
+    $scope.selectedNode = function(obj){
+      if (obj.uuid) {
+        return $scope.tableModel.selectedSrcTable;
+      }
+    }
+
     $scope.aceSrcTbChanged = function () {
       $scope.tableModel.selectedSrcDb = [];
       $scope.tableModel.selectedSrcTable = {};
