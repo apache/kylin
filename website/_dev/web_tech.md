@@ -1,6 +1,6 @@
 ---
 layout: dev
-title:  "Kylin web front end summary"
+title:  "Kylin Web Summary"
 categories: development
 permalink: /development/web_tech.html
 ---

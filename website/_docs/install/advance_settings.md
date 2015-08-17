@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  "Advance settings of Kylin environment"
+title:  "Advance Settings of Kylin Environment"
 categories: install
 permalink: /docs/install/advance_settings.html
 version: v0.7.2

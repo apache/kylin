@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  How to use Restful API in Javascript
+title:  How to Use Restful API in Javascript
 categories: howto
 permalink: /docs/howto/howto_use_restapi_in_js.html
 version: v0.8
