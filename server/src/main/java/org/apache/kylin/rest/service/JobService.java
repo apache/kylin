@@ -142,6 +142,19 @@ public class JobService extends BasicService {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);
             job = BuildEngineFactory.createBatchMergeJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.REFRESH) {
+            List<CubeSegment> readySegs = cube.getSegment(SegmentStatusEnum.READY);
+            boolean segExists = false;
+            for (CubeSegment aSeg : readySegs) {
+                if (aSeg.getDateRangeStart() == startDate && aSeg.getDateRangeEnd() == endDate) {
+                    segExists = true;
+                    break;
+                }
+            }
+
+            if (segExists == false) {
+                throw new IllegalArgumentException("You can only refresh an existing segment, but there is no ready segment for start time:" + startDate + ", end time: " + endDate);
+            }
+
             CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate);
             job = BuildEngineFactory.createBatchCubingJob(refreshSeg, submitter);
         } else {
