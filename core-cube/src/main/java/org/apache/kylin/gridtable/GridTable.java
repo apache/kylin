@@ -33,7 +33,7 @@ public class GridTable implements Closeable {
     }
 
     public IGTScanner scan(GTScanRequest req) throws IOException {
-        IGTScanner result = new GTRawScanner(info, store, req);
+        IGTScanner result = store.scan(req);
         return req.decorateScanner(result);
     }
 
