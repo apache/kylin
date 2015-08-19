@@ -41,8 +41,9 @@ public interface BatchConstants {
     String CUBE_CAPACITY = "cube.capacity";
 
     String CFG_KYLIN_LOCAL_TEMP_DIR = "/tmp/kylin/";
-    String CFG_STATISTICS_LOCAL_DIR = CFG_KYLIN_LOCAL_TEMP_DIR + "cuboidstatistics/";
+    String CFG_KYLIN_HDFS_TEMP_DIR = "/tmp/kylin/";
     
+    String CFG_STATISTICS_LOCAL_DIR = CFG_KYLIN_LOCAL_TEMP_DIR + "cuboidstatistics/";
     String CFG_STATISTICS_ENABLED = "statistics.enabled";
     String CFG_STATISTICS_OUTPUT = "statistics.ouput";
     String CFG_STATISTICS_SAMPLING_PERCENT = "statistics.sampling.percent";
