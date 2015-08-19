@@ -31,8 +31,11 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.rest.controller.QueryController;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 
 /**
@@ -44,6 +47,7 @@ public class CacheService extends BasicService {
     @Autowired
     private CubeService cubeService;
 
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void rebuildCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "rebuild cache type: " + cacheType + " name:" + cacheKey;
         try {
@@ -106,6 +110,7 @@ public class CacheService extends BasicService {
         }
     }
 
+    @Caching(evict = { @CacheEvict(value = QueryController.SUCCESS_QUERY_CACHE, allEntries = true), @CacheEvict(value = QueryController.EXCEPTION_QUERY_CACHE, allEntries = true) })
     public void removeCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "remove cache type: " + cacheType + " name:" + cacheKey;
         try {
@@ -116,7 +121,7 @@ public class CacheService extends BasicService {
             case CUBE_DESC:
                 getCubeDescManager().removeLocalCubeDesc(cacheKey);
                 break;
-            case PROJECT:
+                case PROJECT:
                 ProjectManager.clearCache();
                 break;
             case INVERTED_INDEX:
