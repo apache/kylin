@@ -8,6 +8,4 @@ public interface IGTScanner extends Iterable<GTRecord>, Closeable {
 
     int getScannedRowCount();
 
-    int getScannedRowBlockCount();
-
 }

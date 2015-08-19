@@ -48,6 +48,10 @@
             <groupId>com.n3twork.druid</groupId>
             <artifactId>extendedset</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo-shaded</artifactId>
+        </dependency>
 
         <!-- Env & Test -->
         <dependency>

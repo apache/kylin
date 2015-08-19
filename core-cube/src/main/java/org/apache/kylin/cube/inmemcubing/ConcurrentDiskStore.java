@@ -30,15 +30,16 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRowBlock;
+import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.GTStoreBridgeScanner;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
+import org.apache.kylin.gridtable.IGTWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,17 +92,16 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
     }
 
     @Override
-    public IGTStoreWriter rebuild(int shard) throws IOException {
+    public IGTWriter rebuild(int shard) throws IOException {
         return newWriter(0);
     }
 
     @Override
-    public IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast) throws IOException {
-        throw new IllegalStateException("does not support append yet");
-        //return newWriter(diskFile.length());
+    public IGTWriter append(int shard) throws IOException {
+        return newWriter(diskFile.length());
     }
 
-    private IGTStoreWriter newWriter(long startOffset) throws IOException {
+    private IGTWriter newWriter(long startOffset) throws IOException {
         synchronized (lock) {
             if (activeWriter != null || !activeReaders.isEmpty())
                 throw new IllegalStateException();
@@ -124,14 +124,10 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
 
     @Override
     public IGTScanner scan(GTScanRequest scanRequest) throws IOException {
-        return new GTStoreBridgeScanner(info, scanRequest, oldScan(scanRequest));
-    }
-
-    private IGTStoreScanner oldScan(GTScanRequest scanRequest) throws IOException {
         return newReader();
     }
 
-    private IGTStoreScanner newReader() throws IOException {
+    private IGTScanner newReader() throws IOException {
         synchronized (lock) {
             if (activeWriter != null)
                 throw new IllegalStateException();
@@ -154,13 +150,11 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
         }
     }
 
-    private class Reader implements IGTStoreScanner {
+    private class Reader implements IGTScanner {
         final DataInputStream din;
         long fileLen;
         long readOffset;
-
-        GTRowBlock block = GTRowBlock.allocate(info);
-        GTRowBlock next = null;
+        int count;
 
         Reader(long startOffset) throws IOException {
             this.fileLen = diskFile.length();
@@ -208,40 +202,6 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
         }
 
         @Override
-        public boolean hasNext() {
-            if (next != null)
-                return true;
-
-            try {
-                if (din.available() > 0) {
-                    block.importFrom(din);
-                    next = block;
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            return next != null;
-        }
-
-        @Override
-        public GTRowBlock next() {
-            if (next == null) {
-                hasNext();
-                if (next == null)
-                    throw new NoSuchElementException();
-            }
-            GTRowBlock r = next;
-            next = null;
-            return r;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public void close() throws IOException {
             din.close();
             closeReader(this);
@@ -249,14 +209,76 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
             if (debug)
                 logger.debug(ConcurrentDiskStore.this + " read end @ " + readOffset);
         }
+
+        @Override
+        public Iterator<GTRecord> iterator() {
+            count = 0;
+            return new Iterator<GTRecord>() {
+                GTRecord record = new GTRecord(info);
+                GTRecord next;
+                ByteBuffer buf = ByteBuffer.allocate(info.getMaxRecordLength());
+                
+                @Override
+                public boolean hasNext() {
+                    if (next != null)
+                        return true;
+
+                    try {
+                        if (din.available() > 0) {
+                            int len = din.readInt();
+                            din.read(buf.array(), buf.arrayOffset(), len);
+                            buf.clear();
+                            buf.limit(len);
+                            record.loadColumns(info.getAllColumns(), buf);
+                            next = record;
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    return next != null;
+                }
+
+                @Override
+                public GTRecord next() {
+                    if (next == null) {
+                        hasNext();
+                        if (next == null)
+                            throw new NoSuchElementException();
+                    }
+                    GTRecord r = next;
+                    next = null;
+                    count++;
+                    return r;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+
+        @Override
+        public GTInfo getInfo() {
+            return info;
+        }
+
+        @Override
+        public int getScannedRowCount() {
+            return count;
+        }
+
     }
 
-    private class Writer implements IGTStoreWriter {
+    private class Writer implements IGTWriter {
         final DataOutputStream dout;
+        final ByteBuffer buf;
         long writeOffset;
 
         Writer(long startOffset) {
             this.writeOffset = startOffset;
+            this.buf = ByteBuffer.allocate(info.getMaxRecordLength());
 
             if (debug)
                 logger.debug(ConcurrentDiskStore.this + " write start @ " + writeOffset);
@@ -284,8 +306,13 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
         }
 
         @Override
-        public void write(GTRowBlock block) throws IOException {
-            block.export(dout);
+        public void write(GTRecord rec) throws IOException {
+            buf.clear();
+            rec.exportColumns(info.getAllColumns(), buf);
+            
+            int len = buf.position();
+            dout.writeInt(len);
+            dout.write(buf.array(), buf.arrayOffset(), len);
         }
 
         @Override

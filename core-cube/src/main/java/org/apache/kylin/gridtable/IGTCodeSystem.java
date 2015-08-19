@@ -9,8 +9,6 @@ public interface IGTCodeSystem {
 
     void init(GTInfo info);
 
-    IGTCodeSystem trim();
-
     IGTComparator getComparator();
 
     /** Return the length of code starting at the specified buffer, buffer position must not change after return */

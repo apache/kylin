@@ -23,9 +23,8 @@ public class GTRecord implements Comparable<GTRecord> {
     public GTRecord(GTInfo info, ImmutableBitSet maskForEqualHashComp) {
         this.cols = new ByteArray[info.getColumnCount()];
         for (int i = 0; i < this.cols.length; i++) {
-            if (maskForEqualHashComp.get(i)) {
-                this.cols[i] = new ByteArray();
-            }
+            // consider column projection by pass in another bit set
+            this.cols[i] = new ByteArray();
         }
         this.info = info;
         this.maskForEqualHashComp = maskForEqualHashComp;
@@ -214,7 +213,7 @@ public class GTRecord implements Comparable<GTRecord> {
         }
 
         ByteArray buf = ByteArray.allocate(len);
-        exportColumns(info.primaryKey, buf);
+        exportColumns(selectedCols, buf);
         return buf;
     }
 

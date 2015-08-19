@@ -580,11 +580,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             return 0;
         }
 
-        @Override
-        public int getScannedRowBlockCount() {
-            return 0;
-        }
-
         private void buildGTRecord(List<String> row, GTRecord record) {
             Object[] dimensions = buildKey(row);
             Object[] metricsValues = buildValue(row);

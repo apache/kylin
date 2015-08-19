@@ -38,6 +38,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.util.KryoUtils;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
@@ -47,7 +48,6 @@ import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitPr
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.Builder;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitService;
-import org.apache.kylin.storage.util.KryoUtils;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -59,9 +59,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     static class EndpintResultsAsGTScanner implements IGTScanner {
         private GTInfo info;
         private Iterator<byte[]> blocks;
-
-        private int scannedRowCount = 0;
-        private int scannedRowBlockCount = 0;
 
         public EndpintResultsAsGTScanner(GTInfo info, Iterator<byte[]> blocks) {
             this.info = info;
@@ -75,11 +72,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         @Override
         public int getScannedRowCount() {
-            return 0;
-        }
-
-        @Override
-        public int getScannedRowBlockCount() {
             return 0;
         }
 

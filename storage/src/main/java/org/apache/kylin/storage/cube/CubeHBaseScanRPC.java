@@ -70,7 +70,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             }
         };
 
-        IGTStore store = new HBaseGTStore(cellListIterator, scanRequest, hbaseColumns);
+        IGTStore store = new HBaseReadonlyStore(cellListIterator, scanRequest, hbaseColumns);
         IGTScanner rawScanner = store.scan(scanRequest);
         return scanRequest.decorateScanner(rawScanner);
     }
