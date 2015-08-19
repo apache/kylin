@@ -58,6 +58,7 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.job.common.OptionsHelper;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.steps.CreateHTableJob;
 import org.apache.kylin.storage.hbase.steps.CubeHTableUtil;
@@ -102,6 +103,7 @@ public class SparkCubing extends AbstractSparkApplication {
         options.addOption(OPTION_CUBE_NAME);
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_CONF_PATH);
+        options.addOption(OPTION_COPROCESSOR);
 
     }
 
@@ -469,7 +471,9 @@ public class SparkCubing extends AbstractSparkApplication {
         cubeSegment.setStatus(SegmentStatusEnum.READY);
         try {
             CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
-            cubeBuilder.setToUpdateSegs(cubeInstance.getSegmentById(segmentId));
+            cubeInstance.setStatus(RealizationStatusEnum.READY);
+            cubeSegment.setStatus(SegmentStatusEnum.READY);
+            cubeBuilder.setToUpdateSegs(cubeSegment);
             CubeManager.getInstance(kylinConfig).updateCube(cubeBuilder);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deal with the request: " + e.getLocalizedMessage());
