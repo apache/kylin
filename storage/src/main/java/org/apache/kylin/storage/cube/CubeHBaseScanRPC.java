@@ -15,7 +15,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRawScanner;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
@@ -72,7 +71,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         };
 
         IGTStore store = new HBaseGTStore(cellListIterator, scanRequest, hbaseColumns);
-        GTRawScanner rawScanner = new GTRawScanner(scanRequest.getInfo(), store, scanRequest);
+        IGTScanner rawScanner = store.scan(scanRequest);
         return scanRequest.decorateScanner(rawScanner);
     }
 }

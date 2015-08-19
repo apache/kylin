@@ -8,6 +8,8 @@ import java.util.List;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRowBlock;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTStoreBridgeScanner;
+import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 
 public class GTSimpleMemStore implements IGTStore {
@@ -77,7 +79,11 @@ public class GTSimpleMemStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(GTScanRequest scanRequest) {
+    public IGTScanner scan(GTScanRequest scanRequest) throws IOException {
+        return new GTStoreBridgeScanner(info, scanRequest, oldScan(scanRequest));
+    }
+
+    private IGTStoreScanner oldScan(GTScanRequest scanRequest) {
 
         return new IGTStoreScanner() {
             Iterator<GTRowBlock> it = rowBlockList.iterator();

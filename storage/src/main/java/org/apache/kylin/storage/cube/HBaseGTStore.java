@@ -28,6 +28,8 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRowBlock;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTStoreBridgeScanner;
+import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 
 public class HBaseGTStore implements IGTStore {
@@ -67,7 +69,11 @@ public class HBaseGTStore implements IGTStore {
     }
 
     @Override
-    public IGTStoreScanner scan(GTScanRequest scanRequest) throws IOException {
+    public IGTScanner scan(GTScanRequest scanRequest) throws IOException {
+        return new GTStoreBridgeScanner(info, scanRequest, oldScan(scanRequest));
+    }
+
+    private IGTStoreScanner oldScan(GTScanRequest scanRequest) throws IOException {
         return new IGTStoreScanner() {
             @Override
             public boolean hasNext() {

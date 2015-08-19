@@ -36,7 +36,6 @@ import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.gridtable.GTRawScanner;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
@@ -140,7 +139,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
 
             IGTStore store = new HBaseGTStore(cellListIterator, scanReq, hbaseRawScan.hbaseColumns);
-            GTRawScanner rawScanner = new GTRawScanner(scanReq.getInfo(), store, scanReq);
+            IGTScanner rawScanner = store.scan(scanReq);
             IGTScanner finalScanner = scanReq.decorateScanner(rawScanner);
 
             ByteBuffer buffer = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);

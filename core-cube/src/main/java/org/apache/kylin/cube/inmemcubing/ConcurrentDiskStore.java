@@ -36,6 +36,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRowBlock;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTStoreBridgeScanner;
+import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +123,11 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
     }
 
     @Override
-    public IGTStoreScanner scan(GTScanRequest scanRequest) throws IOException {
+    public IGTScanner scan(GTScanRequest scanRequest) throws IOException {
+        return new GTStoreBridgeScanner(info, scanRequest, oldScan(scanRequest));
+    }
+
+    private IGTStoreScanner oldScan(GTScanRequest scanRequest) throws IOException {
         return newReader();
     }
 
