@@ -500,7 +500,7 @@ public class KylinConfig implements Serializable {
     }
 
     private String[] getOptionalStringArray(String prop) {
-        final String property = System.getProperty(prop);
+        final String property = getOptional(prop);
         if (!StringUtils.isBlank(property)) {
             return property.split("\\s*,\\s*");
         } else {
