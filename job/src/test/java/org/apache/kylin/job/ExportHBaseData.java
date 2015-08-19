@@ -46,6 +46,7 @@ public class ExportHBaseData {
     String exportLocalFolder;
     String backupArchive;
     String tableNameBase;
+    long currentTIME;
 
     public ExportHBaseData() {
         try {
@@ -63,7 +64,7 @@ public class ExportHBaseData {
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cli = kylinConfig.getCliCommandExecutor();
 
-        long currentTIME = System.currentTimeMillis();
+        currentTIME = System.currentTimeMillis();
         exportHdfsFolder = kylinConfig.getHdfsWorkingDirectory() + "hbase-export/" + currentTIME + "/";
         exportLocalFolderParent = BatchConstants.CFG_KYLIN_LOCAL_TEMP_DIR + "hbase-export/";
         exportLocalFolder = exportLocalFolderParent + currentTIME + "/";
@@ -127,7 +128,7 @@ public class ExportHBaseData {
         }
 
         cli.execute("hadoop fs -copyToLocal " + exportHdfsFolder + " " + exportLocalFolderParent);
-        cli.execute("tar -zcvf " + backupArchive + " --directory=" + exportLocalFolderParent + " .");
+        cli.execute("tar -zcvf " + backupArchive + " --directory=" + exportLocalFolderParent + " " + currentTIME);
         downloadToLocal();
     }
 
