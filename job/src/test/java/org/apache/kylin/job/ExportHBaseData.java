@@ -127,7 +127,7 @@ public class ExportHBaseData {
         }
 
         cli.execute("hadoop fs -copyToLocal " + exportHdfsFolder + " " + exportLocalFolderParent);
-        cli.execute("tar -zcvf " + backupArchive + " " + exportLocalFolder);
+        cli.execute("tar -zcvf " + backupArchive + " --directory=" + exportLocalFolderParent + " .");
         downloadToLocal();
     }
 

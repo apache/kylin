@@ -45,7 +45,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
-    public static final String OUTPUT_PATH = "/tmp/cardinality";
+    public static final String OUTPUT_PATH = BatchConstants.CFG_KYLIN_HDFS_TEMP_DIR + "cardinality";
 
     public HiveColumnCardinalityJob() {
     }
