@@ -17,7 +17,7 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import static org.apache.kylin.common.util.MemoryBudgetController.ONE_MB;
+import static org.apache.kylin.common.util.MemoryBudgetController.*;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -31,17 +31,18 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryConsumer;
 import org.apache.kylin.common.util.MemoryBudgetController.NotEnoughBudgetException;
 import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRowBlock;
+import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.GTStoreBridgeScanner;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
+import org.apache.kylin.gridtable.IGTWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,12 +88,12 @@ public class MemDiskStore implements IGTStore, Closeable {
     }
 
     @Override
-    public IGTStoreWriter rebuild(int shard) throws IOException {
+    public IGTWriter rebuild(int shard) throws IOException {
         return newWriter(0);
     }
 
     @Override
-    public IGTStoreWriter append(int shard, GTRowBlock.Writer fillLast) throws IOException {
+    public IGTWriter append(int shard) throws IOException {
         return newWriter(length());
     }
 
@@ -108,10 +109,6 @@ public class MemDiskStore implements IGTStore, Closeable {
 
     @Override
     public IGTScanner scan(GTScanRequest scanRequest) throws IOException {
-        return new GTStoreBridgeScanner(info, scanRequest, oldScan(scanRequest));
-    }
-
-    public IGTStoreScanner oldScan(GTScanRequest scanRequest) throws IOException {
         synchronized (lock) {
             return new Reader();
         }
@@ -135,16 +132,14 @@ public class MemDiskStore implements IGTStore, Closeable {
         return "MemDiskStore@" + (info.getTableName() == null ? this.hashCode() : info.getTableName());
     }
 
-    private class Reader implements IGTStoreScanner {
+    private class Reader implements IGTScanner {
 
         final DataInputStream din;
         long readOffset = 0;
         long memRead = 0;
         long diskRead = 0;
         int nReadCalls = 0;
-
-        GTRowBlock block = GTRowBlock.allocate(info);
-        GTRowBlock next = null;
+        int count = 0;
 
         Reader() throws IOException {
             diskPart.openRead();
@@ -218,40 +213,6 @@ public class MemDiskStore implements IGTStore, Closeable {
         }
 
         @Override
-        public boolean hasNext() {
-            if (next != null)
-                return true;
-
-            try {
-                if (din.available() > 0) {
-                    block.importFrom(din);
-                    next = block;
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            return next != null;
-        }
-
-        @Override
-        public GTRowBlock next() {
-            if (next == null) {
-                hasNext();
-                if (next == null)
-                    throw new NoSuchElementException();
-            }
-            GTRowBlock r = next;
-            next = null;
-            return r;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public void close() throws IOException {
             synchronized (lock) {
                 din.close();
@@ -261,11 +222,72 @@ public class MemDiskStore implements IGTStore, Closeable {
             }
         }
 
+        @Override
+        public Iterator<GTRecord> iterator() {
+            count = 0;
+            return new Iterator<GTRecord>() {
+                GTRecord record = new GTRecord(info);
+                GTRecord next;
+                ByteBuffer buf = ByteBuffer.allocate(info.getMaxRecordLength());
+
+                @Override
+                public boolean hasNext() {
+                    if (next != null)
+                        return true;
+
+                    try {
+                        if (din.available() > 0) {
+                            int len = din.readInt();
+                            din.read(buf.array(), buf.arrayOffset(), len);
+                            buf.clear();
+                            buf.limit(len);
+                            record.loadColumns(info.getAllColumns(), buf);
+                            next = record;
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    return next != null;
+                }
+
+                @Override
+                public GTRecord next() {
+                    if (next == null) {
+                        hasNext();
+                        if (next == null)
+                            throw new NoSuchElementException();
+                    }
+                    GTRecord r = next;
+                    next = null;
+                    count++;
+                    return r;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+
+            };
+        }
+
+        @Override
+        public GTInfo getInfo() {
+            return info;
+        }
+
+        @Override
+        public int getScannedRowCount() {
+            return count;
+        }
+
     }
 
-    private class Writer implements IGTStoreWriter {
+    private class Writer implements IGTWriter {
 
         final DataOutputStream dout;
+        final ByteBuffer buf;
         long writeOffset;
         long memWrite = 0;
         long diskWrite = 0;
@@ -273,6 +295,7 @@ public class MemDiskStore implements IGTStore, Closeable {
         boolean closed = false;
 
         Writer(long startOffset) throws IOException {
+            buf = ByteBuffer.allocate(info.getMaxRecordLength());
             writeOffset = 0; // TODO does not support append yet
             memPart.clear();
             diskPart.clear();
@@ -294,7 +317,7 @@ public class MemDiskStore implements IGTStore, Closeable {
 
                 @Override
                 public void write(byte[] bytes, int offset, int length) throws IOException {
-                    // lock inside memPart.write() and diskPartm.write()
+                    // lock inside memPart.write() and diskPart.write()
                     nWriteCalls++;
                     while (length > 0) {
                         int n;
@@ -318,8 +341,13 @@ public class MemDiskStore implements IGTStore, Closeable {
         }
 
         @Override
-        public void write(GTRowBlock block) throws IOException {
-            block.export(dout);
+        public void write(GTRecord rec) throws IOException {
+            buf.clear();
+            rec.exportColumns(info.getAllColumns(), buf);
+            
+            int len = buf.position();
+            dout.writeInt(len);
+            dout.write(buf.array(), buf.arrayOffset(), len);
         }
 
         @Override

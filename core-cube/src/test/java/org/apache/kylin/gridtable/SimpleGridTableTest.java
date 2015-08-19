@@ -41,7 +41,6 @@ public class SimpleGridTableTest {
 
         GTBuilder builder = rebuild(table);
         IGTScanner scanner = scan(table);
-        assertEquals(builder.getWrittenRowBlockCount(), scanner.getScannedRowBlockCount());
         assertEquals(builder.getWrittenRowCount(), scanner.getScannedRowCount());
     }
 
@@ -53,7 +52,6 @@ public class SimpleGridTableTest {
 
         GTBuilder builder = rebuild(table);
         IGTScanner scanner = scan(table);
-        assertEquals(builder.getWrittenRowBlockCount(), scanner.getScannedRowBlockCount());
         assertEquals(builder.getWrittenRowCount(), scanner.getScannedRowCount());
     }
 
@@ -65,7 +63,6 @@ public class SimpleGridTableTest {
 
         GTBuilder builder = rebuild(table);
         IGTScanner scanner = scanAndAggregate(table);
-        assertEquals(builder.getWrittenRowBlockCount(), scanner.getScannedRowBlockCount());
         assertEquals(builder.getWrittenRowCount(), scanner.getScannedRowCount());
     }
 
@@ -77,7 +74,6 @@ public class SimpleGridTableTest {
 
         rebuildViaAppend(table);
         IGTScanner scanner = scan(table);
-        assertEquals(3, scanner.getScannedRowBlockCount());
         assertEquals(10, scanner.getScannedRowCount());
     }
 
@@ -93,7 +89,6 @@ public class SimpleGridTableTest {
             System.out.println(r);
         }
         scanner.close();
-        System.out.println("Scanned Row Block Count: " + scanner.getScannedRowBlockCount());
         System.out.println("Scanned Row Count: " + scanner.getScannedRowCount());
         return scanner;
     }
@@ -128,7 +123,6 @@ public class SimpleGridTableTest {
             System.out.println(r);
         }
         scanner.close();
-        System.out.println("Scanned Row Block Count: " + scanner.getScannedRowBlockCount());
         System.out.println("Scanned Row Count: " + scanner.getScannedRowCount());
         return scanner;
     }
@@ -140,7 +134,6 @@ public class SimpleGridTableTest {
         }
         builder.close();
 
-        System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
         return builder;
     }
@@ -156,7 +149,6 @@ public class SimpleGridTableTest {
         builder.write(data.get(i++));
         builder.write(data.get(i++));
         builder.close();
-        System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
 
         builder = table.append();
@@ -164,20 +156,17 @@ public class SimpleGridTableTest {
         builder.write(data.get(i++));
         builder.write(data.get(i++));
         builder.close();
-        System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
 
         builder = table.append();
         builder.write(data.get(i++));
         builder.write(data.get(i++));
         builder.close();
-        System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
 
         builder = table.append();
         builder.write(data.get(i++));
         builder.close();
-        System.out.println("Written Row Block Count: " + builder.getWrittenRowBlockCount());
         System.out.println("Written Row Count: " + builder.getWrittenRowCount());
     }
 

@@ -36,18 +36,18 @@ import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.util.KryoUtils;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.storage.cube.CellListIterator;
 import org.apache.kylin.storage.cube.CubeHBaseRPC;
-import org.apache.kylin.storage.cube.HBaseGTStore;
+import org.apache.kylin.storage.cube.HBaseReadonlyStore;
 import org.apache.kylin.storage.cube.RawScan;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Builder;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
-import org.apache.kylin.storage.util.KryoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,7 +138,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             innerScanner = region.getScanner(scan);
             InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
 
-            IGTStore store = new HBaseGTStore(cellListIterator, scanReq, hbaseRawScan.hbaseColumns);
+            IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScan.hbaseColumns);
             IGTScanner rawScanner = store.scan(scanReq);
             IGTScanner finalScanner = scanReq.decorateScanner(rawScanner);
 

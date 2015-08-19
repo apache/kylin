@@ -50,7 +50,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
         this.dependentMetricsMap = dependentMetricsMap;
     }
 
-    public IGTCodeSystem trim() {
+    public IGTCodeSystem trimForCoprocessor() {
         DataTypeSerializer[] newSerializers = new DataTypeSerializer[serializers.length];
 
         for (int i = 0; i < serializers.length; i++) {

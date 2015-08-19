@@ -22,12 +22,10 @@ import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.GTScanRangePlanner;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTUtil;
-import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.util.KryoUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -65,10 +63,8 @@ public class CubeScanner implements IGTScanner {
 
         scanRequests = Lists.newArrayListWithCapacity(scanRanges.size());
 
-        IGTCodeSystem origin = info.trimCodeSystemForCoprocessor();
-        trimmedInfoBytes = KryoUtils.serialize(info);
-        info.setIGTCodeSystem(origin);
-        GTInfo trimmedInfo = KryoUtils.deserialize(this.trimmedInfoBytes, GTInfo.class);
+        trimmedInfoBytes = GTInfo.serialize(info);
+        GTInfo trimmedInfo = GTInfo.deserialize(trimmedInfoBytes);
 
         for (GTScanRange range : scanRanges) {
             scanRequests.add(new GTScanRequest(trimmedInfo, range, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate));
@@ -152,11 +148,6 @@ public class CubeScanner implements IGTScanner {
     @Override
     public int getScannedRowCount() {
         return scanner.getScannedRowCount();
-    }
-
-    @Override
-    public int getScannedRowBlockCount() {
-        return scanner.getScannedRowBlockCount();
     }
 
     static class RemoteGTRecordAdapter implements Iterable<GTRecord> {
@@ -265,17 +256,6 @@ public class CubeScanner implements IGTScanner {
                     break;
 
                 result += inputScanners[i].getScannedRowCount();
-            }
-            return result;
-        }
-
-        public int getScannedRowBlockCount() {
-            int result = 0;
-            for (int i = 0; i < inputScanners.length; i++) {
-                if (inputScanners[i] == null)
-                    break;
-
-                result += inputScanners[i].getScannedRowBlockCount();
             }
             return result;
         }

@@ -52,11 +52,6 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
     }
 
     @Override
-    public IGTCodeSystem trim() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public IGTComparator getComparator() {
         return comparator;
     }

@@ -37,11 +37,6 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     }
 
     @Override
-    public IGTCodeSystem trim() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public int codeLength(int col, ByteBuffer buf) {
         return serializers[col].peekLength(buf);
     }

@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.cube.gridtable.CubeCodeSystem;
+import org.apache.kylin.cube.util.KryoUtils;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -39,16 +41,6 @@ public class GTInfo {
     private GTInfo() {
     }
 
-    public IGTCodeSystem trimCodeSystemForCoprocessor() {
-        IGTCodeSystem originalCodeSystem = this.codeSystem;
-        codeSystem = this.codeSystem.trim();
-        return originalCodeSystem;
-    }
-
-    public void setIGTCodeSystem(IGTCodeSystem codeSystem) {
-        this.codeSystem = codeSystem;
-    }
-
     public String getTableName() {
         return tableName;
     }
@@ -63,6 +55,10 @@ public class GTInfo {
 
     public ImmutableBitSet getPrimaryKey() {
         return primaryKey;
+    }
+    
+    public ImmutableBitSet getAllColumns() {
+        return colAll;
     }
 
     public boolean isShardingEnabled() {
@@ -128,7 +124,6 @@ public class GTInfo {
     }
 
     void validate() {
-
         if (codeSystem == null)
             throw new IllegalStateException();
 
@@ -250,4 +245,19 @@ public class GTInfo {
         }
     }
 
+    public static byte[] serialize(GTInfo info) {
+        if (info.codeSystem instanceof CubeCodeSystem) {
+            CubeCodeSystem origin = (CubeCodeSystem) info.codeSystem;
+            info.codeSystem = origin.trimForCoprocessor();
+            byte[] trimmedInfoBytes = KryoUtils.serialize(info);
+            info.codeSystem = origin;
+            return trimmedInfoBytes;
+        } else {
+            return KryoUtils.serialize(info);
+        }
+    }
+    
+    public static GTInfo deserialize(byte[] bytes) {
+        return KryoUtils.deserialize(bytes, GTInfo.class);
+    }
 }
