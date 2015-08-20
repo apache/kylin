@@ -144,16 +144,15 @@ public class HyperLogLogCounterTest {
         double absError = 0;
         int n = 100;
         for (int i = 0; i < n; i++) {
-            System.out.println("============" + i);
             double e = merge();
             error += e;
             absError += Math.abs(e);
         }
         System.out.println("Total average error is " + error / n + " and absolute error is " + absError / n);
-
-        System.out.println("errorCount1 is " + errorCount1 + "!");
-        System.out.println("errorCount2 is " + errorCount2 + "!");
-        System.out.println("errorCount3 is " + errorCount3 + "!");
+        
+        System.out.println("  errorRateCount1 is " + errorCount1 + "!");
+        System.out.println("  errorRateCount2 is " + errorCount2 + "!");
+        System.out.println("  errorRateCount3 is " + errorCount3 + "!");
 
         Assert.assertTrue(errorCount1 <= n * 0.40);
         Assert.assertTrue(errorCount2 <= n * 0.08);
@@ -186,9 +185,8 @@ public class HyperLogLogCounterTest {
         long estimate = mergeHllc.getCountEstimate();
         double actualError = (double) (testSet.size() - estimate) / testSet.size();
 
-        System.out.println(testSet.size() + "-" + estimate);
-
-        System.out.println("=" + actualError);
+        System.out.println(testSet.size() + "-" + estimate + " ~ " + actualError);
+        
         if (Math.abs(actualError) > errorRate) {
             errorCount1++;
         }
