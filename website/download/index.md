@@ -32,9 +32,9 @@ And ODBC Driver could be find here:
 __Development Version (v0.7.3)__  
 Here's latest development version binary package:
 
-  * [kylin-v0.7.3-incubating-SNAPSHOT](kylin-0.7.3-incubating-SNAPSHOT.tar.gz)
-  * Updated Date: 2015-08-04
-  * Commit ID: a880dd4fb6e4443d2bcad0d57db3ae09bac65c4d
+  * [kylin-v1.0-incubating-SNAPSHOT](kylin-1.0-incubating-SNAPSHOT-bin.tar.gz)
+  * Updated Date: 2015-08-14
+  * Commit ID: b449590cc5c6aaa3eea9d19f922473bff6fce4b0
 
 
 
