@@ -32,7 +32,7 @@ echo 'package tar.gz'
 rm -rf dist/kylin-${version}
 mkdir dist/kylin-${version}
 # copy files
-cp -r lib bin conf dist/tomcat examples/sample_cube commit.sha1 dist/kylin-${version}
+cp -r lib bin conf dist/tomcat examples/sample_cube dist/commit.sha1 dist/kylin-${version}
 # copy license files
 cp LICENSE README.md NOTICE DISCLAIMER  dist/kylin-${version}
 

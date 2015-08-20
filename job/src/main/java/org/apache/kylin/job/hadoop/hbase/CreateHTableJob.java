@@ -53,10 +53,6 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author George Song (ysong1)
- */
-
 public class CreateHTableJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(CreateHTableJob.class);

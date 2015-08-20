@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.test;
 
-import java.io.File;
 import java.util.Map;
 
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -58,6 +57,5 @@ public class IIQueryTest extends KylinQueryTest {
     public void testDetailedQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
     }
-
 
 }
