@@ -40,7 +40,7 @@ find dist/kylin-${version} -type d -exec chmod 755 {} \;
 find dist/kylin-${version} -type f -exec chmod 644 {} \;
 find dist/kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
 cd dist
-tar -cvzf kylin-${version}.tar.gz kylin-${version}
+tar -cvzf kylin-${version}-bin.tar.gz kylin-${version}
 rm -rf kylin-${version}
 
-echo "Package ready dist/kylin-${version}.tar.gz"
+echo "Package ready dist/kylin-${version}-bin.tar.gz"
