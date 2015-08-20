@@ -339,7 +339,7 @@ public class NewBaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, T
 
         } catch (Throwable t) {
             logger.error("", t);
-            context.getCounter(BatchConstants.MAPREDUCE_COUTNER_GROUP_NAME, "Error records").increment(1L);
+            context.getCounter(BatchConstants.MAPREDUCE_COUNTER_GROUP_NAME, "Error records").increment(1L);
             return;
         }
     }

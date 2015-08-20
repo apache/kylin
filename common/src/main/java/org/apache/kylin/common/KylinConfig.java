@@ -52,15 +52,6 @@ public class KylinConfig {
     public static final String KYLIN_REST_SERVERS = "kylin.rest.servers";
 
     public static final String KYLIN_REST_TIMEZONE = "kylin.rest.timezone";
-    /**
-     * The dir containing scripts for kylin. For example: /usr/lib/kylin/bin
-     */
-    public static final String KYLIN_SCRIPT_DIR = "kylin.script.dir";
-    /**
-     * The script file name for generating table metadat from hive. For example:
-     * generateTable.sh
-     */
-    public static final String KYLIN_SCRIPT_GEN_TABLE_META = "kylin.script.genTableMeta";
 
     public static final String KYLIN_JOB_CONCURRENT_MAX_LIMIT = "kylin.job.concurrent.max.limit";
 
@@ -124,6 +115,7 @@ public class KylinConfig {
     public static final String MAIL_SENDER = "mail.sender";
 
     public static final String KYLIN_HOME = "KYLIN_HOME";
+
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
@@ -233,8 +225,7 @@ public class KylinConfig {
 
     /**
      * Find config from environment. The Search process: 1. Check the
-     * $KYLIN_CONF/kylin.properties 2. Check the /etc/kylin/kylin.properties 3.
-     * Check the kylin.properties in classpath
+     * $KYLIN_CONF/kylin.properties 2. Check the $KYLIN_HOME/conf/kylin.properties
      *
      * @return
      */
@@ -284,7 +275,7 @@ public class KylinConfig {
         if (!root.endsWith("/")) {
             root += "/";
         }
-        return root + getMetadataUrlPrefix();
+        return root + getMetadataUrlPrefix() + "/";
     }
 
     public String getKylinJobLogDir() {
