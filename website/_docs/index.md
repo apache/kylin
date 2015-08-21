@@ -11,39 +11,46 @@ Welcome to Apache Kylin
 
 Apache Kylin is an open source Distributed Analytics Engine, contributed by eBay Inc., provides SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
-Installation 
+Installation & Setup
 ------------  
 
-Please follow  installation & tutorial to start with Kylin.
+Please follow installation & tutorial in the navigation panel.
 
 Advanced Topics
 -------  
 
-### Connectivity
+#### Connectivity
+
 1.[How to use kylin remote jdbc driver](howto/howto_jdbc.html)
 
 2.[SQL Reference](http://calcite.incubator.apache.org/)
 
-### REST API
-1.[Kylin Restful API List](/development/rest_api.html)
+---
 
-2.[Build Cube with Restful API](/development/build_api.html)
+#### REST API
 
-3.[How to consume Kylin REST API in javascript](/development/javascript_api.html)
+1.[Kylin Restful API List](howto/howto_use_restapi.html)
 
-### Operations
-1.[Kylin Metadata Store](/development/new_metadata.html)
+2.[Build Cube with Restful API](howto/howto_build_cube_with_restapi.html)
 
-2.[Export Kylin HBase data](howto/howto_backup.html)
+3.[How to consume Kylin REST API in javascript](howto/howto_use_restapi_in_js.html)
+
+---
+
+#### Operations
+
+1.[Check Kylin Metadata Store](howto/howto_backup_metadata.html)
+
+2.[Clean/Export Kylin HBase data](howto/howto_backup.html)
 
 3.[Advanced settings of Kylin environment](install/advance_settings.html)
 
-### Test
-1.[Run Kylin test case with HBase Mini Cluster](/development/test_minicluster.html)
+---
 
+#### Technical Details
 
-### Technical Details
 1.[New meta data model structure](/development/new_metadata.html)
 
+---
 
 

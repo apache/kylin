@@ -27,7 +27,7 @@ This directory contains the source code for the Apache Kylin (incubating) websit
 2. ___layouts__: Page layout template
 3. ___includes__: Page template like header, footer...
 2. ___data__: Jekyll collections, docs.yml is for Docs menu generation
-3. ___docs__: Docuemtation folder
+3. ___docs__: Documentation folder
 4. ___posts__: Blog folder
 5. __download__: Download folder, including released source code package, binary package, ODBC Driver and development version.
 6. __cn__: Chinese version 
