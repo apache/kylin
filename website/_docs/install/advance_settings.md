@@ -33,3 +33,13 @@ create 'lzoTable', {NAME => 'colFam',COMPRESSION => 'LZO'}
 
 You'll need to stop Kylin first by running `./kylin.sh stop`, and then modify $KYLIN_HOME/conf/kylin_job_conf.xml by uncommenting some configuration entries related to LZO compression. 
 After this, you need to run `./kylin.sh start` to start Kylin again. Now Kylin will use LZO to compress MR outputs and hbase tables.
+
+## Kylin Server modes
+
+Kylin instances are stateless,  the runtime state is saved in its "Metadata Store" in hbase (kylin.metadata.url config in conf/kylin.properties). For load balance considerations it is possible to start multiple Kylin instances sharing the same metadata store (thus sharing the same state on table schemas, job status, cube status, etc.)
+
+Each of the kylin instances has a kylin.server.mode entry in conf/kylin.properties specifying the runtime mode, it has three options: 1. "job" for running job engine only 2. "query" for running query engine only and 3 "all" for running both. Notice that only one server can run the job engine("all" mode or "job" mode), the others must all be "query" mode.
+
+A typical scenario is depicted in the following chart:
+
+![]( /images/install/kylin_server_modes.png)
