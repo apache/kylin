@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  How to Backup HBase Tables
+title:  How to Clean/Backup HBase Tables
 categories: howto
 permalink: /docs/howto/howto_backup_hbase.html
 version: v0.7.2
