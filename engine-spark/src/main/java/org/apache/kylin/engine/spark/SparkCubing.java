@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.primitives.UnsignedBytes;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -32,9 +33,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
@@ -54,8 +57,12 @@ import org.apache.kylin.cube.model.*;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.job.common.OptionsHelper;
+import org.apache.kylin.metadata.measure.MeasureAggregators;
+import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -408,12 +415,49 @@ public class SparkCubing extends AbstractSparkApplication {
             }
         });
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        final Configuration conf = HBaseConnection.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl());
+        final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
+        final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+        Configuration conf = getConfigurationForHFile(cubeSegment.getStorageLocationIdentifier());
         Path path = new Path(kylinConfig.getHdfsWorkingDirectory(), "hfile_" + UUID.randomUUID().toString());
         Preconditions.checkArgument(!FileSystem.get(conf).exists(path));
         String url = conf.get("fs.defaultFS") + path.toString();
         System.out.println("use " + url + " as hfile");
-        javaPairRDD.mapToPair(new PairFunction<Tuple2<byte[], byte[]>, ImmutableBytesWritable, KeyValue>() {
+        javaPairRDD.reduceByKey(new Function2<byte[], byte[], byte[]>() {
+
+            @Override
+            public byte[] call(byte[] v1, byte[] v2) throws Exception {
+                prepare();
+                final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+                final CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
+                final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
+                final CubeDesc cubeDesc = cubeInstance.getDescriptor();
+                List<MeasureDesc> measuresDescs = Lists.newArrayList();
+                for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
+                    for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
+                        for (MeasureDesc measure : colDesc.getMeasures()) {
+                            measuresDescs.add(measure);
+                        }
+                    }
+                }
+                MeasureCodec codec = new MeasureCodec(measuresDescs);
+                MeasureAggregators aggs = new MeasureAggregators(measuresDescs);
+                Object[] input = new Object[measuresDescs.size()];
+                Object[] result = new Object[measuresDescs.size()];
+                
+                codec.decode(ByteBuffer.wrap(v1), input);
+                aggs.aggregate(input);
+                codec.decode(ByteBuffer.wrap(v2), input);
+                aggs.aggregate(input);
+                
+                aggs.collectStates(result);
+                final ByteBuffer buffer = ByteBuffer.allocate(Math.max(v1.length, v2.length));
+                buffer.clear();
+                codec.encode(result, buffer);
+                byte[] bytes = new byte[buffer.position()];
+                System.arraycopy(buffer.array(), buffer.arrayOffset(), bytes, 0, buffer.position());
+                return bytes;
+            }
+        }).sortByKey(UnsignedBytes.lexicographicalComparator()).mapToPair(new PairFunction<Tuple2<byte[], byte[]>, ImmutableBytesWritable, KeyValue>() {
             @Override
             public Tuple2<ImmutableBytesWritable, KeyValue> call(Tuple2<byte[], byte[]> tuple2) throws Exception {
                 ImmutableBytesWritable key = new ImmutableBytesWritable(tuple2._1());
@@ -441,6 +485,16 @@ public class SparkCubing extends AbstractSparkApplication {
         final byte[][] splitKeys = CreateHTableJob.getSplitsFromCuboidStatistics(cubeSizeMap, kylinConfig, cubeSegment);
         CubeHTableUtil.createHTable(cubeDesc, cubeSegment.getStorageLocationIdentifier(), splitKeys);
         System.out.println(cubeSegment.getStorageLocationIdentifier() + " table created");
+    }
+    
+    private Configuration getConfigurationForHFile(String hTableName) throws IOException {
+        final Configuration conf = HBaseConnection.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl());
+        Job job = Job.getInstance(conf);
+        job.setMapOutputKeyClass(ImmutableBytesWritable.class);
+        job.setMapOutputValueClass(KeyValue.class);
+        HTable table = new HTable(conf, hTableName);
+        HFileOutputFormat.configureIncrementalLoad (job, table);
+        return conf;
     }
     
     private void bulkLoadHFile(String cubeName, String segmentId, String hfileLocation) throws Exception {

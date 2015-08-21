@@ -18,13 +18,7 @@
 
 package org.apache.kylin.engine.spark;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
@@ -48,7 +42,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+
+import static org.junit.Assert.assertEquals;
 
 public class BuildCubeWithSparkTest {
 
