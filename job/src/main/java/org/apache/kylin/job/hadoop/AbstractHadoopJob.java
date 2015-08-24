@@ -234,35 +234,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         dumpResources(kylinConfig, metaDir, dumpList);
-
-        // hadoop distributed cache
-        String hdfsMetaDir = "file://" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
-        logger.info("HDFS meta dir is: " + hdfsMetaDir);
-        conf.set("tmpfiles", hdfsMetaDir);
-
-    }
-
-    protected void cleanupTempConfFile(Configuration conf) {
-        String tempMetaFileString = conf.get("tmpfiles");
-        logger.info("tempMetaFileString is : " + tempMetaFileString);
-        if (tempMetaFileString != null) {
-            if (tempMetaFileString.startsWith("file://")) {
-                tempMetaFileString = tempMetaFileString.substring("file://".length());
-                File tempMetaFile = new File(tempMetaFileString);
-                if (tempMetaFile.exists()) {
-                    try {
-                        FileUtils.forceDelete(tempMetaFile.getParentFile());
-
-                    } catch (IOException e) {
-                        logger.warn("error when deleting " + tempMetaFile, e);
-                    }
-                } else {
-                    logger.info("" + tempMetaFileString + " does not exist");
-                }
-            } else {
-                logger.info("tempMetaFileString is not starting with file:// :" + tempMetaFileString);
-            }
-        }
+        addToHadoopDistCache(conf, metaDir);
     }
 
     protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
@@ -293,9 +265,16 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         dumpResources(kylinConfig, metaDir, dumpList);
+        addToHadoopDistCache(conf, metaDir);
+    }
 
+    private void addToHadoopDistCache(Configuration conf, File metaDir) {
         // hadoop distributed cache
-        String hdfsMetaDir = "file://" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        String hdfsMetaDir = OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        if (hdfsMetaDir.startsWith("/")) // note Path on windows is like "d:/../..."
+            hdfsMetaDir = "file://" + hdfsMetaDir;
+        else
+            hdfsMetaDir = "file:///" + hdfsMetaDir;
         logger.info("HDFS meta dir is: " + hdfsMetaDir);
         conf.set("tmpfiles", hdfsMetaDir);
     }
@@ -354,6 +333,29 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         kylinConfig.setMetadataUrl(metaDir.getAbsolutePath());
         return kylinConfig;
+    }
+
+    protected void cleanupTempConfFile(Configuration conf) {
+        String tempMetaFileString = conf.get("tmpfiles");
+        logger.info("tempMetaFileString is : " + tempMetaFileString);
+        if (tempMetaFileString != null) {
+            if (tempMetaFileString.startsWith("file://")) {
+                tempMetaFileString = tempMetaFileString.substring("file://".length());
+                File tempMetaFile = new File(tempMetaFileString);
+                if (tempMetaFile.exists()) {
+                    try {
+                        FileUtils.forceDelete(tempMetaFile.getParentFile());
+
+                    } catch (IOException e) {
+                        logger.warn("error when deleting " + tempMetaFile, e);
+                    }
+                } else {
+                    logger.info("" + tempMetaFileString + " does not exist");
+                }
+            } else {
+                logger.info("tempMetaFileString is not starting with file:// :" + tempMetaFileString);
+            }
+        }
     }
 
     public void kill() throws JobException {
