@@ -51,10 +51,6 @@ import org.xml.sax.SAXException;
 
 public class JoinedFlatTable {
 
-    public static final String FACT_TABLE_ALIAS = "FACT_TABLE";
-
-    public static final String LOOKUP_TABLE_ALAIS_PREFIX = "LOOKUP_";
-
     public static String getTableDir(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir) {
         return storageDfsDir + "/" + intermediateTableDesc.getTableName();
     }
@@ -142,18 +138,29 @@ public class JoinedFlatTable {
     private static Map<String, String> buildTableAliasMap(DataModelDesc dataModelDesc) {
         Map<String, String> tableAliasMap = new HashMap<String, String>();
 
-        tableAliasMap.put(dataModelDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);
+        addTableAlias(dataModelDesc.getFactTable(), tableAliasMap);
 
-        int i = 1;
         for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
             JoinDesc join = lookupDesc.getJoin();
             if (join != null) {
-                tableAliasMap.put(lookupDesc.getTable().toUpperCase(), LOOKUP_TABLE_ALAIS_PREFIX + i);
-                i++;
+                addTableAlias(lookupDesc.getTable(), tableAliasMap);
             }
-
         }
         return tableAliasMap;
+    }
+
+    // The table alias used to be "FACT_TABLE" and "LOOKUP_#", but that's too unpredictable
+    // for those who want to write a filter. (KYLIN-900)
+    // Also yet don't support joining the same table more than once, since table name is the map key.
+    private static void addTableAlias(String table, Map<String, String> tableAliasMap) {
+        String alias;
+        int cut = table.lastIndexOf('.');
+        if (cut < 0)
+            alias = table;
+        else
+            alias = table.substring(cut + 1);
+
+        tableAliasMap.put(table, alias);
     }
 
     private static void appendJoinStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
