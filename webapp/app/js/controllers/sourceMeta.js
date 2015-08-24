@@ -77,7 +77,7 @@ KylinApp
     };
 
     $scope.selectedNode = function(obj){
-      if (obj.uuid) {
+      if (obj&&obj.uuid) {
         return $scope.tableModel.selectedSrcTable;
       }
     }
