@@ -26,6 +26,7 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.storage.hbase.HBaseResourceStore;
 
 /**
  * a helper class to start and shutdown hbase mini cluster
