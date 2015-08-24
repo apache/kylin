@@ -48,6 +48,10 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
             this.count = count;
             this.counterList = new DoublyLinkedList<Counter<T>>();
         }
+
+        public int size() {
+            return counterList.size();
+        }
     }
 
     protected int capacity;
@@ -297,33 +301,36 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
 
     }
 
-    public TopNCounter<T> merge(TopNCounter<T> another) throws IOException, ClassNotFoundException {
-        TopNCounter<T> secondCounter = new TopNCounter<T>(another.capacity);
-        secondCounter.fromBytes(another.toBytes());
+    /**
+     * Merge another counter into this counter; Note, the other counter will be changed in this method; please make a copy and passed in here;
+     * @param another
+     * @return
+     */
+    public TopNCounter<T> merge(TopNCounter<T> another) {
         double m1 = 0.0, m2 = 0.0;
         if (this.size() >= this.capacity) {
             m1 = this.bucketList.tail().getValue().count;
         }
 
-        if (secondCounter.size() >= secondCounter.capacity) {
-            m2 = secondCounter.bucketList.tail().getValue().count;
+        if (another.size() >= another.capacity) {
+            m2 = another.bucketList.tail().getValue().count;
         }
 
         for (Map.Entry<T, ListNode2<Counter<T>>> entry : this.counterMap.entrySet()) {
             T item = entry.getKey();
-            ListNode2<Counter<T>> existing = secondCounter.counterMap.get(item);
+            ListNode2<Counter<T>> existing = another.counterMap.get(item);
             if (existing != null) {
-                this.offer(item, secondCounter.counterMap.get(item).getValue().count);
-                this.counterMap.get(item).getValue().error = entry.getValue().getValue().error+ secondCounter.counterMap.get(item).getValue().error;
+                this.offer(item, another.counterMap.get(item).getValue().count);
+                this.counterMap.get(item).getValue().error = entry.getValue().getValue().error + another.counterMap.get(item).getValue().error;
 
-                secondCounter.counterMap.remove(item);
+                another.counterMap.remove(item);
             } else {
                 this.offer(item, m2);
                 this.counterMap.get(item).getValue().error = entry.getValue().getValue().error + m2;
             }
         }
 
-        for (Map.Entry<T, ListNode2<Counter<T>>> entry : secondCounter.counterMap.entrySet()) {
+        for (Map.Entry<T, ListNode2<Counter<T>>> entry : another.counterMap.entrySet()) {
             T item = entry.getKey();
             double counter = entry.getValue().getValue().count;
             double error = entry.getValue().getValue().error;
@@ -332,5 +339,28 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
         }
 
         return this;
+    }
+
+    /**
+     * Retain the capacity to the given number; The extra counters will be cut off
+     * @param newCapacity
+     */
+    public void retain(int newCapacity) {
+        assert newCapacity > 0;
+        this.capacity = newCapacity;
+        if (newCapacity < this.size()) {
+            ListNode2<Bucket> tail = bucketList.tail;
+            while (tail != null && this.size() > newCapacity) {
+                Bucket bucket = tail.getValue();
+
+                for (Counter<T> counter : bucket.counterList) {
+                    this.counterMap.remove(counter.getItem());
+                }
+                tail = tail.getNext();
+            }
+
+            tail.next = null;
+        }
+
     }
 }
