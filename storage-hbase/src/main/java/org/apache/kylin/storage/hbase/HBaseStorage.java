@@ -16,13 +16,15 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.storage.hbase.steps;
+package org.apache.kylin.storage.hbase;
 
 import org.apache.kylin.engine.mr.IMROutput;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
+import org.apache.kylin.storage.hbase.steps.HBaseMROutput;
+import org.apache.kylin.storage.hbase.steps.HBaseMROutput2;
 
 @SuppressWarnings("unused")//used by reflection
 public class HBaseStorage implements IStorage {
