@@ -352,7 +352,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
         logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        kylinConfig.setMetadataUrl(metaDir.getCanonicalPath());
+        kylinConfig.setMetadataUrl(metaDir.getAbsolutePath());
         return kylinConfig;
     }
 
