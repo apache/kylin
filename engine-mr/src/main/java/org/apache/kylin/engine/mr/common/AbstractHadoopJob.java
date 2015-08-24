@@ -280,7 +280,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        String hdfsMetaDir = "file://" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        String hdfsMetaDir = OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        if (hdfsMetaDir.startsWith("/")) // note Path on windows is like "d:/../..."
+            hdfsMetaDir = "file://" + hdfsMetaDir;
+        else
+            hdfsMetaDir = "file:///" + hdfsMetaDir;
         logger.info("HDFS meta dir is: " + hdfsMetaDir);
         conf.set("tmpfiles", hdfsMetaDir);
     }
@@ -295,7 +299,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 if (tempMetaFile.exists()) {
                     try {
                         FileUtils.forceDelete(tempMetaFile.getParentFile());
-                                
+
                     } catch (IOException e) {
                         logger.warn("error when deleting " + tempMetaFile, e);
                     }
