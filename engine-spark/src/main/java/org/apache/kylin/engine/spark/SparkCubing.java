@@ -59,7 +59,7 @@ import org.apache.kylin.job.common.OptionsHelper;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hbase.steps.HBaseConnection;
 import org.apache.kylin.storage.hbase.steps.CreateHTableJob;
 import org.apache.kylin.storage.hbase.steps.CubeHTableUtil;
 import org.apache.spark.SparkConf;

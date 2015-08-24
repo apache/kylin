@@ -24,6 +24,7 @@ import java.util.Properties;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.linq4j.Enumerator;
+import org.apache.kylin.dict.DictCodeSystem;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TimeConditionLiteralsReplacer;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -32,8 +33,7 @@ import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.storage.IStorageQuery;
-import org.apache.kylin.storage.StorageFactory;
-import org.apache.kylin.storage.hbase.coprocessor.DictCodeSystem;
+import org.apache.kylin.storage.StorageQueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +111,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         olapContext.resetSQLDigest();
 
         // query storage engine
-        IStorageQuery storageEngine = StorageFactory.createQuery(olapContext.realization);
+        IStorageQuery storageEngine = StorageQueryFactory.createQuery(olapContext.realization);
         ITupleIterator iterator = storageEngine.search(olapContext.storageContext, olapContext.getSQLDigest(), olapContext.returnTupleInfo);
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");

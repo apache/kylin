@@ -23,6 +23,8 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ITableSource;
 import org.apache.kylin.source.ReadableTable;
 
+@SuppressWarnings("unused")
+//used by reflection
 public class HiveTableSource implements ITableSource {
 
     @SuppressWarnings("unchecked")

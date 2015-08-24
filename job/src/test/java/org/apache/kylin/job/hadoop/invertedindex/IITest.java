@@ -33,14 +33,14 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
-import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
-import org.apache.kylin.storage.hbase.coprocessor.FilterDecorator;
-import org.apache.kylin.storage.hbase.coprocessor.endpoint.ClearTextDictionary;
-import org.apache.kylin.storage.hbase.coprocessor.endpoint.EndpointAggregators;
-import org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint;
-import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
+import org.apache.kylin.storage.hbase.common.coprocessor.FilterDecorator;
+import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.ClearTextDictionary;
+import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.EndpointAggregators;
+import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.IIEndpoint;
+import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.generated.IIProtos;
 import org.apache.kylin.streaming.MicroStreamBatch;
 import org.apache.kylin.streaming.ParsedStreamMessage;
 import org.apache.kylin.streaming.StreamMessage;
@@ -230,7 +230,7 @@ public class IITest extends LocalFileMetadataTestCase {
         Assert.assertEquals(2, response.getRowsList().size());
         System.out.println(response.getRowsList().size());
         Set<String> answers = Sets.newHashSet("120.4747", "26.8551");
-        for (org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos.IIResponseInternal.IIRow responseRow : response.getRowsList()) {
+        for (IIProtos.IIResponseInternal.IIRow responseRow : response.getRowsList()) {
             byte[] measuresBytes = responseRow.getMeasures().toByteArray();
             List<Object> metrics = aggregators.deserializeMetricValues(measuresBytes, 0);
             Assert.assertTrue(answers.contains(metrics.get(0)));

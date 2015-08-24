@@ -79,7 +79,7 @@ public class DebugTomcat {
         if (devJobJar != null) {
             conf.overrideMRJobJarPath(devJobJar.getAbsolutePath());
         }
-        File devCoprocessorJar = findFile("../storage/target", "kylin-storage-.*-SNAPSHOT-coprocessor.jar");
+        File devCoprocessorJar = findFile("../storage-hbase/target", "kylin-storage-hbase-.*-SNAPSHOT-coprocessor.jar");
         if (devCoprocessorJar != null) {
             conf.overrideCoprocessorLocalJar(devCoprocessorJar.getAbsolutePath());
         }

@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
+import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;

@@ -28,7 +28,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableReader;
 import org.apache.kylin.source.TableSourceFactory;
-import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

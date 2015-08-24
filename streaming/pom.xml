@@ -26,7 +26,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-storage</artifactId>
+            <artifactId>kylin-storage-hbase</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 

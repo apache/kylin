@@ -52,7 +52,7 @@ import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hbase.steps.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,9 +63,9 @@ public class DeployCoprocessorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
-    public static final String CubeObserverClass = "org.apache.kylin.storage.hbase.coprocessor.observer.AggregateRegionObserver";
-    public static final String CubeEndpointClass = "org.apache.kylin.storage.hbase.coprocessor.endpoint.CubeVisitService";
-    public static final String IIEndpointClass = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
+    public static final String CubeObserverClass = "org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.AggregateRegionObserver";
+    public static final String CubeEndpointClass = "org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.CubeVisitService";
+    public static final String IIEndpointClass = "org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.IIEndpoint";
 
     public static void main(String[] args) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();

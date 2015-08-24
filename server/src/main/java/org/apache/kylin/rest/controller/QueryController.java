@@ -49,7 +49,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.storage.cache.AbstractCacheFledgedStorageEngine;
-import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
+import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
