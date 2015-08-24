@@ -46,7 +46,7 @@ import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.job.hadoop.cube.StorageCleanupJob;
 import org.apache.kylin.job.streaming.BootstrapConfig;
 import org.apache.kylin.job.streaming.StreamingBootstrap;
-import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.apache.kylin.streaming.StreamingConfig;
 import org.apache.kylin.streaming.StreamingManager;
 import org.junit.AfterClass;

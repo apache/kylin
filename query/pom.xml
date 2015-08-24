@@ -43,7 +43,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-storage</artifactId>
+            <artifactId>kylin-core-storage</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -73,6 +73,12 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-storage-hbase</artifactId>
             <scope>test</scope>
             <version>${project.parent.version}</version>
         </dependency>

@@ -12,7 +12,7 @@ import org.apache.kylin.engine.mr.IMROutput2.IMRBatchMergeOutputSide2;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.TableSourceFactory;
-import org.apache.kylin.storage.StorageFactory2;
+import org.apache.kylin.storage.StorageFactory;
 
 public class MRUtil {
 
@@ -33,23 +33,23 @@ public class MRUtil {
     }
 
     public static IMRBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg) {
-        return StorageFactory2.createEngineAdapter(seg, IMROutput.class).getBatchCubingOutputSide(seg);
+        return StorageFactory.createEngineAdapter(seg, IMROutput.class).getBatchCubingOutputSide(seg);
     }
 
     public static IMRBatchMergeOutputSide getBatchMergeOutputSide(CubeSegment seg) {
-        return StorageFactory2.createEngineAdapter(seg, IMROutput.class).getBatchMergeOutputSide(seg);
+        return StorageFactory.createEngineAdapter(seg, IMROutput.class).getBatchMergeOutputSide(seg);
     }
 
     public static IMRBatchCubingOutputSide2 getBatchCubingOutputSide2(CubeSegment seg) {
-        return StorageFactory2.createEngineAdapter(seg, IMROutput2.class).getBatchCubingOutputSide(seg);
+        return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchCubingOutputSide(seg);
     }
 
     public static IMRBatchMergeInputSide2 getBatchMergeInputSide2(CubeSegment seg) {
-        return StorageFactory2.createEngineAdapter(seg, IMROutput2.class).getBatchMergeInputSide(seg);
+        return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchMergeInputSide(seg);
     }
 
     public static IMRBatchMergeOutputSide2 getBatchMergeOutputSide2(CubeSegment seg) {
-        return StorageFactory2.createEngineAdapter(seg, IMROutput2.class).getBatchMergeOutputSide(seg);
+        return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchMergeOutputSide(seg);
     }
 
 }

@@ -20,7 +20,7 @@ package org.apache.kylin.source.hive;
 
 import java.io.IOException;
 
-import org.apache.kylin.storage.hbase.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 

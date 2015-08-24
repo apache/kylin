@@ -11,7 +11,7 @@ echo "copy lib file"
 rm -rf lib
 mkdir lib
 cp job/target/kylin-job-${version}-job.jar lib/kylin-job-${version}.jar
-cp storage/target/kylin-storage-${version}-coprocessor.jar lib/kylin-coprocessor-${version}.jar
+cp storage-hbase/target/kylin-storage-hbase-${version}-coprocessor.jar lib/kylin-coprocessor-${version}.jar
 cp jdbc/target/kylin-jdbc-${version}.jar lib/kylin-jdbc-${version}.jar
 # Copied file becomes 000 for some env (e.g. my Cygwin)
 chmod 644 lib/kylin-job-${version}.jar

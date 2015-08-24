@@ -31,8 +31,8 @@ import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.SSHClient;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.storage.hbase.HBaseConnection;
-import org.apache.kylin.storage.hbase.HBaseMiniclusterHelper;
+import org.apache.kylin.storage.hbase.steps.HBaseConnection;
+import org.apache.kylin.storage.hbase.steps.HBaseMiniclusterHelper;
 
 public class ExportHBaseData {
 

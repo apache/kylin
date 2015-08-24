@@ -86,32 +86,6 @@ public class DeployUtil {
         config().overrideSparkJobJarPath(getSparkJobJarFile().getAbsolutePath());
     }
 
-    public static void deployJobJars() throws IOException {
-        File originalJobJar = getJobJarFile();
-        File originalCoprocessorJar = getCoprocessorJarFile();
-
-        String jobJarPath = config().getKylinJobJarPath();
-        if (StringUtils.isEmpty(jobJarPath)) {
-            throw new RuntimeException("deployJobJars cannot find job jar");
-        }
-
-        File targetJobJar = new File(jobJarPath);
-        File jobJarRenamedAsTarget = new File(originalJobJar.getParentFile(), targetJobJar.getName());
-        if (originalJobJar.equals(jobJarRenamedAsTarget) == false) {
-            FileUtils.copyFile(originalJobJar, jobJarRenamedAsTarget);
-        }
-
-        File targetCoprocessorJar = new File(config().getCoprocessorLocalJar());
-        File coprocessorJarRenamedAsTarget = new File(originalCoprocessorJar.getParentFile(), targetCoprocessorJar.getName());
-        if (originalCoprocessorJar.equals(coprocessorJarRenamedAsTarget) == false) {
-            FileUtils.copyFile(originalCoprocessorJar, coprocessorJarRenamedAsTarget);
-        }
-
-        CliCommandExecutor cmdExec = config().getCliCommandExecutor();
-        cmdExec.copyFile(jobJarRenamedAsTarget.getAbsolutePath(), targetJobJar.getParent());
-        cmdExec.copyFile(coprocessorJarRenamedAsTarget.getAbsolutePath(), targetCoprocessorJar.getParent());
-    }
-
     private static String getPomVersion() {
         try {
             MavenXpp3Reader pomReader = new MavenXpp3Reader();
@@ -127,7 +101,7 @@ public class DeployUtil {
     }
 
     private static File getCoprocessorJarFile() {
-        return new File("../storage/target", "kylin-storage-" + getPomVersion() + "-coprocessor.jar");
+        return new File("../storage-hbase/target", "kylin-storage-hbase-" + getPomVersion() + "-coprocessor.jar");
     }
 
     private static File getSparkJobJarFile() {

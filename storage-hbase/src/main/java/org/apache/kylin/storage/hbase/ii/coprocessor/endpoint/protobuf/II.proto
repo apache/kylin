@@ -1,0 +1,47 @@
+// usage:
+// protoc  --java_out=./storage-hbase/src/main/java  ./storage-hbase/src/main/java/org/apache/kylin/storage/hbase/ii/coprocessor/endpoint/protobuf/II.proto
+
+option java_package = "org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.generated";
+
+option java_outer_classname = "IIProtos";
+
+option java_generic_services = true;
+
+option java_generate_equals_and_hash = true;
+
+option optimize_for = SPEED;
+
+message IIRequest {
+    required bytes type = 1;
+    required bytes filter = 2;
+    required bytes projector = 3;
+    required bytes aggregator = 4;
+    optional bytes tsRange = 5;
+}
+
+message IIResponseInternal {
+    message IIRow {
+        required bytes columns = 1;
+        optional bytes measures = 2;
+    }
+    //all entries in this struct be optional to conveniently add more entries in the future
+    message Stats {
+        optional int32 myShard = 1;
+        optional int64 latestDataTime = 2;
+        optional int64 serviceStartTime = 3;
+        optional int64 serviceEndTime = 4;
+        optional int32 scannedSlices = 5;
+    }
+    repeated IIRow rows = 1;
+    required Stats stats = 2;
+}
+
+message IIResponse {
+    required bytes blob = 1;
+}
+
+
+
+service RowsService {
+    rpc getRows (IIRequest) returns (IIResponse);
+}
