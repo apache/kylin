@@ -35,8 +35,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hadoop.version>2.6.0</hadoop.version>
-        <hive.version>0.14.0</hive.version>
     </properties>
 
     <dependencies>
@@ -48,7 +46,7 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>net.sf.opencsv</groupId>
@@ -59,19 +57,19 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
-            <version>${hadoop.version}</version>
+            <version>${hadoop2.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-auth</artifactId>
-            <version>${hadoop.version}</version>
+            <version>${hadoop2.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>${hadoop.version}</version>
+            <version>${hadoop2.version}</version>
             <scope>provided</scope>
         </dependency>
         <!--hbase dependency-->
