@@ -124,12 +124,12 @@ public class DictionaryManager {
         if (largestDictInfo != null) {
             largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
             Dictionary<?> largestDictObject = largestDictInfo.getDictionaryObject();
-            if (newDict.contains(largestDictObject)) {
-                logger.info("dictionary content " + newDict + " is by far the largest, save it");
-                return saveNewDict(newDictInfo);
-            } else if (largestDictObject.contains(newDict)) {
+            if (largestDictObject.contains(newDict)) {
                 logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDictInfo.getResourcePath());
                 return largestDictInfo;
+            } else if (newDict.contains(largestDictObject)) {
+                logger.info("dictionary content " + newDict + " is by far the largest, save it");
+                return saveNewDict(newDictInfo);
             } else {
                 logger.info("merge dict and save...");
                 return mergeDictionary(Lists.newArrayList(newDictInfo, largestDictInfo));
