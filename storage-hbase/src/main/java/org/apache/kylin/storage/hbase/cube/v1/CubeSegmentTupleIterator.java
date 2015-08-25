@@ -32,7 +32,6 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
 import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
 import org.apache.kylin.common.persistence.StorageException;
@@ -44,9 +43,10 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.translate.HBaseKeyRange;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
+import org.apache.kylin.storage.hbase.cube.v1.filter.FuzzyRowFilterV2;
 import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
+import org.apache.kylin.storage.translate.HBaseKeyRange;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
@@ -188,6 +188,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         info.append(" - ");
         info.append(Bytes.toStringBinary(keyRange.getStopKey()));
         if (this.scan.getFilter() != null) {
+            info.append("\nFuzzy key counts: " + keyRange.getFuzzyKeys().size());
             info.append("\nFuzzy: ");
             info.append(keyRange.getFuzzyKeyAsString());
         }
@@ -213,17 +214,23 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     private void applyFuzzyFilter(Scan scan, HBaseKeyRange keyRange) {
         List<org.apache.kylin.common.util.Pair<byte[], byte[]>> fuzzyKeys = keyRange.getFuzzyKeys();
         if (fuzzyKeys != null && fuzzyKeys.size() > 0) {
-            FuzzyRowFilter rowFilter = new FuzzyRowFilter(convertToHBasePair(fuzzyKeys));
+
+            //FuzzyRowFilterV2 is a back ported from https://issues.apache.org/jira/browse/HBASE-13761
+            //However we found a bug of it and fixed it in https://issues.apache.org/jira/browse/HBASE-14269
+            //After fix the performance is not much faster than the original one. So by default use defalt one.
+            boolean useFuzzyRowFilterV2 = false;
+            Filter fuzzyFilter = null;
+            if (useFuzzyRowFilterV2) {
+                fuzzyFilter = new FuzzyRowFilterV2(convertToHBasePair(fuzzyKeys));
+            } else {
+                fuzzyFilter = new FuzzyRowFilter(convertToHBasePair(fuzzyKeys));
+            }
 
             Filter filter = scan.getFilter();
             if (filter != null) {
-                // may have existed InclusiveStopFilter, see buildScan
-                FilterList filterList = new FilterList();
-                filterList.addFilter(filter);
-                filterList.addFilter(rowFilter);
-                scan.setFilter(filterList);
+                throw new RuntimeException("Scan filter not empty : " + filter);
             } else {
-                scan.setFilter(rowFilter);
+                scan.setFilter(fuzzyFilter);
             }
         }
     }

@@ -18,9 +18,7 @@
 
 package org.apache.kylin.storage.translate;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -52,8 +50,14 @@ public class FuzzyValueCombination {
 
     public static List<Map<TblColRef, String>> calculate(Map<TblColRef, Set<String>> fuzzyValues, long cap) {
         Dim[] dims = toDims(fuzzyValues);
-        capDims(dims, cap);
-        return combination(dims);
+        // If a query has many IN clause and each IN clause has many values, then it will easily generate 
+        // thousands of fuzzy keys. When there are lots of fuzzy keys, the scan performance is bottle necked 
+        // on it. So simply choose to abandon all fuzzy keys in this case.
+        if (exceedCap(dims, cap)) {
+            return Lists.newArrayList();
+        } else {
+            return combination(dims);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -115,19 +119,8 @@ public class FuzzyValueCombination {
         return dims;
     }
 
-    private static void capDims(Dim[] dims, long cap) {
-        Arrays.sort(dims, new Comparator<Dim>() {
-            @Override
-            public int compare(Dim o1, Dim o2) {
-                return -(o1.values.size() - o2.values.size());
-            }
-        });
-
-        for (Dim dim : dims) {
-            if (combCount(dims) < cap)
-                break;
-            dim.values = Collections.emptySet();
-        }
+    private static boolean exceedCap(Dim[] dims, long cap) {
+        return combCount(dims) > cap;
     }
 
     private static long combCount(Dim[] dims) {

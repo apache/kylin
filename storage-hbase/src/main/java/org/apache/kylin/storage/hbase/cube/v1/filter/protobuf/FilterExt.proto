@@ -1,0 +1,21 @@
+// usage:
+// protoc  --java_out=./storage-hbase/src/main/java  ./storage-hbase/src/main/java/org/apache/kylin/storage/hbase/cube/v1/filter/protobuf/FilterExt.proto
+
+option java_package = "org.apache.kylin.storage.hbase.cube.v1.filter.generated";
+
+option java_outer_classname = "FilterProtosExt";
+
+option java_generic_services = true;
+
+option java_generate_equals_and_hash = true;
+
+option optimize_for = SPEED;
+
+message BytesBytesPair {
+    required bytes first = 1;
+    required bytes second = 2;
+}
+
+message FuzzyRowFilterV2 {
+    repeated BytesBytesPair fuzzy_keys_data = 1;
+}

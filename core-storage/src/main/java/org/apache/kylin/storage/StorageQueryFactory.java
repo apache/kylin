@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
 public class StorageQueryFactory {
 
     private final static boolean allowStorageLayerCache = true;
-    private final static String defaultCubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery";
+    private final static String defaultCubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery";
     private final static String defaultIIStorageQuery = "org.apache.kylin.storage.hbase.ii.InvertedIndexStorageQuery";
 
     public static IStorageQuery createQuery(IRealization realization) {

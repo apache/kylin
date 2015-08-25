@@ -65,6 +65,10 @@ public class BasicTest {
     @Test
     public void testxx() {
         byte[] temp = new byte[] { 1, 2, 3 };
+        byte[] temp2 = new byte[] { 1, 2, 3 };
+
+        System.out.println(temp.hashCode());
+        System.out.println(temp2.hashCode());
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(3);
         buffer.put((byte) 1);
