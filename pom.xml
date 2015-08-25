@@ -819,7 +819,7 @@
                                 <!-- Kylin's website content -->
                                 <exclude>**/.sass-cache/**</exclude>
 
-                                <exclude>docs/website/**</exclude>
+                                <exclude>website/**</exclude>
 
                                 <!-- tomcat package -->
                                 <exclude>tomcat/**</exclude>
