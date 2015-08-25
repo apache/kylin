@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.util.Bytes;
@@ -56,12 +58,12 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
+import org.apache.kylin.storage.hbase.steps.HBaseConnection;
+import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 import org.apache.kylin.storage.translate.ColumnValueRange;
 import org.apache.kylin.storage.translate.DerivedFilterTranslator;
 import org.apache.kylin.storage.translate.HBaseKeyRange;
-import org.apache.kylin.storage.hbase.steps.HBaseConnection;
-import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
-import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,9 +73,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 
-/**
- * @author xjiang, yangli9
- */
+//v1
+@SuppressWarnings("unused")
 public class CubeStorageQuery implements ICachableStorageQuery {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeStorageQuery.class);
@@ -435,11 +436,19 @@ public class CubeStorageQuery implements ICachableStorageQuery {
                 scanRanges.add(rowKeyRange);
             }
 
+            //log
             sb.append(scanRanges.size() + "=>");
+
             List<HBaseKeyRange> mergedRanges = mergeOverlapRanges(scanRanges);
+
+            //log
             sb.append(mergedRanges.size() + "=>");
+
             mergedRanges = mergeTooManyRanges(mergedRanges);
+
+            //log
             sb.append(mergedRanges.size() + ", ");
+
             result.addAll(mergedRanges);
         }
 
@@ -592,7 +601,18 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             byte[] stopKey = keyRange.getStopKey();
             long partitionColumnStartDate = Long.MAX_VALUE;
             long partitionColumnEndDate = 0;
-            List<Pair<byte[], byte[]>> newFuzzyKeys = new ArrayList<Pair<byte[], byte[]>>(mergeSize);
+
+            TreeSet<Pair<byte[], byte[]>> newFuzzyKeys = new TreeSet<>(new Comparator<Pair<byte[], byte[]>>() {
+                @Override
+                public int compare(Pair<byte[], byte[]> o1, Pair<byte[], byte[]> o2) {
+                    int partialResult = Bytes.compareTo(o1.getFirst(), o2.getFirst());
+                    if (partialResult != 0) {
+                        return partialResult;
+                    } else {
+                        return Bytes.compareTo(o1.getSecond(), o2.getSecond());
+                    }
+                }
+            });
             List<Collection<ColumnValueRange>> newFlatOrAndFilter = Lists.newLinkedList();
 
             boolean hasNonFuzzyRange = false;
@@ -619,7 +639,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
             partitionColumnStartDate = (partitionColumnStartDate == Long.MAX_VALUE) ? 0 : partitionColumnStartDate;
             partitionColumnEndDate = (partitionColumnEndDate == 0) ? Long.MAX_VALUE : partitionColumnEndDate;
-            keyRange = new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, newFuzzyKeys, newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
+            keyRange = new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, Lists.newArrayList(newFuzzyKeys), newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
         }
         return keyRange;
     }
