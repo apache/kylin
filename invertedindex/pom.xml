@@ -21,7 +21,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>1.0-incubating</version>
+        <version>1.1-incubating-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kylin-invertedindex</artifactId>
