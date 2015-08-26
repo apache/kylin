@@ -34,10 +34,11 @@ public class FunctionDesc {
     public static final String FUNC_MAX = "MAX";
     public static final String FUNC_COUNT = "COUNT";
     public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
+    public static final String FUNC_TOP_N = "TOP_N";
 
     public static final String PARAMTER_TYPE_CONSTANT = "constant";
     public static final String PARAMETER_TYPE_COLUMN = "column";
-
+    
     @JsonProperty("expression")
     private String expression;
     @JsonProperty("parameter")
@@ -92,6 +93,10 @@ public class FunctionDesc {
         return FUNC_COUNT_DISTINCT.equalsIgnoreCase(expression);
     }
 
+    public boolean isTopN() {
+        return FUNC_TOP_N.equalsIgnoreCase(expression);
+    }
+
     public boolean isHolisticCountDistinct() {
         if (isCountDistinct() && returnDataType != null && returnDataType.isBigInt()) {
             return true;
@@ -138,7 +143,7 @@ public class FunctionDesc {
     }
 
     public DataType getSQLType() {
-        if (isCountDistinct())
+        if (isCountDistinct() || isTopN())
             return DataType.ANY;
         else if (isSum() || isMax() || isMin())
             return parameter.getColRefs().get(0).getType();

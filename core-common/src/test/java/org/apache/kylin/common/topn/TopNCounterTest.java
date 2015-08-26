@@ -41,7 +41,7 @@ public class TopNCounterTest {
     protected static int SPACE_SAVING_ROOM;
 
     protected static int PARALLEL = 10;
-
+    
     protected static boolean verbose = true;
 
     public TopNCounterTest() {
@@ -60,7 +60,7 @@ public class TopNCounterTest {
 
         outputMsg("Start to create test random data...");
         long startTime = System.currentTimeMillis();
-        ZipfDistribution zipf = new ZipfDistribution(KEY_SPACE - 1, 0.8);
+        ZipfDistribution zipf = new ZipfDistribution(KEY_SPACE, 0.5);
         int keyIndex;
 
         File tempFile = File.createTempFile("ZipfDistribution", ".txt");
@@ -70,7 +70,7 @@ public class TopNCounterTest {
         FileWriter fw = new FileWriter(tempFile);
         try {
             for (int i = 0; i < TOTAL_RECORDS; i++) {
-                keyIndex = zipf.sample();
+                keyIndex = zipf.sample() -1;
                 fw.write(allKeys[keyIndex]);
                 fw.write('\n');
             }
@@ -85,7 +85,7 @@ public class TopNCounterTest {
         return tempFile.getAbsolutePath();
     }
 
-    @Test
+    //@Test
     public void testSingleSpaceSaving() throws IOException {
         String dataFile = prepareTestDate();
         TopNCounterTest.SpaceSavingConsumer spaceSavingCounter = new TopNCounterTest.SpaceSavingConsumer(TOP_K * SPACE_SAVING_ROOM);
@@ -163,7 +163,7 @@ public class TopNCounterTest {
         if (consumers.length == 1)
             return consumers;
 
-        TopNCounterTest.SpaceSavingConsumer merged = new TopNCounterTest.SpaceSavingConsumer(TOP_K * SPACE_SAVING_ROOM * 10);
+        TopNCounterTest.SpaceSavingConsumer merged = new TopNCounterTest.SpaceSavingConsumer(TOP_K * SPACE_SAVING_ROOM * PARALLEL);
         
         for (int i=0, n=consumers.length; i<n; i++) {
             merged.vs.merge(consumers[i].vs);

@@ -30,8 +30,6 @@ import static org.junit.Assert.assertTrue;
 
 public class TopNCounterBasicTest {
 
-    private static final int NUM_ITERATIONS = 100000;
-
     @Test
     public void testTopNCounter() {
         TopNCounter<String> vs = new TopNCounter<String>(3);
@@ -170,5 +168,42 @@ public class TopNCounterBasicTest {
         TopNCounter<String> clone = new TopNCounter<String>(bytes);
 
         assertEquals(vs.toString(), clone.toString());
+    }
+    
+    @Test
+    public void testRetain() {
+        TopNCounter<String> vs = new TopNCounter<String>(10);
+        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A"};
+        for (String i : stream) {
+            vs.offer(i);
+        }
+        
+        vs.retain(5);
+        assertTrue(vs.size() <= 5);
+        assertTrue(vs.getCapacity() <= 5);
+    }
+    
+    @Test
+    public void testMerge() {
+
+        TopNCounter<String> vs = new TopNCounter<String>(10);
+        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "B"};
+        for (String i : stream) {
+            vs.offer(i);
+        }
+
+
+        String[] stream2 = {"B", "B", "Z", "Z", "B", "C", "X", "X"};
+        TopNCounter<String> vs2 = new TopNCounter<String>(10);
+        for (String i : stream2) {
+            vs2.offer(i);
+        }
+        // X: 4+2, C: 2+1, A: 3+0, B: 2 +3, Y: 1+0 Z: 1 +0
+        vs.merge(vs2);
+        List<Counter<String>> topK = vs.topK(3);
+        for (Counter<String> c : topK) {
+            assertTrue(Arrays.asList("A", "B", "X").contains(c.getItem()));
+        }
+        
     }
 }
