@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.persistence.HBaseConnection;
@@ -557,8 +559,19 @@ public class CubeStorageEngine implements IStorageEngine {
             byte[] stopKey = keyRange.getStopKey();
             long partitionColumnStartDate = Long.MAX_VALUE;
             long partitionColumnEndDate = 0;
-            List<Pair<byte[], byte[]>> newFuzzyKeys = new ArrayList<Pair<byte[], byte[]>>(mergeSize);
+
             List<Collection<ColumnValueRange>> newFlatOrAndFilter = Lists.newLinkedList();
+            TreeSet<Pair<byte[], byte[]>> newFuzzyKeys = new TreeSet<>(new Comparator<Pair<byte[], byte[]>>() {
+                @Override
+                public int compare(Pair<byte[], byte[]> o1, Pair<byte[], byte[]> o2) {
+                    int partialResult = Bytes.compareTo(o1.getFirst(), o2.getFirst());
+                    if (partialResult != 0) {
+                        return partialResult;
+                    } else {
+                        return Bytes.compareTo(o1.getSecond(), o2.getSecond());
+                    }
+                }
+            });
 
             boolean hasNonFuzzyRange = false;
             for (int k = from; k <= to; k++) {
@@ -584,7 +597,7 @@ public class CubeStorageEngine implements IStorageEngine {
 
             partitionColumnStartDate = (partitionColumnStartDate == Long.MAX_VALUE) ? 0 : partitionColumnStartDate;
             partitionColumnEndDate = (partitionColumnEndDate == 0) ? Long.MAX_VALUE : partitionColumnEndDate;
-            keyRange = new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, newFuzzyKeys, newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
+            keyRange = new HBaseKeyRange(cubeSegment, cuboid, startKey, stopKey, Lists.newArrayList(newFuzzyKeys), newFlatOrAndFilter, partitionColumnStartDate, partitionColumnEndDate);
         }
         return keyRange;
     }
