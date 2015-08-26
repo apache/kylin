@@ -135,6 +135,8 @@ public class KylinConfig implements Serializable {
 
     public static final String VERSION = "${project.version}";
 
+    public static final String HTABLE_DEFAULT_COMPRESSION_CODEC = "kylin.hbase.default.compression.codec";
+
     // static cached instances
     private static KylinConfig ENV_INSTANCE = null;
 
@@ -285,6 +287,8 @@ public class KylinConfig implements Serializable {
         }
         return root + getMetadataUrlPrefix() + "/";
     }
+    
+    
 
     public String getKylinJobLogDir() {
         return getOptional(KYLIN_JOB_LOG_DIR, "/tmp/kylin/logs");
@@ -492,6 +496,10 @@ public class KylinConfig implements Serializable {
         percent = Math.max(percent, 1);
         percent = Math.min(percent, 100);
         return percent;
+    }
+    
+    public String getHbaseDefaultCompressionCodec() {
+        return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC);
     }
 
     private String getOptional(String prop) {
