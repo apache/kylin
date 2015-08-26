@@ -8,7 +8,7 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.io.compress.Compression;
+import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
@@ -17,7 +17,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI;
-import org.apache.kylin.storage.hbase.util.LZOSupportnessChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,11 +49,33 @@ public class CubeHTableUtil {
                 HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
                 cf.setMaxVersions(1);
 
-                if (LZOSupportnessChecker.getSupportness()) {
-                    logger.info("hbase will use lzo to compress cube data");
-                    cf.setCompressionType(Compression.Algorithm.LZO);
-                } else {
-                    logger.info("hbase will not use lzo to compress cube data");
+                String hbaseDefaultCC = kylinConfig.getHbaseDefaultCompressionCodec().toLowerCase();
+
+                switch (hbaseDefaultCC) {
+                case "snappy": {
+                    logger.info("hbase will use snappy to compress data");
+                    cf.setCompressionType(Algorithm.SNAPPY);
+                    break;
+                }
+                case "lzo": {
+                    logger.info("hbase will use lzo to compress data");
+                    cf.setCompressionType(Algorithm.LZO);
+                    break;
+                }
+                case "gz":
+                case "gzip": {
+                    logger.info("hbase will use gzip to compress data");
+                    cf.setCompressionType(Algorithm.GZ);
+                    break;
+                }
+                case "lz4": {
+                    logger.info("hbase will use lz4 to compress data");
+                    cf.setCompressionType(Algorithm.LZ4);
+                    break;
+                }
+                default: {
+                    logger.info("hbase will not user any compression codec to compress data");
+                }
                 }
 
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
