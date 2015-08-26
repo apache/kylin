@@ -10,41 +10,40 @@
         </description>
     </property>
 
-    <!-- uncomment the following 5 properties to enable lzo compressing
 
-	<property>
-		<name>mapred.compress.map.output</name>
-		<value>true</value>
-		<description>Compress map outputs</description>
-	</property>
+    <property>
+        <name>mapred.compress.map.output</name>
+        <value>true</value>
+        <description>Compress map outputs</description>
+    </property>
 
-	<property>
-		<name>mapred.map.output.compression.codec</name>
-		<value>com.hadoop.compression.lzo.LzoCodec</value>
-		<description>The compression codec to use for map outputs
-		</description>
-	</property>
+    <property>
+        <name>mapred.map.output.compression.codec</name>
+        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+        <description>The compression codec to use for map outputs
+        </description>
+    </property>
 
-	<property>
-		<name>mapred.output.compress</name>
-		<value>true</value>
-		<description>Compress the output of a MapReduce job</description>
-	</property>
+    <property>
+        <name>mapred.output.compress</name>
+        <value>true</value>
+        <description>Compress the output of a MapReduce job</description>
+    </property>
 
-	<property>
-		<name>mapred.output.compression.codec</name>
-		<value>com.hadoop.compression.lzo.LzoCodec</value>
-		<description>The compression codec to use for job outputs
-		</description>
-	</property>
+    <property>
+        <name>mapred.output.compression.codec</name>
+        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+        <description>The compression codec to use for job outputs
+        </description>
+    </property>
 
-	<property>
-		<name>mapred.output.compression.type</name>
-		<value>BLOCK</value>
-		<description>The compression type to use for job outputs</description>
-	</property>
+    <property>
+        <name>mapred.output.compression.type</name>
+        <value>BLOCK</value>
+        <description>The compression type to use for job outputs</description>
+    </property>
 
-	!-->
+
 
     <property>
         <name>mapreduce.job.max.split.locations</name>
