@@ -122,6 +122,8 @@ public class KylinConfig {
 
     public static final String VERSION = "${project.version}";
 
+    public static final String HTABLE_DEFAULT_COMPRESSION_CODEC = "kylin.hbase.default.compression.codec";
+
     // static cached instances
     private static KylinConfig ENV_INSTANCE = null;
 
@@ -447,6 +449,11 @@ public class KylinConfig {
 
     public int getHBaseKeyValueSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
+    }
+
+    public String getHbaseDefaultCompressionCodec() {
+        return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC);
+
     }
 
     private String getOptional(String prop) {
