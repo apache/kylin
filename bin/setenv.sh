@@ -34,5 +34,5 @@ then
     echo "KYLIN_LD_LIBRARY_SETTINGS is ${KYLIN_LD_LIBRARY_SETTINGS}"
     KYLIN_EXTRA_START_OPTS="${KYLIN_LD_LIBRARY_SETTINGS} ${KYLIN_EXTRA_START_OPTS}"
 else
-    echo "KYLIN_LD_LIBRARY_SETTINGS is not set, lzo compression at MR and hbase might not work"
+    echo "KYLIN_LD_LIBRARY_SETTINGS is not set, Usually it's okay unless you want to enable LZO compression, etc. "
 fi
