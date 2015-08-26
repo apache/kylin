@@ -48,7 +48,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.tools.DeployCoprocessorCLI;
-import org.apache.kylin.job.tools.LZOSupportnessChecker;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,12 +92,43 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
                 cf.setMaxVersions(1);
 
-                if (LZOSupportnessChecker.getSupportness()) {
+                KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+                String hbaseDefaultCC = kylinConfig.getHbaseDefaultCompressionCodec().toLowerCase();
+
+                switch (hbaseDefaultCC) {
+                case "snappy": {
+                    logger.info("hbase will use snappy to compress data");
+                    cf.setCompressionType(Algorithm.SNAPPY);
+                    break;
+                }
+                case "lzo": {
                     logger.info("hbase will use lzo to compress data");
                     cf.setCompressionType(Algorithm.LZO);
-                } else {
-                    logger.info("hbase will not use lzo to compress data");
+                    break;
                 }
+                case "gz":
+                case "gzip": {
+                    logger.info("hbase will use gzip to compress data");
+                    cf.setCompressionType(Algorithm.GZ);
+                    break;
+                }
+                case "lz4": {
+                    logger.info("hbase will use lz4 to compress data");
+                    cf.setCompressionType(Algorithm.LZ4);
+                    break;
+                }
+                default: {
+                    logger.info("hbase will not user any compression codec to compress data");
+
+                }
+                }
+
+                //if (LZOSupportnessChecker.getSupportness()) {
+                //     logger.info("hbase will use lzo to compress data");
+                //     cf.setCompressionType(Algorithm.LZO);
+                // } else {
+                //     logger.info("hbase will not use lzo to compress data");
+                // }
 
                 cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
                 cf.setInMemory(false);
