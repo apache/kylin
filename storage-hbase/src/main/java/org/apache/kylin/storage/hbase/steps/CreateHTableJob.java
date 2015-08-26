@@ -27,8 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
+import javax.annotation.Nullable;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -64,10 +64,10 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import javax.annotation.Nullable;
 
 /**
  */
@@ -109,7 +109,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
             byte[][] splitKeys;
             if (statistics_enabled) {
-
                 final Map<Long, Long> cuboidSizeMap = getCubeRowCountMapFromCuboidStatistics(cubeSegment, kylinConfig, conf);
                 splitKeys = getSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment);
             } else {
@@ -159,7 +158,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         byte[][] retValue = rowkeyList.toArray(new byte[rowkeyList.size()][]);
         return retValue.length == 0 ? null : retValue;
     }
-    
+
     public static Map<Long, Long> getCubeRowCountMapFromCuboidStatistics(CubeSegment cubeSegment, KylinConfig kylinConfig, Configuration conf) throws IOException {
         ResourceStore rs = ResourceStore.getStore(kylinConfig);
         String fileKey = cubeSegment.getStatisticsResourcePath();
@@ -174,7 +173,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(is);
             IOUtils.closeStream(tempFileStream);
         }
-        
+
         Map<Long, Long> cuboidSizeMap = Maps.newHashMap();
         FileSystem fs = HadoopUtil.getFileSystem("file:///" + tempFile.getAbsolutePath());
         SequenceFile.Reader reader = null;
@@ -204,7 +203,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
         return cuboidSizeMap;
     }
-    
+
     public static Map<Long, Long> getCubeRowCountMapFromCuboidStatistics(Map<Long, HyperLogLogPlusCounter> counterMap, final int samplingPercentage) throws IOException {
         Preconditions.checkArgument(samplingPercentage > 0);
         return Maps.transformValues(counterMap, new Function<HyperLogLogPlusCounter, Long>() {
@@ -215,7 +214,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             }
         });
     }
-    
+
     public static byte[][] getSplitsFromCuboidStatistics(final Map<Long, Long> cubeRowCountMap, KylinConfig kylinConfig, CubeSegment cubeSegment) throws IOException {
 
         final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
@@ -229,7 +228,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             logger.info("Rowkey column " + i + " length " + cubeSegment.getColumnLength(columnList.get(i)));
             rowkeyColumnSize.add(cubeSegment.getColumnLength(columnList.get(i)));
         }
-        
+
         DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
         int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.toString());
 
@@ -250,7 +249,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         for (Long cuboidSize : cubeSizeMap.values()) {
             totalSizeInM += cuboidSize;
         }
-        
+
         int nRegion = Math.round((float) totalSizeInM / (cut * 1024L));
         nRegion = Math.max(kylinConfig.getHBaseRegionCutMin(), nRegion);
         nRegion = Math.min(kylinConfig.getHBaseRegionCutMax(), nRegion);

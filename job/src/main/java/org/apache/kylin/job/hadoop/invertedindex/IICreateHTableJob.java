@@ -40,7 +40,6 @@ import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.storage.hbase.steps.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI;
-import org.apache.kylin.storage.hbase.util.LZOSupportnessChecker;
 
 /**
  * @author George Song (ysong1)
@@ -68,11 +67,33 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             HColumnDescriptor cf = new HColumnDescriptor(IIDesc.HBASE_FAMILY);
             cf.setMaxVersions(1);
 
-            if (LZOSupportnessChecker.getSupportness()) {
-                logger.info("hbase will use lzo to compress II data");
+            String hbaseDefaultCC = config.getHbaseDefaultCompressionCodec().toLowerCase();
+
+            switch (hbaseDefaultCC) {
+            case "snappy": {
+                logger.info("hbase will use snappy to compress data");
+                cf.setCompressionType(Compression.Algorithm.SNAPPY);
+                break;
+            }
+            case "lzo": {
+                logger.info("hbase will use lzo to compress data");
                 cf.setCompressionType(Compression.Algorithm.LZO);
-            } else {
-                logger.info("hbase will not use lzo to compress II data");
+                break;
+            }
+            case "gz":
+            case "gzip": {
+                logger.info("hbase will use gzip to compress data");
+                cf.setCompressionType(Compression.Algorithm.GZ);
+                break;
+            }
+            case "lz4": {
+                logger.info("hbase will use lz4 to compress data");
+                cf.setCompressionType(Compression.Algorithm.LZ4);
+                break;
+            }
+            default: {
+                logger.info("hbase will not user any compression codec to compress data");
+            }
             }
 
             cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
