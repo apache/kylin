@@ -29,37 +29,33 @@ public class TopNCounterCombinationTest extends TopNCounterTest {
     public static Collection<Integer[]> configs() {
         //       return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
         return Arrays.asList(new Integer[][] {
-                /*
                 // with 20X space
-                { 100, 10, 20 }, // top 100 among 1,000 keys (top 10%)
-                { 100, 20, 20 }, // top 100 among 2,000 keys (top 5%)
-                { 100, 100, 20 }, // top 100 among 10,000 keys (top 1%)
-                { 100, 1000, 20 }, // top 100 among 100,000 keys (top 0.1%)
-                
-                */
-                // with 50X space
-                { 100, 10, 50 }, // top 100 among 1,000 keys (top 10%)
-                { 100, 20, 50 }, // top 100 among 2,000 keys (top 5%)
-                { 100, 100, 50 }, // top 100 among 10,000 keys (top 1%)
-                { 100, 1000, 50 }, // top 100 among 100,000 keys (top 0.1%)
+                { 10, 20 }, // top 10%
+                { 20, 20 }, // top 5%
+                { 100, 20 }, // top 1%
+                { 1000, 20 }, // top 0.1%
 
-                /*
+                // with 50X space
+                { 10, 50 }, // top 10% 
+                { 20, 50 }, // top 5% 
+                { 100, 50 }, // top 1% 
+                { 1000, 50 }, // top 0.1%
+
                 // with 100X space
-                { 100, 10, 100 }, // top 100 among 1,000 keys (top 10%)
-                { 100, 20, 100 }, // top 100 among 2,000 keys (top 5%)
-                { 100, 100, 100 }, // top 100 among 10,000 keys (top 1%)
-                { 100, 1000, 100 }, // top 100 among 100,000 keys (top 0.1%)
-                */
+                { 10, 100 }, // top 10% 
+                { 20, 100 }, // top 5% 
+                { 100, 100 }, // top 1% 
+                { 1000, 100 }, // top 0.1% 
         });
     }
 
-    public TopNCounterCombinationTest(int topK, int keySpaceRate, int spaceSavingRate) throws Exception {
+    public TopNCounterCombinationTest(int keySpaceRate, int spaceSavingRate) throws Exception {
         super();
-        this.TOP_K = topK;
+        this.TOP_K = 100;
         this.KEY_SPACE = TOP_K * keySpaceRate;
         this.SPACE_SAVING_ROOM = spaceSavingRate;
         TOTAL_RECORDS = 1000000; // 1 million
-        this.PARALLEL = 50;
-        this.verbose = false;
+        this.PARALLEL = 10;
+        this.verbose = true;
     }
 }

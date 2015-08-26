@@ -57,6 +57,8 @@ abstract public class MeasureAggregator<V> implements Serializable {
                 return new BigDecimalMinAggregator();
             else if (isDouble(returnType))
                 return new DoubleMinAggregator();
+        } else if (FunctionDesc.FUNC_TOP_N.equalsIgnoreCase(funcName)) {
+            return new TopNAggregator();
         }
         throw new IllegalArgumentException("No aggregator for func '" + funcName + "' and return type '" + returnType + "'");
     }

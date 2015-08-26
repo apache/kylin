@@ -36,7 +36,7 @@ public class DataType implements Serializable {
 
     public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|binary" //
             + "|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" //
-            + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc" //
+            + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc|topn" //
             + "|" + TblColRef.InnerDataTypeEnum.LITERAL.getDataType() //
             + "|" + TblColRef.InnerDataTypeEnum.DERIVED.getDataType();
 
@@ -184,6 +184,8 @@ public class DataType implements Serializable {
             return 8;
         } else if (isHLLC()) {
             return 1 << precision;
+        } else if (isTopN()) {
+            return 8 * precision * 50;
         }
         throw new IllegalStateException("The return type : " + name + " is not recognized;");
     }
@@ -250,6 +252,10 @@ public class DataType implements Serializable {
 
     public boolean isHLLC() {
         return name.equals("hllc");
+    }
+    
+    public boolean isTopN() {
+        return name.equals("topn");
     }
 
     public String getName() {

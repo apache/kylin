@@ -39,6 +39,9 @@ public class ParameterDesc {
     private String type;
     @JsonProperty("value")
     private String value;
+    
+    @JsonProperty("counter")
+    private String counter;
 
     private List<TblColRef> colRefs;
 
@@ -60,6 +63,14 @@ public class ParameterDesc {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public String getCounter() {
+        return counter;
+    }
+
+    public void setCounter(String counter) {
+        this.counter = counter;
     }
 
     public List<TblColRef> getColRefs() {
@@ -85,39 +96,30 @@ public class ParameterDesc {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
-        return result;
-    }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ParameterDesc other = (ParameterDesc) obj;
-        if (type == null) {
-            if (other.type != null)
-                return false;
-        } else if (!type.equals(other.type))
-            return false;
-        if (value == null) {
-            if (other.value != null)
-                return false;
-        } else if (!value.equals(other.value))
-            return false;
+        ParameterDesc that = (ParameterDesc) o;
+
+        if (counter != null ? !counter.equals(that.counter) : that.counter != null) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+        if (value != null ? !value.equals(that.value) : that.value != null) return false;
+
         return true;
     }
 
     @Override
+    public int hashCode() {
+        int result = type != null ? type.hashCode() : 0;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (counter != null ? counter.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
-        return "ParameterDesc [type=" + type + ", value=" + value + "]";
+        return "ParameterDesc [type=" + type + ", value=" + value + ", counter=" + counter + "]";
     }
 
 }

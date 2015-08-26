@@ -72,14 +72,14 @@ public class Counter<T> implements Externalizable {
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         item = (T) in.readObject();
         count = in.readDouble();
-        error = in.readDouble();
+        //error = in.readDouble();
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(item);
         out.writeDouble(count);
-        out.writeDouble(error);
+        //out.writeDouble(error);
     }
 }
 
