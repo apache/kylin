@@ -295,7 +295,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     }
 
     protected void deletePath(Configuration conf, Path path) throws IOException {
-        FileSystem fs = FileSystem.get(conf);
+        FileSystem fs = FileSystem.get(path.toUri(), conf);
         if (fs.exists(path)) {
             fs.delete(path, true);
         }

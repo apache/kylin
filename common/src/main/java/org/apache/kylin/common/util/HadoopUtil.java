@@ -29,8 +29,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,15 +41,38 @@ public class HadoopUtil {
 
     private static ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
 
+    private static ThreadLocal<Configuration> hbaseConfig = new ThreadLocal<>();
+
     public static void setCurrentConfiguration(Configuration conf) {
         hadoopConfig.set(conf);
     }
 
+    public static void setCurrentHBaseConfiguration(Configuration conf) {
+        hbaseConfig.set(conf);
+    }
+
     public static Configuration getCurrentConfiguration() {
         if (hadoopConfig.get() == null) {
-            hadoopConfig.set(new Configuration());
+            Configuration configuration = new Configuration();
+            String hadoopClusterFs = KylinConfig.getInstanceFromEnv().getHadoopClusterFs();
+            if (hadoopClusterFs != null && !hadoopClusterFs.equals("")) {
+                configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, hadoopClusterFs);
+            }
+            hadoopConfig.set(configuration);
         }
         return hadoopConfig.get();
+    }
+
+    public static Configuration getCurrentHBaseConfiguration() {
+        if (hbaseConfig.get() == null) {
+            Configuration configuration = HBaseConfiguration.create(new Configuration());
+            String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
+            if (hbaseClusterFs != null && !hbaseClusterFs.equals("")) {
+                configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
+            }
+            hbaseConfig.set(configuration);
+        }
+        return hbaseConfig.get();
     }
 
     public static FileSystem getFileSystem(String path) throws IOException {
@@ -59,6 +84,24 @@ public class HadoopUtil {
             return new URI(filePath);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create FileSystem from URI: " + filePath, e);
+        }
+    }
+
+    public static String makeQualifiedPathInHadoopCluster(String path) {
+        try {
+            FileSystem fs = FileSystem.get(getCurrentConfiguration());
+            return fs.makeQualified(new Path(path)).toString();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot create FileSystem from current hadoop cluster conf", e);
+        }
+    }
+
+    public static String makeQualifiedPathInHBaseCluster(String path) {
+        try {
+            FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
+            return fs.makeQualified(new Path(path)).toString();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot create FileSystem from current hbase cluster conf", e);
         }
     }
 
@@ -116,6 +159,10 @@ public class HadoopUtil {
         conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
         // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
 
+        String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
+        if (hbaseClusterFs != null && !hbaseClusterFs.equals("")) {
+            conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
+        }
         return conf;
     }
 
