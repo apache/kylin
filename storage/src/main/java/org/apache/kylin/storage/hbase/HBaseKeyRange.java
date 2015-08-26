@@ -52,7 +52,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseKeyRange.class);
 
-    private static final int FUZZY_VALUE_CAP = 20;
+    private static final int FUZZY_VALUE_CAP = 100;
     private static final byte[] ZERO_TAIL_BYTES = new byte[] { 0 };
 
     private final CubeSegment cubeSeg;

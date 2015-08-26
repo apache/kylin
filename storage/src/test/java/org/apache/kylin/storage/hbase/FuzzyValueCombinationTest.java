@@ -100,7 +100,7 @@ public class FuzzyValueCombinationTest {
         for (Map<TblColRef, String> item : result) {
             System.out.println(item);
         }
-        assertEquals(9, result.size());
+        assertEquals(0, result.size());
     }
 
     private static TblColRef col(int i, TableDesc t) {
