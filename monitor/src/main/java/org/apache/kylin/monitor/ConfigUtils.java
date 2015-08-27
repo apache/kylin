@@ -154,14 +154,14 @@ public class ConfigUtils {
         }
 
         String kylinHome = getKylinHome();
-        if (!StringUtils.isEmpty(kylinHome))
-            if (logDirList.isEmpty()) {
-                throw new RuntimeException("Didn't find KYLIN_CONF or KYLIN_HOME or KYLIN_EXT_LOG_BASE_DIR, please set one of them");
-            } else {
-                String path = kylinHome + File.separator + "tomcat" + File.separator + "logs";
-                logDirList.add(path);
-            }
-
+        if (!StringUtils.isEmpty(kylinHome)) {
+            String path = kylinHome + File.separator + "tomcat" + File.separator + "logs";
+            logDirList.add(path);
+        }
+        
+        if (logDirList.isEmpty())
+            throw new RuntimeException("Didn't find KYLIN_CONF or KYLIN_HOME or KYLIN_EXT_LOG_BASE_DIR, please set one of them");
+        
         return logDirList;
     }
 
