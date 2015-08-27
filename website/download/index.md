@@ -25,7 +25,9 @@ For convenience, there's binary package also available:
   * Generate binary package from source, please refer to this [guide](../docs/howto/howto_package.html)
     
 __ODBC Driver__  
-And ODBC Driver could be find here:
+Kylin ODBC requires you first install Microsoft Visual C++ 2012 Redistributable first, it can be downloaded at:http://www.microsoft.com/en-us/download/details.aspx?id=30679
+
+And Kylin ODBC Driver could be find here:
 
   * [Kylin ODBC Driver](KylinODBCDriver.zip)
 
