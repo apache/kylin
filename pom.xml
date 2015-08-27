@@ -29,7 +29,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-incubating-SNAPSHOT</version>
+    <version>1.0-incubating</version>
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
@@ -139,7 +139,7 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</url>
-        <tag>apache-kylin-0.7.1-incubating</tag>
+        <tag>kylin-1.0-incubating</tag>
     </scm>
 
     <dependencyManagement>
@@ -839,6 +839,8 @@
 
                                 <!-- jdbc log -->
                                 <exclude>jdbc/kylin_jdbc.log*</exclude>
+                                <!-- server log -->
+                                <exclude>server/logs/**</exclude>
 
                                 <!-- HBase MiniCluster Testing Data, for testing only -->
                                 <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
