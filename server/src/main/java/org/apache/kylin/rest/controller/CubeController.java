@@ -330,56 +330,57 @@ public class CubeController extends BasicController {
     }
 
     /**
-     * Get available table list of the input database
+     * Update cube description. If cube signature has changed, all existing cube segments are dropped.
      *
      * @return Table metadata array
      * @throws JsonProcessingException
-     * @throws IOException
      */
     @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
-
-        //Update Model 
-        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        DataModelDesc modelDesc = deserializeDataModelDesc(cubeRequest);
-        if (modelDesc == null) {
-            return cubeRequest;
-        }
-        try {
-
-            DataModelDesc existingModel = metaManager.getDataModelDesc(modelDesc.getName());
-            if (existingModel == null) {
-                metaManager.createDataModelDesc(modelDesc);
-            } else {
-
-                //ignore overwriting conflict checking before splict MODEL & CUBE
-                modelDesc.setLastModified(existingModel.getLastModified());
-                metaManager.updateDataModelDesc(modelDesc);
-            }
-
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
-        }
-
-        //update cube
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
-
         if (desc == null) {
             return cubeRequest;
+        }
+
+        final String cubeName = desc.getName();
+        if (StringUtils.isEmpty(cubeName)) {
+            return errorRequest(cubeRequest, "Missing cubeName");
+        }
+
+        MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        // KYLIN-958: disallow data model change
+        if (StringUtils.isNotEmpty(cubeRequest.getModelDescData())) {
+            DataModelDesc modelDesc = deserializeDataModelDesc(cubeRequest);
+            if (modelDesc == null) {
+                return cubeRequest;
+            }
+
+            final String modeName = modelDesc.getName();
+
+            if (!StringUtils.equals(desc.getModelName(), modeName)) {
+                return errorRequest(cubeRequest, "CubeDesc.model_name " + desc.getModelName() + " not consistent with model " + modeName);
+            }
+
+            DataModelDesc oldModelDesc = metadataManager.getDataModelDesc(modeName);
+            if (oldModelDesc == null) {
+                return errorRequest(cubeRequest, "Data model " + modeName + " not found");
+            }
+
+            if (!modelDesc.compatibleWith(oldModelDesc)) {
+                return errorRequest(cubeRequest, "Update data model is not allowed! Please create a new cube if needed");
+            }
+
         }
 
         // Check if the cube is editable
         if (!cubeService.isCubeDescEditable(desc)) {
             String error = "Cube desc " + desc.getName().toUpperCase() + " is not editable.";
-            updateRequest(cubeRequest, false, error);
-            return cubeRequest;
+            return errorRequest(cubeRequest, error);
         }
 
         try {
-            CubeInstance cube = cubeService.getCubeManager().getCube(cubeRequest.getCubeName());
+            CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
             cube.setRetentionRange(desc.getRetentionRange());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
@@ -395,7 +396,7 @@ public class CubeController extends BasicController {
             cubeRequest.setSuccessful(true);
         } else {
             logger.warn("Cube " + desc.getName() + " fail to create because " + desc.getError());
-            updateRequest(cubeRequest, false, omitMessage(desc.getError()));
+            errorRequest(cubeRequest, omitMessage(desc.getError()));
         }
         String descData = JsonUtil.writeValueAsIndentString(desc);
         cubeRequest.setCubeDescData(descData);
@@ -449,15 +450,15 @@ public class CubeController extends BasicController {
     private CubeDesc deserializeCubeDesc(CubeRequest cubeRequest) {
         CubeDesc desc = null;
         try {
-            logger.debug("Saving cube " + cubeRequest.getCubeDescData());
+            logger.debug("Deserialize cube desc " + cubeRequest.getCubeDescData());
             desc = JsonUtil.readValue(cubeRequest.getCubeDescData(), CubeDesc.class);
             //            desc.setRetentionRange(cubeRequest.getRetentionRange());
         } catch (JsonParseException e) {
             logger.error("The cube definition is not valid.", e);
-            updateRequest(cubeRequest, false, e.getMessage());
+            errorRequest(cubeRequest, e.getMessage());
         } catch (JsonMappingException e) {
             logger.error("The cube definition is not valid.", e);
-            updateRequest(cubeRequest, false, e.getMessage());
+            errorRequest(cubeRequest, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
@@ -468,14 +469,14 @@ public class CubeController extends BasicController {
     private DataModelDesc deserializeDataModelDesc(CubeRequest cubeRequest) {
         DataModelDesc desc = null;
         try {
-            logger.debug("Saving MODEL " + cubeRequest.getModelDescData());
+            logger.debug("Deserialize data model " + cubeRequest.getModelDescData());
             desc = JsonUtil.readValue(cubeRequest.getModelDescData(), DataModelDesc.class);
         } catch (JsonParseException e) {
             logger.error("The data model definition is not valid.", e);
-            updateRequest(cubeRequest, false, e.getMessage());
+            errorRequest(cubeRequest, e.getMessage());
         } catch (JsonMappingException e) {
             logger.error("The data model definition is not valid.", e);
-            updateRequest(cubeRequest, false, e.getMessage());
+            errorRequest(cubeRequest, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
@@ -496,10 +497,11 @@ public class CubeController extends BasicController {
         return buffer.toString();
     }
 
-    private void updateRequest(CubeRequest request, boolean success, String message) {
+    private CubeRequest errorRequest(CubeRequest request, String errmsg) {
         request.setCubeDescData("");
-        request.setSuccessful(success);
-        request.setMessage(message);
+        request.setSuccessful(false);
+        request.setMessage(errmsg);
+        return request;
     }
 
     public void setCubeService(CubeService cubeService) {

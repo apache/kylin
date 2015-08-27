@@ -18,14 +18,17 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 
@@ -33,9 +36,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DataModelDesc extends RootPersistentEntity {
+    private static final Logger logger = LoggerFactory.getLogger(DataModelDesc.class);
 
     public static enum RealizationCapacity {
         SMALL, MEDIUM, LARGE
@@ -211,6 +217,41 @@ public class DataModelDesc extends RootPersistentEntity {
             }
 
         }
+    }
+
+    /**
+     * Check whether two data model are compatible or not. Compatible means
+     * having the same structure. Tow models could be compatible even they
+     * have different UUID or last modified time.
+     * @param that model to compare with
+     * @return true if compatible, false otherwise.
+     */
+    public boolean compatibleWith(DataModelDesc that) {
+        if (this == that)
+            return true;
+
+        if (that == null)
+            return false;
+
+        try {
+            String thisRepr = excludeHeaderInfo(this);
+            String thatRepr = excludeHeaderInfo(that);
+            return StringUtils.equals(thisRepr, thatRepr);
+
+        } catch (IOException e) {
+            logger.error("Failed to serialize DataModelDesc to string", e);
+            return false;
+        }
+    }
+
+    private String excludeHeaderInfo(DataModelDesc modelDesc) throws IOException {
+        // make a copy
+        String repr = JsonUtil.writeValueAsString(modelDesc);
+        DataModelDesc copy = JsonUtil.readValue(repr, DataModelDesc.class);
+
+        copy.setUuid(null);
+        copy.setLastModified(0);
+        return JsonUtil.writeValueAsString(copy);
     }
 
     @Override
