@@ -236,11 +236,11 @@ public class CubeService extends BasicService {
         }
 
         try {
-            if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
-                this.releaseAllSegments(cube);
+            CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
+            if (!updatedCubeDesc.getError().isEmpty()) {
+                return updatedCubeDesc;
             }
 
-            CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
             cube = getCubeManager().updateCube(cube);
 
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
@@ -387,9 +387,6 @@ public class CubeService extends BasicService {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new JobException("Enable is not allowed with a running job.");
-        }
-        if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
-            this.releaseAllSegments(cube);
         }
 
         cube.setStatus(RealizationStatusEnum.READY);
