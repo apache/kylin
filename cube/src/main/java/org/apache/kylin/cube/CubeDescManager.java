@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -253,6 +253,14 @@ public class CubeDescManager {
 
         desc.setSignature(desc.calculateSignature());
 
+        // drop cube segments if signature changes
+        CubeInstance cube = getCubeManager().getCube(desc.getName());
+        if (cube != null && !StringUtils.equals(desc.getSignature(), cube.getDescriptor().getSignature())) {
+            logger.info("Detect signature change of [" + desc.getName() + "], drop all existing segments");
+            cube.getSegments().clear();
+            getCubeManager().updateCube(cube);
+        }
+
         // Save Source
         String path = desc.getResourcePath();
         getStore().putResource(path, desc, CUBE_DESC_SERIALIZER);
@@ -267,6 +275,10 @@ public class CubeDescManager {
 
     private MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(config);
+    }
+
+    private CubeManager getCubeManager() {
+        return CubeManager.getInstance(config);
     }
 
     private ResourceStore getStore() {
