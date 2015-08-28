@@ -34,7 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
- * Created by jiazhong on 2015/4/28.
+ * @author jiazhong
  */
 public class ConfigUtils {
 
@@ -67,6 +67,8 @@ public class ConfigUtils {
 
     public static final String HIVE_JDBC_CON_USERNAME = "kylin.hive.jdbc.connection.username";
     public static final String HIVE_JDBC_CON_PASSWD = "kylin.hive.jdbc.connection.password";
+
+    public static final String KYLIN_MAP_JOB_QUEUE = "mapred.job.queue.name";
 
     public static final String DEPLOY_ENV = "deploy.env";
 
@@ -167,6 +169,10 @@ public class ConfigUtils {
 
     public String getMetadataUrl() {
         return this.monitorConfig.getProperty(KYLIN_METADATA_URL);
+    }
+
+    public String getKylinMapJobQueue(){
+        return this.monitorConfig.getProperty(KYLIN_MAP_JOB_QUEUE);
     }
 
     public String getMetadataUrlPrefix() {
