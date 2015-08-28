@@ -452,7 +452,7 @@ public class KylinConfig {
     }
 
     public String getHbaseDefaultCompressionCodec() {
-        return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC);
+        return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC, "");
 
     }
 
