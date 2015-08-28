@@ -18,11 +18,6 @@
 
 package org.apache.kylin.metadata.model;
 
-public interface IBuildable {
+public interface IBuildable extends ISourceAware, IEngineAware, IStorageAware {
 
-    int getSourceType();
-
-    int getEngineType();
-
-    int getStorageType();
 }

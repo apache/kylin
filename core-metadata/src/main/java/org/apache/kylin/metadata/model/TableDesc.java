@@ -32,12 +32,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Table Metadata from Source. All name should be uppercase.
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class TableDesc extends RootPersistentEntity {
+public class TableDesc extends RootPersistentEntity implements ISourceAware {
+    
     @JsonProperty("name")
     private String name;
     @JsonProperty("columns")
     private ColumnDesc[] columns;
+    @JsonProperty("source_type")
+    private int sourceType = ISourceAware.ID_HIVE;
 
     private DatabaseDesc database = new DatabaseDesc();
 
@@ -170,5 +174,10 @@ public class TableDesc extends RootPersistentEntity {
         TableDesc mockup = new TableDesc();
         mockup.setName(tableName);
         return mockup;
+    }
+
+    @Override
+    public int getSourceType() {
+        return sourceType;
     }
 }

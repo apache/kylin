@@ -25,9 +25,13 @@ import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.BaseCuboidJob;
 import org.apache.kylin.engine.mr.steps.NDCuboidJob;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BatchCubingJobBuilder extends JobBuilderSupport {
-
+    
+    private static final Logger logger = LoggerFactory.getLogger(BatchCubingJobBuilder.class);
+    
     private final IMRBatchCubingInputSide inputSide;
     private final IMRBatchCubingOutputSide outputSide;
 
@@ -38,6 +42,8 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
     }
 
     public CubingJob build() {
+        logger.info("MR_V1 new job to BUILD segment " + seg);
+        
         final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
         final String jobId = result.getId();
         final String cuboidRootPath = getCuboidRootPath(jobId);
@@ -81,7 +87,7 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
 
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
-        appendExecCmdParameters(cmd, "input", ""); // marks flat table input
+        appendExecCmdParameters(cmd, "input", "FLAT_TABLE"); // marks flat table input
         appendExecCmdParameters(cmd, "output", cuboidOutputTempPath[0]);
         appendExecCmdParameters(cmd, "jobname", "Kylin_Base_Cuboid_Builder_" + seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "level", "0");

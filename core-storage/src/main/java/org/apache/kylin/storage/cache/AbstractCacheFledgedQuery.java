@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-public abstract class AbstractCacheFledgedStorageEngine implements IStorageQuery, TeeTupleItrListener {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractCacheFledgedStorageEngine.class);
+public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTupleItrListener {
+    private static final Logger logger = LoggerFactory.getLogger(AbstractCacheFledgedQuery.class);
     private static final String storageCacheTemplate = "StorageCache";
 
     protected static CacheManager CACHE_MANAGER;
@@ -27,7 +27,7 @@ public abstract class AbstractCacheFledgedStorageEngine implements IStorageQuery
     protected ICachableStorageQuery underlyingStorage;
     protected StreamSQLDigest streamSQLDigest;
 
-    public AbstractCacheFledgedStorageEngine(ICachableStorageQuery underlyingStorage) {
+    public AbstractCacheFledgedQuery(ICachableStorageQuery underlyingStorage) {
         this.underlyingStorage = underlyingStorage;
         this.makeCacheIfNecessary(underlyingStorage.getStorageUUID());
     }

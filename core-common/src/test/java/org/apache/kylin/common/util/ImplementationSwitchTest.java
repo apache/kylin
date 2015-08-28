@@ -1,0 +1,58 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.kylin.common.util;
+
+import static org.junit.Assert.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
+
+public class ImplementationSwitchTest {
+    
+    ImplementationSwitch sw;
+
+    public ImplementationSwitchTest() {
+        Map<Integer, String> impls = new HashMap<>();
+        impls.put(0, "non.exist.class");
+        impls.put(1, Impl1.class.getName());
+        impls.put(2, Impl2.class.getName());
+        sw = new ImplementationSwitch(impls);
+    }
+    
+    public static interface I {
+    }
+    
+    public static class Impl1 implements I {
+    }
+    
+    public static class Impl2 implements I {
+    }
+    
+    @Test
+    public void test() {
+        assertTrue(sw.get(1, I.class) instanceof Impl1);
+        assertTrue(sw.get(2, I.class) instanceof Impl2);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)  
+    public void testException() {
+        sw.get(0, I.class);
+    }
+}

@@ -26,14 +26,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
-import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeUpdate;
@@ -150,10 +148,9 @@ public class DeployUtil {
     }
 
     public static void prepareTestDataForStreamingCube(long startTime, long endTime, StreamingConfig streamingConfig) throws IOException {
-        MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(streamingConfig.getCubeName());
         List<String> data = StreamingTableDataGenerator.generate(10000, startTime, endTime, cubeInstance.getFactTable());
-        TableDesc tableDesc = metadataManager.getTableDesc(cubeInstance.getFactTable());
+        TableDesc tableDesc = cubeInstance.getFactTableDesc();
 
         //load into kafka
         KafkaDataLoader.loadIntoKafka(streamingConfig, data);

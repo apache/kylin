@@ -30,7 +30,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
-import org.apache.kylin.engine.BuildEngineFactory;
+import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
@@ -137,10 +137,10 @@ public class JobService extends BasicService {
 
         if (buildType == CubeBuildTypeEnum.BUILD) {
             CubeSegment newSeg = getCubeManager().appendSegments(cube, endDate);
-            job = BuildEngineFactory.createBatchCubingJob(newSeg, submitter);
+            job = EngineFactory.createBatchCubingJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);
-            job = BuildEngineFactory.createBatchMergeJob(newSeg, submitter);
+            job = EngineFactory.createBatchMergeJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.REFRESH) {
             List<CubeSegment> readySegs = cube.getSegment(SegmentStatusEnum.READY);
             boolean segExists = false;
@@ -156,7 +156,7 @@ public class JobService extends BasicService {
             }
 
             CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate);
-            job = BuildEngineFactory.createBatchCubingJob(refreshSeg, submitter);
+            job = EngineFactory.createBatchCubingJob(refreshSeg, submitter);
         } else {
             throw new JobException("invalid build type:" + buildType);
         }

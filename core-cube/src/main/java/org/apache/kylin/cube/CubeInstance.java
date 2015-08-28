@@ -26,9 +26,13 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -43,8 +47,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeInstance extends RootPersistentEntity implements IRealization {
+public class CubeInstance extends RootPersistentEntity implements IRealization, IBuildable {
 
     public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
@@ -58,6 +63,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         cubeInstance.updateRandomUuid();
         cubeInstance.setProjectName(projectName);
         cubeInstance.setRetentionRange(cubeDesc.getRetentionRange());
+        
+        // MR_V2 is the default engine since 0.8
+        cubeInstance.setEngineType(IEngineAware.ID_MR_V2);
+        cubeInstance.setStorageType(IStorageAware.ID_HBASE);
 
         return cubeInstance;
     }
@@ -84,12 +93,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
-
     @JsonProperty("auto_merge_time_ranges")
     private long[] autoMergeTimeRanges;
-
     @JsonProperty("retention_range")
     private long retentionRange = 0;
+    @JsonProperty("engine_type")
+    private int engineType = IEngineAware.ID_MR_V1;
+    @JsonProperty("storage_type")
+    private int storageType = IStorageAware.ID_HBASE;
 
     private String projectName;
 
@@ -205,7 +216,11 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @Override
     public String getFactTable() {
-        return this.getDescriptor().getFactTable();
+        return getDescriptor().getFactTable();
+    }
+
+    public TableDesc getFactTableDesc() {
+        return getDescriptor().getFactTableDesc();
     }
 
     @Override
@@ -441,4 +456,28 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     public void setRetentionRange(long retentionRange) {
         this.retentionRange = retentionRange;
     }
+
+    @Override
+    public int getSourceType() {
+        return getFactTableDesc().getSourceType();
+    }
+
+    @Override
+    public int getStorageType() {
+        return storageType;
+    }
+    
+    private void setStorageType(int storageType) {
+        this.storageType = storageType;
+    }
+
+    @Override
+    public int getEngineType() {
+        return engineType;
+    }
+
+    private void setEngineType(int engineType) {
+        this.engineType = engineType;
+    }
+
 }

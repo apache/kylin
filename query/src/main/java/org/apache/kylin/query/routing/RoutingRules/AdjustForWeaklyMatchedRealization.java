@@ -66,7 +66,7 @@ public class AdjustForWeaklyMatchedRealization extends RoutingRule {
     private static void adjustOLAPContextIfNecessary(IIInstance ii, OLAPContext olapContext) {
         IIDesc iiDesc = ii.getDescriptor();
         Collection<FunctionDesc> iiFuncs = iiDesc.listAllFunctions();
-        convertAggregationToDimension(olapContext, iiFuncs, iiDesc.getFactTableName());
+        convertAggregationToDimension(olapContext, iiFuncs);
     }
 
     private static void adjustOLAPContextIfNecessary(CubeInstance cube, OLAPContext olapContext) {
@@ -75,10 +75,10 @@ public class AdjustForWeaklyMatchedRealization extends RoutingRule {
 
         CubeDesc cubeDesc = cube.getDescriptor();
         Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
-        convertAggregationToDimension(olapContext, cubeFuncs, cubeDesc.getFactTable());
+        convertAggregationToDimension(olapContext, cubeFuncs);
     }
 
-    private static void convertAggregationToDimension(OLAPContext olapContext, Collection<FunctionDesc> availableAggregations, String factTableName) {
+    private static void convertAggregationToDimension(OLAPContext olapContext, Collection<FunctionDesc> availableAggregations) {
         Iterator<FunctionDesc> it = olapContext.aggregations.iterator();
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();

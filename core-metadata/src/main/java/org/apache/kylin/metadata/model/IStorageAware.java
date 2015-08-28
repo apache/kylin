@@ -16,30 +16,12 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.metadata.model;
 
-import org.apache.kylin.engine.mr.IMRInput;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.ISource;
-import org.apache.kylin.source.ReadableTable;
+public interface IStorageAware {
 
-@SuppressWarnings("unused")
-//used by reflection
-public class HiveTableSource implements ISource {
+    public static final int ID_HBASE = 0;
+    public static final int ID_HYBRID = 1;
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <I> I adaptToBuildEngine(Class<I> engineInterface) {
-        if (engineInterface == IMRInput.class) {
-            return (I) new HiveMRInput();
-        } else {
-            throw new RuntimeException("Cannot adapt to " + engineInterface);
-        }
-    }
-
-    @Override
-    public ReadableTable createReadableTable(TableDesc tableDesc) {
-        return new HiveTable(tableDesc);
-    }
-
+    int getStorageType();
 }

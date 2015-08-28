@@ -45,7 +45,7 @@ import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.QueryUtil;
-import org.apache.kylin.storage.cache.AbstractCacheFledgedStorageEngine;
+import org.apache.kylin.storage.cache.AbstractCacheFledgedQuery;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,7 @@ public class QueryController extends BasicController {
     @PostConstruct
     public void init() throws IOException {
         Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
-        AbstractCacheFledgedStorageEngine.setCacheManager(cacheManager);
+        AbstractCacheFledgedQuery.setCacheManager(cacheManager);
     }
 
     @RequestMapping(value = "/query", method = RequestMethod.POST)

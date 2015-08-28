@@ -57,7 +57,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
-import org.apache.kylin.source.TableSourceFactory;
+import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,7 +131,7 @@ public class NewBaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, T
         cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         cubeDesc = cube.getDescriptor();
-        factTableDesc = metadataManager.getTableDesc(cubeDesc.getFactTable());
+        factTableDesc = cubeDesc.getFactTableDesc();
 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
@@ -171,7 +171,7 @@ public class NewBaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, T
                 // load lookup tables
                 if (!lookupTables.containsKey(lookupTableName)) {
                     TableDesc tableDesc = metadataManager.getTableDesc(lookupTableName);
-                    ReadableTable htable = TableSourceFactory.createReadableTable(tableDesc);
+                    ReadableTable htable = SourceFactory.createReadableTable(tableDesc);
                     LookupBytesTable btable = new LookupBytesTable(tableDesc, join.getPrimaryKey(), htable);
                     lookupTables.put(lookupTableName, btable);
                 }

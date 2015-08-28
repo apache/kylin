@@ -16,39 +16,35 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.storage;
-
-import static org.apache.kylin.metadata.model.IStorageAware.*;
+package org.apache.kylin.source;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kylin.common.util.ImplementationSwitch;
-import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.model.ISourceAware;
+import static org.apache.kylin.metadata.model.ISourceAware.*;
+import org.apache.kylin.metadata.model.TableDesc;
 
-/**
- */
-public class StorageFactory {
+public class SourceFactory {
 
-    private static ImplementationSwitch storages;
+    private static ImplementationSwitch sources;
     static {
         Map<Integer, String> impls = new HashMap<>();
-        impls.put(ID_HBASE, "org.apache.kylin.storage.hbase.HBaseStorage");
-        impls.put(ID_HYBRID, "org.apache.kylin.storage.hybrid.HybridStorage");
-        storages = new ImplementationSwitch(impls);
+        impls.put(ID_HIVE, "org.apache.kylin.source.hive.HiveTableSource");
+        sources = new ImplementationSwitch(impls);
     }
-    
-    public static IStorage storage(IStorageAware aware) {
-        return storages.get(aware.getStorageType(), IStorage.class);
+
+    public static ISource tableSource(ISourceAware aware) {
+        return sources.get(aware.getSourceType(), ISource.class);
     }
-    
-    public static IStorageQuery createQuery(IRealization realization) {
-        return storage(realization).createQuery(realization);
+
+    public static ReadableTable createReadableTable(TableDesc table) {
+        return tableSource(table).createReadableTable(table);
     }
-    
-    public static <T> T createEngineAdapter(IStorageAware aware, Class<T> engineInterface) {
-        return storage(aware).adaptToBuildEngine(engineInterface);
+
+    public static <T> T createEngineAdapter(ISourceAware table, Class<T> engineInterface) {
+        return tableSource(table).adaptToBuildEngine(engineInterface);
     }
 
 }
