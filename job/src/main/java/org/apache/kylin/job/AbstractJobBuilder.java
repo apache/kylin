@@ -50,8 +50,9 @@ public abstract class AbstractJobBuilder {
         return cmd.append(" -").append(paraName).append(" ").append(paraValue);
     }
 
+    // return in full-qualified name, that is "dbname.tablename"
     protected String getIntermediateHiveTableName(IJoinedFlatTableDesc intermediateTableDesc, String jobUuid) {
-        return intermediateTableDesc.getTableName(jobUuid);
+        return engineConfig.getConfig().getHiveDatabaseForIntermediateTable() + "." + intermediateTableDesc.getTableName(jobUuid);
     }
 
     protected String getIntermediateHiveTableLocation(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID) {
