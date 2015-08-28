@@ -24,7 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
- * Created by jiazhong on 2015/5/7.
+ * @author jiazhong
  */
 public class Client {
 

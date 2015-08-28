@@ -30,7 +30,7 @@
     source ${dir}/find-hive-dependency.sh
     source ${dir}/find-hbase-dependency.sh
 
-    export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
+    export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}:$KYLIN_HOME/conf
     _monitorjar=`ls ${KYLIN_HOME}/lib |grep kylin-monitor`
 
     hbase \
