@@ -35,3 +35,32 @@ You'll need to stop Kylin first by running `./kylin.sh stop`, and then modify $K
 After this, you need to run `./kylin.sh start` to start Kylin again. Now Kylin will use LZO to compress MR outputs and hbase tables.
 
 
+## Enable LDAP authentication
+
+Kylin supports LDAP authentication for enterprise or production deployment; This is implemented based on Spring Security framework; Before enable LDAP, please contact your LDAP administrator to get necessary information, like LDAP server URL, username/password, search patterns, etc;
+
+## Configure LDAP properties conf/kylin.properties
+
+Firstly, provide your LDAP URL, and username/password if the LDAP server is secured;
+
+```
+ldap.server=ldap://<your_ldap_host>:<port>
+ldap.username=<your_user_name>
+ldap.password=<your_password>
+```
+
+Secondly, provide the user search patterns, this is by your LDAP design, here is just a sample:
+
+
+```
+ldap.user.searchBase=OU=UserAccounts,DC=mycompany,DC=com
+ldap.user.searchPattern=(&(AccountName={0})(memberOf=CN=MYCOMPANY-USERS,DC=mycompany,DC=com))
+ldap.user.groupSearchBase=OU=Group,DC=mycompany,DC=com
+```
+
+If you have service accounts (e.g, for system integration) which also need be authenticated, you can configure them in ldap.service.*; If not, leave them be empty; 
+
+
+### Enable LDAP mode
+
+Set "kylin.sandbox=true" in conf/kylin.properties, then restart Kylin server; In the Login page, use a LDAP account name/password to login.
