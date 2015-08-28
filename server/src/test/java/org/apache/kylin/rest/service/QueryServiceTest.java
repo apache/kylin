@@ -20,7 +20,6 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Date;
 
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -58,6 +57,6 @@ public class QueryServiceTest extends ServiceTestBase {
         request.setAcceptPartial(true);
         SQLResponse response = new SQLResponse();
         response.setHitCache(true);
-        queryService.logQuery(request, response, new Date(), new Date());
+        queryService.logQuery(request, response);
     }
 }
