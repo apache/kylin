@@ -143,8 +143,6 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
-        context.setTotalScanCount(scanCount);
-
         // hasNext() loop may exit because of limit, threshold, etc.
         // close all the remaining segmentIterator
         segmentIterator.close();

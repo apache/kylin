@@ -31,7 +31,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,6 +48,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -82,13 +82,16 @@ public class QueryService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
     public static final String USER_QUERY_FAMILY = "q";
-    private Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
     private static final String USER_QUERY_COLUMN = "c";
-    private String hbaseUrl = null;
-    private String tableNameBase = null;
-    private String userTableName = null;
+
+    private final Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
+    private final BadQueryDetector badQueryDetector = new BadQueryDetector();
+
+    private final String hbaseUrl;
+    private final String tableNameBase;
+    private final String userTableName;
 
     public QueryService() {
         String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
@@ -97,6 +100,8 @@ public class QueryService extends BasicService {
         tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         userTableName = tableNameBase + USER_TABLE_NAME;
+        
+        badQueryDetector.start();
     }
 
     public List<TableMeta> getMetadata(String project) throws SQLException {
@@ -104,18 +109,14 @@ public class QueryService extends BasicService {
     }
 
     public SQLResponse query(SQLRequest sqlRequest) throws Exception {
-        SQLResponse fakeResponse = QueryUtil.tableauIntercept(sqlRequest.getSql());
-        if (null != fakeResponse) {
-            logger.debug("Return fake response, is exception? " + fakeResponse.getIsException());
-
-            return fakeResponse;
+        try {
+            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest);
+            
+            return queryWithSqlMassage(sqlRequest);
+            
+        } finally {
+            badQueryDetector.queryEnd(Thread.currentThread());
         }
-
-        String correctedSql = QueryUtil.healSickSql(sqlRequest.getSql());
-        if (correctedSql.equals(sqlRequest.getSql()) == false)
-            logger.debug("The corrected query: " + correctedSql);
-
-        return executeQuery(correctedSql, sqlRequest);
     }
 
     public void saveQuery(final String creator, final Query query) throws IOException {
@@ -194,12 +195,11 @@ public class QueryService extends BasicService {
         return queries;
     }
 
-    public void logQuery(final SQLRequest request, final SQLResponse response, final Date startTime, final Date endTime) {
+    public void logQuery(final SQLRequest request, final SQLResponse response) {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
         final Set<String> realizationNames = new HashSet<String>();
         final Set<Long> cuboidIds = new HashSet<Long>();
-        long totalScanCount = 0;
-        float duration = (endTime.getTime() - startTime.getTime()) / (float) 1000;
+        float duration = response.getDuration() / (float) 1000;
 
         if (!response.isHitCache() && null != OLAPContext.getThreadLocalContexts()) {
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
@@ -213,8 +213,6 @@ public class QueryService extends BasicService {
                     String realizationName = ctx.realization.getName();
                     realizationNames.add(realizationName);
                 }
-
-                totalScanCount += ctx.storageContext.getTotalScanCount();
             }
         }
 
@@ -234,7 +232,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Project: ").append(request.getProject()).append(newLine);
         stringBuilder.append("Realization Names: ").append(realizationNames).append(newLine);
         stringBuilder.append("Cuboid Ids: ").append(cuboidIds).append(newLine);
-        stringBuilder.append("Total scan count: ").append(totalScanCount).append(newLine);
+        stringBuilder.append("Total scan count: ").append(response.getTotalScanCount()).append(newLine);
         stringBuilder.append("Result row count: ").append(resultRowCount).append(newLine);
         stringBuilder.append("Accept Partial: ").append(request.isAcceptPartial()).append(newLine);
         stringBuilder.append("Is Partial Result: ").append(response.isPartial()).append(newLine);
@@ -249,25 +247,30 @@ public class QueryService extends BasicService {
     public void checkAuthorization(CubeInstance cube) throws AccessDeniedException {
     }
 
-    protected SQLResponse executeQuery(String sql, SQLRequest sqlRequest) throws Exception {
-        sql = sql.trim().replace(";", "");
-
-        int limit = sqlRequest.getLimit();
-        if (limit > 0 && !sql.toLowerCase().contains("limit")) {
-            sql += (" LIMIT " + limit);
+    private SQLResponse queryWithSqlMassage(SQLRequest sqlRequest) throws Exception {
+        SQLResponse fakeResponse = QueryUtil.tableauIntercept(sqlRequest.getSql());
+        if (null != fakeResponse) {
+            logger.debug("Return fake response, is exception? " + fakeResponse.getIsException());
+            return fakeResponse;
         }
 
-        int offset = sqlRequest.getOffset();
-        if (offset > 0 && !sql.toLowerCase().contains("offset")) {
-            sql += (" OFFSET " + offset);
-        }
+        String correctedSql = QueryUtil.massageSql(sqlRequest);
+        if (correctedSql.equals(sqlRequest.getSql()) == false)
+            logger.debug("The corrected query: " + correctedSql);
 
         // add extra parameters into olap context, like acceptPartial
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(sqlRequest.isAcceptPartial()));
         OLAPContext.setParameters(parameters);
 
-        return execute(sql, sqlRequest);
+        try {
+            BackdoorToggles.setToggles(sqlRequest.getBackdoorToggles());
+
+            return execute(correctedSql, sqlRequest);
+
+        } finally {
+            BackdoorToggles.cleanToggles();
+        }
     }
 
     protected List<TableMeta> getMetadata(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException {
@@ -333,6 +336,8 @@ public class QueryService extends BasicService {
         Connection conn = null;
         Statement stat = null;
         ResultSet resultSet = null;
+        long startTime = System.currentTimeMillis();
+
         List<List<String>> results = new LinkedList<List<String>>();
         List<SelectedColumnMeta> columnMetas = new LinkedList<SelectedColumnMeta>();
 
@@ -388,6 +393,7 @@ public class QueryService extends BasicService {
 
         SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult);
         response.setTotalScanCount(totalScanCount);
+        response.setDuration(System.currentTimeMillis() - startTime);
 
         return response;
     }

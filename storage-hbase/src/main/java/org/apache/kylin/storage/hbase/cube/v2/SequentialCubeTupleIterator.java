@@ -12,6 +12,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
@@ -27,20 +28,25 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private final TupleInfo tupleInfo;
     private final Tuple tuple;
     private final Iterator<CubeScanner> scannerIterator;
+    private final StorageContext context;
 
     private CubeScanner curScanner;
     private Iterator<GTRecord> curRecordIterator;
     private CubeTupleConverter curTupleConverter;
     private Tuple next;
 
+    private int scanCount;
+    private int scanCountDelta;
+
     public SequentialCubeTupleIterator(List<CubeScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
-            Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo) {
+            Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context) {
         this.cuboid = cuboid;
         this.selectedDimensions = selectedDimensions;
         this.selectedMetrics = selectedMetrics;
         this.tupleInfo = returnTupleInfo;
         this.tuple = new Tuple(returnTupleInfo);
         this.scannerIterator = scanners.iterator();
+        this.context = context;
     }
 
     @Override
@@ -80,6 +86,10 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
                 throw new NoSuchElementException();
         }
 
+        scanCount++;
+        if (++scanCountDelta >= 1000)
+            flushScanCountDelta();
+
         ITuple result = next;
         next = null;
         return result;
@@ -92,6 +102,8 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
+        flushScanCountDelta();
+
         if (curScanner != null)
             close(curScanner);
 
@@ -106,6 +118,15 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         } catch (IOException e) {
             logger.error("Exception when close CubeScanner", e);
         }
+    }
+    
+    public int getScanCount() {
+        return scanCount;
+    }
+
+    private void flushScanCountDelta() {
+        context.increaseTotalScanCount(scanCountDelta);
+        scanCountDelta = 0;
     }
 
 }

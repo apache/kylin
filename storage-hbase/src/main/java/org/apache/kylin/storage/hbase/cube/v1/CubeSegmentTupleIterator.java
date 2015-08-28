@@ -80,6 +80,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     private ResultScanner scanner;
     private Iterator<Result> resultIterator;
     private int scanCount;
+    private int scanCountDelta;
     private Tuple next;
 
     public CubeSegmentTupleIterator(CubeSegment cubeSeg, List<HBaseKeyRange> keyRanges, HConnection conn, //
@@ -100,7 +101,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         this.tupleConverter = new CubeTupleConverter(cubeSeg, cuboid, rowValueDecoders, returnTupleInfo);
         this.oneTuple = new Tuple(returnTupleInfo);
         this.rangeIterator = keyRanges.iterator();
-        this.scanCount = 0;
 
         try {
             this.table = conn.getTable(tableName);
@@ -129,6 +129,8 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
         Result result = resultIterator.next();
         scanCount++;
+        if (++scanCountDelta >= 1000)
+            flushScanCountDelta();
         tupleConverter.translateResult(result, oneTuple);
         next = oneTuple;
         return true;
@@ -237,8 +239,8 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     private List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> convertToHBasePair(List<org.apache.kylin.common.util.Pair<byte[], byte[]>> pairList) {
         List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> result = Lists.newArrayList();
-        for (org.apache.kylin.common.util.Pair pair : pairList) {
-            org.apache.hadoop.hbase.util.Pair element = new org.apache.hadoop.hbase.util.Pair(pair.getFirst(), pair.getSecond());
+        for (org.apache.kylin.common.util.Pair<byte[], byte[]> pair : pairList) {
+            org.apache.hadoop.hbase.util.Pair<byte[], byte[]> element = new org.apache.hadoop.hbase.util.Pair<byte[], byte[]>(pair.getFirst(), pair.getSecond());
             result.add(element);
         }
 
@@ -246,6 +248,8 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     }
 
     private void closeScanner() {
+        flushScanCountDelta();
+
         if (logger.isDebugEnabled() && scan != null) {
             logger.debug("Scan " + scan.toString());
             byte[] metricsBytes = scan.getAttribute(Scan.SCAN_ATTRIBUTES_METRICS_DATA);
@@ -280,6 +284,11 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         logger.info("Closing CubeSegmentTupleIterator");
         closeScanner();
         closeTable();
+    }
+
+    private void flushScanCountDelta() {
+        context.increaseTotalScanCount(scanCountDelta);
+        scanCountDelta = 0;
     }
 
 }

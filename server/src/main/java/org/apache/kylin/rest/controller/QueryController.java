@@ -21,9 +21,7 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
@@ -34,7 +32,6 @@ import net.sf.ehcache.Element;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -94,14 +91,14 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/query", method = RequestMethod.POST)
     @ResponseBody
     public SQLResponse query(@RequestBody SQLRequest sqlRequest) {
-        return doQuery(sqlRequest);
+        return doQueryWithCache(sqlRequest);
     }
 
     // TODO should be just "prepare" a statement, get back expected ResultSetMetaData
     @RequestMapping(value = "/query/prestate", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
     public SQLResponse prepareQuery(@RequestBody PrepareSqlRequest sqlRequest) {
-        return doQuery(sqlRequest);
+        return doQueryWithCache(sqlRequest);
     }
 
     @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
@@ -130,7 +127,7 @@ public class QueryController extends BasicController {
     @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET)
     @ResponseBody
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
-        SQLResponse result = doQuery(sqlRequest);
+        SQLResponse result = doQueryWithCache(sqlRequest);
         response.setContentType("text/" + format + ";charset=utf-8");
         response.setHeader("Content-Disposition", "attachment; filename=\"result." + format + "\"");
         ICsvListWriter csvWriter = null;
@@ -168,19 +165,7 @@ public class QueryController extends BasicController {
         }
     }
 
-    private SQLResponse doQuery(SQLRequest sqlRequest) {
-        initDebugToggles(sqlRequest);
-
-        long startTimestamp = System.currentTimeMillis();
-        SQLResponse response = doQueryInternal(sqlRequest);
-        response.setDuration(System.currentTimeMillis() - startTimestamp);
-        queryService.logQuery(sqlRequest, response, new Date(startTimestamp), new Date(System.currentTimeMillis()));
-
-        cleanupDebugToggles();
-        return response;
-    }
-
-    private SQLResponse doQueryInternal(SQLRequest sqlRequest) {
+    private SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
         String sql = sqlRequest.getSql();
         String project = sqlRequest.getProject();
         logger.info("Using project: " + project);
@@ -217,10 +202,12 @@ public class QueryController extends BasicController {
             }
         }
 
+        queryService.logQuery(sqlRequest, sqlResponse);
+        
         if (sqlResponse.getIsException())
             throw new InternalErrorException(sqlResponse.getExceptionMessage());
-        else
-            return sqlResponse;
+        
+        return sqlResponse;
     }
 
     private SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
@@ -249,20 +236,6 @@ public class QueryController extends BasicController {
 
     public void setCacheManager(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
-    }
-
-    private void initDebugToggles(SQLRequest sqlRequest) {
-
-        Map<String, String> toggles = sqlRequest.getBackdoorToggles();
-        if (toggles == null || toggles.size() == 0) {
-            return;
-        }
-
-        BackdoorToggles.setToggles(toggles);
-    }
-
-    private void cleanupDebugToggles() {
-        BackdoorToggles.cleanToggles();
     }
 
 }
