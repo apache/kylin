@@ -20,9 +20,15 @@
 dir=$(dirname ${0})
 source ${dir}/check-env.sh
 job_jar=`find ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
+HADOOP_FS=`sh $KYLIN_HOME/bin/get-properties.sh kylin.hadoop.cluster.fs`
 echo "Going to create sample tables in hive..."
 cd ${KYLIN_HOME}/sample_cube/data
+if [ -z $HADOOP_FS ];then
 hive -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+else
+hive -hiveconf fs.defaultFS=${HADOOP_FS} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+fi
+
 echo "Sample hive tables are created successfully; Going to create sample cube..."
 cd ${KYLIN_HOME}
 hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
