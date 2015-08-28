@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
 import au.com.bytecode.opencsv.CSVWriter;
 
 /**
- * Created by jiazhong on 2015/6/18.
+ * @author jiazhong
  */
 public class FileUtils {
 
@@ -113,7 +113,7 @@ public class FileUtils {
      */
     public static FileSystem getHdfsFileSystem() throws IOException {
         Configuration conf = new Configuration();
-        //        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+        //conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
         FileSystem fs = null;
         try {
             fs = FileSystem.newInstance(conf);

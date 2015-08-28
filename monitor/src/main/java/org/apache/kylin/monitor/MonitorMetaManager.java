@@ -35,7 +35,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.log4j.Logger;
 
 /**
- * Created by jiazhong on 2015/5/25.
+ * @author jiazhong
  */
 public class MonitorMetaManager {
 
