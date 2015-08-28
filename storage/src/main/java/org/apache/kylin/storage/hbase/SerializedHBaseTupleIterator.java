@@ -128,7 +128,6 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
-        context.setTotalScanCount(scanCount);
         segmentIterator.close();
     }
 }

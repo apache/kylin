@@ -20,6 +20,7 @@ package org.apache.kylin.storage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -53,14 +54,14 @@ public class StorageContext {
     private boolean enableLimit;
     private boolean enableCoprocessor;
 
-    private long totalScanCount;
+    private AtomicLong totalScanCount;
     private Cuboid cuboid;
     private boolean partialResultReturned;
 
     public StorageContext() {
         this.threshold = DEFAULT_THRESHOLD;
         this.limit = DEFAULT_THRESHOLD;
-        this.totalScanCount = 0;
+        this.totalScanCount = new AtomicLong();
         this.cuboid = null;
         this.aliasMap = HashBiMap.create();
         this.hasSort = false;
@@ -151,11 +152,11 @@ public class StorageContext {
     }
 
     public long getTotalScanCount() {
-        return totalScanCount;
+        return totalScanCount.get();
     }
 
-    public void setTotalScanCount(long totalScanCount) {
-        this.totalScanCount = totalScanCount;
+    public long increaseTotalScanCount(long count) {
+        return this.totalScanCount.addAndGet(count);
     }
 
     public boolean isAcceptPartialResult() {
