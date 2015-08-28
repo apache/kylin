@@ -27,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.kylin.rest.model.SelectedColumnMeta;
+import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 
 /**
@@ -97,8 +98,28 @@ public class QueryUtil {
         }
     }
 
+    public static String massageSql(SQLRequest sqlRequest) {
+        String sql = sqlRequest.getSql();
+        sql = sql.trim();
+        
+        while (sql.endsWith(";"))
+            sql = sql.substring(0, sql.length() - 1);
+
+        int limit = sqlRequest.getLimit();
+        if (limit > 0 && !sql.toLowerCase().contains("limit")) {
+            sql += (" LIMIT " + limit);
+        }
+
+        int offset = sqlRequest.getOffset();
+        if (offset > 0 && !sql.toLowerCase().contains("offset")) {
+            sql += (" OFFSET " + offset);
+        }
+        
+        return healSickSql(sql);
+    }
+
     // correct sick / invalid SQL
-    public static String healSickSql(String sql) {
+    private static String healSickSql(String sql) {
         Matcher m;
 
         // Case fn{ EXTRACT(...) }
