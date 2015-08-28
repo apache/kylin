@@ -32,8 +32,6 @@ import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterBuildStep;
 import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterMergeStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -45,7 +43,6 @@ public class JobBuilderSupport {
     final protected JobEngineConfig config;
     final protected CubeSegment seg;
     final protected String submitter;
-    final protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public JobBuilderSupport(CubeSegment seg, String submitter) {
         Preconditions.checkNotNull(seg, "segment cannot be null");

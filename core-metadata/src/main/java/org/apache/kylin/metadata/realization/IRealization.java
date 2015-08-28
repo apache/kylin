@@ -21,10 +21,11 @@ package org.apache.kylin.metadata.realization;
 import java.util.List;
 
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-public interface IRealization {
+public interface IRealization extends IStorageAware {
 
     public boolean isCapable(SQLDigest digest);
 

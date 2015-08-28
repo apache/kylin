@@ -44,7 +44,7 @@ public class StaticCacheTest {
 
         final AtomicInteger underlyingSEHitCount = new AtomicInteger(0);
 
-        CacheFledgedStaticStorageEngine cacheFledgedStaticStorageEngine = new CacheFledgedStaticStorageEngine(new ICachableStorageQuery() {
+        CacheFledgedStaticQuery cacheFledgedStaticStorageEngine = new CacheFledgedStaticQuery(new ICachableStorageQuery() {
             @Override
             public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
                 underlyingSEHitCount.incrementAndGet();

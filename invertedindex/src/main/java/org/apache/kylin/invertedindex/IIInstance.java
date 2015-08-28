@@ -27,6 +27,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -45,6 +46,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * @author honma
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class IIInstance extends RootPersistentEntity implements IRealization {
 
@@ -364,6 +366,11 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
 
     public void setCost(int cost) {
         this.cost = cost;
+    }
+
+    @Override
+    public int getStorageType() {
+        return IStorageAware.ID_HBASE;
     }
 
 }

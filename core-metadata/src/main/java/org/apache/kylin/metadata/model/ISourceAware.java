@@ -16,13 +16,12 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.source;
+package org.apache.kylin.metadata.model;
 
-import org.apache.kylin.metadata.model.TableDesc;
+public interface ISourceAware {
 
-public interface ITableSource {
+    public static final int ID_HIVE = 0;
+    public static final int ID_SPARKSQL = 5;
 
-    public <I> I adaptToBuildEngine(Class<I> engineInterface);
-
-    public ReadableTable createReadableTable(TableDesc tableDesc);
+    int getSourceType();
 }

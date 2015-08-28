@@ -37,7 +37,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.engine.BuildEngineFactory;
+import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
@@ -635,7 +635,7 @@ public class CubeService extends BasicService {
                     if (newSeg != null) {
                         newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd(), true);
                         logger.debug("Will submit merge job on " + newSeg);
-                        DefaultChainedExecutable job = BuildEngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
+                        DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
                         getExecutableManager().addJob(job);
                     } else {
                         logger.debug("Not ready for merge on cube " + cubeName);

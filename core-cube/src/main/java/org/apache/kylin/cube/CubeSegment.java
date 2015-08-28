@@ -326,7 +326,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
+        return Objects.toStringHelper(this).add("cube", cubeInstance.getName()).add("name", name).add("status", status).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("last_build_job_id", lastBuildJobID).toString();
     }
 
     public void setDictionaries(ConcurrentHashMap<String, String> dictionaries) {
@@ -347,16 +347,17 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
 
     @Override
     public int getSourceType() {
-        return 0;
+        return cubeInstance.getSourceType();
     }
 
     @Override
     public int getEngineType() {
-        return 0;
+        return cubeInstance.getEngineType();
     }
 
     @Override
     public int getStorageType() {
-        return 0;
+        return cubeInstance.getStorageType();
     }
+
 }

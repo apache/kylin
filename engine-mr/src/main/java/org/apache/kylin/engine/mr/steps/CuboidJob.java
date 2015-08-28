@@ -21,7 +21,6 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -128,7 +127,7 @@ public class CuboidJob extends AbstractHadoopJob {
     private void configureMapperInputFormat(CubeSegment cubeSeg) throws IOException {
         String input = getOptionValue(OPTION_INPUT_PATH);
 
-        if (StringUtils.isBlank(input)) {
+        if ("FLAT_TABLE".equals(input)) {
             // base cuboid case
             IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
             flatTableInputFormat.configureJob(job);

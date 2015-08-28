@@ -19,10 +19,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Ranges;
 
-public class CacheFledgedStaticStorageEngine extends AbstractCacheFledgedStorageEngine {
-    private static final Logger logger = LoggerFactory.getLogger(CacheFledgedStaticStorageEngine.class);
+public class CacheFledgedStaticQuery extends AbstractCacheFledgedQuery {
+    private static final Logger logger = LoggerFactory.getLogger(CacheFledgedStaticQuery.class);
 
-    public CacheFledgedStaticStorageEngine(ICachableStorageQuery underlyingStorage) {
+    public CacheFledgedStaticQuery(ICachableStorageQuery underlyingStorage) {
         super(underlyingStorage);
     }
 

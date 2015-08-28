@@ -25,8 +25,11 @@ import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
 import org.apache.kylin.engine.mr.steps.SaveStatisticsStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BatchCubingJobBuilder2 extends JobBuilderSupport {
+    private static final Logger logger = LoggerFactory.getLogger(BatchCubingJobBuilder2.class);
 
     private final IMRBatchCubingInputSide inputSide;
     private final IMRBatchCubingOutputSide2 outputSide;
@@ -38,6 +41,8 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     }
 
     public CubingJob build() {
+        logger.info("MR_V2 new job to BUILD segment " + seg);
+        
         final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
         final String jobId = result.getId();
 

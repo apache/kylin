@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +62,7 @@ import com.google.common.collect.Maps;
 
 /**
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeDesc extends RootPersistentEntity {
 
@@ -217,29 +217,6 @@ public class CubeDesc extends RootPersistentEntity {
         return functions;
     }
 
-    /**
-     * @return
-     * @deprecated use getModel().getAllTables() instead
-     */
-    public List<TableDesc> listTables() {
-        MetadataManager metaMgr = MetadataManager.getInstance(config);
-        HashSet<String> tableNames = new HashSet<String>();
-        List<TableDesc> result = new ArrayList<TableDesc>();
-
-        tableNames.add(this.getFactTable().toUpperCase());
-        for (DimensionDesc dim : dimensions) {
-            String table = dim.getTable();
-            if (table != null)
-                tableNames.add(table.toUpperCase());
-        }
-
-        for (String tableName : tableNames) {
-            result.add(metaMgr.getTableDesc(tableName));
-        }
-
-        return result;
-    }
-
     public boolean isDerived(TblColRef col) {
         return derivedToHostMap.containsKey(col);
     }
@@ -330,7 +307,11 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public String getFactTable() {
-        return model.getFactTable().toUpperCase();
+        return model.getFactTable();
+    }
+    
+    public TableDesc getFactTableDesc() {
+        return model.getFactTableDesc();
     }
 
     public String[] getNullStrings() {
@@ -456,8 +437,8 @@ public class CubeDesc extends RootPersistentEntity {
         }
 
         sortDimAndMeasure();
-        initDimensionColumns(tables);
-        initMeasureColumns(tables);
+        initDimensionColumns();
+        initMeasureColumns();
 
         rowkey.init(this);
         if (hbaseMapping != null) {
@@ -473,7 +454,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    private void initDimensionColumns(Map<String, TableDesc> tables) {
+    private void initDimensionColumns() {
         for (DimensionDesc dim : dimensions) {
             JoinDesc join = dim.getJoin();
 
@@ -622,12 +603,12 @@ public class CubeDesc extends RootPersistentEntity {
         return ref;
     }
 
-    private void initMeasureColumns(Map<String, TableDesc> tables) {
+    private void initMeasureColumns() {
         if (measures == null || measures.isEmpty()) {
             return;
         }
 
-        TableDesc factTable = tables.get(getFactTable());
+        TableDesc factTable = getFactTableDesc();
         for (MeasureDesc m : measures) {
             m.setName(m.getName().toUpperCase());
 

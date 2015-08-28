@@ -25,10 +25,13 @@ import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class SparkCubingJobBuilder extends JobBuilderSupport {
+    private static final Logger logger = LoggerFactory.getLogger(SparkCubingJobBuilder.class);
 
     private final IMRInput.IMRBatchCubingInputSide inputSide;
     private final IMROutput2.IMRBatchCubingOutputSide2 outputSide;

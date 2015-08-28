@@ -28,14 +28,14 @@ import com.google.common.collect.Range;
 
 /**
  */
-public class CacheFledgedDynamicStorageEngine extends AbstractCacheFledgedStorageEngine {
-    private static final Logger logger = LoggerFactory.getLogger(CacheFledgedDynamicStorageEngine.class);
+public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
+    private static final Logger logger = LoggerFactory.getLogger(CacheFledgedDynamicQuery.class);
 
     private final TblColRef partitionColRef;
 
     private Range<Long> ts;
 
-    public CacheFledgedDynamicStorageEngine(ICachableStorageQuery underlyingStorage, TblColRef partitionColRef) {
+    public CacheFledgedDynamicQuery(ICachableStorageQuery underlyingStorage, TblColRef partitionColRef) {
         super(underlyingStorage);
         this.partitionColRef = partitionColRef;
 

@@ -35,7 +35,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableSignature;
-import org.apache.kylin.source.TableSourceFactory;
+import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -220,7 +220,7 @@ public class DictionaryManager {
             inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
         } else {
             TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(srcTable);
-            inpTable = TableSourceFactory.createReadableTable(tableDesc);
+            inpTable = SourceFactory.createReadableTable(tableDesc);
         }
 
         TableSignature inputSig = inpTable.getSignature();

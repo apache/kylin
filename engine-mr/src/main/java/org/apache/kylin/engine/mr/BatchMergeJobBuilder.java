@@ -26,11 +26,14 @@ import org.apache.kylin.engine.mr.IMROutput.IMRBatchMergeOutputSide;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.MergeCuboidJob;
 import org.apache.kylin.job.constant.ExecutableConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class BatchMergeJobBuilder extends JobBuilderSupport {
+    private static final Logger logger = LoggerFactory.getLogger(BatchMergeJobBuilder.class);
 
     private final IMRBatchMergeOutputSide outputSide;
 
@@ -40,6 +43,8 @@ public class BatchMergeJobBuilder extends JobBuilderSupport {
     }
 
     public CubingJob build() {
+        logger.info("MR_V1 new job to MERGE segment " + seg);
+        
         final CubingJob result = CubingJob.createMergeJob(seg, submitter, config);
         final String jobId = result.getId();
         final String cuboidRootPath = getCuboidRootPath(jobId);

@@ -14,32 +14,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
+package org.apache.kylin.storage.hybrid;
 
-package org.apache.kylin.source.hive;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.storage.IStorage;
+import org.apache.kylin.storage.IStorageQuery;
 
-import org.apache.kylin.engine.mr.IMRInput;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.ISource;
-import org.apache.kylin.source.ReadableTable;
+public class HybridStorage implements IStorage {
 
-@SuppressWarnings("unused")
-//used by reflection
-public class HiveTableSource implements ISource {
-
-    @SuppressWarnings("unchecked")
     @Override
-    public <I> I adaptToBuildEngine(Class<I> engineInterface) {
-        if (engineInterface == IMRInput.class) {
-            return (I) new HiveMRInput();
-        } else {
-            throw new RuntimeException("Cannot adapt to " + engineInterface);
-        }
+    public IStorageQuery createQuery(IRealization realization) {
+        return new HybridStorageQuery((HybridInstance) realization);
     }
 
     @Override
-    public ReadableTable createReadableTable(TableDesc tableDesc) {
-        return new HiveTable(tableDesc);
+    public <I> I adaptToBuildEngine(Class<I> engineInterface) {
+        throw new UnsupportedOperationException();
     }
 
 }

@@ -86,7 +86,7 @@ public class DynamicCacheTest {
         final AtomicInteger underlyingSEHitCount = new AtomicInteger(0);
         final List<Integer> returnedRowPerSearch = Lists.newArrayList();
 
-        CacheFledgedDynamicStorageEngine dynamicCache = new CacheFledgedDynamicStorageEngine(new ICachableStorageQuery() {
+        CacheFledgedDynamicQuery dynamicCache = new CacheFledgedDynamicQuery(new ICachableStorageQuery() {
             @Override
             public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
                 Range<Long> tsRagneInQuery = TsConditionExtractor.extractTsCondition(partitionCol, sqlDigest.filter);

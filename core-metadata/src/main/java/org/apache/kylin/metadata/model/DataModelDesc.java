@@ -36,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Sets;
 
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DataModelDesc extends RootPersistentEntity {
 
@@ -69,6 +70,8 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
+    private TableDesc factTableDesc;
+
     /**
      * Error messages during resolving json metadata
      */
@@ -100,6 +103,10 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public String getFactTable() {
         return factTable;
+    }
+    
+    public TableDesc getFactTableDesc() {
+        return factTableDesc;
     }
 
     public void setFactTable(String factTable) {
@@ -168,6 +175,11 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public void init(Map<String, TableDesc> tables) {
+        this.factTableDesc = tables.get(this.factTable.toUpperCase());
+        if (factTableDesc == null) {
+            throw new IllegalStateException("Fact table does not exist:" + this.factTable);
+        }
+
         initJoinColumns(tables);
         DimensionDesc.capicalizeStrings(dimensions);
         initPartitionDesc(tables);
@@ -195,6 +207,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
             StringUtil.toUpperCaseArray(join.getForeignKey(), join.getForeignKey());
             StringUtil.toUpperCaseArray(join.getPrimaryKey(), join.getPrimaryKey());
+            
             // primary key
             String[] pks = join.getPrimaryKey();
             TblColRef[] pkCols = new TblColRef[pks.length];
@@ -208,15 +221,12 @@ public class DataModelDesc extends RootPersistentEntity {
                 pkCols[i] = colRef;
             }
             join.setPrimaryKeyColumns(pkCols);
+            
             // foreign key
-            TableDesc factTable = tables.get(this.factTable.toUpperCase());
-            if (factTable == null) {
-                throw new IllegalStateException("Fact table does not exist:" + this.getFactTable());
-            }
             String[] fks = join.getForeignKey();
             TblColRef[] fkCols = new TblColRef[fks.length];
             for (int i = 0; i < fks.length; i++) {
-                ColumnDesc col = factTable.findColumnByName(fks[i]);
+                ColumnDesc col = factTableDesc.findColumnByName(fks[i]);
                 if (col == null) {
                     throw new IllegalStateException("Can't find column " + fks[i] + " in table " + this.getFactTable());
                 }
@@ -225,6 +235,7 @@ public class DataModelDesc extends RootPersistentEntity {
                 fkCols[i] = colRef;
             }
             join.setForeignKeyColumns(fkCols);
+            
             // Validate join in dimension
             if (pkCols.length != fkCols.length) {
                 throw new IllegalStateException("Primary keys(" + lookup.getTable() + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + this.getFactTable() + ") " + Arrays.toString(fks));
