@@ -59,8 +59,12 @@ public class HiveMRInput implements IMRInput {
         final String dbName;
         final String tableName;
 
-        public HiveTableInputFormat(String hiveTable) {
-            String[] parts = HadoopUtil.parseHiveTableName(hiveTable);
+        /**
+         * Construct a HiveTableInputFormat to read hive table.
+         * @param fullQualifiedTableName "databaseName.tableName"
+         */
+        public HiveTableInputFormat(String fullQualifiedTableName) {
+            String[] parts = HadoopUtil.parseHiveTableName(fullQualifiedTableName);
             dbName = parts[0];
             tableName = parts[1];
         }
@@ -112,8 +116,9 @@ public class HiveMRInput implements IMRInput {
             }
 
             ShellExecutable step = new ShellExecutable();
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             buf.append("hive -e \"");
+            buf.append(useDatabaseHql + "\n");
             buf.append(dropTableHql + "\n");
             buf.append(createTableHql + "\n");
             buf.append(insertDataHqls + "\n");
@@ -129,15 +134,18 @@ public class HiveMRInput implements IMRInput {
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
             GarbageCollectionStep step = new GarbageCollectionStep();
             step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
-            step.setOldHiveTable(flatHiveTableDesc.getTableName());
+            step.setIntermediateTableIdentity(getIntermediateTableIdentity());
             jobFlow.addTask(step);
         }
 
         @Override
         public IMRTableInputFormat getFlatTableInputFormat() {
-            return new HiveTableInputFormat(flatHiveTableDesc.getTableName());
+            return new HiveTableInputFormat(getIntermediateTableIdentity());
         }
 
+        private String getIntermediateTableIdentity() {
+            return conf.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatHiveTableDesc.getTableName();
+        }
     }
 
     public static class GarbageCollectionStep extends AbstractExecutable {
@@ -146,9 +154,9 @@ public class HiveMRInput implements IMRInput {
         protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
             StringBuffer output = new StringBuffer();
 
-            final String hiveTable = this.getOldHiveTable();
+            final String hiveTable = this.getIntermediateTableIdentity();
             if (StringUtils.isNotEmpty(hiveTable)) {
-                final String dropSQL = "USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";" + " DROP TABLE IF EXISTS  " + hiveTable + ";";
+                final String dropSQL = "DROP TABLE IF EXISTS  " + hiveTable + ";";
                 final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
                 ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
                 try {
@@ -164,11 +172,11 @@ public class HiveMRInput implements IMRInput {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
         }
 
-        public void setOldHiveTable(String hiveTable) {
-            setParam("oldHiveTable", hiveTable);
+        public void setIntermediateTableIdentity(String tableIdentity) {
+            setParam("oldHiveTable", tableIdentity);
         }
 
-        private String getOldHiveTable() {
+        private String getIntermediateTableIdentity() {
             return getParam("oldHiveTable");
         }
     }
