@@ -57,7 +57,7 @@ public final class IIJobBuilder {
         IIJob result = initialJob(seg, "BUILD", submitter);
         final String jobId = result.getId();
         final IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(seg.getIIDesc());
-        final String intermediateHiveTableName = intermediateTableDesc.getTableName();
+        final String intermediateTableIdentity = getIntermediateTableIdentity(intermediateTableDesc);
         final String factDistinctColumnsPath = getIIDistinctColumnsPath(seg, jobId);
         final String iiRootPath = getJobWorkingDir(jobId) + "/" + seg.getIIInstance().getName() + "/";
         final String iiPath = iiRootPath + "*";
@@ -65,11 +65,11 @@ public final class IIJobBuilder {
         final AbstractExecutable intermediateHiveTableStep = createFlatHiveTableStep(intermediateTableDesc, jobId);
         result.addTask(intermediateHiveTableStep);
 
-        result.addTask(createFactDistinctColumnsStep(seg, intermediateHiveTableName, jobId, factDistinctColumnsPath));
+        result.addTask(createFactDistinctColumnsStep(seg, intermediateTableIdentity, jobId, factDistinctColumnsPath));
 
         result.addTask(createBuildDictionaryStep(seg, factDistinctColumnsPath));
 
-        result.addTask(createInvertedIndexStep(seg, intermediateHiveTableName, iiRootPath));
+        result.addTask(createInvertedIndexStep(seg, intermediateTableIdentity, iiRootPath));
 
         // create htable step
         result.addTask(createCreateHTableStep(seg));
@@ -222,5 +222,9 @@ public final class IIJobBuilder {
 
     private String getJobWorkingDir(String uuid) {
         return engineConfig.getHdfsWorkingDirectory() + "/" + "kylin-" + uuid;
+    }
+
+    private String getIntermediateTableIdentity(IIJoinedFlatTableDesc intermediateTableDesc) {
+        return engineConfig.getConfig().getHiveDatabaseForIntermediateTable() + "." + intermediateTableDesc.getTableName();
     }
 }
