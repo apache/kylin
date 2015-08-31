@@ -24,6 +24,7 @@
         <description>enable map-side join</description>
     </property>
 
+    <!--
     <property>
         <name>mapreduce.map.output.compress.codec</name>
         <value>org.apache.hadoop.io.compress.SnappyCodec</value>
@@ -34,7 +35,8 @@
         <value>org.apache.hadoop.io.compress.SnappyCodec</value>
         <description></description>
     </property>
-   
+    -->
+
     <property>
         <name>hive.merge.mapfiles</name>
         <value>true</value>

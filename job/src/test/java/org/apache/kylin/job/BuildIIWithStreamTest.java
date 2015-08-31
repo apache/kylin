@@ -120,7 +120,7 @@ public class BuildIIWithStreamTest {
         JobEngineConfig jobEngineConfig = new JobEngineConfig(kylinConfig);
         final String uuid = UUID.randomUUID().toString();
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc);
-        final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, JobBuilderSupport.getJobWorkingDir(jobEngineConfig,uuid));
+        final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, JobBuilderSupport.getJobWorkingDir(jobEngineConfig, uuid));
         String insertDataHqls;
         try {
             insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobEngineConfig);

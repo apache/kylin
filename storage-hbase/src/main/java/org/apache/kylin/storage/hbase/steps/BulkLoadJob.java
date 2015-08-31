@@ -48,6 +48,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
         Options options = new Options();
 
         try {
+            
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_HTABLE_NAME);
             options.addOption(OPTION_CUBE_NAME);

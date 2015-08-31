@@ -75,7 +75,6 @@ public class BuildCubeWithStreamTest {
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
         System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
-
     }
 
     @Before
