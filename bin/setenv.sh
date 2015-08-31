@@ -18,7 +18,7 @@ then
     echo "KYLIN_JVM_SETTINGS is ${KYLIN_JVM_SETTINGS}"
     KYLIN_EXTRA_START_OPTS="${KYLIN_JVM_SETTINGS} ${KYLIN_EXTRA_START_OPTS}"
 else
-    echo "KYLIN_JVM_SETTINGS is not set, using default jvm settings"
+    echo "KYLIN_JVM_SETTINGS is not set, using default jvm settings: ${KYLIN_JVM_SETTINGS}"
 fi
 
 if [ ! -z "${KYLIN_DEBUG_SETTINGS}" ]
@@ -34,5 +34,5 @@ then
     echo "KYLIN_LD_LIBRARY_SETTINGS is ${KYLIN_LD_LIBRARY_SETTINGS}"
     KYLIN_EXTRA_START_OPTS="${KYLIN_LD_LIBRARY_SETTINGS} ${KYLIN_EXTRA_START_OPTS}"
 else
-    echo "KYLIN_LD_LIBRARY_SETTINGS is not set, Usually it's okay unless you want to enable LZO compression, etc. "
+    echo "KYLIN_LD_LIBRARY_SETTINGS is not set, Usually it's okay unless you want to specify your own native path"
 fi

@@ -11,6 +11,7 @@
     </property>
 
 
+    <!--
     <property>
         <name>mapred.compress.map.output</name>
         <value>true</value>
@@ -42,8 +43,7 @@
         <value>BLOCK</value>
         <description>The compression type to use for job outputs</description>
     </property>
-
-
+    -->
 
     <property>
         <name>mapreduce.job.max.split.locations</name>

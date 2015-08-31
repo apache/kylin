@@ -51,10 +51,12 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
+@Ignore
 public class TestFuzzyRowFilterV2EndToEnd {
     private final static HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
     private final static byte fuzzyValue = (byte) 63;
@@ -75,8 +77,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
     public static void setUpBeforeClass() throws Exception {
         Configuration conf = TEST_UTIL.getConfiguration();
         conf.setInt("hbase.client.scanner.caching", 1000);
-        conf.set(HConstants.HBASE_REGION_SPLIT_POLICY_KEY,
-                ConstantSizeRegionSplitPolicy.class.getName());
+        conf.set(HConstants.HBASE_REGION_SPLIT_POLICY_KEY, ConstantSizeRegionSplitPolicy.class.getName());
         // set no splits
         conf.setLong(HConstants.HREGION_MAX_FILESIZE, ((long) 1024) * 1024 * 1024 * 10);
 
@@ -111,8 +112,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
     public void testEndToEnd() throws Exception {
         String cf = "f";
 
-        HTable ht =
-                TEST_UTIL.createTable(TableName.valueOf(table), Bytes.toBytes(cf), Integer.MAX_VALUE);
+        HTable ht = TEST_UTIL.createTable(TableName.valueOf(table), Bytes.toBytes(cf), Integer.MAX_VALUE);
 
         // 10 byte row key - (2 bytes 4 bytes 4 bytes)
         // 4 byte qualifier
@@ -250,8 +250,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
     public void testFilterList() throws Exception {
         String cf = "f";
         String table = "TestFuzzyRowFiltersInFilterList";
-        HTable ht =
-                TEST_UTIL.createTable(TableName.valueOf(table), Bytes.toBytes(cf), Integer.MAX_VALUE);
+        HTable ht = TEST_UTIL.createTable(TableName.valueOf(table), Bytes.toBytes(cf), Integer.MAX_VALUE);
 
         // 10 byte row key - (2 bytes 4 bytes 4 bytes)
         // 4 byte qualifier
@@ -276,8 +275,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
                     p.setDurability(Durability.SKIP_WAL);
                     p.add(cf.getBytes(), cq, Bytes.toBytes(c));
                     ht.put(p);
-                    LOG.info("Inserting: rk: " + Bytes.toStringBinary(rk) + " cq: "
-                            + Bytes.toStringBinary(cq));
+                    LOG.info("Inserting: rk: " + Bytes.toStringBinary(rk) + " cq: " + Bytes.toStringBinary(cq));
                 }
             }
         }
@@ -320,8 +318,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
         runScanner(hTable, expectedSize, fuzzyRowFilter1, fuzzyRowFilter2);
     }
 
-    private void runScanner(HTable hTable, int expectedSize, Filter filter1, Filter filter2)
-            throws IOException {
+    private void runScanner(HTable hTable, int expectedSize, Filter filter1, Filter filter2) throws IOException {
         String cf = "f";
         Scan scan = new Scan();
         scan.addFamily(cf.getBytes());
@@ -334,8 +331,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
         long timeBeforeScan = System.currentTimeMillis();
         while ((result = scanner.next()) != null) {
             for (Cell kv : result.listCells()) {
-                LOG.info("Got rk: " + Bytes.toStringBinary(CellUtil.cloneRow(kv)) + " cq: "
-                        + Bytes.toStringBinary(CellUtil.cloneQualifier(kv)));
+                LOG.info("Got rk: " + Bytes.toStringBinary(CellUtil.cloneRow(kv)) + " cq: " + Bytes.toStringBinary(CellUtil.cloneQualifier(kv)));
                 results.add(kv);
             }
         }
@@ -348,5 +344,3 @@ public class TestFuzzyRowFilterV2EndToEnd {
         assertEquals(expectedSize, results.size());
     }
 }
-
-

@@ -18,7 +18,13 @@
 
 package org.apache.kylin.engine.spark;
 
-import com.google.common.collect.Lists;
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
@@ -42,12 +48,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.collect.Lists;
 
 public class BuildCubeWithSparkTest {
 
@@ -120,7 +121,7 @@ public class BuildCubeWithSparkTest {
         waitForJob(cubingJob.getId());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(cubingJob.getId()).getState());
     }
-    
+
     private void clearSegment(String cubeName) throws Exception {
         CubeInstance cube = cubeManager.getCube(cubeName);
         // remove all existing segments

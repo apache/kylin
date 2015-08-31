@@ -237,7 +237,6 @@ public class BuildIIWithEngineTest {
         return exitCode;
     }
 
-
     public static void main(String[] args) throws Exception {
         BuildIIWithEngineTest instance = new BuildIIWithEngineTest();
 
