@@ -16,45 +16,36 @@
 
 package org.apache.kylin.common.topn;
 
-import org.apache.kylin.common.topn.Counter;
-import org.apache.kylin.common.topn.TopNCounter;
 import org.junit.Test;
 
-import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-
 public class TopNCounterBasicTest {
 
     @Test
     public void testTopNCounter() {
         TopNCounter<String> vs = new TopNCounter<String>(3);
-        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "A", "A", "Y"};
+        String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "A", "A", "Y" };
         for (String i : stream) {
-                vs.offer(i);
-            /*
-        for(String s : vs.poll(3))
-        System.out.print(s+" ");
-             */
-            System.out.println(vs);
+            vs.offer(i);
         }
 
         List<Counter<String>> topk = vs.topK(6);
-        
-        for(Counter<String> top : topk) {
+
+        for (Counter<String> top : topk) {
             System.out.println(top.getItem() + ":" + top.getCount() + ":" + top.getError());
         }
-        
+
     }
 
     @Test
     public void testTopK() {
         TopNCounter<String> vs = new TopNCounter<String>(3);
-        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A"};
+        String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A" };
         for (String i : stream) {
             vs.offer(i);
         }
@@ -67,7 +58,7 @@ public class TopNCounterBasicTest {
     @Test
     public void testTopKWithIncrement() {
         TopNCounter<String> vs = new TopNCounter<String>(3);
-        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A"};
+        String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A" };
         for (String i : stream) {
             vs.offer(i, 10);
         }
@@ -81,8 +72,8 @@ public class TopNCounterBasicTest {
     public void testTopKWithIncrementOutOfOrder() {
         TopNCounter<String> vs_increment = new TopNCounter<String>(3);
         TopNCounter<String> vs_single = new TopNCounter<String>(3);
-        String[] stream = {"A", "B", "C", "D", "A"};
-        Integer[] increments = {15, 20, 25, 30, 1};
+        String[] stream = { "A", "B", "C", "D", "A" };
+        Integer[] increments = { 15, 20, 25, 30, 1 };
 
         for (int i = 0; i < stream.length; i++) {
             vs_increment.offer(stream[i], increments[i]);
@@ -98,102 +89,33 @@ public class TopNCounterBasicTest {
         List<Counter<String>> topK_single = vs_single.topK(3);
 
         for (int i = 0; i < topK_increment.size(); i++) {
-            assertEquals(topK_increment.get(i).getItem(),
-                    topK_single.get(i).getItem());
+            assertEquals(topK_increment.get(i).getItem(), topK_single.get(i).getItem());
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testCounterSerialization() throws IOException, ClassNotFoundException {
-        TopNCounter<String> vs = new TopNCounter<String>(3);
-        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A"};
-        for (String i : stream) {
-            vs.offer(i);
-        }
-        List<Counter<String>> topK = vs.topK(3);
-        for (Counter<String> c : topK) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutput oo = new ObjectOutputStream(baos);
-            oo.writeObject(c);
-            oo.close();
-
-            ObjectInput oi = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-            Counter<String> clone = (Counter<String>) oi.readObject();
-            assertEquals(c.getCount(), clone.getCount(), 0.0001);
-            assertEquals(c.getError(), clone.getError(), 0.0001);
-            assertEquals(c.getItem(), clone.getItem());
-        }
-    }
-
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testSerialization() throws IOException, ClassNotFoundException {
-        TopNCounter<String> vs = new TopNCounter<String>(3);
-        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A"};
-        for (String i : stream) {
-            vs.offer(i);
-        }
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutput oo = new ObjectOutputStream(baos);
-        oo.writeObject(vs);
-        oo.close();
-
-        ObjectInput oi = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-        TopNCounter<String> clone = (TopNCounter<String>) oi.readObject();
-
-        assertEquals(vs.toString(), clone.toString());
-    }
-
-
-    @Test
-    public void testByteSerialization() throws IOException, ClassNotFoundException {
-        TopNCounter<String> vs = new TopNCounter<String>(3);
-        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A"};
-        for (String i : stream) {
-            vs.offer(i);
-        }
-
-        testSerialization(vs);
-
-        // Empty
-        vs = new TopNCounter<String>(0);
-        testSerialization(vs);
-    }
-
-    private void testSerialization(TopNCounter<?> vs) throws IOException, ClassNotFoundException {
-        byte[] bytes = vs.toBytes();
-        TopNCounter<String> clone = new TopNCounter<String>(bytes);
-
-        assertEquals(vs.toString(), clone.toString());
-    }
-    
     @Test
     public void testRetain() {
         TopNCounter<String> vs = new TopNCounter<String>(10);
-        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A"};
+        String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A" };
         for (String i : stream) {
             vs.offer(i);
         }
-        
+
         vs.retain(5);
         assertTrue(vs.size() <= 5);
         assertTrue(vs.getCapacity() <= 5);
     }
-    
+
     @Test
     public void testMerge() {
 
         TopNCounter<String> vs = new TopNCounter<String>(10);
-        String[] stream = {"X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "B"};
+        String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "B" };
         for (String i : stream) {
             vs.offer(i);
         }
 
-
-        String[] stream2 = {"B", "B", "Z", "Z", "B", "C", "X", "X"};
+        String[] stream2 = { "B", "B", "Z", "Z", "B", "C", "X", "X" };
         TopNCounter<String> vs2 = new TopNCounter<String>(10);
         for (String i : stream2) {
             vs2.offer(i);
@@ -204,6 +126,6 @@ public class TopNCounterBasicTest {
         for (Counter<String> c : topK) {
             assertTrue(Arrays.asList("A", "B", "X").contains(c.getItem()));
         }
-        
+
     }
 }

@@ -38,7 +38,7 @@ import java.util.Map;
  *
  * @param <T> type of data in the stream to be summarized
  */
-public class TopNCounter<T> implements ITopK<T>, Externalizable {
+public class TopNCounter<T> implements ITopK<T> {
     
     public static final int EXTRA_SPACE_RATE = 50;
 
@@ -101,7 +101,7 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
      * @param item stream element (<i>e</i>)
      * @return item dropped from summary if an item was dropped, null otherwise
      */
-    public T offerReturnDropped(T item, int incrementCount) {
+    public T offerReturnDropped(T item, double incrementCount) {
         return offerReturnAll(item, incrementCount).getSecond();
     }
 
@@ -241,28 +241,6 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
         return sb.toString();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        this.bucketList = new DoublyLinkedList<Bucket>();
-        this.capacity = in.readInt();
-
-        int size = in.readInt();
-        this.counterMap = new HashMap<T, ListNode2<Counter<T>>>(size);
-
-        Bucket currentBucket = null;
-        ListNode2<Bucket> currentBucketNode = null;
-        for (int i = 0; i < size; i++) {
-            Counter<T> c = (Counter<T>) in.readObject();
-            if (currentBucket == null || c.count != currentBucket.count) {
-                currentBucket = new Bucket(c.count);
-                currentBucketNode = bucketList.add(currentBucket);
-            }
-            c.bucketNode = currentBucketNode;
-            counterMap.put(c.item, currentBucket.counterList.add(c));
-        }
-    }
-
     public void fromExternal(int size, double[] counters, List<T> items) {
         this.bucketList = new DoublyLinkedList<Bucket>();
 
@@ -283,46 +261,10 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
         }
     }
 
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeInt(this.capacity);
-        out.writeInt(this.size());
-        for (ListNode2<Bucket> bNode = bucketList.tail(); bNode != null; bNode = bNode.getNext()) {
-            Bucket b = bNode.getValue();
-            for (Counter<T> c : b.counterList) {
-                out.writeObject(c);
-            }
-        }
-    }
-
     /**
      * For de-serialization
      */
     public TopNCounter() {
-    }
-
-    /**
-     * For de-serialization
-     *
-     * @param bytes
-     * @throws java.io.IOException
-     * @throws ClassNotFoundException
-     */
-    public TopNCounter(byte[] bytes) throws IOException, ClassNotFoundException {
-        fromBytes(bytes);
-    }
-
-    public void fromBytes(byte[] bytes) throws IOException, ClassNotFoundException {
-        readExternal(new ObjectInputStream(new ByteArrayInputStream(bytes)));
-    }
-
-    public byte[] toBytes() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream out = new ObjectOutputStream(baos);
-        this.writeExternal(out);
-        out.flush();
-        return baos.toByteArray();
-
     }
 
     /**
@@ -387,12 +329,16 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
         }
 
     }
-    
+
+    /**
+     * Get the counter values in ascending order
+     * @return
+     */
     public double[] getCounters() {
         double[] counters = new double[size()];
         int index = 0;
 
-        for (ListNode2<Bucket> bNode = bucketList.head(); bNode != null; bNode = bNode.getPrev()) {
+        for (ListNode2<Bucket> bNode = bucketList.tail(); bNode != null; bNode = bNode.getNext()) {
             Bucket b = bNode.getValue();
             for (Counter<T> c : b.counterList) {
                 counters[index] = c.count;
@@ -402,10 +348,14 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
 
         return counters;
     }
-    
+
+    /**
+     * Get the item list order by counter values in ascending order
+     * @return
+     */
     public List<T> getItems() {
         List<T> items = Lists.newArrayList();
-        for (ListNode2<Bucket> bNode = bucketList.head(); bNode != null; bNode = bNode.getPrev()) {
+        for (ListNode2<Bucket> bNode = bucketList.tail(); bNode != null; bNode = bNode.getNext()) {
             Bucket b = bNode.getValue();
             for (Counter<T> c : b.counterList) {
                 items.add(c.item);
