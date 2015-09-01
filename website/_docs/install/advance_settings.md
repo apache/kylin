@@ -15,7 +15,7 @@ To enable LZO in Kylin, follow these steps:
 
 ### Make sure LZO is working in your environment
 
-We have a simple tool to test whether LZO is well installed on EVERY SERVER in hbase cluster (http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.1.2/bk_installing_manually_book/content/rpm-chap2-3.html), and restart the cluster.
+We have a simple tool to test whether LZO is well installed on EVERY SERVER in hbase cluster ( http://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.2.4/bk_installing_manually_book/content/ch_install_hdfs_yarn_chapter.html#install-snappy-man-install ), and restart the cluster.
 To test it on the hadoop CLI that you deployed Kylin, Just run
 
 {% highlight Groff markup %}
