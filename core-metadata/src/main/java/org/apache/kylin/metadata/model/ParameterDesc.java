@@ -40,8 +40,8 @@ public class ParameterDesc {
     @JsonProperty("value")
     private String value;
     
-    @JsonProperty("counter")
-    private String counter;
+    @JsonProperty("displaycolumn")
+    private String displayColumn;
 
     private List<TblColRef> colRefs;
 
@@ -65,12 +65,12 @@ public class ParameterDesc {
         this.value = value;
     }
 
-    public String getCounter() {
-        return counter;
+    public String getDisplayColumn() {
+        return displayColumn;
     }
 
-    public void setCounter(String counter) {
-        this.counter = counter;
+    public void setDisplayColumn(String displayColumn) {
+        this.displayColumn = displayColumn;
     }
 
     public List<TblColRef> getColRefs() {
@@ -102,7 +102,7 @@ public class ParameterDesc {
 
         ParameterDesc that = (ParameterDesc) o;
 
-        if (counter != null ? !counter.equals(that.counter) : that.counter != null) return false;
+        if (displayColumn != null ? !displayColumn.equals(that.displayColumn) : that.displayColumn != null) return false;
         if (type != null ? !type.equals(that.type) : that.type != null) return false;
         if (value != null ? !value.equals(that.value) : that.value != null) return false;
 
@@ -113,13 +113,13 @@ public class ParameterDesc {
     public int hashCode() {
         int result = type != null ? type.hashCode() : 0;
         result = 31 * result + (value != null ? value.hashCode() : 0);
-        result = 31 * result + (counter != null ? counter.hashCode() : 0);
+        result = 31 * result + (displayColumn != null ? displayColumn.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "ParameterDesc [type=" + type + ", value=" + value + ", counter=" + counter + "]";
+        return "ParameterDesc [type=" + type + ", value=" + value + ", displayColumn=" + displayColumn + "]";
     }
 
 }

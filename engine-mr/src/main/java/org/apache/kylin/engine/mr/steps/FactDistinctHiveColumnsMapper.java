@@ -23,7 +23,9 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
@@ -36,13 +38,12 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author yangli9
  */
 public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, Object> {
-
-    private CubeJoinedFlatTableDesc intermediateTableDesc;
 
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
@@ -58,7 +59,8 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     @Override
     protected void setup(Context context) throws IOException {
         super.setup(context);
-        intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
+
+        
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
             SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
@@ -111,9 +113,9 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     public void map(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         String[] row = flatTableInputFormat.parseMapperInput(record);
         try {
-            for (int i : factDictCols) {
-                outputKey.set((long) i);
-                String fieldValue = row[intermediateTableDesc.getRowKeyColumnIndexes()[i]];
+            for (int i = 0; i < factDictCols.size(); i++) {
+                outputKey.set((long) factDictCols.get(i));
+                String fieldValue = row[dictionaryColumnIndex[i]];
                 if (fieldValue == null)
                     continue;
                 byte[] bytes = Bytes.toBytes(fieldValue);

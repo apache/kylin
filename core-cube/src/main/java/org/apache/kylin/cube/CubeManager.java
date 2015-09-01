@@ -163,11 +163,11 @@ public class CubeManager implements IRealizationProvider {
 
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
-        if (!cubeDesc.getRowkey().isUseDictionary(col))
+        if (!cubeDesc.getAllColumnsNeedDictionary().contains(col))
             return null;
 
         DictionaryManager dictMgr = getDictionaryManager();
-        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factTableValueProvider);
+        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), "true", col, factTableValueProvider);
 
         if (dictInfo != null) {
             cubeSeg.putDictResPath(col, dictInfo.getResourcePath());

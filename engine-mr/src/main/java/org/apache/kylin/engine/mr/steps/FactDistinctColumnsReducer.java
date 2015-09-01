@@ -77,9 +77,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
 
-        baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-        columnList = baseCuboid.getColumns();
+        columnList = cubeDesc.getAllColumnsNeedDictionary();
         collectStatistics = Boolean.parseBoolean(conf.get(BatchConstants.CFG_STATISTICS_ENABLED));
         statisticsOutput = conf.get(BatchConstants.CFG_STATISTICS_OUTPUT);
 

@@ -63,6 +63,10 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
             return new HLLCSerializer(type);
         }
 
+        if (type.isTopN()) {
+            return new TopNCounterSerializer(type);
+        }
+
         Class<?> clz = implementations.get(type.getName());
         if (clz == null)
             throw new RuntimeException("No MeasureSerializer for type " + type);
