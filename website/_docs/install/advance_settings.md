@@ -9,7 +9,7 @@ since: v0.7.1
 
 ## Enabling LZO compression
 
-LZO compression can be leveraged to compress the output of MR jobs, as well as hbase table storage, reducing the storage overhead. By default we do not enable LZO compression in Kylin because hadoop sandbox venders tend to not include LZO in their distributions due to license(GPL) issues.
+By default Kylin leverages snappy compression to compress the output of MR jobs, as well as hbase table storage, reducing the storage overhead. We do not choose LZO compression in Kylin because hadoop venders tend to not include LZO in their distributions due to license(GPL) issues.
 
 To enable LZO in Kylin, follow these steps:
 
