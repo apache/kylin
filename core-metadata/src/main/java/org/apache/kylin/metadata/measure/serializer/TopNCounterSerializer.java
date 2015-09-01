@@ -18,44 +18,92 @@
 
 package org.apache.kylin.metadata.measure.serializer;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import com.google.common.collect.Lists;
+import org.apache.kylin.common.topn.DoubleDeltaSerializer;
 import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.DataType;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 /**
  * 
  */
 public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteArray>> {
 
-    // be thread-safe and avoid repeated obj creation
-    private ThreadLocal<TopNCounter<ByteArray>> current = new ThreadLocal<TopNCounter<ByteArray>>();
+    private DoubleDeltaSerializer dds = new DoubleDeltaSerializer();
+
+    private int precision;
+    
+    public TopNCounterSerializer(DataType dataType) {
+        this.precision = dataType.getPrecision();
+    }
 
     @Override
     public int peekLength(ByteBuffer in) {
-        return 0;
+        int mark = in.position();
+        int capacity = in.getInt();
+        int size = in.getInt();
+        int keyLength = in.getInt();
+        dds.deserialize(in);
+        int len = in.position() - mark + keyLength * size;
+        in.position(mark);
+        return len;
     }
 
     @Override
     public int maxLength() {
-        return 0;
+        return precision * TopNCounter.EXTRA_SPACE_RATE * (4 + 8);
     }
 
     @Override
     public TopNCounter<ByteArray> valueOf(byte[] value) {
-        return null;
+        ByteBuffer buffer = ByteBuffer.wrap(value);
+        int sizeOfId = buffer.getInt();
+        int keyEncodedValue = buffer.getInt();
+        double counter = buffer.getDouble();
+
+        ByteArray key = new ByteArray(sizeOfId);
+        BytesUtil.writeUnsigned(keyEncodedValue, key.array(), 0, sizeOfId);
+        
+        TopNCounter<ByteArray> topNCounter = new TopNCounter<ByteArray>(precision * TopNCounter.EXTRA_SPACE_RATE);
+        topNCounter.offer(key, counter);
+        return topNCounter;
     }
 
     @Override
     public void serialize(TopNCounter<ByteArray> value, ByteBuffer out) {
+        double[] counters = value.getCounters();
+        List<ByteArray> items = value.getItems();
+        int keyLength = items.size() > 0 ? items.get(0).length() : 0;
+        out.putInt(value.getCapacity());
+        out.putInt(value.size());
+        out.putInt(keyLength);
+        dds.serialize(counters, out);
 
+        for (ByteArray item : items) {
+            out.put(item.array());
+        }
     }
 
     @Override
     public TopNCounter<ByteArray> deserialize(ByteBuffer in) {
-        return null;
+        int capacity = in.getInt();
+        int size = in.getInt();
+        int keyLength = in.getInt();
+        double[] counters = dds.deserialize(in);
+        List<ByteArray> items = Lists.newArrayList();
+        
+        for(int i=0; i<size; i++) {
+            ByteArray byteArray = new ByteArray(keyLength);
+            in.get(byteArray.array());
+            items.add(byteArray);
+        }
+        
+        TopNCounter<ByteArray> counter = new TopNCounter<ByteArray>(capacity);
+        counter.fromExternal(size, counters, items);
+        return counter;
     }
 }

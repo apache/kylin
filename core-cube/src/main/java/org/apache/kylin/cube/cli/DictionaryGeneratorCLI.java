@@ -18,8 +18,6 @@
 
 package org.apache.kylin.cube.cli;
 
-import java.io.IOException;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -30,6 +28,8 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class DictionaryGeneratorCLI {
 
@@ -45,15 +45,13 @@ public class DictionaryGeneratorCLI {
     private static void processSegment(KylinConfig config, CubeSegment cubeSeg, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
-        for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
-            // dictionary
-            for (TblColRef col : dim.getColumnRefs()) {
-                if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
-                    logger.info("Building dictionary for " + col);
-                    cubeMgr.buildDictionary(cubeSeg, col, factTableValueProvider);
-                }
-            }
+        // dictionary
+        for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionary()) {
+            logger.info("Building dictionary for " + col);
+            cubeMgr.buildDictionary(cubeSeg, col, factTableValueProvider);
+        }
 
+        for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
             // build snapshot
             if (dim.getTable() != null && !dim.getTable().equalsIgnoreCase(cubeSeg.getCubeDesc().getFactTable())) {
                 // CubeSegment seg = cube.getTheOnlySegment();

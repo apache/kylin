@@ -18,9 +18,11 @@
 
 package org.apache.kylin.common.topn;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.Pair;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +39,8 @@ import java.util.Map;
  * @param <T> type of data in the stream to be summarized
  */
 public class TopNCounter<T> implements ITopK<T>, Externalizable {
+    
+    public static final int EXTRA_SPACE_RATE = 50;
 
     protected class Bucket {
 
@@ -259,6 +263,26 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
         }
     }
 
+    public void fromExternal(int size, double[] counters, List<T> items) {
+        this.bucketList = new DoublyLinkedList<Bucket>();
+
+        this.counterMap = new HashMap<T, ListNode2<Counter<T>>>(size);
+
+        Bucket currentBucket = null;
+        ListNode2<Bucket> currentBucketNode = null;
+        for (int i = 0; i < size; i++) {
+            Counter<T> c = new Counter<T>();
+            c.count = counters[i];
+            c.item = items.get(i);
+            if (currentBucket == null || c.count != currentBucket.count) {
+                currentBucket = new Bucket(c.count);
+                currentBucketNode = bucketList.add(currentBucket);
+            }
+            c.bucketNode = currentBucketNode;
+            counterMap.put(c.item, currentBucket.counterList.add(c));
+        }
+    }
+
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeInt(this.capacity);
@@ -361,6 +385,34 @@ public class TopNCounter<T> implements ITopK<T>, Externalizable {
 
             tail.next = null;
         }
+
+    }
+    
+    public double[] getCounters() {
+        double[] counters = new double[size()];
+        int index = 0;
+
+        for (ListNode2<Bucket> bNode = bucketList.head(); bNode != null; bNode = bNode.getPrev()) {
+            Bucket b = bNode.getValue();
+            for (Counter<T> c : b.counterList) {
+                counters[index] = c.count;
+                index ++;
+            }
+        }
+
+        return counters;
+    }
+    
+    public List<T> getItems() {
+        List<T> items = Lists.newArrayList();
+        for (ListNode2<Bucket> bNode = bucketList.head(); bNode != null; bNode = bNode.getPrev()) {
+            Bucket b = bNode.getValue();
+            for (Counter<T> c : b.counterList) {
+                items.add(c.item);
+            }
+        }
+
+        return items;
 
     }
 }

@@ -129,6 +129,7 @@ public class CubeDesc extends RootPersistentEntity {
     private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<TblColRef>();
+    private LinkedHashSet<TblColRef> measureDisplayColumns = new LinkedHashSet<TblColRef>();
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
 
@@ -628,18 +629,28 @@ public class CubeDesc extends RootPersistentEntity {
             ParameterDesc p = f.getParameter();
             p.normalizeColumnValue();
 
+            ArrayList<TblColRef> colRefs = Lists.newArrayList();
             if (p.isColumnType()) {
-                ArrayList<TblColRef> colRefs = Lists.newArrayList();
                 for (String cName : p.getValue().split("\\s*,\\s*")) {
                     ColumnDesc sourceColumn = factTable.findColumnByName(cName);
                     TblColRef colRef = new TblColRef(sourceColumn);
                     colRefs.add(colRef);
                     allColumns.add(colRef);
                 }
-                if (colRefs.isEmpty() == false)
-                    p.setColRefs(colRefs);
             }
 
+            // for topN
+            if (StringUtils.isNotEmpty(p.getDisplayColumn())) {
+                ColumnDesc sourceColumn = factTable.findColumnByName(p.getDisplayColumn());
+                TblColRef colRef = new TblColRef(sourceColumn);
+                colRefs.add(colRef);
+                measureDisplayColumns.add(colRef);
+                allColumns.add(colRef);
+            }
+
+            if (colRefs.isEmpty() == false)
+                p.setColRefs(colRefs);
+            
             // verify holistic count distinct as a dependent measure
             if (m.getFunction().isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
                 throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
@@ -799,4 +810,22 @@ public class CubeDesc extends RootPersistentEntity {
         this.engineType = engineType;
     }
 
+    
+    public List<TblColRef> getAllColumnsNeedDictionary() {
+        List<TblColRef> result = Lists.newArrayList();
+        
+        for (RowKeyColDesc rowKeyColDesc : rowkey.getRowKeyColumns()) {
+            TblColRef colRef = rowKeyColDesc.getColRef();
+            if (rowkey.isUseDictionary(colRef)) {
+                result.add(colRef);
+            }
+        }
+        
+        for (TblColRef colRef : measureDisplayColumns) {
+            if (!result.contains(colRef))
+                result.add(colRef);
+        }
+        return result;
+    }
+    
 }

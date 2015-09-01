@@ -53,7 +53,6 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
 
     @Override
     public int getMemBytesEstimate() {
-        // 1024 + 60 returned by AggregationCacheMemSizeTest
         return 8 * capacity;
     }
 

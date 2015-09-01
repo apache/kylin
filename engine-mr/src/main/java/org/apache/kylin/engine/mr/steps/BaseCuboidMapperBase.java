@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
@@ -18,14 +20,12 @@ import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +57,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     private Text outputKey = new Text();
     private Text outputValue = new Text();
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+    private Map<Integer, Dictionary<String>> topNDisplayColDictMap;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -91,7 +92,23 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         keyBytesBuf = new byte[colCount][];
 
+        initTopNDisplayColDictionaryMap();
         initNullBytes();
+    }
+    
+    private void initTopNDisplayColDictionaryMap() {
+        topNDisplayColDictMap = Maps.newHashMap();
+        for (int measureIdx = 0; measureIdx < measures.length; measureIdx++) {
+            MeasureDesc measureDesc = cubeDesc.getMeasures().get(measureIdx);
+            FunctionDesc func = measureDesc.getFunction();
+            if (func.isTopN()) {
+                int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
+                int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
+                TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
+                Dictionary<String> dictionary = (Dictionary<String>)cubeSegment.getDictionary(displayCol);
+                topNDisplayColDictMap.put(displayColIdx, dictionary);
+            }
+        }
     }
 
     private void initNullBytes() {
@@ -147,27 +164,49 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         // constant
         if (flatTableIdx == null) {
             result = Bytes.toBytes(paramDesc.getValue());
-        }
-        // column values
-        else {
-            // for multiple columns, their values are joined
-            for (int i = 0; i < flatTableIdx.length; i++) {
-                SplittedBytes split = splitBuffers[flatTableIdx[i]];
-                if (result == null) {
-                    result = Arrays.copyOf(split.value, split.length);
-                } else {
-                    byte[] newResult = new byte[result.length + split.length];
-                    System.arraycopy(result, 0, newResult, 0, result.length);
-                    System.arraycopy(split.value, 0, newResult, result.length, split.length);
-                    result = newResult;
-                }
-            }
-        }
-
-        if (func.isCount() || func.isHolisticCountDistinct()) {
+        } 
+        // count and count distinct
+        else if (func.isCount() || func.isHolisticCountDistinct()) {
             // note for holistic count distinct, this value will be ignored
             result = ONE;
         }
+        // topN, need encode the key column
+        else if(func.isTopN()) {
+            // encode the key column with dict, and get the counter column;
+            int keyColIndex = flatTableIdx[flatTableIdx.length - 1];
+            Dictionary<String> displayColDict = topNDisplayColDictMap.get(keyColIndex);
+            int keyColEncoded = displayColDict.getIdFromValue(Bytes.toString(splitBuffers[keyColIndex].value));
+            valueBuf.clear();
+            valueBuf.putInt(displayColDict.getSizeOfId());
+            valueBuf.putInt(keyColEncoded);
+            if (flatTableIdx.length == 1) {
+                // only displayCol, use 1.0 as counter
+                valueBuf.putDouble(1.0);
+            } else {
+                // get the counter column value
+                valueBuf.putDouble(Double.valueOf(Bytes.toString(splitBuffers[flatTableIdx[0]].value)));
+            }
+            
+            result = valueBuf.array();
+            
+        } 
+        // normal case, concat column values
+        else {
+                // for multiple columns, their values are joined
+                for (int i = 0; i < flatTableIdx.length; i++) {
+                    SplittedBytes split = splitBuffers[flatTableIdx[i]];
+                    if (result == null) {
+                        result = Arrays.copyOf(split.value, split.length);
+                    } else {
+                        byte[] newResult = new byte[result.length + split.length];
+                        System.arraycopy(result, 0, newResult, 0, result.length);
+                        System.arraycopy(split.value, 0, newResult, result.length, split.length);
+                        result = newResult;
+                    }
+                }
+            }
+
+        
 
         if (isNull(result)) {
             result = null;
