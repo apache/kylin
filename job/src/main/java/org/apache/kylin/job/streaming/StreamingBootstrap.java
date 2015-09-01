@@ -135,6 +135,14 @@ public class StreamingBootstrap {
         final String streaming = bootstrapConfig.getStreaming();
         Preconditions.checkNotNull(streaming, "streaming name cannot be empty");
         final StreamingConfig streamingConfig = streamingManager.getStreamingConfig(streaming);
+
+        if (bootstrapConfig.getMargin() != 0L) {
+            streamingConfig.setMargin(bootstrapConfig.getMargin());
+            logger.info("Margin is overwrite to " + streamingConfig.getMargin());
+        } else {
+            logger.info("Margin is default value: " + streamingConfig.getMargin());
+        }
+
         Preconditions.checkArgument(streamingConfig != null, "cannot find kafka config:" + streaming);
 
         if (!StringUtils.isEmpty(streamingConfig.getIiName())) {
