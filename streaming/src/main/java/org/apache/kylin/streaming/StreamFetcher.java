@@ -59,14 +59,10 @@ public class StreamFetcher implements Callable<MicroStreamBatch> {
                     microStreamBatch = new MicroStreamBatch(partitionId);
                     clearCounter();
                 }
-                StreamMessage streamMessage = peek(streamMessageQueue, 30000);
+                StreamMessage streamMessage = peek(streamMessageQueue, 60000);
                 if (streamMessage == null) {
                     logger.info("The stream queue is drained, current available stream count: " + microStreamBatch.size());
-                    if (!microStreamBatch.isEmpty()) {
-                        return microStreamBatch;
-                    } else {
-                        continue;
-                    }
+                    return microStreamBatch;
                 }
                 if (streamMessage.getOffset() < 0) {
                     logger.warn("streaming encountered EOF, stop building");
