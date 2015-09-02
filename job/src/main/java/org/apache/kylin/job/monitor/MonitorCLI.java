@@ -62,7 +62,7 @@ public class MonitorCLI {
         }
         if (cubeName != null) {
             logger.info(String.format("check cube cubeName:%s receivers:%s", cubeName, StringUtils.join(receivers, ";")));
-            streamingMonitor.checkCube(receivers, cubeName);
+            streamingMonitor.checkCube(receivers, cubeName,host);
         }
         System.exit(0);
     }
