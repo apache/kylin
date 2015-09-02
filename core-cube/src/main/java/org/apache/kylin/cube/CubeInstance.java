@@ -50,6 +50,10 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity implements IRealization, IBuildable {
+    private static final int COST_WEIGHT_DIMENSION = 1;
+    private static final int COST_WEIGHT_MEASURE = 1;
+    private static final int COST_WEIGHT_LOOKUP_TABLE = 1;
+    private static final int COST_WEIGHT_INNER_JOIN = 2;
 
     public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
@@ -70,7 +74,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         return cubeInstance;
     }
-
+    
     @JsonIgnore
     private KylinConfig config;
     @JsonProperty("name")
@@ -104,10 +108,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     private String projectName;
 
-    private static final int COST_WEIGHT_DIMENSION = 1;
-    private static final int COST_WEIGHT_MEASURE = 1;
-    private static final int COST_WEIGHT_LOOKUP_TABLE = 1;
-    private static final int COST_WEIGHT_INNER_JOIN = 2;
+    // default constructor for jackson
+    public CubeInstance() {
+    }
 
     public List<CubeSegment> getBuildingSegments() {
         List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
@@ -134,7 +137,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
         return mergingSegments;
     }
-
+    
     public CubeDesc getDescriptor() {
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
