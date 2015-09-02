@@ -254,8 +254,8 @@ public class CubeManager implements IRealizationProvider {
         return cube;
     }
 
-    public CubeInstance updateCube(CubeUpdate cubeBuilder) throws IOException {
-        return updateCube(cubeBuilder, 0);
+    public CubeInstance updateCube(CubeUpdate update) throws IOException {
+        return updateCube(update, 0);
     }
 
     private boolean validateReadySegments(CubeInstance cube) {
@@ -283,22 +283,22 @@ public class CubeManager implements IRealizationProvider {
         return true;
     }
 
-    private CubeInstance updateCube(CubeUpdate cubeBuilder, int retry) throws IOException {
-        if (cubeBuilder == null || cubeBuilder.getCubeInstance() == null)
+    private CubeInstance updateCube(CubeUpdate update, int retry) throws IOException {
+        if (update == null || update.getCubeInstance() == null)
             throw new IllegalStateException();
 
-        CubeInstance cube = cubeBuilder.getCubeInstance();
+        CubeInstance cube = update.getCubeInstance();
         logger.info("Updating cube instance '" + cube.getName() + "'");
 
-        if (cubeBuilder.getToAddSegs() != null)
-            cube.getSegments().addAll(Arrays.asList(cubeBuilder.getToAddSegs()));
+        if (update.getToAddSegs() != null)
+            cube.getSegments().addAll(Arrays.asList(update.getToAddSegs()));
 
         List<String> toRemoveResources = Lists.newArrayList();
-        if (cubeBuilder.getToRemoveSegs() != null) {
+        if (update.getToRemoveSegs() != null) {
             Iterator<CubeSegment> iterator = cube.getSegments().iterator();
             while (iterator.hasNext()) {
                 CubeSegment currentSeg = iterator.next();
-                for (CubeSegment toRemoveSeg : cubeBuilder.getToRemoveSegs()) {
+                for (CubeSegment toRemoveSeg : update.getToRemoveSegs()) {
                     if (currentSeg.getUuid().equals(toRemoveSeg.getUuid())) {
                         iterator.remove();
                         toRemoveResources.add(toRemoveSeg.getStatisticsResourcePath());
@@ -308,14 +308,13 @@ public class CubeManager implements IRealizationProvider {
 
         }
 
-        if (cubeBuilder.getToUpdateSegs() != null) {
-            for (CubeSegment segment : cubeBuilder.getToUpdateSegs()) {
+        if (update.getToUpdateSegs() != null) {
+            for (CubeSegment segment : update.getToUpdateSegs()) {
                 for (int i = 0; i < cube.getSegments().size(); i++) {
                     if (cube.getSegments().get(i).getUuid().equals(segment.getUuid())) {
                         cube.getSegments().set(i, segment);
                     }
                 }
-
             }
         }
 
@@ -325,16 +324,16 @@ public class CubeManager implements IRealizationProvider {
             throw new IllegalStateException("Has invalid Ready segments in cube " + cube.getName());
         }
 
-        if (cubeBuilder.getStatus() != null) {
-            cube.setStatus(cubeBuilder.getStatus());
+        if (update.getStatus() != null) {
+            cube.setStatus(update.getStatus());
         }
 
-        if (cubeBuilder.getOwner() != null) {
-            cube.setOwner(cubeBuilder.getOwner());
+        if (update.getOwner() != null) {
+            cube.setOwner(update.getOwner());
         }
 
-        if (cubeBuilder.getCost() > 0) {
-            cube.setCost(cubeBuilder.getCost());
+        if (update.getCost() > 0) {
+            cube.setCost(update.getCost());
         }
 
         try {
@@ -347,9 +346,9 @@ public class CubeManager implements IRealizationProvider {
             }
 
             cube = reloadCubeLocal(cube.getName());
-            cubeBuilder.setCubeInstance(cube);
+            update.setCubeInstance(cube);
             retry++;
-            cube = updateCube(cubeBuilder, retry);
+            cube = updateCube(update, retry);
         }
 
         if (toRemoveResources.size() > 0) {
