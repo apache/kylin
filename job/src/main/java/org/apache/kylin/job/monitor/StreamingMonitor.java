@@ -113,7 +113,7 @@ public class StreamingMonitor {
         return overlaps;
     }
 
-    public void checkCube(List<String> receivers, String cubeName) {
+    public void checkCube(List<String> receivers, String cubeName, String host) {
         final CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
         if (cube == null) {
             logger.info("cube:" + cubeName + " does not exist");
@@ -136,7 +136,7 @@ public class StreamingMonitor {
         }
         if (content.length() > 0) {
             logger.info(content.toString());
-            sendMail(receivers, String.format("%s has gaps or overlaps", cubeName), content.toString());
+            sendMail(receivers, String.format("%s has gaps or overlaps on host %s", cubeName, host), content.toString());
         } else {
             logger.info("no gaps or overlaps");
         }
