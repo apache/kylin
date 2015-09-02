@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.Sets;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
@@ -42,10 +43,14 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * @author yangli9
  */
+@SuppressWarnings("serial")
 public class KylinConfig implements Serializable {
 
+    /*
+     * NOTE: These key constants should be private or even better be removed.
+     *       All external access should go through public methods.
+     */
     public static final String KYLIN_STORAGE_URL = "kylin.storage.url";
 
     public static final String KYLIN_METADATA_URL = "kylin.metadata.url";
@@ -287,8 +292,6 @@ public class KylinConfig implements Serializable {
         }
         return root + getMetadataUrlPrefix() + "/";
     }
-    
-    
 
     public String getKylinJobLogDir() {
         return getOptional(KYLIN_JOB_LOG_DIR, "/tmp/kylin/logs");
@@ -497,9 +500,13 @@ public class KylinConfig implements Serializable {
         percent = Math.min(percent, 100);
         return percent;
     }
-    
+
     public String getHbaseDefaultCompressionCodec() {
         return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC);
+    }
+
+    public boolean isHiveKeepFlatTable() {
+        return Boolean.parseBoolean(this.getOptional("kylin.hive.keep.flat.table", "false"));
     }
 
     private String getOptional(String prop) {
@@ -512,7 +519,7 @@ public class KylinConfig implements Serializable {
         if (!StringUtils.isBlank(property)) {
             return property.split("\\s*,\\s*");
         } else {
-            return new String[]{};
+            return new String[] {};
         }
     }
 
@@ -624,7 +631,6 @@ public class KylinConfig implements Serializable {
                 throw new RuntimeException(e);
             }
         }
-
 
     }
 

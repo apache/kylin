@@ -50,7 +50,7 @@ public class ResourceTool {
             reset(args.length == 1 ? KylinConfig.getInstanceFromEnv() : KylinConfig.createInstanceFromUri(args[1]));
             break;
         case "list":
-            list(KylinConfig.getInstanceFromEnv(), args[2]);
+            list(KylinConfig.getInstanceFromEnv(), args[1]);
             break;
         case "download":
             copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
