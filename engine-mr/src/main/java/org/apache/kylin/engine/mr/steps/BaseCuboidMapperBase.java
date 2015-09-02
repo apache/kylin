@@ -189,9 +189,9 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
 
     protected void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
 
-        System.err.println("Insane record: " + bytesSplitter);
-        ex.printStackTrace(System.err);
+        logger.error("Insane record: " + bytesSplitter, ex);
 
+        // TODO expose errorRecordCounter as hadoop counter
         errorRecordCounter++;
         if (errorRecordCounter > BatchConstants.ERROR_RECORD_THRESHOLD) {
             if (ex instanceof IOException)

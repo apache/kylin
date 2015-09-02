@@ -31,7 +31,7 @@ public class SourceFactory {
     private static ImplementationSwitch sources;
     static {
         Map<Integer, String> impls = new HashMap<>();
-        impls.put(ID_HIVE, "org.apache.kylin.source.hive.HiveTableSource");
+        impls.put(ID_HIVE, "org.apache.kylin.source.hive.HiveSource");
         sources = new ImplementationSwitch(impls);
     }
 

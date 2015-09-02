@@ -152,15 +152,16 @@ public class HiveMRInput implements IMRInput {
 
         @Override
         protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+            KylinConfig config = context.getConfig();
             StringBuffer output = new StringBuffer();
 
             final String hiveTable = this.getIntermediateTableIdentity();
-            if (StringUtils.isNotEmpty(hiveTable)) {
+            if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
                 final String dropSQL = "DROP TABLE IF EXISTS  " + hiveTable + ";";
                 final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
                 ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
                 try {
-                    context.getConfig().getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
+                    config.getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
                     output.append("Hive table " + hiveTable + " is dropped. \n");
                 } catch (IOException e) {
                     logger.error("job:" + getId() + " execute finished with exception", e);
