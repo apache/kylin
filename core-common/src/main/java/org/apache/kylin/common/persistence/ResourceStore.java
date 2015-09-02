@@ -72,35 +72,35 @@ abstract public class ResourceStore {
         }
         return knownImpl;
     }
+    
+    private static ResourceStore createResourceStore(KylinConfig kylinConfig) {
+        List<Throwable> es = new ArrayList<Throwable>();
+        logger.info("Using metadata url " + kylinConfig.getMetadataUrl() + " for resource store");
+        for (Class<? extends ResourceStore> cls : getKnownImpl()) {
+            try {
+                return cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
+            } catch (Throwable e) {
+                es.add(e);
+            }
+        }
+        for (Throwable exceptionOrError : es) {
+            logger.error("Create new store instance failed ", exceptionOrError);
+        }
+        throw new IllegalArgumentException("Failed to find metadata store by url: " + kylinConfig.getMetadataUrl());
+    }
 
     public static ResourceStore getStore(KylinConfig kylinConfig) {
-        ResourceStore r = CACHE.get(kylinConfig);
-        List<Throwable> es = new ArrayList<Throwable>();
-        if (r == null) {
-            logger.info("Using metadata url " + kylinConfig.getMetadataUrl() + " for resource store");
-            for (Class<? extends ResourceStore> cls : getKnownImpl()) {
-                try {
-                    r = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
-                } catch (Exception e) {
-                    es.add(e);
-                } catch (NoClassDefFoundError er) {
-                    // may throw NoClassDefFoundError
-                    es.add(er);
-                }
-                if (r != null) {
-                    break;
-                }
-            }
-            if (r == null) {
-                for (Throwable exceptionOrError : es) {
-                    logger.error("Create new store instance failed ", exceptionOrError);
-                }
-                throw new IllegalArgumentException("Failed to find metadata store by url: " + kylinConfig.getMetadataUrl());
-            }
-
-            CACHE.put(kylinConfig, r);
+        if (CACHE.containsKey(kylinConfig)) {
+            return CACHE.get(kylinConfig);
         }
-        return r;
+        synchronized (ResourceStore.class) {
+            if (CACHE.containsKey(kylinConfig)) {
+                return CACHE.get(kylinConfig);
+            } else {
+                CACHE.putIfAbsent(kylinConfig, createResourceStore(kylinConfig));
+            }
+        }
+        return CACHE.get(kylinConfig);
     }
 
     // ============================================================================
