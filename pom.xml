@@ -429,8 +429,6 @@
                     </configuration>
                 </plugin>
 
-
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
@@ -546,40 +544,36 @@
                     <version>2.15</version>
                 </plugin>
 
-            </plugins>
-        </pluginManagement>
-
-        <plugins>
-            <!--
-            <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>${maven-license.plugin.version}</version>
-                <configuration>
-                    <header>License-Header.txt</header>
-                    <licenseName>apache_v2</licenseName>
-                    <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
-                    <canUpdateCopyright>true</canUpdateCopyright>
-                    <canUpdateDescription>true</canUpdateDescription>
-                    <excludes>
-                        <exclude>**/*.diff</exclude>
-                        <exclude>*.patch</exclude>
-                        <exclude>**/*.log</exclude>
-                        <exclude>**/*.data</exclude>
-                        <exclude>**/README.*</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <!-- Checkstyle Plugin -->
-            <plugin>
+                <!--
+                <plugin>
+                    <groupId>com.mycila</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>${maven-license.plugin.version}</version>
+                    <configuration>
+                        <header>License-Header.txt</header>
+                        <licenseName>apache_v2</licenseName>
+                        <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                        <canUpdateCopyright>true</canUpdateCopyright>
+                        <canUpdateDescription>true</canUpdateDescription>
+                        <excludes>
+                            <exclude>**/*.diff</exclude>
+                            <exclude>*.patch</exclude>
+                            <exclude>**/*.log</exclude>
+                            <exclude>**/*.data</exclude>
+                            <exclude>**/README.*</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+                -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+                <!-- Checkstyle Plugin -->
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <executions>
@@ -600,9 +594,8 @@
                         </execution>
                     </executions>
                 </plugin>
-
-        </plugins>
-
+            </plugins>
+        </pluginManagement>
     </build>
 
     <modules>
