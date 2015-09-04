@@ -23,7 +23,10 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.sql.fun.SqlAvgAggFunction;
 import org.apache.kylin.query.relnode.OLAPAggregateRel;
 import org.apache.kylin.query.relnode.OLAPRel;
 
@@ -40,12 +43,28 @@ public class OLAPAggregateRule extends ConverterRule {
     @Override
     public RelNode convert(RelNode rel) {
         LogicalAggregate agg = (LogicalAggregate) rel;
+
+        // AVG() will be transformed into SUM()/COUNT() by AggregateReduceFunctionsRule.
+        // Here only let the transformed plan pass.
+        if (containsAvg(agg)) {
+            return null;
+        }
+
         RelTraitSet traitSet = agg.getTraitSet().replace(OLAPRel.CONVENTION);
         try {
             return new OLAPAggregateRel(agg.getCluster(), traitSet, convert(agg.getInput(), traitSet), agg.getGroupSet(), agg.getAggCallList());
         } catch (InvalidRelException e) {
             throw new IllegalStateException("Can't create OLAPAggregateRel!", e);
         }
+    }
+
+    private boolean containsAvg(LogicalAggregate agg) {
+        for (AggregateCall call : agg.getAggCallList()) {
+            SqlAggFunction func = call.getAggregation();
+            if (func instanceof SqlAvgAggFunction)
+                return true;
+        }
+        return false;
     }
 
 }
