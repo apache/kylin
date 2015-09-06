@@ -20,9 +20,11 @@ package org.apache.kylin.metadata.model;
 
 import org.apache.commons.lang.StringUtils;
 
+import java.io.Serializable;
+
 /**
  */
-public class TblColRef {
+public class TblColRef implements Serializable {
 
     private static final String INNER_TABLE_NAME = "_kylin_table";
 

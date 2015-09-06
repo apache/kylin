@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.Set;
 /**
  * @author xjiang
  */
-public class DatabaseDesc {
+public class DatabaseDesc implements Serializable {
     private String name;
 
     /**

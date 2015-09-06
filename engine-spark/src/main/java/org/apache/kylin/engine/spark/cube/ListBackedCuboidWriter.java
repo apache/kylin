@@ -15,53 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+package org.apache.kylin.engine.spark.cube;
 
-package org.apache.kylin.metadata.measure;
+import com.google.common.collect.Lists;
+import org.apache.kylin.engine.spark.SparkCuboidWriter;
+import org.apache.kylin.gridtable.GTRecord;
+import scala.Tuple2;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.util.ArrayList;
 
-public class DoubleMutable implements Comparable<DoubleMutable>, Serializable {
+/**
+ */
+public class ListBackedCuboidWriter implements SparkCuboidWriter {
+    
+    private final ArrayList<Tuple2<byte[], byte[]>> result;
+    private final TupleConverter tupleConverter;
 
-    private double v;
-
-    public DoubleMutable() {
-        this(0);
+    public ListBackedCuboidWriter(TupleConverter tupleConverter) {
+        this.result= Lists.newArrayList();
+        this.tupleConverter = tupleConverter;
     }
-
-    public DoubleMutable(double v) {
-        set(v);
-    }
-
-    public double get() {
-        return v;
-    }
-
-    public void set(double v) {
-        this.v = v;
+    @Override
+    public void write(long cuboidId, GTRecord record) throws IOException {
+        result.add(tupleConverter.convert(cuboidId, record));
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof DoubleMutable)) {
-            return false;
-        }
-        DoubleMutable other = (DoubleMutable) o;
-        return this.v == other.v;
+    public void flush() {
+
     }
 
     @Override
-    public int hashCode() {
-        return (int) Double.doubleToLongBits(v);
-    }
+    public void close() {
 
+    }
+    
     @Override
-    public int compareTo(DoubleMutable o) {
-        return (v < o.v ? -1 : (v == o.v ? 0 : 1));
+    public Iterable<Tuple2<byte[], byte[]>> getResult() {
+        return result;
     }
-
-    @Override
-    public String toString() {
-        return Double.toString(v);
-    }
-
 }

@@ -117,6 +117,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 else
                     throw new IOException(e);
             } finally {
+                output.close();
                 closeGirdTables(splits);
                 logger.info("Dogged Cube Build end, totally took " + (System.currentTimeMillis() - start) + " ms");
                 ensureExit(splits);

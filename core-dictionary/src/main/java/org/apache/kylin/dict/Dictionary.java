@@ -19,6 +19,7 @@
 package org.apache.kylin.dict;
 
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.kylin.common.persistence.Writable;
@@ -39,7 +40,7 @@ import org.apache.kylin.common.util.BytesUtil;
  * 
  * @author yangli9
  */
-abstract public class Dictionary<T> implements Writable {
+abstract public class Dictionary<T> implements Writable, Serializable {
 
     public static final byte NULL = (byte) 0xff;
 

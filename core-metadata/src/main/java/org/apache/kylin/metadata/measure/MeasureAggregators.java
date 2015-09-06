@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.measure;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,28 +31,28 @@ import org.apache.kylin.metadata.model.MeasureDesc;
  * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class MeasureAggregators {
+public class MeasureAggregators implements Serializable {
 
-    private MeasureDesc[] descs;
-    private MeasureAggregator[] aggs;
+    private final MeasureAggregator[] aggs;
+    private final int descLength;
 
     public MeasureAggregators(Collection<MeasureDesc> measureDescs) {
         this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs.size()]));
     }
 
     public MeasureAggregators(MeasureDesc... measureDescs) {
-        descs = measureDescs;
-        aggs = new MeasureAggregator[descs.length];
+        descLength = measureDescs.length;
+        aggs = new MeasureAggregator[descLength];
 
         Map<String, Integer> measureIndexMap = new HashMap<String, Integer>();
-        for (int i = 0; i < descs.length; i++) {
-            FunctionDesc func = descs[i].getFunction();
+        for (int i = 0; i < descLength; i++) {
+            FunctionDesc func = measureDescs[i].getFunction();
             aggs[i] = MeasureAggregator.create(func.getExpression(), func.getReturnType());
-            measureIndexMap.put(descs[i].getName(), i);
+            measureIndexMap.put(measureDescs[i].getName(), i);
         }
         // fill back dependent aggregator
-        for (int i = 0; i < descs.length; i++) {
-            String depMsrRef = descs[i].getDependentMeasureRef();
+        for (int i = 0; i < descLength; i++) {
+            String depMsrRef = measureDescs[i].getDependentMeasureRef();
             if (depMsrRef != null) {
                 int index = measureIndexMap.get(depMsrRef);
                 aggs[i].setDependentAggregator(aggs[index]);
@@ -64,17 +65,17 @@ public class MeasureAggregators {
             aggs[i].reset();
         }
     }
-
+    
     public void aggregate(Object[] values) {
-        assert values.length == descs.length;
+        assert values.length == descLength;
 
-        for (int i = 0; i < descs.length; i++) {
+        for (int i = 0; i < descLength; i++) {
             aggs[i].aggregate(values[i]);
         }
     }
 
     public void collectStates(Object[] states) {
-        for (int i = 0; i < descs.length; i++) {
+        for (int i = 0; i < descLength; i++) {
             states[i] = aggs[i].getState();
         }
     }

@@ -17,9 +17,7 @@
 */
 package org.apache.kylin.engine.spark;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hasher;
@@ -42,7 +40,6 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -50,15 +47,16 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
-import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
+import org.apache.kylin.cube.inmemcubing.AbstractInMemCubeBuilder;
 import org.apache.kylin.cube.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.*;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
-import org.apache.kylin.engine.mr.ByteArrayWritable;
-import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
+import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
+import org.apache.kylin.engine.spark.util.IteratorUtils;
 import org.apache.kylin.job.common.OptionsHelper;
 import org.apache.kylin.metadata.measure.MeasureAggregators;
 import org.apache.kylin.metadata.measure.MeasureCodec;
@@ -66,26 +64,25 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.storage.hbase.steps.HBaseConnection;
 import org.apache.kylin.storage.hbase.steps.CreateHTableJob;
 import org.apache.kylin.storage.hbase.steps.CubeHTableUtil;
+import org.apache.kylin.storage.hbase.steps.HBaseConnection;
+import org.apache.spark.Partitioner;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkFiles;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.api.java.function.PairFlatMapFunction;
-import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.function.*;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
 import scala.Tuple2;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -213,6 +210,15 @@ public class SparkCubing extends AbstractSparkApplication {
             zeroValue.put(id, new HyperLogLogPlusCounter(14));
         }
 
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        CubeDesc cubeDesc = CubeManager.getInstance(kylinConfig).getCube(cubeName).getDescriptor();
+        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
+        CuboidScheduler cuboidScheduler = new CuboidScheduler(cubeDesc);
+        final int[] rowKeyColumnIndexes = flatTableDesc.getRowKeyColumnIndexes();
+        final int nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
+        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+        final List<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
+
         final HashMap<Long, HyperLogLogPlusCounter> samplingResult = rowJavaRDD.aggregate(zeroValue,
                 new Function2<HashMap<Long, HyperLogLogPlusCounter>,
                         List<String>,
@@ -220,29 +226,20 @@ public class SparkCubing extends AbstractSparkApplication {
 
                     @Override
                     public HashMap<Long, HyperLogLogPlusCounter> call(HashMap<Long, HyperLogLogPlusCounter> v1, List<String> v2) throws Exception {
-                        prepare();
-                        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-                        final CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
-                        final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
-                        final CubeDesc cubeDesc = cubeInstance.getDescriptor();
-                        final CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
-                        final int nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
                         ByteArray[] row_hashcodes = new ByteArray[nRowKey];
                         for (int i = 0; i < nRowKey; ++i) {
                             row_hashcodes[i] = new ByteArray();
                         }
                         for (int i = 0; i < nRowKey; i++) {
                             Hasher hc = Hashing.murmur3_32().newHasher();
-                            String colValue = v2.get(flatTableDesc.getRowKeyColumnIndexes()[i]);
+                            String colValue = v2.get(rowKeyColumnIndexes[i]);
                             if (colValue != null) {
                                 row_hashcodes[i].set(hc.putString(colValue).hash().asBytes());
                             } else {
                                 row_hashcodes[i].set(hc.putInt(0).hash().asBytes());
                             }
                         }
-                        final CuboidScheduler cuboidScheduler = new CuboidScheduler(cubeDesc);
-                        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-                        final List<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
+
                         final Map<Long, Integer[]> allCuboidsBitSet = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
                         for (Long cuboidId : allCuboidIds) {
                             BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
@@ -260,7 +257,6 @@ public class SparkCubing extends AbstractSparkApplication {
                             allCuboidsBitSet.put(cuboidId, cuboidBitSet);
                         }
 
-                        HashMap<Long, HyperLogLogPlusCounter> result = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
                         for (Long cuboidId : allCuboidIds) {
                             Hasher hc = Hashing.murmur3_32().newHasher();
                             HyperLogLogPlusCounter counter = v1.get(cuboidId);
@@ -269,9 +265,8 @@ public class SparkCubing extends AbstractSparkApplication {
                                 hc.putBytes(row_hashcodes[cuboidBitSet[position]].array());
                             }
                             counter.add(hc.hash().asBytes());
-                            result.put(cuboidId, counter);
                         }
-                        return result;
+                        return v1;
                     }
                 },
                 new Function2<HashMap<Long, HyperLogLogPlusCounter>,
@@ -281,29 +276,14 @@ public class SparkCubing extends AbstractSparkApplication {
                     public HashMap<Long, HyperLogLogPlusCounter> call(HashMap<Long, HyperLogLogPlusCounter> v1, HashMap<Long, HyperLogLogPlusCounter> v2) throws Exception {
                         Preconditions.checkArgument(v1.size() == v2.size());
                         Preconditions.checkArgument(v1.size() > 0);
-                        final HashMap<Long, HyperLogLogPlusCounter> result = Maps.newHashMapWithExpectedSize(v1.size());
                         for (Map.Entry<Long, HyperLogLogPlusCounter> entry : v1.entrySet()) {
                             final HyperLogLogPlusCounter counter1 = entry.getValue();
                             final HyperLogLogPlusCounter counter2 = v2.get(entry.getKey());
                             if (counter2 != null) {
                                 counter1.merge(counter2);
                             }
-                            result.put(entry.getKey(), counter1);
                         }
-                        return result;
-                    }
-
-                    private HashMap<Long, HyperLogLogPlusCounter> copy(HashMap<Long, HyperLogLogPlusCounter> v1, HashMap<Long, HyperLogLogPlusCounter> v2) {
-                        final HashMap<Long, HyperLogLogPlusCounter> result = Maps.newHashMapWithExpectedSize(v1.size());
-                        for (Map.Entry<Long, HyperLogLogPlusCounter> entry : v1.entrySet()) {
-                            final HyperLogLogPlusCounter counter1 = entry.getValue();
-                            final HyperLogLogPlusCounter counter2 = v2.get(entry.getKey());
-                            if (counter2 != null) {
-                                counter1.merge(counter2);
-                            }
-                            result.put(entry.getKey(), counter1);
-                        }
-                        return result;
+                        return v1;
                     }
 
                 });
@@ -313,142 +293,99 @@ public class SparkCubing extends AbstractSparkApplication {
     /*
     return hfile location
      */
-    private String build(JavaRDD<List<List<String>>> javaRDD, final String cubeName, final String segmentId) throws Exception {
-
-
-        final JavaPairRDD<byte[], byte[]> javaPairRDD = javaRDD.mapPartitionsToPair(new PairFlatMapFunction<Iterator<List<List<String>>>, byte[], byte[]>() {
+    private String build(JavaRDD<List<String>> javaRDD, final String cubeName, final String segmentId, final byte[][] splitKeys) throws Exception {
+        CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+        CubeDesc cubeDesc = cubeInstance.getDescriptor();
+        CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+        List<TblColRef> baseCuboidColumn = Cuboid.findById(cubeDesc, Cuboid.getBaseCuboidId(cubeDesc)).getColumns();
+        final Map<TblColRef, Integer> columnLengthMap = Maps.newHashMap();
+        for (TblColRef tblColRef : baseCuboidColumn) {
+            columnLengthMap.put(tblColRef, cubeSegment.getColumnLength(tblColRef));
+        }
+        final Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
+        for (DimensionDesc dim : cubeDesc.getDimensions()) {
+            // dictionary
+            for (TblColRef col : dim.getColumnRefs()) {
+                if (cubeDesc.getRowkey().isUseDictionary(col)) {
+                    Dictionary<?> dict = cubeSegment.getDictionary(col);
+                    if (dict == null) {
+                        System.err.println("Dictionary for " + col + " was not found.");
+                    }
+                    dictionaryMap.put(col, dict);
+                    System.out.println("col:" + col + " dictionary size:" + dict.getSize());
+                }
+            }
+        }
+        final JavaPairRDD<byte[], byte[]> javaPairRDD = javaRDD.glom().mapPartitionsToPair(new PairFlatMapFunction<Iterator<List<List<String>>>, byte[], byte[]>() {
 
             @Override
             public Iterable<Tuple2<byte[], byte[]>> call(Iterator<List<List<String>>> listIterator) throws Exception {
+                long t = System.currentTimeMillis();
                 prepare();
 
                 final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
                 final CubeDesc cubeDesc = cubeInstance.getDescriptor();
-                final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
 
-                final Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
-
-                for (DimensionDesc dim : cubeDesc.getDimensions()) {
-                    // dictionary
-                    for (TblColRef col : dim.getColumnRefs()) {
-                        if (cubeDesc.getRowkey().isUseDictionary(col)) {
-                            Dictionary<?> dict = cubeSegment.getDictionary(col);
-                            if (dict == null) {
-                                System.err.println("Dictionary for " + col + " was not found.");
-                            }
-                            dictionaryMap.put(col, dict);
+                LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue();
+                System.out.println("load properties finished");
+                AbstractInMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), dictionaryMap);
+                inMemCubeBuilder.setReserveMemoryMB(2400);
+                final SparkCuboidWriter sparkCuboidWriter = new BufferedCuboidWriter(new DefaultTupleConverter(cubeDesc, columnLengthMap));
+                final Future<?> future = Executors.newCachedThreadPool().submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, sparkCuboidWriter));
+                try {
+                    while (listIterator.hasNext()) {
+                        for (List<String> row : listIterator.next()) {
+                            blockingQueue.put(row);
                         }
                     }
+                    blockingQueue.put(Collections.<String>emptyList());
+                    future.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
-                final Iterator<Iterator<Tuple2<byte[], byte[]>>> iterator = Iterators.transform(listIterator, new Function<List<List<String>>, Iterator<Tuple2<byte[], byte[]>>>() {
-                    @Nullable
-                    @Override
-                    public Iterator<Tuple2<byte[], byte[]>> apply(@Nullable List<List<String>> input) {
-                        if (input.isEmpty()) {
-                            return Collections.emptyIterator();
-                        }
-                        LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue<List<String>>();
-                        final List<Tuple2<byte[], byte[]>> result = Lists.newLinkedList();
-                        InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), dictionaryMap);
-                        final Future<?> future = Executors.newCachedThreadPool().submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, new ICuboidWriter() {
-
-                            final int measureCount = cubeDesc.getMeasures().size();
-                            int[] measureColumnsIndex = new int[measureCount];
-                            ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-
-                            @Override
-                            public void write(long cuboidId, GTRecord record) throws IOException {
-                                int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
-                                Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
-                                for (TblColRef column : cuboid.getColumns()) {
-                                    bytesLength += cubeSegment.getColumnLength(column);
-                                    final Dictionary<?> dictionary = cubeSegment.getDictionary(column);
-                                }
-
-                                final int dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
-                                for (int i = 0; i < measureCount; i++) {
-                                    measureColumnsIndex[i] = dimensions + i;
-                                }
-
-                                byte[] key = new byte[bytesLength];
-                                System.arraycopy(Bytes.toBytes(cuboidId), 0, key, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
-                                int offSet = RowConstants.ROWKEY_CUBOIDID_LEN;
-                                for (int x = 0; x < dimensions; x++) {
-                                    final ByteArray byteArray = record.get(x);
-                                    System.arraycopy(byteArray.array(), byteArray.offset(), key, offSet, byteArray.length());
-                                    offSet += byteArray.length();
-                                }
-
-
-                                //output measures
-                                valueBuf.clear();
-                                record.exportColumns(measureColumnsIndex, valueBuf);
-
-                                byte[] value = new byte[valueBuf.position()];
-                                System.arraycopy(valueBuf.array(), 0, value, 0, valueBuf.position());
-                                result.add(new Tuple2<byte[], byte[]>(key, value));
-                            }
-
-                            @Override
-                            public void flush() {
-
-                            }
-                        }));
-                        try {
-                            for (List<String> row : input) {
-                                blockingQueue.put(row);
-                            }
-                            blockingQueue.put(Collections.<String>emptyList());
-                            future.get();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                        return result.iterator();
-                    }
-                });
-                return new Iterable<Tuple2<byte[], byte[]>>() {
-                    @Override
-                    public Iterator<Tuple2<byte[], byte[]>> iterator() {
-                        return Iterators.concat(iterator);
-                    }
-                };
+                System.out.println("build partition cost: " + (System.currentTimeMillis() - t) + "ms");
+                return sparkCuboidWriter.getResult();
             }
         });
-        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
-        final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Configuration conf = getConfigurationForHFile(cubeSegment.getStorageLocationIdentifier());
         Path path = new Path(kylinConfig.getHdfsWorkingDirectory(), "hfile_" + UUID.randomUUID().toString());
         Preconditions.checkArgument(!FileSystem.get(conf).exists(path));
         String url = conf.get("fs.defaultFS") + path.toString();
         System.out.println("use " + url + " as hfile");
+        List<MeasureDesc> measuresDescs = Lists.newArrayList();
+        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
+            for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
+                for (MeasureDesc measure : colDesc.getMeasures()) {
+                    measuresDescs.add(measure);
+                }
+            }
+        }
+        final int measureSize = measuresDescs.size();
+        final String[] dataTypes = new String[measureSize];
+        for (int i = 0; i < dataTypes.length; i++) {
+            dataTypes[i] = measuresDescs.get(i).getFunction().getReturnType();
+        }
+        final MeasureAggregators aggs = new MeasureAggregators(measuresDescs);
+        writeToHFile2(javaPairRDD, dataTypes, measureSize, aggs, splitKeys, conf, url);
+        return url;
+    }
+
+    private void writeToHFile(final JavaPairRDD<byte[], byte[]> javaPairRDD, final String[] dataTypes, final int measureSize, final MeasureAggregators aggs, final byte[][] splitKeys, final Configuration conf, final String hFileLocation) {
         javaPairRDD.reduceByKey(new Function2<byte[], byte[], byte[]>() {
 
             @Override
             public byte[] call(byte[] v1, byte[] v2) throws Exception {
-                prepare();
-                final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-                final CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
-                final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
-                final CubeDesc cubeDesc = cubeInstance.getDescriptor();
-                List<MeasureDesc> measuresDescs = Lists.newArrayList();
-                for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
-                    for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                        for (MeasureDesc measure : colDesc.getMeasures()) {
-                            measuresDescs.add(measure);
-                        }
-                    }
-                }
-                MeasureCodec codec = new MeasureCodec(measuresDescs);
-                MeasureAggregators aggs = new MeasureAggregators(measuresDescs);
-                Object[] input = new Object[measuresDescs.size()];
-                Object[] result = new Object[measuresDescs.size()];
-                
+                MeasureCodec codec = new MeasureCodec(dataTypes);
+                Object[] input = new Object[measureSize];
+                Object[] result = new Object[measureSize];
+
                 codec.decode(ByteBuffer.wrap(v1), input);
                 aggs.aggregate(input);
                 codec.decode(ByteBuffer.wrap(v2), input);
                 aggs.aggregate(input);
-                
+
                 aggs.collectStates(result);
                 final ByteBuffer buffer = ByteBuffer.allocate(Math.max(v1.length, v2.length));
                 buffer.clear();
@@ -464,8 +401,75 @@ public class SparkCubing extends AbstractSparkApplication {
                 KeyValue value = new KeyValue(tuple2._1(), "F1".getBytes(), "M".getBytes(), tuple2._2());
                 return new Tuple2(key, value);
             }
-        }).saveAsNewAPIHadoopFile(url, ImmutableBytesWritable.class, KeyValue.class, HFileOutputFormat.class, conf);
-        return url;
+        }).saveAsNewAPIHadoopFile(hFileLocation, ImmutableBytesWritable.class, KeyValue.class, HFileOutputFormat.class, conf);
+    }
+
+    private void writeToHFile2(final JavaPairRDD<byte[], byte[]> javaPairRDD, final String[] dataTypes, final int measureSize, final MeasureAggregators aggs, final byte[][] splitKeys, final Configuration conf, final String hFileLocation) {
+        javaPairRDD.repartitionAndSortWithinPartitions(new Partitioner() {
+            @Override
+            public int numPartitions() {
+                return splitKeys.length + 1;
+            }
+
+            @Override
+            public int getPartition(Object key) {
+                Preconditions.checkArgument(key instanceof byte[]);
+                for (int i = 0, n = splitKeys.length; i < n; ++i) {
+                    if (UnsignedBytes.lexicographicalComparator().compare((byte[]) key, splitKeys[i]) < 0) {
+                        return i;
+                    }
+                }
+                return splitKeys.length;
+            }
+        }, UnsignedBytes.lexicographicalComparator()).mapPartitions(new FlatMapFunction<Iterator<Tuple2<byte[], byte[]>>, Tuple2<byte[], byte[]>>() {
+            @Override
+            public Iterable<Tuple2<byte[], byte[]>> call(final Iterator<Tuple2<byte[], byte[]>> tuple2Iterator) throws Exception {
+                return new Iterable<Tuple2<byte[], byte[]>>() {
+                    final ByteBuffer buffer = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+                    final MeasureCodec codec = new MeasureCodec(dataTypes);
+                    final Object[] input = new Object[measureSize];
+                    final Object[] result = new Object[measureSize];
+
+                    @Override
+                    public Iterator<Tuple2<byte[], byte[]>> iterator() {
+                        return IteratorUtils.merge(tuple2Iterator, UnsignedBytes.lexicographicalComparator(), new Function<Iterable<byte[]>, byte[]>() {
+                            @Override
+                            public byte[] call(Iterable<byte[]> v1) throws Exception {
+                                final LinkedList<byte[]> list = Lists.newLinkedList(v1);
+                                if (list.size() == 1) {
+                                    return list.get(0);
+                                }
+                                aggs.reset();
+                                for (byte[] v : list) {
+                                    try {
+                                        codec.decode(ByteBuffer.wrap(v), input);
+                                    } catch (BufferUnderflowException e) {
+                                        e.printStackTrace();
+                                        System.out.println("buffer under flow v.length:" + v.length);
+                                        System.out.println("value:" + Arrays.toString(v));
+                                        throw e;
+                                    }
+                                    aggs.aggregate(input);
+                                }
+                                aggs.collectStates(result);
+                                buffer.clear();
+                                codec.encode(result, buffer);
+                                byte[] bytes = new byte[buffer.position()];
+                                System.arraycopy(buffer.array(), buffer.arrayOffset(), bytes, 0, buffer.position());
+                                return bytes;
+                            }
+                        });
+                    }
+                };
+            }
+        }, true).mapToPair(new PairFunction<Tuple2<byte[], byte[]>, ImmutableBytesWritable, KeyValue>() {
+            @Override
+            public Tuple2<ImmutableBytesWritable, KeyValue> call(Tuple2<byte[], byte[]> tuple2) throws Exception {
+                ImmutableBytesWritable key = new ImmutableBytesWritable(tuple2._1());
+                KeyValue value = new KeyValue(tuple2._1(), "F1".getBytes(), "M".getBytes(), tuple2._2());
+                return new Tuple2(key, value);
+            }
+        }).saveAsNewAPIHadoopFile(hFileLocation, ImmutableBytesWritable.class, KeyValue.class, HFileOutputFormat.class, conf);
     }
 
     private static void prepare() throws Exception {
@@ -475,8 +479,8 @@ public class SparkCubing extends AbstractSparkApplication {
         System.setProperty(KylinConfig.KYLIN_CONF, confPath);
         ClassUtil.addClasspath(confPath);
     }
-    
-    private void createHTable(String cubeName, String segmentId, Map<Long, HyperLogLogPlusCounter> samplingResult) throws Exception {
+
+    private byte[][] createHTable(String cubeName, String segmentId, Map<Long, HyperLogLogPlusCounter> samplingResult) throws Exception {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
@@ -485,18 +489,19 @@ public class SparkCubing extends AbstractSparkApplication {
         final byte[][] splitKeys = CreateHTableJob.getSplitsFromCuboidStatistics(cubeSizeMap, kylinConfig, cubeSegment);
         CubeHTableUtil.createHTable(cubeDesc, cubeSegment.getStorageLocationIdentifier(), splitKeys);
         System.out.println(cubeSegment.getStorageLocationIdentifier() + " table created");
+        return splitKeys;
     }
-    
+
     private Configuration getConfigurationForHFile(String hTableName) throws IOException {
         final Configuration conf = HBaseConnection.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl());
         Job job = Job.getInstance(conf);
         job.setMapOutputKeyClass(ImmutableBytesWritable.class);
         job.setMapOutputValueClass(KeyValue.class);
         HTable table = new HTable(conf, hTableName);
-        HFileOutputFormat.configureIncrementalLoad (job, table);
+        HFileOutputFormat.configureIncrementalLoad(job, table);
         return conf;
     }
-    
+
     private void bulkLoadHFile(String cubeName, String segmentId, String hfileLocation) throws Exception {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
@@ -521,7 +526,7 @@ public class SparkCubing extends AbstractSparkApplication {
 
         int ret = ToolRunner.run(new LoadIncrementalHFiles(hbaseConf), newArgs);
         System.out.println("incremental load result:" + ret);
-        
+
         cubeSegment.setStatus(SegmentStatusEnum.READY);
         try {
             CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
@@ -538,6 +543,9 @@ public class SparkCubing extends AbstractSparkApplication {
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         final String hiveTable = optionsHelper.getOptionValue(OPTION_INPUT_PATH);
         SparkConf conf = new SparkConf().setAppName("Simple Application");
+        conf.set("spark.executor.memory", "6g");
+        conf.set("spark.storage.memoryFraction", "0.3");
+
         JavaSparkContext sc = new JavaSparkContext(conf);
         HiveContext sqlContext = new HiveContext(sc.sc());
         final DataFrame intermediateTable = sqlContext.sql("select * from " + hiveTable);
@@ -568,9 +576,9 @@ public class SparkCubing extends AbstractSparkApplication {
             }
         });
         final Map<Long, HyperLogLogPlusCounter> samplingResult = sampling(rowJavaRDD, cubeName);
-        createHTable(cubeName, segmentId, samplingResult);
-        
-        final String hfile = build(rowJavaRDD.glom(), cubeName, segmentId);
+        final byte[][] splitKeys = createHTable(cubeName, segmentId, samplingResult);
+
+        final String hfile = build(rowJavaRDD, cubeName, segmentId, splitKeys);
         bulkLoadHFile(cubeName, segmentId, hfile);
     }
 

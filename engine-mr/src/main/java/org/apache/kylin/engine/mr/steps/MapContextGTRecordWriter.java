@@ -82,6 +82,11 @@ public class MapContextGTRecordWriter implements ICuboidWriter {
 
     }
 
+    @Override
+    public void close() {
+        
+    }
+
     private void initVariables(Long cuboidId) {
         bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
