@@ -177,7 +177,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             String path = status.getPath().getName();
             // System.out.println(path);
             if (path.startsWith(JobInstance.JOB_WORKING_DIR_PREFIX)) {
-                String kylinJobPath = engineConfig.getHdfsWorkingDirectory() + "/" + path;
+                String kylinJobPath = engineConfig.getHdfsWorkingDirectory() + path;
                 allHdfsPathsNeedToBeDeleted.add(kylinJobPath);
             }
         }
