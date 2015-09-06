@@ -144,9 +144,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected int getIdFromValueImpl(T value, int roundingFlag) {
         if (enableCache && roundingFlag == 0) {
-            HashMap cache = valueToIdCache.get(); // SoftReference to skip cache
-                                                  // gracefully when short of
-                                                  // memory
+            HashMap cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 Integer id = null;
                 id = (Integer) cache.get(value);
@@ -190,7 +188,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
      *            found, might be nValues
      */
     private int lookupSeqNoFromValue(int n, byte[] inp, int o, int inpEnd, int roundingFlag) {
-        if (inp.length == 0) // special 'empty' value
+        if (o == inpEnd) // special 'empty' value
             return checkFlag(headSize, BIT_IS_END_OF_VALUE) ? 0 : roundSeqNo(roundingFlag, -1, -1, 0);
 
         int seq = 0; // the sequence no under track
@@ -199,11 +197,8 @@ public class TrieDictionary<T> extends Dictionary<T> {
             // match the current node, note [0] of node's value has been matched
             // when this node is selected by its parent
             int p = n + firstByteOffset; // start of node's value
-            int end = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1); // end of
-                                                                       // node's
-                                                                       // value
-            for (p++; p < end && o < inpEnd; p++, o++) { // note matching start
-                                                         // from [1]
+            int end = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1); // end of node's value
+            for (p++; p < end && o < inpEnd; p++, o++) { // note matching start from [1]
                 if (trieBytes[p] != inp[o]) {
                     int comp = BytesUtil.compareByteUnsigned(trieBytes[p], inp[o]);
                     if (comp < 0) {
@@ -216,9 +211,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             // node completely matched, is input all consumed?
             boolean isEndOfValue = checkFlag(n, BIT_IS_END_OF_VALUE);
             if (o == inpEnd) {
-                return p == end && isEndOfValue ? seq : roundSeqNo(roundingFlag, seq - 1, -1, seq); // input
-                                                                                                    // all
-                                                                                                    // matched
+                return p == end && isEndOfValue ? seq : roundSeqNo(roundingFlag, seq - 1, -1, seq); // input all matched
             }
             if (isEndOfValue)
                 seq++;
@@ -226,9 +219,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             // find a child to continue
             int c = headSize + (BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask);
             if (c == headSize) // has no children
-                return roundSeqNo(roundingFlag, seq - 1, -1, seq); // input only
-                                                                   // partially
-                                                                   // matched
+                return roundSeqNo(roundingFlag, seq - 1, -1, seq); // input only partially matched
             byte inpByte = inp[o];
             int comp;
             while (true) {
@@ -242,26 +233,10 @@ public class TrieDictionary<T> extends Dictionary<T> {
                 } else if (comp < 0) { // try next child
                     seq += BytesUtil.readUnsigned(trieBytes, c + sizeChildOffset, sizeNoValuesBeneath);
                     if (checkFlag(c, BIT_IS_LAST_CHILD))
-                        return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no
-                                                                           // child
-                                                                           // can
-                                                                           // match
-                                                                           // the
-                                                                           // next
-                                                                           // byte
-                                                                           // of
-                                                                           // input
+                        return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no child can match the next byte of input
                     c = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1);
                 } else { // children are ordered by their first value byte
-                    return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no
-                                                                       // child
-                                                                       // can
-                                                                       // match
-                                                                       // the
-                                                                       // next
-                                                                       // byte
-                                                                       // of
-                                                                       // input
+                    return roundSeqNo(roundingFlag, seq - 1, -1, seq); // no child can match the next byte of input
                 }
             }
         }
@@ -279,9 +254,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected T getValueFromIdImpl(int id) {
         if (enableCache) {
-            Object[] cache = idToValueCache.get(); // SoftReference to skip
-                                                   // cache gracefully when
-                                                   // short of memory
+            Object[] cache = idToValueCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 int seq = calcSeqNoFromId(id);
                 if (seq < 0 || seq >= nValues)
@@ -347,8 +320,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             int nValuesBeneath;
             while (true) {
                 nValuesBeneath = BytesUtil.readUnsigned(trieBytes, c + sizeChildOffset, sizeNoValuesBeneath);
-                if (seq - nValuesBeneath < 0) { // value is under this child,
-                                                // reset n and loop again
+                if (seq - nValuesBeneath < 0) { // value is under this child, reset n and loop again
                     n = c;
                     break;
                 } else { // go to next child
@@ -430,27 +402,26 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     public static void main(String[] args) throws Exception {
         TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
-        // b.addValue("part");
-        // b.print();
-        // b.addValue("part");
-        // b.print();
-        // b.addValue("par");
-        // b.print();
-        // b.addValue("partition");
-        // b.print();
-        // b.addValue("party");
-        // b.print();
-        // b.addValue("parties");
-        // b.print();
-        // b.addValue("paint");
-        // b.print();
-        b.addValue("-000000.41");
-        b.addValue("0000101.81");
-        b.addValue("6779331");
-        String t = "0000001.6131";
+        b.addValue("");
+        b.print();
+        b.addValue("part");
+        b.print();
+        b.addValue("part");
+        b.print();
+        b.addValue("par");
+        b.print();
+        b.addValue("partition");
+        b.print();
+        b.addValue("party");
+        b.print();
+        b.addValue("parties");
+        b.print();
+        b.addValue("paint");
+        b.print();
         TrieDictionary<String> dict = b.build(0);
 
-        System.out.println(dict.getIdFromValue(t, -1));
-        System.out.println(dict.getIdFromValue(t, 1));
+        dict.dump(System.out);
+        
+        dict.getIdFromValueBytes(new byte[10], 0, 0);
     }
 }
