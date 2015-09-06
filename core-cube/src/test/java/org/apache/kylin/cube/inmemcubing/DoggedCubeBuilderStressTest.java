@@ -96,5 +96,10 @@ public class DoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
         public void flush() {
 
         }
+
+        @Override
+        public void close() {
+            
+        }
     }
 }

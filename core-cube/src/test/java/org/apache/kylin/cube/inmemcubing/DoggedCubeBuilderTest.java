@@ -152,6 +152,7 @@ public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
 
         }
 
+        @Override
         public void close() {
             writer.close();
         }

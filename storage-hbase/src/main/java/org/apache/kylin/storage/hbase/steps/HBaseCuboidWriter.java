@@ -140,4 +140,9 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
         }
     }
 
+    @Override
+    public void close() {
+        
+    }
+
 }

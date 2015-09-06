@@ -12,8 +12,8 @@ import org.apache.kylin.common.util.DateFormat;
  */
 public class TimeStrDictionary extends Dictionary<String> {
 
-    private long maxid = Integer.MAX_VALUE;
-    private int maxLenghOfPositiveLong = 19;
+    private static final long MAX_ID = Integer.MAX_VALUE;
+    private static final int MAX_LENGTH_OF_POSITIVE_LONG = 19;
 
     @Override
     public int getMinId() {
@@ -32,7 +32,7 @@ public class TimeStrDictionary extends Dictionary<String> {
 
     @Override
     public int getSizeOfValue() {
-        return maxLenghOfPositiveLong;
+        return MAX_LENGTH_OF_POSITIVE_LONG;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class TimeStrDictionary extends Dictionary<String> {
         long millis = DateFormat.stringToMillis(value);
         long seconds = millis / 1000;
 
-        if (seconds > maxid) {
+        if (seconds > MAX_ID) {
             return nullId();
         } else if (seconds < 0) {
             throw new IllegalArgumentException("Illegal value: " + value + ", parsed seconds: " + seconds);

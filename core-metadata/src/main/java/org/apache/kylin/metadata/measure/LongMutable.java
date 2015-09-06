@@ -18,7 +18,9 @@
 
 package org.apache.kylin.metadata.measure;
 
-public class LongMutable implements Comparable<LongMutable> {
+import java.io.Serializable;
+
+public class LongMutable implements Comparable<LongMutable>, Serializable {
 
     private long v;
 

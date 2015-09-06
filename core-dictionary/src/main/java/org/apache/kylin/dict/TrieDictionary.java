@@ -18,21 +18,18 @@
 
 package org.apache.kylin.dict;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.ref.SoftReference;
-import java.util.Arrays;
-import java.util.HashMap;
-
+import com.google.common.base.Preconditions;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.lang.ref.SoftReference;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -457,6 +454,24 @@ public class TrieDictionary<T> extends Dictionary<T> {
         init(all);
     }
 
+    private void writeObject(java.io.ObjectOutputStream stream)
+            throws IOException {
+        stream.writeInt(trieBytes.length);
+        stream.write(trieBytes);
+    }
+
+    private void readObject(java.io.ObjectInputStream stream)
+            throws IOException, ClassNotFoundException {
+        int length = stream.readInt();
+        byte[] trieBytes = new byte[length];
+        int currentCount;
+        int idx = 0;
+        while ((currentCount = stream.read(trieBytes, idx, length - idx)) > 0) {
+            idx += currentCount;
+        }
+        init(trieBytes);
+    }
+
     @Override
     public void dump(PrintStream out) {
         out.println("Total " + nValues + " values");
@@ -515,7 +530,15 @@ public class TrieDictionary<T> extends Dictionary<T> {
         b.print();
         TrieDictionary<String> dict = b.build(0);
 
-        dict.enableIdToValueBytesCache();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        new ObjectOutputStream(baos).writeObject(dict);
+        
+        TrieDictionary<String> dict2 = (TrieDictionary<String>) new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())).readObject();
+        Preconditions.checkArgument(dict.contains(dict2));
+        Preconditions.checkArgument(dict2.contains(dict));
+        Preconditions.checkArgument(dict.equals(dict2));
+        
+        dict2.enableIdToValueBytesCache();
         for (int i = 0; i <= dict.getMaxId(); i++) {
             System.out.println(Bytes.toString(dict.getValueBytesFromId(i)));
         }

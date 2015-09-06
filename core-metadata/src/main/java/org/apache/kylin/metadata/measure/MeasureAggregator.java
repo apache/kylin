@@ -21,11 +21,13 @@ package org.apache.kylin.metadata.measure;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 
+import java.io.Serializable;
+
 /**
  * @author yangli9
  * 
  */
-abstract public class MeasureAggregator<V> {
+abstract public class MeasureAggregator<V> implements Serializable {
 
     public static MeasureAggregator<?> create(String funcName, String returnType) {
         if (FunctionDesc.FUNC_SUM.equalsIgnoreCase(funcName) || FunctionDesc.FUNC_COUNT.equalsIgnoreCase(funcName)) {

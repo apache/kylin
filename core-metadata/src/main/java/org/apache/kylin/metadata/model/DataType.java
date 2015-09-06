@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,7 +32,7 @@ import java.util.regex.Pattern;
  * @author yangli9
  * 
  */
-public class DataType {
+public class DataType implements Serializable {
 
     public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|binary" //
             + "|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" //

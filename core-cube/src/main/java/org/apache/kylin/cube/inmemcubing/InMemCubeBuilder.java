@@ -132,9 +132,13 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     @Override
     public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
         ConcurrentNavigableMap<Long, CuboidResult> result = build(input);
-        for (CuboidResult cuboidResult : result.values()) {
-            outputCuboid(cuboidResult.cuboidId, cuboidResult.table, output);
-            cuboidResult.table.close();
+        try {
+            for (CuboidResult cuboidResult : result.values()) {
+                outputCuboid(cuboidResult.cuboidId, cuboidResult.table, output);
+                cuboidResult.table.close();
+            }
+        } finally {
+            output.close();
         }
     }
 
@@ -143,9 +147,11 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         build(input, new ICuboidCollector() {
             @Override
             public void collect(CuboidResult cuboidResult) {
+                logger.info("collecting CuboidResult cuboid id:" + cuboidResult.cuboidId);
                 result.put(cuboidResult.cuboidId, cuboidResult);
             }
         });
+        logger.info("total CuboidResult count:" + result.size());
         return result;
     }
 
