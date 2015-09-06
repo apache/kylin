@@ -30,7 +30,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.8.1-incubating-SNAPSHOT</version>
+    <version>2.0-incubating-SNAPSHOT</version>
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
@@ -128,11 +128,25 @@
 
     <mailingLists>
         <mailingList>
+            <name>kylin-user</name>
+            <subscribe>user-subscribe@kylin.incubator.apache.org</subscribe>
+            <unsubscribe>user-unsubscribe@kylin.incubator.apache.org</unsubscribe>
+            <post>user@kylin.incubator.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-user/</archive>
+        </mailingList>
+        <mailingList>
             <name>kylin-dev</name>
             <subscribe>dev-subscribe@kylin.incubator.apache.org</subscribe>
             <unsubscribe>dev-unsubscribe@kylin.incubator.apache.org</unsubscribe>
             <post>dev@kylin.incubator.apache.org</post>
             <archive>http://mail-archives.apache.org/mod_mbox/kylin-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>kylin-issues</name>
+            <subscribe>issues-subscribe@kylin.incubator.apache.org</subscribe>
+            <unsubscribe>issues-unsubscribe@kylin.incubator.apache.org</unsubscribe>
+            <post>issues@kylin.incubator.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/kylin-issues/</archive>
         </mailingList>
         <mailingList>
             <name>kylin-commits</name>
@@ -147,7 +161,7 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</url>
-        <tag>apache-kylin-0.7.1-incubating</tag>
+        <tag>apache-kylin-2.0-incubating</tag>
     </scm>
 
     <dependencyManagement>
@@ -725,6 +739,36 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Override the parent assembly execution to customize the assembly
+              descriptor and final name. -->
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>source-release-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <tarLongFileMode>posix</tarLongFileMode>
+                                    <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                                    <appendAssemblyId>true</appendAssemblyId>
+                                    <descriptor>src/main/config/assemblies/source-assembly.xml</descriptor>
+                                    <finalName>apache-kylin-${project.version}-src</finalName>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.16</version>
                         <configuration>
@@ -779,12 +823,18 @@
                                 <exclude>**/*.pdf</exclude>
                                 <exclude>**/*.log</exclude>
 
+                                <exclude>**/.checkstyle</exclude>
+                                <!--Job's Test Data-->
+                                <exclude>**/src/test/resources/data/**</exclude>
+
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
                                 <exclude>lib/**</exclude>
                                 <!-- Kylin's website content -->
                                 <exclude>**/.sass-cache/**</exclude>
-                                <exclude>docs/website/**</exclude>
+
+                                <exclude>website/**</exclude>
+
                                 <!-- tomcat package -->
                                 <exclude>tomcat/**</exclude>
                                 <!-- front end libary and generated files -->
@@ -802,8 +852,13 @@
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
 
                                 <!-- jdbc log -->
-                                <exclude>jdbc/kylin_jdbc.log.*</exclude>
-                                <exclude>jdbc/kylin_jdbc.*</exclude>
+                                <exclude>jdbc/kylin_jdbc.log*</exclude>
+                                <!-- server log -->
+                                <exclude>server/logs/**</exclude>
+
+                                <!-- HBase MiniCluster Testing Data, for testing only -->
+                                <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
+                                <exclude>examples/test_case_data/**/*.xml</exclude>
 
                             </excludes>
                         </configuration>
