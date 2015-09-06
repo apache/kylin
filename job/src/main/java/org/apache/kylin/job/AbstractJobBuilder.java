@@ -94,6 +94,6 @@ public abstract class AbstractJobBuilder {
     }
 
     protected String getJobWorkingDir(String uuid) {
-        return engineConfig.getHdfsWorkingDirectory() + "/" + JOB_WORKING_DIR_PREFIX + uuid;
+        return engineConfig.getHdfsWorkingDirectory() + JOB_WORKING_DIR_PREFIX + uuid;
     }
 }
