@@ -32,4 +32,7 @@ public class IRealizationConstants {
      */
     public final static String HTableTag = "KYLIN_HOST";
 
+
+    public final static String HTableCreationTime = "CREATION_TIME";
+
 }

@@ -18,14 +18,10 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -52,6 +48,11 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @author ysong1
  */
@@ -61,6 +62,8 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
 
     protected static final Logger log = LoggerFactory.getLogger(StorageCleanupJob.class);
+
+    public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000l; // 2 days
 
     boolean delete = false;
 
@@ -108,9 +111,11 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
         for (HTableDescriptor desc : tableDescriptors) {
             String host = desc.getValue(IRealizationConstants.HTableTag);
+            String creationTime = desc.getValue(IRealizationConstants.HTableCreationTime);
             if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
-                //only take care htables that belongs to self
-                allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+                //only take care htables that belongs to self, and created more than 2 days
+                if (StringUtils.isNotEmpty(creationTime) || (System.currentTimeMillis() - Long.valueOf(creationTime) > TIME_THREADSHOLD))
+                    allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
             }
         }
 

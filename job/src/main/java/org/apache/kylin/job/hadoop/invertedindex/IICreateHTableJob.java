@@ -99,6 +99,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
             tableDesc.addFamily(cf);
             tableDesc.setValue(IRealizationConstants.HTableTag, config.getMetadataUrlPrefix());
+            tableDesc.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
             tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
 
             Configuration conf = HBaseConfiguration.create(getConf());
