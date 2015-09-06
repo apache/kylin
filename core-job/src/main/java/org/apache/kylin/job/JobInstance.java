@@ -65,7 +65,7 @@ public class JobInstance extends RootPersistentEntity implements Comparable<JobI
         if (jobUuid == null || jobUuid.equals("")) {
             throw new IllegalArgumentException("jobUuid can't be null or empty");
         }
-        return hdfsWorkdingDir + "/" + JOB_WORKING_DIR_PREFIX + jobUuid;
+        return hdfsWorkdingDir + JOB_WORKING_DIR_PREFIX + jobUuid;
     }
 
     @JsonProperty("name")

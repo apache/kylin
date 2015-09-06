@@ -221,7 +221,7 @@ public final class IIJobBuilder {
     }
 
     private String getJobWorkingDir(String uuid) {
-        return engineConfig.getHdfsWorkingDirectory() + "/" + "kylin-" + uuid;
+        return engineConfig.getHdfsWorkingDirectory() + "kylin-" + uuid;
     }
 
     private String getIntermediateTableIdentity(IIJoinedFlatTableDesc intermediateTableDesc) {
