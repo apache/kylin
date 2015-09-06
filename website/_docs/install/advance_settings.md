@@ -29,11 +29,20 @@ To test if the hbase cluster is ready to create LZO compressed tables, test foll
 create 'lzoTable', {NAME => 'colFam',COMPRESSION => 'LZO'}
 {% endhighlight %}
 
-### Modify kylin_job_conf.xml
+### Use LZO for HBase compression
 
 You'll need to stop Kylin first by running `./kylin.sh stop`, and then modify $KYLIN_HOME/conf/kylin_job_conf.xml by uncommenting some configuration entries related to LZO compression. 
 After this, you need to run `./kylin.sh start` to start Kylin again. Now Kylin will use LZO to compress MR outputs and hbase tables.
 
+Goto $KYLIN_HOME/conf/kylin.properties, change kylin.hbase.default.compression.codec=snappy to kylin.hbase.default.compression.codec=lzo
+
+### Use LZO for MR jobs
+
+Modify $KYLIN_HOME/conf/kylin_job_conf.xml by changing all org.apache.hadoop.io.compress.SnappyCodec to com.hadoop.compression.lzo.LzoCodec. 
+
+### Restart Kylin
+
+Start Kylin again. Now Kylin will use LZO to compress MR outputs and HBase tables.
 
 ## Enable LDAP authentication
 

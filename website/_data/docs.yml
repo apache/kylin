@@ -49,6 +49,6 @@
   - howto/howto_use_restapi
   - howto/howto_optimize_cubes
   - howto/howto_backup_metadata
-  - howto/howto_backup_hbase
+  - howto/howto_cleanup_storage
   - howto/howto_jdbc
   - howto/howto_upgrade
