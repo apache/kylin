@@ -23,6 +23,11 @@
       "realization": "test_kylin_cube_without_slr_left_join_empty"
     },
     {
+      "name": "test_kylin_cube_topn",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_topn"
+    },
+    {
       "name": "test_kylin_ii_left_join",
       "type": "INVERTED_INDEX",
       "realization": "test_kylin_ii_left_join"

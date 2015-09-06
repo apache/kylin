@@ -125,7 +125,8 @@ public class BuildCubeWithEngineTest {
     }
 
     private void testInner() throws Exception {
-        String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", };
+       String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", "testInnerJoinTopNCube"};
+//        String[] testCase = new String[] { "testInnerJoinTopNCube" };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -181,6 +182,21 @@ public class BuildCubeWithEngineTest {
                 countDownLatch.countDown();
             }
         }
+    }
+
+
+    @SuppressWarnings("unused")
+    // called by reflection
+    private List<String> testInnerJoinTopNCube() throws Exception {
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        long date1 = 0;
+        long date2 = f.parse("2013-01-01").getTime();
+        long date3 = f.parse("2022-01-01").getTime();
+        List<String> result = Lists.newArrayList();
+        result.add(buildSegment("test_kylin_cube_topn", date1, date2));
+        result.add(buildSegment("test_kylin_cube_topn", date2, date3));
+        return result;
     }
 
     @SuppressWarnings("unused")

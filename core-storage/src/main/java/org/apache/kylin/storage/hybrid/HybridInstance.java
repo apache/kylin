@@ -277,7 +277,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     }
 
     public IRealization getLatestRealization() {
-        if (realizations.length > 0) {
+        if (getRealizations().length > 0) {
             return realizations[realizations.length - 1];
         }
         return null;
