@@ -1,7 +1,10 @@
 package org.apache.kylin.storage.hbase.util;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -17,6 +20,8 @@ import org.apache.kylin.storage.hbase.steps.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 /**
  */
 public class ZookeeperJobLock implements JobLock {
@@ -31,13 +36,15 @@ public class ZookeeperJobLock implements JobLock {
     @Override
     public boolean lock() {
         this.scheduleID = schedulerId();
-        String ZKConnectString = getZKConnectString();
-        if (StringUtils.isEmpty(ZKConnectString)) {
+        String zkConnectString = getZKConnectString();
+        logger.info("zk connection string:" + zkConnectString);
+        logger.info("schedulerId:" + scheduleID);
+        if (StringUtils.isEmpty(zkConnectString)) {
             throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
         }
 
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        this.zkClient = CuratorFrameworkFactory.newClient(ZKConnectString, retryPolicy);
+        this.zkClient = CuratorFrameworkFactory.newClient(zkConnectString, retryPolicy);
         this.zkClient.start();
         this.sharedLock = new InterProcessMutex(zkClient, this.scheduleID);
         boolean hasLock = false;
@@ -61,7 +68,15 @@ public class ZookeeperJobLock implements JobLock {
 
     private String getZKConnectString() {
         Configuration conf = HBaseConnection.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl());
-        return conf.get(HConstants.ZOOKEEPER_QUORUM) + ":" + conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
+        final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
+        final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
+        return org.apache.commons.lang3.StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
+            @Nullable
+            @Override
+            public String apply(String input) {
+                return input + ":" + port;
+            }
+        }), ",");
     }
 
     private void releaseLock() {
