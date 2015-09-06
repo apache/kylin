@@ -14,20 +14,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 
 import org.apache.kylin.rest.service.AdminService;
+import org.apache.kylin.rest.service.CubeService;
+import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.apache.kylin.rest.service.CubeService;
-import org.apache.kylin.rest.service.ServiceTestBase;
 
 /**
  * @author xduo

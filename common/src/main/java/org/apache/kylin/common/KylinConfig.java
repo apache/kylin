@@ -14,11 +14,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common;
 
-import com.google.common.collect.Sets;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.SortedSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
@@ -28,10 +38,7 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.SortedSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -45,15 +52,6 @@ public class KylinConfig {
     public static final String KYLIN_REST_SERVERS = "kylin.rest.servers";
 
     public static final String KYLIN_REST_TIMEZONE = "kylin.rest.timezone";
-    /**
-     * The dir containing scripts for kylin. For example: /usr/lib/kylin/bin
-     */
-    public static final String KYLIN_SCRIPT_DIR = "kylin.script.dir";
-    /**
-     * The script file name for generating table metadat from hive. For example:
-     * generateTable.sh
-     */
-    public static final String KYLIN_SCRIPT_GEN_TABLE_META = "kylin.script.genTableMeta";
 
     public static final String KYLIN_JOB_CONCURRENT_MAX_LIMIT = "kylin.job.concurrent.max.limit";
 
@@ -62,6 +60,8 @@ public class KylinConfig {
     public static final String KYLIN_JOB_YARN_APP_REST_CHECK_INTERVAL_SECONDS = "kylin.job.yarn.app.rest.check.interval.seconds";
 
     public static final String KYLIN_TMP_HDFS_DIR = "kylin.tmp.hdfs.dir";
+
+    public static final String HIVE_DATABASE_FOR_INTERMEDIATE_TABLE = "kylin.job.hive.database.for.intermediatetable";
 
     public static final String HIVE_TABLE_LOCATION_PREFIX = "hive.table.location.";
 
@@ -100,14 +100,6 @@ public class KylinConfig {
 
     public static final String HIVE_URL = "hive.url";
     /**
-     * Key string to specify the kylin evn: prod, dev, qa
-     */
-    public static final String KYLIN_ENV = "KYLIN_ENV";
-    /**
-     * Default Kylin conf path
-     */
-    public static final String KYLIN_CONF_DEFAULT = "/etc/kylin";
-    /**
      * Kylin properties file
      */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
@@ -123,6 +115,7 @@ public class KylinConfig {
     public static final String MAIL_SENDER = "mail.sender";
 
     public static final String KYLIN_HOME = "KYLIN_HOME";
+
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
@@ -232,8 +225,7 @@ public class KylinConfig {
 
     /**
      * Find config from environment. The Search process: 1. Check the
-     * $KYLIN_CONF/kylin.properties 2. Check the /etc/kylin/kylin.properties 3.
-     * Check the kylin.properties in classpath
+     * $KYLIN_CONF/kylin.properties 2. Check the $KYLIN_HOME/conf/kylin.properties
      *
      * @return
      */
@@ -279,7 +271,11 @@ public class KylinConfig {
     }
 
     public String getHdfsWorkingDirectory() {
-        return getRequired(KYLIN_HDFS_WORKING_DIR);
+        String root = getRequired(KYLIN_HDFS_WORKING_DIR);
+        if (!root.endsWith("/")) {
+            root += "/";
+        }
+        return root + getMetadataUrlPrefix() + "/";
     }
 
     public String getKylinJobLogDir() {
@@ -420,11 +416,15 @@ public class KylinConfig {
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
     }
-    
+
+    public int getTableSnapshotMaxMB() {
+        return Integer.parseInt(getOptional("kylin.table.snapshot.max_mb", "300"));
+    }
+
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
-    
+
     public boolean getQueryRunLocalCoprocessor() {
         return Boolean.parseBoolean(getOptional("kylin.query.run.local.coprocessor", "false"));
     }
@@ -611,6 +611,10 @@ public class KylinConfig {
     public void setStorageUrl(String storageUrl) {
         kylinConfig.setProperty(KYLIN_STORAGE_URL, storageUrl);
         this.storageUrl = storageUrl;
+    }
+
+    public String getHiveDatabaseForIntermediateTable() {
+        return this.getOptional(HIVE_DATABASE_FOR_INTERMEDIATE_TABLE, "default");
     }
 
     public void setRunAsRemoteCommand(String v) {

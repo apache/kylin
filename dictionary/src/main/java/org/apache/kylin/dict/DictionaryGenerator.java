@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict;
 
@@ -29,15 +29,14 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.dict.lookup.TableReader;
+import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.dict.lookup.ReadableTable;
+import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
+import org.apache.kylin.metadata.model.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.dict.lookup.ReadableTable;
-import org.apache.kylin.metadata.model.DataType;
 
 /**
  * @author yangli9

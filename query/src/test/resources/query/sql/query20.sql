@@ -19,7 +19,7 @@
 SELECT 
  test_cal_dt.week_beg_dt 
  ,test_category_groupings.meta_categ_name 
- ,sum(price) as GMV, count(*) as TRANS_CNT 
+ ,sum(price) as GMV, count(*) as TRANS_CNT , sum(test_kylin_fact.item_count) as total_items
  FROM test_kylin_fact 
  inner JOIN edw.test_cal_dt as test_cal_dt  
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt 

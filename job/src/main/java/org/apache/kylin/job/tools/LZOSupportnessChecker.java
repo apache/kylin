@@ -14,15 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.tools;
+
+import java.io.File;
 
 import org.apache.hadoop.hbase.util.CompressionTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 /**
  * Created by honma on 10/21/14.
@@ -35,7 +35,7 @@ public class LZOSupportnessChecker {
             File temp = File.createTempFile("test", ".tmp");
             CompressionTest.main(new String[] { "file://" + temp.getAbsolutePath(), "lzo" });
         } catch (Exception e) {
-            log.error("Fail to compress file with lzo", e);
+            log.info("LZO compression test encounters " + e.toString());
             return false;
         }
         return true;

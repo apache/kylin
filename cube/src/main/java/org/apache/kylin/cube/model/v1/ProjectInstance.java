@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.model.v1;
 
@@ -23,12 +23,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.project.ProjectStatusEnum;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Project is a concept in Kylin similar to schema in DBMS
@@ -46,7 +47,6 @@ public class ProjectInstance extends RootPersistentEntity {
 
     @JsonProperty("tables")
     private Set<String> tables;
-
 
     @JsonProperty("owner")
     private String owner;
@@ -162,7 +162,6 @@ public class ProjectInstance extends RootPersistentEntity {
         return cubes;
     }
 
-
     public void setCubes(List<String> cubes) {
         this.cubes = cubes;
     }
@@ -215,7 +214,6 @@ public class ProjectInstance extends RootPersistentEntity {
     public void recordUpdateTime(long timeMillis) {
         this.lastUpdateTime = formatTime(timeMillis);
     }
-
 
     public void init() {
         if (name == null)

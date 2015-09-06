@@ -14,14 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.index;
 
 import java.util.Iterator;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  * Within a partition (per timestampGranularity), records are further sliced

@@ -14,19 +14,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.model;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Arrays;
+import java.util.Comparator;
+
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringSplitter;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Table Metadata from Source. All name should be uppercase.
@@ -64,7 +65,6 @@ public class TableDesc extends RootPersistentEntity {
     public String getResourcePath() {
         return concatResourcePath(getIdentity());
     }
-    
 
     /**
      * @deprecated this is for compatible with data model v1;
@@ -73,14 +73,14 @@ public class TableDesc extends RootPersistentEntity {
     public String getResourcePathV1() {
         return concatResourcePath(name);
     }
-    
+
     public String getIdentity() {
         if (identity == null) {
             identity = String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
         }
         return identity;
     }
-    
+
     public static String concatResourcePath(String tableIdentity) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + ".json";
     }
@@ -88,7 +88,7 @@ public class TableDesc extends RootPersistentEntity {
     public static String concatExdResourcePath(String tableIdentity) {
         return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableIdentity + ".json";
     }
-    
+
     // ============================================================================
 
     public String getName() {

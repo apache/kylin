@@ -14,17 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.dao;
 
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 /**
  * Created by qianzhou on 12/15/14.

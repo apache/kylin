@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.hive;
 
@@ -133,7 +133,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         if (columnCount != bytesSplitter.getBufferSize()) {
             throw new IllegalArgumentException("Expect " + columnCount + " columns, but see " + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
         }
-        
+
         // TODO: check data types here
     }
 

@@ -14,9 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.engine;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -24,8 +30,6 @@ import org.apache.kylin.job.tools.OptionsHelper;
 import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
 
 /**
  * @author ysong1
@@ -107,7 +111,6 @@ public class JobEngineConfig {
     public String getHdfsWorkingDirectory() {
         return config.getHdfsWorkingDirectory();
     }
-
 
     /**
      * @return the maxConcurrentJobLimit

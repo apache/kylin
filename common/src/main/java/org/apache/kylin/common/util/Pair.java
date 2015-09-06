@@ -14,20 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
 import java.io.Serializable;
-
 
 /**
  * A generic class for pairs. Copied from org.apache.hadoop.hbase.util.Pair
  * @param <T1>
  * @param <T2>
  */
-public class Pair<T1, T2> implements Serializable
-{
+public class Pair<T1, T2> implements Serializable {
     private static final long serialVersionUID = -3986244606585552569L;
     protected T1 first = null;
     protected T2 second = null;
@@ -35,8 +33,7 @@ public class Pair<T1, T2> implements Serializable
     /**
      * Default constructor.
      */
-    public Pair()
-    {
+    public Pair() {
     }
 
     /**
@@ -44,8 +41,7 @@ public class Pair<T1, T2> implements Serializable
      * @param a operand
      * @param b operand
      */
-    public Pair(T1 a, T2 b)
-    {
+    public Pair(T1 a, T2 b) {
         this.first = a;
         this.second = b;
     }
@@ -58,16 +54,15 @@ public class Pair<T1, T2> implements Serializable
      * @param b second element
      * @return a new pair containing the passed arguments
      */
-    public static <T1,T2> Pair<T1,T2> newPair(T1 a, T2 b) {
-        return new Pair<T1,T2>(a, b);
+    public static <T1, T2> Pair<T1, T2> newPair(T1 a, T2 b) {
+        return new Pair<T1, T2>(a, b);
     }
 
     /**
      * Replace the first element of the pair.
      * @param a operand
      */
-    public void setFirst(T1 a)
-    {
+    public void setFirst(T1 a) {
         this.first = a;
     }
 
@@ -75,8 +70,7 @@ public class Pair<T1, T2> implements Serializable
      * Replace the second element of the pair.
      * @param b operand
      */
-    public void setSecond(T2 b)
-    {
+    public void setSecond(T2 b) {
         this.second = b;
     }
 
@@ -84,8 +78,7 @@ public class Pair<T1, T2> implements Serializable
      * Return the first element stored in the pair.
      * @return T1
      */
-    public T1 getFirst()
-    {
+    public T1 getFirst() {
         return first;
     }
 
@@ -93,27 +86,22 @@ public class Pair<T1, T2> implements Serializable
      * Return the second element stored in the pair.
      * @return T2
      */
-    public T2 getSecond()
-    {
+    public T2 getSecond() {
         return second;
     }
 
-    private static boolean equals(Object x, Object y)
-    {
+    private static boolean equals(Object x, Object y) {
         return (x == null && y == null) || (x != null && x.equals(y));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean equals(Object other)
-    {
-        return other instanceof Pair && equals(first, ((Pair)other).first) &&
-                equals(second, ((Pair)other).second);
+    public boolean equals(Object other) {
+        return other instanceof Pair && equals(first, ((Pair) other).first) && equals(second, ((Pair) other).second);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         if (first == null)
             return (second == null) ? 0 : second.hashCode() + 1;
         else if (second == null)
@@ -123,9 +111,7 @@ public class Pair<T1, T2> implements Serializable
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "{" + getFirst() + "," + getSecond() + "}";
     }
 }
-

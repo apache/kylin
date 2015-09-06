@@ -14,15 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.model;
+
+import java.util.Collection;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Collection;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To
@@ -130,13 +130,13 @@ public class FunctionDesc {
         this.parameter = parameter;
     }
 
-    public String getSQLType() {
+    public DataType getSQLType() {
         if (isCountDistinct())
-            return "any";
+            return DataType.ANY;
         else if (isSum() || isMax() || isMin())
-            return parameter.getColRefs().get(0).getType().getName();
+            return parameter.getColRefs().get(0).getType();
         else
-            return returnType;
+            return returnDataType;
     }
 
     public String getReturnType() {
@@ -151,7 +151,7 @@ public class FunctionDesc {
         this.returnType = returnType;
         this.initReturnDataType();
     }
-    
+
     // Jackson does not provide object post-processing currently
     public void initReturnDataType() {
         this.returnDataType = DataType.getInstance(returnType);

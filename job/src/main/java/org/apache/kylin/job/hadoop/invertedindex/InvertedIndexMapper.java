@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.invertedindex;
 
@@ -51,7 +51,7 @@ public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, L
     private ImmutableBytesWritable outputValue;
     private HCatSchema schema = null;
     private List<HCatFieldSchema> fields;
-    
+
     @Override
     protected void setup(Context context) throws IOException {
         super.publishConfiguration(context.getConfiguration());
@@ -69,7 +69,7 @@ public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, L
         outputValue = new ImmutableBytesWritable(rec.getBytes());
 
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
-        
+
         fields = schema.getFields();
     }
 
@@ -79,7 +79,7 @@ public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, L
         rec.reset();
         for (int i = 0; i < fields.size(); i++) {
             Object fieldValue = record.get(i);
-            rec.setValueString(i, fieldValue == null? null : fieldValue.toString());
+            rec.setValueString(i, fieldValue == null ? null : fieldValue.toString());
         }
 
         outputKey.set(rec.getTimestamp());

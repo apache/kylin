@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.invertedindex;
 
@@ -31,7 +31,6 @@ public class IIJob extends DefaultChainedExecutable {
 
     private static final String II_INSTANCE_NAME = "iiName";
     private static final String SEGMENT_ID = "segmentId";
-
 
     void setIIName(String name) {
         setParam(II_INSTANCE_NAME, name);

@@ -14,41 +14,37 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.kylin.common.util.Bytes;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;
-import org.apache.kylin.job.constant.BatchConstants;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.kv.RowKeyDecoder;
+import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * @author George Song (ysong1)
- * 
- */
 public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
 
     MapDriver<Text, Text, Text, Text> mapDriver;
-    String localTempDir = System.getProperty("java.io.tmpdir") + File.separator;
 
     @Before
     public void setUp() throws Exception {
@@ -76,7 +72,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
         // mapDriver.getConfiguration().set(BatchConstants.CFG_METADATA_URL,
         // metadata);
-        mapDriver.withInput(new Text("key"), new Text("2012-12-15118480Health & BeautyFragrancesWomenAuction15123456789132.33"));
+        mapDriver.withInput(new Text("key"), new Text("2012-12-15118480Health & BeautyFragrancesWomenAuction15123456789132.3322"));
         List<Pair<Text, Text>> result = mapDriver.run();
 
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
@@ -98,16 +94,18 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         assertEquals(511, Bytes.toLong(cuboidId));
         assertEquals(22, restKey.length);
 
-        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "132.33", "132.33", "132.33");
+        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "132.33", "132.33", "132.33", "1", "22");
     }
 
-    private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String m1, String m2, String m3) {
+    private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String... valueStr) {
         MeasureCodec codec = new MeasureCodec(measures);
         Object[] values = new Object[measures.size()];
         codec.decode(valueBytes, values);
-        assertTrue(new BigDecimal(m1).equals(values[0]));
-        assertTrue(new BigDecimal(m2).equals(values[1]));
-        assertTrue(new BigDecimal(m3).equals(values[2]));
+        assertTrue(new BigDecimal(valueStr[0]).equals(values[0]));
+        assertTrue(new BigDecimal(valueStr[1]).equals(values[1]));
+        assertTrue(new BigDecimal(valueStr[2]).equals(values[2]));
+        assertTrue(new LongWritable(Long.valueOf(valueStr[3])).equals(values[3]));
+        assertTrue(new LongWritable(Long.valueOf(valueStr[4])).equals(values[4]));
     }
 
     @Test
@@ -118,7 +116,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
         // mapDriver.getConfiguration().set(BatchConstants.CFG_METADATA_URL,
         // metadata);
-        mapDriver.withInput(new Text("key"), new Text("2012-12-15118480Health & BeautyFragrances\\NAuction15123456789\\N"));
+        mapDriver.withInput(new Text("key"), new Text("2012-12-15118480Health & BeautyFragrances\\NAuction15123456789\\N22"));
         List<Pair<Text, Text>> result = mapDriver.run();
 
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
@@ -140,6 +138,6 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         assertEquals(511, Bytes.toLong(cuboidId));
         assertEquals(22, restKey.length);
 
-        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "0", "0", "0");
+        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "0", "0", "0", "1","22");
     }
 }

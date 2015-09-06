@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.model;
 
@@ -47,7 +47,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -71,8 +70,6 @@ public class IIDesc extends RootPersistentEntity {
     private String modelName;
     @JsonProperty("timestamp_dimension")
     private String timestampDimension;
-    @JsonProperty("bitmap_dimensions")
-    private List<IIDimension> bitmapDimensions;
     @JsonProperty("value_dimensions")
     private List<IIDimension> valueDimensions;
     @JsonProperty("metrics")
@@ -87,8 +84,8 @@ public class IIDesc extends RootPersistentEntity {
     // computed
     private List<TableDesc> allTables = Lists.newArrayList();
     private List<TblColRef> allColumns = Lists.newArrayList();
+    private List<TblColRef> allDimensions = Lists.newArrayList();
     private int tsCol;
-    private int[] bitmapCols;
     private int[] valueCols;
     private int[] metricsCols;
     private BitSet metricsColSet;
@@ -111,7 +108,6 @@ public class IIDesc extends RootPersistentEntity {
         timestampDimension = timestampDimension.toUpperCase();
 
         // capitalize
-        IIDimension.capicalizeStrings(bitmapDimensions);
         IIDimension.capicalizeStrings(valueDimensions);
         StringUtil.toUpperCaseArray(metricNames, metricNames);
 
@@ -119,12 +115,14 @@ public class IIDesc extends RootPersistentEntity {
         HashSet<String> allTableNames = Sets.newHashSet();
         measureDescs = Lists.newArrayList();
         measureDescs.add(makeCountMeasure());
-        for (IIDimension iiDimension : Iterables.concat(bitmapDimensions, valueDimensions)) {
+        for (IIDimension iiDimension : valueDimensions) {
             TableDesc tableDesc = this.getTableDesc(iiDimension.getTable());
             for (String column : iiDimension.getColumns()) {
                 ColumnDesc columnDesc = tableDesc.findColumnByName(column);
-                allColumns.add(new TblColRef(columnDesc));
-                measureDescs.add(makeHLLMeasure(columnDesc, null));
+                TblColRef tcr = new TblColRef(columnDesc);
+                allColumns.add(tcr);
+                allDimensions.add(tcr);
+                measureDescs.add(makeHLLMeasure(columnDesc, "hllc10"));
             }
 
             if (!allTableNames.contains(tableDesc.getIdentity())) {
@@ -146,15 +144,11 @@ public class IIDesc extends RootPersistentEntity {
         }
 
         // indexing for each type of columns
-        bitmapCols = new int[IIDimension.getColumnCount(bitmapDimensions)];
         valueCols = new int[IIDimension.getColumnCount(valueDimensions)];
         metricsCols = new int[metricNames.length];
         metricsColSet = new BitSet(this.getTableDesc(this.getFactTableName()).getColumnCount());
 
         int totalIndex = 0;
-        for (int i = 0; i < bitmapCols.length; ++i, ++totalIndex) {
-            bitmapCols[i] = totalIndex;
-        }
         for (int i = 0; i < valueCols.length; ++i, ++totalIndex) {
             valueCols[i] = totalIndex;
         }
@@ -174,7 +168,7 @@ public class IIDesc extends RootPersistentEntity {
             }
         }
         if (tsCol < 0)
-            throw new RuntimeException("timestamp_dimension is not in bitmapDimensions or valueDimensions");
+            throw new RuntimeException("timestamp_dimension is not in valueDimensions");
     }
 
     private TableDesc getTableDesc(String tableName) {
@@ -262,6 +256,10 @@ public class IIDesc extends RootPersistentEntity {
         return allColumns;
     }
 
+    public List<TblColRef> listAllDimensions() {
+        return allDimensions;
+    }
+
     public TblColRef findColumnRef(String table, String column) {
         ColumnDesc columnDesc = this.getTableDesc(table).findColumnByName(column);
         return new TblColRef(columnDesc);
@@ -297,10 +295,6 @@ public class IIDesc extends RootPersistentEntity {
 
     public int getTimestampColumn() {
         return tsCol;
-    }
-
-    public int[] getBitmapColumns() {
-        return bitmapCols;
     }
 
     public int[] getValueColumns() {
@@ -359,7 +353,7 @@ public class IIDesc extends RootPersistentEntity {
         try {
             md = MessageDigest.getInstance("MD5");
             StringBuilder sigString = new StringBuilder();
-            sigString.append(this.name).append("|").append(this.getFactTableName()).append("|").append(timestampDimension).append("|").append(JsonUtil.writeValueAsString(this.bitmapDimensions)).append("|").append(JsonUtil.writeValueAsString(valueDimensions)).append("|").append(JsonUtil.writeValueAsString(this.metricNames)).append("|").append(sharding).append("|").append(sliceSize);
+            sigString.append(this.name).append("|").append(this.getFactTableName()).append("|").append(timestampDimension).append("|").append("|").append(JsonUtil.writeValueAsString(valueDimensions)).append("|").append(JsonUtil.writeValueAsString(this.metricNames)).append("|").append(sharding).append("|").append(sliceSize);
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));

@@ -14,20 +14,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.cuboid;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.MetadataManager;
 
 /**
  * @author yangli9
@@ -173,7 +173,6 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         assertEquals(toLong("111111111"), cuboid.getId());
     }
 
-    //@Test
     public void testII() {
         CubeDesc cube = getTestKylinCubeII();
         assertEquals(toLong("111111111"), Cuboid.getBaseCuboidId(cube));

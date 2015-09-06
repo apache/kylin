@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
@@ -40,10 +40,9 @@ public class SliceBitMapProvider implements BitMapFilterEvaluator.BitMapProvider
         this.type = type;
     }
 
-
     @Override
     public ConciseSet getBitMap(TblColRef col, Integer startId, Integer endId) {
-        return slice.getColumnValueContainer(type.getColIndexByTblColRef(col)).getBitMap(startId,endId);
+        return slice.getColumnValueContainer(type.getColIndexByTblColRef(col)).getBitMap(startId, endId);
     }
 
     @Override

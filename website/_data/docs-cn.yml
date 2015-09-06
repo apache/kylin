@@ -1,0 +1,18 @@
+- title: 开始
+  docs:
+  - index
+
+- title: 安装
+  docs:
+  - install/install_guide
+  - install/manual_install_guide
+
+- title: 教程
+  docs:
+  - tutorial/create_cube_cn
+  - tutorial/cube_build_job
+  - tutorial/acl
+  - tutorial/web
+  - tutorial/tableau
+  - tutorial/odbc
+

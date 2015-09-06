@@ -14,15 +14,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 package org.apache.kylin.common.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.io.WritableComparator;
-import org.apache.hadoop.io.WritableUtils;
-import sun.misc.Unsafe;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkPositionIndex;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -41,7 +38,13 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.io.RawComparator;
+import org.apache.hadoop.io.WritableComparator;
+import org.apache.hadoop.io.WritableUtils;
+
+import sun.misc.Unsafe;
 
 /**
  * Utility class that handles byte arrays, conversions to/from other types,
@@ -108,7 +111,6 @@ public class Bytes {
      */
     public static final int SIZEOF_SHORT = Short.SIZE / Byte.SIZE;
 
-
     /**
      * Estimate of size cost to pay beyond payload in jvm for instance of byte [].
      * Estimate based on study of jhat and jprofiler numbers.
@@ -116,7 +118,6 @@ public class Bytes {
     // JHat says BU is 56 bytes.
     // SizeOf which uses java.lang.instrument says 24 bytes. (3 longs?)
     public static final int ESTIMATED_HEAP_TAX = 16;
-
 
     /**
      * Returns length of the byte array, returning 0 if the array is null.
@@ -147,8 +148,7 @@ public class Bytes {
 
         @Override
         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-            return LexicographicalComparerHolder.BEST_COMPARER.
-                    compareTo(b1, s1, l1, b2, s2, l2);
+            return LexicographicalComparerHolder.BEST_COMPARER.compareTo(b1, s1, l1, b2, s2, l2);
         }
     }
 
@@ -198,8 +198,7 @@ public class Bytes {
      * @return byte array read off <code>in</code>
      * @throws java.io.IOException e
      */
-    public static byte[] readByteArray(final DataInput in)
-            throws IOException {
+    public static byte[] readByteArray(final DataInput in) throws IOException {
         int len = WritableUtils.readVInt(in);
         if (len < 0) {
             throw new NegativeArraySizeException(Integer.toString(len));
@@ -231,8 +230,7 @@ public class Bytes {
      * @param b   array to write
      * @throws IOException e
      */
-    public static void writeByteArray(final DataOutput out, final byte[] b)
-            throws IOException {
+    public static void writeByteArray(final DataOutput out, final byte[] b) throws IOException {
         if (b == null) {
             WritableUtils.writeVInt(out, 0);
         } else {
@@ -249,9 +247,7 @@ public class Bytes {
      * @param length length past offset
      * @throws IOException e
      */
-    public static void writeByteArray(final DataOutput out, final byte[] b,
-                                      final int offset, final int length)
-            throws IOException {
+    public static void writeByteArray(final DataOutput out, final byte[] b, final int offset, final int length) throws IOException {
         WritableUtils.writeVInt(out, length);
         out.write(b, offset, length);
     }
@@ -266,8 +262,7 @@ public class Bytes {
      * @param srcLength source length
      * @return New offset in src array.
      */
-    public static int writeByteArray(final byte[] tgt, final int tgtOffset,
-                                     final byte[] src, final int srcOffset, final int srcLength) {
+    public static int writeByteArray(final byte[] tgt, final int tgtOffset, final byte[] src, final int srcOffset, final int srcLength) {
         byte[] vint = vintToBytes(srcLength);
         System.arraycopy(vint, 0, tgt, tgtOffset, vint.length);
         int offset = tgtOffset + vint.length;
@@ -285,8 +280,7 @@ public class Bytes {
      * @param srcLength source length
      * @return incremented offset
      */
-    public static int putBytes(byte[] tgtBytes, int tgtOffset, byte[] srcBytes,
-                               int srcOffset, int srcLength) {
+    public static int putBytes(byte[] tgtBytes, int tgtOffset, byte[] srcBytes, int srcOffset, int srcLength) {
         System.arraycopy(srcBytes, srcOffset, tgtBytes, tgtOffset, srcLength);
         return tgtOffset + srcLength;
     }
@@ -358,9 +352,7 @@ public class Bytes {
      * @param sep The separator to use.
      * @param b2  The second byte array.
      */
-    public static String toString(final byte[] b1,
-                                  String sep,
-                                  final byte[] b2) {
+    public static String toString(final byte[] b1, String sep, final byte[] b2) {
         return toString(b1, 0, b1.length) + sep + toString(b2, 0, b2.length);
     }
 
@@ -429,14 +421,13 @@ public class Bytes {
     public static String toStringBinary(final byte[] b, int off, int len) {
         StringBuilder result = new StringBuilder();
         // Just in case we are passed a 'len' that is > buffer length...
-        if (off >= b.length) return result.toString();
-        if (off + len > b.length) len = b.length - off;
+        if (off >= b.length)
+            return result.toString();
+        if (off + len > b.length)
+            len = b.length - off;
         for (int i = off; i < off + len; ++i) {
             int ch = b[i] & 0xFF;
-            if ((ch >= '0' && ch <= '9')
-                    || (ch >= 'A' && ch <= 'Z')
-                    || (ch >= 'a' && ch <= 'z')
-                    || " `~!@#$%^&*()-_=+[]{}|;:'\",.<>/?".indexOf(ch) >= 0) {
+            if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || " `~!@#$%^&*()-_=+[]{}|;:'\",.<>/?".indexOf(ch) >= 0) {
                 result.append((char) ch);
             } else {
                 result.append(String.format("\\x%02X", ch));
@@ -446,9 +437,7 @@ public class Bytes {
     }
 
     private static boolean isHexDigit(char c) {
-        return
-                (c >= 'A' && c <= 'F') ||
-                        (c >= '0' && c <= '9');
+        return (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9');
     }
 
     /**
@@ -477,8 +466,7 @@ public class Bytes {
                 char hd2 = in.charAt(i + 3);
 
                 // they need to be A-F0-9:
-                if (!isHexDigit(hd1) ||
-                        !isHexDigit(hd2)) {
+                if (!isHexDigit(hd1) || !isHexDigit(hd2)) {
                     // bogus escape code, ignore:
                     continue;
                 }
@@ -515,7 +503,7 @@ public class Bytes {
      * @return <code>b</code> encoded in a byte array.
      */
     public static byte[] toBytes(final boolean b) {
-        return new byte[]{b ? (byte) -1 : (byte) 0};
+        return new byte[] { b ? (byte) -1 : (byte) 0 };
     }
 
     /**
@@ -596,17 +584,12 @@ public class Bytes {
         }
     }
 
-    private static IllegalArgumentException
-    explainWrongLengthOrOffset(final byte[] bytes,
-                               final int offset,
-                               final int length,
-                               final int expectedLength) {
+    private static IllegalArgumentException explainWrongLengthOrOffset(final byte[] bytes, final int offset, final int length, final int expectedLength) {
         String reason;
         if (length != expectedLength) {
             reason = "Wrong length: " + length + ", expected " + expectedLength;
         } else {
-            reason = "offset (" + offset + ") + length (" + length + ") exceed the"
-                    + " capacity of the array: " + bytes.length;
+            reason = "offset (" + offset + ") + length (" + length + ") exceed the" + " capacity of the array: " + bytes.length;
         }
         return new IllegalArgumentException(reason);
     }
@@ -623,8 +606,7 @@ public class Bytes {
      */
     public static int putLong(byte[] bytes, int offset, long val) {
         if (bytes.length - offset < SIZEOF_LONG) {
-            throw new IllegalArgumentException("Not enough room to put a long at"
-                    + " offset " + offset + " in a " + bytes.length + " byte array");
+            throw new IllegalArgumentException("Not enough room to put a long at" + " offset " + offset + " in a " + bytes.length + " byte array");
         }
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.isAvailable()) {
             return putLongUnsafe(bytes, offset, val);
@@ -650,8 +632,7 @@ public class Bytes {
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
             val = Long.reverseBytes(val);
         }
-        org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putLong(bytes, (long) offset +
-                org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET, val);
+        org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putLong(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET, val);
         return offset + SIZEOF_LONG;
     }
 
@@ -807,11 +788,9 @@ public class Bytes {
      */
     public static int toIntUnsafe(byte[] bytes, int offset) {
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
-            return Integer.reverseBytes(org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getInt(bytes,
-                    (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET));
+            return Integer.reverseBytes(org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getInt(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET));
         } else {
-            return org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getInt(bytes,
-                    (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET);
+            return org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getInt(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET);
         }
     }
 
@@ -824,11 +803,9 @@ public class Bytes {
      */
     public static short toShortUnsafe(byte[] bytes, int offset) {
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
-            return Short.reverseBytes(org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getShort(bytes,
-                    (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET));
+            return Short.reverseBytes(org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getShort(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET));
         } else {
-            return org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getShort(bytes,
-                    (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET);
+            return org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getShort(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET);
         }
     }
 
@@ -841,11 +818,9 @@ public class Bytes {
      */
     public static long toLongUnsafe(byte[] bytes, int offset) {
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
-            return Long.reverseBytes(org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getLong(bytes,
-                    (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET));
+            return Long.reverseBytes(org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getLong(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET));
         } else {
-            return org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getLong(bytes,
-                    (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET);
+            return org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.getLong(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET);
         }
     }
 
@@ -861,8 +836,7 @@ public class Bytes {
      */
     public static int readAsInt(byte[] bytes, int offset, final int length) {
         if (offset + length > bytes.length) {
-            throw new IllegalArgumentException("offset (" + offset + ") + length (" + length
-                    + ") exceed the" + " capacity of the array: " + bytes.length);
+            throw new IllegalArgumentException("offset (" + offset + ") + length (" + length + ") exceed the" + " capacity of the array: " + bytes.length);
         }
         int n = 0;
         for (int i = offset; i < (offset + length); i++) {
@@ -884,8 +858,7 @@ public class Bytes {
      */
     public static int putInt(byte[] bytes, int offset, int val) {
         if (bytes.length - offset < SIZEOF_INT) {
-            throw new IllegalArgumentException("Not enough room to put an int at"
-                    + " offset " + offset + " in a " + bytes.length + " byte array");
+            throw new IllegalArgumentException("Not enough room to put an int at" + " offset " + offset + " in a " + bytes.length + " byte array");
         }
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.isAvailable()) {
             return putIntUnsafe(bytes, offset, val);
@@ -911,8 +884,7 @@ public class Bytes {
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
             val = Integer.reverseBytes(val);
         }
-        org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putInt(bytes, (long) offset +
-                org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET, val);
+        org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putInt(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET, val);
         return offset + SIZEOF_INT;
     }
 
@@ -1001,8 +973,7 @@ public class Bytes {
      */
     public static int putShort(byte[] bytes, int offset, short val) {
         if (bytes.length - offset < SIZEOF_SHORT) {
-            throw new IllegalArgumentException("Not enough room to put a short at"
-                    + " offset " + offset + " in a " + bytes.length + " byte array");
+            throw new IllegalArgumentException("Not enough room to put a short at" + " offset " + offset + " in a " + bytes.length + " byte array");
         }
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.isAvailable()) {
             return putShortUnsafe(bytes, offset, val);
@@ -1026,8 +997,7 @@ public class Bytes {
         if (org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.littleEndian) {
             val = Short.reverseBytes(val);
         }
-        org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putShort(bytes, (long) offset +
-                org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET, val);
+        org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.theUnsafe.putShort(bytes, (long) offset + org.apache.kylin.common.util.Bytes.LexicographicalComparerHolder.UnsafeComparer.BYTE_ARRAY_BASE_OFFSET, val);
         return offset + SIZEOF_SHORT;
     }
 
@@ -1046,8 +1016,7 @@ public class Bytes {
      */
     public static int putAsShort(byte[] bytes, int offset, int val) {
         if (bytes.length - offset < SIZEOF_SHORT) {
-            throw new IllegalArgumentException("Not enough room to put a short at"
-                    + " offset " + offset + " in a " + bytes.length + " byte array");
+            throw new IllegalArgumentException("Not enough room to put a short at" + " offset " + offset + " in a " + bytes.length + " byte array");
         }
         bytes[offset + 1] = (byte) val;
         val >>= 8;
@@ -1069,7 +1038,6 @@ public class Bytes {
         return result;
     }
 
-
     /**
      * Converts a byte array to a BigDecimal
      *
@@ -1089,8 +1057,7 @@ public class Bytes {
      * @return the char value
      */
     public static BigDecimal toBigDecimal(byte[] bytes, int offset, final int length) {
-        if (bytes == null || length < SIZEOF_INT + 1 ||
-                (offset + length > bytes.length)) {
+        if (bytes == null || length < SIZEOF_INT + 1 || (offset + length > bytes.length)) {
             return null;
         }
 
@@ -1185,8 +1152,7 @@ public class Bytes {
      * @return deserialized long from stream.
      * @throws java.io.IOException e
      */
-    public static long readVLong(final byte[] buffer, final int offset)
-            throws IOException {
+    public static long readVLong(final byte[] buffer, final int offset) throws IOException {
         byte firstByte = buffer[offset];
         int len = WritableUtils.decodeVIntSize(firstByte);
         if (len == 1) {
@@ -1207,8 +1173,7 @@ public class Bytes {
      * @return 0 if equal, < 0 if left is less than right, etc.
      */
     public static int compareTo(final byte[] left, final byte[] right) {
-        return LexicographicalComparerHolder.BEST_COMPARER.
-                compareTo(left, 0, left.length, right, 0, right.length);
+        return LexicographicalComparerHolder.BEST_COMPARER.compareTo(left, 0, left.length, right, 0, right.length);
     }
 
     /**
@@ -1222,16 +1187,12 @@ public class Bytes {
      * @param length2 How much to compare from the right buffer
      * @return 0 if equal, < 0 if left is less than right, etc.
      */
-    public static int compareTo(byte[] buffer1, int offset1, int length1,
-                                byte[] buffer2, int offset2, int length2) {
-        return LexicographicalComparerHolder.BEST_COMPARER.
-                compareTo(buffer1, offset1, length1, buffer2, offset2, length2);
+    public static int compareTo(byte[] buffer1, int offset1, int length1, byte[] buffer2, int offset2, int length2) {
+        return LexicographicalComparerHolder.BEST_COMPARER.compareTo(buffer1, offset1, length1, buffer2, offset2, length2);
     }
 
     interface Comparer<T> {
-        int compareTo(
-                T buffer1, int offset1, int length1, T buffer2, int offset2, int length2
-        );
+        int compareTo(T buffer1, int offset1, int length1, T buffer2, int offset2, int length2);
     }
 
     static Comparer<byte[]> lexicographicalComparerJavaImpl() {
@@ -1246,8 +1207,7 @@ public class Bytes {
      * {@code Unsafe} isn't available.
      */
     static class LexicographicalComparerHolder {
-        static final String UNSAFE_COMPARER_NAME =
-                LexicographicalComparerHolder.class.getName() + "$UnsafeComparer";
+        static final String UNSAFE_COMPARER_NAME = LexicographicalComparerHolder.class.getName() + "$UnsafeComparer";
 
         static final Comparer<byte[]> BEST_COMPARER = getBestComparer();
 
@@ -1261,8 +1221,7 @@ public class Bytes {
 
                 // yes, UnsafeComparer does implement Comparer<byte[]>
                 @SuppressWarnings("unchecked")
-                Comparer<byte[]> comparer =
-                        (Comparer<byte[]>) theClass.getEnumConstants()[0];
+                Comparer<byte[]> comparer = (Comparer<byte[]>) theClass.getEnumConstants()[0];
                 return comparer;
             } catch (Throwable t) { // ensure we really catch *everything*
                 return lexicographicalComparerJavaImpl();
@@ -1273,12 +1232,9 @@ public class Bytes {
             INSTANCE;
 
             @Override
-            public int compareTo(byte[] buffer1, int offset1, int length1,
-                                 byte[] buffer2, int offset2, int length2) {
+            public int compareTo(byte[] buffer1, int offset1, int length1, byte[] buffer2, int offset2, int length2) {
                 // Short circuit equal case
-                if (buffer1 == buffer2 &&
-                        offset1 == offset2 &&
-                        length1 == length2) {
+                if (buffer1 == buffer2 && offset1 == offset2 && length1 == length2) {
                     return 0;
                 }
                 // Bring WritableComparator code local
@@ -1306,23 +1262,22 @@ public class Bytes {
             static final int BYTE_ARRAY_BASE_OFFSET;
 
             static {
-                theUnsafe = (Unsafe) AccessController.doPrivileged(
-                        new PrivilegedAction<Object>() {
-                            @Override
-                            public Object run() {
-                                try {
-                                    Field f = Unsafe.class.getDeclaredField("theUnsafe");
-                                    f.setAccessible(true);
-                                    return f.get(null);
-                                } catch (NoSuchFieldException e) {
-                                    // It doesn't matter what we throw;
-                                    // it's swallowed in getBestComparer().
-                                    throw new Error();
-                                } catch (IllegalAccessException e) {
-                                    throw new Error();
-                                }
-                            }
-                        });
+                theUnsafe = (Unsafe) AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                    @Override
+                    public Object run() {
+                        try {
+                            Field f = Unsafe.class.getDeclaredField("theUnsafe");
+                            f.setAccessible(true);
+                            return f.get(null);
+                        } catch (NoSuchFieldException e) {
+                            // It doesn't matter what we throw;
+                            // it's swallowed in getBestComparer().
+                            throw new Error();
+                        } catch (IllegalAccessException e) {
+                            throw new Error();
+                        }
+                    }
+                });
 
                 BYTE_ARRAY_BASE_OFFSET = theUnsafe.arrayBaseOffset(byte[].class);
 
@@ -1332,8 +1287,7 @@ public class Bytes {
                 }
             }
 
-            static final boolean littleEndian =
-                    ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN);
+            static final boolean littleEndian = ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN);
 
             /**
              * Returns true if x1 is less than x2, when both values are treated as
@@ -1380,13 +1334,10 @@ public class Bytes {
              * @return 0 if equal, < 0 if left is less than right, etc.
              */
             @Override
-            public int compareTo(byte[] buffer1, int offset1, int length1,
-                                 byte[] buffer2, int offset2, int length2) {
+            public int compareTo(byte[] buffer1, int offset1, int length1, byte[] buffer2, int offset2, int length2) {
 
                 // Short circuit equal case
-                if (buffer1 == buffer2 &&
-                        offset1 == offset2 &&
-                        length1 == length2) {
+                if (buffer1 == buffer2 && offset1 == offset2 && length1 == length2) {
                     return 0;
                 }
                 final int minLength = Math.min(length1, length2);
@@ -1394,11 +1345,11 @@ public class Bytes {
                 final long offset1Adj = offset1 + BYTE_ARRAY_BASE_OFFSET;
                 final long offset2Adj = offset2 + BYTE_ARRAY_BASE_OFFSET;
 
-        /*
-         * Compare 8 bytes at a time. Benchmarking shows comparing 8 bytes at a
-         * time is no slower than comparing 4 bytes at a time even on 32-bit.
-         * On the other hand, it is substantially faster on 64-bit.
-         */
+                /*
+                 * Compare 8 bytes at a time. Benchmarking shows comparing 8 bytes at a
+                 * time is no slower than comparing 4 bytes at a time even on 32-bit.
+                 * On the other hand, it is substantially faster on 64-bit.
+                 */
                 for (int i = 0; i < minWords * SIZEOF_LONG; i += SIZEOF_LONG) {
                     long lw = theUnsafe.getLong(buffer1, offset1Adj + (long) i);
                     long rw = theUnsafe.getLong(buffer2, offset2Adj + (long) i);
@@ -1457,25 +1408,27 @@ public class Bytes {
     public static boolean equals(final byte[] left, final byte[] right) {
         // Could use Arrays.equals?
         //noinspection SimplifiableConditionalExpression
-        if (left == right) return true;
-        if (left == null || right == null) return false;
-        if (left.length != right.length) return false;
-        if (left.length == 0) return true;
+        if (left == right)
+            return true;
+        if (left == null || right == null)
+            return false;
+        if (left.length != right.length)
+            return false;
+        if (left.length == 0)
+            return true;
 
         // Since we're often comparing adjacent sorted data,
         // it's usual to have equal arrays except for the very last byte
         // so check that first
-        if (left[left.length - 1] != right[right.length - 1]) return false;
+        if (left[left.length - 1] != right[right.length - 1])
+            return false;
 
         return compareTo(left, right) == 0;
     }
 
-    public static boolean equals(final byte[] left, int leftOffset, int leftLen,
-                                 final byte[] right, int rightOffset, int rightLen) {
+    public static boolean equals(final byte[] left, int leftOffset, int leftLen, final byte[] right, int rightOffset, int rightLen) {
         // short circuit case
-        if (left == right &&
-                leftOffset == rightOffset &&
-                leftLen == rightLen) {
+        if (left == right && leftOffset == rightOffset && leftLen == rightLen) {
             return true;
         }
         // different lengths fast check
@@ -1489,12 +1442,11 @@ public class Bytes {
         // Since we're often comparing adjacent sorted data,
         // it's usual to have equal arrays except for the very last byte
         // so check that first
-        if (left[leftOffset + leftLen - 1] != right[rightOffset + rightLen - 1]) return false;
+        if (left[leftOffset + leftLen - 1] != right[rightOffset + rightLen - 1])
+            return false;
 
-        return LexicographicalComparerHolder.BEST_COMPARER.
-                compareTo(left, leftOffset, leftLen, right, rightOffset, rightLen) == 0;
+        return LexicographicalComparerHolder.BEST_COMPARER.compareTo(left, leftOffset, leftLen, right, rightOffset, rightLen) == 0;
     }
-
 
     /**
      * @param a   left operand
@@ -1502,9 +1454,12 @@ public class Bytes {
      * @return True if equal
      */
     public static boolean equals(byte[] a, ByteBuffer buf) {
-        if (a == null) return buf == null;
-        if (buf == null) return false;
-        if (a.length != buf.remaining()) return false;
+        if (a == null)
+            return buf == null;
+        if (buf == null)
+            return false;
+        if (a.length != buf.remaining())
+            return false;
 
         // Thou shalt not modify the original byte buffer in what should be read only operations.
         ByteBuffer b = buf.duplicate();
@@ -1516,16 +1471,12 @@ public class Bytes {
         return true;
     }
 
-
     /**
      * Return true if the byte array on the right is a prefix of the byte
      * array on the left.
      */
     public static boolean startsWith(byte[] bytes, byte[] prefix) {
-        return bytes != null && prefix != null &&
-                bytes.length >= prefix.length &&
-                LexicographicalComparerHolder.BEST_COMPARER.
-                        compareTo(bytes, 0, prefix.length, prefix, 0, prefix.length) == 0;
+        return bytes != null && prefix != null && bytes.length >= prefix.length && LexicographicalComparerHolder.BEST_COMPARER.compareTo(bytes, 0, prefix.length, prefix, 0, prefix.length) == 0;
     }
 
     /**
@@ -1672,8 +1623,7 @@ public class Bytes {
      *                  the range in two; i.e. one split.
      * @return Array of dividing values
      */
-    public static byte[][] split(final byte[] a, final byte[] b,
-                                 boolean inclusive, final int num) {
+    public static byte[][] split(final byte[] a, final byte[] b, boolean inclusive, final int num) {
         byte[][] ret = new byte[num + 2][];
         int i = 0;
         Iterable<byte[]> iter = iterateOnSplits(a, b, inclusive, num);
@@ -1688,16 +1638,14 @@ public class Bytes {
     /**
      * Iterate over keys within the passed range, splitting at an [a,b) boundary.
      */
-    public static Iterable<byte[]> iterateOnSplits(final byte[] a,
-                                                   final byte[] b, final int num) {
+    public static Iterable<byte[]> iterateOnSplits(final byte[] a, final byte[] b, final int num) {
         return iterateOnSplits(a, b, false, num);
     }
 
     /**
      * Iterate over keys within the passed range.
      */
-    public static Iterable<byte[]> iterateOnSplits(
-            final byte[] a, final byte[] b, boolean inclusive, final int num) {
+    public static Iterable<byte[]> iterateOnSplits(final byte[] a, final byte[] b, boolean inclusive, final int num) {
         byte[] aPadded;
         byte[] bPadded;
         if (a.length < b.length) {
@@ -1716,7 +1664,7 @@ public class Bytes {
         if (num <= 0) {
             throw new IllegalArgumentException("num cannot be <= 0");
         }
-        byte[] prependHeader = {1, 0};
+        byte[] prependHeader = { 1, 0 };
         final BigInteger startBI = new BigInteger(add(prependHeader, aPadded));
         final BigInteger stopBI = new BigInteger(add(prependHeader, bPadded));
         BigInteger diffBI = stopBI.subtract(startBI);
@@ -1746,8 +1694,10 @@ public class Bytes {
             @Override
             public byte[] next() {
                 i++;
-                if (i == 0) return a;
-                if (i == num + 1) return b;
+                if (i == 0)
+                    return a;
+                if (i == num + 1)
+                    return b;
 
                 BigInteger curBI = startBI.add(intervalBI.multiply(BigInteger.valueOf(i)));
                 byte[] padded = curBI.toByteArray();
@@ -1832,8 +1782,7 @@ public class Bytes {
      * means that this function can return 2N + 1 different values
      * ranging from -(N + 1) to N - 1.
      */
-    public static int binarySearch(byte[][] arr, byte[] key, int offset,
-                                   int length, RawComparator<?> comparator) {
+    public static int binarySearch(byte[][] arr, byte[] key, int offset, int length, RawComparator<?> comparator) {
         int low = 0;
         int high = arr.length - 1;
 
@@ -1841,15 +1790,14 @@ public class Bytes {
             int mid = (low + high) >>> 1;
             // we have to compare in this order, because the comparator order
             // has special logic when the 'left side' is a special key.
-            int cmp = comparator.compare(key, offset, length,
-                    arr[mid], 0, arr[mid].length);
+            int cmp = comparator.compare(key, offset, length, arr[mid], 0, arr[mid].length);
             // key lives above the midpoint
             if (cmp > 0)
                 low = mid + 1;
-                // key lives below the midpoint
+            // key lives below the midpoint
             else if (cmp < 0)
                 high = mid - 1;
-                // BAM. how often does this really happen?
+            // BAM. how often does this really happen?
             else
                 return mid;
         }
@@ -1870,18 +1818,17 @@ public class Bytes {
             // Hopefully this doesn't happen too often.
             byte[] newvalue;
             if (val[0] < 0) {
-                newvalue = new byte[]{-1, -1, -1, -1, -1, -1, -1, -1};
+                newvalue = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1 };
             } else {
                 newvalue = new byte[SIZEOF_LONG];
             }
-            System.arraycopy(val, 0, newvalue, newvalue.length - val.length,
-                    val.length);
+            System.arraycopy(val, 0, newvalue, newvalue.length - val.length, val.length);
             val = newvalue;
         } else if (val.length > SIZEOF_LONG) {
-            throw new IllegalArgumentException("Increment Bytes - value too big: " +
-                    val.length);
+            throw new IllegalArgumentException("Increment Bytes - value too big: " + val.length);
         }
-        if (amount == 0) return val;
+        if (amount == 0)
+            return val;
         if (val[0] < 0) {
             return binaryIncrementNeg(val, amount);
         }
@@ -1908,7 +1855,8 @@ public class Bytes {
                 amo -= sign;
             }
             value[value.length - i - 1] = (byte) total;
-            if (amo == 0) return value;
+            if (amo == 0)
+                return value;
         }
         return value;
     }
@@ -1933,7 +1881,8 @@ public class Bytes {
                 total %= 256;
             }
             value[value.length - i - 1] = (byte) total;
-            if (amo == 0) return value;
+            if (amo == 0)
+                return value;
         }
         return value;
     }
@@ -1941,12 +1890,10 @@ public class Bytes {
     /**
      * Writes a string as a fixed-size field, padded with zeros.
      */
-    public static void writeStringFixedSize(final DataOutput out, String s,
-                                            int size) throws IOException {
+    public static void writeStringFixedSize(final DataOutput out, String s, int size) throws IOException {
         byte[] b = toBytes(s);
         if (b.length > size) {
-            throw new IOException("Trying to write " + b.length + " bytes (" +
-                    toStringBinary(b) + ") into a field of length " + size);
+            throw new IOException("Trying to write " + b.length + " bytes (" + toStringBinary(b) + ") into a field of length " + size);
         }
 
         out.writeBytes(s);
@@ -1957,8 +1904,7 @@ public class Bytes {
     /**
      * Reads a fixed-size field and interprets it as a string padded with zeros.
      */
-    public static String readStringFixedSize(final DataInput in, int size)
-            throws IOException {
+    public static String readStringFixedSize(final DataInput in, int size) throws IOException {
         byte[] b = new byte[size];
         in.readFully(b);
         int n = b.length;
@@ -1976,7 +1922,8 @@ public class Bytes {
      * @return a copy of the given byte array
      */
     public static byte[] copy(byte[] bytes) {
-        if (bytes == null) return null;
+        if (bytes == null)
+            return null;
         byte[] result = new byte[bytes.length];
         System.arraycopy(bytes, 0, result, 0, bytes.length);
         return result;
@@ -1992,7 +1939,8 @@ public class Bytes {
      * @return a copy of the given designated byte array
      */
     public static byte[] copy(byte[] bytes, final int offset, final int length) {
-        if (bytes == null) return null;
+        if (bytes == null)
+            return null;
         byte[] result = new byte[length];
         System.arraycopy(bytes, offset, result, 0, length);
         return result;
@@ -2077,7 +2025,6 @@ public class Bytes {
         return true;
     }
 
-
     /**
      * Returns the index of the first appearance of the value {@code target} in
      * {@code array}.
@@ -2114,8 +2061,7 @@ public class Bytes {
             return 0;
         }
 
-        outer:
-        for (int i = 0; i < array.length - target.length + 1; i++) {
+        outer: for (int i = 0; i < array.length - target.length + 1; i++) {
             for (int j = 0; j < target.length; j++) {
                 if (array[i + j] != target[j]) {
                     continue outer;
@@ -2221,8 +2167,7 @@ public class Bytes {
         }
         byte[] result = new byte[srcBytes.length * multiNum];
         for (int i = 0; i < multiNum; i++) {
-            System.arraycopy(srcBytes, 0, result, i * srcBytes.length,
-                    srcBytes.length);
+            System.arraycopy(srcBytes, 0, result, i * srcBytes.length, srcBytes.length);
         }
         return result;
     }
@@ -2250,11 +2195,9 @@ public class Bytes {
         hex = hex.toUpperCase();
         byte[] b = new byte[hex.length() / 2];
         for (int i = 0; i < b.length; i++) {
-            b[i] = (byte) ((toBinaryFromHex((byte) hex.charAt(2 * i)) << 4) +
-                    toBinaryFromHex((byte) hex.charAt((2 * i + 1))));
+            b[i] = (byte) ((toBinaryFromHex((byte) hex.charAt(2 * i)) << 4) + toBinaryFromHex((byte) hex.charAt((2 * i + 1))));
         }
         return b;
     }
 
 }
-

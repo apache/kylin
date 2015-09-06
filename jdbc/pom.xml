@@ -22,12 +22,12 @@
 	<artifactId>kylin-jdbc</artifactId>
 	<packaging>jar</packaging>
 	<name>Kylin:JDBC</name>
-	<description>Kylin JDBC Driver on optiq avatica</description>
+	<description>Kylin JDBC Driver on Calcite Avatica</description>
 
 	<parent>
 		<groupId>org.apache.kylin</groupId>
 		<artifactId>kylin</artifactId>
-		<version>0.7.2-incubating</version>
+		<version>1.0-incubating</version>
 	</parent>
 
 	<properties>

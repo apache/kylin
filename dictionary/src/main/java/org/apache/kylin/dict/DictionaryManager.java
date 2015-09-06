@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict;
 
@@ -25,24 +25,28 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.dict.lookup.FileTable;
-import org.apache.kylin.dict.lookup.HiveTable;
-import org.apache.kylin.dict.lookup.TableSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.dict.lookup.FileTable;
+import org.apache.kylin.dict.lookup.HiveTable;
 import org.apache.kylin.dict.lookup.ReadableTable;
+import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DictionaryManager {
 
@@ -72,14 +76,24 @@ public class DictionaryManager {
     // ============================================================================
 
     private KylinConfig config;
-    private ConcurrentHashMap<String, DictionaryInfo> dictCache; // resource
+    private LoadingCache<String, DictionaryInfo> dictCache;
 
     // path ==>
     // DictionaryInfo
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
-        dictCache = new ConcurrentHashMap<String, DictionaryInfo>();
+        this.dictCache = CacheBuilder.newBuilder().weakValues().expireAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, DictionaryInfo>() {
+            @Override
+            public DictionaryInfo load(String key) throws Exception {
+                DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
+                if (dictInfo == null) {
+                    return NONE_INDICATOR;
+                } else {
+                    return dictInfo;
+                }
+            }
+        });
     }
 
     public Dictionary<?> getDictionary(String resourcePath) throws IOException {
@@ -88,14 +102,16 @@ public class DictionaryManager {
     }
 
     public DictionaryInfo getDictionaryInfo(String resourcePath) throws IOException {
-        DictionaryInfo dictInfo = dictCache.get(resourcePath);
-        if (dictInfo == null) {
-            dictInfo = load(resourcePath, true);
-            if (dictInfo == null)
-                dictInfo = NONE_INDICATOR;
-            dictCache.put(resourcePath, dictInfo);
+        try {
+            DictionaryInfo result = dictCache.get(resourcePath);
+            if (result == NONE_INDICATOR) {
+                return null;
+            } else {
+                return result;
+            }
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e.getCause());
         }
-        return dictInfo == NONE_INDICATOR ? null : dictInfo;
     }
 
     public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
@@ -116,6 +132,12 @@ public class DictionaryManager {
     }
 
     public DictionaryInfo mergeDictionary(List<DictionaryInfo> dicts) throws IOException {
+        if (dicts.size() == 0)
+            return null;
+
+        if (dicts.size() == 1)
+            return dicts.get(0);
+
         DictionaryInfo firstDictInfo = null;
         int totalSize = 0;
         for (DictionaryInfo info : dicts) {
@@ -159,7 +181,7 @@ public class DictionaryManager {
             logger.info("Use one of the merging dictionaries directly");
             return dicts.get(0);
         }
-        
+
         Dictionary<?> newDict = DictionaryGenerator.mergeDictionaries(newDictInfo, dicts);
         return trySaveNewDict(newDict, newDictInfo);
     }
@@ -174,7 +196,10 @@ public class DictionaryManager {
         int srcColIdx = (Integer) tmp[2];
         ReadableTable inpTable = (ReadableTable) tmp[3];
 
-        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inpTable.getSignature(), inpTable.getColumnDelimeter());
+        if (!inpTable.exists())
+            return null;
+
+        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcCol, srcColIdx, col.getDatatype(), inpTable.getSignature());
 
         String dupDict = checkDupByInfo(dictInfo);
         if (dupDict != null) {
@@ -327,7 +352,7 @@ public class DictionaryManager {
     public void removeDictionary(String resourcePath) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         store.deleteResource(resourcePath);
-        dictCache.remove(resourcePath);
+        dictCache.invalidate(resourcePath);
     }
 
     public void removeDictionaries(String srcTable, String srcCol) throws IOException {

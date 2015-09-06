@@ -14,24 +14,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.invertedindex;
 
+import java.io.IOException;
+import java.util.UUID;
+
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IIDescManager;
-import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Created by shaoshi on 1/30/15.
@@ -54,7 +50,7 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
     public void testCRUD() throws IOException {
         IIDescManager mgr = IIDescManager.getInstance(getTestConfig());
 
-        String newDescName = "Copy of " + TEST_II_DESC_NAME;
+        String newDescName = "Copy_of_" + TEST_II_DESC_NAME;
 
         try {
             IIDesc testRecord = mgr.getIIDesc(newDescName);
@@ -72,7 +68,6 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
 
         mgr.createIIDesc(desc);
 
-
         desc = mgr.getIIDesc(newDescName);
 
         Assert.assertNotNull(desc);
@@ -82,7 +77,6 @@ public class IIDescManagerTest extends LocalFileMetadataTestCase {
         mgr.removeIIDesc(desc);
 
         Assert.assertNull(mgr.getIIDesc(newDescName));
-
 
     }
 

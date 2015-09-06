@@ -14,11 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
@@ -26,15 +26,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-
-/**
- * @author ysong1
- */
 public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
 
     private Configuration conf;
@@ -64,23 +60,23 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
         String jobname = "merge_cuboid";
 
         File baseFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "base");
-        baseFolder.delete();
+        FileUtils.forceDelete(baseFolder);
         baseFolder.mkdir();
         FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), baseFolder);
-        baseFolder.deleteOnExit();
+        FileUtils.forceDeleteOnExit(baseFolder);
 
-        File sixDFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "6d");
-        sixDFolder.delete();
-        sixDFolder.mkdir();
-        FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), sixDFolder);
-        sixDFolder.deleteOnExit();
+        File eightFolder = File.createTempFile("kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa-", "8d");
+        FileUtils.forceDelete(eightFolder);
+        eightFolder.mkdir();
+        FileUtils.copyDirectory(new File("src/test/resources/data/base_cuboid"), eightFolder);
+        FileUtils.forceDeleteOnExit(eightFolder);
 
         FileUtil.fullyDelete(new File(output));
 
         // CubeManager cubeManager =
         // CubeManager.getInstanceFromEnv(getTestConfig());
 
-        String[] args = { "-input", baseFolder.getAbsolutePath() + "," + sixDFolder.getAbsolutePath(), "-cubename", cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output, "-jobname", jobname };
+        String[] args = { "-input", baseFolder.getAbsolutePath() + "," + eightFolder.getAbsolutePath(), "-cubename", cubeName, "-segmentname", "20130331080000_20131212080000", "-output", output, "-jobname", jobname };
         assertEquals("Job failed", 0, ToolRunner.run(conf, new MergeCuboidJob(), args));
 
     }

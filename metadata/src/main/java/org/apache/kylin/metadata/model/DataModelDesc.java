@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.model;
 
@@ -24,15 +24,15 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metadata.MetadataConstants;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Sets;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.MetadataConstants;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DataModelDesc extends RootPersistentEntity {
@@ -54,7 +54,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private String filterCondition;
     @JsonProperty("partition_desc")
     PartitionDesc partitionDesc;
-    
+
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
@@ -93,7 +93,6 @@ public class DataModelDesc extends RootPersistentEntity {
     public boolean isFactTable(String factTable) {
         return this.factTable.equalsIgnoreCase(factTable);
     }
-    
 
     public String getFilterCondition() {
         return filterCondition;
@@ -129,7 +128,7 @@ public class DataModelDesc extends RootPersistentEntity {
             if (join == null)
                 continue;
 
-            if(joinType != null && !joinType.equals(join.getType()))
+            if (joinType != null && !joinType.equals(join.getType()))
                 continue;
 
             int find = ArrayUtils.indexOf(join.getForeignKeyColumns(), fk);
@@ -150,9 +149,10 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     private void initPartitionDesc(Map<String, TableDesc> tables) {
-        if(this.partitionDesc != null)
+        if (this.partitionDesc != null)
             this.partitionDesc.init(tables);
     }
+
     private void initJoinColumns(Map<String, TableDesc> tables) {
         // join columns may or may not present in cube;
         // here we don't modify 'allColumns' and 'dimensionColumns';

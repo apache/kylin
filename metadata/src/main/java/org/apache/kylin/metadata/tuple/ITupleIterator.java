@@ -14,14 +14,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.tuple;
+
+import java.util.Iterator;
 
 /**
  * @author xjiang
  */
-public interface ITupleIterator {
+public interface ITupleIterator extends Iterator<ITuple> {
     public static final ITupleIterator EMPTY_TUPLE_ITERATOR = new ITupleIterator() {
         @Override
         public boolean hasNext() {
@@ -31,6 +33,10 @@ public interface ITupleIterator {
         @Override
         public ITuple next() {
             return null;
+        }
+
+        @Override
+        public void remove() {
         }
 
         @Override

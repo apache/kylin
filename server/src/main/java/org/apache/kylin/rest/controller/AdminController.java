@@ -14,10 +14,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.controller;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.request.UpdateConfigRequest;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
@@ -29,9 +31,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.request.MetricsRequest;
 
 /**
  * Admin Controller is defined as Restful API entrance for UI.

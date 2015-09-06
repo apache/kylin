@@ -14,11 +14,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.filter;
-
-import org.apache.kylin.metadata.tuple.ITuple;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +24,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.kylin.metadata.tuple.ITuple;
 
 public class LogicalTupleFilter extends TupleFilter {
 

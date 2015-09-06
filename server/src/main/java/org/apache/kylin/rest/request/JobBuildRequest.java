@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.request;
 
@@ -29,6 +29,16 @@ public class JobBuildRequest {
     private long endTime;
 
     private String buildType;
+
+    public boolean isForceMergeEmptySegment() {
+        return forceMergeEmptySegment;
+    }
+
+    public void setForceMergeEmptySegment(boolean forceMergeEmptySegment) {
+        this.forceMergeEmptySegment = forceMergeEmptySegment;
+    }
+
+    private boolean forceMergeEmptySegment = false;
 
     public long getStartTime() {
         return startTime;

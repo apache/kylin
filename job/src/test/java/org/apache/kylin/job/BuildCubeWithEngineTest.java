@@ -14,14 +14,27 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job;
 
-import com.google.common.collect.Lists;
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -40,14 +53,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.concurrent.*;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.collect.Lists;
 
 public class BuildCubeWithEngineTest {
 
@@ -92,18 +98,17 @@ public class BuildCubeWithEngineTest {
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
 
-
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
         scheduler = DefaultScheduler.getInstance();
-        scheduler.init(new JobEngineConfig(kylinConfig));
+        scheduler.init(new JobEngineConfig(kylinConfig), new ZookeeperJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
         cubeManager = CubeManager.getInstance(kylinConfig);
         jobEngineConfig = new JobEngineConfig(kylinConfig);
         for (String jobId : jobService.getAllJobIds()) {
-            if(jobService.getJob(jobId) instanceof CubingJob){
+            if (jobService.getJob(jobId) instanceof CubingJob) {
                 jobService.deleteJob(jobId);
             }
         }
@@ -123,19 +128,13 @@ public class BuildCubeWithEngineTest {
 
     private void testInner() throws Exception {
         DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
-        String[] testCase = new String[]{
-                "testInnerJoinCube",
-                "testInnerJoinCube2",
-        };
+        String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", };
         runTestAndAssertSucceed(testCase);
     }
 
     private void testLeft() throws Exception {
         DeployUtil.prepareTestData("left", "test_kylin_cube_with_slr_left_join_empty");
-        String[] testCase = new String[]{
-                "testLeftJoinCube",
-                "testLeftJoinCube2",
-        };
+        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2", };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -188,7 +187,8 @@ public class BuildCubeWithEngineTest {
         }
     }
 
-    @SuppressWarnings("unused") // called by reflection
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testInnerJoinCube2() throws Exception {
         clearSegment("test_kylin_cube_with_slr_empty");
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -199,21 +199,24 @@ public class BuildCubeWithEngineTest {
         List<String> result = Lists.newArrayList();
         result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
         result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));
+
+        // empty segment
+        long date4 = f.parse("2050-01-01").getTime();
+        result.add(buildSegment("test_kylin_cube_with_slr_empty", date3, date4));
         return result;
     }
 
-    @SuppressWarnings("unused") // called by reflection
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testInnerJoinCube() throws Exception {
         clearSegment("test_kylin_cube_without_slr_empty");
-
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
 
         // this cube's start date is 0, end date is 20501112000000
         long date1 = 0;
-        long date2 = f.parse("2013-01-01").getTime();
-
+        long date2 = f.parse("2022-01-01").getTime();
 
         // this cube doesn't support incremental build, always do full build
 
@@ -222,7 +225,8 @@ public class BuildCubeWithEngineTest {
         return result;
     }
 
-    @SuppressWarnings("unused") // called by reflection
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testLeftJoinCube2() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -244,7 +248,8 @@ public class BuildCubeWithEngineTest {
 
     }
 
-    @SuppressWarnings("unused") // called by reflection
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testLeftJoinCube() throws Exception {
         String cubeName = "test_kylin_cube_with_slr_left_join_empty";
         clearSegment(cubeName);
@@ -266,7 +271,6 @@ public class BuildCubeWithEngineTest {
         cube.getSegments().clear();
         cubeManager.updateCube(cube);
     }
-
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {
         CubeSegment segment = cubeManager.appendSegments(cubeManager.getCube(cubeName), endDate);

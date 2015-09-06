@@ -14,17 +14,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.realization;
-
-import com.google.common.collect.*;
-import org.apache.kylin.common.KylinConfig;
-
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -32,6 +24,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.kylin.common.KylinConfig;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/18/14.
@@ -111,6 +112,7 @@ public class RealizationRegistry {
         IRealizationProvider p = providers.get(type);
         if (p == null) {
             logger.warn("No provider for realization type " + type);
+            return null;
         }
 
         try {

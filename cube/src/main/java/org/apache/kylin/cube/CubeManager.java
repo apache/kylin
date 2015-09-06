@@ -14,21 +14,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.Dictionary;
@@ -44,14 +53,17 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.metadata.realization.*;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
+import org.apache.kylin.metadata.realization.IRealizationProvider;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 /**
  * @author yangli9
@@ -152,9 +164,11 @@ public class CubeManager implements IRealizationProvider {
 
         DictionaryManager dictMgr = getDictionaryManager();
         DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
-        cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
 
-        saveResource(cubeSeg.getCubeInstance());
+        if (dictInfo != null) {
+            cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
+            saveResource(cubeSeg.getCubeInstance());
+        }
 
         return dictInfo;
     }
@@ -282,7 +296,6 @@ public class CubeManager implements IRealizationProvider {
         return newSegment;
     }
 
-
     public CubeSegment refreshSegment(CubeInstance cube, long startDate, long endDate) throws IOException {
         checkNoBuildingSegment(cube);
 
@@ -294,12 +307,25 @@ public class CubeManager implements IRealizationProvider {
         return newSegment;
     }
 
-    public CubeSegment mergeSegments(CubeInstance cube, final long startDate, final long endDate) throws IOException {
+    public CubeSegment mergeSegments(CubeInstance cube, final long startDate, final long endDate, boolean forceMergeEmptySeg) throws IOException {
         checkNoBuildingSegment(cube);
         checkCubeIsPartitioned(cube);
 
         Pair<Long, Long> range = alignMergeRange(cube, startDate, endDate);
         CubeSegment newSegment = newSegment(cube, range.getFirst(), range.getSecond());
+        List<CubeSegment> mergingSegments = cube.getMergingSegments(newSegment);
+
+        if (forceMergeEmptySeg == false) {
+            List<String> emptySegment = Lists.newArrayList();
+            for (CubeSegment seg : mergingSegments) {
+                if (seg.getSizeKB() == 0) {
+                    emptySegment.add(seg.getName());
+                }
+            }
+            if (emptySegment.size() > 0) {
+                throw new IllegalArgumentException("Empty cube segment found, couldn't merge unless 'forceMergeEmptySegment' set to true: " + emptySegment);
+            }
+        }
 
         validateNewSegments(cube, newSegment);
         cube.getSegments().add(newSegment);
@@ -398,6 +424,7 @@ public class CubeManager implements IRealizationProvider {
         final String cubeName = cube.getName().toUpperCase();
         cubeMap.remove(cubeName);
         usedStorageLocation.removeAll(cubeName);
+        Cuboid.reloadCache(cube.getDescName());
     }
 
     public void removeCubeCacheLocal(String cubeName) {
@@ -530,12 +557,9 @@ public class CubeManager implements IRealizationProvider {
 
         // check first segment start time
         CubeSegment firstSeg = tobe.get(0);
-        if (firstSeg.getDateRangeStart() != partDesc.getPartitionDateStart()) {
-            throw new IllegalStateException("For " + cube + ", the first segment, " + firstSeg + ", must start at " + partDesc.getPartitionDateStart());
-        }
         firstSeg.validate();
 
-        for (int i = 0, j = 1; j < tobe.size(); ) {
+        for (int i = 0, j = 1; j < tobe.size();) {
             CubeSegment is = tobe.get(i);
             CubeSegment js = tobe.get(j);
             js.validate();
@@ -632,6 +656,69 @@ public class CubeManager implements IRealizationProvider {
             logger.error("Error during load cube instance " + path, e);
             return null;
         }
+    }
+
+    public CubeSegment autoMergeCubeSegments(CubeInstance cube) throws IOException {
+        if (!cube.needAutoMerge()) {
+            logger.debug("Cube " + cube.getName() + " doesn't need auto merge");
+            return null;
+        }
+
+        if (cube.getBuildingSegments().size() > 0) {
+            logger.debug("Cube " + cube.getName() + " has bulding segment, will not trigger merge at this moment");
+            return null;
+        }
+
+        List<CubeSegment> readySegments = Lists.newArrayList(cube.getSegment(SegmentStatusEnum.READY));
+
+        if (readySegments.size() == 0) {
+            logger.debug("Cube " + cube.getName() + " has no ready segment to merge");
+            return null;
+        }
+
+        long[] timeRanges = cube.getAutoMergeTimeRanges();
+        Arrays.sort(timeRanges);
+
+        CubeSegment newSeg = null;
+        for (int i = timeRanges.length - 1; i >= 0; i--) {
+            long toMergeRange = timeRanges[i];
+            long currentRange = 0;
+            long lastEndTime = 0;
+            List<CubeSegment> toMergeSegments = Lists.newArrayList();
+            for (CubeSegment segment : readySegments) {
+                long thisSegmentRange = segment.getDateRangeEnd() - segment.getDateRangeStart();
+
+                if (thisSegmentRange >= toMergeRange) {
+                    // this segment and its previous segments will not be merged
+                    toMergeSegments.clear();
+                    currentRange = 0;
+                    lastEndTime = segment.getDateRangeEnd();
+                    continue;
+                }
+
+                if (segment.getDateRangeStart() != lastEndTime && toMergeSegments.isEmpty() == false) {
+                    // gap exists, give up the small segments before the gap;
+                    toMergeSegments.clear();
+                    currentRange = 0;
+                }
+
+                currentRange += thisSegmentRange;
+                if (currentRange < toMergeRange) {
+                    toMergeSegments.add(segment);
+                    lastEndTime = segment.getDateRangeEnd();
+                } else {
+                    // merge
+                    toMergeSegments.add(segment);
+
+                    newSeg = newSegment(cube, toMergeSegments.get(0).getDateRangeStart(), segment.getDateRangeEnd());
+                    // only one merge job be created here
+                    return newSeg;
+                }
+            }
+
+        }
+
+        return null;
     }
 
     private MetadataManager getMetadataManager() {

@@ -14,38 +14,35 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.schema;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.linq4j.Enumerable;
-import net.hydromatic.linq4j.Enumerator;
-import net.hydromatic.linq4j.QueryProvider;
-import net.hydromatic.linq4j.Queryable;
-import net.hydromatic.optiq.DataContext;
-import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.Statistic;
-import net.hydromatic.optiq.Statistics;
-import net.hydromatic.optiq.TranslatableTable;
-import net.hydromatic.optiq.impl.AbstractTableQueryable;
-import net.hydromatic.optiq.impl.java.AbstractQueryableTable;
-
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelOptTable.ToRelContext;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeUtil;
-
-import com.google.common.collect.Lists;
+import org.apache.calcite.DataContext;
+import org.apache.calcite.adapter.java.AbstractQueryableTable;
+import org.apache.calcite.linq4j.Enumerable;
+import org.apache.calcite.linq4j.Enumerator;
+import org.apache.calcite.linq4j.QueryProvider;
+import org.apache.calcite.linq4j.Queryable;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelOptTable.ToRelContext;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Statistic;
+import org.apache.calcite.schema.Statistics;
+import org.apache.calcite.schema.TranslatableTable;
+import org.apache.calcite.schema.impl.AbstractTableQueryable;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.SqlTypeUtil;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -55,10 +52,11 @@ import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.enumerator.OLAPQuery.EnumeratorTypeEnum;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 /**
- * 
- * @author xjiang
- * 
  */
 public class OLAPTable extends AbstractQueryableTable implements TranslatableTable {
 
@@ -122,12 +120,12 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         if (this.rowType == null) {
             // always build exposedColumns and rowType together
             this.exposedColumns = listSourceColumns();
-            this.rowType = deduceRowType(typeFactory);
+            this.rowType = deriveRowType(typeFactory);
         }
         return this.rowType;
     }
 
-    private RelDataType deduceRowType(RelDataTypeFactory typeFactory) {
+    private RelDataType deriveRowType(RelDataTypeFactory typeFactory) {
         RelDataTypeFactory.FieldInfoBuilder fieldInfo = typeFactory.builder();
         for (ColumnDesc column : exposedColumns) {
             RelDataType sqlType = createSqlType(typeFactory, column);
@@ -153,8 +151,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         else
             result = typeFactory.createSqlType(sqlTypeName);
 
-        // due to left join and uncertain data quality, dimension value can be
-        // null
+        // due to left join and uncertain data quality, dimension value can be null
         if (column.isNullable()) {
             result = typeFactory.createTypeWithNullability(result, true);
         } else {
@@ -166,10 +163,11 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
     private List<ColumnDesc> listSourceColumns() {
         ProjectManager mgr = ProjectManager.getInstance(olapSchema.getConfig());
-        List<ColumnDesc> exposedColumns = Lists.newArrayList(mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity()));
+        List<ColumnDesc> tableColumns = Lists.newArrayList(mgr.listExposedColumns(olapSchema.getProjectName(), sourceTable.getIdentity()));
 
-        List<MeasureDesc> countMeasures = mgr.listEffectiveRewriteMeasures(olapSchema.getProjectName(), sourceTable.getIdentity());
+        List<MeasureDesc> countMeasures = mgr.listEffectiveMeasures(olapSchema.getProjectName(), sourceTable.getIdentity(), true);
         HashSet<String> metFields = new HashSet<String>();
+        List<ColumnDesc> metricColumns = Lists.newArrayList();
         for (MeasureDesc m : countMeasures) {
             FunctionDesc func = m.getFunction();
             String fieldName = func.getRewriteFieldName();
@@ -177,14 +175,33 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
                 metFields.add(fieldName);
                 ColumnDesc fakeCountCol = new ColumnDesc();
                 fakeCountCol.setName(fieldName);
-                fakeCountCol.setDatatype(func.getSQLType());
-                fakeCountCol.setNullable(false);
+                fakeCountCol.setDatatype(func.getSQLType().toString());
+                if (func.isCount())
+                    fakeCountCol.setNullable(false);
                 fakeCountCol.init(sourceTable);
-                exposedColumns.add(fakeCountCol);
+                metricColumns.add(fakeCountCol);
             }
         }
 
-        return exposedColumns;
+        //if exist sum(x), where x is integer/short/byte
+        //to avoid overflow we upgrade x's type to long
+        HashSet<ColumnDesc> updateColumns = Sets.newHashSet();
+        for (MeasureDesc m : mgr.listEffectiveMeasures(olapSchema.getProjectName(), sourceTable.getIdentity(), false)) {
+            if (m.getFunction().isSum()) {
+                FunctionDesc functionDesc = m.getFunction();
+                if (functionDesc.getReturnDataType() != functionDesc.getSQLType() && //
+                        functionDesc.getReturnDataType().isBigInt() && //
+                        functionDesc.getSQLType().isIntegerFamily()) {
+                    updateColumns.add(functionDesc.getParameter().getColRefs().get(0).getColumnDesc());
+                }
+            }
+        }
+        for (ColumnDesc upgrade : updateColumns) {
+            int index = tableColumns.indexOf(upgrade);
+            tableColumns.get(index).setDatatype("bigint");
+        }
+
+        return Lists.newArrayList(Iterables.concat(tableColumns, metricColumns));
     }
 
     @Override
@@ -215,7 +232,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
     @Override
     public Statistic getStatistic() {
-        List<BitSet> keys = new ArrayList<BitSet>();
+        List<ImmutableBitSet> keys = new ArrayList<ImmutableBitSet>();
         return Statistics.of(100, keys);
     }
 

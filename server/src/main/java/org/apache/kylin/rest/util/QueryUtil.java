@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.util;
 
@@ -149,17 +149,27 @@ public class QueryUtil {
         return null;
     }
 
-    /**
-     * adjust error message order
-     * 
-     * @param errorMsg
-     * @return
-     */
+    public static String makeErrorMsgUserFriendly(Throwable e) {
+        String msg = e.getMessage();
+
+        // pick ParseException error message if possible
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause.getClass().getName().contains("ParseException")) {
+                msg = cause.getMessage();
+                break;
+            }
+            cause = cause.getCause();
+        }
+
+        return makeErrorMsgUserFriendly(msg);
+    }
+
     public static String makeErrorMsgUserFriendly(String errorMsg) {
         try {
             // make one line
             errorMsg = errorMsg.replaceAll("\\s", " ");
-            
+
             // move cause to be ahead of sql, calcite creates the message pattern below
             Pattern pattern = Pattern.compile("error while executing SQL \"(.*)\":(.*)");
             Matcher matcher = pattern.matcher(errorMsg);

@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.execution;
 
@@ -25,7 +25,9 @@ import com.google.common.base.Preconditions;
  */
 public final class ExecuteResult {
 
-    public static enum State {SUCCEED, FAILED, ERROR, DISCARDED, STOPPED}
+    public static enum State {
+        SUCCEED, FAILED, ERROR, DISCARDED, STOPPED
+    }
 
     private final State state;
     private final String output;
@@ -47,7 +49,6 @@ public final class ExecuteResult {
     public boolean succeed() {
         return state == State.SUCCEED;
     }
-
 
     public String output() {
         return output;

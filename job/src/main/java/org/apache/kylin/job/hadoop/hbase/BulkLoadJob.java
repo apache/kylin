@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.hbase;
 
@@ -26,14 +26,12 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.util.ToolRunner;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +73,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
                 Path columnFamilyPath = new Path(input + cfName);
 
                 // File may have already been auto-loaded (in the case of MapR DB)
-                if(fs.exists(columnFamilyPath)) {
+                if (fs.exists(columnFamilyPath)) {
                     fs.setPermission(columnFamilyPath, permission);
                 }
             }

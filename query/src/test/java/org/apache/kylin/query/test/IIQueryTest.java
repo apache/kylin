@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.test;
 
@@ -28,9 +28,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-/**
- * Created by Hongbin Ma(Binmahone) on 2/2/15.
- */
 public class IIQueryTest extends KylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
@@ -38,8 +35,9 @@ public class IIQueryTest extends KylinQueryTest {
         KylinQueryTest.setUp();//invoke super class
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
-        priorities.put(RealizationType.INVERTED_INDEX, 0);
-        priorities.put(RealizationType.CUBE, 1);
+        priorities.put(RealizationType.INVERTED_INDEX, 1);
+        priorities.put(RealizationType.CUBE, 2);
+        priorities.put(RealizationType.HYBRID, 2);
         RealizationPriorityRule.setPriorities(priorities);
 
     }
@@ -49,8 +47,9 @@ public class IIQueryTest extends KylinQueryTest {
         KylinQueryTest.tearDown();//invoke super class
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
-        priorities.put(RealizationType.INVERTED_INDEX, 1);
-        priorities.put(RealizationType.CUBE, 0);
+        priorities.put(RealizationType.INVERTED_INDEX, 2);
+        priorities.put(RealizationType.CUBE, 1);
+        priorities.put(RealizationType.HYBRID, 1);
         RealizationPriorityRule.setPriorities(priorities);
     }
 

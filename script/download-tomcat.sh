@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -19,6 +19,7 @@
 dir=$(dirname ${0})
 cd ${dir}/..
 
+cd dist
 rm -rf tomcat
 
 if [ ! -f "apache-tomcat-7.0.59.tar.gz" ]
@@ -35,9 +36,10 @@ else
 fi
 
 tar -zxvf apache-tomcat-7.0.59.tar.gz
+
 mv apache-tomcat-7.0.59 tomcat
 rm -rf tomcat/webapps/*
 
 mv tomcat/conf/server.xml tomcat/conf/server.xml.bak
-cp deploy/server.xml tomcat/conf/server.xml
+cp ../deploy/server.xml tomcat/conf/server.xml
 echo "server.xml overwritten..."

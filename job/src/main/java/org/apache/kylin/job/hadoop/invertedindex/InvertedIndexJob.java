@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.invertedindex;
 
@@ -68,7 +68,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
             IIInstance ii = getII(iiname);
             short sharding = ii.getDescriptor().getSharding();
-            
+
             setJobClasspath(job);
 
             setupMapper(intermediateTable);
@@ -80,8 +80,10 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         } catch (Exception e) {
             printUsage(options);
             throw e;
+        } finally {
+            if (job != null)
+                cleanupTempConfFile(job.getConfiguration());
         }
-
     }
 
     private IIInstance getII(String iiName) {
@@ -105,9 +107,8 @@ public class InvertedIndexJob extends AbstractHadoopJob {
     private void setupMapper(String intermediateTable) throws IOException {
 
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
-        HCatInputFormat.setInput(job, dbTableNames[0],
-                dbTableNames[1]);
-        
+        HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
+
         job.setInputFormatClass(HCatInputFormat.class);
 
         job.setMapperClass(InvertedIndexMapper.class);

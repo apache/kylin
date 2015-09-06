@@ -14,10 +14,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.service;
 
+import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +31,6 @@ import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.kylin.common.persistence.AclEntity;
-import org.apache.kylin.rest.response.AccessEntryResponse;
-import org.apache.kylin.rest.security.AclPermission;
-import org.apache.kylin.rest.security.AclPermissionFactory;
 
 /**
  * @author xduo

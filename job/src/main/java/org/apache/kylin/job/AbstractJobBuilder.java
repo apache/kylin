@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job;
 
@@ -23,8 +23,8 @@ import java.io.IOException;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.hadoop.hive.IJoinedFlatTableDesc;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.hadoop.hive.IJoinedFlatTableDesc;
 
 public abstract class AbstractJobBuilder {
 
@@ -32,7 +32,7 @@ public abstract class AbstractJobBuilder {
 
     protected JobEngineConfig engineConfig;
     protected String submitter;
-    
+
     public AbstractJobBuilder(JobEngineConfig engineConfig) {
         this.engineConfig = engineConfig;
     }
@@ -60,6 +60,7 @@ public abstract class AbstractJobBuilder {
 
     protected AbstractExecutable createIntermediateHiveTableStep(IJoinedFlatTableDesc intermediateTableDesc, String jobId) {
 
+        final String useDatabaseHql = "USE " + engineConfig.getConfig().getHiveDatabaseForIntermediateTable() + ";";
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobId);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobId), jobId);
         String insertDataHqls;
@@ -73,6 +74,7 @@ public abstract class AbstractJobBuilder {
         ShellExecutable step = new ShellExecutable();
         StringBuffer buf = new StringBuffer();
         buf.append("hive -e \"");
+        buf.append(useDatabaseHql + "\n");
         buf.append(dropTableHql + "\n");
         buf.append(createTableHql + "\n");
         buf.append(insertDataHqls + "\n");

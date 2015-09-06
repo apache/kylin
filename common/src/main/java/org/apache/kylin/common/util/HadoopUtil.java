@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
@@ -128,7 +128,7 @@ public class HadoopUtil {
         int cut = table.indexOf('.');
         String database = cut >= 0 ? table.substring(0, cut).trim() : "DEFAULT";
         String tableName = cut >= 0 ? table.substring(cut + 1).trim() : table.trim();
-        
-        return new String[] {database, tableName};
+
+        return new String[] { database, tableName };
     }
 }

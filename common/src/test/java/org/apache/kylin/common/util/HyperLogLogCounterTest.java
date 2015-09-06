@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.junit.Assert;
 import org.junit.Test;
@@ -120,16 +119,15 @@ public class HyperLogLogCounterTest {
         double absError = 0;
         int n = 100;
         for (int i = 0; i < n; i++) {
-            System.out.println("============" + i);
             double e = merge();
             error += e;
             absError += Math.abs(e);
         }
         System.out.println("Total average error is " + error / n + " and absolute error is " + absError / n);
 
-        System.out.println("errorCount1 is " + errorCount1 + "!");
-        System.out.println("errorCount2 is " + errorCount2 + "!");
-        System.out.println("errorCount3 is " + errorCount3 + "!");
+        System.out.println("  errorRateCount1 is " + errorCount1 + "!");
+        System.out.println("  errorRateCount2 is " + errorCount2 + "!");
+        System.out.println("  errorRateCount3 is " + errorCount3 + "!");
 
         Assert.assertTrue(errorCount1 <= n * 0.40);
         Assert.assertTrue(errorCount2 <= n * 0.08);
@@ -162,9 +160,8 @@ public class HyperLogLogCounterTest {
         long estimate = mergeHllc.getCountEstimate();
         double actualError = (double) (testSet.size() - estimate) / testSet.size();
 
-        System.out.println(testSet.size() + "-" + estimate);
+        System.out.println(testSet.size() + "-" + estimate + " ~ " + actualError);
 
-        System.out.println("=" + actualError);
         if (Math.abs(actualError) > errorRate) {
             errorCount1++;
         }
@@ -213,7 +210,7 @@ public class HyperLogLogCounterTest {
         ha.add(a, 1, 3);
         hb.add(b);
 
-        Assert.assertTrue(ha.getCountEstimate()==hb.getCountEstimate());
+        Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
     }
 
     private HyperLogLogPlusCounter newHLLC() {

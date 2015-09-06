@@ -14,67 +14,70 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.jdbc;
 
+import java.io.IOException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.hydromatic.avatica.AvaticaStatement;
-import net.hydromatic.avatica.ColumnMetaData;
-import net.hydromatic.avatica.ColumnMetaData.Rep;
-import net.hydromatic.linq4j.Enumerator;
-
-import org.apache.kylin.jdbc.stub.ConnectionException;
-import org.apache.kylin.jdbc.stub.DataSet;
-import org.apache.kylin.jdbc.stub.RemoteClient;
+import org.apache.calcite.avatica.AvaticaParameter;
+import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.ColumnMetaData.Rep;
+import org.apache.kylin.jdbc.KylinMeta.KMetaCatalog;
+import org.apache.kylin.jdbc.KylinMeta.KMetaColumn;
+import org.apache.kylin.jdbc.KylinMeta.KMetaProject;
+import org.apache.kylin.jdbc.KylinMeta.KMetaSchema;
+import org.apache.kylin.jdbc.KylinMeta.KMetaTable;
 
 /**
- * @author xduo
- * 
  */
-public class DummyClient implements RemoteClient {
+public class DummyClient implements IRemoteClient {
 
-    public DummyClient(KylinConnectionImpl conn) {
+    public DummyClient(KylinConnection conn) {
     }
 
     @Override
-    public void connect() throws ConnectionException {
+    public void connect() throws IOException {
     }
 
     @Override
-    public KylinMetaImpl.MetaProject getMetadata(String project) throws ConnectionException {
-        List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
-        for (int i = 0; i < 10; i++) {
-            meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
-        }
+    public KMetaProject retrieveMetaData(String project) throws IOException {
+        List<KMetaColumn> columns = new ArrayList<KMetaColumn>();
 
-        List<KylinMetaImpl.MetaTable> tables = new ArrayList<KylinMetaImpl.MetaTable>();
-        KylinMetaImpl.MetaTable table = new KylinMetaImpl.MetaTable("dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", "dummy", new ArrayList<KylinMetaImpl.MetaColumn>());
+        KMetaTable table = new KMetaTable("dummy", "dummy", "dummy", "dummy", columns);
+        List<KMetaTable> tables = new ArrayList<KMetaTable>();
         tables.add(table);
 
-        List<KylinMetaImpl.MetaSchema> schemas = new ArrayList<KylinMetaImpl.MetaSchema>();
-        schemas.add(new KylinMetaImpl.MetaSchema("dummy", "dummy", tables));
-        List<KylinMetaImpl.MetaCatalog> catalogs = new ArrayList<KylinMetaImpl.MetaCatalog>();
-        catalogs.add(new KylinMetaImpl.MetaCatalog("dummy", schemas));
+        KMetaSchema schema = new KMetaSchema("dummy", "dummy", tables);
+        List<KMetaSchema> schemas = new ArrayList<KMetaSchema>();
+        schemas.add(schema);
 
-        return new KylinMetaImpl.MetaProject(null, catalogs);
+        KMetaCatalog catalog = new KMetaCatalog("dummay", schemas);
+        List<KMetaCatalog> catalogs = new ArrayList<KMetaCatalog>();
+        catalogs.add(catalog);
+
+        return new KMetaProject(project, catalogs);
     }
 
     @Override
-    public DataSet<Object[]> query(AvaticaStatement statement, String sql) {
-        List<Object[]> data = new ArrayList<Object[]>();
+    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues) throws IOException {
+        List<Object> data = new ArrayList<Object>();
         Object[] row = new Object[] { "foo", "bar", "tool" };
         data.add(row);
-        Enumerator<Object[]> enumerator = new KylinEnumerator<Object[]>(data);
+
         List<ColumnMetaData> meta = new ArrayList<ColumnMetaData>();
         meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
         meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
         meta.add(ColumnMetaData.dummy(ColumnMetaData.scalar(Types.VARCHAR, "varchar", Rep.STRING), true));
 
-        return new DataSet<Object[]>(meta, enumerator);
+        return new QueryResult(meta, data);
+    }
+
+    @Override
+    public void close() throws IOException {
     }
 
 }

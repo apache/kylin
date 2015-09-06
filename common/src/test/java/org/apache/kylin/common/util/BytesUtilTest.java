@@ -14,14 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
-import junit.framework.TestCase;
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
+
+import junit.framework.TestCase;
+
+import org.junit.Test;
 
 /**
  * by honma
@@ -54,12 +55,11 @@ public class BytesUtilTest extends TestCase {
     }
 
     @Test
-    public void testReadable()
-    {
+    public void testReadable() {
         String x = "\\x00\\x00\\x00\\x00\\x00\\x01\\xFC\\xA8";
         byte[] bytes = BytesUtil.fromReadableText(x);
         String y = BytesUtil.toHex(bytes);
-        assertEquals(x,y);
+        assertEquals(x, y);
     }
 
 }

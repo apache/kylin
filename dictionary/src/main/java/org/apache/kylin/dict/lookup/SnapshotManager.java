@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict.lookup;
 
@@ -22,13 +22,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author yangli9
@@ -55,10 +55,7 @@ public class SnapshotManager {
     // ============================================================================
 
     private KylinConfig config;
-    private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource
-
-    // path ==>
-    // SnapshotTable
+    private ConcurrentHashMap<String, SnapshotTable> snapshotCache; // resource path ==> SnapshotTable
 
     private SnapshotManager(KylinConfig config) {
         this.config = config;
@@ -94,6 +91,11 @@ public class SnapshotManager {
             return getSnapshotTable(dup);
         }
 
+        if (snapshot.getSignature().getSize() / 1024 / 1024 > config.getTableSnapshotMaxMB()) {
+            throw new IllegalStateException("Table snapshot should be no greater than " + config.getTableSnapshotMaxMB() //
+                    + " MB, but " + tableDesc + " size is " + snapshot.getSignature().getSize());
+        }
+
         snapshot.takeSnapshot(table, tableDesc);
 
         return trySaveNewSnapshot(snapshot);
@@ -123,9 +125,7 @@ public class SnapshotManager {
         TableSignature sig = snapshot.getSignature();
         for (String existing : existings) {
             SnapshotTable existingTable = load(existing, false); // skip cache,
-            // direct
-            // load from
-            // store
+            // direct load from store
             if (existingTable != null && sig.equals(existingTable.getSignature()))
                 return existing;
         }

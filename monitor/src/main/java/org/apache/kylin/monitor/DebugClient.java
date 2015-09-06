@@ -14,27 +14,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
-
+ */
 
 package org.apache.kylin.monitor;
 
-import org.apache.log4j.Logger;
 import java.io.File;
 
+import org.apache.log4j.Logger;
 
 /**
  * Created by jiazhong on 2015/5/7
  */
 public class DebugClient {
 
-    static{
+    static {
         //set catalina.home temp
         System.setProperty(ConfigUtils.CATALINA_HOME, "../server/");
     }
 
     final static Logger logger = Logger.getLogger(DebugClient.class);
-
 
     public static void main(String[] args) throws Exception {
 
@@ -47,15 +45,15 @@ public class DebugClient {
         //get kylin.properties ,if not exist will get from $KYLIN_HOME/conf/
         System.setProperty(ConfigUtils.KYLIN_CONF, "../examples/test_case_data/sandbox");
 
-
         QueryParser queryParser = new QueryParser();
         HiveJdbcClient jdbcClient = new HiveJdbcClient();
 
         try {
+            MonitorMetaManager.init();
             queryParser.start();
             jdbcClient.start();
         } catch (Exception e) {
-            logger.info("Exception ",e);
+            logger.info("Exception ", e);
         }
     }
 

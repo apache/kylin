@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.index;
 
@@ -23,10 +23,10 @@ import com.google.common.hash.Hashing;
 
 public class ShardingHash {
 
-	static HashFunction hashFunc = Hashing.murmur3_128();
+    static HashFunction hashFunc = Hashing.murmur3_128();
 
-	public static long hashInt(int integer) {
-		return hashFunc.newHasher().putInt(integer).hash().asLong();
-	}
+    public static long hashInt(int integer) {
+        return hashFunc.newHasher().putInt(integer).hash().asLong();
+    }
 
 }

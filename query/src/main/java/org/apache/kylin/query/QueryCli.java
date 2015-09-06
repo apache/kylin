@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query;
 
@@ -25,13 +25,13 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 
+import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 
@@ -54,7 +54,7 @@ public class QueryCli {
         KylinConfig config = KylinConfig.createInstanceFromUri(commandLine.getOptionValue(OPTION_METADATA.getOpt()));
         String sql = commandLine.getOptionValue(OPTION_SQL.getOpt());
 
-        Class.forName("net.hydromatic.optiq.jdbc.Driver");
+        Class.forName(Driver.class.getName());
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(null, config);
 
         Connection conn = null;

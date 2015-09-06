@@ -43,19 +43,27 @@ KylinApp
     };
 
     $scope.aceSrcTbLoaded = function (forceLoad) {
+      //stop request when project invalid
+      if(!$scope.projectModel.getSelectedProject()){
+        TableModel.init();
+        return;
+      }
       if (forceLoad) {
         $httpDefaultCache.removeAll();
       }
       $scope.loading = true;
       TableModel.aceSrcTbLoaded(forceLoad).then(function () {
         $scope.loading = false;
+      },function(resp){
+        SweetAlert.swal('Oops...',resp, 'error');
       });
     };
-
+    $scope.aceSrcTbLoaded();
     $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
 //         will load table when enter this page,null or not
-      $scope.aceSrcTbLoaded();
-
+      if (newValue != oldValue || newValue == null) {
+        $scope.aceSrcTbLoaded();
+      }
     });
 
 
@@ -67,6 +75,12 @@ KylinApp
         $scope.tableModel.selectedSrcTable.selectedSrcColumn = obj;
       }
     };
+
+    $scope.selectedNode = function(obj){
+      if (obj&&obj.uuid) {
+        return $scope.tableModel.selectedSrcTable;
+      }
+    }
 
     $scope.aceSrcTbChanged = function () {
       $scope.tableModel.selectedSrcDb = [];

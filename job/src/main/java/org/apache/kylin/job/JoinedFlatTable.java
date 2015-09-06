@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job;
 
@@ -150,7 +150,7 @@ public class JoinedFlatTable {
         tableAliasMap.put(dataModelDesc.getFactTable().toUpperCase(), FACT_TABLE_ALIAS);
 
         int i = 1;
-        for (LookupDesc lookupDesc: dataModelDesc.getLookups()) {
+        for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
             JoinDesc join = lookupDesc.getJoin();
             if (join != null) {
                 tableAliasMap.put(lookupDesc.getTable().toUpperCase(), LOOKUP_TABLE_ALAIS_PREFIX + i);

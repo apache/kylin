@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.model;
 
@@ -89,6 +89,7 @@ public class DataType {
 
     private static final ConcurrentMap<DataType, DataType> CACHE = new ConcurrentHashMap<DataType, DataType>();
 
+    public static final DataType ANY = DataType.getInstance("any");
 
     public static DataType getInstance(String type) {
         if (type == null)
@@ -143,7 +144,6 @@ public class DataType {
                     throw new IllegalArgumentException("bad data type -- " + datatype + ", too many precision/scale parts");
             }
         }
-
 
         // FIXME 256 for unknown string precision
         if ((name.equals("char") || name.equals("varchar")) && precision == -1) {

@@ -14,9 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.invertedindex;
+
+import java.io.IOException;
 
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -27,9 +29,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-
 
 /**
  * Created by shaoshi on 1/30/15.
@@ -68,5 +67,3 @@ public class IIDescTest extends LocalFileMetadataTestCase {
         Assert.assertEquals(iiDesc, desc2);
     }
 }
-
-

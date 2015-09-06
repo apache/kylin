@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.model;
 
@@ -65,6 +65,10 @@ public class TblColRef {
 
     public TblColRef(ColumnDesc column) {
         this.column = column;
+    }
+
+    public ColumnDesc getColumnDesc() {
+        return column;
     }
 
     public ColumnDesc getColumn() {

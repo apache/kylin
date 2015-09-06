@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict.lookup;
 
@@ -25,11 +25,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
+import org.apache.kylin.metadata.model.TableDesc;
 
 import com.google.common.collect.Sets;
-import org.apache.kylin.common.util.Array;
-import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * An in-memory lookup table, in which each cell is an object of type T. The

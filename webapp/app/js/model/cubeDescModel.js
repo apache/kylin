@@ -48,7 +48,8 @@ KylinApp.service('CubeDescModel', function () {
       "capacity": "",
       "hbase_mapping": {
         "column_family": []
-      }
+      },
+      "retentionRange":"0"
     };
 
     return cubeMeta;

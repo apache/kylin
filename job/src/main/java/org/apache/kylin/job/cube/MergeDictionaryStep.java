@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.cube;
 
@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-
-import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -41,6 +39,8 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.Lists;
 
 public class MergeDictionaryStep extends AbstractExecutable {
 
@@ -59,15 +59,15 @@ public class MergeDictionaryStep extends AbstractExecutable {
         final CubeInstance cube = mgr.getCube(getCubeName());
         final CubeSegment newSegment = cube.getSegmentById(getSegmentId());
         final List<CubeSegment> mergingSegments = getMergingSegments(cube);
-        
+
         Collections.sort(mergingSegments);
-        
+
         try {
             checkLookupSnapshotsMustIncremental(mergingSegments);
-            
+
             makeDictForNewSegment(conf, cube, newSegment, mergingSegments);
             makeSnapshotForNewSegment(cube, newSegment, mergingSegments);
-            
+
             mgr.updateCube(cube);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
@@ -75,7 +75,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
-    
+
     private List<CubeSegment> getMergingSegments(CubeInstance cube) {
         List<String> mergingSegmentIds = getMergingSegmentIds();
         List<CubeSegment> result = Lists.newArrayListWithCapacity(mergingSegmentIds.size());
@@ -125,8 +125,10 @@ public class MergeDictionaryStep extends AbstractExecutable {
             List<DictionaryInfo> dictInfos = new ArrayList<DictionaryInfo>();
             for (CubeSegment segment : mergingSegments) {
                 logger.info("Including fact table dictionary of segment : " + segment);
-                DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
-                dictInfos.add(dictInfo);
+                if (segment.getDictResPath(col) != null) {
+                    DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
+                    dictInfos.add(dictInfo);
+                }
             }
             mergeDictionaries(dictMgr, newSeg, dictInfos, col);
         }
@@ -139,8 +141,8 @@ public class MergeDictionaryStep extends AbstractExecutable {
 
     private DictionaryInfo mergeDictionaries(DictionaryManager dictMgr, CubeSegment cubeSeg, List<DictionaryInfo> dicts, TblColRef col) throws IOException {
         DictionaryInfo dictInfo = dictMgr.mergeDictionary(dicts);
-        cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
-
+        if (dictInfo != null)
+            cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
         return dictInfo;
     }
 
@@ -184,7 +186,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
         if (ids != null) {
             final String[] splitted = StringUtils.split(ids, ",");
             ArrayList<String> result = Lists.newArrayListWithExpectedSize(splitted.length);
-            for (String id: splitted) {
+            for (String id : splitted) {
                 result.add(id);
             }
             return result;

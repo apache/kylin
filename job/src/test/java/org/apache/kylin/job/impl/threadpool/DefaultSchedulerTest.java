@@ -14,21 +14,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.impl.threadpool;
 
-import static org.junit.Assert.*;
-
-import org.apache.kylin.job.SelfStopExecutable;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import org.apache.kylin.job.BaseTestExecutable;
 import org.apache.kylin.job.ErrorTestExecutable;
 import org.apache.kylin.job.FailedTestExecutable;
+import org.apache.kylin.job.SelfStopExecutable;
 import org.apache.kylin.job.SucceedTestExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
+import org.junit.Test;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by qianzhou on 12/19/14.
@@ -59,6 +66,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task2.getId()).getState());
     }
+
     @Test
     public void testSucceedAndFailed() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();
@@ -72,6 +80,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
         assertEquals(ExecutableState.ERROR, jobService.getOutput(task2.getId()).getState());
     }
+
     @Test
     public void testSucceedAndError() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();
@@ -99,5 +108,44 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         assertEquals(ExecutableState.DISCARDED, jobService.getOutput(task1.getId()).getState());
         Thread.sleep(5000);
         System.out.println(job);
+    }
+
+    @Test
+    public void testSchedulerPool() throws InterruptedException {
+        ScheduledExecutorService fetchPool = Executors.newScheduledThreadPool(1);
+        final CountDownLatch countDownLatch = new CountDownLatch(3);
+        ScheduledFuture future = fetchPool.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                countDownLatch.countDown();
+            }
+        }, 5, 5, TimeUnit.SECONDS);
+        assertTrue("countDownLatch should reach zero in 15 secs", countDownLatch.await(20, TimeUnit.SECONDS));
+        assertTrue("future should still running", future.cancel(true));
+
+        final CountDownLatch countDownLatch2 = new CountDownLatch(3);
+        ScheduledFuture future2 = fetchPool.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                countDownLatch2.countDown();
+                throw new RuntimeException();
+            }
+        }, 5, 5, TimeUnit.SECONDS);
+        assertFalse("countDownLatch2 should NOT reach zero in 15 secs", countDownLatch2.await(20, TimeUnit.SECONDS));
+        assertFalse("future2 should has been stopped", future2.cancel(true));
+
+        final CountDownLatch countDownLatch3 = new CountDownLatch(3);
+        ScheduledFuture future3 = fetchPool.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    countDownLatch3.countDown();
+                    throw new RuntimeException();
+                } catch (Exception e) {
+                }
+            }
+        }, 5, 5, TimeUnit.SECONDS);
+        assertTrue("countDownLatch3 should reach zero in 15 secs", countDownLatch3.await(20, TimeUnit.SECONDS));
+        assertTrue("future3 should still running", future3.cancel(true));
     }
 }

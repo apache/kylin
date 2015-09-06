@@ -14,15 +14,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.response;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.metadata.model.TableDesc;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * A response class to wrap TableDesc

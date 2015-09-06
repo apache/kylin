@@ -14,13 +14,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.cube;
 
 import java.io.IOException;
 
 import org.apache.commons.cli.Options;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ShortWritable;
@@ -57,6 +58,8 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
+            Configuration jobConf = job.getConfiguration();
+
             String cubeName = getOptionValue(OPTION_CUBE_NAME);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             String intermediateTable = getOptionValue(OPTION_TABLE_NAME);
@@ -66,11 +69,11 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cubeInstance = cubeMgr.getCube(cubeName);
 
-            job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+            jobConf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
             System.out.println("Starting: " + job.getJobName());
 
             setJobClasspath(job);
-            
+
             setupMapper(intermediateTable);
             setupReducer(output);
 
@@ -83,17 +86,20 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             logger.error("error in FactDistinctColumnsJob", e);
             printUsage(options);
             throw e;
+        } finally {
+            if (job != null) {
+                cleanupTempConfFile(job.getConfiguration());
+            }
         }
 
     }
 
     private void setupMapper(String intermediateTable) throws IOException {
-//        FileInputFormat.setInputPaths(job, input);
+        //        FileInputFormat.setInputPaths(job, input);
 
         String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
-        HCatInputFormat.setInput(job, dbTableNames[0],
-                dbTableNames[1]);
-        
+        HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
+
         job.setInputFormatClass(HCatInputFormat.class);
         job.setMapperClass(FactDistinctColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);

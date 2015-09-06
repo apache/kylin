@@ -14,15 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.service;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -48,8 +51,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.*;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author ysong1
@@ -105,25 +111,25 @@ public class JobService extends BasicService {
 
     private ExecutableState parseToExecutableState(JobStatusEnum status) {
         switch (status) {
-            case DISCARDED:
-                return ExecutableState.DISCARDED;
-            case ERROR:
-                return ExecutableState.ERROR;
-            case FINISHED:
-                return ExecutableState.SUCCEED;
-            case NEW:
-                return ExecutableState.READY;
-            case PENDING:
-                return ExecutableState.READY;
-            case RUNNING:
-                return ExecutableState.RUNNING;
-            default:
-                throw new RuntimeException("illegal status:" + status);
+        case DISCARDED:
+            return ExecutableState.DISCARDED;
+        case ERROR:
+            return ExecutableState.ERROR;
+        case FINISHED:
+            return ExecutableState.SUCCEED;
+        case NEW:
+            return ExecutableState.READY;
+        case PENDING:
+            return ExecutableState.READY;
+        case RUNNING:
+            return ExecutableState.RUNNING;
+        default:
+            throw new RuntimeException("illegal status:" + status);
         }
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, String submitter) throws IOException, JobException {
+    public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, boolean forceMergeEmptySeg, String submitter) throws IOException, JobException {
 
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
         for (CubingJob job : cubingJobs) {
@@ -145,9 +151,22 @@ public class JobService extends BasicService {
                 job = builder.buildJob(newSeg);
             }
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
-            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate);
+            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);
             job = builder.mergeJob(newSeg);
         } else if (buildType == CubeBuildTypeEnum.REFRESH) {
+            List<CubeSegment> readySegs = cube.getSegment(SegmentStatusEnum.READY);
+            boolean segExists = false;
+            for (CubeSegment aSeg : readySegs) {
+                if (aSeg.getDateRangeStart() == startDate && aSeg.getDateRangeEnd() == endDate) {
+                    segExists = true;
+                    break;
+                }
+            }
+
+            if (segExists == false) {
+                throw new IllegalArgumentException("You can only refresh an existing segment, but there is no ready segment for start time:" + startDate + ", end time: " + endDate);
+            }
+
             CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate);
             job = builder.buildJob(refreshSeg);
         } else {
@@ -180,7 +199,7 @@ public class JobService extends BasicService {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(cubeJob.getCubeName());
-        result.setRelatedSegment(cubeJob.getSegmentId());
+        result.setRelatedSegment(cubeJob.getSegmentIds());
         result.setLastModified(cubeJob.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
@@ -205,7 +224,7 @@ public class JobService extends BasicService {
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
         result.setRelatedCube(cubeJob.getCubeName());
-        result.setRelatedSegment(cubeJob.getSegmentId());
+        result.setRelatedSegment(cubeJob.getSegmentIds());
         result.setLastModified(output.getLastModified());
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
@@ -249,37 +268,37 @@ public class JobService extends BasicService {
 
     private JobStatusEnum parseToJobStatus(ExecutableState state) {
         switch (state) {
-            case READY:
-                return JobStatusEnum.PENDING;
-            case RUNNING:
-                return JobStatusEnum.RUNNING;
-            case ERROR:
-                return JobStatusEnum.ERROR;
-            case DISCARDED:
-                return JobStatusEnum.DISCARDED;
-            case SUCCEED:
-                return JobStatusEnum.FINISHED;
-            case STOPPED:
-            default:
-                throw new RuntimeException("invalid state:" + state);
+        case READY:
+            return JobStatusEnum.PENDING;
+        case RUNNING:
+            return JobStatusEnum.RUNNING;
+        case ERROR:
+            return JobStatusEnum.ERROR;
+        case DISCARDED:
+            return JobStatusEnum.DISCARDED;
+        case SUCCEED:
+            return JobStatusEnum.FINISHED;
+        case STOPPED:
+        default:
+            throw new RuntimeException("invalid state:" + state);
         }
     }
 
     private JobStepStatusEnum parseToJobStepStatus(ExecutableState state) {
         switch (state) {
-            case READY:
-                return JobStepStatusEnum.PENDING;
-            case RUNNING:
-                return JobStepStatusEnum.RUNNING;
-            case ERROR:
-                return JobStepStatusEnum.ERROR;
-            case DISCARDED:
-                return JobStepStatusEnum.DISCARDED;
-            case SUCCEED:
-                return JobStepStatusEnum.FINISHED;
-            case STOPPED:
-            default:
-                throw new RuntimeException("invalid state:" + state);
+        case READY:
+            return JobStepStatusEnum.PENDING;
+        case RUNNING:
+            return JobStepStatusEnum.RUNNING;
+        case ERROR:
+            return JobStepStatusEnum.ERROR;
+        case DISCARDED:
+            return JobStepStatusEnum.DISCARDED;
+        case SUCCEED:
+            return JobStepStatusEnum.FINISHED;
+        case STOPPED:
+        default:
+            throw new RuntimeException("invalid state:" + state);
         }
     }
 
@@ -295,12 +314,14 @@ public class JobService extends BasicService {
         //            getExecutableManager().stopJob(cubeJob.getId());
         //        }
 
-        final String segmentId = job.getRelatedSegment();
+        final String[] segmentIds = StringUtils.split(job.getRelatedSegment(), ",");
         CubeInstance cubeInstance = getCubeManager().getCube(job.getRelatedCube());
-        final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-        if (segment.getStatus() == SegmentStatusEnum.NEW) {
-            cubeInstance.getSegments().remove(segment);
-            getCubeManager().updateCube(cubeInstance);
+        for (String segmentId : segmentIds) {
+            final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
+            if (segment.getStatus() == SegmentStatusEnum.NEW) {
+                cubeInstance.getSegments().remove(segment);
+                getCubeManager().updateCube(cubeInstance);
+            }
         }
         getExecutableManager().discardJob(job.getId());
         return job;

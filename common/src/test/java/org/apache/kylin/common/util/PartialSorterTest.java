@@ -14,15 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
-import com.google.common.collect.Lists;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+
 import java.util.Comparator;
 import java.util.List;
+
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 1/5/15.

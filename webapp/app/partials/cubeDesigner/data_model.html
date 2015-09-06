@@ -79,7 +79,7 @@
                 <td>
                     <ul class="list-unstyled">
                         <li ng-repeat="pk in lookup.join.primary_key track by $index">
-                            <code>{{lookup.table + '.' + pk}} = {{metaModel.model.fact_table + '.' + lookup.join.foreign_key[$index]}}</code>
+                            <code>{{metaModel.model.fact_table + '.' + lookup.join.foreign_key[$index]}} = {{lookup.table + '.' + pk}}</code>
                         </li>
                     </ul>
                 </td>
@@ -135,15 +135,15 @@
                             <div class="col-xs-9">
                                 <div ng-repeat="joinIndex in [] | range: newLookup.join.primary_key.length">
                                     <div>
-                                        <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
-                                                ng-model="newLookup.join.primary_key[$index]"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
-                                            <option value=""></option>
-                                        </select>
-                                        <b>=</b>
                                         <select style="width: 45%" chosen data-placeholder="Fact Table Column"
                                                 ng-model="newLookup.join.foreign_key[$index]"
                                                 ng-options="columns.name as columns.name for columns in getColumnsByTable(metaModel.model.fact_table)" >
+                                            <option value=""></option>
+                                        </select>
+                                        <b>=</b>
+                                        <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
+                                                ng-model="newLookup.join.primary_key[$index]"
+                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
                                             <option value=""></option>
                                         </select>
                                         <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete"
@@ -181,7 +181,7 @@
                                 <div class="col-xs-12">
                                     <ol class="text-info">
                                         <li>Pick up lookup table at first</li>
-                                        <li>Specify join relationship between chosen lookup table and fact table</li>
+                                        <li>Specify join relationship between fact table and chosen lookup table </li>
                                         <li>Join Type have to be same as will be used in query</li>
                                     </ol>
                                 </div>

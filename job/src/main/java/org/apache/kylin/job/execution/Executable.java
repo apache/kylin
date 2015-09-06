@@ -14,13 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.execution;
 
-import org.apache.kylin.job.exception.ExecuteException;
-
 import java.util.Map;
+
+import org.apache.kylin.job.exception.ExecuteException;
 
 /**
  * Created by qianzhou on 12/15/14.
