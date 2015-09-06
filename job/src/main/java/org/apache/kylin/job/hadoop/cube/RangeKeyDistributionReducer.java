@@ -38,17 +38,13 @@ import org.slf4j.LoggerFactory;
 public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable, Text, LongWritable> {
 
     public static final long ONE_GIGA_BYTES = 1024L * 1024L * 1024L;
-    public static final int SMALL_CUT = 10; //  10 GB per region
-    public static final int MEDIUM_CUT = 20; //  20 GB per region
-    public static final int LARGE_CUT = 100; // 100 GB per region
-
-    public static final int MAX_REGION = 500;
 
     private static final Logger logger = LoggerFactory.getLogger(RangeKeyDistributionReducer.class);
 
     private LongWritable outputValue = new LongWritable(0);
 
-    private int cut;
+    private int maxRegionCount = 500;
+    private int cut = 10;
     private long bytesRead = 0;
     private List<Text> gbPoints = new ArrayList<Text>();
 
@@ -56,20 +52,15 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
     protected void setup(Context context) throws IOException {
         super.publishConfiguration(context.getConfiguration());
 
-        CubeCapacity cubeCapacity = CubeCapacity.valueOf(context.getConfiguration().get(BatchConstants.CUBE_CAPACITY));
-        switch (cubeCapacity) {
-        case SMALL:
-            cut = SMALL_CUT;
-            break;
-        case MEDIUM:
-            cut = MEDIUM_CUT;
-            break;
-        case LARGE:
-            cut = LARGE_CUT;
-            break;
+        if (context.getConfiguration().get(BatchConstants.REGION_SPLIT_SIZE) != null) {
+            cut = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_SPLIT_SIZE));
         }
 
-        logger.info("Chosen cut for htable is " + cut);
+        if (context.getConfiguration().get(BatchConstants.REGION_NUMBER) != null) {
+            maxRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_NUMBER));
+        }
+
+        logger.info("Chosen cut for htable is " + cut + ", max region count is " + maxRegionCount);
     }
 
     @Override
@@ -88,7 +79,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
     protected void cleanup(Context context) throws IOException, InterruptedException {
         int nRegion = Math.round((float) gbPoints.size() / (float) cut);
         nRegion = Math.max(1, nRegion);
-        nRegion = Math.min(MAX_REGION, nRegion);
+        nRegion = Math.min(maxRegionCount, nRegion);
 
         int gbPerRegion = gbPoints.size() / nRegion;
         gbPerRegion = Math.max(1, gbPerRegion);

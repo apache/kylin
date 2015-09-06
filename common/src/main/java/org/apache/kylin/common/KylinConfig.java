@@ -127,6 +127,10 @@ public class KylinConfig {
     public static final String VERSION = "${project.version}";
 
     public static final String HTABLE_DEFAULT_COMPRESSION_CODEC = "kylin.hbase.default.compression.codec";
+    
+    public static final String HBASE_REGION_SIZE = "kylin.hbase.region.size";
+    
+    public static final String HBASE_REGION_MAX_COUNT = "kylin.hbase.region.max.count";
 
     // static cached instances
     private static KylinConfig ENV_INSTANCE = null;
@@ -650,6 +654,15 @@ public class KylinConfig {
 
     public void setRemoteHadoopCliPassword(String v) {
         kylinConfig.setProperty(KYLIN_JOB_REMOTE_CLI_PASSWORD, v);
+    }
+    
+    public int getHBaseRegionSizeGB(String capacity) {
+        String key = HBASE_REGION_SIZE + "." + capacity.toLowerCase();
+        return Integer.valueOf(getOptional(key, "10"));
+    }
+    
+    public int getHBaseMaxRegionCount() {
+        return Integer.valueOf(getOptional(HBASE_REGION_MAX_COUNT, "500"));
     }
 
     public String getProperty(String key, String defaultValue) {

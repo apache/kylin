@@ -43,6 +43,7 @@ public interface BatchConstants {
 
     String MAPPER_SAMPLE_NUMBER = "mapper.sample.number";
     String REGION_NUMBER = "region.number";
+    String REGION_SPLIT_SIZE = "region.split.size";
     String CUBE_CAPACITY = "cube.capacity";
 
     String CFG_KYLIN_LOCAL_TEMP_DIR = "/tmp/kylin/";
