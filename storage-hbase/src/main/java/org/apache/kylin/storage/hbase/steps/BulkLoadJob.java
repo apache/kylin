@@ -71,7 +71,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
             FsPermission permission = new FsPermission((short) 0777);
             for (HBaseColumnFamilyDesc cf : cubeDesc.getHBaseMapping().getColumnFamily()) {
                 String cfName = cf.getName();
-                Path columnFamilyPath = new Path(input + cfName);
+                Path columnFamilyPath = new Path(input, cfName);
 
                 // File may have already been auto-loaded (in the case of MapR DB)
                 if (fs.exists(columnFamilyPath)) {
