@@ -253,8 +253,7 @@ public class DictionaryManager {
             if (model.isFactTable(col.getTable())) {
                 TblColRef pkCol = model.findPKByFK(col, "inner");
                 if (pkCol != null)
-                    col = pkCol; // scan the counterparty PK on lookup table
-                // instead
+                    col = pkCol; // scan the counterparty PK on lookup table instead
             }
             srcTable = col.getTable();
             srcCol = col.getName();
@@ -317,10 +316,7 @@ public class DictionaryManager {
 
         TableSignature input = dictInfo.getInput();
         for (String existing : existings) {
-            DictionaryInfo existingInfo = load(existing, false); // skip cache,
-            // direct
-            // load from
-            // store
+            DictionaryInfo existingInfo = load(existing, false); // skip cache, direct load from store
             if (input.equals(existingInfo.getInput()))
                 return existing;
         }
@@ -336,9 +332,7 @@ public class DictionaryManager {
 
         for (String existing : existings) {
             logger.info("Checking dup dict :" + existing);
-            DictionaryInfo existingInfo = load(existing, true); // skip cache,
-            // direct load
-            // from store
+            DictionaryInfo existingInfo = load(existing, true); // skip cache, direct load from store
             if (existingInfo == null)
                 logger.info("existingInfo is null");
 
