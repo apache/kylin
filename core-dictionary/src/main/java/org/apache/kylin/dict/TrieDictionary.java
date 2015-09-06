@@ -148,9 +148,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected int getIdFromValueImpl(T value, int roundingFlag) {
         if (enableValueCache && roundingFlag == 0) {
-            HashMap cache = valueToIdCache.get(); // SoftReference to skip cache
-                                                  // gracefully when short of
-                                                  // memory
+            HashMap cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 Integer id = null;
                 id = (Integer) cache.get(value);
@@ -194,7 +192,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
      *            -- >0: return closest bigger if not found, return nValues
      */
     private int lookupSeqNoFromValue(int n, byte[] inp, int o, int inpEnd, int roundingFlag) {
-        if (inp.length == 0) // special 'empty' value
+        if (o == inpEnd) // special 'empty' value
             return checkFlag(headSize, BIT_IS_END_OF_VALUE) ? 0 : roundSeqNo(roundingFlag, -1, -1, 0);
 
         int seq = 0; // the sequence no under track
@@ -231,8 +229,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             while (true) {
                 p = c + firstByteOffset;
                 comp = BytesUtil.compareByteUnsigned(trieBytes[p], inpByte);
-                if (comp == 0) { // continue in the matching child, reset n and
-                                 // loop again
+                if (comp == 0) { // continue in the matching child, reset n and loop again
                     n = c;
                     o++;
                     break;
