@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.request;
 
@@ -28,7 +28,7 @@ public class SQLRequest {
     private Integer limit = 0;
     private boolean acceptPartial = true;
 
-    private Map<String,String> backdoorToggles;
+    private Map<String, String> backdoorToggles;
 
     public SQLRequest() {
     }
@@ -40,7 +40,6 @@ public class SQLRequest {
     public void setBackdoorToggles(Map<String, String> backdoorToggles) {
         this.backdoorToggles = backdoorToggles;
     }
-
 
     public String getProject() {
         return project;

@@ -14,27 +14,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-
-/**
- * @author George Song (ysong1)
- * 
- */
 public class NDCuboidJobTest extends LocalFileMetadataTestCase {
 
     private Configuration conf;
@@ -57,12 +52,12 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testJob6D() throws Exception {
+    public void testJob8D() throws Exception {
         String input = "src/test/resources/data/base_cuboid/";
-        String output = "target/test-output/6d_cuboid";
+        String output = "target/test-output/8d_cuboid";
         String cubeName = "test_kylin_cube_with_slr_1_new_segment";
         String segmentName = "20130331080000_20131212080000";
-        String jobname = "6d_cuboid";
+        String jobname = "8d_cuboid";
         String level = "1";
 
         FileUtil.fullyDelete(new File(output));
@@ -72,12 +67,12 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testJob5D() throws Exception {
-        final String input = "src/test/resources/data/6d_cuboid/";
-        final String output = "target/test-output/5d_cuboid";
+    public void testJob7D() throws Exception {
+        final String input = "src/test/resources/data/8d_cuboid/";
+        final String output = "target/test-output/7d_cuboid";
         final String cubeName = "test_kylin_cube_with_slr_1_new_segment";
         String segmentName = "20130331080000_20131212080000";
-        String jobname = "5d_cuboid";
+        String jobname = "7d_cuboid";
         String level = "2";
 
         FileUtil.fullyDelete(new File(output));

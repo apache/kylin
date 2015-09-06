@@ -14,20 +14,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.kylin.dict.lookup.FileTable;
 import org.apache.kylin.dict.lookup.FileTableReader;
 import org.junit.Test;
-
-import org.apache.kylin.dict.lookup.ReadableTable;
 
 /**
  * @author yangli9
@@ -38,7 +37,7 @@ public class TableReaderTest {
     @Test
     public void testBasicReader() throws IOException {
         File f = new File("src/test/resources/dict/DW_SITES");
-        FileTableReader reader = new FileTableReader("file://" + f.getAbsolutePath(), ReadableTable.DELIM_AUTO, 10);
+        FileTableReader reader = new FileTableReader("file://" + f.getAbsolutePath(), FileTable.DELIM_AUTO, 10);
         while (reader.next()) {
             assertEquals("[-1, Korea Auction.co.kr, S, 48, 0, 111, 2009-02-11, , DW_OFFPLAT, ]", Arrays.toString(reader.getRow()));
             break;

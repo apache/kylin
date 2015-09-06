@@ -14,21 +14,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.routing;
 
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.kylin.query.routing.RoutingRules.*;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.routing.RoutingRules.AdjustForWeeklyMatchedRealization;
+import org.apache.kylin.query.routing.RoutingRules.RealizationSortRule;
+import org.apache.kylin.query.routing.RoutingRules.RemoveUncapableRealizationsRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.query.relnode.OLAPContext;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 1/5/15.
@@ -41,10 +43,8 @@ public abstract class RoutingRule {
     //1. simple query use II prior to cube
     //2. exact match prior to week match
     static {
-        rules.add(new RealizationPriorityRule());
         rules.add(new RemoveUncapableRealizationsRule());
-        rules.add(new SimpleQueryMoreColumnsCubeFirstRule());
-        rules.add(new CubesSortRule());
+        rules.add(new RealizationSortRule());
         rules.add(new AdjustForWeeklyMatchedRealization());//this rule might modify olapcontext content, better put it at last
     }
 

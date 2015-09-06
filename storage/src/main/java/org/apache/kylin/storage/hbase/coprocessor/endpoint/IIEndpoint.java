@@ -14,15 +14,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.RpcCallback;
-import com.google.protobuf.RpcController;
-import com.google.protobuf.Service;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -41,12 +40,18 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
-import org.apache.kylin.storage.hbase.coprocessor.*;
+import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorFilter;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorProjector;
+import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 import org.apache.kylin.storage.hbase.coprocessor.endpoint.generated.IIProtos;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.RpcCallback;
+import com.google.protobuf.RpcController;
+import com.google.protobuf.Service;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  * Created by honma on 11/7/14.

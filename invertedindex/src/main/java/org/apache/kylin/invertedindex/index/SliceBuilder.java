@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.index;
 
@@ -25,100 +25,95 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
  */
 public class SliceBuilder {
 
-	TableRecordInfo info;
-	private int nColumns;
-	int nRecordsCap;
+    TableRecordInfo info;
+    private int nColumns;
+    int nRecordsCap;
 
-	short shard;
-	long sliceTimestamp;
-	int nRecords;
-	private ColumnValueContainer[] containers;
+    short shard;
+    long sliceTimestamp;
+    int nRecords;
+    private ColumnValueContainer[] containers;
 
-	transient ImmutableBytesWritable temp = new ImmutableBytesWritable();
+    transient ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
-	public SliceBuilder(TableRecordInfo info, short shard) {
-		this.info = info;
-		this.nColumns = info.getDigest().getColumnCount();
-		this.nRecordsCap = Math.max(1, info.getDescriptor().getSliceSize());
+    public SliceBuilder(TableRecordInfo info, short shard) {
+        this.info = info;
+        this.nColumns = info.getDigest().getColumnCount();
+        this.nRecordsCap = Math.max(1, info.getDescriptor().getSliceSize());
 
-		this.shard = shard;
-		this.sliceTimestamp = Long.MIN_VALUE;
-		this.nRecords = 0;
-		this.containers = null;
+        this.shard = shard;
+        this.sliceTimestamp = Long.MIN_VALUE;
+        this.nRecords = 0;
+        this.containers = null;
 
-		doneSlice(); // init containers
-	}
+        doneSlice(); // init containers
+    }
 
-	private Slice doneSlice() {
-		Slice r = null;
-		if (nRecords > 0) {
-			for (int i = 0; i < nColumns; i++) {
-				containers[i].closeForChange();
-			}
-			r = new Slice(info.getDigest(), shard, sliceTimestamp, containers);
-		}
+    private Slice doneSlice() {
+        Slice r = null;
+        if (nRecords > 0) {
+            for (int i = 0; i < nColumns; i++) {
+                containers[i].closeForChange();
+            }
+            r = new Slice(info.getDigest(), shard, sliceTimestamp, containers);
+        }
 
-		// reset for next slice
-		nRecords = 0;
-		containers = new ColumnValueContainer[nColumns];
-		for (int i : info.getDescriptor().getBitmapColumns()) {
-			containers[i] = new BitMapContainer(info.getDigest(), i);
-		}
-		for (int i : info.getDescriptor().getValueColumns()) {
-			containers[i] = new CompressedValueContainer(info.getDigest(), i,
-					nRecordsCap);
-		}
-		for (int i : info.getDescriptor().getMetricsColumns()) {
-			containers[i] = new CompressedValueContainer(info.getDigest(), i,
-					nRecordsCap);
-		}
+        // reset for next slice
+        nRecords = 0;
+        containers = new ColumnValueContainer[nColumns];
+        for (int i : info.getDescriptor().getValueColumns()) {
+            containers[i] = new CompressedValueContainer(info.getDigest(), i, nRecordsCap);
+        }
+        for (int i : info.getDescriptor().getMetricsColumns()) {
+            containers[i] = new CompressedValueContainer(info.getDigest(), i, nRecordsCap);
+        }
 
-		return r;
+        return r;
 
-	}
+    }
 
-	// NOTE: record must be appended in time order
-	public Slice append(TableRecord rec) {
-		if (rec.getShard() != shard)
-			throw new IllegalStateException();
+    // NOTE: record must be appended in time order
+    public Slice append(TableRecord rec) {
+        if (rec.getShard() != shard)
+            throw new IllegalStateException();
 
-		Slice doneSlice = null;
+        Slice doneSlice = null;
 
-		if (isFull()) {
-			doneSlice = doneSlice();
-		}
+        if (isFull()) {
+            doneSlice = doneSlice();
+        }
 
-		if (nRecords == 0) {
-			sliceTimestamp = increaseSliceTimestamp(rec.getTimestamp());
-		}
+        if (nRecords == 0) {
+            sliceTimestamp = increaseSliceTimestamp(rec.getTimestamp());
+        }
 
-		nRecords++;
-		for (int i = 0; i < nColumns; i++) {
-			rec.getValueBytes(i, temp);
-			containers[i].append(temp);
-		}
+        nRecords++;
+        for (int i = 0; i < nColumns; i++) {
+            rec.getValueBytes(i, temp);
+            containers[i].append(temp);
+        }
 
-		return doneSlice;
-	}
+        return doneSlice;
+    }
 
-	private long increaseSliceTimestamp(long timestamp) {
-		if (timestamp < sliceTimestamp)
-			throw new IllegalStateException();
+    private long increaseSliceTimestamp(long timestamp) {
+        if (timestamp < sliceTimestamp)
+            throw new IllegalStateException();
 
-		if (timestamp == sliceTimestamp)
-			return ++timestamp; // ensure slice timestamp increases
-		else
-			return timestamp;
-	}
+        if (timestamp == sliceTimestamp)
+            return ++timestamp; // ensure slice timestamp increases
+        else
+            return timestamp;
+    }
 
-	public Slice close() {
-		Slice doneSlice = doneSlice();
-		this.sliceTimestamp = Long.MIN_VALUE;
-		this.nRecords = 0;
-		return doneSlice;
-	}
+    public Slice close() {
+        Slice doneSlice = doneSlice();
+        this.sliceTimestamp = Long.MIN_VALUE;
+        this.nRecords = 0;
+        return doneSlice;
+    }
 
-	private boolean isFull() {
-		return nRecords >= nRecordsCap;
-	}
+    private boolean isFull() {
+        return nRecords >= nRecordsCap;
+    }
 }

@@ -14,16 +14,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
+
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.hbase.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.coprocessor.AggregationCache;
-
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.

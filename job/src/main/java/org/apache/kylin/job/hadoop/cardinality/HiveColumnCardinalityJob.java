@@ -14,11 +14,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.cardinality;
-
-import java.io.File;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -32,8 +30,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
-
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 
 /**
@@ -47,7 +45,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
-    public static final String OUTPUT_PATH = "/tmp/cardinality";
+    public static final String OUTPUT_PATH = BatchConstants.CFG_KYLIN_HDFS_TEMP_DIR + "cardinality";
 
     public HiveColumnCardinalityJob() {
     }
@@ -70,7 +68,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             job = Job.getInstance(conf, jobName);
 
             setJobClasspath(job);
-            
+
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             FileOutputFormat.setOutputPath(job, output);
             job.getConfiguration().set("dfs.block.size", "67108864");

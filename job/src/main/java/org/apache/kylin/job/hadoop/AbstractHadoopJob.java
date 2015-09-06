@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop;
 
@@ -23,10 +23,20 @@ package org.apache.kylin.job.hadoop;
  *
  */
 
+import static org.apache.hadoop.util.StringUtils.formatTime;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -39,7 +49,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -57,15 +66,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.apache.hadoop.util.StringUtils.formatTime;
-
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractHadoopJob.class);
@@ -82,11 +82,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_NCUBOID_LEVEL = OptionBuilder.withArgName("level").hasArg().isRequired(true).withDescription("N-Cuboid build level, e.g. 1, 2, 3...").create("level");
     protected static final Option OPTION_PARTITION_FILE_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("Partition file path.").create("input");
     protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName("htable name").hasArg().isRequired(true).withDescription("HTable name").create("htablename");
-    protected static final Option OPTION_KEY_COLUMN_PERCENTAGE = OptionBuilder.withArgName("rowkey column percentage").hasArg().isRequired(true).withDescription("Percentage of row key columns").create("columnpercentage");
-    protected static final Option OPTION_KEY_SPLIT_NUMBER = OptionBuilder.withArgName("key split number").hasArg().isRequired(true).withDescription("Number of key split range").create("splitnumber");
 
     protected String name;
-    protected String description;
     protected boolean isAsync = false;
     protected OptionsHelper optionsHelper = new OptionsHelper();
 
@@ -129,16 +126,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return retVal;
     }
 
-    protected static void runJob(Tool job, String[] args) {
-        try {
-            int exitCode = ToolRunner.run(job, args);
-            System.exit(exitCode);
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            System.exit(5);
-        }
-    }
-
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 
     protected void setJobClasspath(Job job) {
@@ -153,7 +140,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
         String kylinHBaseDependency = System.getProperty("kylin.hbase.dependency");
-        logger.info("append kylin.hive.dependency: " + kylinHiveDependency + " and kylin.hive.dependency: " + kylinHBaseDependency + " to " + MAP_REDUCE_CLASSPATH);
+        logger.info("append kylin.hive.dependency: " + kylinHiveDependency + " and kylin.hbase.dependency: " + kylinHBaseDependency + " to " + MAP_REDUCE_CLASSPATH);
 
         Configuration jobConf = job.getConfiguration();
         String classpath = jobConf.get(MAP_REDUCE_CLASSPATH);
@@ -162,7 +149,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             classpath = getDefaultMapRedClasspath();
             logger.info("The default mapred classpath is: " + classpath);
         }
-
 
         if (kylinHBaseDependency != null) {
             // yarn classpath is comma separated
@@ -180,7 +166,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
     }
 
-
     private String getDefaultMapRedClasspath() {
 
         String classpath = "";
@@ -196,7 +181,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         return classpath;
     }
-
 
     public void addInputDirs(String input, Job job) throws IOException {
         for (String inp : StringSplitter.split(input, ",")) {
@@ -225,11 +209,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
-        tmp.delete(); // we need a directory, so delete the file first
+        FileUtils.forceDelete(tmp);
 
         File metaDir = new File(tmp, "meta");
         metaDir.mkdirs();
-        metaDir.getParentFile().deleteOnExit();
 
         // write kylin.properties
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -253,16 +236,41 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+        String hdfsMetaDir = "file://" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        logger.info("HDFS meta dir is: " + hdfsMetaDir);
+        conf.set("tmpfiles", hdfsMetaDir);
+
+    }
+
+    protected void cleanupTempConfFile(Configuration conf) {
+        String tempMetaFileString = conf.get("tmpfiles");
+        logger.info("tempMetaFileString is : " + tempMetaFileString);
+        if (tempMetaFileString != null) {
+            if (tempMetaFileString.startsWith("file://")) {
+                tempMetaFileString = tempMetaFileString.substring("file://".length());
+                File tempMetaFile = new File(tempMetaFileString);
+                if (tempMetaFile.exists()) {
+                    try {
+                        FileUtils.forceDelete(tempMetaFile.getParentFile());
+
+                    } catch (IOException e) {
+                        logger.warn("error when deleting " + tempMetaFile, e);
+                    }
+                } else {
+                    logger.info("" + tempMetaFileString + " does not exist");
+                }
+            } else {
+                logger.info("tempMetaFileString is not starting with file:// :" + tempMetaFileString);
+            }
+        }
     }
 
     protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
-        tmp.delete(); // we need a directory, so delete the file first
+        FileUtils.forceDelete(tmp);
 
         File metaDir = new File(tmp, "meta");
         metaDir.mkdirs();
-        metaDir.getParentFile().deleteOnExit();
 
         // write kylin.properties
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -287,7 +295,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpResources(kylinConfig, metaDir, dumpList);
 
         // hadoop distributed cache
-        conf.set("tmpfiles", "file:///" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath()));
+        String hdfsMetaDir = "file://" + OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        logger.info("HDFS meta dir is: " + hdfsMetaDir);
+        conf.set("tmpfiles", hdfsMetaDir);
     }
 
     private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList) throws IOException {

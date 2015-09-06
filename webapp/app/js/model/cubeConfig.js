@@ -66,7 +66,7 @@ KylinApp.constant('cubeConfig', {
     {attr: 'name', name: 'Name'},
     {attr: 'status', name: 'Status'},
     {attr: 'size_kb', name: 'Cube Size'},
-    {attr: 'source_records_count', name: 'Source Records'},
+    {attr: 'input_records_count', name: 'Source Records'},
     {attr: 'last_build_time', name: 'Last Build Time'},
     {attr: 'owner', name: 'Owner'},
     {attr: 'create_time', name: 'Create Time'}

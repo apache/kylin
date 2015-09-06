@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
-
 import org.apache.kylin.common.KylinConfig;
 
 /**
@@ -94,7 +93,7 @@ public class MailService {
             email.getMailSession();
 
         } catch (EmailException e) {
-            logger.error(e.getLocalizedMessage(),e);
+            logger.error(e.getLocalizedMessage(), e);
             return false;
         }
 

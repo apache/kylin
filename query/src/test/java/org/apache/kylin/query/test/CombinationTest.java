@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.test;
 
@@ -22,12 +22,11 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
 
 /**
  * Created by honma on 7/2/14.

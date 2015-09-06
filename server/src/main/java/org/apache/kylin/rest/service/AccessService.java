@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.service;
 
@@ -22,7 +22,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.ForbiddenException;
+import org.apache.kylin.rest.response.AccessEntryResponse;
+import org.apache.kylin.rest.security.AclEntityFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.acls.domain.BasePermission;
@@ -42,12 +47,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-
-import org.apache.kylin.common.persistence.AclEntity;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.response.AccessEntryResponse;
-import org.apache.kylin.rest.security.AclEntityFactory;
 
 /**
  * @author xduo

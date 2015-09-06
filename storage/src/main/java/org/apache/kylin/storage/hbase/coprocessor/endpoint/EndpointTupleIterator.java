@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.coprocessor.endpoint;
 
@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
-
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/2/14.
@@ -192,6 +191,11 @@ public class EndpointTupleIterator implements ITupleIterator {
     }
 
     @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void close() {
         IOUtils.closeQuietly(table);
         logger.info("Closed after " + rowsInAllMetric + " rows are fetched");
@@ -239,7 +243,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         for (FunctionDesc measure : measures) {
-            info.setField(measure.getRewriteFieldName(), null, measure.getSQLType(), index++);
+            info.setField(measure.getRewriteFieldName(), null, measure.getSQLType().getName(), index++);
         }
 
         return info;
@@ -310,6 +314,11 @@ public class EndpointTupleIterator implements ITupleIterator {
         }
 
         @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void close() {
 
         }
@@ -331,8 +340,7 @@ public class EndpointTupleIterator implements ITupleIterator {
                         String fieldName = measures.get(i).getRewriteFieldName();
                         Object value = measureValues.get(i);
                         String dataType = tuple.getDataType(fieldName);
-                        //TODO: currently in II all metrics except HLLC is returned as String
-                        if (dataType.toLowerCase().equalsIgnoreCase("hllc")) {
+                        if (value instanceof String) {
                             value = Tuple.convertOptiqCellValue((String) value, dataType);
                         }
                         tuple.setMeasureValue(fieldName, value);

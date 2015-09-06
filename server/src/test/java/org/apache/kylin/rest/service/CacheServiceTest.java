@@ -14,9 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.service;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.Broadcaster;
@@ -38,15 +47,12 @@ import org.apache.kylin.rest.broadcaster.BroadcasterReceiveServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.slf4j.Logger;
-
-import java.util.Arrays;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by qianzhou on 1/16/15.
@@ -90,15 +96,15 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
                 logger.info(log);
                 counter.incrementAndGet();
                 switch (wipeEvent) {
-                    case CREATE:
-                    case UPDATE:
-                        cacheService.rebuildCache(wipeType, name);
-                        break;
-                    case DROP:
-                        cacheService.removeCache(wipeType, name);
-                        break;
-                    default:
-                        throw new RuntimeException("invalid type:" + wipeEvent);
+                case CREATE:
+                case UPDATE:
+                    cacheService.rebuildCache(wipeType, name);
+                    break;
+                case DROP:
+                    cacheService.removeCache(wipeType, name);
+                    break;
+                default:
+                    throw new RuntimeException("invalid type:" + wipeEvent);
                 }
             }
         })), "/");
@@ -148,12 +154,15 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     private static CubeManager getCubeManager(KylinConfig config) throws Exception {
         return CubeManager.getInstance(config);
     }
+
     private static ProjectManager getProjectManager(KylinConfig config) throws Exception {
         return ProjectManager.getInstance(config);
     }
+
     private static CubeDescManager getCubeDescManager(KylinConfig config) throws Exception {
         return CubeDescManager.getInstance(config);
     }
+
     private static MetadataManager getMetadataManager(KylinConfig config) throws Exception {
         return MetadataManager.getInstance(config);
     }
@@ -234,7 +243,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertTrue(cubeManagerB.getCube(cubeName) == null);
         assertTrue(!containsRealization(projectManagerB.listAllRealizations(ProjectInstance.DEFAULT_PROJECT_NAME), RealizationType.CUBE, cubeName));
 
-
         final String cubeDescName = "test_cube_desc";
         cubeDesc.setName(cubeDescName);
         cubeDesc.setLastModified(0);
@@ -246,7 +254,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         waitForCounterAndClear(1);
         assertNotNull(cubeDescManager.getCubeDesc(cubeDescName));
         assertNotNull(cubeDescManagerB.getCubeDesc(cubeDescName));
-
 
         cubeDesc.setNotifyList(Arrays.asList("test@email", "test@email", "test@email"));
         cubeDescManager.updateCubeDesc(cubeDesc);
@@ -261,8 +268,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertTrue(cubeDescManager.getCubeDesc(cubeDescName) == null);
         assertTrue(cubeDescManagerB.getCubeDesc(cubeDescName) == null);
 
-
-
         getStore().deleteResource("/cube/a_whole_new_cube.json");
     }
 
@@ -274,7 +279,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         tableDesc.setLastModified(0);
         return tableDesc;
     }
-
 
     @Test
     public void testMetaCRUD() throws Exception {
@@ -293,9 +297,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertNotNull(metadataManager.getTableDesc(tableDesc.getIdentity()));
         assertNotNull(metadataManagerB.getTableDesc(tableDesc.getIdentity()));
 
-
-
-
         final String dataModelName = "test_data_model";
         DataModelDesc dataModelDesc = metadataManager.getDataModelDesc("test_kylin_ii_model_desc");
         dataModelDesc.setName(dataModelName);
@@ -312,7 +313,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
         final LookupDesc[] lookups = dataModelDesc.getLookups();
         assertTrue(lookups.length > 0);
-        dataModelDesc.setLookups(new LookupDesc[]{lookups[0]});
+        dataModelDesc.setLookups(new LookupDesc[] { lookups[0] });
         metadataManager.updateDataModelDesc(dataModelDesc);
         //only one for data model update
         assertEquals(1, broadcaster.getCounterAndClear());

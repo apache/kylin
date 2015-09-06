@@ -14,19 +14,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.tools;
 
-import org.apache.kylin.job.constant.JobStepStatusEnum;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
+import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * @author xduo
@@ -65,7 +65,7 @@ public class HadoopStatusChecker {
                 status = JobStepStatusEnum.ERROR;
                 break;
             case KILLED:
-                status = JobStepStatusEnum.ERROR;
+                status = JobStepStatusEnum.KILLED;
                 break;
             case UNDEFINED:
                 switch (result.getLeft()) {

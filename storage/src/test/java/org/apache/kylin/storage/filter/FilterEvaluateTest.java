@@ -14,21 +14,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.junit.Test;
-
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author xjiang

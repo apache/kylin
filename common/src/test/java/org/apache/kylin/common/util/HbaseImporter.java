@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
@@ -35,9 +35,6 @@ import org.apache.kylin.common.persistence.HBaseConnection;
 
 import com.google.common.base.Preconditions;
 
-/**
- * Created by Hongbin Ma(Binmahone) on 2/6/15.
- */
 public class HbaseImporter {
 
     private static final Log logger = LogFactory.getLog(HbaseImporter.class);
@@ -56,12 +53,12 @@ public class HbaseImporter {
             return;
         }
 
-        File folder = new File("/tmp/hbase-export/");
+        File folder = File.createTempFile("hbase-import", "tmp");
         if (folder.exists()) {
-            FileUtils.deleteDirectory(folder);
+            FileUtils.forceDelete(folder);
         }
         folder.mkdirs();
-        folder.deleteOnExit();
+        FileUtils.forceDeleteOnExit(folder);
 
         //TarGZUtil.uncompressTarGZ(exportFile, folder);
         FileUtil.unTar(exportFile, folder);

@@ -14,38 +14,36 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.optrule;
 
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelTraitSet;
-
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.kylin.query.relnode.OLAPProjectRel;
 import org.apache.kylin.query.relnode.OLAPRel;
 
 /**
- * 
- * @author xjiang
- * 
  */
 public class OLAPProjectRule extends RelOptRule {
 
     public static final RelOptRule INSTANCE = new OLAPProjectRule();
 
     public OLAPProjectRule() {
-        super(operand(ProjectRel.class, any()));
+        super(operand(LogicalProject.class, any()));
     }
 
     @Override
     public void onMatch(RelOptRuleCall call) {
-        ProjectRel project = call.rel(0);
+        LogicalProject project = call.rel(0);
 
-        RelTraitSet traitSet = project.getTraitSet().replace(OLAPRel.CONVENTION);
+        RelTraitSet origTraitSet = project.getTraitSet();
+        RelTraitSet traitSet = origTraitSet.replace(OLAPRel.CONVENTION).simplify();
+
         OLAPProjectRel olapProj = new OLAPProjectRel(project.getCluster(), traitSet, //
-                convert(project.getChild(), traitSet), project.getProjects(), project.getRowType(), project.getFlags());
+                convert(project.getInput(), traitSet), project.getProjects(), project.getRowType());
         call.transformTo(olapProj);
     }
 

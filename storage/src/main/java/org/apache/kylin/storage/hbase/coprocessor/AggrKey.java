@@ -14,15 +14,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 package org.apache.kylin.storage.hbase.coprocessor;
-
-import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.cube.kv.RowConstants;
 
 import java.util.Arrays;
 import java.util.LinkedList;
+
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.cube.kv.RowConstants;
+
+import com.google.common.collect.Lists;
 
 /**
  * Created by qianzhou on 4/20/15.
@@ -57,12 +58,11 @@ public class AggrKey implements Comparable<AggrKey> {
         this.hashcode = hashcode;
     }
 
-    private int calculateHash()
-    {
+    private int calculateHash() {
         int hash = 1;
         for (int i = 0; i < groupByMaskSet.length; i++) {
             byte t = data[offset + groupByMaskSet[i]];
-            if(t!= RowConstants.ROWKEY_PLACE_HOLDER_BYTE) {
+            if (t != RowConstants.ROWKEY_PLACE_HOLDER_BYTE) {
                 hash = (31 * hash) + t;
             }
         }

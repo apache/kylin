@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.relnode;
 
@@ -26,20 +26,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.query.schema.OLAPSchema;
-import org.eigenbase.reltype.RelDataType;
-
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.metadata.filter.TupleFilter;
 
 /**
- * @author xjiang
- * 
  */
 public class OLAPContext {
 
@@ -95,8 +92,7 @@ public class OLAPContext {
 
     // query info
     public OLAPSchema olapSchema = null;
-    public OLAPTableScan firstTableScan = null; // to be fact table scan except
-                                                // "select * from lookupTable"
+    public OLAPTableScan firstTableScan = null; // to be fact table scan except "select * from lookupTable"
     public RelDataType olapRowType = null;
     public boolean afterAggregate = false;
     public boolean afterJoin = false;

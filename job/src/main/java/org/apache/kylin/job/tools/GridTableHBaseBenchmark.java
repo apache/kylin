@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.tools;
 
@@ -36,9 +36,9 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
+import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.common.persistence.HBaseConnection;
 
 import com.google.common.collect.Lists;
 
@@ -100,7 +100,7 @@ public class GridTableHBaseBenchmark {
 
             int nLogicCols = colScans.size();
             int nLogicRows = colScans.get(0).getSecond() - colScans.get(0).getFirst();
-            
+
             Scan[] scans = new Scan[nLogicCols];
             ResultScanner[] scanners = new ResultScanner[nLogicCols];
             for (int i = 0; i < nLogicCols; i++) {
@@ -115,7 +115,7 @@ public class GridTableHBaseBenchmark {
                 }
                 dot(i, nLogicRows);
             }
-            
+
             stats.markEnd();
         } finally {
             IOUtils.closeQuietly(table);

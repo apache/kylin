@@ -14,11 +14,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.coprocessor.observer;
 
-import com.google.common.collect.Lists;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -38,16 +48,7 @@ import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverAggregators.H
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -171,7 +172,7 @@ public class AggregateRegionObserverTest {
 
         MockupRegionScanner innerScanner = new MockupRegionScanner(cellsInput);
 
-        RegionScanner aggrScanner = new AggregationScanner(rowType, filter, projector, aggregators, innerScanner,ObserverBehavior.SCAN_FILTER_AGGR);
+        RegionScanner aggrScanner = new AggregationScanner(rowType, filter, projector, aggregators, innerScanner, ObserverBehavior.SCAN_FILTER_AGGR);
         ArrayList<Cell> result = Lists.newArrayList();
         boolean hasMore = true;
         while (hasMore) {

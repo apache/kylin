@@ -14,11 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,14 +45,14 @@ public class DateStrDictionaryTest {
         } catch (IllegalArgumentException e) {
             // good
         }
-        
+
         try {
             dict.getValueFromId(DateStrDictionary.ID_9999_12_31 + 1);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             // good
         }
-        
+
         try {
             dict.getIdFromValue("10000-1-1");
             fail("IllegalArgumentException expected");

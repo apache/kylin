@@ -108,6 +108,8 @@ KylinApp.service('TableModel', function (ProjectModel, $q, TableService) {
         });
       }
       defer.resolve();
+    },function(e){
+      defer.reject("Failed to load tables, please check system log for details.");
     });
 
     return defer.promise;

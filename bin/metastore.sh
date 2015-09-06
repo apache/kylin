@@ -17,6 +17,14 @@
 # limitations under the License.
 #
 
+# This script is for production metadata store manipulation
+# It is desinged to run in hadoop CLI, both in sandbox or in real hadoop environment
+#
+# If you're a developper of Kylin and want to download sandbox's metadata into your dev machine,
+# take a look at SandboxMetastoreCLI
+
+
+
 dir=$(dirname ${0})
 source ${dir}/check-env.sh
 
@@ -33,7 +41,7 @@ then
     echo "Starting backup to ${_file}"
     mkdir -p ${_file}
 
-    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool  copy ${KYLIN_HOME}/conf/kylin.properties ${_file}
+    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool download ${_file}
     echo "metadata store backed up to ${_file}"
 
 elif [ $1 == "restore" ]
@@ -41,14 +49,22 @@ then
 
     _file=$2
     echo "Starting restoring $_file"
-    hbase  org.apache.hadoop.util.RunJar  ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool  copy $_file ${KYLIN_HOME}/conf/kylin.properties
+    hbase  org.apache.hadoop.util.RunJar  ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool upload $_file
 
 elif [ $1 == "reset" ]
 then
 
     hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool  reset
+    
+elif [ $1 == "clean" ]
+then
+
+    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}  org.apache.kylin.job.hadoop.cube.MetadataCleanupJob "${@:2}"
 
 else
-    echo "usage: metastore.sh backup or metastore.sh restore PATH_TO_LOCAL_META"
+    echo "usage: metastore.sh backup"
+    echo "       metastore.sh reset"
+    echo "       metastore.sh restore PATH_TO_LOCAL_META"
+    echo "       metastore.sh clean [--delete true]"
     exit 1
 fi

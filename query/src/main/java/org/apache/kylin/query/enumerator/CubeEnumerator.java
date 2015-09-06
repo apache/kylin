@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.enumerator;
 
@@ -22,24 +22,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import net.hydromatic.linq4j.Enumerator;
-import net.hydromatic.optiq.DataContext;
-import net.hydromatic.optiq.jdbc.OptiqConnection;
-
-import org.eigenbase.reltype.RelDataTypeField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.storage.IStorageEngine;
-import org.apache.kylin.storage.StorageEngineFactory;
+import org.apache.calcite.DataContext;
+import org.apache.calcite.jdbc.CalciteConnection;
+import org.apache.calcite.linq4j.Enumerator;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.storage.IStorageEngine;
+import org.apache.kylin.storage.StorageEngineFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * @author xjiang
  */
 public class CubeEnumerator implements Enumerator<Object[]> {
 
@@ -50,6 +47,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     private final Object[] current;
     private ITupleIterator cursor;
     private int[] fieldIndexes;
+    private List<String> tupleFieldsSnapshot;
 
     public CubeEnumerator(OLAPContext olapContext, DataContext optiqContext) {
         this.olapContext = olapContext;
@@ -98,19 +96,20 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     private Object[] convertCurrentRow(ITuple tuple) {
 
         // build field index map
-        if (this.fieldIndexes == null) {
+        if (tupleFieldsSnapshot != tuple.getAllFields()) { // note != for fast comparison
             List<String> fields = tuple.getAllFields();
             int size = fields.size();
             this.fieldIndexes = new int[size];
             for (int i = 0; i < size; i++) {
                 String field = fields.get(i);
-                RelDataTypeField relField = olapContext.olapRowType.getField(field, true);
+                RelDataTypeField relField = olapContext.olapRowType.getField(field, true, false);
                 if (relField != null) {
                     fieldIndexes[i] = relField.getIndex();
                 } else {
                     fieldIndexes[i] = -1;
                 }
             }
+            tupleFieldsSnapshot = tuple.getAllFields();
         }
 
         // set field value
@@ -135,19 +134,17 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         // bind dynamic variables
         bindVariable(olapContext.filter);
 
-
-
         // query storage engine
         IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine(olapContext.realization);
-        ITupleIterator iterator = storageEngine.search(olapContext.storageContext,olapContext.getSQLDigest());
+        ITupleIterator iterator = storageEngine.search(olapContext.storageContext, olapContext.getSQLDigest());
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
         }
 
         this.fieldIndexes = null;
+        this.tupleFieldsSnapshot = null;
         return iterator;
     }
-
 
     private void bindVariable(TupleFilter filter) {
         if (filter == null) {
@@ -172,7 +169,7 @@ public class CubeEnumerator implements Enumerator<Object[]> {
     }
 
     private void setConnectionProperties() {
-        OptiqConnection conn = (OptiqConnection) optiqContext.getQueryProvider();
+        CalciteConnection conn = (CalciteConnection) optiqContext.getQueryProvider();
         Properties connProps = conn.getProperties();
 
         String propThreshold = connProps.getProperty(OLAPQuery.PROP_SCAN_THRESHOLD);

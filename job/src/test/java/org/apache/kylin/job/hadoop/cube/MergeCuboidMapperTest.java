@@ -14,9 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.cube;
+
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,12 +29,6 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -42,12 +38,15 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.TrieDictionary;
-import org.apache.kylin.dict.lookup.TableSignature;
+import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
-
-import static org.junit.Assert.assertTrue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author honma
@@ -72,7 +71,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         signature.setLastModifiedTime(System.currentTimeMillis());
         signature.setPath("fake_common_dict");
 
-        DictionaryInfo newDictInfo = new DictionaryInfo("", "", 0, "string", signature, "");
+        DictionaryInfo newDictInfo = new DictionaryInfo("", "", 0, "string", signature);
 
         List<byte[]> values = new ArrayList<byte[]>();
         values.add(new byte[] { 101, 101, 101 });
@@ -121,7 +120,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
             signature.setLastModifiedTime(System.currentTimeMillis());
             signature.setPath("fake_dict_for" + lfn.getName() + segment.getName());
 
-            DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumn().getName(), lfn.getColumn().getZeroBasedIndex(), "string", signature, "");
+            DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumn().getName(), lfn.getColumn().getZeroBasedIndex(), "string", signature);
 
             List<byte[]> values = new ArrayList<byte[]>();
             values.add(new byte[] { 97, 97, 97 });
@@ -157,31 +156,31 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         String cubeName = "test_kylin_cube_without_slr_left_join_ready_2_segments";
 
-        CubeSegment newSeg = cubeManager.mergeSegments(cube, 0L, 1386835200000L);
+        CubeSegment newSeg = cubeManager.mergeSegments(cube, 0L, 1386835200000L, false);
         String segmentName = newSeg.getName();
 
         final Dictionary<?> dictionary = cubeManager.getDictionary(newSeg, lfn);
         assertTrue(dictionary == null);
-//        ((TrieDictionary) dictionary).dump(System.out);
+        //        ((TrieDictionary) dictionary).dump(System.out);
 
         // hack for distributed cache
-//        File metaDir = new File("../job/meta");
-//        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), metaDir);
-//
-//        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-//        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
-//        // mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL,
-//        // "../job/meta");
-//
-//        byte[] key = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1 };
-//        byte[] value = new byte[] { 1, 2, 3 };
-//        byte[] newkey = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 2 };
-//        byte[] newvalue = new byte[] { 1, 2, 3 };
-//
-//        mapDriver.withInput(new Text(key), new Text(value));
-//        mapDriver.withOutput(new Text(newkey), new Text(newvalue));
-//        mapDriver.setMapInputPath(new Path("/apps/hdmi-prod/b_kylin/prod/kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa/vac_sw_cube_v4/cuboid/15d_cuboid"));
-//
-//        mapDriver.runTest();
+        //        File metaDir = new File("../job/meta");
+        //        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), metaDir);
+        //
+        //        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+        //        mapDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
+        //        // mapDriver.getConfiguration().set(KylinConfig.KYLIN_METADATA_URL,
+        //        // "../job/meta");
+        //
+        //        byte[] key = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 1 };
+        //        byte[] value = new byte[] { 1, 2, 3 };
+        //        byte[] newkey = new byte[] { 0, 0, 0, 0, 0, 0, 0, -92, 1, 1, 2 };
+        //        byte[] newvalue = new byte[] { 1, 2, 3 };
+        //
+        //        mapDriver.withInput(new Text(key), new Text(value));
+        //        mapDriver.withOutput(new Text(newkey), new Text(newvalue));
+        //        mapDriver.setMapInputPath(new Path("/apps/hdmi-prod/b_kylin/prod/kylin-f24668f6-dcff-4cb6-a89b-77f1119df8fa/vac_sw_cube_v4/cuboid/15d_cuboid"));
+        //
+        //        mapDriver.runTest();
     }
 }

@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.persistence;
 
@@ -51,7 +51,7 @@ abstract public class ResourceStore {
     public static final String SNAPSHOT_RESOURCE_ROOT = "/table_snapshot";
     public static final String TABLE_EXD_RESOURCE_ROOT = "/table_exd";
     public static final String TABLE_RESOURCE_ROOT = "/table";
-
+    public static final String HYBRID_RESOURCE_ROOT = "/hybrid";
 
     private static ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 

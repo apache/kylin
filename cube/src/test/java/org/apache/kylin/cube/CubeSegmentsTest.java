@@ -14,16 +14,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.junit.After;
 import org.junit.Before;
@@ -72,9 +73,9 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         assertEquals(0, seg2.getDateRangeStart());
         assertEquals(Long.MAX_VALUE, seg2.getDateRangeEnd());
         assertEquals(2, cube.getSegments().size());
-        
+
         // non-partitioned cannot merge, throw exception
-        mgr.mergeSegments(cube, 0, Long.MAX_VALUE);
+        mgr.mergeSegments(cube, 0, Long.MAX_VALUE, false);
     }
 
     @Test
@@ -97,25 +98,25 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         assertEquals(2000, seg2.getDateRangeEnd());
         assertEquals(SegmentStatusEnum.NEW, seg2.getStatus());
         seg2.setStatus(SegmentStatusEnum.READY);
-        
+
         // merge first and second
-        CubeSegment merge = mgr.mergeSegments(cube, 0, 2000);
+        CubeSegment merge = mgr.mergeSegments(cube, 0, 2000, true);
 
         assertEquals(3, cube.getSegments().size());
         assertEquals(0, merge.getDateRangeStart());
         assertEquals(2000, merge.getDateRangeEnd());
         assertEquals(SegmentStatusEnum.NEW, merge.getStatus());
-        
+
         // segments are strictly ordered
         assertEquals(seg1, cube.getSegments().get(0));
         assertEquals(merge, cube.getSegments().get(1));
         assertEquals(seg2, cube.getSegments().get(2));
-        
+
         // drop the merge
         cube.getSegments().remove(merge);
-        
+
         // try merge at start/end at middle of segments
-        CubeSegment merge2 = mgr.mergeSegments(cube, 500, 1500);
+        CubeSegment merge2 = mgr.mergeSegments(cube, 500, 1500, true);
         assertEquals(3, cube.getSegments().size());
         assertEquals(0, merge2.getDateRangeStart());
         assertEquals(2000, merge2.getDateRangeEnd());
@@ -135,7 +136,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         } catch (IllegalStateException ex) {
             // expected, append and merge requires at least one segment
         }
-        
+
         // append first
         CubeSegment seg1 = mgr.appendSegments(cube, 1000);
         seg1.setStatus(SegmentStatusEnum.READY);
@@ -152,13 +153,13 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         assertEquals(2000, seg2.getDateRangeEnd());
         assertEquals(0, merge.getDateRangeStart());
         assertEquals(2000, merge.getDateRangeEnd());
-        
+
         // segments are strictly ordered
         assertEquals(seg1, cube.getSegments().get(0));
         assertEquals(merge, cube.getSegments().get(1));
         assertEquals(seg2, cube.getSegments().get(2));
     }
-    
+
     private void discard(Object o) {
         // throw away input parameter
     }

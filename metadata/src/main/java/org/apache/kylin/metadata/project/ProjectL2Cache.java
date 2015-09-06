@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.project;
 
@@ -24,7 +24,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.*;
+import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.slf4j.Logger;
@@ -90,7 +94,6 @@ class ProjectL2Cache {
         if (tableCache == null)
             return false;
 
-
         for (ColumnDesc colDesc : tableCache.exposedColumns) {
             if (colDesc.getName().equals(col))
                 return true;
@@ -122,15 +125,20 @@ class ProjectL2Cache {
         return result;
     }
 
-    public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable) {
+    public List<MeasureDesc> listEffectiveMeasures(String project, String factTable, boolean onlyRewriteMeasure) {
         Set<IRealization> realizations = getRealizationsByTable(project, factTable);
         List<MeasureDesc> result = Lists.newArrayList();
         for (IRealization r : realizations) {
             if (r.getFactTable().equalsIgnoreCase(factTable) && r.isReady()) {
                 for (MeasureDesc m : r.getMeasures()) {
                     FunctionDesc func = m.getFunction();
-                    if (func.needRewrite())
+
+                    if (onlyRewriteMeasure) {
+                        if (func.needRewrite())
+                            result.add(m);
+                    } else {
                         result.add(m);
+                    }
                 }
             }
         }
@@ -256,7 +264,7 @@ class ProjectL2Cache {
     private static class TableCache {
         private boolean exposed = false;
         private TableDesc tableDesc;
-        private Set<ColumnDesc> exposedColumns = Sets.newHashSet();
+        private Set<ColumnDesc> exposedColumns = Sets.newLinkedHashSet();
         private Set<IRealization> realizations = Sets.newHashSet();
 
         TableCache(TableDesc tableDesc) {

@@ -14,23 +14,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
 * Created by honma on 10/17/14.
@@ -68,7 +67,7 @@ public class BasicTest {
         ListenableFuture futureTask = MoreExecutors.listeningDecorator(executorService).submit(new Runnable() {
             @Override
             public void run() {
-                
+
             }
         });
         futureTask.addListener(new Runnable() {

@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.model;
 
@@ -23,14 +23,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/24/13 Time: 10:40 AM To
@@ -107,7 +108,7 @@ public class DimensionDesc {
         if (derived != null) {
             StringUtil.toUpperCaseArray(derived, derived);
         }
-        
+
         if (derived != null && join == null) {
             throw new IllegalStateException("Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
         }
@@ -123,7 +124,7 @@ public class DimensionDesc {
         }
         return false;
     }
-    
+
     public boolean isDerived() {
         return derived != null;
     }

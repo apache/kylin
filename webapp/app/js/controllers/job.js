@@ -22,6 +22,7 @@ KylinApp
   .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService, SweetAlert, loadingRequest, UserService, jobConfig, JobList) {
 
     $scope.jobList = JobList;
+    JobList.removeAll();
     $scope.jobConfig = jobConfig;
     $scope.cubeName = null;
     $scope.projects = [];
@@ -83,6 +84,11 @@ KylinApp
       return JobList.list(jobRequest).then(function (resp) {
         $scope.state.loading = false;
         defer.resolve(resp);
+        return defer.promise;
+      },function(resp){
+        $scope.state.loading = false;
+        defer.resolve([]);
+        SweetAlert.swal('Oops...', resp, 'error');
         return defer.promise;
       });
     }
@@ -186,6 +192,8 @@ KylinApp
               tjob.steps[stepId].cmd_output = result['cmd_output'];
               tjob.steps[stepId].loadingOp = false;
             }
+          },function(e){
+            SweetAlert.swal('Oops...',"Failed to load job info, please check system log for details.", 'error');
           });
         } else {
           internalOpenModal();

@@ -14,56 +14,58 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.relnode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import net.hydromatic.optiq.AggregateFunction;
-import net.hydromatic.optiq.FunctionParameter;
-import net.hydromatic.optiq.impl.AggregateFunctionImpl;
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.JavaRules.EnumerableAggregateRel;
-
+import org.apache.calcite.adapter.enumerable.EnumerableAggregate;
+import org.apache.calcite.adapter.enumerable.EnumerableConvention;
+import org.apache.calcite.adapter.enumerable.EnumerableRel;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelTrait;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.schema.AggregateFunction;
+import org.apache.calcite.schema.FunctionParameter;
+import org.apache.calcite.schema.impl.AggregateFunctionImpl;
+import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.InferTypes;
+import org.apache.calcite.sql.type.OperandTypes;
+import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
+import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.Util;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.sqlfunc.HLLDistinctCountAggFunc;
-import org.eigenbase.rel.AggregateCall;
-import org.eigenbase.rel.AggregateRelBase;
-import org.eigenbase.rel.Aggregation;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.sql.SqlAggFunction;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.InferTypes;
-import org.eigenbase.sql.type.OperandTypes;
-import org.eigenbase.sql.type.ReturnTypes;
-import org.eigenbase.sql.type.SqlTypeFamily;
-import org.eigenbase.sql.validate.SqlUserDefinedAggFunction;
-import org.eigenbase.util.Util;
 
 import com.google.common.base.Preconditions;
 
 /**
- * @author xjiang
  */
-public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, EnumerableRel {
+public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     private final static Map<String, String> AGGR_FUNC_MAP = new HashMap<String, String>();
 
@@ -96,16 +98,22 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     private List<TblColRef> groups;
     private List<FunctionDesc> aggregations;
 
-    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet, List<AggregateCall> aggCalls) throws InvalidRelException {
-        super(cluster, traits, child, groupSet, aggCalls);
+    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, ImmutableBitSet groupSet, List<AggregateCall> aggCalls) throws InvalidRelException {
+        super(cluster, traits, child, false, groupSet, asList(groupSet), aggCalls);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         this.afterAggregate = false;
         this.rewriteAggCalls = aggCalls;
         this.rowType = getRowType();
     }
 
+    private static List<ImmutableBitSet> asList(ImmutableBitSet groupSet) {
+        ArrayList<ImmutableBitSet> l = new ArrayList<ImmutableBitSet>(1);
+        l.add(groupSet);
+        return l;
+    }
+
     @Override
-    public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
+    public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
         try {
             return new OLAPAggregateRel(getCluster(), traitSet, input, groupSet, aggCalls);
         } catch (InvalidRelException e) {
@@ -115,19 +123,13 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
 
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner) {
-        double factor = .5;
-        for (AggregateCall aggCall : aggCalls) {
-            if ("$SUM0".equals(aggCall.getAggregation().getName())) {
-                factor = .2;
-            }
-        }
-        return super.computeSelfCost(planner).multiplyBy(factor);
+        return super.computeSelfCost(planner).multiplyBy(.05);
     }
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
 
-        implementor.visitChild(getChild(), this);
+        implementor.visitChild(getInput(), this);
 
         this.context = implementor.getContext();
         this.columnRowType = buildColumnRowType();
@@ -153,7 +155,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
         buildGroups();
         buildAggregations();
 
-        ColumnRowType inputColumnRowType = ((OLAPRel) getChild()).getColumnRowType();
+        ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         List<TblColRef> columns = new ArrayList<TblColRef>(this.rowType.getFieldCount());
         columns.addAll(this.groups);
 
@@ -175,19 +177,21 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     }
 
     private TblColRef buildRewriteColumn(FunctionDesc aggFunc) {
-        TblColRef colRef = null;
+        TblColRef colRef;
         if (aggFunc.needRewrite()) {
             ColumnDesc column = new ColumnDesc();
             column.setName(aggFunc.getRewriteFieldName());
             TableDesc table = this.context.firstTableScan.getOlapTable().getSourceTable();
             column.setTable(table);
             colRef = new TblColRef(column);
+        } else {
+            throw new IllegalStateException("buildRewriteColumn on a aggrFunc that does not need rewrite " + aggFunc);
         }
         return colRef;
     }
 
     private void buildGroups() {
-        ColumnRowType inputColumnRowType = ((OLAPRel) getChild()).getColumnRowType();
+        ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         this.groups = new ArrayList<TblColRef>();
         for (int i = getGroupSet().nextSetBit(0); i >= 0; i = getGroupSet().nextSetBit(i + 1)) {
             Set<TblColRef> columns = inputColumnRowType.getSourceColumnsByIndex(i);
@@ -196,7 +200,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     }
 
     private void buildAggregations() {
-        ColumnRowType inputColumnRowType = ((OLAPRel) getChild()).getColumnRowType();
+        ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         this.aggregations = new ArrayList<FunctionDesc>();
         for (AggregateCall aggCall : this.rewriteAggCalls) {
             ParameterDesc parameter = null;
@@ -223,7 +227,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     }
 
     private void translateAggregation() {
-        ColumnRowType inputColumnRowType = ((OLAPRel) getChild()).getColumnRowType();
+        ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
             context.aggregations.add(aggFunc);
@@ -247,14 +251,13 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     }
 
     private void fillbackOptimizedColumn() {
-        // some aggcall will be optimized out in sub-query (e.g. tableau generated sql)
-        // we need to fill them back
-        RelDataType inputAggRow = getChild().getRowType();
+        // some aggcall will be optimized out in sub-query (e.g. tableau generated sql), we need to fill them back
+        RelDataType inputAggRow = getInput().getRowType();
         RelDataType outputAggRow = getRowType();
         if (inputAggRow.getFieldCount() != outputAggRow.getFieldCount()) {
             for (RelDataTypeField inputField : inputAggRow.getFieldList()) {
                 String inputFieldName = inputField.getName();
-                if (outputAggRow.getField(inputFieldName, true) == null) {
+                if (outputAggRow.getField(inputFieldName, true, false) == null) {
                     TblColRef column = this.columnRowType.getColumnByIndex(inputField.getIndex());
                     this.context.metricsColumns.add(column);
                 }
@@ -264,7 +267,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
 
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
-        implementor.visitChild(this, getChild());
+        implementor.visitChild(this, getInput());
 
         // only rewrite the first aggregation
         if (!this.afterAggregate && RewriteImplementor.needRewrite(this.context)) {
@@ -281,7 +284,8 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
         }
 
         // rebuild rowType & columnRowType
-        this.rowType = this.deriveRowType();
+        //ClassUtil.updateFinalField(Aggregate.class, "aggCalls", this, rewriteAggCalls);
+        this.rowType = this.deriveRowType(); // this does not work coz super.aggCalls is final
         this.columnRowType = this.buildColumnRowType();
 
     }
@@ -291,34 +295,24 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
         // rebuild parameters
         List<Integer> newArgList = new ArrayList<Integer>(1);
         String fieldName = func.getRewriteFieldName();
-        RelDataTypeField field = getChild().getRowType().getField(fieldName, true);
+        RelDataTypeField field = getInput().getRowType().getField(fieldName, true, false);
         newArgList.add(field.getIndex());
 
         // rebuild function
         RelDataType fieldType = aggCall.getType();
-        Aggregation newAgg = aggCall.getAggregation();
+        SqlAggFunction newAgg = aggCall.getAggregation();
         if (func.isCountDistinct()) {
             newAgg = createHyperLogLogAggFunction(fieldType);
         } else if (func.isCount()) {
-            //newAgg = new SqlSumEmptyIsZeroAggFunction(fieldType);
             newAgg = SqlStdOperatorTable.SUM0;
         }
 
         // rebuild aggregate call
         AggregateCall newAggCall = new AggregateCall(newAgg, false, newArgList, fieldType, newAgg.getName());
-
-        // To make sure specified type matches the inferReturnType, or otherwise
-        // there will be assertion failure in optiq
-        // The problem is BIGINT != BIGINT NOT NULL
-        // Details see https://github.scm.corp.ebay.com/Kylin/Kylin/issues/323
-        SqlAggFunction aggFunction = (SqlAggFunction) newAggCall.getAggregation();
-        AggCallBinding callBinding = newAggCall.createBinding(this);
-        RelDataType inferReturnType = aggFunction.inferReturnType(callBinding);
-
-        return new AggregateCall(newAgg, false, newArgList, inferReturnType, newAgg.getName());
+        return newAggCall;
     }
 
-    private Aggregation createHyperLogLogAggFunction(RelDataType returnType) {
+    private SqlAggFunction createHyperLogLogAggFunction(RelDataType returnType) {
         RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
         SqlIdentifier sqlIdentifier = new SqlIdentifier("HLL_COUNT", new SqlParserPos(1, 1));
         AggregateFunction aggFunction = AggregateFunctionImpl.create(HLLDistinctCountAggFunc.class);
@@ -333,16 +327,13 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
     }
 
     @Override
-    public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-
-        EnumerableAggregateRel enumAggRel;
+    public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
         try {
-            enumAggRel = new EnumerableAggregateRel(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), getChild(), this.groupSet, rewriteAggCalls);
+            return new EnumerableAggregate(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
+                    sole(inputs), false, this.groupSet, this.groupSets, rewriteAggCalls);
         } catch (InvalidRelException e) {
-            throw new IllegalStateException("Can't create EnumerableAggregateRel!", e);
+            throw new IllegalStateException("Can't create EnumerableAggregate!", e);
         }
-
-        return enumAggRel.implement(implementor, pref);
     }
 
     @Override
@@ -357,7 +348,7 @@ public class OLAPAggregateRel extends AggregateRelBase implements OLAPRel, Enume
 
     @Override
     public boolean hasSubQuery() {
-        OLAPRel olapChild = (OLAPRel) getChild();
+        OLAPRel olapChild = (OLAPRel) getInput();
         return olapChild.hasSubQuery();
     }
 

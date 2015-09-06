@@ -14,15 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CreateProjectRequest;
 import org.apache.kylin.rest.request.UpdateProjectRequest;
@@ -37,8 +37,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.codahale.metrics.annotation.Metered;
 
 /**
  * @author xduo
@@ -65,7 +63,6 @@ public class ProjectController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
-    @Metered(name = "saveProject")
     public ProjectInstance saveProject(@RequestBody CreateProjectRequest projectRequest) {
         if (StringUtils.isEmpty(projectRequest.getName())) {
             throw new InternalErrorException("A project name must be given to create a project");
@@ -84,7 +81,6 @@ public class ProjectController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
-    @Metered(name = "updateProject")
     public ProjectInstance updateProject(@RequestBody UpdateProjectRequest projectRequest) {
         if (StringUtils.isEmpty(projectRequest.getFormerProjectName())) {
             throw new InternalErrorException("A project name must be given to update a project");
@@ -103,7 +99,6 @@ public class ProjectController extends BasicController {
 
     @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE })
     @ResponseBody
-    @Metered(name = "deleteProject")
     public void deleteProject(@PathVariable String projectName) {
         try {
             projectService.deleteProject(projectName);

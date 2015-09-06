@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.realization;
 
@@ -51,6 +51,8 @@ public interface IRealization {
 
     public List<TblColRef> getAllColumns();
 
+    public List<TblColRef> getAllDimensions();
+
     public List<MeasureDesc> getMeasures();
 
     public boolean isReady();
@@ -58,9 +60,13 @@ public interface IRealization {
     public String getName();
 
     public String getCanonicalName();
-    
+
     public String getProjectName();
-    
+
     public void setProjectName(String prjName);
+
+    public long getDateRangeStart();
+
+    public long getDateRangeEnd();
 
 }

@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
 
@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 
@@ -35,7 +34,7 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
     public void createTestMetadata() {
         createTestMetadata(LOCALMETA_TEST_DATA);
     }
-    
+
     public static void createTestMetadata(String testDataFolder) {
         KylinConfig.destoryInstance();
 

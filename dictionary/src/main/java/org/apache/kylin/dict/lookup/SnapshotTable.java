@@ -14,13 +14,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict.lookup;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -31,12 +35,9 @@ import org.apache.kylin.dict.TrieDictionary;
 import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.metadata.model.TableDesc;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author yangli9
@@ -46,8 +47,6 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
 
     @JsonProperty("signature")
     private TableSignature signature;
-    @JsonProperty("column_delimeter")
-    private String columnDelimeter;
     @JsonProperty("useDictionary")
     private boolean useDictionary;
 
@@ -60,13 +59,11 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
 
     SnapshotTable(ReadableTable table) throws IOException {
         this.signature = table.getSignature();
-        this.columnDelimeter = table.getColumnDelimeter();
         this.useDictionary = true;
     }
 
     public void takeSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
         this.signature = table.getSignature();
-        this.columnDelimeter = table.getColumnDelimeter();
 
         int maxIndex = tableDesc.getMaxColumnIndex();
 
@@ -133,11 +130,6 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
             @Override
             public void close() throws IOException {
             }
-
-            @Override
-            public void setExpectedColumnNumber(int expectedColumnNumber) {
-                // noop
-            }
         };
     }
 
@@ -147,8 +139,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     }
 
     @Override
-    public String getColumnDelimeter() throws IOException {
-        return columnDelimeter;
+    public boolean exists() throws IOException {
+        return true;
     }
 
     /**

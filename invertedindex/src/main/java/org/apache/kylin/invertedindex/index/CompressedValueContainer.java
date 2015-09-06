@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.index;
 
@@ -23,12 +23,12 @@ import java.util.Arrays;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.Bytes;
-
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.dict.Dictionary;
+
 import com.ning.compress.lzf.LZFDecoder;
 import com.ning.compress.lzf.LZFEncoder;
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
-import org.apache.kylin.dict.Dictionary;
 
 /**
  * @author yangli9

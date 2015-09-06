@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.response;
 
@@ -87,16 +87,22 @@ public class HBaseResponse implements Serializable {
      * @param segmentStartTime
      *            the segmentStartTime to set
      */
-    public void setDateRangeStart(long dateRangeStart) { this.dateRangeStart = dateRangeStart; }
+    public void setDateRangeStart(long dateRangeStart) {
+        this.dateRangeStart = dateRangeStart;
+    }
 
     /**
      * @return the segmentEndTime
      */
-    public long getDateRangeEnd() { return dateRangeEnd; }
+    public long getDateRangeEnd() {
+        return dateRangeEnd;
+    }
 
     /**
      * @param segmentEndTime
      *            the segmentEndTime to set
      */
-    public void setDateRangeEnd(long dateRangeEnd) { this.dateRangeEnd = dateRangeEnd; }
+    public void setDateRangeEnd(long dateRangeEnd) {
+        this.dateRangeEnd = dateRangeEnd;
+    }
 }

@@ -14,13 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.execution;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by qianzhou on 1/6/15.

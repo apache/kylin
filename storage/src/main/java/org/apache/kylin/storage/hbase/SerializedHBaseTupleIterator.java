@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase;
 
@@ -25,17 +25,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.hbase.client.HConnection;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.kv.RowValueDecoder;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.storage.StorageContext;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * @author xjiang
@@ -119,6 +119,11 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
             }
         }
         return t;
+    }
+
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.cuboid;
 
@@ -28,7 +28,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.util.Bytes;
-
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
@@ -284,6 +283,14 @@ public class Cuboid implements Comparable<Cuboid> {
 
     public boolean requirePostAggregation() {
         return requirePostAggregation;
+    }
+
+    public static void clearCache() {
+        CUBOID_CACHE.clear();
+    }
+
+    public static void reloadCache(String cubeDescName) {
+        CUBOID_CACHE.remove(cubeDescName);
     }
 
     @Override

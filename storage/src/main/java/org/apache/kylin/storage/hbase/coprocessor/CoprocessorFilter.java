@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
@@ -22,17 +22,21 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
-
-import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.ISegment;
-import org.apache.kylin.metadata.filter.*;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer.Decorator;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
+
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9

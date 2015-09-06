@@ -14,11 +14,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.cli.Options;
@@ -32,9 +31,6 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -43,6 +39,8 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author ysong1
@@ -129,6 +127,9 @@ public class CuboidJob extends AbstractHadoopJob {
             logger.error("error in CuboidJob", e);
             printUsage(options);
             throw e;
+        } finally {
+            if (job != null)
+                cleanupTempConfFile(job.getConfiguration());
         }
     }
 

@@ -14,11 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.kv;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -26,23 +26,18 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.FunctionDesc;
-
-/**
- * @author George Song (ysong1)
- * 
- */
 public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
     @Before
@@ -66,8 +61,9 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");
         LongWritable count = new LongWritable(2);
+        LongWritable item_count = new LongWritable(99999);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        codec.encode(new Object[] { sum, min, max, count }, buf);
+        codec.encode(new Object[] { sum, min, max, count,item_count }, buf);
 
         buf.flip();
         byte[] valueBytes = new byte[buf.limit()];
@@ -84,8 +80,8 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         List<String> measureNames = rowValueDecoder.getNames();
         Object[] measureValues = rowValueDecoder.getValues();
 
-        assertEquals("[PRICE, MIN_PRICE_, MAX_PRICE_, COUNT__]", measureNames.toString());
-        assertEquals("[333.1234567, 333.1111111, 333.1999999, 2]", Arrays.toString(measureValues));
+        assertEquals("[PRICE, MIN_PRICE_, MAX_PRICE_, COUNT__, ITEM_COUNT]", measureNames.toString());
+        assertEquals("[333.1234567, 333.1111111, 333.1999999, 2, 99999]", Arrays.toString(measureValues));
     }
 
 }

@@ -14,17 +14,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.monitor;
 
-import au.com.bytecode.opencsv.CSVWriter;
-import org.apache.commons.io.filefilter.RegexFileFilter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
-import org.apache.log4j.Logger;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -38,6 +36,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.filefilter.RegexFileFilter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.log4j.Logger;
+
+import au.com.bytecode.opencsv.CSVWriter;
+
 /**
  * @author jiazhong
  */
@@ -50,8 +55,7 @@ public class ApiRequestParser {
     final static String REQUEST_LOG_PARSE_RESULT_FILENAME = "kylin_request_log.csv";
     static String DEPLOY_ENV;
 
-
-    final static String[] KYLIN_REQUEST_CSV_HEADER = {"REQUESTER", "REQ_TIME","REQ_DATE", "URI", "METHOD", "QUERY_STRING", "PAYLOAD", "RESP_STATUS", "TARGET", "ACTION","DEPLOY_ENV"};
+    final static String[] KYLIN_REQUEST_CSV_HEADER = { "REQUESTER", "REQ_TIME", "REQ_DATE", "URI", "METHOD", "QUERY_STRING", "PAYLOAD", "RESP_STATUS", "TARGET", "ACTION", "DEPLOY_ENV" };
 
     private ConfigUtils monitorConfig;
 
@@ -69,7 +73,7 @@ public class ApiRequestParser {
         ApiRequestParser.REQUEST_PARSE_RESULT_PATH = ConfigUtils.getInstance().getRequestLogParseResultDir() + REQUEST_LOG_PARSE_RESULT_FILENAME;
         this.parseRequestInit();
 
-        //get api req log files have been read
+        // get api req log files have been read
         String[] hasReadFiles = MonitorMetaManager.getReadApiReqLogFileList();
 
         List<File> files = this.getRequestLogFiles();
@@ -91,7 +95,7 @@ public class ApiRequestParser {
             if (!fs.exists(path)) {
                 fs.create(path);
 
-                //need to close before get FileSystem again
+                // need to close before get FileSystem again
                 fs.close();
                 this.writeResultToHdfs(ApiRequestParser.REQUEST_PARSE_RESULT_PATH, ApiRequestParser.KYLIN_REQUEST_CSV_HEADER);
             }
@@ -101,16 +105,16 @@ public class ApiRequestParser {
         }
     }
 
-    //parse query log and convert to csv file to hdfs
+    // parse query log and convert to csv file to hdfs
     public void parseRequestLog(String filePath, String dPath) throws ParseException, IOException {
 
         logger.info("Start parsing kylin api request file " + filePath + " !");
 
-//        writer config init
+        // writer config init
         FileSystem fs = this.getHdfsFileSystem();
         org.apache.hadoop.fs.Path resultStorePath = new org.apache.hadoop.fs.Path(dPath);
         OutputStreamWriter writer = new OutputStreamWriter(fs.append(resultStorePath));
-        CSVWriter cwriter = new CSVWriter(writer,'|',CSVWriter.NO_QUOTE_CHARACTER);
+        CSVWriter cwriter = new CSVWriter(writer, '|', CSVWriter.NO_QUOTE_CHARACTER);
 
         Pattern p_available = Pattern.compile("/kylin/api/(cubes|user)+.*");
         Pattern p_request = Pattern.compile("^.*\\[.*KylinApiFilter.logRequest.*\\].*REQUEST:.*REQUESTER=(.*);REQ_TIME=(\\w+ (\\d{4}-\\d{2}-\\d{2}).*);URI=(.*);METHOD=(.*);QUERY_STRING=(.*);PAYLOAD=(.*);RESP_STATUS=(.*);$");
@@ -124,13 +128,13 @@ public class ApiRequestParser {
             BufferedReader reader = Files.newBufferedReader(path, ENCODING);
             String line = null;
             while ((line = reader.readLine()) != null) {
-                //reset the input
+                // reset the input
                 m_available.reset(line);
                 m_request.reset(line);
 
-                //filter unnecessary info
+                // filter unnecessary info
                 if (m_available.find()) {
-                    //filter GET info
+                    // filter GET info
                     if (m_request.find() && !m_request.group(5).equals("GET")) {
 
                         List<String> groups = new ArrayList<String>();
@@ -142,33 +146,28 @@ public class ApiRequestParser {
                         m_uri.reset(uri);
                         if (m_uri.find()) {
 
-                            //add target
+                            // add target
                             groups.add(m_uri.group(1));
 
-                            //add action
+                            // add action
                             if (m_uri.group(1).equals("cubes")) {
-                                switch (m_request.group(5)) {
-                                    case "DELETE":
-                                        groups.add("drop");
-                                        break;
-                                    case "POST":
-                                        groups.add("save");
-                                        break;
-                                    default:
-                                        //add parse action
-                                        groups.add(m_uri.group(3));
-                                        break;
+                                String method = m_request.group(5);
+                                if ("DELETE".equals(method)) {
+                                    groups.add("drop");
+                                } else if ("POST".equals(method)) {
+                                    groups.add("save");
+                                } else {
+                                    // add parse action
+                                    groups.add(m_uri.group(3));
                                 }
                             }
-
                         }
                         groups.add(DEPLOY_ENV);
                         String[] recordArray = groups.toArray(new String[groups.size()]);
-                        //write to hdfs
+                        // write to hdfs
                         cwriter.writeNext(recordArray);
                     }
                 }
-
 
             }
         } catch (IOException ex) {
@@ -191,7 +190,7 @@ public class ApiRequestParser {
             fs = this.getHdfsFileSystem();
             org.apache.hadoop.fs.Path resultStorePath = new org.apache.hadoop.fs.Path(dPath);
             writer = new OutputStreamWriter(fs.append(resultStorePath));
-            cwriter = new CSVWriter(writer,'|',CSVWriter.NO_QUOTE_CHARACTER);
+            cwriter = new CSVWriter(writer, '|', CSVWriter.NO_QUOTE_CHARACTER);
             cwriter.writeNext(record);
 
         } catch (IOException e) {
@@ -206,7 +205,8 @@ public class ApiRequestParser {
     public List<File> getRequestLogFiles() {
         List<File> logFiles = new ArrayList<File>();
 
-//        String request_log_file_pattern = monitorConfig.getRequestLogFilePattern();
+        // String request_log_file_pattern =
+        // monitorConfig.getRequestLogFilePattern();
 
         List<String> request_log_dir_list = monitorConfig.getLogBaseDir();
         FileFilter filter = new RegexFileFilter(REQUEST_LOG_FILE_PATTERN);
@@ -227,12 +227,12 @@ public class ApiRequestParser {
 
     public FileSystem getHdfsFileSystem() throws IOException {
         Configuration conf = new Configuration();
-//        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
+        // conf.set("dfs.client.block.write.replace-datanode-on-failure.policy",
+        // "NEVER");
         FileSystem fs = null;
         try {
             fs = FileSystem.get(conf);
         } catch (IOException e) {
-            fs.close();
             logger.info("Failed to get hdfs FileSystem", e);
         }
         return fs;

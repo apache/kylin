@@ -14,15 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.cube;
 
-import java.io.IOException;
-
 import org.apache.commons.lang.StringUtils;
-
-import com.google.common.base.Preconditions;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -32,6 +28,8 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+
+import java.io.IOException;
 
 /**
  * Created by qianzhou on 1/4/15.
@@ -101,19 +99,30 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
         Output baseCuboidOutput = executableManager.getOutput(getBaseCuboidStepId());
         String sourceRecordsCount = baseCuboidOutput.getExtra().get(ExecutableConstants.SOURCE_RECORDS_COUNT);
-        Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsCount), "Can't get cube source record count.");
-        long sourceCount = Long.parseLong(sourceRecordsCount);
+        long sourceCount = 0l;
+        if (StringUtils.isNotEmpty(sourceRecordsCount)) {
+            sourceCount = Long.parseLong(sourceRecordsCount);
+        } else {
+            logger.warn("Can not get cube source record count.");
+        }
 
+        long sourceSize = 0l;
         String sourceRecordsSize = baseCuboidOutput.getExtra().get(ExecutableConstants.SOURCE_RECORDS_SIZE);
-        Preconditions.checkState(StringUtils.isNotEmpty(sourceRecordsSize), "Can't get cube source record size.");
-        long sourceSize = Long.parseLong(sourceRecordsSize);
+        if (StringUtils.isNotEmpty(sourceRecordsSize)) {
+            sourceSize = Long.parseLong(sourceRecordsSize);
+        } else {
+            logger.warn("Can not get cube source record size.");
+        }
 
         long size = 0;
         boolean segmentReady = true;
         if (!StringUtils.isBlank(getConvertToHfileStepId())) {
             String cubeSizeString = executableManager.getOutput(getConvertToHfileStepId()).getExtra().get(ExecutableConstants.HDFS_BYTES_WRITTEN);
-            Preconditions.checkState(StringUtils.isNotEmpty(cubeSizeString), "Can't get cube segment size.");
-            size = Long.parseLong(cubeSizeString) / 1024;
+            if (StringUtils.isNotEmpty(cubeSizeString)) {
+                size = Long.parseLong(cubeSizeString) / 1024;
+            } else {
+                logger.warn("Can't get cube segment size.");
+            }
         } else {
             // for the increment & merge case, the increment segment is only built to be merged, won't serve query by itself
             segmentReady = false;

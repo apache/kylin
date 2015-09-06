@@ -14,9 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.controller;
+
+import java.io.IOException;
 
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.Broadcaster.EVENT;
@@ -29,8 +31,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.io.IOException;
 
 /**
  * CubeController is defined as Restful API entrance for UI.

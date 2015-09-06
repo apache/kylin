@@ -14,20 +14,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.common;
-
-import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.hadoop.mapreduce.Counters;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.TaskCounter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.kylin.job.constant.ExecutableConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author xduo
@@ -80,7 +80,7 @@ public class HadoopCmdOutput {
     public String getHdfsBytesRead() {
         return hdfsBytesRead;
     }
-    
+
     public void updateJobCounter() {
         try {
             Counters counters = job.getCounters();
@@ -99,6 +99,10 @@ public class HadoopCmdOutput {
         } catch (Exception e) {
             log.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());
+
+            mapInputRecords = "0";
+            hdfsBytesWritten = "0";
+            hdfsBytesRead = "0";
         }
     }
 

@@ -14,20 +14,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.kv;
 
 import java.util.Arrays;
 
-import org.apache.kylin.dict.ISegment;
 import org.apache.kylin.common.util.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.ISegment;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Read/Write column values from/into bytes

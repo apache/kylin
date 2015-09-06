@@ -14,9 +14,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.tuple;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.DateFormat;
@@ -26,10 +30,6 @@ import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
-
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author xjiang
@@ -151,8 +151,10 @@ public class Tuple implements ITuple {
             return new BigDecimal(strValue);
         } else if ("timestamp".equals(dataType)) {
             return Long.valueOf(DateFormat.stringToMillis(strValue));
-        } else if ("float".equals(dataType)){
+        } else if ("float".equals(dataType)) {
             return Float.valueOf(strValue);
+        } else if ("boolean".equals(dataType)) {
+            return Boolean.valueOf(strValue);
         } else {
             return strValue;
         }

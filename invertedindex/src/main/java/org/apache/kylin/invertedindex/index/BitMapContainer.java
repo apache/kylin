@@ -14,11 +14,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.index;
-
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -27,9 +25,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
+
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  * @author yangli9

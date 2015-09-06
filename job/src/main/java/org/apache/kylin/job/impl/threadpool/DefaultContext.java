@@ -14,17 +14,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.impl.threadpool;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.execution.Executable;
-import org.apache.kylin.job.execution.ExecutableContext;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.job.execution.Executable;
+import org.apache.kylin.job.execution.ExecutableContext;
 
 /**
  * Created by qianzhou on 12/16/14.
@@ -38,6 +38,7 @@ public class DefaultContext implements ExecutableContext {
         this.runningJobs = runningJobs;
         this.kylinConfig = kylinConfig;
     }
+
     @Override
     public Object getSchedulerContext() {
         return null;

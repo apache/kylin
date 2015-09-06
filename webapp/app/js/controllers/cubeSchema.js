@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService, $filter, ModelService, MetaModel, CubeDescModel, CubeList, TableModel, ProjectModel) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService, $filter, ModelService, MetaModel, CubeDescModel, CubeList, TableModel, ProjectModel,SweetAlert) {
 
   $scope.projects = [];
   $scope.newDimension = null;
@@ -67,6 +67,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         if (model) {
           $scope.metaModel.model = model;
         }
+      },function(resp){
+        SweetAlert.swal('Oops...', "Failed to load model info, please check system log for details.", 'error');
       });
     }
   });

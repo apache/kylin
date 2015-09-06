@@ -41,6 +41,22 @@
                     </div>
                 </td>
             </tr>
+          <tr>
+            <td>
+              <!--Cube Size-->
+              <div class="form-group">
+                <div class="row">
+                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Retention Range(days)</b></label>
+                  <div class="col-xs-12 col-sm-6">
+                    <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
+                    <input type="text" retention-format class="form-control ng-scope ng-pristine ng-valid" placeholder="how many days cube retention" ng-model="cubeMetaFrame.retentionRange"  ng-if="state.mode=='edit'">
+                    <small class="help-block text-red" ng-show="state.mode=='edit'">(by default it's '0',which will keep all historic cube segments ,or will keep latest [Retention Range] days cube segments )</small>
+                    <span ng-if="state.mode=='view'">{{cube.retention_range | millisecondsToDay}}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
         </table>
 
     </div>

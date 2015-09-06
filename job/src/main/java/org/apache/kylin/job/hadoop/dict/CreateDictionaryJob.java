@@ -14,13 +14,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.hadoop.dict;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cli.DictionaryGeneratorCLI;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;

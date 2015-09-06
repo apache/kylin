@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict.lookup;
 
@@ -33,6 +33,7 @@ import org.apache.hive.hcatalog.data.transfer.DataTransferFactory;
 import org.apache.hive.hcatalog.data.transfer.HCatReader;
 import org.apache.hive.hcatalog.data.transfer.ReadEntity;
 import org.apache.hive.hcatalog.data.transfer.ReaderContext;
+import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
 
 /**
  * An implementation of TableReader with HCatalog for Hive table.
@@ -111,11 +112,6 @@ public class HiveTableReader implements TableReader {
         }
 
         return rowValues.toArray(new String[allFields.size()]);
-    }
-
-    @Override
-    public void setExpectedColumnNumber(int expectedColumnNumber) {
-
     }
 
     @Override

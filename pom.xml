@@ -29,7 +29,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>0.7.2-incubating</version>
+    <version>1.0-incubating</version>
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
@@ -83,15 +83,8 @@
         <!-- REST Service -->
         <spring.framework.version>3.1.2.RELEASE</spring.framework.version>
 
-        <!-- Optiq Version -->
-        <optiq.version>0.9.2-incubating</optiq.version>
-        <linq4j.version>0.4</linq4j.version>
-
-        <!-- Metrics Codahale Version -->
-        <metrics.version>3.0.1</metrics.version>
-
-        <!-- Quartz Version -->
-        <quartz.version>2.2.1</quartz.version>
+        <!-- Calcite Version -->
+        <calcite.version>1.3.0-incubating</calcite.version>
 
         <!-- Curator.version Version -->
         <curator.version>2.6.0</curator.version>
@@ -102,7 +95,7 @@
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
         <sonar.language>java</sonar.language>
         <sonar.jacoco.excludes>
-            org/apache/kylin/**/tools/**:**/*CLI.java:net/hydromatic/optiq/**:org/eigenbase/sql2rel/**
+            org/apache/kylin/**/tools/**:**/*CLI.java
         </sonar.jacoco.excludes>
 
     </properties>
@@ -146,7 +139,7 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</url>
-        <tag>kylin-0.7.2-incubating</tag>
+        <tag>kylin-1.0-incubating</tag>
     </scm>
 
     <dependencyManagement>
@@ -248,21 +241,21 @@
                 <version>${yarn.version}</version>
             </dependency>
 
-            <!-- optiq dependencies -->
+            <!-- Calcite dependencies -->
             <dependency>
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-core</artifactId>
-                <version>${optiq.version}</version>
+                <version>${calcite.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-avatica</artifactId>
-                <version>${optiq.version}</version>
+                <version>${calcite.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.hydromatic</groupId>
-                <artifactId>linq4j</artifactId>
-                <version>${linq4j.version}</version>
+                <groupId>org.apache.calcite</groupId>
+                <artifactId>calcite-linq4j</artifactId>
+                <version>${calcite.version}</version>
             </dependency>
 
             <!-- Other dependencies -->
@@ -388,17 +381,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz</artifactId>
-                <version>${quartz.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.quartz-scheduler</groupId>
-                <artifactId>quartz-jobs</artifactId>
-                <version>${quartz.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-framework</artifactId>
                 <version>${curator.version}</version>
@@ -477,7 +459,13 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.0.2</version>
+                    <version>2.6</version>
+                    <configuration>
+                        <packagingExcludes>
+                            WEB-INF/lib/servlet-api-*.jar,
+                            WEB-INF/lib/zookeeper-*.jar,
+                        </packagingExcludes>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -644,7 +632,6 @@
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclude>**/SnapshotManagerTest.java</exclude>
                                 <exclude>**/HiveTableReaderTest.java</exclude>
@@ -706,7 +693,6 @@
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                             </excludes>
                             <systemProperties>
@@ -773,7 +759,6 @@
                             <excludes>
                                 <exclude>**/BuildCubeWithEngineTest.java</exclude>
                                 <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
                                 <exclude>**/KylinQueryTest.java</exclude>
                                 <exclude>**/SnapshotManagerTest.java</exclude>
                                 <exclude>**/HiveTableReaderTest.java</exclude>
@@ -834,7 +819,7 @@
                                 <!-- Kylin's website content -->
                                 <exclude>**/.sass-cache/**</exclude>
 
-                                <exclude>docs/website/**</exclude>
+                                <exclude>website/**</exclude>
 
                                 <!-- tomcat package -->
                                 <exclude>tomcat/**</exclude>
@@ -854,6 +839,8 @@
 
                                 <!-- jdbc log -->
                                 <exclude>jdbc/kylin_jdbc.log*</exclude>
+                                <!-- server log -->
+                                <exclude>server/logs/**</exclude>
 
                                 <!-- HBase MiniCluster Testing Data, for testing only -->
                                 <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>

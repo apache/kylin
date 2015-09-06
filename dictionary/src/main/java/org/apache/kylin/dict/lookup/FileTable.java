@@ -14,17 +14,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict.lookup;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.Pair;
 
 /**
  * @author yangli9
@@ -32,32 +35,21 @@ import org.apache.kylin.common.util.HadoopUtil;
  */
 public class FileTable implements ReadableTable {
 
+    public static final String DELIM_AUTO = "auto";
+    public static final String DELIM_COMMA = ",";
+
     String path;
     String delim;
     int nColumns;
-    boolean nativeTable;
 
     public FileTable(String path, int nColumns) {
-        this(path, DELIM_AUTO, nColumns, true);
+        this(path, DELIM_AUTO, nColumns);
     }
 
-    public FileTable(String path, String delim, int nColumns, boolean nativeTable) {
+    public FileTable(String path, String delim, int nColumns) {
         this.path = path;
         this.delim = delim;
         this.nColumns = nColumns;
-        this.nativeTable = nativeTable;
-    }
-
-    public FileTable(String path, int nColumns, boolean nativeTable) {
-        this.path = path;
-        this.delim = DELIM_AUTO;
-        this.nColumns = nColumns;
-        this.nativeTable = nativeTable;
-    }
-
-    @Override
-    public String getColumnDelimeter() {
-        return delim;
     }
 
     @Override
@@ -67,16 +59,48 @@ public class FileTable implements ReadableTable {
 
     @Override
     public TableSignature getSignature() throws IOException {
-        FileSystem fs = HadoopUtil.getFileSystem(path);
-        FileStatus status = fs.getFileStatus(new Path(path));
-        if (nativeTable) {
-            return new TableSignature(path, status.getLen(), status.getModificationTime());
+        if (!exists())
+            throw new IllegalStateException("Table not exists :" + path);
+
+        try {
+            Pair<Long, Long> sizeAndLastModified = getSizeAndLastModified(path);
+            return new TableSignature(path, sizeAndLastModified.getFirst(), sizeAndLastModified.getSecond());
+        } catch (FileNotFoundException ex) {
+            return null;
         }
-        return new TableSignature(path, status.getLen(), System.currentTimeMillis());
+    }
+
+    @Override
+    public boolean exists() throws IOException {
+        FileSystem fs = HadoopUtil.getFileSystem(path);
+        return fs.exists(new Path(path));
     }
 
     @Override
     public String toString() {
         return path;
+    }
+
+    public static Pair<Long, Long> getSizeAndLastModified(String path) throws IOException {
+        FileSystem fs = HadoopUtil.getFileSystem(path);
+
+        // get all contained files if path is directory
+        ArrayList<FileStatus> allFiles = new ArrayList<>();
+        FileStatus status = fs.getFileStatus(new Path(path));
+        if (status.isFile()) {
+            allFiles.add(status);
+        } else {
+            FileStatus[] listStatus = fs.listStatus(new Path(path));
+            allFiles.addAll(Arrays.asList(listStatus));
+        }
+
+        long size = 0;
+        long lastModified = 0;
+        for (FileStatus file : allFiles) {
+            size += file.getLen();
+            lastModified = Math.max(lastModified, file.getModificationTime());
+        }
+
+        return new Pair<Long, Long>(size, lastModified);
     }
 }

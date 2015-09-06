@@ -14,18 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.util;
-
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.Writable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.io.Writable;
 
 public class BytesUtil {
 
@@ -370,7 +370,6 @@ public class BytesUtil {
         return toHex(array);
     }
 
-
     /**
      * this method only works for hex strings
      */
@@ -401,7 +400,6 @@ public class BytesUtil {
         }
         return sb.toString();
     }
-
 
     public static void main(String[] args) throws Exception {
     }

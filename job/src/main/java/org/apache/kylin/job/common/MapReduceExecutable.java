@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.common;
 
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -134,6 +135,10 @@ public class MapReduceExecutable extends AbstractExecutable {
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
             while (!isDiscarded()) {
                 JobStepStatusEnum newStatus = statusChecker.checkStatus();
+                if (status == JobStepStatusEnum.KILLED) {
+                    executableManager.updateJobOutput(getId(), ExecutableState.ERROR, Collections.<String, String>emptyMap(), "killed by admin");
+                    return new ExecuteResult(ExecuteResult.State.FAILED, "killed by admin");
+                }
                 if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
                     final long waitTime = System.currentTimeMillis() - getStartTime();
                     setMapReduceWaitTime(waitTime);

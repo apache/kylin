@@ -14,16 +14,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job.cube;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -46,7 +47,6 @@ public class CubingJob extends DefaultChainedExecutable {
     private static final String SEGMENT_ID = "segmentId";
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
-
     public void setCubeName(String name) {
         setParam(CUBE_INSTANCE_NAME, name);
     }
@@ -55,35 +55,38 @@ public class CubingJob extends DefaultChainedExecutable {
         return getParam(CUBE_INSTANCE_NAME);
     }
 
+    void setSegmentIds(List<String> segmentIds) {
+        setParam(SEGMENT_ID, StringUtils.join(segmentIds, ","));
+    }
+
     void setSegmentId(String segmentId) {
         setParam(SEGMENT_ID, segmentId);
     }
 
-    public String getSegmentId() {
+    public String getSegmentIds() {
         return getParam(SEGMENT_ID);
     }
 
     @Override
     protected Pair<String, String> formatNotifications(ExecutableState state) {
         final Output output = jobService.getOutput(getId());
-        String logMsg;
+        String logMsg = "";
         switch (output.getState()) {
-            case ERROR:
-                logMsg = output.getVerboseMsg();
-                break;
-            case DISCARDED:
-                logMsg = "";
-                break;
-            case SUCCEED:
-                logMsg = "";
-                break;
-            default:
-                return null;
+        case ERROR:
+            logMsg = output.getVerboseMsg();
+            break;
+        case DISCARDED:
+            break;
+        case SUCCEED:
+            break;
+        default:
+            return null;
         }
         String content = ExecutableConstants.NOTIFY_EMAIL_TEMPLATE;
         content = content.replaceAll("\\$\\{job_name\\}", getName());
         content = content.replaceAll("\\$\\{result\\}", state.toString());
         content = content.replaceAll("\\$\\{cube_name\\}", getCubeName());
+        content = content.replaceAll("\\$\\{source_records_count\\}", getSourceRecordCount());
         content = content.replaceAll("\\$\\{start_time\\}", new Date(getStartTime()).toString());
         content = content.replaceAll("\\$\\{duration\\}", getDuration() / 60000 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", getMapReduceWaitTime() / 60000 + "mins");
@@ -98,14 +101,14 @@ public class CubingJob extends DefaultChainedExecutable {
             logger.warn(e.getLocalizedMessage(), e);
         }
 
-        String title = "["+ state.toString() + "] - [Kylin Cube Build Job]-" + getCubeName();
+        String title = "[" + state.toString() + "] - [Kylin Cube Build Job]-" + getCubeName();
         return Pair.of(title, content);
     }
 
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         long time = 0L;
-        for (AbstractExecutable task: getTasks()) {
+        for (AbstractExecutable task : getTasks()) {
             final ExecutableState status = task.getStatus();
             if (status != ExecutableState.SUCCEED) {
                 break;
@@ -124,5 +127,15 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public void setMapReduceWaitTime(long t) {
         addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
+    }
+
+
+    public final String getSourceRecordCount() {
+        for (AbstractExecutable task : getTasks()) {
+            if (ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID.equals(task.getName())) {
+               return getExtraInfo(task.getOutput(), ExecutableConstants.SOURCE_RECORDS_COUNT);
+            }
+        }
+        return "N/A";
     }
 }

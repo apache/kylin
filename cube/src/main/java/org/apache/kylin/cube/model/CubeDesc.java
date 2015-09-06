@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.model;
 
@@ -55,6 +55,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
@@ -114,6 +115,10 @@ public class CubeDesc extends RootPersistentEntity {
     private String signature;
     @JsonProperty("notify_list")
     private List<String> notifyList;
+    /*
+     * this field will not be serialized ,can be deserialized to front javascript
+     */
+    private long retentionRange;
 
     private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
@@ -621,7 +626,7 @@ public class CubeDesc extends RootPersistentEntity {
             if (m.getDependentMeasureRef() != null) {
                 m.setDependentMeasureRef(m.getDependentMeasureRef().toUpperCase());
             }
-            
+
             FunctionDesc f = m.getFunction();
             f.setExpression(f.getExpression().toUpperCase());
             f.initReturnDataType();
@@ -640,7 +645,7 @@ public class CubeDesc extends RootPersistentEntity {
                 if (colRefs.isEmpty() == false)
                     p.setColRefs(colRefs);
             }
-            
+
             // verify holistic count distinct as a dependent measure
             if (m.isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
                 throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
@@ -763,4 +768,13 @@ public class CubeDesc extends RootPersistentEntity {
         this.nullStrings = nullStrings;
     }
 
+    @JsonProperty
+    public long getRetentionRange() {
+        return retentionRange;
+    }
+
+    @JsonIgnore
+    public void setRetentionRange(long retentionRange) {
+        this.retentionRange = retentionRange;
+    }
 }

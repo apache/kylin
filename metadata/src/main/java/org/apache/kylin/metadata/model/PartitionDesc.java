@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.metadata.model;
 
@@ -72,8 +72,8 @@ public class PartitionDesc {
         } else {
             throw new IllegalStateException("The 'partition_date_column' format is invalid: " + partitionDateColumn + ", it should be {db}.{table}.{column}.");
         }
-        
-       partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
+
+        partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
     }
 
     public boolean isPartitioned() {
@@ -177,7 +177,6 @@ public class PartitionDesc {
                 builder.append("AND ");
             }
             builder.append(concatField + " < '" + DateFormat.formatToDateStr(endExclusive) + "'");
-
 
             return builder.toString();
         }

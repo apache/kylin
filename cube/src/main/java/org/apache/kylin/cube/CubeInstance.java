@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube;
 
@@ -55,6 +55,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         cubeInstance.updateRandomUuid();
         cubeInstance.setProjectName(projectName);
+        cubeInstance.setRetentionRange(cubeDesc.getRetentionRange());
 
         return cubeInstance;
     }
@@ -82,8 +83,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
+    @JsonProperty("auto_merge_time_ranges")
+    private long[] autoMergeTimeRanges;
+
+    @JsonProperty("retention_range")
+    private long retentionRange = 0;
+
     private String projectName;
-    
+
     public List<CubeSegment> getBuildingSegments() {
         List<CubeSegment> buildingSegments = new ArrayList<CubeSegment>();
         if (null != segments) {
@@ -327,7 +334,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @Override
     public int getCost(SQLDigest digest) {
-        return 0;
+        return cost;
     }
 
     @Override
@@ -348,4 +355,61 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         this.projectName = projectName;
     }
 
+    public long[] getAutoMergeTimeRanges() {
+        return autoMergeTimeRanges;
+    }
+
+    public void setAutoMergeTimeRanges(long[] autoMergeTimeRanges) {
+        this.autoMergeTimeRanges = autoMergeTimeRanges;
+    }
+
+    public boolean needAutoMerge() {
+        if (!this.getDescriptor().getModel().getPartitionDesc().isPartitioned())
+            return false;
+
+        if (this.getDescriptor().hasHolisticCountDistinctMeasures())
+            return false;
+
+        return autoMergeTimeRanges != null && autoMergeTimeRanges.length > 0;
+    }
+
+    public long getRetentionRange() {
+        return retentionRange;
+    }
+
+    public void setRetentionRange(long retentionRange) {
+        this.retentionRange = retentionRange;
+    }
+
+    @Override
+    public long getDateRangeStart() {
+        List<CubeSegment> readySegs = getSegments(SegmentStatusEnum.READY);
+
+        long startTime = Long.MAX_VALUE;
+        for (CubeSegment seg : readySegs) {
+            if (seg.getDateRangeStart() < startTime)
+                startTime = seg.getDateRangeStart();
+        }
+
+        return startTime;
+    }
+
+    @Override
+    public long getDateRangeEnd() {
+
+        List<CubeSegment> readySegs = getSegments(SegmentStatusEnum.READY);
+
+        long endTime = 0;
+        for (CubeSegment seg : readySegs) {
+            if (seg.getDateRangeEnd() > endTime)
+                endTime = seg.getDateRangeEnd();
+        }
+
+        return endTime;
+    }
+
+    @Override
+    public List<TblColRef> getAllDimensions() {
+        return Lists.newArrayList(getDescriptor().listDimensionColumnsIncludingDerived());
+    }
 }

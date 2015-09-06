@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.common.restclient;
 
@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 /**
  * Created by qianzhou on 1/15/15.
  */
-public class CaseInsensitiveStringCache<V> extends SingleValueCache<String, V>{
+public class CaseInsensitiveStringCache<V> extends SingleValueCache<String, V> {
 
     public CaseInsensitiveStringCache(Broadcaster.TYPE syncType) {
         super(syncType, new ConcurrentSkipListMap<String, V>(String.CASE_INSENSITIVE_ORDER));

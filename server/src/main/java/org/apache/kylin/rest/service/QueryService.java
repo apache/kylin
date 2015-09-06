@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.service;
 
@@ -41,16 +41,20 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
-import net.hydromatic.avatica.ColumnMetaData.Rep;
-
+import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.metrics.QueryMetrics;
 import org.apache.kylin.rest.model.ColumnMeta;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.model.SelectedColumnMeta;
@@ -66,13 +70,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.HBaseConnection;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.query.relnode.OLAPContext;
 
 /**
  * @author xduo
@@ -223,10 +220,6 @@ public class QueryService extends BasicService {
         if (!response.getIsException() && response.getResults() != null) {
             resultRowCount = response.getResults().size();
         }
-
-        QueryMetrics.getInstance().increase("duration", duration);
-        QueryMetrics.getInstance().increase("totalScanCount", (float) totalScanCount);
-        QueryMetrics.getInstance().increase("count", (float) 1);
 
         String newLine = System.getProperty("line.separator");
         StringBuilder stringBuilder = new StringBuilder();

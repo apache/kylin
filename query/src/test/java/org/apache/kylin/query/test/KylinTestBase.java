@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.test;
 
@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.logging.LogManager;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.dbunit.Assertion;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
@@ -57,7 +58,6 @@ import org.dbunit.ext.h2.H2DataTypeFactory;
 import org.junit.Assert;
 
 import com.google.common.io.Files;
-import org.apache.kylin.common.KylinConfig;
 
 /**
  * Created by hongbin on 2/18/14.
@@ -423,7 +423,7 @@ public class KylinTestBase {
         int count = executeQuery(sql, true);
 
         if (debug) {
-            System.clearProperty("optiq.debug");
+            System.clearProperty("calcite.debug");
         }
         return count;
     }

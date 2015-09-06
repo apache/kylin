@@ -14,15 +14,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.invertedindex.model;
 
 import java.util.List;
 
+import org.apache.kylin.common.util.StringUtil;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.common.util.StringUtil;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 12/26/14.
@@ -50,11 +51,12 @@ public class IIDimension {
         this.columns = columns;
     }
 
-
     public static void capicalizeStrings(List<IIDimension> dimensions) {
-        for (IIDimension iiDimension : dimensions) {
-            iiDimension.setTable(iiDimension.getTable().toUpperCase());
-            StringUtil.toUpperCaseArray(iiDimension.getColumns(), iiDimension.getColumns());
+        if (dimensions != null) {
+            for (IIDimension iiDimension : dimensions) {
+                iiDimension.setTable(iiDimension.getTable().toUpperCase());
+                StringUtil.toUpperCaseArray(iiDimension.getColumns(), iiDimension.getColumns());
+            }
         }
     }
 

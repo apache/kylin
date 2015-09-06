@@ -14,10 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.job;
 
+import org.apache.kylin.common.lock.JobLock;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.Executable;
@@ -27,7 +28,7 @@ import org.apache.kylin.job.execution.Executable;
  */
 public interface Scheduler<T extends Executable> {
 
-    void init(JobEngineConfig jobEngineConfig) throws SchedulerException;
+    void init(JobEngineConfig jobEngineConfig, JobLock jobLock) throws SchedulerException;
 
     void shutdown() throws SchedulerException;
 

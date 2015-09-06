@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.request;
 
@@ -28,6 +28,7 @@ public class CubeRequest {
     private String message;
     private String cubeDescName;
     private String project;
+    private long retentionRange;
 
     public String getUuid() {
         return uuid;
@@ -85,7 +86,7 @@ public class CubeRequest {
     public CubeRequest() {
     }
 
-    public CubeRequest(long id, String cubeName, String cubeDescData,String modelDescData) {
+    public CubeRequest(long id, String cubeName, String cubeDescData, String modelDescData) {
         this.cubeName = cubeName;
         this.cubeDescData = cubeDescData;
         this.modelDescData = modelDescData;
@@ -98,9 +99,7 @@ public class CubeRequest {
     public void setCubeDescData(String cubeDescData) {
         this.cubeDescData = cubeDescData;
     }
-    
-    
-    
+
     public String getModelDescData() {
         return modelDescData;
     }
@@ -132,4 +131,11 @@ public class CubeRequest {
         this.project = project;
     }
 
+    public long getRetentionRange() {
+        return retentionRange;
+    }
+
+    public void setRetentionRange(long retentionRange) {
+        this.retentionRange = retentionRange;
+    }
 }

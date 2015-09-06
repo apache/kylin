@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.dict.lookup;
 
@@ -29,17 +29,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringSplitter;
+import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tables are typically CSV or SEQ file.
@@ -89,11 +89,6 @@ public class FileTableReader implements TableReader {
     }
 
     @Override
-    public void setExpectedColumnNumber(int expectedColumnNumber) {
-        this.expectedColumnNumber = expectedColumnNumber;
-    }
-
-    @Override
     public boolean next() throws IOException {
         curLine = reader.nextLine();
         curColumns = null;
@@ -107,7 +102,7 @@ public class FileTableReader implements TableReader {
     @Override
     public String[] getRow() {
         if (curColumns == null) {
-            if (ReadableTable.DELIM_AUTO.equals(delim))
+            if (FileTable.DELIM_AUTO.equals(delim))
                 delim = autoDetectDelim(curLine);
 
             if (delim == null)
@@ -123,7 +118,7 @@ public class FileTableReader implements TableReader {
         String str[] = StringSplitter.split(line, delim);
 
         // un-escape CSV
-        if (ReadableTable.DELIM_COMMA.equals(delim)) {
+        if (FileTable.DELIM_COMMA.equals(delim)) {
             for (int i = 0; i < str.length; i++) {
                 str[i] = unescapeCsv(str[i]);
             }

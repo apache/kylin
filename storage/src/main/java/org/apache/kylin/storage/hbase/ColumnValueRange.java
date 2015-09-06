@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase;
 
@@ -23,12 +23,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 import org.apache.kylin.cube.kv.RowKeyColumnOrder;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -167,7 +167,7 @@ public class ColumnValueRange {
     public void preEvaluateWithDict(Dictionary<String> dict) {
         if (dict == null)
             return;
-        
+
         if (equalValues != null) {
             Iterator<String> it = equalValues.iterator();
             while (it.hasNext()) {
@@ -181,7 +181,7 @@ public class ColumnValueRange {
             }
             refreshBeginEndFromEquals();
         }
-        
+
         if (beginValue != null) {
             try {
                 beginValue = dict.getValueFromId(dict.getIdFromValue(beginValue, -1));
@@ -190,7 +190,7 @@ public class ColumnValueRange {
                 beginValue = null;
             }
         }
-        
+
         if (endValue != null) {
             try {
                 endValue = dict.getValueFromId(dict.getIdFromValue(endValue, 1));

@@ -19,15 +19,18 @@
 KylinApp.service('ProjectModel', function () {
 
   this.projects = [];
-  this.selectedProject = null;
+  this.selectedProject = "_null";
 
 
   this.setSelectedProject = function (project) {
-    if (this.projects.indexOf(project) > -1) {
+    if (this.projects.indexOf(project) > -1||!project) {
       this.selectedProject = project;
     }
   };
   this.getSelectedProject = function (project) {
+    if(this.selectedProject=="_null"){
+      return null;
+    }
     return this.selectedProject;
   };
 

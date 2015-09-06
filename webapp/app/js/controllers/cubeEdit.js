@@ -145,7 +145,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
 
     $scope.state.project = $scope.cubeMetaFrame.project;
-//        delete $scope.cubeMetaFrame.project;
 
     $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
     $scope.state.modelSchema = angular.toJson($scope.metaModel.model, true);

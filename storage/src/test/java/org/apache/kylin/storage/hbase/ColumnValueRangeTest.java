@@ -14,11 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.storage.hbase;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -66,12 +66,12 @@ public class ColumnValueRangeTest {
             r2.preEvaluateWithDict(dict);
             assertEquals("CN", r2.getBeginValue());
             assertEquals(null, r2.getEndValue());
-            
+
             ColumnValueRange r3 = new ColumnValueRange(col, set("Other"), FilterOperatorEnum.GTE);
             r3.preEvaluateWithDict(dict);
             assertEquals("CN", r3.getBeginValue());
             assertEquals(null, r3.getEndValue());
-            
+
             ColumnValueRange r4 = new ColumnValueRange(col, set("CI"), FilterOperatorEnum.GTE);
             r4.preEvaluateWithDict(dict);
             assertEquals(null, r4.getBeginValue());

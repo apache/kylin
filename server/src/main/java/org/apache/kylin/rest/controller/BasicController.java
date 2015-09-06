@@ -14,25 +14,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.rest.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
+import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.response.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import org.apache.kylin.rest.exception.BadRequestException;
-import org.apache.kylin.rest.exception.NotFoundException;
-import org.apache.kylin.rest.service.MetricsService;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/1/13 Time: 10:54 PM To
@@ -42,9 +39,6 @@ public class BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicController.class);
 
-    @Autowired
-    protected MetricsService metricsService;
-
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     @ResponseBody
@@ -52,7 +46,6 @@ public class BasicController {
         logger.error("", ex);
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
-    
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(ForbiddenException.class)
