@@ -14,7 +14,7 @@ Steps:
 
 1. Check which resources can be cleanup, this will not remove anything: 
 {% highlight Groff markup %}
-hbase org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-(version).jar org.apache.kylin.job.hadoop.cube.StorageCleanupJob --delete true
+hbase org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-(version).jar org.apache.kylin.job.hadoop.cube.StorageCleanupJob --delete false
 {% endhighlight %}
 
 Here please replace (version) with the specific Kylin jar version in your installation;
