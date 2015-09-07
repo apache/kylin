@@ -6,37 +6,28 @@ permalink: /download/index.html
 
 __Latest Release (Source Code)__  
 The latest release of Apache Kylin can be downloaded from the ASF:
-  * [Apache-Kylin-0.7.2-Incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-0.7.2-incubating)
-  * [Release Notes](../docs/release_notes.html)
-  * Git Tag: [kylin-0.7.2-incubating](https://github.com/apache/incubator-kylin/tree/kylin-0.7.2-incubating)
-  * Git Commit: [f7a28422645bc209b2c38bb05b24a340444f9066](https://github.com/apache/incubator-kylin/commit/f7a28422645bc209b2c38bb05b24a340444f9066)
+
+* [Apache Kylin v1.0-incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-1.0-incubating/)
+* [Release Notes](http://kylin.incubator.apache.org/docs/release_notes.html)
+* Git Tag: [kylin-1.0-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.0-incubating)
+* Git Commit: [ef067de4ae43303c015118ad39a9aba7172bc250](https://github.com/apache/incubator-kylin/commit/ef067de4ae43303c015118ad39a9aba7172bc250)
+
+__Binary Package__
+For convenience, there’s binary package also available: 
+
+* Apache Kylin v1.0-indubating [Binary Package](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.0-incubating/apache-kylin-1.0-incubating-bin.tar.gz)
+* [Installation Guide](http://kylin.incubator.apache.org/docs/install)
+
+__Build Binary Package__
+To build binary package from any version even latest development branch, please refer to this [guide](http://kylin.incubator.apache.org/docs/howto/howto_package.html)
 
 __Previous Release__  
-  * [Apache-Kylin-0.7.1-Incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-0.7.1-incubating)
-  * [Release Notes](../docs/release_notes.html)
-  * Git Tag: [kylin-0.7.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-0.7.1-incubating)
-  * Git Commit: [6a7d07dd79ffc00ba1ece330010275b6f0715de8](https://github.com/apache/incubator-kylin/commit/6a7d07dd79ffc00ba1ece330010275b6f0715de8)
-
-__Binary Package__  
-For convenience, there's binary package also available:
-
-  * [Kylin Binary Package for Deployment](kylin-0.7.2-incubating.tar.gz)
-  * [Installation Guide](../docs/install)
-  * Generate binary package from source, please refer to this [guide](../docs/howto/howto_package.html)
+ Older releases may be found in the [archives](https://dist.apache.org/repos/dist/release/incubator/kylin/).
     
 __ODBC Driver__  
-Kylin ODBC requires you first install Microsoft Visual C++ 2012 Redistributable first, it can be downloaded at:http://www.microsoft.com/en-us/download/details.aspx?id=30679
+Kylin ODBC driver requires [Microsoft Visual C++ 2012 Redistributable](http://www.microsoft.com/en-us/download/details.aspx?id=30679) installed first. 
+And Kylin ODBC Driver could be downloaded here: 
 
-And Kylin ODBC Driver could be find here:
-
-  * [Kylin ODBC Driver](KylinODBCDriver.zip)
-
-__Development Version (v0.7.3)__  
-Here's latest development version binary package:
-
-  * [kylin-v1.0-incubating-SNAPSHOT](kylin-1.0-incubating-SNAPSHOT-bin.tar.gz)
-  * Updated Date: 2015-08-14
-  * Commit ID: b449590cc5c6aaa3eea9d19f922473bff6fce4b0
-
+* [Kylin ODBC Driver](http://kylin.incubator.apache.org/download/KylinODBCDriver.zip)
 
 
