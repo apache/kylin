@@ -170,9 +170,8 @@ public class KylinQueryTest extends KylinTestBase {
         execAndCompQuery("src/test/resources/query/sql", null, true);
     }
 
-    @Ignore
     @Test
-    public void testSimpleQuery() throws Exception {
+    public void testVerifyQuery() throws Exception {
         verifyResultRowCount("src/test/resources/query/sql_verifyCount");
     }
 
