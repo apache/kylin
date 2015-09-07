@@ -18,13 +18,6 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -56,6 +49,13 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author ysong1
@@ -225,8 +225,6 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     }
 
     private void cleanUnusedIntermediateHiveTable(Configuration conf) throws IOException {
-        FileSystem fs = FileSystem.get(conf);
-        //JobEngineConfig engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         int uuidLength = 36;
 
         StringBuilder buf = new StringBuilder();
@@ -243,7 +241,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             e.printStackTrace();
         }
 
-        if(output == null)
+        if (output == null)
             return;
         String outputStr = output.getOutput();
         BufferedReader reader = new BufferedReader(new StringReader(outputStr));
@@ -258,44 +256,31 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
             if (!state.isFinalState()) {
                 workingJobList.add(jobId);
-                log.info("Remove intermediate hive table with job id " + jobId + " with job status " + state);
+                log.info("Exclude intermediate hive table with job id " + jobId + " with job status " + state);
             }
         }
 
         while ((line = reader.readLine()) != null) {
-            if(line.startsWith("kylin_intermediate_")){
-                boolean isNeedDel = true;
+            if (line.startsWith("kylin_intermediate_")) {
+                boolean isNeedDel = false;
                 String uuid = line.substring(line.length() - uuidLength, line.length());
                 uuid = uuid.replace("_", "-");
                 //Check whether it's a hive table in use
-                if(workingJobList.contains(uuid)){
-                    isNeedDel = false;
-                }
-                else{
-                    log.info("Hive table with uuid " + uuid + " is in use.");
+                if (allJobs.contains(uuid) && !workingJobList.contains(uuid)) {
+                    isNeedDel = true;
                 }
 
-                //Check whether the hive table belongs to current Kylin instance
-                String hdfsPath = JobInstance.getJobWorkingDir(uuid, KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory());
-                Path p = new Path(hdfsPath);
-
-                if (fs.exists(p) == false) {
-                    isNeedDel = false;
-                }
-                else{
-                    log.info("Hive table with uuid " + uuid + " belongs to a different Kylin instance.");
-                }
-
-                if(isNeedDel)
+                if (isNeedDel) {
                     allHiveTablesNeedToBeDeleted.add(line);
+                }
             }
         }
-        
+
         if (delete == true) {
             buf.delete(0, buf.length());
             buf.append("hive -e \"");
 
-            for(String delHive : allHiveTablesNeedToBeDeleted){
+            for (String delHive : allHiveTablesNeedToBeDeleted) {
                 buf.append("drop table if exists " + delHive + "; ");
                 log.info("Remove " + delHive + " from hive tables.");
             }
@@ -315,7 +300,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             System.out.println("----------------------------------------------------");
         }
 
-        if(reader != null)
+        if (reader != null)
             reader.close();
     }
 
