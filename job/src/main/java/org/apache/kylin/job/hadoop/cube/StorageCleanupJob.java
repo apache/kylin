@@ -18,6 +18,11 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -47,11 +52,6 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author ysong1
@@ -114,8 +114,9 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             String creationTime = desc.getValue(IRealizationConstants.HTableCreationTime);
             if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
                 //only take care htables that belongs to self, and created more than 2 days
-                if (StringUtils.isNotEmpty(creationTime) || (System.currentTimeMillis() - Long.valueOf(creationTime) > TIME_THREADSHOLD))
+                if (StringUtils.isEmpty(creationTime) || (System.currentTimeMillis() - Long.valueOf(creationTime) > TIME_THREADSHOLD)) {
                     allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+                }
             }
         }
 
