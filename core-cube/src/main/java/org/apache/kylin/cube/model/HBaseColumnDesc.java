@@ -37,8 +37,9 @@ public class HBaseColumnDesc {
     @JsonProperty("measure_refs")
     private String[] measureRefs;
 
-    // these two will be assemble at runtime
+    // these two will be assembled at runtime
     private MeasureDesc[] measures;
+    private int[] measureIndex; // the index on CubeDesc.getMeasures()
     private String columnFamilyName;
 
     public String getQualifier() {
@@ -56,18 +57,17 @@ public class HBaseColumnDesc {
     public void setMeasureRefs(String[] measureRefs) {
         this.measureRefs = measureRefs;
     }
+    
+    public int[] getMeasureIndex() {
+        return measureIndex;
+    }
+    
+    public void setMeasureIndex(int[] index) {
+        this.measureIndex = index;
+    }
 
     public MeasureDesc[] getMeasures() {
         return measures;
-    }
-
-    public int findMeasureIndex(FunctionDesc function) {
-        for (int i = 0; i < measures.length; i++) {
-            if (measures[i].getFunction().equals(function)) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     public void setMeasures(MeasureDesc[] measures) {
@@ -80,6 +80,23 @@ public class HBaseColumnDesc {
 
     public void setColumnFamilyName(String columnFamilyName) {
         this.columnFamilyName = columnFamilyName;
+    }
+
+    public int findMeasure(FunctionDesc function) {
+        for (int i = 0; i < measures.length; i++) {
+            if (measures[i].getFunction().equals(function)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public boolean containsMeasure(String refName) {
+        for (String ref : measureRefs) {
+            if (ref.equals(refName))
+                return true;
+        }
+        return false;
     }
 
     @Override

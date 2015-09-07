@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
@@ -35,8 +34,6 @@ import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
@@ -46,14 +43,12 @@ import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 /**
  * @author shaoshi
@@ -111,22 +106,14 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
         mergedCubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         storageInputFormat = MRUtil.getBatchMergeInputSide2(mergedCubeSegment).getStorageInputFormat();
 
-        newKeyBuf = new byte[256];// size will auto-grow
+        newKeyBuf = new byte[256]; // size will auto-grow
 
         sourceCubeSegment = storageInputFormat.findSourceSegment(context, cube);
-        logger.info(sourceCubeSegment.toString());
+        logger.info("Source cube segment: " + sourceCubeSegment);
 
-        this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
+        rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
 
-        List<MeasureDesc> measuresDescs = Lists.newArrayList();
-        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                for (MeasureDesc measure : colDesc.getMeasures()) {
-                    measuresDescs.add(measure);
-                }
-            }
-        }
-        codec = new MeasureCodec(measuresDescs);
+        codec = new MeasureCodec(cubeDesc.getMeasures());
     }
 
     @Override

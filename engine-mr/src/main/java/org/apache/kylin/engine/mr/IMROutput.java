@@ -40,8 +40,8 @@ public interface IMROutput {
         /**
          * Add step that saves cuboid output from HDFS to storage.
          * 
-         * The cuboid output is a directory of sequence files, where key takes format "CUBOID,D1,D2,..,Dn", 
-         * value takes format "M1,M2,..,Mm". CUBOID is 8 bytes cuboid ID; Dx is dimension value with
+         * The cuboid output is a directory of sequence files, where key is CUBOID+D1+D2+..+Dn, 
+         * value is M1+M2+..+Mm. CUBOID is 8 bytes cuboid ID; Dx is dimension value with
          * dictionary encoding; Mx is measure value serialization form.
          */
         public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow, String cuboidRootPath);
@@ -66,8 +66,8 @@ public interface IMROutput {
         /**
          * Add step that saves cuboid output from HDFS to storage.
          * 
-         * The cuboid output is a directory of sequence files, where key takes format "CUBOID,D1,D2,..,Dn", 
-         * value takes format "M1,M2,..,Mm". CUBOID is 8 bytes cuboid ID; Dx is dimension value with
+         * The cuboid output is a directory of sequence files, where key is CUBOID+D1+D2+..+Dn, 
+         * value is M1+M2+..+Mm. CUBOID is 8 bytes cuboid ID; Dx is dimension value with
          * dictionary encoding; Mx is measure value serialization form.
          */
         public void addStepPhase2_BuildCube(DefaultChainedExecutable jobFlow, String cuboidRootPath);

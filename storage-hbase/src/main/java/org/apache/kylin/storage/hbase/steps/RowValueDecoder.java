@@ -42,7 +42,7 @@ public class RowValueDecoder implements Cloneable {
     private final MeasureCodec codec;
     private final BitSet projectionIndex;
     private final MeasureDesc[] measures;
-    private Object[] values;
+    private final Object[] values;
 
     public RowValueDecoder(HBaseColumnDesc hbaseColumn) {
         this.hbaseColumn = hbaseColumn;
@@ -54,22 +54,26 @@ public class RowValueDecoder implements Cloneable {
         this.values = new Object[measures.length];
     }
 
-    public void decode(Result hbaseRow) {
+    public void decodeAndConvertJavaObj(Result hbaseRow) {
         decode(hbaseRow, true);
     }
+    
+    public void decode(Result hbaseRow) {
+        decode(hbaseRow, false);
+    }
 
-    public void decode(Result hbaseRow, boolean convertToJavaObject) {
+    private void decode(Result hbaseRow, boolean convertToJavaObject) {
         decode(hbaseRow.getValueAsByteBuffer(hbaseColumnFamily, hbaseColumnQualifier), convertToJavaObject);
     }
 
+    public void decodeAndConvertJavaObj(byte[] bytes) {
+        decode(ByteBuffer.wrap(bytes), true);
+    }
+
     public void decode(byte[] bytes) {
-        decode(bytes, true);
+        decode(ByteBuffer.wrap(bytes), false);
     }
-
-    public void decode(byte[] bytes, boolean convertToJavaObject) {
-        decode(ByteBuffer.wrap(bytes), convertToJavaObject);
-    }
-
+    
     private void decode(ByteBuffer buffer, boolean convertToJavaObject) {
         codec.decode(buffer, values);
         if (convertToJavaObject) {
@@ -90,16 +94,16 @@ public class RowValueDecoder implements Cloneable {
         }
     }
 
-    public void setIndex(int bitIndex) {
+    public void setProjectIndex(int bitIndex) {
         projectionIndex.set(bitIndex);
-    }
-
-    public HBaseColumnDesc getHBaseColumn() {
-        return hbaseColumn;
     }
 
     public BitSet getProjectionIndex() {
         return projectionIndex;
+    }
+
+    public HBaseColumnDesc getHBaseColumn() {
+        return hbaseColumn;
     }
 
     public Object[] getValues() {
@@ -108,6 +112,14 @@ public class RowValueDecoder implements Cloneable {
 
     public MeasureDesc[] getMeasures() {
         return measures;
+    }
+    
+    // result is in order of <code>CubeDesc.getMeasures()</code>
+    public void loadCubeMeasureArray(Object result[]) {
+        int[] measureIndex = hbaseColumn.getMeasureIndex();
+        for (int i = 0; i < measureIndex.length; i++) {
+            result[measureIndex[i]] = values[i];
+        }
     }
 
     public boolean hasMemHungryCountDistinct() {

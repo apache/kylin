@@ -79,8 +79,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
         KeyValue outputValue;
 
         int n = keyValueCreators.size();
-        if (n == 1 && keyValueCreators.get(0).isFullCopy) { // shortcut for
-                                                            // simple full copy
+        if (n == 1 && keyValueCreators.get(0).isFullCopy) { // shortcut for simple full copy
 
             outputValue = keyValueCreators.get(0).create(key, value.getBytes(), 0, value.getLength());
             context.write(outputKey, outputValue);

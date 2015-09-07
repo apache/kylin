@@ -1,5 +1,6 @@
 package org.apache.kylin.cube.gridtable;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
@@ -59,29 +60,48 @@ public class CuboidToGridTableMapping {
         nDimensions = gtColIdx;
         assert nDimensions == cuboid.getColumns().size();
 
-        // metrics
-        metrics2gt = LinkedListMultimap.create();
+        // column blocks of metrics
+        ArrayList<BitSet> metricsColBlocks = Lists.newArrayList();
         for (HBaseColumnFamilyDesc familyDesc : cuboid.getCube().getHbaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
-                BitSet colBlock = new BitSet();
-                for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
-                    // Count distinct & holistic count distinct are equals() but different.
-                    // Ensure the holistic version if exists is always the first.
-                    FunctionDesc func = measure.getFunction();
-                    if (func.isHolisticCountDistinct()) {
-                        List<Integer> existing = metrics2gt.removeAll(func);
-                        metrics2gt.put(func, gtColIdx);
-                        metrics2gt.putAll(func, existing);
-                    } else {
-                        metrics2gt.put(func, gtColIdx);
-                    }
-                    gtDataTypes.add(func.getReturnDataType());
-                    colBlock.set(gtColIdx);
-                    gtColIdx++;
-                }
-                gtColBlocks.add(new ImmutableBitSet(colBlock));
+            for (int i = 0; i < familyDesc.getColumns().length; i++) {
+                metricsColBlocks.add(new BitSet());
             }
         }
+        
+        // metrics
+        metrics2gt = LinkedListMultimap.create();
+        for (MeasureDesc measure :cuboid.getCube().getMeasures()) {
+            // Count distinct & holistic count distinct are equals() but different.
+            // Ensure the holistic version if exists is always the first.
+            FunctionDesc func = measure.getFunction();
+            if (func.isHolisticCountDistinct()) {
+                List<Integer> existing = metrics2gt.removeAll(func);
+                metrics2gt.put(func, gtColIdx);
+                metrics2gt.putAll(func, existing);
+            } else {
+                metrics2gt.put(func, gtColIdx);
+            }
+            
+            gtDataTypes.add(func.getReturnDataType());
+            
+            // map to column block
+            int cbIdx = 0;
+            for (HBaseColumnFamilyDesc familyDesc : cuboid.getCube().getHbaseMapping().getColumnFamily()) {
+                for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
+                    if (hbaseColDesc.containsMeasure(measure.getName())) {
+                        metricsColBlocks.get(cbIdx).set(gtColIdx);
+                    }
+                    cbIdx++;
+                }
+            }
+            
+            gtColIdx++;
+        }
+        
+        for (BitSet set : metricsColBlocks) {
+            gtColBlocks.add(new ImmutableBitSet(set));
+        }
+        
         nMetrics = gtColIdx - nDimensions;
         assert nMetrics == cuboid.getCube().getMeasures().size();
     }
@@ -157,16 +177,4 @@ public class CuboidToGridTableMapping {
         return result.isEmpty() ? Collections.<Integer, Integer> emptyMap() : result;
     }
 
-    public static MeasureDesc[] getMeasureSequenceOnGridTable(CubeDesc cube) {
-        MeasureDesc[] result = new MeasureDesc[cube.getMeasures().size()];
-        int i = 0;
-        for (HBaseColumnFamilyDesc familyDesc : cube.getHbaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
-                for (MeasureDesc m : hbaseColDesc.getMeasures()) {
-                    result[i++] = m;
-                }
-            }
-        }
-        return result;
-    }
 }

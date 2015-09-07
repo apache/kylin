@@ -118,7 +118,7 @@ public class CubeTupleConverter {
         // measures
         for (int i = 0; i < rowValueDecoders.size(); i++) {
             RowValueDecoder rowValueDecoder = rowValueDecoders.get(i);
-            rowValueDecoder.decode(hbaseRow);
+            rowValueDecoder.decodeAndConvertJavaObj(hbaseRow);
             Object[] measureValues = rowValueDecoder.getValues();
 
             int[] measureIdx = metricsMeasureIdx[i];
