@@ -251,8 +251,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
 
         int nRegion = Math.round((float) totalSizeInM / (cut * 1024L));
-        nRegion = Math.max(kylinConfig.getHBaseRegionCutMin(), nRegion);
-        nRegion = Math.min(kylinConfig.getHBaseRegionCutMax(), nRegion);
+        nRegion = Math.max(kylinConfig.getHBaseRegionCountMin(), nRegion);
+        nRegion = Math.min(kylinConfig.getHBaseRegionCountMax(), nRegion);
 
         int mbPerRegion = (int) (totalSizeInM / (nRegion));
         mbPerRegion = Math.max(1, mbPerRegion);

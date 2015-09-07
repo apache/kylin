@@ -129,9 +129,9 @@ public class KylinConfig implements Serializable {
     public static final String KYLIN_HOME = "KYLIN_HOME";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
-    public static final String HBASE_REGION_CUT_SMALL = "kylin.job.hbase.region.cut.small";
-    public static final String HBASE_REGION_CUT_MEDIUM = "kylin.job.hbase.region.cut.medium";
-    public static final String HBASE_REGION_CUT_LARGE = "kylin.job.hbase.region.cut.large";
+    public static final String HBASE_REGION_CUT_SMALL = "kylin.hbase.region.cut.small";
+    public static final String HBASE_REGION_CUT_MEDIUM = "kylin.hbase.region.cut.medium";
+    public static final String HBASE_REGION_CUT_LARGE = "kylin.hbase.region.cut.large";
 
     public static final String SPARK_HOME = "kylin.spark.home";
     public static final String SPARK_MASTER = "kylin.spark.master";
@@ -454,12 +454,12 @@ public class KylinConfig implements Serializable {
         return Integer.parseInt(getOptional("kylin.table.snapshot.max_mb", "300"));
     }
 
-    public int getHBaseRegionCutMin() {
-        return Integer.parseInt(getOptional("kylin.job.hbase.region.cut.min", "2"));
+    public int getHBaseRegionCountMin() {
+        return Integer.parseInt(getOptional("kylin.hbase.region.count.min", "1"));
     }
 
-    public int getHBaseRegionCutMax() {
-        return Integer.parseInt(getOptional("kylin.job.hbase.region.cut.max", "1000"));
+    public int getHBaseRegionCountMax() {
+        return Integer.parseInt(getOptional("kylin.hbase.region.count.max", "500"));
     }
 
     public int getScanThreshold() {
@@ -726,13 +726,13 @@ public class KylinConfig implements Serializable {
         String cut;
         switch (capacity) {
         case "SMALL":
-            cut = getProperty(HBASE_REGION_CUT_SMALL, "5");
+            cut = getProperty(HBASE_REGION_CUT_SMALL, "10");
             break;
         case "MEDIUM":
-            cut = getProperty(HBASE_REGION_CUT_MEDIUM, "10");
+            cut = getProperty(HBASE_REGION_CUT_MEDIUM, "20");
             break;
         case "LARGE":
-            cut = getProperty(HBASE_REGION_CUT_LARGE, "50");
+            cut = getProperty(HBASE_REGION_CUT_LARGE, "100");
             break;
         default:
             throw new IllegalArgumentException("Capacity not recognized: " + capacity);
