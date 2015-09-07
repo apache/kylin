@@ -43,6 +43,8 @@ public interface BatchConstants {
 
     String MAPPER_SAMPLE_NUMBER = "mapper.sample.number";
     String REGION_NUMBER = "region.number";
+    String REGION_NUMBER_MIN = "region.number.min";
+    String REGION_NUMBER_MAX = "region.number.max";
     String REGION_SPLIT_SIZE = "region.split.size";
     String CUBE_CAPACITY = "cube.capacity";
 
