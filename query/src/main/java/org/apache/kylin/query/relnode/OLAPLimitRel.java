@@ -78,6 +78,11 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
         Number limitValue = (Number) (((RexLiteral) localFetch).getValue());
         int limit = limitValue.intValue();
         this.context.storageContext.setLimit(limit);
+        if(localOffset != null) {
+            Number offsetValue = (Number) (((RexLiteral) localOffset).getValue());
+            int offset = offsetValue.intValue();
+            this.context.storageContext.setOffset(offset);
+        }
     }
 
     private ColumnRowType buildColumnRowType() {

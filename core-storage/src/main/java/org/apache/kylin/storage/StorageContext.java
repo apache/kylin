@@ -40,6 +40,7 @@ public class StorageContext {
     private String connUrl;
     private int threshold;
     private int limit;
+    private int offset;
     private boolean hasSort;
     private List<MeasureDesc> sortMeasures;
     private List<OrderEnum> sortOrders;
@@ -92,6 +93,14 @@ public class StorageContext {
 
     public void setLimit(int l) {
         this.limit = l;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     public void enableLimit() {
