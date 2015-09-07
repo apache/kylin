@@ -32,6 +32,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,10 +92,13 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            int regionSplitSize = KylinConfig.getInstanceFromEnv().getHBaseRegionSizeGB(cube.getDescriptor().getModel().getCapacity().toString());
-            int maxRegionCount = KylinConfig.getInstanceFromEnv().getHBaseMaxRegionCount();
+            DataModelDesc.RealizationCapacity cubeCapacity = cube.getDescriptor().getModel().getCapacity();
+            int regionSplitSize = KylinConfig.getInstanceFromEnv().getHBaseRegionCut(cubeCapacity.toString());
+            int maxRegionCount = KylinConfig.getInstanceFromEnv().getHBaseRegionCountMax();
+            int minRegionCount = KylinConfig.getInstanceFromEnv().getHBaseRegionCountMin();
             job.getConfiguration().set(BatchConstants.REGION_SPLIT_SIZE, String.valueOf(regionSplitSize));
-            job.getConfiguration().set(BatchConstants.REGION_NUMBER, String.valueOf(maxRegionCount));
+            job.getConfiguration().set(BatchConstants.REGION_NUMBER_MAX, String.valueOf(maxRegionCount));
+            job.getConfiguration().set(BatchConstants.REGION_NUMBER_MIN, String.valueOf(minRegionCount));
 
             return waitForCompletion(job);
         } catch (Exception e) {
