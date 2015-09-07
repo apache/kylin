@@ -26,7 +26,6 @@ public class CubeRequest {
     private boolean successful;
     private String message;
     private String project;
-    private long retentionRange;
 
     public String getUuid() {
         return uuid;
@@ -105,11 +104,4 @@ public class CubeRequest {
         this.project = project;
     }
 
-    public long getRetentionRange() {
-        return retentionRange;
-    }
-
-    public void setRetentionRange(long retentionRange) {
-        this.retentionRange = retentionRange;
-    }
 }

@@ -40,4 +40,11 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
         }
 
     }
+
+  $scope.refreshAutoMergeTimeRanges = function(list,index,item){
+    if (item) {
+      list[index] = item;
+    }
+  }
+
 });

@@ -45,11 +45,11 @@ KylinApp.service('CubeDescModel',function(){
                     "aggregation_groups": []
                 },
                 "notify_list": [],
-                "capacity": "",
                 "hbase_mapping": {
                     "column_family": []
                 },
-               "retentionRange":"0"
+               "retention_range":"0",
+               "auto_merge_time_ranges":[604800000,2419200000]
             };
 
             return cubeMeta;
