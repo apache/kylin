@@ -20,6 +20,7 @@ package org.apache.kylin.job.tools;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.security.Principal;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
@@ -28,9 +29,23 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
+import org.apache.http.auth.AuthSchemeProvider;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.config.Lookup;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.impl.auth.SPNegoSchemeFactory;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -51,10 +66,11 @@ public class HadoopStatusGetter {
         this.mrJobId = mrJobId;
     }
 
-    public Pair<RMAppState, FinalApplicationStatus> get() throws IOException {
+    public Pair<RMAppState, FinalApplicationStatus> get(boolean useKerberos) throws IOException {
         String applicationId = mrJobId.replace("job", "application");
         String url = yarnUrl.replace("${job_id}", applicationId);
-        JsonNode root = new ObjectMapper().readTree(getHttpResponse(url));
+        String response = useKerberos ? getHttpResponseWithKerberosAuth(url) : getHttpResponse(url);
+        JsonNode root = new ObjectMapper().readTree(response);
         RMAppState state = RMAppState.valueOf(root.findValue("state").getTextValue());
         FinalApplicationStatus finalStatus = FinalApplicationStatus.valueOf(root.findValue("finalStatus").getTextValue());
         return Pair.of(state, finalStatus);
@@ -120,6 +136,76 @@ public class HadoopStatusGetter {
         }
 
         return response;
+    }
+    
+    private static String DEFAULT_KRB5_CONFIG_LOCATION = "/etc/krb5.conf";
+    private String getHttpResponseWithKerberosAuth(String url) throws IOException {
+        String krb5ConfigPath = System.getProperty("java.security.krb5.conf");
+        if (krb5ConfigPath == null) {
+            krb5ConfigPath = DEFAULT_KRB5_CONFIG_LOCATION;
+        } 
+        log.debug("krb5 config file is " + krb5ConfigPath);
+      
+        boolean skipPortAtKerberosDatabaseLookup = true;
+        System.setProperty("java.security.krb5.conf", krb5ConfigPath);
+        System.setProperty("sun.security.krb5.debug", "true");
+        System.setProperty("javax.security.auth.useSubjectCredsOnly","false");
+        Lookup<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
+                .register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory(skipPortAtKerberosDatabaseLookup))
+                .build();
+        
+        CloseableHttpClient client = HttpClients.custom().setDefaultAuthSchemeRegistry(authSchemeRegistry).build();
+        HttpClientContext context = HttpClientContext.create();
+        BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        // This may seem odd, but specifying 'null' as principal tells java to use the logged in user's credentials
+        Credentials useJaasCreds = new Credentials() {
+            public String getPassword() {
+                return null;
+            }
+            public Principal getUserPrincipal() {
+                return null;
+            }
+        };
+        credentialsProvider.setCredentials( new AuthScope(null, -1, null), useJaasCreds );
+        context.setCredentialsProvider(credentialsProvider);
+        String responseString = null;
+        int count = 0;
+        int MAX_RETRY_TIME = 3;
+        while(responseString == null && count ++ < MAX_RETRY_TIME) {
+            if (url.startsWith("https://")) {
+                registerEasyHttps();
+            }
+            if (url.contains("anonymous=true") == false) {
+                url += url.contains("?") ? "&" : "?";
+                url += "anonymous=true";
+            }
+            HttpGet httpget = new HttpGet(url);
+            try {
+                httpget.addHeader("accept", "application/json");
+                CloseableHttpResponse response = client.execute(httpget,context);
+                String redirect = null;
+                org.apache.http.Header h = response.getFirstHeader("Refresh");
+                if (h != null) {
+                    String s = h.getValue();
+                    int cut = s.indexOf("url=");
+                    if (cut >= 0) {
+                        redirect = s.substring(cut + 4);
+                    }
+                }
+    
+                if (redirect == null) {
+                    responseString = IOUtils.toString(response.getEntity().getContent());
+                    log.debug("Job " + mrJobId + " get status check result.\n");
+                } else {
+                    url = redirect;
+                    log.debug("Job " + mrJobId + " check redirect url " + url + ".\n");
+                } 
+            } finally {
+                httpget.releaseConnection();
+            }
+        }
+        
+        return responseString;
     }
 
     private static Protocol EASY_HTTPS = null;
