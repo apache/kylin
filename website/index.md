@@ -14,7 +14,7 @@ title: Home
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">
               <p class="title_text"> Kylin has been accepted as Apache Incubator Project on Nov 25, 2014.</p>
-              <p class="title_text"> Apache Kylin is an open source Distributed Analytics Engine from eBay Inc. that provides SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets</p>
+              <p class="title_text"> Apache Kylin is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets, original contributed from eBay Inc.</p>
               <img id="diagram" src="assets/images/kylin_diagram.png"> </div>
           </div>
         </div>

@@ -14,7 +14,7 @@ title: 首页
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">
               <p class="title_text"> Kylin 于2014年11月25日被接受会Apache孵化器项目</p>
-              <p class="title_text"> Apache Kylin 是由eBay开源的分布式分析引擎，提供Hadoop之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据</p>
+              <p class="title_text"> Apache Kylin一个开源的分布式分析引擎，提供Hadoop之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc. 开发并贡献至开源社区。</p>
               <img id="diagram" src="{{ "/assets/images/kylin_diagram.png"| prepend: site.baseurl }}"> </div>
           </div>
         </div>
