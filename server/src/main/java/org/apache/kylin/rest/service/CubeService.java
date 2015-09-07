@@ -260,7 +260,6 @@ public class CubeService extends BasicService {
             }
 
             CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
-            cube = getCubeManager().updateCube(new CubeUpdate(cube));
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
 
@@ -591,7 +590,8 @@ public class CubeService extends BasicService {
 
     private void keepCubeRetention(String cubeName) {
         CubeInstance cube = getCubeManager().getCube(cubeName);
-        if (cube.getRetentionRange() > 0) {
+        CubeDesc desc = cube.getDescriptor();
+        if (desc.getRetentionRange() > 0) {
             synchronized (CubeService.class) {
                 cube = getCubeManager().getCube(cubeName);
                 List<CubeSegment> readySegs = cube.getSegment(SegmentStatusEnum.READY);
@@ -599,7 +599,7 @@ public class CubeService extends BasicService {
                 int position = readySegs.size() - 1;
                 while (position >= 0) {
                     currentRange += (readySegs.get(position).getDateRangeEnd() - readySegs.get(position).getDateRangeStart());
-                    if (currentRange >= cube.getRetentionRange()) {
+                    if (currentRange >= desc.getRetentionRange()) {
                         break;
                     }
 

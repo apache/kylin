@@ -66,8 +66,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         cubeInstance.updateRandomUuid();
         cubeInstance.setProjectName(projectName);
-        cubeInstance.setRetentionRange(cubeDesc.getRetentionRange());
-        
+
         // MR_V2 is the default engine since 0.8
         cubeInstance.setEngineType(IEngineAware.ID_MR_V2);
         cubeInstance.setStorageType(IStorageAware.ID_HBASE);
@@ -97,10 +96,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
-    @JsonProperty("auto_merge_time_ranges")
-    private long[] autoMergeTimeRanges;
-    @JsonProperty("retention_range")
-    private long retentionRange = 0;
     @JsonProperty("engine_type")
     private int engineType = IEngineAware.ID_MR_V1;
     @JsonProperty("storage_type")
@@ -434,14 +429,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return Lists.newArrayList(getDescriptor().listDimensionColumnsIncludingDerived());
     }
 
-    public long[] getAutoMergeTimeRanges() {
-        return autoMergeTimeRanges;
-    }
-
-    public void setAutoMergeTimeRanges(long[] autoMergeTimeRanges) {
-        this.autoMergeTimeRanges = autoMergeTimeRanges;
-    }
-
     public boolean needAutoMerge() {
         if (!this.getDescriptor().getModel().getPartitionDesc().isPartitioned())
             return false;
@@ -449,15 +436,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         if (this.getDescriptor().hasHolisticCountDistinctMeasures())
             return false;
 
-        return autoMergeTimeRanges != null && autoMergeTimeRanges.length > 0;
-    }
-
-    public long getRetentionRange() {
-        return retentionRange;
-    }
-
-    public void setRetentionRange(long retentionRange) {
-        this.retentionRange = retentionRange;
+        return this.getDescriptor().getAutoMergeTimeRanges() != null && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
     }
 
     @Override

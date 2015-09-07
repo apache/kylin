@@ -95,7 +95,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
-        cube.setAutoMergeTimeRanges(new long[] { 2000, 6000 });
+        cube.getDescriptor().setAutoMergeTimeRanges(new long[]{2000, 6000});
         mgr.updateCube(new CubeUpdate(cube));
 
         assertTrue(cube.needAutoMerge());
@@ -138,7 +138,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
-        cube.setAutoMergeTimeRanges(new long[] { 2000, 6000 });
+        cube.getDescriptor().setAutoMergeTimeRanges(new long[] { 2000, 6000 });
         mgr.updateCube(new CubeUpdate(cube));
 
         assertTrue(cube.needAutoMerge());
