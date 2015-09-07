@@ -104,7 +104,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public String getFactTable() {
         return factTable;
     }
-    
+
     public TableDesc getFactTableDesc() {
         return factTableDesc;
     }
@@ -175,6 +175,7 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public void init(Map<String, TableDesc> tables) {
+        this.factTable = this.factTable.toUpperCase();
         this.factTableDesc = tables.get(this.factTable.toUpperCase());
         if (factTableDesc == null) {
             throw new IllegalStateException("Fact table does not exist:" + this.factTable);
@@ -207,7 +208,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
             StringUtil.toUpperCaseArray(join.getForeignKey(), join.getForeignKey());
             StringUtil.toUpperCaseArray(join.getPrimaryKey(), join.getPrimaryKey());
-            
+
             // primary key
             String[] pks = join.getPrimaryKey();
             TblColRef[] pkCols = new TblColRef[pks.length];
@@ -221,7 +222,7 @@ public class DataModelDesc extends RootPersistentEntity {
                 pkCols[i] = colRef;
             }
             join.setPrimaryKeyColumns(pkCols);
-            
+
             // foreign key
             String[] fks = join.getForeignKey();
             TblColRef[] fkCols = new TblColRef[fks.length];
@@ -235,7 +236,7 @@ public class DataModelDesc extends RootPersistentEntity {
                 fkCols[i] = colRef;
             }
             join.setForeignKeyColumns(fkCols);
-            
+
             // Validate join in dimension
             if (pkCols.length != fkCols.length) {
                 throw new IllegalStateException("Primary keys(" + lookup.getTable() + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + this.getFactTable() + ") " + Arrays.toString(fks));
