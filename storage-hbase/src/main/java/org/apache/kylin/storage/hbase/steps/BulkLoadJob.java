@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 public class BulkLoadJob extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(BulkLoadJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(BulkLoadJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -83,9 +83,9 @@ public class BulkLoadJob extends AbstractHadoopJob {
             newArgs[0] = input;
             newArgs[1] = tableName;
 
-            log.debug("Start to run LoadIncrementalHFiles");
+            logger.debug("Start to run LoadIncrementalHFiles");
             int ret = ToolRunner.run(new LoadIncrementalHFiles(conf), newArgs);
-            log.debug("End to run LoadIncrementalHFiles");
+            logger.debug("End to run LoadIncrementalHFiles");
             return ret;
         } catch (Exception e) {
             printUsage(options);

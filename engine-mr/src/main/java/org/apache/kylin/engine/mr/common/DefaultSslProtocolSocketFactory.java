@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFactory {
     /** Log object for this class. */
-    private static Logger LOG = LoggerFactory.getLogger(DefaultSslProtocolSocketFactory.class);
+    private static Logger logger = LoggerFactory.getLogger(DefaultSslProtocolSocketFactory.class);
     private SSLContext sslcontext = null;
 
     /**
@@ -135,7 +135,7 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
 
             return context;
         } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             throw new HttpClientError(e.toString());
         }
     }

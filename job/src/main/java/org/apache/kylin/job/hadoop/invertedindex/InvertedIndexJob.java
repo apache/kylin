@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * @author yangli9
  */
 public class InvertedIndexJob extends AbstractHadoopJob {
-    protected static final Logger log = LoggerFactory.getLogger(InvertedIndexJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(InvertedIndexJob.class);
 
     @Override
     public int run(String[] args) throws Exception {

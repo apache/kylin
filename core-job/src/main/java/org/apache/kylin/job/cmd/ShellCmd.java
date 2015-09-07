@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ShellCmd implements IJobCommand {
 
-    private static Logger log = LoggerFactory.getLogger(ShellCmd.class);
+    private static Logger logger = LoggerFactory.getLogger(ShellCmd.class);
 
     private final String executeCommand;
     private final ICommandOutput output;
@@ -74,9 +74,9 @@ public class ShellCmd implements IJobCommand {
         if (!isAsync) {
             try {
                 exitCode = future.get();
-                log.info("finish executing");
+                logger.info("finish executing");
             } catch (CancellationException e) {
-                log.debug("Command is cancelled");
+                logger.debug("Command is cancelled");
                 exitCode = -2;
             } catch (Exception e) {
                 throw new JobException("Error when execute job " + executeCommand, e);

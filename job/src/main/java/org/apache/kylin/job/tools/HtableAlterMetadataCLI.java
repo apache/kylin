@@ -41,7 +41,7 @@ public class HtableAlterMetadataCLI extends AbstractHadoopJob {
     private static final Option OPTION_METADATA_KEY = OptionBuilder.withArgName("key").hasArg().isRequired(true).withDescription("The metadata key").create("key");
     private static final Option OPTION_METADATA_VALUE = OptionBuilder.withArgName("value").hasArg().isRequired(true).withDescription("The metadata value").create("value");
 
-    protected static final Logger log = LoggerFactory.getLogger(HtableAlterMetadataCLI.class);
+    protected static final Logger logger = LoggerFactory.getLogger(HtableAlterMetadataCLI.class);
 
     String tableName;
     String metadataKey;

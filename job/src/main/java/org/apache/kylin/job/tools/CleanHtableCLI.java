@@ -34,9 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CleanHtableCLI extends AbstractHadoopJob {
 
-    protected static final Logger log = LoggerFactory.getLogger(CleanHtableCLI.class);
-
-    String tableName;
+    protected static final Logger logger = LoggerFactory.getLogger(CleanHtableCLI.class);
 
     @Override
     public int run(String[] args) throws Exception {

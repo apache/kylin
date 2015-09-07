@@ -41,7 +41,7 @@ public class HadoopStatusGetter {
     private final String mrJobId;
     private final String yarnUrl;
 
-    protected static final Logger log = LoggerFactory.getLogger(HadoopStatusChecker.class);
+    protected static final Logger logger = LoggerFactory.getLogger(HadoopStatusChecker.class);
 
     public HadoopStatusGetter(String yarnUrl, String mrJobId) {
         this.yarnUrl = yarnUrl;
@@ -88,10 +88,10 @@ public class HadoopStatusGetter {
 
                 if (redirect == null) {
                     response = get.getResponseBodyAsString();
-                    log.debug("Job " + mrJobId + " get status check result.\n");
+                    logger.debug("Job " + mrJobId + " get status check result.\n");
                 } else {
                     url = redirect;
-                    log.debug("Job " + mrJobId + " check redirect url " + url + ".\n");
+                    logger.debug("Job " + mrJobId + " check redirect url " + url + ".\n");
                 }
             } finally {
                 get.releaseConnection();

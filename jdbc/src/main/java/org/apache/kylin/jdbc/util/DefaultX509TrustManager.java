@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public class DefaultX509TrustManager implements X509TrustManager {
 
     /** Log object for this class. */
-    private static Logger LOG = LoggerFactory.getLogger(DefaultX509TrustManager.class);
+    private static Logger logger = LoggerFactory.getLogger(DefaultX509TrustManager.class);
     private X509TrustManager standardTrustManager = null;
 
     /**
@@ -71,12 +71,12 @@ public class DefaultX509TrustManager implements X509TrustManager {
     }
 
     public boolean isServerTrusted(X509Certificate[] certificates) {
-        if ((certificates != null) && LOG.isDebugEnabled()) {
-            LOG.debug("Server certificate chain:");
+        if ((certificates != null) && logger.isDebugEnabled()) {
+            logger.debug("Server certificate chain:");
 
             for (int i = 0; i < certificates.length; i++) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("X509Certificate[" + i + "]=" + certificates[i]);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("X509Certificate[" + i + "]=" + certificates[i]);
                 }
             }
         }
@@ -87,7 +87,7 @@ public class DefaultX509TrustManager implements X509TrustManager {
             try {
                 certificate.checkValidity();
             } catch (CertificateException e) {
-                LOG.error(e.toString());
+                logger.error(e.toString());
 
                 return false;
             }
