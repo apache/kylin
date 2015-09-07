@@ -82,6 +82,8 @@ public class KylinConfig {
     public static final String KYLIN_JOB_REMOTE_CLI_WORKING_DIR = "kylin.job.remote.cli.working.dir";
 
     public static final String KYLIN_JOB_CMD_EXTRA_ARGS = "kylin.job.cmd.extra.args";
+    
+    public static final String KYLIN_GET_JOB_STATUS_WITH_KERBEROS = "kylin.job.status.with.kerberos";
     /**
      * Toggle to indicate whether to use hive for table flattening. Default
      * true.
@@ -418,6 +420,10 @@ public class KylinConfig {
 
     public String getMapReduceCmdExtraArgs() {
         return getOptional(KYLIN_JOB_CMD_EXTRA_ARGS);
+    }
+    
+    public boolean getKylinUseKerberosAuth() {
+        return Boolean.valueOf(getOptional(KYLIN_GET_JOB_STATUS_WITH_KERBEROS, "false"));
     }
 
     public String getOverrideHiveTableLocation(String table) {

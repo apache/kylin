@@ -24,6 +24,7 @@ import java.util.Date;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +40,13 @@ public class HadoopStatusChecker {
     private final String yarnUrl;
     private final String mrJobID;
     private final StringBuilder output;
+    private final KylinConfig config; 
 
-    public HadoopStatusChecker(String yarnUrl, String mrJobID, StringBuilder output) {
+    public HadoopStatusChecker(String yarnUrl, String mrJobID, StringBuilder output, KylinConfig config) {
         this.yarnUrl = yarnUrl;
         this.mrJobID = mrJobID;
         this.output = output;
+        this.config = config;
     }
 
     public JobStepStatusEnum checkStatus() {
@@ -53,7 +56,8 @@ public class HadoopStatusChecker {
         }
         JobStepStatusEnum status = null;
         try {
-            final Pair<RMAppState, FinalApplicationStatus> result = new HadoopStatusGetter(yarnUrl, mrJobID).get();
+            boolean useKerberosAuth = config.getKylinUseKerberosAuth();
+            final Pair<RMAppState, FinalApplicationStatus> result = new HadoopStatusGetter(yarnUrl, mrJobID).get(useKerberosAuth);
             logger.debug("State of Hadoop job: " + mrJobID + ":" + result.getLeft() + "-" + result.getRight());
             output.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(new Date()) + " - State of Hadoop job: " + mrJobID + ":" + result.getLeft() + " - " + result.getRight() + "\n");
 
