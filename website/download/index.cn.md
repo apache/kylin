@@ -3,7 +3,7 @@ layout: download-cn
 title: 下载
 ---
 
-__最新发布 (源代码)__  
+__最新发布(源代码)__  
 最新发布的Apache Kylin可以从ASF网站下载：:
 
 * [Apache Kylin v1.0-incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-1.0-incubating/)
