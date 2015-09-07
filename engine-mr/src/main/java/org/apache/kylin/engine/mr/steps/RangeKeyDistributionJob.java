@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class RangeKeyDistributionJob extends AbstractHadoopJob {
-    protected static final Logger log = LoggerFactory.getLogger(RangeKeyDistributionJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(RangeKeyDistributionJob.class);
 
     /*
      * (non-Javadoc)

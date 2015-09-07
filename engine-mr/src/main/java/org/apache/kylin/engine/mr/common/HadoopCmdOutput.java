@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HadoopCmdOutput {
 
-    protected static final Logger log = LoggerFactory.getLogger(HadoopCmdOutput.class);
+    protected static final Logger logger = LoggerFactory.getLogger(HadoopCmdOutput.class);
 
     private final StringBuilder output;
     private final Job job;
@@ -86,18 +86,18 @@ public class HadoopCmdOutput {
             Counters counters = job.getCounters();
             if (counters == null) {
                 String errorMsg = "no counters for job " + getMrJobId();
-                log.warn(errorMsg);
+                logger.warn(errorMsg);
                 output.append(errorMsg);
                 return;
             }
             this.output.append(counters.toString()).append("\n");
-            log.debug(counters.toString());
+            logger.debug(counters.toString());
 
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
             hdfsBytesWritten = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue());
             hdfsBytesRead = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_READ").getValue());
         } catch (Exception e) {
-            log.error(e.getLocalizedMessage(), e);
+            logger.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());
         }
     }

@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ShellCmdOutput extends BaseCommandOutput implements ICommandOutput {
 
-    protected static final Logger log = LoggerFactory.getLogger(ShellCmdOutput.class);
+    protected static final Logger logger = LoggerFactory.getLogger(ShellCmdOutput.class);
 
     protected StringBuilder output;
     protected int exitCode;
@@ -62,7 +62,7 @@ public class ShellCmdOutput extends BaseCommandOutput implements ICommandOutput 
     @Override
     public void appendOutput(String message) {
         output.append(message).append(System.getProperty("line.separator"));
-        log.debug(message);
+        logger.debug(message);
     }
 
     @Override

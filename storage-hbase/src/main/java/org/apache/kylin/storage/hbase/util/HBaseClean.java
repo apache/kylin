@@ -19,7 +19,6 @@
 package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,7 +47,7 @@ public class HBaseClean extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     private static final Option OPTION_TAG = OptionBuilder.withArgName("tag").hasArg().isRequired(true).withDescription("the tag of HTable").create("tag");
 
-    protected static final Logger log = LoggerFactory.getLogger(HBaseClean.class);
+    protected static final Logger logger = LoggerFactory.getLogger(HBaseClean.class);
     boolean delete = false;
     String tag = null;
 
@@ -56,13 +55,13 @@ public class HBaseClean extends AbstractHadoopJob {
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
-        log.info("----- jobs args: " + Arrays.toString(args));
+        logger.info("jobs args: " + Arrays.toString(args));
         try {
             options.addOption(OPTION_DELETE);
             options.addOption(OPTION_TAG);
             parseOptions(options, args);
 
-            log.info("options: '" + getOptionsAsString() + "'");
+            logger.info("options: '" + getOptionsAsString() + "'");
             
             tag = getOptionValue(OPTION_TAG);
             delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
@@ -94,16 +93,16 @@ public class HBaseClean extends AbstractHadoopJob {
             if (delete) {
                 // drop tables
                 for (String htableName : allTablesNeedToBeDropped) {
-                    log.info("Deleting HBase table " + htableName);
+                    logger.info("Deleting HBase table " + htableName);
                     if (hbaseAdmin.tableExists(htableName)) {
                         if (hbaseAdmin.isTableEnabled(htableName)) {
                             hbaseAdmin.disableTable(htableName);
                         }
 
                         hbaseAdmin.deleteTable(htableName);
-                        log.info("Deleted HBase table " + htableName);
+                        logger.info("Deleted HBase table " + htableName);
                     } else {
-                        log.info("HBase table" + htableName + " does not exist");
+                        logger.info("HBase table" + htableName + " does not exist");
                     }
                 }
             } else {

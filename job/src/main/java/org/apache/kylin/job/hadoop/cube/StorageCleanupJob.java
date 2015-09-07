@@ -53,15 +53,12 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author ysong1
- */
 public class StorageCleanupJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
 
-    protected static final Logger log = LoggerFactory.getLogger(StorageCleanupJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(StorageCleanupJob.class);
 
     public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000l; // 2 days
 
@@ -78,13 +75,13 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
-        log.info("----- jobs args: " + Arrays.toString(args));
+        logger.info("jobs args: " + Arrays.toString(args));
         try {
             options.addOption(OPTION_DELETE);
             parseOptions(options, args);
 
-            log.info("options: '" + getOptionsAsString() + "'");
-            log.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
+            logger.info("options: '" + getOptionsAsString() + "'");
+            logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
             delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
 
             Configuration conf = HBaseConfiguration.create(getConf());
@@ -95,7 +92,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
             return 0;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            printUsage(options);
             throw e;
         }
     }
@@ -126,7 +123,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
                 String tablename = seg.getStorageLocationIdentifier();
                 if (allTablesNeedToBeDropped.contains(tablename)) {
                     allTablesNeedToBeDropped.remove(tablename);
-                    log.info("Exclude table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
+                    logger.info("Exclude table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
                 }
             }
         }
@@ -138,7 +135,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
                 if (allTablesNeedToBeDropped.contains(tablename)) {
                     allTablesNeedToBeDropped.remove(tablename);
-                    log.info("Exclude table " + tablename + " from drop list, as the table belongs to ii " + ii.getName() + " with status " + ii.getStatus());
+                    logger.info("Exclude table " + tablename + " from drop list, as the table belongs to ii " + ii.getName() + " with status " + ii.getStatus());
                 }
             }
         }
@@ -146,16 +143,16 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         if (delete == true) {
             // drop tables
             for (String htableName : allTablesNeedToBeDropped) {
-                log.info("Deleting HBase table " + htableName);
+                logger.info("Deleting HBase table " + htableName);
                 if (hbaseAdmin.tableExists(htableName)) {
                     if (hbaseAdmin.isTableEnabled(htableName)) {
                         hbaseAdmin.disableTable(htableName);
                     }
 
                     hbaseAdmin.deleteTable(htableName);
-                    log.info("Deleted HBase table " + htableName);
+                    logger.info("Deleted HBase table " + htableName);
                 } else {
-                    log.info("HBase table" + htableName + " does not exist");
+                    logger.info("HBase table" + htableName + " does not exist");
                 }
             }
         } else {
@@ -195,7 +192,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             if (!state.isFinalState()) {
                 String path = JobInstance.getJobWorkingDir(jobId, engineConfig.getHdfsWorkingDirectory());
                 allHdfsPathsNeedToBeDeleted.remove(path);
-                log.info("Remove " + path + " from deletion list, as the path belongs to job " + jobId + " with status " + state);
+                logger.info("Remove " + path + " from deletion list, as the path belongs to job " + jobId + " with status " + state);
             }
         }
 
@@ -206,7 +203,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
                 if (jobUuid != null && jobUuid.equals("") == false) {
                     String path = JobInstance.getJobWorkingDir(jobUuid, engineConfig.getHdfsWorkingDirectory());
                     allHdfsPathsNeedToBeDeleted.remove(path);
-                    log.info("Remove " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
+                    logger.info("Remove " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
                 }
             }
         }
@@ -214,13 +211,13 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         if (delete == true) {
             // remove files
             for (String hdfsPath : allHdfsPathsNeedToBeDeleted) {
-                log.info("Deleting hdfs path " + hdfsPath);
+                logger.info("Deleting hdfs path " + hdfsPath);
                 Path p = new Path(hdfsPath);
                 if (fs.exists(p) == true) {
                     fs.delete(p, true);
-                    log.info("Deleted hdfs path " + hdfsPath);
+                    logger.info("Deleted hdfs path " + hdfsPath);
                 } else {
-                    log.info("Hdfs path " + hdfsPath + "does not exist");
+                    logger.info("Hdfs path " + hdfsPath + "does not exist");
                 }
             }
         } else {

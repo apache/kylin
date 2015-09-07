@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  */
 public class FactDistinctColumnsJob extends AbstractHadoopJob {
-    protected static final Logger log = LoggerFactory.getLogger(FactDistinctColumnsJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -79,7 +79,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_ENABLED, statistics_enabled);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_OUTPUT, statistics_output);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, statistics_sampling_percent);
-            log.info("Starting: " + job.getJobName());
+            logger.info("Starting: " + job.getJobName());
 
             setJobClasspath(job);
 

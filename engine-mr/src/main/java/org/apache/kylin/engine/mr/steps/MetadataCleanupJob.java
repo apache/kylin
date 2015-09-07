@@ -44,7 +44,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused metadata").create("delete");
 
-    protected static final Logger log = LoggerFactory.getLogger(MetadataCleanupJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(MetadataCleanupJob.class);
 
     boolean delete = false;
 
@@ -61,13 +61,13 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
-        log.info("----- jobs args: " + Arrays.toString(args));
+        logger.info("jobs args: " + Arrays.toString(args));
         try {
             options.addOption(OPTION_DELETE);
             parseOptions(options, args);
 
-            log.info("options: '" + getOptionsAsString() + "'");
-            log.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
+            logger.info("options: '" + getOptionsAsString() + "'");
+            logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
             delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
 
             config = KylinConfig.getInstanceFromEnv();
@@ -76,7 +76,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
 
             return 0;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            printUsage(options);
             throw e;
         }
     }

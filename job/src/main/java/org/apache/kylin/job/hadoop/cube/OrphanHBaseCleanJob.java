@@ -47,7 +47,7 @@ public class OrphanHBaseCleanJob extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     private static final Option OPTION_WHITELIST = OptionBuilder.withArgName("whitelist").hasArg().isRequired(true).withDescription("metadata store whitelist, separated with comma").create("whitelist");
 
-    protected static final Logger log = LoggerFactory.getLogger(OrphanHBaseCleanJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(OrphanHBaseCleanJob.class);
 
     boolean delete = false;
     Set<String> metastoreWhitelistSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
@@ -56,19 +56,19 @@ public class OrphanHBaseCleanJob extends AbstractHadoopJob {
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
-        log.info("----- jobs args: " + Arrays.toString(args));
+        logger.info("jobs args: " + Arrays.toString(args));
         try {
             options.addOption(OPTION_DELETE);
             options.addOption(OPTION_WHITELIST);
             parseOptions(options, args);
 
-            log.info("options: '" + getOptionsAsString() + "'");
-            log.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
+            logger.info("options: '" + getOptionsAsString() + "'");
+            logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
             delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
             String[] metastoreWhitelist = getOptionValue(OPTION_WHITELIST).split(",");
 
             for (String ms : metastoreWhitelist) {
-                log.info("metadata store in white list: " + ms);
+                logger.info("metadata store in white list: " + ms);
                 metastoreWhitelistSet.add(ms);
             }
 
@@ -93,27 +93,27 @@ public class OrphanHBaseCleanJob extends AbstractHadoopJob {
         for (HTableDescriptor desc : tableDescriptors) {
             String host = desc.getValue(IRealizationConstants.HTableTag);
             if (!metastoreWhitelistSet.contains(host)) {
-                log.info("HTable {} is recognized as orphan because its tag is {}", desc.getTableName(), host);
+                logger.info("HTable {} is recognized as orphan because its tag is {}", desc.getTableName(), host);
                 //collect orphans
                 allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
             } else {
-                log.info("HTable {} belongs to {}", desc.getTableName(), host);
+                logger.info("HTable {} belongs to {}", desc.getTableName(), host);
             }
         }
 
         if (delete == true) {
             // drop tables
             for (String htableName : allTablesNeedToBeDropped) {
-                log.info("Deleting HBase table " + htableName);
+                logger.info("Deleting HBase table " + htableName);
                 if (hbaseAdmin.tableExists(htableName)) {
                     if (hbaseAdmin.isTableEnabled(htableName)) {
                         hbaseAdmin.disableTable(htableName);
                     }
 
                     hbaseAdmin.deleteTable(htableName);
-                    log.info("Deleted HBase table " + htableName);
+                    logger.info("Deleted HBase table " + htableName);
                 } else {
-                    log.info("HBase table" + htableName + " does not exist");
+                    logger.info("HBase table" + htableName + " does not exist");
                 }
             }
         } else {

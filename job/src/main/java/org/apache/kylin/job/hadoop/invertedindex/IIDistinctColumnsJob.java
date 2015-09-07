@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * @author yangli9
  */
 public class IIDistinctColumnsJob extends AbstractHadoopJob {
-    protected static final Logger log = LoggerFactory.getLogger(IIDistinctColumnsJob.class);
+    protected static final Logger logger = LoggerFactory.getLogger(IIDistinctColumnsJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -65,7 +65,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
 
             // ----------------------------------------------------------------------------
 
-            log.info("Starting: " + job.getJobName() + " on table " + tableName);
+            logger.info("Starting: " + job.getJobName() + " on table " + tableName);
 
             IIManager iiMgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
             IIInstance ii = iiMgr.getII(iiName);
@@ -102,7 +102,7 @@ public class IIDistinctColumnsJob extends AbstractHadoopJob {
         String tableName = job.getConfiguration().get(BatchConstants.TABLE_NAME);
         String[] dbTableNames = HadoopUtil.parseHiveTableName(tableName);
 
-        log.info("setting hcat input format, db name {} , table name {}", dbTableNames[0], dbTableNames[1]);
+        logger.info("setting hcat input format, db name {} , table name {}", dbTableNames[0], dbTableNames[1]);
 
         HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
 
