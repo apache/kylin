@@ -658,7 +658,18 @@ public class KylinConfig {
     
     public int getHBaseRegionSizeGB(String capacity) {
         String key = HBASE_REGION_SIZE + "." + capacity.toLowerCase();
-        return Integer.valueOf(getOptional(key, "10"));
+
+        int cut = 20;
+        if (kylinConfig.containsKey(key)) {
+            cut = kylinConfig.getInt(key);
+        } else if ("small".equalsIgnoreCase(capacity)) {
+            cut = 10;
+        } else if ("medium".equalsIgnoreCase(capacity)) {
+            cut = 20;
+        } else if ("large".equalsIgnoreCase(capacity)) {
+            cut = 100;
+        }
+        return cut;
     }
     
     public int getHBaseMaxRegionCount() {
