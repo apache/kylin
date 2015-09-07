@@ -84,8 +84,7 @@ public class GarbageCollectionStep extends AbstractExecutable {
         final String hiveTable = this.getOldHiveTable();
         if (StringUtils.isNotEmpty(hiveTable)) {
             final String dropSQL = "USE " + KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable() + ";" + " DROP TABLE IF EXISTS  " + hiveTable + ";";
-            final String setClusterHql = "-hiveconf " + FileSystem.FS_DEFAULT_NAME_KEY + "=\"" + HadoopUtil.getCurrentConfiguration().get(FileSystem.FS_DEFAULT_NAME_KEY) + "\"";
-            final String dropHiveCMD = "hive " + setClusterHql + " -e \"" + dropSQL + "\"";
+            final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
             logger.info("executing: " + dropHiveCMD);
             ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
             context.getConfig().getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
@@ -132,32 +131,28 @@ public class GarbageCollectionStep extends AbstractExecutable {
             }
         }
     }
-
-    private void dropFileSystemPath(FileSystem fs, Path p) throws IOException {
-        Path path = fs.makeQualified(p);
-        if (fs.exists(path)) {
-            fs.delete(path, true);
-            logger.debug("Dropped HDFS path: " + path);
-            output.append("Dropped HDFS path  \"" + path + "\" \n");
-        } else {
-            logger.debug("HDFS path not exists: " + path);
-            output.append("HDFS path not exists: \"" + path + "\" \n");
-        }
-    }
-
+    
     private void dropHdfsPath(ExecutableContext context) throws IOException {
+
         List<String> oldHdfsPaths = this.getOldHdsfPaths();
         if (oldHdfsPaths != null && oldHdfsPaths.size() > 0) {
-            FileSystem hadoopFs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
-            FileSystem hbaseFs = FileSystem.get(HadoopUtil.getCurrentHBaseConfiguration());
+            Configuration hconf = HadoopUtil.getCurrentConfiguration();
+            FileSystem fileSystem = FileSystem.get(hconf);
             for (String path : oldHdfsPaths) {
                 if (path.endsWith("*"))
                     path = path.substring(0, path.length() - 1);
 
                 Path oldPath = new Path(path);
-                dropFileSystemPath(hadoopFs, oldPath);
-                dropFileSystemPath(hbaseFs, oldPath);
+                if (fileSystem.exists(oldPath)) {
+                    fileSystem.delete(oldPath, true);
+                    logger.debug("Dropped HDFS path: " + path);
+                    output.append("Dropped HDFS path  \"" + path + "\" \n");
+                } else {
+                    logger.debug("HDFS path not exists: " + path);
+                    output.append("HDFS path not exists: \"" + path + "\" \n");
+                }
             }
+
         }
     }
 

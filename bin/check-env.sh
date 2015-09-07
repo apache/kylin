@@ -46,17 +46,10 @@ then
 fi
 
 WORKING_DIR=`sh $KYLIN_HOME/bin/get-properties.sh kylin.hdfs.working.dir`
-HADOOP_FS=`sh $KYLIN_HOME/bin/get-properties.sh kylin.hadoop.cluster.fs`
-
-if [ "$HADOOP_FS" ]
-then
-  hadoop fs -Dfs.defaultFS=$HADOOP_FS -mkdir -p $WORKING_DIR
-else
-  hadoop fs -mkdir -p $WORKING_DIR
-fi
+hadoop fs -mkdir -p $WORKING_DIR
 
 if [ $? != 0 ]
 then
-    echo "failed to create $HADOOP_FS$WORKING_DIR, Please make sure the user has right to access $HADOOP_FS$WORKING_DIR"
+    echo "failed to create $WORKING_DIR, Please make sure the user has right to access $WORKING_DIR"
     exit 1
 fi

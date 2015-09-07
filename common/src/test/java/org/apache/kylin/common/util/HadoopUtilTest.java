@@ -46,30 +46,12 @@ public class HadoopUtilTest {
   }
 
   @Test
-  public void testGetCurrentConfiguration() throws Exception {
-    KylinConfig config = KylinConfig.getInstanceFromEnv();
-    config.setProperty(KylinConfig.KYLIN_HADOOP_CLUSTER_FS, "hdfs://hadoop-cluster/");
-
-    Configuration conf = HadoopUtil.getCurrentConfiguration();
-    assertEquals("hdfs://hadoop-cluster/", conf.get(FileSystem.FS_DEFAULT_NAME_KEY));
-  }
-
-  @Test
   public void testGetCurrentHBaseConfiguration() throws Exception {
     KylinConfig config = KylinConfig.getInstanceFromEnv();
     config.setProperty(KylinConfig.KYLIN_HBASE_CLUSTER_FS, "hdfs://hbase-cluster/");
 
     Configuration conf = HadoopUtil.getCurrentHBaseConfiguration();
     assertEquals("hdfs://hbase-cluster/", conf.get(FileSystem.FS_DEFAULT_NAME_KEY));
-  }
-
-  @Test
-  public void testMakeQualifiedPathInHadoopCluster() throws Exception {
-    KylinConfig config = KylinConfig.getInstanceFromEnv();
-    config.setProperty(KylinConfig.KYLIN_HADOOP_CLUSTER_FS, "file:/");
-
-    String path = HadoopUtil.makeQualifiedPathInHadoopCluster("/path/to/test/hadoop");
-    assertEquals("file:/path/to/test/hadoop", path);
   }
 
   @Test
