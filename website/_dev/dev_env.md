@@ -75,18 +75,14 @@ Run a end-to-end cube building test, these special test cases will populate some
 It might take a while (maybe one hour), please keep patient.
  
 {% highlight Groff markup %}
-
-mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false -P sandbox
-mvn test -Dtest=org.apache.kylin.job.BuildIIWithEngineTest -DfailIfNoTests=false -P sandbox
-	
+	mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false -P sandbox
+	mvn test -Dtest=org.apache.kylin.job.BuildIIWithEngineTest -DfailIfNoTests=false -P sandbox
 {% endhighlight %}
 	
 Run other tests, the end-to-end cube building test is exclueded
 
 {% highlight Groff markup %}
-
 	mvn test -fae -P sandbox
-
 {% endhighlight %}
 
 ### Launch Kylin Web Server
@@ -94,7 +90,15 @@ Run other tests, the end-to-end cube building test is exclueded
 Copy server/src/main/webapp/WEB-INF to webapp/app/WEB-INF 
 
 {% highlight Groff markup %}
-cp -r server/src/main/webapp/WEB-INF webapp/app/WEB-INF 
+	cp -r server/src/main/webapp/WEB-INF webapp/app/WEB-INF 
+{% endhighlight %}
+
+Download JS for Kylin web GUI. `npm` is part of `Node.js`, please search about how to install it on your OS.
+
+{% highlight Groff markup %}
+	cd webapp
+	npm install -g bower
+	bower --allow-root install
 {% endhighlight %}
 
 In IDE, launch `org.apache.kylin.rest.DebugTomcat` with working directory set to the /server folder. (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
