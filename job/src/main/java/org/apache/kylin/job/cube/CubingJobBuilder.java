@@ -204,7 +204,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
     AbstractExecutable addHTableSteps(CubeSegment seg, String cuboidRootPath, CubingJob result) {
         final String jobId = result.getId();
-        final String cuboidPath = HadoopUtil.makeQualifiedPathInHadoopCluster(cuboidRootPath + "*");
+        final String cuboidPath = cuboidRootPath + "*";
 
         result.addTask(createRangeRowkeyDistributionStep(seg, cuboidPath));
         // create htable step
@@ -243,8 +243,6 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             if (jobConf != null && jobConf.length() > 0) {
                 builder.append(" -conf ").append(jobConf);
             }
-            String setCluster = " -D" + FileSystem.FS_DEFAULT_NAME_KEY + "=" + HadoopUtil.getCurrentConfiguration().get(FileSystem.FS_DEFAULT_NAME_KEY);
-            builder.append(setCluster);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -268,11 +266,11 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
     }
 
     private String getRowkeyDistributionOutputPath(CubeSegment seg) {
-        return HadoopUtil.makeQualifiedPathInHBaseCluster(getJobWorkingDir(seg.getLastBuildJobID()) + "/" + seg.getCubeInstance().getName() + "/rowkey_stats");
+        return getJobWorkingDir(seg.getLastBuildJobID()) + "/" + seg.getCubeInstance().getName() + "/rowkey_stats";
     }
 
     private String getFactDistinctColumnsPath(CubeSegment seg, String jobUuid) {
-        return HadoopUtil.makeQualifiedPathInHadoopCluster(getJobWorkingDir(jobUuid) + "/" + seg.getCubeInstance().getName() + "/fact_distinct_columns");
+        return getJobWorkingDir(jobUuid) + "/" + seg.getCubeInstance().getName() + "/fact_distinct_columns";
     }
 
     private String getHFilePath(CubeSegment seg, String jobId) {

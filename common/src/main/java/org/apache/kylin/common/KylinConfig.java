@@ -94,8 +94,6 @@ public class KylinConfig {
 
     public static final String KYLIN_HDFS_WORKING_DIR = "kylin.hdfs.working.dir";
 
-    public static final String KYLIN_HADOOP_CLUSTER_FS = "kylin.hadoop.cluster.fs";
-
     public static final String KYLIN_HBASE_CLUSTER_FS = "kylin.hbase.cluster.fs";
 
     public static final String HIVE_PASSWORD = "hive.password";
@@ -289,10 +287,6 @@ public class KylinConfig {
             root += "/";
         }
         return root + getMetadataUrlPrefix() + "/";
-    }
-
-    public String getHadoopClusterFs() {
-        return getOptional(KYLIN_HADOOP_CLUSTER_FS, "");
     }
 
     public String getHBaseClusterFs() {

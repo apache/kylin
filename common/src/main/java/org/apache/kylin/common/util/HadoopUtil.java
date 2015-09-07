@@ -53,12 +53,7 @@ public class HadoopUtil {
 
     public static Configuration getCurrentConfiguration() {
         if (hadoopConfig.get() == null) {
-            Configuration configuration = new Configuration();
-            String hadoopClusterFs = KylinConfig.getInstanceFromEnv().getHadoopClusterFs();
-            if (hadoopClusterFs != null && !hadoopClusterFs.equals("")) {
-                configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, hadoopClusterFs);
-            }
-            hadoopConfig.set(configuration);
+            hadoopConfig.set(new Configuration());
         }
         return hadoopConfig.get();
     }
@@ -67,7 +62,7 @@ public class HadoopUtil {
         if (hbaseConfig.get() == null) {
             Configuration configuration = HBaseConfiguration.create(new Configuration());
             String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
-            if (hbaseClusterFs != null && !hbaseClusterFs.equals("")) {
+            if (StringUtils.isNotEmpty(hbaseClusterFs)) {
                 configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
             }
             hbaseConfig.set(configuration);
@@ -160,7 +155,7 @@ public class HadoopUtil {
         // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
 
         String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
-        if (hbaseClusterFs != null && !hbaseClusterFs.equals("")) {
+        if (StringUtils.isNotEmpty(hbaseClusterFs)) {
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
         }
         return conf;
