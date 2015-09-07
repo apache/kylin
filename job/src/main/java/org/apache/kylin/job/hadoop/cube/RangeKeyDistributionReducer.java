@@ -43,6 +43,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
 
     private LongWritable outputValue = new LongWritable(0);
 
+    private int minRegionCount = 1;
     private int maxRegionCount = 500;
     private int cut = 10;
     private long bytesRead = 0;
@@ -56,11 +57,15 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
             cut = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_SPLIT_SIZE));
         }
 
-        if (context.getConfiguration().get(BatchConstants.REGION_NUMBER) != null) {
-            maxRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_NUMBER));
+        if (context.getConfiguration().get(BatchConstants.REGION_NUMBER_MIN) != null) {
+            minRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_NUMBER_MIN));
+        }
+        
+        if (context.getConfiguration().get(BatchConstants.REGION_NUMBER_MAX) != null) {
+            maxRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_NUMBER_MAX));
         }
 
-        logger.info("Chosen cut for htable is " + cut + ", max region count is " + maxRegionCount);
+        logger.info("Chosen cut for htable is " + cut + ", max region count=" + maxRegionCount + ", min region count =" + minRegionCount);
     }
 
     @Override
@@ -78,7 +83,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         int nRegion = Math.round((float) gbPoints.size() / (float) cut);
-        nRegion = Math.max(1, nRegion);
+        nRegion = Math.max(minRegionCount, nRegion);
         nRegion = Math.min(maxRegionCount, nRegion);
 
         int gbPerRegion = gbPoints.size() / nRegion;
