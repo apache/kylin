@@ -58,9 +58,6 @@ import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.storage.hbase.steps.HBaseMRSteps;
-import org.apache.kylin.storage.hbase.steps.InMemKeyValueCreator;
-import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 
 import com.google.common.collect.Lists;
 
@@ -196,14 +193,10 @@ public class HBaseMROutput2 implements IMROutput2 {
             ImmutableBytesWritable key = (ImmutableBytesWritable) inKey;
             parsedKey.set(key.get(), key.getOffset(), key.getLength());
 
-            Result value = (Result) inValue;
-            int position = 0;
+            Result hbaseRow = (Result) inValue;
             for (int i = 0; i < rowValueDecoders.length; i++) {
-                rowValueDecoders[i].decode(value, false);
-                Object[] measureValues = rowValueDecoders[i].getValues();
-                for (int j = 0; j < measureValues.length; j++) {
-                    parsedValue[position++] = measureValues[j];
-                }
+                rowValueDecoders[i].decode(hbaseRow);
+                rowValueDecoders[i].loadCubeMeasureArray(parsedValue);
             }
 
             return parsedPair;
@@ -214,7 +207,7 @@ public class HBaseMROutput2 implements IMROutput2 {
     private static class HBaseOutputFormat implements IMRStorageOutputFormat {
         final CubeSegment seg;
 
-        final List<InMemKeyValueCreator> keyValueCreators = Lists.newArrayList();
+        final List<KeyValueCreator> keyValueCreators = Lists.newArrayList();
         final ImmutableBytesWritable outputKey = new ImmutableBytesWritable();
 
         public HBaseOutputFormat(CubeSegment seg) {
@@ -243,11 +236,9 @@ public class HBaseMROutput2 implements IMROutput2 {
         @Override
         public void doReducerOutput(ByteArrayWritable key, Object[] value, Reducer.Context context) throws IOException, InterruptedException {
             if (keyValueCreators.size() == 0) {
-                int startPosition = 0;
                 for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHBaseMapping().getColumnFamily()) {
                     for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                        keyValueCreators.add(new InMemKeyValueCreator(colDesc, startPosition));
-                        startPosition += colDesc.getMeasures().length;
+                        keyValueCreators.add(new KeyValueCreator(seg.getCubeDesc(), colDesc));
                     }
                 }
             }

@@ -57,8 +57,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private CubeInstance cube;
     private CubeDesc cubeDesc;
     private CubeSegment mergedCubeSegment;
-    private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
-    // life cycle
+    private CubeSegment sourceCubeSegment; // Must be unique during a mapper's life cycle
 
     private Text outputKey = new Text();
 

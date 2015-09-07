@@ -38,8 +38,6 @@ import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTAggregateScanner;
 import org.apache.kylin.gridtable.GTBuilder;
@@ -75,7 +73,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private final CubeJoinedFlatTableDesc intermediateTableDesc;
     private final MeasureCodec measureCodec;
     private final String[] metricsAggrFuncs;
-    private final int[] hbaseMeasureRefIndex;
     private final MeasureDesc[] measureDescs;
     private final int measureCount;
 
@@ -97,35 +94,18 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         this.intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
         this.measureCodec = new MeasureCodec(cubeDesc.getMeasures());
 
+        this.measureCount = cubeDesc.getMeasures().size();
+        this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
+        
         Map<String, Integer> measureIndexMap = Maps.newHashMap();
         List<String> metricsAggrFuncsList = Lists.newArrayList();
-        measureCount = cubeDesc.getMeasures().size();
-
-        List<MeasureDesc> measureDescsList = Lists.newArrayList();
-        hbaseMeasureRefIndex = new int[measureCount];
-        int measureRef = 0;
-        for (HBaseColumnFamilyDesc familyDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
-                for (MeasureDesc measure : hbaseColDesc.getMeasures()) {
-                    for (int j = 0; j < measureCount; j++) {
-                        if (cubeDesc.getMeasures().get(j).equals(measure)) {
-                            measureDescsList.add(measure);
-                            hbaseMeasureRefIndex[measureRef] = j;
-                            break;
-                        }
-                    }
-                    measureRef++;
-                }
-            }
-        }
 
         for (int i = 0; i < measureCount; i++) {
-            MeasureDesc measureDesc = measureDescsList.get(i);
+            MeasureDesc measureDesc = measureDescs[i];
             metricsAggrFuncsList.add(measureDesc.getFunction().getExpression());
             measureIndexMap.put(measureDesc.getName(), i);
         }
         this.metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
-        this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
     }
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
@@ -605,8 +585,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             Object[] values = new Object[measureCount];
             MeasureDesc measureDesc = null;
 
-            for (int position = 0; position < hbaseMeasureRefIndex.length; position++) {
-                int i = hbaseMeasureRefIndex[position];
+            for (int i = 0; i < measureCount; i++) {
                 measureDesc = measureDescs[i];
 
                 Object value = null;
@@ -635,7 +614,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                     }
                     value = measureCodec.getSerializer(i).valueOf(result);
                 }
-                values[position] = value;
+                values[i] = value;
             }
             return values;
         }

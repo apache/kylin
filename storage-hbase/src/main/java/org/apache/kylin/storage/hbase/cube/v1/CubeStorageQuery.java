@@ -373,7 +373,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             int bestIndex = -1;
             for (HBaseColumnDesc hbCol : hbCols) {
                 bestHBCol = hbCol;
-                bestIndex = hbCol.findMeasureIndex(aggrFunc);
+                bestIndex = hbCol.findMeasure(aggrFunc);
                 MeasureDesc measure = hbCol.getMeasures()[bestIndex];
                 // criteria for holistic measure: Exact Aggregation && Exact Cuboid
                 if (measure.getFunction().isHolisticCountDistinct() && context.isExactAggregation()) {
@@ -387,7 +387,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
                 codec = new RowValueDecoder(bestHBCol);
                 codecMap.put(bestHBCol, codec);
             }
-            codec.setIndex(bestIndex);
+            codec.setProjectIndex(bestIndex);
         }
         return new ArrayList<RowValueDecoder>(codecMap.values());
     }

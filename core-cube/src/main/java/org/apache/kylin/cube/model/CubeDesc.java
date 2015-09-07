@@ -651,17 +651,24 @@ public class CubeDesc extends RootPersistentEntity {
         if (measures == null || measures.size() == 0)
             return;
 
-        Map<String, MeasureDesc> measureCache = new HashMap<String, MeasureDesc>();
+        Map<String, MeasureDesc> measureLookup = new HashMap<String, MeasureDesc>();
         for (MeasureDesc m : measures)
-            measureCache.put(m.getName(), m);
+            measureLookup.put(m.getName(), m);
+        Map<String, Integer> measureIndexLookup = new HashMap<String, Integer>();
+        for (int i = 0; i < measures.size(); i++)
+            measureIndexLookup.put(measures.get(i).getName(), i);
 
         for (HBaseColumnFamilyDesc cf : getHBaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc c : cf.getColumns()) {
-                MeasureDesc[] measureDescs = new MeasureDesc[c.getMeasureRefs().length];
-                for (int i = 0; i < c.getMeasureRefs().length; i++) {
-                    measureDescs[i] = measureCache.get(c.getMeasureRefs()[i]);
+                String[] colMeasureRefs = c.getMeasureRefs();
+                MeasureDesc[] measureDescs = new MeasureDesc[colMeasureRefs.length];
+                int[] measureIndex = new int[colMeasureRefs.length];
+                for (int i = 0; i < colMeasureRefs.length; i++) {
+                    measureDescs[i] = measureLookup.get(colMeasureRefs[i]);
+                    measureIndex[i] = measureIndexLookup.get(colMeasureRefs[i]);
                 }
                 c.setMeasures(measureDescs);
+                c.setMeasureIndex(measureIndex);
                 c.setColumnFamilyName(cf.getName());
             }
         }

@@ -73,11 +73,11 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         RowValueDecoder rowValueDecoder = new RowValueDecoder(hbaseCol);
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
             FunctionDesc aggrFunc = measure.getFunction();
-            int index = hbaseCol.findMeasureIndex(aggrFunc);
-            rowValueDecoder.setIndex(index);
+            int index = hbaseCol.findMeasure(aggrFunc);
+            rowValueDecoder.setProjectIndex(index);
         }
 
-        rowValueDecoder.decode(valueBytes);
+        rowValueDecoder.decodeAndConvertJavaObj(valueBytes);
         Object[] measureValues = rowValueDecoder.getValues();
         //BigDecimal.ROUND_HALF_EVEN in BigDecimalSerializer
         assertEquals("[333.1235, 333.1111, 333.2000, 2, 100]", Arrays.toString(measureValues));

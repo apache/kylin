@@ -45,7 +45,6 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
@@ -64,26 +63,26 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
 
     private static final int BATCH_PUT_THRESHOLD = 10000;
 
-    private final List<InMemKeyValueCreator> keyValueCreators;
+    private final List<KeyValueCreator> keyValueCreators;
     private final int nColumns;
     private final HTableInterface hTable;
     private final ByteBuffer byteBuffer;
     private final CubeDesc cubeDesc;
+    private final Object[] measureValues;
     private List<Put> puts = Lists.newArrayList();
 
     public HBaseCuboidWriter(CubeDesc cubeDesc, HTableInterface hTable) {
         this.keyValueCreators = Lists.newArrayList();
         this.cubeDesc = cubeDesc;
-        int startPosition = 0;
         for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                keyValueCreators.add(new InMemKeyValueCreator(colDesc, startPosition));
-                startPosition += colDesc.getMeasures().length;
+                keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
             }
         }
         this.nColumns = keyValueCreators.size();
         this.hTable = hTable;
         this.byteBuffer = ByteBuffer.allocate(1 << 20);
+        this.measureValues = new Object[cubeDesc.getMeasures().size()];
     }
 
     private byte[] copy(byte[] array, int offset, int length) {
@@ -106,10 +105,13 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
     @Override
     public void write(long cuboidId, GTRecord record) throws IOException {
         final ByteBuffer key = createKey(cuboidId, record);
-        final CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(Cuboid.findById(cubeDesc, cuboidId));
-        final ImmutableBitSet bitSet = new ImmutableBitSet(mapping.getDimensionCount(), mapping.getColumnCount());
+        final Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
+        final int nDims = cuboid.getColumns().size();
+        final ImmutableBitSet bitSet = new ImmutableBitSet(nDims, nDims + cubeDesc.getMeasures().size());
+        
         for (int i = 0; i < nColumns; i++) {
-            final KeyValue keyValue = keyValueCreators.get(i).create(key.array(), 0, key.position(), record.getValues(bitSet, new Object[bitSet.cardinality()]));
+            final Object[] values = record.getValues(bitSet, measureValues);
+            final KeyValue keyValue = keyValueCreators.get(i).create(key.array(), 0, key.position(), values);
             final Put put = new Put(copy(key.array(), 0, key.position()));
             byte[] family = copy(keyValue.getFamilyArray(), keyValue.getFamilyOffset(), keyValue.getFamilyLength());
             byte[] qualifier = copy(keyValue.getQualifierArray(), keyValue.getQualifierOffset(), keyValue.getQualifierLength());

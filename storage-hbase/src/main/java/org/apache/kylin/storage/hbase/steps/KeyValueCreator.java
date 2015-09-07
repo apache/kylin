@@ -1,7 +1,6 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.hbase.KeyValue;
@@ -36,21 +35,14 @@ public class KeyValueCreator {
         qBytes = Bytes.toBytes(colDesc.getQualifier());
         timestamp = System.currentTimeMillis();
 
-        List<MeasureDesc> measures = cubeDesc.getMeasures();
-        String[] measureNames = getMeasureNames(cubeDesc);
-        String[] refs = colDesc.getMeasureRefs();
-
-        refIndex = new int[refs.length];
-        refMeasures = new MeasureDesc[refs.length];
-        for (int i = 0; i < refs.length; i++) {
-            refIndex[i] = indexOf(measureNames, refs[i]);
-            refMeasures[i] = measures.get(refIndex[i]);
-        }
+        refIndex = colDesc.getMeasureIndex();
+        refMeasures = colDesc.getMeasures();
 
         codec = new MeasureCodec(refMeasures);
-        colValues = new Object[refs.length];
+        colValues = new Object[refMeasures.length];
 
         isFullCopy = true;
+        List<MeasureDesc> measures = cubeDesc.getMeasures();
         for (int i = 0; i < measures.size(); i++) {
             if (refIndex.length <= i || refIndex[i] != i)
                 isFullCopy = false;
@@ -82,22 +74,6 @@ public class KeyValueCreator {
 
     public KeyValue create(Text key, byte[] value, int voffset, int vlen) {
         return create(key.getBytes(), 0, key.getLength(), value, voffset, vlen);
-    }
-
-    private int indexOf(String[] measureNames, String ref) {
-        for (int i = 0; i < measureNames.length; i++)
-            if (measureNames[i].equalsIgnoreCase(ref))
-                return i;
-
-        throw new IllegalArgumentException("Measure '" + ref + "' not found in " + Arrays.toString(measureNames));
-    }
-
-    private String[] getMeasureNames(CubeDesc cubeDesc) {
-        List<MeasureDesc> measures = cubeDesc.getMeasures();
-        String[] result = new String[measures.size()];
-        for (int i = 0; i < measures.size(); i++)
-            result[i] = measures.get(i).getName();
-        return result;
     }
 
 }
