@@ -4,7 +4,7 @@ title: Download
 permalink: /download/index.html
 ---
 
-__Latest Release (Source Code)__  
+__Latest Release(Source Code)__  
 The latest release of Apache Kylin can be downloaded from the ASF:
 
 * [Apache Kylin v1.0-incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-1.0-incubating/)
