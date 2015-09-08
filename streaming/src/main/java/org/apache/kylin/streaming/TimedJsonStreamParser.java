@@ -61,29 +61,48 @@ public final class TimedJsonStreamParser implements StreamParser {
 
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
 
-    private final List<TblColRef> allColumns;
-    private boolean formatTs;
+    private List<TblColRef> allColumns;
+    private boolean formatTs = false;
     private final ObjectMapper mapper = new ObjectMapper();
+    private String tsColName = "timestamp";
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
 
-    @SuppressWarnings("unused")
-    public TimedJsonStreamParser(List<TblColRef> allColumns) {
+    public TimedJsonStreamParser(List<TblColRef> allColumns, String propertiesStr) {
         this.allColumns = allColumns;
-        this.formatTs = false;
-    }
+        if (!StringUtils.isEmpty(propertiesStr)) {
+            String[] properties = propertiesStr.split(";");
+            for (String prop : properties) {
+                try {
+                    String[] parts = prop.split("=");
+                    if (parts.length == 2) {
+                        switch (parts[0]) {
+                        case "formatTs":
+                            this.formatTs = Boolean.valueOf(parts[1]);
+                            break;
+                        case "tsColName":
+                            this.tsColName = parts[1];
+                            break;  
+                        default:
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to parse property " + prop);
+                    //ignore
+                }
+            }
+        }
 
-    public TimedJsonStreamParser(List<TblColRef> allColumns, boolean formatTs) {
-        this.allColumns = allColumns;
-        this.formatTs = formatTs;
+        logger.info("TimedJsonStreamParser with formatTs {} tsColName {}", formatTs, tsColName);
     }
 
     @Override
     public ParsedStreamMessage parse(StreamMessage stream) {
         try {
             Map<String, String> root = mapper.readValue(stream.getRawData(), mapType);
-            String tsStr = root.get("timestamp");
+            String tsStr = root.get(tsColName);
             Preconditions.checkArgument(!StringUtils.isEmpty(tsStr), "Timestamp field cannot be null");
-            long t = Long.valueOf(root.get("timestamp"));
+            long t = Long.valueOf(root.get(tsColName));
             ArrayList<String> result = Lists.newArrayList();
 
             for (TblColRef column : allColumns) {

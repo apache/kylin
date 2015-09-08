@@ -154,13 +154,14 @@ public class DeployUtil {
 
         //load into kafka
         KafkaDataLoader.loadIntoKafka(streamingConfig, data);
+        logger.info("Write {} messages into topic {}", data.size(), streamingConfig.getTopic());
 
         //csv data for H2 use
         List<TblColRef> tableColumns = Lists.newArrayList();
         for (ColumnDesc columnDesc : tableDesc.getColumns()) {
             tableColumns.add(new TblColRef(columnDesc));
         }
-        TimedJsonStreamParser timedJsonStreamParser = new TimedJsonStreamParser(tableColumns, true);
+        TimedJsonStreamParser timedJsonStreamParser = new TimedJsonStreamParser(tableColumns, "formatTs=true");
         StringBuilder sb = new StringBuilder();
         for (String json : data) {
             List<String> rowColumns = timedJsonStreamParser.parse(new StreamMessage(0, json.getBytes())).getStreamMessage();

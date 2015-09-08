@@ -252,8 +252,8 @@ public class StreamingBootstrap {
     private StreamParser getStreamParser(StreamingConfig streamingConfig, List<TblColRef> columns) throws Exception {
         if (!StringUtils.isEmpty(streamingConfig.getParserName())) {
             Class clazz = Class.forName(streamingConfig.getParserName());
-            Constructor constructor = clazz.getConstructor(List.class);
-            return (StreamParser) constructor.newInstance(columns);
+            Constructor constructor = clazz.getConstructor(List.class, String.class);
+            return (StreamParser) constructor.newInstance(columns, streamingConfig.getParserProperties());
         } else {
             return new JsonStreamParser(columns);
         }
