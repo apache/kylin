@@ -11,20 +11,14 @@ title: Blog
          <!-- second-->
           <div id="content-container" class="animated fadeIn">
             <div >
-            <!--
-            <p class="aboutkylin" style="font-size:1.2em">Comming Soon...</p>
-            -->
              <ul class="post-list">
             {% for category in site.categories %}     <!-- categories -->
             {% if category[0]  == 'blog' %}
             {% for post in category[1] %}
             <li>
-            <!--
-            <span align="left" class="content-header">{{ post.date | date: "%b %-d, %Y" }}</span>
-            -->
         <h2 align="left">
-          <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
-        </h2>
+          <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a></h2><div align="left" class="post-meta" >posted: {{ post.date | date: "%b %-d, %Y" }}</div>
+        
       </li>
     {% endfor %}
     {% endif %}

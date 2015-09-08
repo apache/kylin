@@ -87,7 +87,7 @@
   role: PMC
 - name: Dayue Gao (高大月)
   apacheId: 
-  githubId: 
+  githubId: gaodayue
   org: Meituan
   role: committer
 - name: Hua Huang (黄桦)
@@ -95,5 +95,6 @@
   githubId: superhua
   org: MiningLAMP
   role: committer 
+
 
 
