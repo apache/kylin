@@ -180,7 +180,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             classpath = classpath + "," + kylinHiveDependency;
         }
 
-        jobConf.set(MAP_REDUCE_CLASSPATH, classpath + "," + kylinHiveDependency);
+        jobConf.set(MAP_REDUCE_CLASSPATH, classpath);
         logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
     }
 
