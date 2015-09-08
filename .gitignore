@@ -91,3 +91,10 @@ tomcat
 lib
 webapp/app/components/*
 commit.sha1
+
+# website 
+website/_site
+website/.sass-cache
+
+
+
