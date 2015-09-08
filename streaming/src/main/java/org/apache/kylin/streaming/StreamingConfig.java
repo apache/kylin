@@ -83,6 +83,10 @@ public class StreamingConfig extends RootPersistentEntity {
 
     @JsonProperty("parserName")
     private String parserName;
+    
+    //"configA=1;configB=2"
+    @JsonProperty("parserProperties")
+    private String parserProperties;
 
     @JsonProperty("margin")
     private long margin;
@@ -161,6 +165,14 @@ public class StreamingConfig extends RootPersistentEntity {
 
     public void setMargin(long margin) {
         this.margin = margin;
+    }
+
+    public String getParserProperties() {
+        return parserProperties;
+    }
+
+    public void setParserProperties(String parserProperties) {
+        this.parserProperties = parserProperties;
     }
 
     @Override

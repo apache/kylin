@@ -116,8 +116,7 @@ public final class KafkaRequester {
             });
             return new TopicMeta(kafkaClusterConfig.getTopic(), partitionIds);
         }
-        logger.debug("cannot find topic:" + kafkaClusterConfig.getTopic());
-        return null;
+        throw new IllegalArgumentException("cannot find topic:" + kafkaClusterConfig.getTopic());
     }
 
     public static PartitionMetadata getPartitionMetadata(String topic, int partitionId, List<Broker> brokers, KafkaClusterConfig kafkaClusterConfig) {
