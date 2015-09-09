@@ -28,15 +28,15 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.log4j.Logger;
 import org.datanucleus.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * @author jiazhong
@@ -93,20 +93,20 @@ public class HiveJdbcClient {
 
         MAP_QUEUE_NAME = getQueueName();
 
-        if(org.apache.commons.lang.StringUtils.isEmpty(MAP_QUEUE_NAME)){
+        if (org.apache.commons.lang.StringUtils.isEmpty(MAP_QUEUE_NAME)) {
             MAP_QUEUE_NAME = monitorConfig.getKylinMapJobQueue();
         }
 
-        logger.info("mapred.job.queue.name:"+MAP_QUEUE_NAME);
+        logger.info("mapred.job.queue.name:" + MAP_QUEUE_NAME);
 
         String CON_URL = monitorConfig.getHiveJdbcConUrl();
 
         String USER_NAME = monitorConfig.getHiveJdbcConUserName();
         String PASSWD = monitorConfig.getHiveJdbcConPasswd();
 
-        Connection con = DriverManager.getConnection(CON_URL,USER_NAME,PASSWD);
+        Connection con = DriverManager.getConnection(CON_URL, USER_NAME, PASSWD);
         Statement stmt = con.createStatement();
-        stmt.execute("set mapred.job.queue.name="+MAP_QUEUE_NAME);
+        stmt.execute("set mapred.job.queue.name=" + MAP_QUEUE_NAME);
         ResultSet res = null;
 
         SQL_GENERATE_QUERY_LOG_TABLE = generateQueryLogSql();
@@ -187,7 +187,27 @@ public class HiveJdbcClient {
             FileUtils.appendResultToHdfs(each_day_percentile_file, new String[] { res.getString(1), res.getString(2), res.getString(3) });
             logger.info(res.getString(1) + "," + res.getString(2) + "," + res.getString(3));
         }
-
+        if (res != null) {
+            try {
+                res.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+        }
+        if (stmt != null) {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+        }
+        if (con != null) {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+        }
     }
 
     public String generateQueryLogSql() {
@@ -228,8 +248,8 @@ public class HiveJdbcClient {
 
     public String getQueueName() throws IOException {
         String queueName = "";
-        InputStream stream =  this.getClass().getClassLoader().getResourceAsStream(KYLIN_JOB_CONF_XML);
-        if (stream!=null) {
+        InputStream stream = this.getClass().getClassLoader().getResourceAsStream(KYLIN_JOB_CONF_XML);
+        if (stream != null) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder;
             Document doc;
@@ -253,6 +273,7 @@ public class HiveJdbcClient {
         }
         return queueName;
     }
+
     public String monthStasticSqlConvert(String sql) {
 
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
