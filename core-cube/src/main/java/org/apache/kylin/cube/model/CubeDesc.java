@@ -46,6 +46,8 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
@@ -118,6 +120,11 @@ public class CubeDesc extends RootPersistentEntity {
     private long[] autoMergeTimeRanges;
     @JsonProperty("retention_range")
     private long retentionRange = 0;
+
+    @JsonProperty("engine_type")
+    private int engineType = IEngineAware.ID_MR_V1;
+    @JsonProperty("storage_type")
+    private int storageType = IStorageAware.ID_HBASE;
 
     private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
@@ -307,7 +314,7 @@ public class CubeDesc extends RootPersistentEntity {
     public String getFactTable() {
         return model.getFactTable();
     }
-    
+
     public TableDesc getFactTableDesc() {
         return model.getFactTableDesc();
     }
@@ -767,6 +774,22 @@ public class CubeDesc extends RootPersistentEntity {
 
     public void setNullStrings(String[] nullStrings) {
         this.nullStrings = nullStrings;
+    }
+
+    public int getStorageType() {
+        return storageType;
+    }
+
+    private void setStorageType(int storageType) {
+        this.storageType = storageType;
+    }
+
+    public int getEngineType() {
+        return engineType;
+    }
+
+    private void setEngineType(int engineType) {
+        this.engineType = engineType;
     }
 
 }
