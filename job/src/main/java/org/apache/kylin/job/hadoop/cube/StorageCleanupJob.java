@@ -226,9 +226,10 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
     private void cleanUnusedIntermediateHiveTable(Configuration conf) throws IOException {
         int uuidLength = 36;
-
+        final String useDatabaseHql = "USE " + KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable() + ";";
         StringBuilder buf = new StringBuilder();
         buf.append("hive -e \"");
+        buf.append(useDatabaseHql);
         buf.append("show tables " + "\'kylin_intermediate_*\'" + "; ");
         buf.append("\"");
 
@@ -279,7 +280,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         if (delete == true) {
             buf.delete(0, buf.length());
             buf.append("hive -e \"");
-
+            buf.append(useDatabaseHql);
             for (String delHive : allHiveTablesNeedToBeDeleted) {
                 buf.append("drop table if exists " + delHive + "; ");
                 log.info("Remove " + delHive + " from hive tables.");

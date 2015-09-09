@@ -52,10 +52,6 @@ import org.xml.sax.SAXException;
 
 public class JoinedFlatTable {
 
-    public static String getTableDir(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
-        return storageDfsDir + "/" + intermediateTableDesc.getTableName(jobUUID);
-    }
-
     public static String generateCreateTableStatement(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir, String jobUUID) {
         StringBuilder ddl = new StringBuilder();
 
