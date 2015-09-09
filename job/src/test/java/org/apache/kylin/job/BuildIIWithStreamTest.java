@@ -119,6 +119,7 @@ public class BuildIIWithStreamTest {
         IIJoinedFlatTableDesc intermediateTableDesc = new IIJoinedFlatTableDesc(desc);
         JobEngineConfig jobEngineConfig = new JobEngineConfig(kylinConfig);
         final String uuid = UUID.randomUUID().toString();
+        final String useDatabaseHql = "USE " + kylinConfig.getHiveDatabaseForIntermediateTable() + ";";
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, JobBuilderSupport.getJobWorkingDir(jobEngineConfig, uuid));
         String insertDataHqls;
@@ -132,6 +133,7 @@ public class BuildIIWithStreamTest {
         ShellExecutable step = new ShellExecutable();
         StringBuffer buf = new StringBuffer();
         buf.append("hive -e \"");
+        buf.append(useDatabaseHql + "\n");
         buf.append(dropTableHql + "\n");
         buf.append(createTableHql + "\n");
         buf.append(insertDataHqls + "\n");
