@@ -81,6 +81,10 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("margin")
     private long margin;
 
+    //"configA=1;configB=2"
+    @JsonProperty("parserProperties")
+    private String parserProperties;
+
     public List<KafkaClusterConfig> getKafkaClusterConfigs() {
         return kafkaClusterConfigs;
     }
@@ -139,6 +143,14 @@ public class KafkaConfig extends RootPersistentEntity {
 
     public void setMargin(long margin) {
         this.margin = margin;
+    }
+
+    public String getParserProperties() {
+        return parserProperties;
+    }
+
+    public void setParserProperties(String parserProperties) {
+        this.parserProperties = parserProperties;
     }
 
     @Override

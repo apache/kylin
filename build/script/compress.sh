@@ -21,6 +21,7 @@ rm -rf lib tomcat commit_SHA1
 find kylin-${version} -type d -exec chmod 755 {} \;
 find kylin-${version} -type f -exec chmod 644 {} \;
 find kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
+mkdir -p ../dist
 tar -cvzf ../dist/kylin-${version}.tar.gz kylin-${version}
 rm -rf kylin-${version}
 
