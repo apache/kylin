@@ -91,7 +91,7 @@ public class ITInvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
         List<TableRecord> records = iterateRecords(slices);
         //dump(records);
-        System.out.println(records.size() + " records");
+        System.out.println("table name:" + tableName + " has " + records.size() + " records");
     }
 
     private List<TableRecord> iterateRecords(List<Slice> slices) {

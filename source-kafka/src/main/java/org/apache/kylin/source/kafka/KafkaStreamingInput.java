@@ -79,9 +79,10 @@ public class KafkaStreamingInput implements IStreamingInput {
     @Override
     public StreamingBatch getBatchWithTimeWindow(String streaming, int id, long startTime, long endTime) {
         try {
+            logger.info(String.format("prepare to get streaming batch, name:%s, id:%d, startTime:%d, endTime:%d", streaming, id, startTime, endTime));
             final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             final KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
-            final KafkaConfig kafkaConfig = kafkaConfigManager.getStreamingConfig(streaming);
+            final KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(streaming);
             final StreamingParser streamingParser = getStreamingParser(kafkaConfig);
             final ExecutorService executorService = Executors.newCachedThreadPool();
             final List<Future<List<StreamingMessage>>> futures = Lists.newArrayList();
@@ -106,6 +107,7 @@ public class KafkaStreamingInput implements IStreamingInput {
                 }
             }
             final Pair<Long, Long> timeRange = Pair.newPair(startTime, endTime);
+            logger.info("finish to get streaming batch, total message count:" + messages.size());
             return new StreamingBatch(messages, timeRange);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("failed to create instance of StreamingParser", e);
@@ -220,8 +222,8 @@ public class KafkaStreamingInput implements IStreamingInput {
         });
         if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
             Class clazz = Class.forName(kafkaConfig.getParserName());
-            Constructor constructor = clazz.getConstructor(List.class);
-            return (StreamingParser) constructor.newInstance(columns);
+            Constructor constructor = clazz.getConstructor(List.class, String.class);
+            return (StreamingParser) constructor.newInstance(columns, kafkaConfig.getParserProperties());
         } else {
             throw new IllegalStateException("invalid StreamingConfig:" + kafkaConfig.getName() + " missing property StreamingParser");
         }

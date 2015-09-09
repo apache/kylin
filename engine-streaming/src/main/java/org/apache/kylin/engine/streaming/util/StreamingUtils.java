@@ -53,7 +53,7 @@ public class StreamingUtils {
     }
 
     public static IStreamingOutput getStreamingOutput(String streaming) {
-        return (IStreamingOutput) ClassUtil.newInstance("org.apache.kylin.storage.hbase.HBaseStreamingOutput");
+        return (IStreamingOutput) ClassUtil.newInstance("org.apache.kylin.storage.hbase.steps.HBaseStreamingOutput");
     }
 
     public static StreamingBatchBuilder getMicroBatchBuilder(String streaming) {
