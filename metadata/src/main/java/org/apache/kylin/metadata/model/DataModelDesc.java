@@ -251,6 +251,9 @@ public class DataModelDesc extends RootPersistentEntity {
 
         copy.setUuid(null);
         copy.setLastModified(0);
+        copy.setCapacity(RealizationCapacity.MEDIUM);
+        copy.setFilterCondition(null);
+        copy.setPartitionDesc(null);
         return JsonUtil.writeValueAsString(copy);
     }
 
