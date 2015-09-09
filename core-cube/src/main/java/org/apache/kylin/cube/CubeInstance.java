@@ -67,10 +67,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         cubeInstance.updateRandomUuid();
         cubeInstance.setProjectName(projectName);
 
-        // MR_V2 is the default engine since 0.8
-        cubeInstance.setEngineType(IEngineAware.ID_MR_V2);
-        cubeInstance.setStorageType(IStorageAware.ID_HBASE);
-
         return cubeInstance;
     }
     
@@ -96,10 +92,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
-    @JsonProperty("engine_type")
-    private int engineType = IEngineAware.ID_MR_V1;
-    @JsonProperty("storage_type")
-    private int storageType = IStorageAware.ID_HBASE;
 
     private String projectName;
 
@@ -446,20 +438,14 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     @Override
     public int getStorageType() {
-        return storageType;
+        return getDescriptor().getStorageType();
     }
     
-    private void setStorageType(int storageType) {
-        this.storageType = storageType;
-    }
 
     @Override
     public int getEngineType() {
-        return engineType;
+        return getDescriptor().getEngineType();
     }
 
-    private void setEngineType(int engineType) {
-        this.engineType = engineType;
-    }
 
 }

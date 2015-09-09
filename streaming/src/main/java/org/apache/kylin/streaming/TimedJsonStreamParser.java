@@ -51,7 +51,6 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -81,7 +80,7 @@ public final class TimedJsonStreamParser implements StreamParser {
                             break;
                         case "tsColName":
                             this.tsColName = parts[1];
-                            break;  
+                            break;
                         default:
                             break;
                         }
@@ -101,8 +100,14 @@ public final class TimedJsonStreamParser implements StreamParser {
         try {
             Map<String, String> root = mapper.readValue(stream.getRawData(), mapType);
             String tsStr = root.get(tsColName);
-            Preconditions.checkArgument(!StringUtils.isEmpty(tsStr), "Timestamp field cannot be null");
-            long t = Long.valueOf(root.get(tsColName));
+            //Preconditions.checkArgument(!StringUtils.isEmpty(tsStr), "Timestamp field " + tsColName + //
+            //" cannot be null, the message offset is " + stream.getOffset() + " content is " + new String(stream.getRawData()));
+            long t;
+            if (StringUtils.isEmpty(tsStr)) {
+                t = 0;
+            } else {
+                t = Long.valueOf(tsStr);
+            }
             ArrayList<String> result = Lists.newArrayList();
 
             for (TblColRef column : allColumns) {
