@@ -38,8 +38,10 @@ public interface BatchConstants {
 
     String MAPREDUCE_COUNTER_GROUP_NAME = "Cube Builder";
 
-    String CUBE_CAPACITY = "cube.capacity";
-
+    String REGION_NUMBER_MIN = "region.number.min";
+    String REGION_NUMBER_MAX = "region.number.max";
+    String REGION_SPLIT_SIZE = "region.split.size";
+    
     String CFG_KYLIN_LOCAL_TEMP_DIR = "/tmp/kylin/";
     String CFG_KYLIN_HDFS_TEMP_DIR = "/tmp/kylin/";
     
