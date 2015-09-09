@@ -34,7 +34,6 @@ import com.google.common.collect.HashBiMap;
  */
 public class StorageContext {
 
-    public static final int HARD_THRESHOLD = 4000000;
     public static final int DEFAULT_THRESHOLD = 1000000;
 
     public enum OrderEnum {
@@ -102,7 +101,7 @@ public class StorageContext {
     }
 
     public void setThreshold(int t) {
-        threshold = Math.min(t, HARD_THRESHOLD);
+        threshold = t;
     }
 
     public int getLimit() {
