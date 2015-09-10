@@ -55,6 +55,8 @@ public class GarbageCollectionStep extends AbstractExecutable {
 
     private static final String OLD_HDFS_PATHS = "oldHdfsPaths";
 
+    private static final String OLD_HDFS_PATHS_ON_HBASE_CLUSTER = "oldHdfsPathsOnHBaseCluster";
+
     private static final Logger logger = LoggerFactory.getLogger(GarbageCollectionStep.class);
 
     private StringBuffer output;
@@ -69,8 +71,9 @@ public class GarbageCollectionStep extends AbstractExecutable {
 
         try {
             dropHBaseTable(context);
-            dropHdfsPath(context);
             dropHiveTable(context);
+            dropHdfsPath(context);
+            dropHdfsPathOnHBaseCluster(context);
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
             output.append("\n").append(e.getLocalizedMessage());
@@ -131,13 +134,11 @@ public class GarbageCollectionStep extends AbstractExecutable {
             }
         }
     }
-    
-    private void dropHdfsPath(ExecutableContext context) throws IOException {
 
-        List<String> oldHdfsPaths = this.getOldHdsfPaths();
+    private void dropHdfsPathOnCluster(List<String> oldHdfsPaths, FileSystem fileSystem) throws IOException {
         if (oldHdfsPaths != null && oldHdfsPaths.size() > 0) {
-            Configuration hconf = HadoopUtil.getCurrentConfiguration();
-            FileSystem fileSystem = FileSystem.get(hconf);
+            logger.debug("Drop HDFS path on FileSystem: " + fileSystem.getUri());
+            output.append("Drop HDFS path on FileSystem: \"" + fileSystem.getUri() + "\" \n");
             for (String path : oldHdfsPaths) {
                 if (path.endsWith("*"))
                     path = path.substring(0, path.length() - 1);
@@ -152,8 +153,19 @@ public class GarbageCollectionStep extends AbstractExecutable {
                     output.append("HDFS path not exists: \"" + path + "\" \n");
                 }
             }
-
         }
+    }
+
+    private void dropHdfsPath(ExecutableContext context) throws IOException {
+        List<String> oldHdfsPaths = this.getOldHdfsPaths();
+        FileSystem fileSystem = FileSystem.get(HadoopUtil.getCurrentConfiguration());
+        dropHdfsPathOnCluster(oldHdfsPaths, fileSystem);
+    }
+
+    private void dropHdfsPathOnHBaseCluster(ExecutableContext context) throws IOException {
+        List<String> oldHdfsPaths = this.getOldHdfsPathsOnHBaseCluster();
+        FileSystem fileSystem = FileSystem.get(HadoopUtil.getCurrentHBaseConfiguration());
+        dropHdfsPathOnCluster(oldHdfsPaths, fileSystem);
     }
 
     public void setOldHTables(List<String> tables) {
@@ -164,12 +176,20 @@ public class GarbageCollectionStep extends AbstractExecutable {
         return getArrayParam(OLD_HTABLES);
     }
 
-    public void setOldHdsfPaths(List<String> paths) {
+    public void setOldHdfsPaths(List<String> paths) {
         setArrayParam(OLD_HDFS_PATHS, paths);
     }
 
-    private List<String> getOldHdsfPaths() {
+    private List<String> getOldHdfsPaths() {
         return getArrayParam(OLD_HDFS_PATHS);
+    }
+
+    public void setOldHdfsPathsOnHBaseCluster(List<String> paths) {
+        setArrayParam(OLD_HDFS_PATHS_ON_HBASE_CLUSTER, paths);
+    }
+
+    private List<String> getOldHdfsPathsOnHBaseCluster() {
+        return getArrayParam(OLD_HDFS_PATHS_ON_HBASE_CLUSTER);
     }
 
     private void setArrayParam(String paramKey, List<String> paramValues) {
