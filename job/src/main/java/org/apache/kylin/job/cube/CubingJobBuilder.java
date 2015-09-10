@@ -206,9 +206,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         final String jobId = result.getId();
         final String cuboidPath = cuboidRootPath + "*";
 
-        result.addTask(createRangeRowkeyDistributionStep(seg, cuboidPath));
+        result.addTask(createRangeRowkeyDistributionStep(seg, cuboidPath, jobId));
         // create htable step
-        result.addTask(createCreateHTableStep(seg));
+        result.addTask(createCreateHTableStep(seg, jobId));
         // generate hfiles step
         final MapReduceExecutable convertCuboidToHfileStep = createConvertCuboidToHfileStep(seg, cuboidPath, jobId);
         result.addTask(convertCuboidToHfileStep);
@@ -265,8 +265,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return getJobWorkingDir(seg.getLastBuildJobID()) + "/" + seg.getCubeInstance().getName() + "/cuboid/*";
     }
 
-    private String getRowkeyDistributionOutputPath(CubeSegment seg) {
-        return getJobWorkingDir(seg.getLastBuildJobID()) + "/" + seg.getCubeInstance().getName() + "/rowkey_stats";
+    private String getRowkeyDistributionOutputPath(CubeSegment seg, String jobId) {
+        return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/rowkey_stats";
     }
 
     private String getFactDistinctColumnsPath(CubeSegment seg, String jobUuid) {
@@ -347,14 +347,14 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return ndCuboidStep;
     }
 
-    private MapReduceExecutable createRangeRowkeyDistributionStep(CubeSegment seg, String inputPath) {
+    private MapReduceExecutable createRangeRowkeyDistributionStep(CubeSegment seg, String inputPath, String jobId) {
         MapReduceExecutable rowkeyDistributionStep = new MapReduceExecutable();
         rowkeyDistributionStep.setName(ExecutableConstants.STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION);
         StringBuilder cmd = new StringBuilder();
 
         appendMapReduceParameters(cmd, seg);
         appendExecCmdParameters(cmd, "input", inputPath);
-        appendExecCmdParameters(cmd, "output", getRowkeyDistributionOutputPath(seg));
+        appendExecCmdParameters(cmd, "output", getRowkeyDistributionOutputPath(seg, jobId));
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
         appendExecCmdParameters(cmd, "jobname", "Kylin_Region_Splits_Calculator_" + seg.getCubeInstance().getName() + "_Step");
 
@@ -363,12 +363,12 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return rowkeyDistributionStep;
     }
 
-    private HadoopShellExecutable createCreateHTableStep(CubeSegment seg) {
+    private HadoopShellExecutable createCreateHTableStep(CubeSegment seg, String jobId) {
         HadoopShellExecutable createHtableStep = new HadoopShellExecutable();
         createHtableStep.setName(ExecutableConstants.STEP_NAME_CREATE_HBASE_TABLE);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
-        appendExecCmdParameters(cmd, "input", getRowkeyDistributionOutputPath(seg) + "/part-r-00000");
+        appendExecCmdParameters(cmd, "input", getRowkeyDistributionOutputPath(seg, jobId) + "/part-r-00000");
         appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
 
         createHtableStep.setJobParams(cmd.toString());
