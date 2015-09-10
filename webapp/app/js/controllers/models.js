@@ -48,19 +48,21 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
             var queryParam = {};
 
             queryParam.projectName = $scope.projectModel.selectedProject;
-
             modelsManager.list(queryParam).then(function(resp){
               modelsManager.loading = false;
             });
 
         };
 
+        $scope.init();
+
         $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
-                modelsManager.removeAll();
-                $scope.init();
+          if (newValue != oldValue || newValue == null) {
+            modelsManager.removeAll();
+            $scope.init();
+          }
 
         });
-
 
     $scope.status = {
         isopen: true

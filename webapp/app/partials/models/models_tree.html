@@ -47,8 +47,11 @@
       </div>
 
     </div>
-    <!--<div class="space-4 box-header with-border"></div>-->
+    <div class="space-4 box-header with-border"></div>
     <!--tree-->
+  <div>
+    <h3 class="text-info">Models</h3>
+  </div>
     <div style="width:100%; height:{{window}}px; overflow:auto;margin-top: 20px;" ng-controller="ModelsCtrl">
 
         <ul class="list-group models-tree">
@@ -60,14 +63,12 @@
             <div class="pull-right" showonhoverparent style="display:none;">
 
               <a href="models/edit/{{model.name}}"  ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-pencil fa-lg fa-fw"></span></a>
-              <a ng-click="dropModel(modelsManager.selectedModel)" style="cursor:pointer;margin-right: 8px;" ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
+              <a ng-click="dropModel(model)" style="cursor:pointer;margin-right: 8px;" ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
             </div>
 
           </li>
         </ul>
-
-        <div ng-if="modelsManager.loading==true||tableModel.loading==true"><i class="fa fa-2x fa-spinner fa-spin"></i> Loading..</div>
-        <div no-result ng-if="modelsManager.loading==false&&tableModel.loading==false&&modelsManager.models.length==0"></div>
-
+      <div ng-if="modelsManager.loading==true"><i class="fa fa-2x fa-spinner fa-spin"></i> Loading..</div>
+      <div no-result ng-if="modelsManager.loading!=true&&modelsManager.models.length==0"></div>
     </div>
 </div>
