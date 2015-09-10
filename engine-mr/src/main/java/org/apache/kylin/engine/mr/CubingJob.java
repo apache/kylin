@@ -21,6 +21,8 @@ package org.apache.kylin.engine.mr;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -179,11 +181,26 @@ public class CubingJob extends DefaultChainedExecutable {
     }
 
     public long findCubeSizeBytes() {
-        return Long.parseLong(findExtraInfo(CUBE_SIZE_BYTES, "0"));
+        // look for the info BACKWARD, let the last step that claims the cube size win
+        return Long.parseLong(findExtraInfoBackward(CUBE_SIZE_BYTES, "0"));
+    }
+    
+    public String findExtraInfo(String key, String dft) {
+        return findExtraInfo(key, dft, false);
     }
 
-    private String findExtraInfo(String key, String dft) {
-        for (AbstractExecutable child : getTasks()) {
+    public String findExtraInfoBackward(String key, String dft) {
+        return findExtraInfo(key, dft, true);
+    }
+    
+    private String findExtraInfo(String key, String dft, boolean backward) {
+        ArrayList<AbstractExecutable> tasks = new ArrayList<AbstractExecutable>(getTasks());
+        
+        if (backward) {
+            Collections.reverse(tasks);
+        }
+        
+        for (AbstractExecutable child : tasks) {
             Output output = executableManager.getOutput(child.getId());
             String value = output.getExtra().get(key);
             if (value != null)
@@ -191,4 +208,5 @@ public class CubingJob extends DefaultChainedExecutable {
         }
         return dft;
     }
+    
 }

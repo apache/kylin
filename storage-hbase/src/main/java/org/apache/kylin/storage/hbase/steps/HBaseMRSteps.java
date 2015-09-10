@@ -24,16 +24,18 @@ public class HBaseMRSteps extends JobBuilderSupport {
         String jobId = jobFlow.getId();
 
         // calculate key distribution
-        jobFlow.addTask(createRangeRowkeyDistributionStep(cuboidRootPath + "*", jobId));
+        jobFlow.addTask(createRangeRowkeyDistributionStep(cuboidRootPath, jobId));
         // create htable step
         jobFlow.addTask(createCreateHTableStep(jobId));
         // generate hfiles step
-        jobFlow.addTask(createConvertCuboidToHfileStep(cuboidRootPath + "*", jobId));
+        jobFlow.addTask(createConvertCuboidToHfileStep(cuboidRootPath, jobId));
         // bulk load step
         jobFlow.addTask(createBulkLoadStep(jobId));
     }
 
-    public MapReduceExecutable createRangeRowkeyDistributionStep(String inputPath, String jobId) {
+    public MapReduceExecutable createRangeRowkeyDistributionStep(String cuboidRootPath, String jobId) {
+        String inputPath = cuboidRootPath + (cuboidRootPath.endsWith("/") ? "" : "/") + "*";
+        
         MapReduceExecutable rowkeyDistributionStep = new MapReduceExecutable();
         rowkeyDistributionStep.setName(ExecutableConstants.STEP_NAME_GET_CUBOID_KEY_DISTRIBUTION);
         StringBuilder cmd = new StringBuilder();
@@ -73,7 +75,9 @@ public class HBaseMRSteps extends JobBuilderSupport {
         return createHtableStep;
     }
 
-    public MapReduceExecutable createConvertCuboidToHfileStep(String inputPath, String jobId) {
+    public MapReduceExecutable createConvertCuboidToHfileStep(String cuboidRootPath, String jobId) {
+        String inputPath = cuboidRootPath + (cuboidRootPath.endsWith("/") ? "" : "/") + "*";
+        
         MapReduceExecutable createHFilesStep = new MapReduceExecutable();
         createHFilesStep.setName(ExecutableConstants.STEP_NAME_CONVERT_CUBOID_TO_HFILE);
         StringBuilder cmd = new StringBuilder();

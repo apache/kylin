@@ -36,6 +36,7 @@ import org.apache.kylin.storage.cache.CacheFledgedDynamicQuery;
 import org.apache.kylin.storage.cache.CacheFledgedStaticQuery;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput2;
+import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridStorageQuery;
 
@@ -105,7 +106,7 @@ public class HBaseStorage implements IStorage {
         if (engineInterface == IMROutput.class) {
             return (I) new HBaseMROutput();
         } else if (engineInterface == IMROutput2.class) {
-            return (I) new HBaseMROutput2();
+            return (I) new HBaseMROutput2Transition();
         } else {
             throw new RuntimeException("Cannot adapt to " + engineInterface);
         }
