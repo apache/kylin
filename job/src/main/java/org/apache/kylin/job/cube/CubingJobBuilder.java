@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
@@ -65,9 +63,11 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         final CubingJob result = initialJob(seg, "BUILD");
         final String jobId = result.getId();
         final String cuboidRootPath = getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/cuboid/";
+        final List<String> toDeletePathsOnHadoopCluster = Lists.newArrayList();
+        final List<String> toDeletePathsOnHBaseCluster = Lists.newArrayList();
 
         // cubing
-        Pair<AbstractExecutable, AbstractExecutable> twoSteps = addCubingSteps(seg, cuboidRootPath, result);
+        Pair<AbstractExecutable, AbstractExecutable> twoSteps = addCubingSteps(seg, cuboidRootPath, result, toDeletePathsOnHadoopCluster);
         String intermediateHiveTableStepId = twoSteps.getFirst().getId();
         String baseCuboidStepId = twoSteps.getSecond().getId();
 
@@ -79,7 +79,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(seg.getCubeDesc(), seg);
         final String hiveIntermediateTable = this.getIntermediateHiveTableName(intermediateTableDesc, jobId);
-        result.addTask(createGarbageCollectionStep(seg, null, hiveIntermediateTable, null));
+        toDeletePathsOnHBaseCluster.add(getJobWorkingDir(jobId));
+        result.addTask(createGarbageCollectionStep(seg, null, hiveIntermediateTable, toDeletePathsOnHadoopCluster, toDeletePathsOnHBaseCluster));
 
         return result;
     }
@@ -92,9 +93,14 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         final String jobId = result.getId();
         final String appendRootPath = getJobWorkingDir(jobId) + "/" + appendSegment.getCubeInstance().getName() + "/append_cuboid/";
         final String mergedRootPath = getJobWorkingDir(jobId) + "/" + appendSegment.getCubeInstance().getName() + "/cuboid/";
+        List<String> mergingSegmentIds = Lists.newArrayList();
+        List<String> mergingCuboidPaths = Lists.newArrayList();
+        List<String> mergingHTables = Lists.newArrayList();
+        final List<String> toDeletePathsOnHadoopCluster = Lists.newArrayList();
+        final List<String> toDeletePathsOnHBaseCluster = Lists.newArrayList();
 
         // cubing the incremental segment
-        Pair<AbstractExecutable, AbstractExecutable> twoSteps = addCubingSteps(appendSegment, appendRootPath, result);
+        Pair<AbstractExecutable, AbstractExecutable> twoSteps = addCubingSteps(appendSegment, appendRootPath, result, toDeletePathsOnHadoopCluster);
         final String intermediateHiveTableStepId = twoSteps.getFirst().getId();
         final String baseCuboidStepId = twoSteps.getSecond().getId();
 
@@ -103,10 +109,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         List<CubeSegment> mergingSegments = mergeSegment.getCubeInstance().getMergingSegments(mergeSegment);
         Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
-        List<String> mergingSegmentIds = Lists.newArrayList();
-        List<String> mergingCuboidPaths = Lists.newArrayList();
-        List<String> mergingHTables = Lists.newArrayList();
-        List<String> toDeletePaths = Lists.newArrayList();
+
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
             mergingHTables.add(merging.getStorageLocationIdentifier());
@@ -115,7 +118,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             } else {
                 mergingCuboidPaths.add(getPathToMerge(merging));
             }
-            toDeletePaths.add(getJobWorkingDir(merging.getLastBuildJobID()));
+            toDeletePathsOnHadoopCluster.add(getJobWorkingDir(merging.getLastBuildJobID()));
         }
 
         // merge cuboid
@@ -126,7 +129,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(mergeSegment, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
-        result.addTask(createGarbageCollectionStep(mergeSegment, mergingHTables, null, toDeletePaths));
+        toDeletePathsOnHBaseCluster.add(getJobWorkingDir(jobId));
+        result.addTask(createGarbageCollectionStep(mergeSegment, mergingHTables, null, toDeletePathsOnHadoopCluster, toDeletePathsOnHBaseCluster));
 
         return result;
     }
@@ -143,12 +147,14 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         List<String> mergingSegmentIds = Lists.newArrayList();
         List<String> mergingCuboidPaths = Lists.newArrayList();
         List<String> mergingHTables = Lists.newArrayList();
-        List<String> toDeletePaths = Lists.newArrayList();
+        final List<String> toDeletePathsOnHadoopCluster = Lists.newArrayList();
+        final List<String> toDeletePathsOnHBaseCluster = Lists.newArrayList();
+
         for (CubeSegment merging : mergingSegments) {
             mergingSegmentIds.add(merging.getUuid());
             mergingCuboidPaths.add(getPathToMerge(merging));
             mergingHTables.add(merging.getStorageLocationIdentifier());
-            toDeletePaths.add(getJobWorkingDir(merging.getLastBuildJobID()));
+            toDeletePathsOnHadoopCluster.add(getJobWorkingDir(merging.getLastBuildJobID()));
         }
 
         // merge cuboid
@@ -159,7 +165,8 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         // update cube info
         result.addTask(createUpdateCubeInfoAfterMergeStep(seg, mergingSegmentIds, convertCuboidToHfileStep.getId(), jobId));
-        result.addTask(createGarbageCollectionStep(seg, mergingHTables, null, toDeletePaths));
+        toDeletePathsOnHBaseCluster.add(getJobWorkingDir(jobId));
+        result.addTask(createGarbageCollectionStep(seg, mergingHTables, null, toDeletePathsOnHadoopCluster, toDeletePathsOnHBaseCluster));
         return result;
     }
 
@@ -171,7 +178,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         result.addTask(createMergeCuboidDataStep(seg, formattedPath, mergedCuboidPath));
     }
 
-    Pair<AbstractExecutable, AbstractExecutable> addCubingSteps(CubeSegment seg, String cuboidRootPath, CubingJob result) {
+    Pair<AbstractExecutable, AbstractExecutable> addCubingSteps(CubeSegment seg, String cuboidRootPath, CubingJob result, List<String> toDeletePaths) {
         final int groupRowkeyColumnsCount = seg.getCubeDesc().getRowkey().getNCuboidBuildLevels();
         final int totalRowkeyColumnsCount = seg.getCubeDesc().getRowkey().getRowKeyColumns().length;
 
@@ -198,6 +205,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             int dimNum = totalRowkeyColumnsCount - i;
             result.addTask(createNDimensionCuboidStep(seg, cuboidOutputTempPath, dimNum, totalRowkeyColumnsCount));
         }
+
+        toDeletePaths.add(intermediateHiveTableLocation);
+        toDeletePaths.add(factDistinctColumnsPath);
 
         return new Pair<AbstractExecutable, AbstractExecutable>(intermediateHiveTableStep, baseCuboidStep);
     }
@@ -266,7 +276,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
     }
 
     private String getRowkeyDistributionOutputPath(CubeSegment seg, String jobId) {
-        return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/rowkey_stats";
+        return HadoopUtil.makeQualifiedPathInHBaseCluster(getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/rowkey_stats");
     }
 
     private String getFactDistinctColumnsPath(CubeSegment seg, String jobUuid) {
@@ -460,12 +470,13 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         return result;
     }
 
-    private GarbageCollectionStep createGarbageCollectionStep(CubeSegment seg, List<String> oldHtables, String hiveIntermediateTable, List<String> oldHdsfPaths) {
+    private GarbageCollectionStep createGarbageCollectionStep(CubeSegment seg, List<String> oldHtables, String hiveIntermediateTable, List<String> oldHdsfPaths, List<String> oldHdfsPathsOnHBaseCluster) {
         GarbageCollectionStep result = new GarbageCollectionStep();
         result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
         result.setOldHTables(oldHtables);
         result.setOldHiveTable(hiveIntermediateTable);
-        result.setOldHdsfPaths(oldHdsfPaths);
+        result.setOldHdfsPaths(oldHdsfPaths);
+        result.setOldHdfsPathsOnHBaseCluster(oldHdfsPathsOnHBaseCluster);
         return result;
     }
 
