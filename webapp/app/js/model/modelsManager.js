@@ -31,11 +31,12 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
     //list models and complemete cube,access info
     this.list = function(queryParam){
 
+        _this.loading = true;
         var defer = $q.defer();
         var cubeDetail = [];
         var modelPermission = [];
         ModelService.list(queryParam, function (_models) {
-            _this.removeAll();
+            //_this.removeAll();
 
             angular.forEach(_models, function (model, index) {
                 $log.info("Add model permission info");
@@ -59,6 +60,7 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
                 function(result){
                     _models = _.filter(_models,function(models){return models.name!=undefined});
                     _this.models = _models;
+                    _this.loading = false;
                     defer.resolve(_this.models);
                 }
             );
@@ -68,17 +70,6 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
         return defer.promise;
 
     };
-
-    //generator tree data info
-    //this.generatorTreeData = function(queryParam){
-    //  _this.loading = true;
-    //    var defer = $q.defer();
-    //    _this.list(queryParam).then(function(resp){
-    //        defer.resolve(_this.modelTreeData);
-    //    });
-    //    return defer.promise;
-    //};
-
 
     this.removemodels = function(models){
         var modelsIndex = _this.models.indexOf(models);

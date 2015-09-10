@@ -48,7 +48,6 @@ KylinApp
             $scope.loading = true;
             TableModel.aceSrcTbLoaded(forceLoad).then(function(){
                 $scope.loading = false;
-                TableModel.loading = false;
             });
         };
 
