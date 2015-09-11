@@ -62,6 +62,10 @@ public final class MicroStreamBatch {
         return this.rawMessageCount;
     }
 
+    public final int getFilteredMessageCount() {
+        return this.streams.size();
+    }
+
     public final void add(ParsedStreamMessage parsedStreamMessage) {
         if (offset.getFirst() > parsedStreamMessage.getOffset()) {
             offset.setFirst(parsedStreamMessage.getOffset());

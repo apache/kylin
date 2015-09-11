@@ -42,8 +42,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-/**
- */
 public class StreamingCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamingCLI.class);

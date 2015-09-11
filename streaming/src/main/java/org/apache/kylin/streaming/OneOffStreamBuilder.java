@@ -45,7 +45,7 @@ public class OneOffStreamBuilder implements Runnable {
             final List<Future<MicroStreamBatch>> futures = Lists.newLinkedList();
             int partitionId = 0;
             for (BlockingQueue<StreamMessage> queue : queues) {
-                futures.add(executorService.submit(new StreamFetcher(partitionId, queue, countDownLatch, batchCondition, streamParser)));
+                futures.add(executorService.submit(new StreamFetcher(partitionId++, queue, countDownLatch, batchCondition, streamParser)));
             }
             countDownLatch.await();
             List<MicroStreamBatch> batches = Lists.newLinkedList();

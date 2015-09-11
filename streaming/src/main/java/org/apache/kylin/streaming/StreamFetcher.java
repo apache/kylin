@@ -7,6 +7,8 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 /**
  */
 public class StreamFetcher implements Callable<MicroStreamBatch> {
@@ -24,9 +26,6 @@ public class StreamFetcher implements Callable<MicroStreamBatch> {
         this.countDownLatch = countDownLatch;
         this.condition = condition;
         this.streamParser = streamParser;
-    }
-
-    private void clearCounter() {
     }
 
     private StreamMessage peek(BlockingQueue<StreamMessage> queue, long timeout) {
@@ -57,7 +56,6 @@ public class StreamFetcher implements Callable<MicroStreamBatch> {
             while (true) {
                 if (microStreamBatch == null) {
                     microStreamBatch = new MicroStreamBatch(partitionId);
-                    clearCounter();
                 }
                 StreamMessage streamMessage = peek(streamMessageQueue, 60000);
                 if (streamMessage == null) {
@@ -83,21 +81,28 @@ public class StreamFetcher implements Callable<MicroStreamBatch> {
                     } else if (result == BatchCondition.Result.LAST_ACCEPT_FOR_BATCH) {
                         streamMessageQueue.take();
                         microStreamBatch.add(parsedStreamMessage);
-                        return microStreamBatch;
+                        break;
                     } else if (result == BatchCondition.Result.DISCARD) {
                         streamMessageQueue.take();
                     } else if (result == BatchCondition.Result.REJECT) {
-                        return microStreamBatch;
+                        logger.info("Partition :" + partitionId + " rejecting message at " + parsedStreamMessage.getOffset());
+                        break;
                     }
                 } else {
                     streamMessageQueue.take();
                 }
             }
+
+            Preconditions.checkArgument(microStreamBatch != null, "microStreamBatch is null!");
+            logger.info(String.format("Partition %d contributing %d filtered messages out from %d raw messages"//
+                    , partitionId, microStreamBatch.getFilteredMessageCount(), microStreamBatch.getRawMessageCount()));
+            return microStreamBatch;
+
         } catch (Exception e) {
             logger.error("build stream error, stop building", e);
             throw new RuntimeException("build stream error, stop building", e);
         } finally {
-            logger.info("one partition sign off");
+            logger.info("partition {} sign off", partitionId);
             countDownLatch.countDown();
         }
     }
