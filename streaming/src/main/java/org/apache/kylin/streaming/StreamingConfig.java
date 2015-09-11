@@ -84,7 +84,7 @@ public class StreamingConfig extends RootPersistentEntity {
     @JsonProperty("parserName")
     private String parserName;
     
-    //"configA=1;configB=2"
+    //"tsColName=timestamp;x=y"
     @JsonProperty("parserProperties")
     private String parserProperties;
 
