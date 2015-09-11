@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
@@ -66,8 +65,6 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private HashMap<TblColRef, Boolean> dictsNeedMerging = new HashMap<TblColRef, Boolean>();
 
-    private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
-
     private Boolean checkNeedMerging(TblColRef col) throws IOException {
         Boolean ret = dictsNeedMerging.get(col);
         if (ret != null)
@@ -81,28 +78,6 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
             dictsNeedMerging.put(col, ret);
             return ret;
         }
-    }
-
-    private String extractJobIDFromPath(String path) {
-        Matcher matcher = JOB_NAME_PATTERN.matcher(path);
-        // check the first occurance
-        if (matcher.find()) {
-            return matcher.group(1);
-        } else {
-            throw new IllegalStateException("Can not extract job ID from file path : " + path);
-        }
-    }
-
-    private CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
-        for (CubeSegment segment : cubeInstance.getSegments()) {
-            String lastBuildJobID = segment.getLastBuildJobID();
-            if (lastBuildJobID != null && lastBuildJobID.equalsIgnoreCase(jobID)) {
-                return segment;
-            }
-        }
-
-        throw new IllegalStateException("No merging segment's last build job ID equals " + jobID);
-
     }
 
     @Override
@@ -123,15 +98,38 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         newKeyBuf = new byte[256];// size will auto-grow
 
         // decide which source segment
-        InputSplit inputSplit = context.getInputSplit();
-        String filePath = ((FileSplit) inputSplit).getPath().toString();
-        System.out.println("filePath:" + filePath);
-        String jobID = extractJobIDFromPath(filePath);
-        System.out.println("jobID:" + jobID);
-        sourceCubeSegment = findSegmentWithUuid(jobID, cube);
-        System.out.println(sourceCubeSegment);
+        FileSplit fileSplit = (FileSplit) context.getInputSplit();
+        sourceCubeSegment = findSourceSegment(fileSplit, cube);
 
-        this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
+        rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
+    }
+    
+    private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
+
+    public static CubeSegment findSourceSegment(FileSplit fileSplit, CubeInstance cube) {
+        String filePath = fileSplit.getPath().toString();
+        String jobID = extractJobIDFromPath(filePath);
+        return findSegmentWithUuid(jobID, cube);
+    }
+    
+    private static String extractJobIDFromPath(String path) {
+        Matcher matcher = JOB_NAME_PATTERN.matcher(path);
+        // check the first occurrence
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            throw new IllegalStateException("Can not extract job ID from file path : " + path);
+        }
+    }
+
+    private static CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
+        for (CubeSegment segment : cubeInstance.getSegments()) {
+            String lastBuildJobID = segment.getLastBuildJobID();
+            if (lastBuildJobID != null && lastBuildJobID.equalsIgnoreCase(jobID)) {
+                return segment;
+            }
+        }
+        throw new IllegalStateException("No merging segment's last build job ID equals " + jobID);
     }
 
     @Override

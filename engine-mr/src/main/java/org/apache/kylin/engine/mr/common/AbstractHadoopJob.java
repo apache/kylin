@@ -200,8 +200,12 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return classpath;
     }
 
-    public void addInputDirs(String input, Job job) throws IOException {
-        for (String inp : StringSplitter.split(input, ",")) {
+    public static void addInputDirs(String input, Job job) throws IOException {
+        addInputDirs(StringSplitter.split(input, ","), job);
+    }
+    
+    public static void addInputDirs(String[] inputs, Job job) throws IOException {
+        for (String inp : inputs) {
             inp = inp.trim();
             if (inp.endsWith("/*")) {
                 inp = inp.substring(0, inp.length() - 2);

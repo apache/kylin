@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Result;
@@ -40,10 +41,11 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
@@ -51,23 +53,29 @@ import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMROutput2;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.engine.mr.steps.MergeCuboidMapper;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
 /**
- * This "Transition" MR output generates cuboid files and then convert to HFile.
- * The additional step slows down build process slightly, but the gains is merge
+ * This "Transition" impl generates cuboid files and then convert to HFile.
+ * The additional step slows down build process, but the gains is merge
  * can read from HDFS instead of over HBase region server. See KYLIN-1007.
  * 
  * This is transitional because finally we want to merge from HTable snapshot.
- * However MR input with multiple snapshots is only supported by HBase 1.x.
+ * However multiple snapshots as MR input is only supported by HBase 1.x.
  * Before most users upgrade to latest HBase, they can only use this transitional
  * cuboid file solution.
  */
 public class HBaseMROutput2Transition implements IMROutput2 {
+
+    private static final Logger logger = LoggerFactory.getLogger(HBaseMROutput2Transition.class);
 
     @Override
     public IMRBatchCubingOutputSide2 getBatchCubingOutputSide(final CubeSegment seg) {
@@ -87,7 +95,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             @Override
             public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow) {
                 String cuboidRootPath = steps.getCuboidRootPath(jobFlow.getId());
-                
+
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(cuboidRootPath, jobFlow.getId()));
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
@@ -127,7 +135,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             @Override
             public void addStepPhase2_BuildCube(DefaultChainedExecutable jobFlow) {
                 String cuboidRootPath = steps.getCuboidRootPath(jobFlow.getId());
-                
+
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(cuboidRootPath, jobFlow.getId()));
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
@@ -141,67 +149,139 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static class HBaseInputFormat implements IMRStorageInputFormat {
-        final Iterable<String> htables;
-
-        final RowValueDecoder[] rowValueDecoders;
-        final ByteArrayWritable parsedKey;
-        final Object[] parsedValue;
-        final Pair<ByteArrayWritable, Object[]> parsedPair;
+        final CubeSegment seg;
 
         public HBaseInputFormat(CubeSegment seg) {
-            this.htables = new HBaseMRSteps(seg).getMergingHTables();
+            this.seg = seg;
+        }
 
-            List<RowValueDecoder> valueDecoderList = Lists.newArrayList();
-            List<MeasureDesc> measuresDescs = Lists.newArrayList();
-            for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHBaseMapping().getColumnFamily()) {
-                for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                    valueDecoderList.add(new RowValueDecoder(colDesc));
-                    for (MeasureDesc measure : colDesc.getMeasures()) {
-                        measuresDescs.add(measure);
+        @Override
+        public void configureInput(Class<? extends Mapper> mapperClz, Class<? extends WritableComparable> outputKeyClz, Class<? extends Writable> outputValueClz, Job job) throws IOException {
+            // merge by cuboid files
+            if (isMergeFromCuboidFiles(job.getConfiguration())) {
+                logger.info("Merge from cuboid files for " + seg);
+                
+                job.setInputFormatClass(SequenceFileInputFormat.class);
+                addCuboidInputDirs(job);
+                
+                job.setMapperClass(mapperClz);
+                job.setMapOutputKeyClass(outputKeyClz);
+                job.setMapOutputValueClass(outputValueClz);
+            }
+            // merge from HTable scan
+            else {
+                logger.info("Merge from HTables for " + seg);
+                
+                Configuration conf = job.getConfiguration();
+                HBaseConfiguration.merge(conf, HBaseConfiguration.create(conf));
+
+                List<Scan> scans = new ArrayList<Scan>();
+                for (String htable : new HBaseMRSteps(seg).getMergingHTables()) {
+                    Scan scan = new Scan();
+                    scan.setCaching(500); // 1 is the default in Scan, which will be bad for MapReduce jobs
+                    scan.setCacheBlocks(false); // don't set to true for MR jobs
+                    scan.setAttribute(Scan.SCAN_ATTRIBUTES_TABLE_NAME, Bytes.toBytes(htable));
+                    scans.add(scan);
+                }
+                TableMapReduceUtil.initTableMapperJob(scans, (Class<? extends TableMapper>) mapperClz, outputKeyClz, outputValueClz, job);
+            }
+        }
+
+        private void addCuboidInputDirs(Job job) throws IOException {
+            List<CubeSegment> mergingSegments = seg.getCubeInstance().getMergingSegments(seg);
+            HBaseMRSteps steps = new HBaseMRSteps(seg);
+            
+            String[] inputs = new String[mergingSegments.size()];
+            for (int i = 0; i < mergingSegments.size(); i++) {
+                CubeSegment mergingSeg = mergingSegments.get(i);
+                String cuboidPath = steps.getCuboidRootPath(mergingSeg);
+                inputs[i] = cuboidPath + (cuboidPath.endsWith("/") ? "" : "/") + "*";
+            }
+            
+            AbstractHadoopJob.addInputDirs(inputs, job);
+        }
+
+        @Override
+        public CubeSegment findSourceSegment(Context context) throws IOException {
+            // merge by cuboid files
+            if (isMergeFromCuboidFiles(context.getConfiguration())) {
+                FileSplit fileSplit = (FileSplit) context.getInputSplit();
+                return MergeCuboidMapper.findSourceSegment(fileSplit, seg.getCubeInstance());
+            }
+            // merge from HTable scan
+            else {
+                TableSplit currentSplit = (TableSplit) context.getInputSplit();
+                byte[] tableName = currentSplit.getTableName();
+                String htableName = Bytes.toString(tableName);
+
+                // decide which source segment
+                for (CubeSegment segment : seg.getCubeInstance().getSegments()) {
+                    String segmentHtable = segment.getStorageLocationIdentifier();
+                    if (segmentHtable != null && segmentHtable.equalsIgnoreCase(htableName)) {
+                        return segment;
                     }
                 }
+                throw new IllegalStateException("No merging segment's storage location identifier equals " + htableName);
             }
-            this.rowValueDecoders = valueDecoderList.toArray(new RowValueDecoder[valueDecoderList.size()]);
-
-            this.parsedKey = new ByteArrayWritable();
-            this.parsedValue = new Object[measuresDescs.size()];
-            this.parsedPair = new Pair<ByteArrayWritable, Object[]>(parsedKey, parsedValue);
         }
 
-        @Override
-        public void configureInput(Class<? extends Mapper> mapper, Class<? extends WritableComparable> outputKeyClass, Class<? extends Writable> outputValueClass, Job job) throws IOException {
-            Configuration conf = job.getConfiguration();
-            HBaseConfiguration.merge(conf, HBaseConfiguration.create(conf));
-
-            List<Scan> scans = new ArrayList<Scan>();
-            for (String htable : htables) {
-                Scan scan = new Scan();
-                scan.setCaching(500); // 1 is the default in Scan, which will be bad for MapReduce jobs
-                scan.setCacheBlocks(false); // don't set to true for MR jobs
-                scan.setAttribute(Scan.SCAN_ATTRIBUTES_TABLE_NAME, Bytes.toBytes(htable));
-                scans.add(scan);
-            }
-            TableMapReduceUtil.initTableMapperJob(scans, (Class<? extends TableMapper>) mapper, outputKeyClass, outputValueClass, job);
-        }
-
-        @Override
-        public CubeSegment findSourceSegment(Context context, CubeInstance cubeInstance) throws IOException {
-            TableSplit currentSplit = (TableSplit) context.getInputSplit();
-            byte[] tableName = currentSplit.getTableName();
-            String htableName = Bytes.toString(tableName);
-
-            // decide which source segment
-            for (CubeSegment segment : cubeInstance.getSegments()) {
-                String segmentHtable = segment.getStorageLocationIdentifier();
-                if (segmentHtable != null && segmentHtable.equalsIgnoreCase(htableName)) {
-                    return segment;
-                }
-            }
-            throw new IllegalStateException("No merging segment's storage location identifier equals " + htableName);
-        }
+        transient ByteArrayWritable parsedKey;
+        transient Object[] parsedValue;
+        transient Pair<ByteArrayWritable, Object[]> parsedPair;
+        
+        transient MeasureCodec measureCodec;
+        transient RowValueDecoder[] rowValueDecoders;
 
         @Override
         public Pair<ByteArrayWritable, Object[]> parseMapperInput(Object inKey, Object inValue) {
+            // lazy init
+            if (parsedPair == null) {
+                parsedKey = new ByteArrayWritable();
+                parsedValue = new Object[seg.getCubeDesc().getMeasures().size()];
+                parsedPair = new Pair<ByteArrayWritable, Object[]>(parsedKey, parsedValue);
+            }
+            
+            // merge by cuboid files
+            if (isMergeFromCuboidFiles(null)) {
+                return parseMapperInputFromCuboidFile(inKey, inValue);
+            }
+            // merge from HTable scan
+            else {
+                return parseMapperInputFromHTable(inKey, inValue);
+            }
+        }
+
+        private Pair<ByteArrayWritable, Object[]> parseMapperInputFromCuboidFile(Object inKey, Object inValue) {
+            // lazy init
+            if (measureCodec == null) {
+                measureCodec = new MeasureCodec(seg.getCubeDesc().getMeasures());
+            }
+            
+            Text key = (Text) inKey;
+            parsedKey.set(key.getBytes(), 0, key.getLength());
+            
+            Text value = (Text) inValue;
+            measureCodec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), parsedValue);
+            
+            return parsedPair;
+        }
+
+        private Pair<ByteArrayWritable, Object[]> parseMapperInputFromHTable(Object inKey, Object inValue) {
+            // lazy init
+            if (rowValueDecoders == null) {
+                List<RowValueDecoder> valueDecoderList = Lists.newArrayList();
+                List<MeasureDesc> measuresDescs = Lists.newArrayList();
+                for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHBaseMapping().getColumnFamily()) {
+                    for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
+                        valueDecoderList.add(new RowValueDecoder(colDesc));
+                        for (MeasureDesc measure : colDesc.getMeasures()) {
+                            measuresDescs.add(measure);
+                        }
+                    }
+                }
+                rowValueDecoders = valueDecoderList.toArray(new RowValueDecoder[valueDecoderList.size()]);
+            }
+
             ImmutableBytesWritable key = (ImmutableBytesWritable) inKey;
             parsedKey.set(key.get(), key.getOffset(), key.getLength());
 
@@ -212,6 +292,53 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             }
 
             return parsedPair;
+        }
+
+        transient Boolean isMergeFromCuboidFiles;
+
+        // merge from cuboid files is better than merge from HTable, because no workload on HBase region server
+        private boolean isMergeFromCuboidFiles(Configuration jobConf) {
+            // cache in this object?
+            if (isMergeFromCuboidFiles != null)
+                return isMergeFromCuboidFiles.booleanValue();
+
+            final String confKey = "kylin.isMergeFromCuboidFiles";
+
+            // cache in job configuration?
+            if (jobConf != null) {
+                String result = jobConf.get(confKey);
+                if (result != null) {
+                    isMergeFromCuboidFiles = Boolean.valueOf(result);
+                    return isMergeFromCuboidFiles.booleanValue();
+                }
+            }
+
+            boolean result = true;
+
+            try {
+                List<CubeSegment> mergingSegments = seg.getCubeInstance().getMergingSegments(seg);
+                HBaseMRSteps steps = new HBaseMRSteps(seg);
+                for (CubeSegment mergingSeg : mergingSegments) {
+                    String cuboidRootPath = steps.getCuboidRootPath(mergingSeg);
+                    FileSystem fs = HadoopUtil.getFileSystem(cuboidRootPath);
+
+                    boolean cuboidFileExist = fs.exists(new Path(cuboidRootPath));
+                    if (cuboidFileExist == false) {
+                        logger.info("Merge from HTable because " + cuboidRootPath + " does not exist");
+                        result = false;
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            // put in cache
+            isMergeFromCuboidFiles = Boolean.valueOf(result);
+            if (jobConf != null) {
+                jobConf.set(confKey, "" + result);
+            }
+            return result;
         }
     }
 
@@ -236,10 +363,10 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             job.setOutputFormatClass(SequenceFileOutputFormat.class);
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
-            
+
             Path output = new Path(new HBaseMRSteps(seg).getCuboidRootPath(jobFlowId));
             FileOutputFormat.setOutputPath(job, output);
-            
+
             HadoopUtil.deletePath(job.getConfiguration(), output);
         }
 
@@ -254,11 +381,11 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             }
 
             outputKey.set(key.array(), key.offset(), key.length());
-         
+
             valueBuf.clear();
             codec.encode(value, valueBuf);
             outputValue.set(valueBuf.array(), 0, valueBuf.position());
-            
+
             context.write(outputKey, outputValue);
         }
     }
