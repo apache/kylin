@@ -76,33 +76,6 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-    <!--request log filter-->
-    <filter>
-        <filter-name>requestLoggingFilter</filter-name>
-        <filter-class>org.apache.kylin.rest.filter.RequestLoggingFilter</filter-class>
-        <init-param>
-            <param-name>includeClientInfo</param-name>
-            <param-value>true</param-value>
-        </init-param>
-        <init-param>
-            <param-name>includePayload</param-name>
-            <param-value>true</param-value>
-        </init-param>
-        <init-param>
-            <param-name>maxPayloadLength</param-name>
-            <param-value>10240</param-value>
-        </init-param>
-        <init-param>
-            <param-name>includeQueryString</param-name>
-            <param-value>true</param-value>
-        </init-param>
-    </filter>
-
-    <filter-mapping>
-        <filter-name>requestLoggingFilter</filter-name>
-        <servlet-name>kylin</servlet-name>
-    </filter-mapping>
-
     <servlet>
         <servlet-name>kylin</servlet-name>
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
