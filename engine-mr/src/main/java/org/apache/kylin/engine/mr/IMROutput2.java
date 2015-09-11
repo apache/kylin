@@ -8,7 +8,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
@@ -51,10 +50,10 @@ public interface IMROutput2 {
     public interface IMRStorageInputFormat {
 
         /** Configure MR mapper class and input file format. */
-        public void configureInput(Class<? extends Mapper> mapper, Class<? extends WritableComparable> outputKeyClass, Class<? extends Writable> outputValueClass, Job job) throws IOException;
+        public void configureInput(Class<? extends Mapper> mapperClz, Class<? extends WritableComparable> outputKeyClz, Class<? extends Writable> outputValueClz, Job job) throws IOException;
 
         /** Given a mapper context, figure out which segment the mapper reads from. */
-        public CubeSegment findSourceSegment(Mapper.Context context, CubeInstance cubeInstance) throws IOException;
+        public CubeSegment findSourceSegment(Mapper.Context context) throws IOException;
 
         /**
          * Read in a row of cuboid. Given the input KV, de-serialize back cuboid ID, dimensions, and measures.

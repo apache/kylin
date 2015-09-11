@@ -108,7 +108,7 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
 
         newKeyBuf = new byte[256]; // size will auto-grow
 
-        sourceCubeSegment = storageInputFormat.findSourceSegment(context, cube);
+        sourceCubeSegment = storageInputFormat.findSourceSegment(context);
         logger.info("Source cube segment: " + sourceCubeSegment);
 
         rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);

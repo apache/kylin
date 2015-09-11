@@ -49,7 +49,6 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
@@ -129,16 +128,16 @@ public class HBaseMROutput2 implements IMROutput2 {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static class HBaseInputFormat implements IMRStorageInputFormat {
-        final Iterable<String> htables;
-
+        final CubeSegment seg;
+        
         final RowValueDecoder[] rowValueDecoders;
         final ByteArrayWritable parsedKey;
         final Object[] parsedValue;
         final Pair<ByteArrayWritable, Object[]> parsedPair;
 
         public HBaseInputFormat(CubeSegment seg) {
-            this.htables = new HBaseMRSteps(seg).getMergingHTables();
-
+            this.seg = seg;
+            
             List<RowValueDecoder> valueDecoderList = Lists.newArrayList();
             List<MeasureDesc> measuresDescs = Lists.newArrayList();
             for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHBaseMapping().getColumnFamily()) {
@@ -157,29 +156,29 @@ public class HBaseMROutput2 implements IMROutput2 {
         }
 
         @Override
-        public void configureInput(Class<? extends Mapper> mapper, Class<? extends WritableComparable> outputKeyClass, Class<? extends Writable> outputValueClass, Job job) throws IOException {
+        public void configureInput(Class<? extends Mapper> mapperClz, Class<? extends WritableComparable> outputKeyClz, Class<? extends Writable> outputValueClz, Job job) throws IOException {
             Configuration conf = job.getConfiguration();
             HBaseConfiguration.merge(conf, HBaseConfiguration.create(conf));
 
             List<Scan> scans = new ArrayList<Scan>();
-            for (String htable : htables) {
+            for (String htable : new HBaseMRSteps(seg).getMergingHTables()) {
                 Scan scan = new Scan();
                 scan.setCaching(500); // 1 is the default in Scan, which will be bad for MapReduce jobs
                 scan.setCacheBlocks(false); // don't set to true for MR jobs
                 scan.setAttribute(Scan.SCAN_ATTRIBUTES_TABLE_NAME, Bytes.toBytes(htable));
                 scans.add(scan);
             }
-            TableMapReduceUtil.initTableMapperJob(scans, (Class<? extends TableMapper>) mapper, outputKeyClass, outputValueClass, job);
+            TableMapReduceUtil.initTableMapperJob(scans, (Class<? extends TableMapper>) mapperClz, outputKeyClz, outputValueClz, job);
         }
 
         @Override
-        public CubeSegment findSourceSegment(Context context, CubeInstance cubeInstance) throws IOException {
+        public CubeSegment findSourceSegment(Context context) throws IOException {
             TableSplit currentSplit = (TableSplit) context.getInputSplit();
             byte[] tableName = currentSplit.getTableName();
             String htableName = Bytes.toString(tableName);
 
             // decide which source segment
-            for (CubeSegment segment : cubeInstance.getSegments()) {
+            for (CubeSegment segment : seg.getCubeInstance().getSegments()) {
                 String segmentHtable = segment.getStorageLocationIdentifier();
                 if (segmentHtable != null && segmentHtable.equalsIgnoreCase(htableName)) {
                     return segment;
