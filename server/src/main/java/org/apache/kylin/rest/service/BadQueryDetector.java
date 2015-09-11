@@ -75,20 +75,13 @@ public class BadQueryDetector extends Thread {
     public interface Notifier {
         void badQueryFound(String adj, int runningSec, String sql);
     }
-    
+
     public void queryStart(Thread thread, SQLRequest sqlRequest) {
         runningQueries.put(thread, new Entry(sqlRequest));
     }
 
     public void queryEnd(Thread thread) {
-        Entry e = runningQueries.remove(thread);
-
-        if (e != null) {
-            int runningSec = (int) ((System.currentTimeMillis() - e.startTime) / 1000);
-            if (runningSec >= alertRunningSec) {
-                notify("Slow", runningSec, e.sqlRequest.getSql());
-            }
-        }
+        runningQueries.remove(thread);
     }
 
     private class Entry implements Comparable<Entry> {
@@ -124,16 +117,26 @@ public class BadQueryDetector extends Thread {
     }
 
     private void detectBadQuery() {
+        long now = System.currentTimeMillis();
+        ArrayList<Entry> entries = new ArrayList<Entry>(runningQueries.values());
+        Collections.sort(entries);
+
+        // report if low memory
         if (getSystemAvailMB() < alertMB) {
-            ArrayList<Entry> entries = new ArrayList<Entry>(runningQueries.values());
-            Collections.sort(entries);
-
             logger.info("System free memory less than " + alertMB + " MB. " + entries.size() + " queries running.");
-            long now = System.currentTimeMillis();
-
             for (int i = 0; i < entries.size(); i++) {
                 Entry e = entries.get(i);
                 notify("Low mem", (int) ((now - e.startTime) / 1000), e.sqlRequest.getSql());
+            }
+        }
+
+        // report if query running long
+        for (Entry e : entries) {
+            int runningSec = (int) ((now - e.startTime) / 1000);
+            if (runningSec >= alertRunningSec) {
+                notify("Slow", runningSec, e.sqlRequest.getSql());
+            } else {
+                break; // entries are sorted by startTime
             }
         }
     }
