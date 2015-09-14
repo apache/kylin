@@ -35,7 +35,7 @@ public class BadQueryDetectorTest {
         String mockSql = "select * from just_a_test";
         final ArrayList<String[]> alerts = new ArrayList<>();
 
-        BadQueryDetector badQueryDetector = new BadQueryDetector(5000, alertMB, alertRunningSec);
+        BadQueryDetector badQueryDetector = new BadQueryDetector(alertRunningSec * 1000, alertMB, alertRunningSec);
         badQueryDetector.registerNotifier(new BadQueryDetector.Notifier() {
             @Override
             public void badQueryFound(String adj, int runningSec, String sql) {
@@ -45,19 +45,25 @@ public class BadQueryDetectorTest {
         badQueryDetector.start();
 
         {
+            Thread.sleep(1000);
+            
             SQLRequest sqlRequest = new SQLRequest();
             sqlRequest.setSql(mockSql);
             badQueryDetector.queryStart(Thread.currentThread(), sqlRequest);
 
-            Thread.sleep(alertRunningSec * 2 * 1000);
+            // make sure bad query check happens twice
+            Thread.sleep((alertRunningSec * 2 + 1) * 1000);
 
             badQueryDetector.queryEnd(Thread.currentThread());
         }
 
         badQueryDetector.stop();
 
-        assertEquals(2, alerts.size());
+        assertEquals(3, alerts.size());
+        // first check founds Low mem
         assertArrayEquals(new String[] { "Low mem", mockSql }, alerts.get(0));
-        assertArrayEquals(new String[] { "Slow", mockSql }, alerts.get(1));
+        // second check founds Low mem & Slow
+        assertArrayEquals(new String[] { "Low mem", mockSql }, alerts.get(1));
+        assertArrayEquals(new String[] { "Slow", mockSql }, alerts.get(2));
     }
 }
