@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.job.tools;
+package org.apache.kylin.source.kafka.util;
 
 import java.io.BufferedReader;
 import java.io.File;

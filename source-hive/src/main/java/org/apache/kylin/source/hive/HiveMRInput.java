@@ -31,7 +31,6 @@ import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.job.JoinedFlatTable;
-import org.apache.kylin.job.cmd.ShellCmdOutput;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -159,14 +158,12 @@ public class HiveMRInput implements IMRInput {
             if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
                 final String dropSQL = "USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";" + " DROP TABLE IF EXISTS  " + hiveTable + ";";
                 final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
-                ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
                 try {
-                    config.getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
+                    config.getCliCommandExecutor().execute(dropHiveCMD);
                     output.append("Hive table " + hiveTable + " is dropped. \n");
                 } catch (IOException e) {
                     logger.error("job:" + getId() + " execute finished with exception", e);
-                    output.append(shellCmdOutput.getOutput()).append("\n").append(e.getLocalizedMessage());
-                    return new ExecuteResult(ExecuteResult.State.ERROR, output.toString());
+                    return new ExecuteResult(ExecuteResult.State.ERROR, e.getMessage());
                 }
             }
 

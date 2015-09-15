@@ -33,7 +33,6 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.job.cmd.ShellCmdOutput;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -88,8 +87,7 @@ public class DeprecatedGCStep extends AbstractExecutable {
         if (StringUtils.isNotEmpty(hiveTable)) {
             final String dropSQL = "USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";" + " DROP TABLE IF EXISTS  " + hiveTable + ";";
             final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
-            ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
-            context.getConfig().getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
+            context.getConfig().getCliCommandExecutor().execute(dropHiveCMD);
             output.append("Dropped Hive table " + hiveTable + " \n");
         }
 
