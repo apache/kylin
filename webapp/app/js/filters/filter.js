@@ -164,4 +164,15 @@ KylinApp
     return function (item) {
         return item/86400000;
     }
-  });;
+  }).filter('timeRangeFormat', function ($filter) {
+    //backend store GMT+0 timezone ,by default front will show local,so convert to GMT+0 Date String format
+    return function (item) {
+      var _day = Math.floor(item/86400000);
+      var _hour = (item%86400000)/3600000;
+      if(_day==0){
+        return _hour +" (Hours)"
+      }else{
+        return _day +" (Days)";
+      }
+    }
+  });
