@@ -1,5 +1,10 @@
-# Fast Cubing on Spark in Apache Kylin
-
+---
+layout: post-blog
+title:  Fast Cubing on Spark in Apache Kylin
+date:   2015-09-09 15:28:00
+author: Qianhao Zhou
+categories: blog
+---
 
 ## Preparation
 
