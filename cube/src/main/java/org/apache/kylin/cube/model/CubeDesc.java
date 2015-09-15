@@ -55,7 +55,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
@@ -115,10 +114,10 @@ public class CubeDesc extends RootPersistentEntity {
     private String signature;
     @JsonProperty("notify_list")
     private List<String> notifyList;
-    /*
-     * this field will not be serialized ,can be deserialized to front javascript
-     */
-    private long retentionRange;
+    @JsonProperty("auto_merge_time_ranges")
+    private long[] autoMergeTimeRanges;
+    @JsonProperty("retention_range")
+    private long retentionRange = 0;
 
     private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
@@ -768,13 +767,20 @@ public class CubeDesc extends RootPersistentEntity {
         this.nullStrings = nullStrings;
     }
 
-    @JsonProperty
     public long getRetentionRange() {
         return retentionRange;
     }
 
-    @JsonIgnore
     public void setRetentionRange(long retentionRange) {
         this.retentionRange = retentionRange;
     }
+
+    public long[] getAutoMergeTimeRanges() {
+        return autoMergeTimeRanges;
+    }
+
+    public void setAutoMergeTimeRanges(long[] autoMergeTimeRanges) {
+        this.autoMergeTimeRanges = autoMergeTimeRanges;
+    }
+
 }

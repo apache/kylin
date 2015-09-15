@@ -676,7 +676,7 @@ public class CubeManager implements IRealizationProvider {
             return null;
         }
 
-        long[] timeRanges = cube.getAutoMergeTimeRanges();
+        long[] timeRanges = cube.getDescriptor().getAutoMergeTimeRanges();
         Arrays.sort(timeRanges);
 
         CubeSegment newSeg = null;

@@ -21,26 +21,86 @@
 
     <div class="form-group">
 
-        <table style="margin-left:42px; width:92%"
-               class="table table-hover list">
-            <tr>
-                <td>
-                    <!--Cube Size-->
-                    <div class="form-group" ng-show="userService.hasRole('ROLE_ADMIN')">
-                        <div class="row">
-                            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Cube Size</b></label>
-                            <div class="col-xs-12 col-sm-6">
-                                <select class="form-control" ng-if="state.mode=='edit'" style="width: 360px;"
-                                        chosen ng-model="metaModel.model.capacity" required
-                                        ng-options="cc as cc for cc in cubeConfig.cubeCapacities">
-                                    <option value=""></option>
-                                </select>
-                                <span ng-if="state.mode=='view'">{{metaModel.model.capacity}}</span>
-                            </div>
-                        </div>
+        <table style="margin-left:42px; width:92%" class="table table-hover list">
+          <tr>
+              <td>
+                  <!--Cube Size-->
+                  <div class="form-group" ng-show="userService.hasRole('ROLE_ADMIN')">
+                      <div class="row">
+                          <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Cube Size</b></label>
+                          <div class="col-xs-12 col-sm-6">
+                              <select class="form-control" ng-if="state.mode=='edit'" style="width: 360px;"
+                                      chosen ng-model="metaModel.model.capacity" required
+                                      ng-options="cc as cc for cc in cubeConfig.cubeCapacities">
+                                  <option value=""></option>
+                              </select>
+                              <span ng-if="state.mode=='view'">{{metaModel.model.capacity}}</span>
+                          </div>
+                      </div>
+                  </div>
+              </td>
+          </tr>
+          <tr>
+            <td>
+              <!--Cube Size-->
+              <div class="form-group">
+                <div class="row">
+                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Auto Merge Time Ranges(days)</b></label>
+                  <div class="col-xs-12 col-sm-6">
+                    <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
+                    <div class="row"  ng-if="state.mode=='edit'">
+                      <table class="table">
+                        <tbody>
+                        <tr ng-repeat="timeRange in _auto_merge_time_ranges">
+                          <td class="col-xs-4">
+                            <select  ng-if="timeRange.type=='hours'"
+                                     chosen ng-model="timeRange.range"
+                                     ng-options="rangeTypes as rangeTypes for rangeTypes in [0.5,1,2,4,8] "
+                                     ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
+                                     style="width: 100% !important;"
+                                     data-placeholder="hours range"
+                                     class="chosen-select">
+                            </select>
+                            <input type="text" ng-if="timeRange.type=='days'"  ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)" class="form-control input-sm" placeholder="days range" ng-model="timeRange.range">
+                          </td>
+                          <td class="col-xs-4">
+                            <select  chosen ng-model="timeRange.type"
+                                     ng-options="rangeTypes as rangeTypes for rangeTypes in ['hours','days'] "
+                                     ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
+                                     style="width: 200px !important;"
+                                     data-placeholder="select a project"
+                                     class="chosen-select">
+                            </select>
+                          </td>
+                          <td>
+                            <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'" ng-click="removeTimeRange(_auto_merge_time_ranges,$index, timeRange)">
+                              <i class="fa fa-minus"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        </tbody>
+                      </table>
+                      <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'" ng-click="addNewMergeTimeRange()">
+                        New Merge Range<i class="fa fa-plus"></i>
+                      </button>
                     </div>
-                </td>
-            </tr>
+                    <div class="row"  ng-if="state.mode=='view'">
+                      <table class="table">
+                        <tbody>
+                        <tr ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges">
+                          <td>
+                            {{timeRange | timeRangeFormat}}
+                          </td>
+                        </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
           <tr>
             <td>
               <!--Cube Size-->
@@ -49,9 +109,9 @@
                   <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Retention Range(days)</b></label>
                   <div class="col-xs-12 col-sm-6">
                     <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
-                    <input type="text" retention-format class="form-control ng-scope ng-pristine ng-valid" placeholder="how many days cube retention" ng-model="cubeMetaFrame.retentionRange"  ng-if="state.mode=='edit'">
+                    <input type="text" retention-format class="form-control ng-scope ng-pristine ng-valid" placeholder="how many days cube retention" ng-model="cubeMetaFrame.retention_range"  ng-if="state.mode=='edit'">
                     <small class="help-block text-red" ng-show="state.mode=='edit'">(by default it's '0',which will keep all historic cube segments ,or will keep latest [Retention Range] days cube segments )</small>
-                    <span ng-if="state.mode=='view'">{{cube.retention_range | millisecondsToDay}}</span>
+                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.retention_range | millisecondsToDay}}</span>
                   </div>
                 </div>
               </div>
