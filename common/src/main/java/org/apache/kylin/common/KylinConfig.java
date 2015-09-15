@@ -132,6 +132,15 @@ public class KylinConfig {
 
     public static final String HBASE_REGION_COUNT_MIN = "kylin.hbase.region.count.min";
     public static final String HBASE_REGION_COUNT_MAX = "kylin.hbase.region.count.max";
+
+    // property for Hive query rerouting enablement
+    public static final String KYLIN_ROUTE_HIVE_ENABLED = "kylin.route.hive.enabled";
+    public static final boolean KYLIN_ROUTE_HIVE_ENABLED_DEFAULT = false;
+    // JDBC Hive connection details for query rerouting
+    public static final String KYLIN_ROUTE_HIVE_URL = "kylin.route.hive.url";
+    public static final String KYLIN_ROUTE_HIVE_URL_DEFAULT = "jdbc:hive2://sandbox:10000";
+    public static final String KYLIN_ROUTE_HIVE_USERNAME = "kylin.route.hive.username";
+    public static final String KYLIN_ROUTE_HIVE_PASSWORD = "kylin.route.hive.password";
     
     // static cached instances
     private static KylinConfig ENV_INSTANCE = null;
@@ -264,6 +273,24 @@ public class KylinConfig {
     }
 
     // ============================================================================
+
+    // start: properties for Hive rerouting
+    public boolean isHiveReroutingEnabled() {
+	return Boolean.parseBoolean(getOptional(KYLIN_ROUTE_HIVE_ENABLED)); 
+    }
+
+    public String getHiveRerouteUrl() {
+        return getOptional(KYLIN_ROUTE_HIVE_URL, KYLIN_ROUTE_HIVE_URL_DEFAULT);
+    }
+
+    public String getHiveRerouteUsername() {
+        return getOptional(KYLIN_ROUTE_HIVE_USERNAME, "");
+    }
+
+    public String getHiveReroutePassword() {
+        return getOptional(KYLIN_ROUTE_HIVE_PASSWORD, "");
+    }
+    // end: properties for JDBC Hive rerouting
 
     public String getStorageUrl() {
         return storageUrl;
