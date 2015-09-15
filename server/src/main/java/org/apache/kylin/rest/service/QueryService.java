@@ -40,6 +40,9 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.calcite.sql.parser.impl.ParseException;
+import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.Get;
@@ -62,6 +65,7 @@ import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.util.HiveRerouteUtil;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.slf4j.Logger;
@@ -372,7 +376,30 @@ public class QueryService extends BasicService {
                 results.add(new LinkedList<String>(oneRow));
                 oneRow.clear();
             }
-        } finally {
+        } catch (SQLException sqlException) {
+            // unsuccessful statement execution, retry with Hive on Spark. Code modification as part of the jira https://issues.apache.org/jira/browse/KYLIN-742
+	    boolean isExpectedCause = (ExceptionUtils.getRootCause(sqlException).getClass().equals(SqlValidatorException.class)) || (ExceptionUtils.getRootCause(sqlException).getClass().equals(ParseException.class));
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+    	    if (isExpectedCause && kylinConfig.isHiveReroutingEnabled()) {
+        	logger.debug("query rerouting option enabled for Kylin");
+        	// running query to hive
+                HiveRerouteUtil rerouteUtil = new HiveRerouteUtil();
+                try {
+                    conn = rerouteUtil.createConnection(kylinConfig.getHiveRerouteUrl(), kylinConfig.getHiveRerouteUsername(), kylinConfig.getHiveReroutePassword());
+                    resultSet = rerouteUtil.executQuery(conn, sql);
+                    columnMetas = rerouteUtil.extractColumnMetadata(resultSet, columnMetas);
+                    results = rerouteUtil.extractResults(resultSet, results);
+                } catch (Exception exception) {
+                    logger.error("exception in re-routing the query to hive", exception);
+                    throw exception;
+                } finally {
+                    rerouteUtil.closeConnection(conn);
+                } 
+            } else {
+                logger.error("exception in running the query: " + sql);
+		throw sqlException;
+    	    }
+	    } finally {
             close(resultSet, stat, conn);
         }
 
