@@ -3,7 +3,7 @@ layout: docs
 title:  How to Backup Metadata
 categories: howto
 permalink: /docs/howto/howto_backup_metadata.html
-version: v0.8
+version: v1.0
 since: v0.7.1
 ---
 

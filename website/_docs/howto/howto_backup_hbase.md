@@ -3,7 +3,7 @@ layout: docs
 title:  How to Clean/Backup HBase Tables
 categories: howto
 permalink: /docs/howto/howto_backup_hbase.html
-version: v0.7.2
+version: v1.0
 since: v0.7.1
 ---
 

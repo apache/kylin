@@ -3,7 +3,7 @@ layout: docs
 title:  How to Use Restful API
 categories: howto
 permalink: /docs/howto/howto_use_restapi.html
-version: v0.8
+version: v1.0
 since: v0.7.1
 ---
 
