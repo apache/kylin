@@ -55,7 +55,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         cubeInstance.updateRandomUuid();
         cubeInstance.setProjectName(projectName);
-        cubeInstance.setRetentionRange(cubeDesc.getRetentionRange());
 
         return cubeInstance;
     }
@@ -82,12 +81,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
-
-    @JsonProperty("auto_merge_time_ranges")
-    private long[] autoMergeTimeRanges;
-
-    @JsonProperty("retention_range")
-    private long retentionRange = 0;
 
     private String projectName;
 
@@ -355,13 +348,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         this.projectName = projectName;
     }
 
-    public long[] getAutoMergeTimeRanges() {
-        return autoMergeTimeRanges;
-    }
-
-    public void setAutoMergeTimeRanges(long[] autoMergeTimeRanges) {
-        this.autoMergeTimeRanges = autoMergeTimeRanges;
-    }
 
     public boolean needAutoMerge() {
         if (!this.getDescriptor().getModel().getPartitionDesc().isPartitioned())
@@ -370,16 +356,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
         if (this.getDescriptor().hasHolisticCountDistinctMeasures())
             return false;
 
-        return autoMergeTimeRanges != null && autoMergeTimeRanges.length > 0;
+        return this.getDescriptor().getAutoMergeTimeRanges() != null && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
     }
 
-    public long getRetentionRange() {
-        return retentionRange;
-    }
-
-    public void setRetentionRange(long retentionRange) {
-        this.retentionRange = retentionRange;
-    }
 
     @Override
     public long getDateRangeStart() {
