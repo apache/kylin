@@ -26,9 +26,11 @@ else
     echo "maven check passed"
 fi
 
+echo "Checking git..."
+
 if [ -z "$(command -v git)" ]
 then
-    echo "Please install maven first so that Kylin packaging can proceed"
+    echo "Please install git first so that Kylin packaging can proceed"
     exit 1
 else
     echo "git check passed"
