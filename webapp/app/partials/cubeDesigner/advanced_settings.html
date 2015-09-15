@@ -33,13 +33,53 @@
                   <div class="col-xs-12 col-sm-6">
                     <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
                     <div class="row"  ng-if="state.mode=='edit'">
-                      <div class="col-xs-3" ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges">
-                        <input type="text" retention-format  ng-change="refreshAutoMergeTimeRanges(cubeMetaFrame.auto_merge_time_ranges,$index,timeRange)" class="form-control" placeholder=".col-xs-3" ng-model="timeRange">
-                      </div>
+                      <table class="table">
+                        <tbody>
+                          <tr ng-repeat="timeRange in _auto_merge_time_ranges">
+                            <td class="col-xs-4">
+                              <select  ng-if="timeRange.type=='hours'"
+                                       chosen ng-model="timeRange.range"
+                                       ng-options="rangeTypes as rangeTypes for rangeTypes in [0.5,1,2,4,8] "
+                                       ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
+                                       style="width: 100% !important;"
+                                       data-placeholder="hours range"
+                                       class="chosen-select">
+                              </select>
+                              <input type="text" ng-if="timeRange.type=='days'"  ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)" class="form-control input-sm" placeholder="days range" ng-model="timeRange.range">
+                            </td>
+                            <td class="col-xs-4">
+                              <select  chosen ng-model="timeRange.type"
+                                       ng-options="rangeTypes as rangeTypes for rangeTypes in ['hours','days'] "
+                                       ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
+                                       style="width: 200px !important;"
+                                       data-placeholder="select a project"
+                                       class="chosen-select">
+                              </select>
+                            </td>
+                            <td>
+                              <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'" ng-click="removeTimeRange(_auto_merge_time_ranges,$index, timeRange)">
+                                <i class="fa fa-minus"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'" ng-click="addNewMergeTimeRange()">
+                        New Merge Range<i class="fa fa-plus"></i>
+                      </button>
                     </div>
-                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.auto_merge_time_ranges[0] | millisecondsToDay}}</span>
-                    <span  ng-if="state.mode=='view'">,</span>
-                    <span ng-if="state.mode=='view'">{{cubeMetaFrame.auto_merge_time_ranges[1] | millisecondsToDay}}</span>
+                    <div class="row"  ng-if="state.mode=='view'">
+                      <table class="table">
+                        <tbody>
+                        <tr ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges">
+                          <td>
+                            {{timeRange | timeRangeFormat}}
+                          </td>
+                        </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
                   </div>
                 </div>
               </div>
