@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.tools;
+package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
 import java.util.List;

@@ -16,7 +16,14 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.cube;
+package org.apache.kylin.storage.hbase.util;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -33,6 +40,8 @@ import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -41,22 +50,12 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.cmd.ICommandOutput;
-import org.apache.kylin.job.cmd.ShellCmd;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class StorageCleanupJob extends AbstractHadoopJob {
 
@@ -236,26 +235,20 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     }
 
     private void cleanUnusedIntermediateHiveTable(Configuration conf) throws IOException {
-        int uuidLength = 36;
-        final String useDatabaseHql = "USE " + KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable() + ";";
+        final KylinConfig config = KylinConfig.getInstanceFromEnv();
+        final CliCommandExecutor cmdExec = config.getCliCommandExecutor();
+        final int uuidLength = 36;
+        
+        final String useDatabaseHql = "USE " + config.getHiveDatabaseForIntermediateTable() + ";";
         StringBuilder buf = new StringBuilder();
         buf.append("hive -e \"");
         buf.append(useDatabaseHql);
         buf.append("show tables " + "\'kylin_intermediate_*\'" + "; ");
         buf.append("\"");
+        
+        Pair<Integer, String> result = cmdExec.execute(buf.toString());
 
-        ShellCmd cmd = new ShellCmd(buf.toString(), null, 0, null, null, false);
-        ICommandOutput output = null;
-
-        try {
-            output = cmd.execute();
-        } catch (JobException e) {
-            e.printStackTrace();
-        }
-
-        if (output == null)
-            return;
-        String outputStr = output.getOutput();
+        String outputStr = result.getSecond();
         BufferedReader reader = new BufferedReader(new StringReader(outputStr));
         String line = null;
         List<String> allJobs = executableManager.getAllJobIds();
@@ -297,11 +290,10 @@ public class StorageCleanupJob extends AbstractHadoopJob {
                 logger.info("Remove " + delHive + " from hive tables.");
             }
             buf.append("\"");
-            cmd = new ShellCmd(buf.toString(), null, 0, null, null, false);
-
+            
             try {
-                cmd.execute();
-            } catch (JobException e) {
+                cmdExec.execute(buf.toString());
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {

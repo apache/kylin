@@ -1,4 +1,4 @@
-package org.apache.kylin.job.tools;
+package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
 import java.text.DateFormat;

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.job.tools;
+package org.apache.kylin.streaming.util;
 
 import java.util.concurrent.atomic.AtomicLong;
 

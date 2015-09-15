@@ -16,14 +16,17 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.tools;
+package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -32,16 +35,32 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-public class CleanHtableCLI extends AbstractHadoopJob {
+@SuppressWarnings("static-access")
+public class HtableAlterMetadataCLI extends AbstractHadoopJob {
 
-    protected static final Logger logger = LoggerFactory.getLogger(CleanHtableCLI.class);
+    private static final Option OPTION_METADATA_KEY = OptionBuilder.withArgName("key").hasArg().isRequired(true).withDescription("The metadata key").create("key");
+    private static final Option OPTION_METADATA_VALUE = OptionBuilder.withArgName("value").hasArg().isRequired(true).withDescription("The metadata value").create("value");
+
+    protected static final Logger logger = LoggerFactory.getLogger(HtableAlterMetadataCLI.class);
+
+    String tableName;
+    String metadataKey;
+    String metadataValue;
 
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
         try {
+            options.addOption(OPTION_HTABLE_NAME);
+            options.addOption(OPTION_METADATA_KEY);
+            options.addOption(OPTION_METADATA_VALUE);
 
-            clean();
+            parseOptions(options, args);
+            tableName = getOptionValue(OPTION_HTABLE_NAME);
+            metadataKey = getOptionValue(OPTION_METADATA_KEY);
+            metadataValue = getOptionValue(OPTION_METADATA_VALUE);
+
+            alter();
 
             return 0;
         } catch (Exception e) {
@@ -50,24 +69,20 @@ public class CleanHtableCLI extends AbstractHadoopJob {
         }
     }
 
-    private void clean() throws IOException {
+    private void alter() throws IOException {
         Configuration conf = HBaseConfiguration.create();
         HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
+        HTableDescriptor table = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
 
-        for (HTableDescriptor descriptor : hbaseAdmin.listTables()) {
-            String name = descriptor.getNameAsString().toLowerCase();
-            if (name.startsWith("kylin") || name.startsWith("_kylin")) {
-                String x = descriptor.getValue("KYLIN_HOST");
-                System.out.println("table name " + descriptor.getNameAsString() + " host: " + x);
-                System.out.println(descriptor);
-                System.out.println();
-            }
-        }
+        hbaseAdmin.disableTable(table.getTableName());
+        table.setValue(metadataKey, metadataValue);
+        hbaseAdmin.modifyTable(table.getTableName(), table);
+        hbaseAdmin.enableTable(table.getTableName());
         hbaseAdmin.close();
     }
 
     public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new CleanHtableCLI(), args);
+        int exitCode = ToolRunner.run(new HtableAlterMetadataCLI(), args);
         System.exit(exitCode);
     }
 }

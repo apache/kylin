@@ -23,7 +23,7 @@ package org.apache.kylin.engine.mr.common;
  *
  */
 
-import static org.apache.hadoop.util.StringUtils.formatTime;
+import static org.apache.hadoop.util.StringUtils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +58,6 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.cmd.ShellCmdOutput;
 import org.apache.kylin.job.common.OptionsHelper;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.MetadataManager;
@@ -189,10 +188,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         String classpath = "";
         try {
             CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
-            ShellCmdOutput output = new ShellCmdOutput();
-            executor.execute("mapred classpath", output);
-
-            classpath = output.getOutput().trim().replace(':', ',');
+            String output = executor.execute("mapred classpath").getSecond();
+            classpath = output.trim().replace(':', ',');
         } catch (IOException e) {
             logger.error("Failed to run: 'mapred classpath'.", e);
         }

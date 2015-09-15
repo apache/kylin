@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.cardinality;
+package org.apache.kylin.source.hive.cardinality;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
