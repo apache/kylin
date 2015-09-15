@@ -104,6 +104,8 @@ public class KylinConfig implements Serializable {
 
     public static final String KYLIN_HDFS_WORKING_DIR = "kylin.hdfs.working.dir";
 
+    public static final String KYLIN_HBASE_CLUSTER_FS = "kylin.hbase.cluster.fs";
+
     public static final String HIVE_DATABASE_FOR_INTERMEDIATE_TABLE = "kylin.job.hive.database.for.intermediatetable";
 
     public static final String HIVE_PASSWORD = "hive.password";
@@ -291,6 +293,10 @@ public class KylinConfig implements Serializable {
             root += "/";
         }
         return root + getMetadataUrlPrefix() + "/";
+    }
+
+    public String getHBaseClusterFs() {
+        return getOptional(KYLIN_HBASE_CLUSTER_FS, "");
     }
 
     public String getKylinJobLogDir() {
