@@ -32,13 +32,13 @@ else
 fi
 
 dir=$(dirname ${0})
-cd ${dir}/..
+cd ${dir}/../..
 version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+'`
 echo "kylin version: ${version}"
 export version
 
 #commit id
-cat << EOF > commit_SHA1
+cat << EOF > build/commit_SHA1
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -55,10 +55,10 @@ cat << EOF > commit_SHA1
 # limitations under the License.
 #
 EOF
-git rev-parse HEAD >> commit_SHA1
+git rev-parse HEAD >> build/commit_SHA1
 
-sh script/download-tomcat.sh || { exit 1; }
-sh script/build.sh || { exit 1; }
-sh script/prepare.sh || { exit 1; }
-sh script/compress.sh || { exit 1; }
+sh build/script/download-tomcat.sh || { exit 1; }
+sh build/script/build.sh || { exit 1; }
+sh build/script/prepare.sh || { exit 1; }
+sh build/script/compress.sh || { exit 1; }
 

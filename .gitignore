@@ -76,11 +76,11 @@ webapp/node_modules:
 webapp/CHANGELOG.md
 
 # package file
-tomcat
-lib
+build/tomcat
+build/lib
 *.tgz
 *.tar.gz
 webapp/app/components/*
 
 ebay*
-/commit_SHA1
+build/commit_SHA1
