@@ -184,6 +184,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
                     scans.add(scan);
                 }
                 TableMapReduceUtil.initTableMapperJob(scans, (Class<? extends TableMapper>) mapperClz, outputKeyClz, outputValueClz, job);
+                TableMapReduceUtil.initCredentials(job);
             }
         }
 

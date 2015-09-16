@@ -129,7 +129,7 @@ public class HBaseMROutput2 implements IMROutput2 {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static class HBaseInputFormat implements IMRStorageInputFormat {
         final CubeSegment seg;
-        
+
         final RowValueDecoder[] rowValueDecoders;
         final ByteArrayWritable parsedKey;
         final Object[] parsedValue;
@@ -137,7 +137,7 @@ public class HBaseMROutput2 implements IMROutput2 {
 
         public HBaseInputFormat(CubeSegment seg) {
             this.seg = seg;
-            
+
             List<RowValueDecoder> valueDecoderList = Lists.newArrayList();
             List<MeasureDesc> measuresDescs = Lists.newArrayList();
             for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHBaseMapping().getColumnFamily()) {
@@ -170,7 +170,7 @@ public class HBaseMROutput2 implements IMROutput2 {
             }
 
             TableMapReduceUtil.initTableMapperJob(scans, (Class<? extends TableMapper>) mapperClz, outputKeyClz, outputValueClz, job);
-TableMapReduceUtil.initCredentials(job);
+            TableMapReduceUtil.initCredentials(job);
 
         }
 
