@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dir=$(dirname ${0})
-cd ${dir}/..
+cd ${dir}/../..
 
 if [ -z "$version" ]
 then
@@ -11,10 +11,10 @@ fi
 echo "version ${version}"
 export version
 
-sh script/prepare_libs.sh || { exit 1; }
+sh build/script/prepare_libs.sh || { exit 1; }
 
-cp server/target/kylin-server-${version}.war tomcat/webapps/kylin.war
-chmod 644 tomcat/webapps/kylin.war
+cp server/target/kylin-server-${version}.war build/tomcat/webapps/kylin.war
+chmod 644 build/tomcat/webapps/kylin.war
 
 echo "add js css to war"
 if [ ! -d "webapp/dist" ]
@@ -27,5 +27,5 @@ cd webapp/dist
 for f in * .[^.]*
 do
     echo "Adding $f to war"
-    jar -uf ../../tomcat/webapps/kylin.war $f
+    jar -uf ../../build/tomcat/webapps/kylin.war $f
 done

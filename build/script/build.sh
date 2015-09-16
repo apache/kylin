@@ -3,7 +3,7 @@
 echo "package back-end"
 
 dir=$(dirname ${0})
-cd ${dir}/..
+cd ${dir}/../..
 
 mvn clean install -DskipTests	 || { exit 1; }
 
