@@ -14,62 +14,64 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-KylinApp.service('CubeDescModel',function(){
+KylinApp.service('CubeDescModel', function () {
 
-    this.cubeMetaFrame = {};
+  this.cubeMetaFrame = {};
 
-    //
-    this.createNew = function () {
-            var cubeMeta = {
-                "name": "",
-                "model_name": "",
-                "description": "",
-                "dimensions": [],
-                "measures": [
-                    {   "id": 1,
-                        "name": "_COUNT_",
-                        "function": {
-                            "expression": "COUNT",
-                            "returntype": "bigint",
-                            "parameter": {
-                                "type": "constant",
-                                "value": "1"
-                            }
-                        }
-                    }
-                ],
-                "rowkey": {
-                    "rowkey_columns": [],
-                    "aggregation_groups": []
-                },
-                "notify_list": [],
-                "hbase_mapping": {
-                    "column_family": []
-                },
-               "retention_range":"0",
-               "auto_merge_time_ranges":[604800000,2419200000]
-            };
-
-            return cubeMeta;
-        };
-
-        this.createMeasure = function (){
-            var measure = {
-                "id": "",
-                "name": "",
-                "function": {
-                    "expression": "",
-                    "returntype": "",
-                    "parameter": {
-                        "type": "",
-                        "value": ""
-                    }
-                }
-            };
-
-            return measure;
+  //
+  this.createNew = function () {
+    var cubeMeta = {
+      "name": "",
+      "model_name": "",
+      "description": "",
+      "dimensions": [],
+      "measures": [
+        {
+          "id": 1,
+          "name": "_COUNT_",
+          "function": {
+            "expression": "COUNT",
+            "returntype": "bigint",
+            "parameter": {
+              "type": "constant",
+              "value": "1"
+            }
+          }
         }
+      ],
+      "rowkey": {
+        "rowkey_columns": [],
+        "aggregation_groups": []
+      },
+      "notify_list": [],
+      "hbase_mapping": {
+        "column_family": []
+      },
+      "retention_range": "0",
+      "auto_merge_time_ranges": [604800000, 2419200000],
+      "engine_type": 2
+    };
+
+    return cubeMeta;
+  };
+
+  this.createMeasure = function () {
+    var measure = {
+      "id": "",
+      "name": "",
+      "function": {
+        "expression": "",
+        "returntype": "",
+        "parameter": {
+          "type": "",
+          "value": ""
+        }
+      }
+    };
+
+    return measure;
+  }
 
 })

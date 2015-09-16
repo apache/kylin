@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -45,6 +46,7 @@ import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -87,7 +89,6 @@ public class CubeMigrationCLI {
     private static void usage() {
         System.out.println("Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName overwriteIfExists realExecute");
         System.out.println(" srcKylinConfigUri: The KylinConfig of the cube’s source \n" + "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" + "cubeName: the name of cube to be migrated. \n" + "projectName: The target project in the target environment.(Make sure it exist) \n" + "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" + "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
-
     }
 
     public static void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
@@ -132,7 +133,6 @@ public class CubeMigrationCLI {
     }
 
     public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
-
         moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName, projectName, overwriteIfExists, realExecute);
     }
 
@@ -143,8 +143,8 @@ public class CubeMigrationCLI {
         logger.info("src metadata url is " + srcMetadataUrl);
         logger.info("dst metadata url is " + dstMetadataUrl);
 
-        int srcIndex = srcMetadataUrl.toLowerCase().indexOf("hbase:");
-        int dstIndex = dstMetadataUrl.toLowerCase().indexOf("hbase:");
+        int srcIndex = srcMetadataUrl.toLowerCase().indexOf("hbase");
+        int dstIndex = dstMetadataUrl.toLowerCase().indexOf("hbase");
         if (srcIndex < 0 || dstIndex < 0)
             throw new IllegalStateException("Both metadata urls should be hbase metadata url");
 
@@ -162,6 +162,11 @@ public class CubeMigrationCLI {
         for (CubeSegment segment : cube.getSegments()) {
 
             String jobUuid = segment.getLastBuildJobID();
+
+            if (StringUtils.isEmpty(jobUuid)) {
+                //segments build from streaming does not have hdfs working dir
+                continue;
+            }
             String src = JobInstance.getJobWorkingDir(jobUuid, srcConfig.getHdfsWorkingDirectory());
             String tgt = JobInstance.getJobWorkingDir(jobUuid, dstConfig.getHdfsWorkingDirectory());
 
@@ -216,7 +221,11 @@ public class CubeMigrationCLI {
         for (CubeSegment segment : cube.getSegments()) {
             dictAndSnapshot.addAll(segment.getSnapshotPaths());
             dictAndSnapshot.addAll(segment.getDictionaryPaths());
-            metaResource.add(segment.getStatisticsResourcePath());
+
+            if (cube.getDescriptor().getEngineType() == IEngineAware.ID_MR_V2) {
+                //only V2 has this
+                metaResource.add(segment.getStatisticsResourcePath());
+            }
         }
     }
 
