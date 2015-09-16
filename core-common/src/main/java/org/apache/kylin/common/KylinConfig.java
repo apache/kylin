@@ -502,7 +502,7 @@ public class KylinConfig implements Serializable {
     }
 
     public String getHbaseDefaultCompressionCodec() {
-        return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC);
+        return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC,"");
     }
 
     public boolean isHiveKeepFlatTable() {
