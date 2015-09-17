@@ -56,6 +56,8 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 /**
  * <p/>
  * This tool serves for the purpose of migrating cubes. e.g. upgrade cube from
@@ -317,31 +319,12 @@ public class CubeMigrationCLI {
                 DictionaryManager srcDicMgr = DictionaryManager.getInstance(srcConfig);
                 DictionaryInfo dictSrc = srcDicMgr.getDictionaryInfo(item);
 
-                long ts = dictSrc.getLastModified();
-                dictSrc.setLastModified(0);//to avoid resource store write conflict
-                DictionaryInfo dictSaved = dstDictMgr.trySaveNewDict(dictSrc.getDictionaryObject(), dictSrc);
-                dictSrc.setLastModified(ts);
+                //trySaveNewDict will return a super set of dictSrc,
+                //which is not expected in migration case
+                DictionaryInfo dictSaved = dstDictMgr.forceSave(dictSrc.getDictionaryObject(), dictSrc);
 
-                if (dictSaved == dictSrc) {
-                    //no dup found, already saved to dest
-                    logger.info("Item " + item + " is copied");
-                } else {
-                    //dictSrc is rejected because of duplication
-                    //modify cube's dictionary path
-                    String cubeName = (String) opt.params[1];
-                    String cubeResPath = CubeInstance.concatResourcePath(cubeName);
-                    Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
-                    CubeInstance cube = dstStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
-                    for (CubeSegment segment : cube.getSegments()) {
-                        for (Map.Entry<String, String> entry : segment.getDictionaries().entrySet()) {
-                            if (entry.getValue().equalsIgnoreCase(item)) {
-                                entry.setValue(dictSaved.getResourcePath());
-                            }
-                        }
-                    }
-                    dstStore.putResource(cubeResPath, cube, cubeSerializer);
-                    logger.info("Item " + item + " is dup, instead " + dictSaved.getResourcePath() + " is reused");
-                }
+                Preconditions.checkState(dictSaved == dictSrc);
+                logger.info("Item " + item + " is copied");
 
             } else if (item.toLowerCase().endsWith(".snapshot")) {
                 SnapshotManager dstSnapMgr = SnapshotManager.getInstance(dstConfig);
