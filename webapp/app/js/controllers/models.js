@@ -14,72 +14,77 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window,$modal, MessageService, CubeDescService, CubeService, JobService, UserService,  ProjectService,SweetAlert,loadingRequest,$log,modelConfig,ProjectModel,ModelService,MetaModel,modelsManager,cubesManager,TableModel,$animate) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, $animate) {
 
-        //tree data
+  //tree data
 
-        $scope.cubeSelected = false;
-        $scope.cube = {};
+  $scope.cubeSelected = false;
+  $scope.cube = {};
 
-        $scope.showModels=true;
+  $scope.showModels = true;
 
-        //tracking data loading status in /models page
-        $scope.tableModel = TableModel;
+  //tracking data loading status in /models page
+  $scope.tableModel = TableModel;
 
-        $scope.toggleTab = function(showModel){
-            $scope.showModels = showModel;
-        }
+  $scope.toggleTab = function (showModel) {
+    $scope.showModels = showModel;
+  }
 
-        $scope.modelsManager = modelsManager;
-        $scope.cubesManager = cubesManager;
-        $scope.modelConfig = modelConfig;
-        modelsManager.removeAll();
-        $scope.loading = false;
-        $scope.action = {};
-        $scope.window = 0.68 * $window.innerHeight;
+  $scope.modelsManager = modelsManager;
+  $scope.cubesManager = cubesManager;
+  $scope.modelConfig = modelConfig;
+  modelsManager.removeAll();
+  $scope.loading = false;
+  $scope.window = 0.68 * $window.innerHeight;
 
 
-        $scope.init = function(){
+  //trigger init with directive []
+  $scope.list = function () {
+    var defer = $q.defer();
+    var queryParam = {};
+    if (!$scope.projectModel.isSelectedProjectValid()) {
+      return;
+    }
 
-            var queryParam = {};
+    queryParam.projectName = $scope.projectModel.selectedProject;
+    return modelsManager.list(queryParam).then(function (resp) {
+      defer.resolve(resp);
+      modelsManager.loading = false;
+      return defer.promise;
+    });
 
-            queryParam.projectName = $scope.projectModel.selectedProject;
-            modelsManager.list(queryParam).then(function(resp){
-              modelsManager.loading = false;
-            });
+  };
 
-        };
+  $scope.list();
 
-        $scope.init();
+  $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
+    if (newValue != oldValue || newValue == null) {
+      modelsManager.removeAll();
+      $scope.list();
+    }
 
-        $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
-          if (newValue != oldValue || newValue == null) {
-            modelsManager.removeAll();
-            $scope.init();
-          }
+  });
 
-        });
+  $scope.status = {
+    isopen: true
+  };
 
-    $scope.status = {
-        isopen: true
-    };
+  $scope.toggled = function (open) {
+    $log.log('Dropdown is now: ', open);
+  };
 
-    $scope.toggled = function(open) {
-        $log.log('Dropdown is now: ', open);
-    };
-
-    $scope.toggleDropdown = function($event) {
-        $event.preventDefault();
-        $event.stopPropagation();
-        $scope.status.isopen = !$scope.status.isopen;
-    };
+  $scope.toggleDropdown = function ($event) {
+    $event.preventDefault();
+    $event.stopPropagation();
+    $scope.status.isopen = !$scope.status.isopen;
+  };
 
   $scope.hideSideBar = false;
-  $scope.toggleModelSideBar = function(){
+  $scope.toggleModelSideBar = function () {
     $scope.hideSideBar = !$scope.hideSideBar;
   }
 
@@ -93,8 +98,8 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
       confirmButtonColor: '#DD6B55',
       confirmButtonText: "Yes",
       closeOnConfirm: true
-    }, function(isConfirm) {
-      if(isConfirm){
+    }, function (isConfirm) {
+      if (isConfirm) {
 
         loadingRequest.show();
         ModelService.drop({modelId: model.name}, {}, function (result) {
@@ -102,13 +107,13 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
 //                    CubeList.removeCube(cube);
           SweetAlert.swal('Success!', 'Model drop is done successfully', 'success');
           location.reload();
-        },function(e){
+        }, function (e) {
           loadingRequest.hide();
-          if(e.data&& e.data.exception){
-            var message =e.data.exception;
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
             var msg = !!(message) ? message : 'Failed to take action.';
             SweetAlert.swal('Oops...', msg, 'error');
-          }else{
+          } else {
             SweetAlert.swal('Oops...', "Failed to take action.", 'error');
           }
         });
@@ -121,7 +126,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     $scope.modelsManager.selectedModel = model;
     $modal.open({
       templateUrl: 'modelDetail.html',
-      controller:ModelDetailModalCtrl,
+      controller: ModelDetailModalCtrl,
       resolve: {
         scope: function () {
           return $scope;
@@ -130,7 +135,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     });
   };
 
-  var ModelDetailModalCtrl = function ($scope,$location, $modalInstance,scope) {
+  var ModelDetailModalCtrl = function ($scope, $location, $modalInstance, scope) {
     $scope.cancel = function () {
       $modalInstance.dismiss('cancel');
     };
