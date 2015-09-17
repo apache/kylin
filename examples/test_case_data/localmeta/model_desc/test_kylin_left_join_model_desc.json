@@ -47,7 +47,8 @@
       "columns": [
         "lstg_format_name",
         "LSTG_SITE_ID",
-        "SLR_SEGMENT_CD"
+        "SLR_SEGMENT_CD",
+        "seller_id"
       ]
     },
     {

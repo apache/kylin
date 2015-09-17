@@ -18,20 +18,10 @@
 
 package org.apache.kylin.storage.hbase.cube.v1;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Pair;
@@ -68,10 +58,7 @@ import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
+import java.util.*;
 
 //v1
 @SuppressWarnings("unused")
@@ -85,17 +72,32 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     private final CubeInstance cubeInstance;
     private final CubeDesc cubeDesc;
     private final String uuid;
+    private Collection<TblColRef> topNColumns;
 
     public CubeStorageQuery(CubeInstance cube) {
         this.cubeInstance = cube;
         this.cubeDesc = cube.getDescriptor();
         this.uuid = cube.getUuid();
+        this.topNColumns = Lists.newArrayList();
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            if (measureDesc.getFunction().isTopN()) {
+                List<TblColRef> colRefs = measureDesc.getFunction().getParameter().getColRefs();
+                topNColumns.add(colRefs.get(colRefs.size() - 1));
+            }
+        }
     }
-
+    
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
 
+        // check whether this is a TopN query;
+        checkAndRewriteTopN(context, sqlDigest, returnTupleInfo);
+
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
+        TblColRef topNCol = extractTopNCol(groups);
+        if (topNCol != null)
+            groups.remove(topNCol);
+
         TupleFilter filter = sqlDigest.filter;
 
         // build dimension & metrics
@@ -148,7 +150,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         setLimit(filter, context);
 
         HConnection conn = HBaseConnection.get(context.getConnUrl());
-        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, valueDecoders, context, returnTupleInfo);
+        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, topNCol, valueDecoders, context, returnTupleInfo);
     }
 
     @Override
@@ -179,6 +181,12 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             if (sqlDigest.metricColumns.contains(column)) {
                 continue;
             }
+
+            // skip topN display col
+            if (topNColumns.contains(column)) {
+                continue;
+            }
+
             dimensions.add(column);
         }
     }
@@ -698,6 +706,50 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
     private void setCoprocessor(Set<TblColRef> groupsCopD, List<RowValueDecoder> valueDecoders, StorageContext context) {
         ObserverEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
+    }
+
+    private void checkAndRewriteTopN(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
+        Collection<TblColRef> groups = sqlDigest.groupbyColumns;
+        TblColRef topNDisplayCol = extractTopNCol(groups);
+        boolean hasTopN = topNDisplayCol != null;
+
+        if (hasTopN == false)
+            return;
+
+        if (sqlDigest.aggregations.size() != 1) {
+            throw new IllegalStateException("When query with topN, only one metrics is allowed.");
+        }
+
+        FunctionDesc functionDesc = sqlDigest.aggregations.iterator().next();
+        if (functionDesc.isSum() == false) {
+            throw new IllegalStateException("When query with topN, only SUM function is allowed.");
+        }
+
+        FunctionDesc rewriteFunction = null;
+        // replace the SUM to the TopN function
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            if (measureDesc.getFunction().isCompatible(functionDesc) && topNDisplayCol.getName().equalsIgnoreCase(measureDesc.getFunction().getParameter().getDisplayColumn())) {
+                rewriteFunction = measureDesc.getFunction();
+                break;
+            }
+        }
+
+        if (rewriteFunction == null) {
+            throw new IllegalStateException("Didn't find topN measure for " + functionDesc);
+        }
+
+        sqlDigest.aggregations = Lists.newArrayList(rewriteFunction);
+        logger.info("Rewrite function " + functionDesc + " to " + rewriteFunction);
+    }
+
+    private TblColRef extractTopNCol(Collection<TblColRef> colRefs) {
+        for (TblColRef colRef : colRefs) {
+            if (topNColumns.contains(colRef)) {
+                return colRef;
+            }
+        }
+
+        return null;
     }
 
 }

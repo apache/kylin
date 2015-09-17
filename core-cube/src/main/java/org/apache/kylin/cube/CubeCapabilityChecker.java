@@ -18,18 +18,19 @@
 
 package org.apache.kylin.cube;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  */
@@ -39,10 +40,11 @@ public class CubeCapabilityChecker {
     public static boolean check(CubeInstance cube, SQLDigest digest, boolean allowWeakMatch) {
 
         // retrieve members from olapContext
-        Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(digest.groupbyColumns, digest.filterColumns);
+        Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(digest);
         Collection<FunctionDesc> functions = digest.aggregations;
         Collection<TblColRef> metricsColumns = digest.metricColumns;
         Collection<JoinDesc> joins = digest.joinDescs;
+        boolean hasTopN = hasTopNMeasure(cube.getDescriptor());
 
         // match dimensions & aggregations & joins
 
@@ -62,12 +64,60 @@ public class CubeCapabilityChecker {
             }
         }
 
+        // for topn, the group column can come from measure
+        if (hasTopN & matchJoin && !matchDimensions && functions.size() == 1) {
+            boolean matchedTopN = isMatchedWithTopN(dimensionColumns, cube, digest);
+            matchDimensions = matchedTopN;
+            matchAggregation = matchedTopN;
+        }
+
         if (!isOnline || !matchDimensions || !matchAggregation || !matchJoin) {
             logger.info("Exclude cube " + cube.getName() + " because " + " isOnlne=" + isOnline + ",matchDimensions=" + matchDimensions + ",matchAggregation=" + matchAggregation + ",matchJoin=" + matchJoin);
             return false;
         }
 
         return true;
+    }
+
+    private static boolean isMatchedWithTopN(Collection<TblColRef> dimensionColumns, CubeInstance cube, SQLDigest digest) {
+
+        CubeDesc cubeDesc = cube.getDescriptor();
+        List<FunctionDesc> cubeFunctions = cubeDesc.listAllFunctions();
+        Collection<FunctionDesc> functions = digest.aggregations;
+        Collection<MeasureDesc> sortMeasures = digest.sortMeasures;
+        Collection<SQLDigest.OrderEnum> sortOrders = digest.sortOrders;
+
+        FunctionDesc onlyFunction = functions.iterator().next();
+        if (onlyFunction.isSum() == false) {
+            // topN only support SUM expression
+            return false;
+        }
+
+        Collection<TblColRef> dimensionColumnsCopy = new ArrayList<TblColRef>(dimensionColumns);
+        for (MeasureDesc measure : cubeDesc.getMeasures()) {
+            if (measure.getFunction().isTopN()) {
+                List<TblColRef> cols = measure.getFunction().getParameter().getColRefs();
+                TblColRef displayCol = cols.get(cols.size() - 1);
+                dimensionColumnsCopy.remove(displayCol);
+                if(isMatchedWithDimensions(dimensionColumnsCopy, cube)) {
+                    if (measure.getFunction().isCompatible(onlyFunction)) {
+                        return true;
+                    }
+                }
+                dimensionColumnsCopy.add(displayCol);
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean hasTopNMeasure(CubeDesc cubeDesc) {
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            if (measureDesc.getFunction().isTopN())
+                return true;
+        }
+
+        return false;
     }
 
     private static boolean isMatchedWithDimensions(Collection<TblColRef> dimensionColumns, CubeInstance cube) {

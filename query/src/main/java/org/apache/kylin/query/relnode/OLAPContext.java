@@ -26,11 +26,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -81,6 +83,8 @@ public class OLAPContext {
     public OLAPContext(int seq) {
         this.id = seq;
         this.storageContext = new StorageContext();
+        this.sortMeasures = Lists.newArrayList();
+        this.sortOrders = Lists.newArrayList();
         Map<String, String> parameters = _localPrarameters.get();
         if (parameters != null) {
             String acceptPartialResult = parameters.get(PRM_ACCEPT_PARTIAL_RESULT);
@@ -111,9 +115,13 @@ public class OLAPContext {
     public Collection<TblColRef> filterColumns = new HashSet<TblColRef>();
     public TupleFilter filter;
     public List<JoinDesc> joins = new LinkedList<JoinDesc>();
+    private List<MeasureDesc> sortMeasures;
+    private List<SQLDigest.OrderEnum> sortOrders;
 
     // rewrite info
     public Map<String, RelDataType> rewriteFields = new HashMap<String, RelDataType>();
+
+    public int limit;
 
     // hive query
     public String sql = "";
@@ -126,7 +134,7 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations, sortMeasures, sortOrders);
         return sqlDigest;
     }
 
@@ -144,4 +152,12 @@ public class OLAPContext {
         }
         this.returnTupleInfo = info;
     }
+
+    public void addSort(MeasureDesc measure, SQLDigest.OrderEnum order) {
+        if (measure != null) {
+            sortMeasures.add(measure);
+            sortOrders.add(order);
+        }
+    }
+
 }

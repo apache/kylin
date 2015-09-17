@@ -120,13 +120,13 @@ public class BuildCubeWithEngineTest {
     @Test
     public void test() throws Exception {
         DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_left_join_empty");
-        testInner();
+//        testInner();
         testLeft();
     }
 
     private void testInner() throws Exception {
-       String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", "testInnerJoinTopNCube"};
-//        String[] testCase = new String[] { "testInnerJoinTopNCube" };
+        String[] testCase = new String[] { "testInnerJoinTopNCube" };
+       // String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", "testInnerJoinTopNCube"};
         runTestAndAssertSucceed(testCase);
     }
 

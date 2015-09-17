@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
 /**
  * @author xjiang
@@ -32,17 +33,12 @@ public class StorageContext {
 
     public static final int DEFAULT_THRESHOLD = 1000000;
 
-    public enum OrderEnum {
-        ASCENDING, DESCENDING
-    }
 
     private String connUrl;
     private int threshold;
     private int limit;
     private int offset;
     private boolean hasSort;
-    private List<MeasureDesc> sortMeasures;
-    private List<OrderEnum> sortOrders;
     private boolean acceptPartialResult;
 
     private boolean exactAggregation;
@@ -59,8 +55,6 @@ public class StorageContext {
         this.totalScanCount = new AtomicLong();
         this.cuboid = null;
         this.hasSort = false;
-        this.sortOrders = new ArrayList<OrderEnum>();
-        this.sortMeasures = new ArrayList<MeasureDesc>();
 
         this.exactAggregation = false;
         this.enableLimit = false;
@@ -108,13 +102,6 @@ public class StorageContext {
 
     public boolean isLimitEnabled() {
         return this.enableLimit;
-    }
-
-    public void addSort(MeasureDesc measure, OrderEnum order) {
-        if (measure != null) {
-            sortMeasures.add(measure);
-            sortOrders.add(order);
-        }
     }
 
     public void markSort() {

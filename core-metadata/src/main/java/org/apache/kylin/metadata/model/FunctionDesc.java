@@ -60,7 +60,7 @@ public class FunctionDesc {
     }
 
     public boolean needRewrite() {
-        return !isSum() && !isDimensionAsMetric();
+        return !isSum() && !isDimensionAsMetric() && !isTopN();
     }
 
     public ColumnDesc newFakeRewriteColumn(TableDesc sourceTable) {
@@ -225,4 +225,16 @@ public class FunctionDesc {
         return "FunctionDesc [expression=" + expression + ", parameter=" + parameter + ", returnType=" + returnType + "]";
     }
 
+    public boolean isCompatible(FunctionDesc another) {
+        if (another == null) {
+            return false;
+        }
+
+        if (this.isTopN() && another.isSum()) {
+            if (this.getParameter().getColRefs().get(0).equals(another.getParameter().getColRefs().get(0)))
+                return true;
+        }
+
+        return false;
+    }
 }

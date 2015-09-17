@@ -129,6 +129,7 @@ public class CubeDesc extends RootPersistentEntity {
     private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<TblColRef>();
+
     private LinkedHashSet<TblColRef> measureDisplayColumns = new LinkedHashSet<TblColRef>();
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
@@ -827,5 +828,8 @@ public class CubeDesc extends RootPersistentEntity {
         }
         return result;
     }
-    
+
+    public LinkedHashSet<TblColRef> getMeasureDisplayColumns() {
+        return measureDisplayColumns;
+    }
 }

@@ -64,25 +64,26 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     public static final int SCAN_CACHE = 1024;
 
-    private final CubeSegment cubeSeg;
+    protected final CubeSegment cubeSeg;
     private final TupleFilter filter;
     private final Collection<TblColRef> groupBy;
-    private final Collection<RowValueDecoder> rowValueDecoders;
+    protected final List<RowValueDecoder> rowValueDecoders;
     private final StorageContext context;
     private final String tableName;
     private final HTableInterface table;
 
-    private final CubeTupleConverter tupleConverter;
-    private final Iterator<HBaseKeyRange> rangeIterator;
-    private final Tuple oneTuple; // avoid new instance
+    protected CubeTupleConverter tupleConverter;
+    protected final Iterator<HBaseKeyRange> rangeIterator;
+    protected final Tuple oneTuple; // avoid new instance
 
     private Scan scan;
     private ResultScanner scanner;
-    private Iterator<Result> resultIterator;
-    private int scanCount;
-    private int scanCountDelta;
-    private Tuple next;
-
+    protected Iterator<Result> resultIterator;
+    protected int scanCount;
+    protected int scanCountDelta;
+    protected Tuple next;
+    protected final Cuboid cuboid;
+    
     public CubeSegmentTupleIterator(CubeSegment cubeSeg, List<HBaseKeyRange> keyRanges, HConnection conn, //
             Set<TblColRef> dimensions, TupleFilter filter, Set<TblColRef> groupBy, //
             List<RowValueDecoder> rowValueDecoders, StorageContext context, TupleInfo returnTupleInfo) {
@@ -93,12 +94,12 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         this.context = context;
         this.tableName = cubeSeg.getStorageLocationIdentifier();
 
-        Cuboid cuboid = keyRanges.get(0).getCuboid();
+        cuboid = keyRanges.get(0).getCuboid();
         for (HBaseKeyRange range : keyRanges) {
             assert cuboid.equals(range.getCuboid());
         }
 
-        this.tupleConverter = new CubeTupleConverter(cubeSeg, cuboid, rowValueDecoders, returnTupleInfo);
+        this.tupleConverter = new CubeTupleConverter(cubeSeg, cuboid, rowValueDecoders, returnTupleInfo, null);
         this.oneTuple = new Tuple(returnTupleInfo);
         this.rangeIterator = keyRanges.iterator();
 
@@ -108,9 +109,10 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             throw new StorageException("Error when open connection to table " + tableName, t);
         }
     }
-
+    
     @Override
     public boolean hasNext() {
+
         if (next != null)
             return true;
 
@@ -136,6 +138,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         return true;
     }
 
+    
     @Override
     public Tuple next() {
         if (next == null) {
@@ -153,7 +156,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         throw new UnsupportedOperationException();
     }
 
-    private final Iterator<Result> doScan(HBaseKeyRange keyRange) {
+    protected final Iterator<Result> doScan(HBaseKeyRange keyRange) {
         Iterator<Result> iter = null;
         try {
             scan = buildScan(keyRange);
@@ -247,7 +250,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         return result;
     }
 
-    private void closeScanner() {
+    protected void closeScanner() {
         flushScanCountDelta();
 
         if (logger.isDebugEnabled() && scan != null) {
@@ -286,7 +289,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         closeTable();
     }
 
-    private void flushScanCountDelta() {
+    protected void flushScanCountDelta() {
         context.increaseTotalScanCount(scanCountDelta);
         scanCountDelta = 0;
     }

@@ -23,10 +23,7 @@ import org.apache.kylin.common.util.Pair;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Modified from the StreamSummary.java in https://github.com/addthis/stream-lib
@@ -38,9 +35,10 @@ import java.util.Map;
  *
  * @param <T> type of data in the stream to be summarized
  */
-public class TopNCounter<T> implements ITopK<T> {
+public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
     
     public static final int EXTRA_SPACE_RATE = 50;
+
 
     protected class Bucket {
 
@@ -365,4 +363,51 @@ public class TopNCounter<T> implements ITopK<T> {
         return items;
 
     }
+
+    @Override
+    public Iterator<Counter<T>> iterator() {
+        return new TopNCounterIterator();
+    }
+    
+    private class TopNCounterIterator implements Iterator {
+
+        private ListNode2<Bucket> currentBNode;
+        private Iterator<Counter<T>> currentCounterIterator;
+        
+        private TopNCounterIterator() {
+            currentBNode = bucketList.head();
+            if (currentBNode != null && currentBNode.getValue() != null) {
+                currentCounterIterator = currentBNode.getValue().counterList.iterator();
+            }
+        }
+        
+        @Override
+        public boolean hasNext() {
+            if (currentCounterIterator == null) {
+                return false;
+            }
+            
+            if (currentCounterIterator.hasNext()) {
+                return true;
+            }
+
+            currentBNode = currentBNode.getPrev();
+            
+            if (currentBNode == null)
+                return false;
+
+            currentCounterIterator = currentBNode.getValue().counterList.iterator();
+            return hasNext();
+        }
+
+        @Override
+        public Counter<T> next() {
+            return currentCounterIterator.next();
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    } 
 }
