@@ -47,7 +47,7 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsReducer;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.hbase.steps.HBaseConnection;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.steps.HBaseCuboidWriter;
 import org.apache.kylin.storage.hbase.steps.CubeHTableUtil;
 import org.apache.kylin.streaming.MicroStreamBatch;

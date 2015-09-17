@@ -31,6 +31,7 @@ import org.apache.hadoop.hbase.mapreduce.Import;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 
 import com.google.common.base.Preconditions;
 

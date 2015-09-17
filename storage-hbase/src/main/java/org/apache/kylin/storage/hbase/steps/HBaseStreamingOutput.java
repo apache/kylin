@@ -37,6 +37,7 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsReducer;
 import org.apache.kylin.engine.streaming.IStreamingOutput;
 import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

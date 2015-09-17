@@ -27,6 +27,12 @@
 
         <!-- Env & Test -->
         <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.10</artifactId>
+            <version>${kafka.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <scope>provided</scope>
@@ -41,11 +47,6 @@
             <artifactId>hive-hcatalog-core</artifactId>
             <version>${hive-hcatalog.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.10</artifactId>
-            <version>${kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
