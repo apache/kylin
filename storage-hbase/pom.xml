@@ -137,7 +137,6 @@
                                     <include>org.apache.kylin:kylin-core-dictionary</include>
                                     <include>org.apache.kylin:kylin-core-cube</include>
                                     <include>org.apache.kylin:kylin-storage</include>
-                                    <include>org.apache.kylin:kylin-invertedindex</include>
                                     <include>com.ning:compress-lzf</include>
                                     <include>com.n3twork.druid:extendedset</include>
                                     <include>com.esotericsoftware:kryo-shaded</include>

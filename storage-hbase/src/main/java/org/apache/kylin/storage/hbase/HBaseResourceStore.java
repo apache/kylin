@@ -47,7 +47,6 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.storage.hbase.steps.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

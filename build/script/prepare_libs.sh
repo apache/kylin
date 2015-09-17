@@ -13,7 +13,7 @@ echo "version ${version}"
 echo "copy lib file"
 rm -rf build/lib
 mkdir build/lib
-cp job/target/kylin-job-${version}-job.jar build/lib/kylin-job-${version}.jar
+cp assembly/target/kylin-job-${version}-job.jar build/lib/kylin-job-${version}.jar
 cp storage-hbase/target/kylin-storage-hbase-${version}-coprocessor.jar build/lib/kylin-coprocessor-${version}.jar
 cp jdbc/target/kylin-jdbc-${version}.jar build/lib/kylin-jdbc-${version}.jar
 # Copied file becomes 000 for some env (e.g. my Cygwin)

@@ -31,7 +31,7 @@ import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.token.TokenUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.storage.hbase.steps.HBaseConnection;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 
 /**
  * @author yangli9

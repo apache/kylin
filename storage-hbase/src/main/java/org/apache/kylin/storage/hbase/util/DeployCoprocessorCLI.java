@@ -52,12 +52,11 @@ import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
-import org.apache.kylin.storage.hbase.steps.HBaseConnection;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author yangli9
  */
 public class DeployCoprocessorCLI {
 
@@ -284,8 +283,7 @@ public class DeployCoprocessorCLI {
                 }
 
                 String jarPath = valueMatcher.group(1).trim();
-                String clsName = valueMatcher.group(2).trim();
-
+                //String clsName = valueMatcher.group(2).trim();
                 //if (CubeObserverClass.equals(clsName)) {
                 result.add(jarPath);
                 //}

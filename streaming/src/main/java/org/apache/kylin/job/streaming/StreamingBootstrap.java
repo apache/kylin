@@ -66,7 +66,7 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.job.monitor.StreamingMonitor;
 import org.apache.kylin.metadata.model.IntermediateColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.hbase.steps.HBaseConnection;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.streaming.JsonStreamParser;
 import org.apache.kylin.streaming.KafkaClusterConfig;
 import org.apache.kylin.streaming.KafkaConsumer;
