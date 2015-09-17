@@ -120,18 +120,17 @@ public class BuildCubeWithEngineTest {
     @Test
     public void test() throws Exception {
         DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_left_join_empty");
-//        testInner();
+        testInner();
         testLeft();
     }
 
     private void testInner() throws Exception {
-        String[] testCase = new String[] { "testInnerJoinTopNCube" };
-       // String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", "testInnerJoinTopNCube"};
+       String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2"};
         runTestAndAssertSucceed(testCase);
     }
 
     private void testLeft() throws Exception {
-        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2", };
+        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2", "testLeftJoinTopNCube" };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -187,7 +186,7 @@ public class BuildCubeWithEngineTest {
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testInnerJoinTopNCube() throws Exception {
+    private List<String> testLeftJoinTopNCube() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         long date1 = 0;
