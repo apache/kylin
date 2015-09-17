@@ -191,7 +191,7 @@ abstract public class ResourceStore {
      */
     final public void putResource(String resPath, InputStream content, long ts) throws IOException {
         resPath = norm(resPath);
-        logger.debug("Saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
+        logger.debug("Directly saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
         putResourceImpl(resPath, content, ts);
     }
 

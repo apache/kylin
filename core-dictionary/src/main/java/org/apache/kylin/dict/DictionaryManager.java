@@ -18,6 +18,9 @@
 
 package org.apache.kylin.dict;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -111,14 +114,22 @@ public class DictionaryManager {
     }
 
     /**
+     * Save the dictionary as it is.
+     * More often you should consider using its alternative trySaveNewDict to save dict space
+     */
+    public DictionaryInfo forceSave(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
+        initDictInfo(newDict, newDictInfo);
+        logger.info("force to save dict directly");
+        return saveNewDict(newDictInfo);
+    }
+
+    /**
      * @return may return another dict that is a super set of the input
      * @throws IOException
      */
     public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
 
-        newDictInfo.setCardinality(newDict.getSize());
-        newDictInfo.setDictionaryObject(newDict);
-        newDictInfo.setDictionaryClass(newDict.getClass().getName());
+        initDictInfo(newDict, newDictInfo);
 
         DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
         if (largestDictInfo != null) {
@@ -138,6 +149,12 @@ public class DictionaryManager {
             logger.info("first dict of this column, save it directly");
             return saveNewDict(newDictInfo);
         }
+    }
+
+    private void initDictInfo(Dictionary<?> newDict, DictionaryInfo newDictInfo) {
+        newDictInfo.setCardinality(newDict.getSize());
+        newDictInfo.setDictionaryObject(newDict);
+        newDictInfo.setDictionaryClass(newDict.getClass().getName());
     }
 
     private DictionaryInfo saveNewDict(DictionaryInfo newDictInfo) throws IOException {
@@ -324,7 +341,16 @@ public class DictionaryManager {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         String path = dict.getResourcePath();
         logger.info("Saving dictionary at " + path);
-        store.putResource(path, dict, DictionaryInfoSerializer.FULL_SERIALIZER);
+
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        DataOutputStream dout = new DataOutputStream(buf);
+        DictionaryInfoSerializer.FULL_SERIALIZER.serialize(dict, dout);
+        dout.close();
+        buf.close();
+
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(buf.toByteArray());
+        store.putResource(path, inputStream, System.currentTimeMillis());
+        inputStream.close();
     }
 
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
