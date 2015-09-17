@@ -1,5 +1,6 @@
 package org.apache.kylin.storage.cache;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kylin.common.util.IdentityUtils;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -34,7 +36,7 @@ public class StaticCacheTest {
         final List<TblColRef> groups = StorageMockUtils.buildGroups();
         final List<FunctionDesc> aggregations = StorageMockUtils.buildAggregations();
         final TupleFilter filter = StorageMockUtils.buildFilter1(groups.get(0));
-        final SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", filter, null, Collections.<TblColRef> emptySet(), groups, Collections.<TblColRef> emptySet(), Collections.<TblColRef> emptySet(), aggregations);
+        final SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", filter, null, Collections.<TblColRef> emptySet(), groups, Collections.<TblColRef> emptySet(), Collections.<TblColRef> emptySet(), aggregations, new ArrayList<MeasureDesc>(), new ArrayList<SQLDigest.OrderEnum>());
         final TupleInfo tupleInfo = StorageMockUtils.newTupleInfo(groups, aggregations);
 
         final List<ITuple> ret = Lists.newArrayList();

@@ -180,7 +180,9 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     @Override
     public DataModelDesc getDataModelDesc() {
-        return this.getLatestRealization().getDataModelDesc();
+        if (this.getLatestRealization() != null)
+            return this.getLatestRealization().getDataModelDesc();
+        return null;
     }
 
     @Override

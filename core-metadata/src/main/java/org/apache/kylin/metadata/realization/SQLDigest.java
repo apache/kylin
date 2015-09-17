@@ -19,15 +19,22 @@
 package org.apache.kylin.metadata.realization;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  */
 public class SQLDigest {
+
+    public enum OrderEnum {
+        ASCENDING, DESCENDING
+    }
+
     public String factTable;
     public TupleFilter filter;
     public Collection<JoinDesc> joinDescs;
@@ -36,9 +43,11 @@ public class SQLDigest {
     public Collection<TblColRef> filterColumns;
     public Collection<TblColRef> metricColumns;
     public Collection<FunctionDesc> aggregations;
+    public Collection<MeasureDesc> sortMeasures;
+    public Collection<OrderEnum> sortOrders;
 
     public SQLDigest(String factTable, TupleFilter filter, Collection<JoinDesc> joinDescs, Collection<TblColRef> allColumns, //
-            Collection<TblColRef> groupbyColumns, Collection<TblColRef> filterColumns, Collection<TblColRef> aggregatedColumns, Collection<FunctionDesc> aggregateFunnc) {
+            Collection<TblColRef> groupbyColumns, Collection<TblColRef> filterColumns, Collection<TblColRef> aggregatedColumns, Collection<FunctionDesc> aggregateFunnc, Collection<MeasureDesc> sortMeasures, Collection<OrderEnum> sortOrders) {
         this.factTable = factTable;
         this.filter = filter;
         this.joinDescs = joinDescs;
@@ -47,6 +56,8 @@ public class SQLDigest {
         this.filterColumns = filterColumns;
         this.metricColumns = aggregatedColumns;
         this.aggregations = aggregateFunnc;
+        this.sortMeasures = sortMeasures;
+        this.sortOrders = sortOrders;
     }
 
     @Override

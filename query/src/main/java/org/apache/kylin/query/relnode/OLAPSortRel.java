@@ -35,6 +35,7 @@ import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rex.RexNode;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.storage.StorageContext;
 
 import com.google.common.base.Preconditions;
@@ -82,12 +83,12 @@ public class OLAPSortRel extends Sort implements OLAPRel {
 
         for (RelFieldCollation fieldCollation : this.collation.getFieldCollations()) {
             int index = fieldCollation.getFieldIndex();
-            StorageContext.OrderEnum order = getOrderEnum(fieldCollation.getDirection());
+            SQLDigest.OrderEnum order = getOrderEnum(fieldCollation.getDirection());
             OLAPRel olapChild = (OLAPRel) this.getInput();
             TblColRef orderCol = olapChild.getColumnRowType().getAllColumns().get(index);
             MeasureDesc measure = findMeasure(orderCol);
             if (measure != null) {
-                this.context.storageContext.addSort(measure, order);
+                this.context.addSort(measure, order);
             }
             this.context.storageContext.markSort();
         }
@@ -96,11 +97,11 @@ public class OLAPSortRel extends Sort implements OLAPRel {
         this.columnRowType = buildColumnRowType();
     }
 
-    private StorageContext.OrderEnum getOrderEnum(RelFieldCollation.Direction direction) {
+    private SQLDigest.OrderEnum getOrderEnum(RelFieldCollation.Direction direction) {
         if (direction == RelFieldCollation.Direction.DESCENDING) {
-            return StorageContext.OrderEnum.DESCENDING;
+            return SQLDigest.OrderEnum.DESCENDING;
         } else {
-            return StorageContext.OrderEnum.ASCENDING;
+            return SQLDigest.OrderEnum.ASCENDING;
         }
     }
 

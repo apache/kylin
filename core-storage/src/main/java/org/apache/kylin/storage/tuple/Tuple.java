@@ -25,6 +25,7 @@ import java.util.List;
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.measure.DoubleMutable;
 import org.apache.kylin.metadata.measure.LongMutable;
@@ -65,6 +66,8 @@ public class Tuple implements ITuple {
                 ret.values[i] = null;
             } else if (this.values[i] instanceof HyperLogLogPlusCounter) {
                 ret.values[i] = new HyperLogLogPlusCounter((HyperLogLogPlusCounter) this.values[i]);
+            } else if (this.values[i] instanceof TopNCounter) {
+                ret.values[i] = null;
             } else {
                 ret.values[i] = this.values[i];
             }

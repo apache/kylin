@@ -1,5 +1,6 @@
 package org.apache.kylin.storage.cache;
 
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -8,6 +9,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.IdentityUtils;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -76,7 +78,7 @@ public class DynamicCacheTest {
         final List<FunctionDesc> aggregations = StorageMockUtils.buildAggregations();
         final TupleInfo tupleInfo = StorageMockUtils.newTupleInfo(groups, aggregations);
 
-        SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", null, null, Lists.<TblColRef> newArrayList(), groups, Lists.newArrayList(partitionCol), Lists.<TblColRef> newArrayList(), aggregations);
+        SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", null, null, Lists.<TblColRef> newArrayList(), groups, Lists.newArrayList(partitionCol), Lists.<TblColRef> newArrayList(), aggregations, new ArrayList<MeasureDesc>(), new ArrayList<SQLDigest.OrderEnum>());
 
         ITuple aTuple = new TsOnlyTuple(partitionCol, "2011-02-01");
         ITuple bTuple = new TsOnlyTuple(partitionCol, "2012-02-01");
