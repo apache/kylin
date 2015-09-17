@@ -94,7 +94,7 @@ public class DeployUtil {
     }
 
     private static File getJobJarFile() {
-        return new File("../assembly/target", "kylin-job-" + getPomVersion() + "-job.jar");
+        return new File("../assembly/target", "kylin-assembly-" + getPomVersion() + "-job.jar");
     }
 
     private static File getCoprocessorJarFile() {

@@ -75,7 +75,7 @@ public class DebugTomcat {
 
     private static void overrideDevJobJarLocations() {
         KylinConfig conf = KylinConfig.getInstanceFromEnv();
-        File devJobJar = findFile("../assembly/target", "kylin-job-.*-SNAPSHOT-job.jar");
+        File devJobJar = findFile("../assembly/target", "kylin-assembly-.*-SNAPSHOT-job.jar");
         if (devJobJar != null) {
             conf.overrideMRJobJarPath(devJobJar.getAbsolutePath());
         }
