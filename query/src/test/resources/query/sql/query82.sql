@@ -18,9 +18,8 @@
 
 SELECT 
  test_kylin_fact.cal_dt, seller_id 
- ,sum(test_kylin_fact.price) as GMV 
  FROM test_kylin_fact 
 left JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
  group by 
- test_kylin_fact.cal_dt, test_kylin_fact.seller_id order by gmv desc limit 100
+ test_kylin_fact.cal_dt, test_kylin_fact.seller_id order by sum(test_kylin_fact.price) desc limit 100

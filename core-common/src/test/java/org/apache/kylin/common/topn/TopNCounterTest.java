@@ -22,6 +22,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.math3.distribution.ZipfDistribution;
 import org.apache.kylin.common.util.Pair;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.*;
@@ -30,6 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+@Ignore("For collecting accuracy statistics, not for functional test")
 public class TopNCounterTest {
 
     protected static int TOP_K;
