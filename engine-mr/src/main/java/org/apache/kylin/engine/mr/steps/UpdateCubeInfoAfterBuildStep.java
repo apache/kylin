@@ -76,7 +76,6 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         long sourceCount = cubingJob.findSourceRecordCount();
         long sourceSizeBytes = cubingJob.findSourceSizeBytes();
         long cubeSizeBytes = cubingJob.findCubeSizeBytes();
-        boolean segmentReady = cubeSizeBytes > 0; // for build+merge scenario, convert HFile not happen yet, so cube size is 0
 
         segment.setLastBuildJobID(getCubingJobId());
         segment.setLastBuildTime(System.currentTimeMillis());
@@ -85,17 +84,26 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         segment.setInputRecordsSize(sourceSizeBytes);
 
         try {
-            if (segmentReady) {
-                cubeManager.promoteNewlyBuiltSegments(cube, segment);
-            } else {
+            if (isBuildAndMerge(cubingJob)) {
+                // don't mark the segment ready yet, it's going to be merged right after
                 CubeUpdate cubeBuilder = new CubeUpdate(cube);
                 cubeBuilder.setToUpdateSegs(segment);
                 cubeManager.updateCube(cubeBuilder);
+            } else {
+                cubeManager.promoteNewlyBuiltSegments(cube, segment);
             }
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
+    }
+    
+    private boolean isBuildAndMerge(CubingJob cubingJob) {
+        for (AbstractExecutable task : cubingJob.getTasks()) {
+            if (task instanceof UpdateCubeInfoAfterMergeStep)
+                return true;
+        }
+        return false;
     }
 }
