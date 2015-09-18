@@ -33,7 +33,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class BufferedCuboidWriter implements SparkCuboidWriter {
 
     private final LinkedBlockingQueue<Tuple2<byte[], byte[]>> blockingQueue;
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final TupleConverter tupleConverter;
 
     public BufferedCuboidWriter(TupleConverter tupleConverter) {
@@ -41,71 +40,27 @@ public class BufferedCuboidWriter implements SparkCuboidWriter {
         this.tupleConverter = tupleConverter;
     }
 
-    volatile Throwable error;
-
-    class RunnableWrapper implements Runnable {
-
-        private final Runnable runnable;
-
-        RunnableWrapper(Runnable runnable) {
-            this.runnable = runnable;
-        }
-
-        @Override
-        public void run() {
-            try {
-                runnable.run();
-            } catch (Throwable e) {
-                e.printStackTrace();
-                error = e;
-            }
-        }
-    }
-
-    private void checkError() {
-        if (error != null) {
-            if (error instanceof RuntimeException) {
-                throw (RuntimeException) error;
-            } else {
-                throw new RuntimeException(error);
-            }
-        }
-    }
-
     @Override
     public void write(final long cuboidId, final GTRecord record) throws IOException {
-        checkError();
-        executorService.submit(new RunnableWrapper(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    blockingQueue.put(tupleConverter.convert(cuboidId, record));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }));
+        try {
+            blockingQueue.put(tupleConverter.convert(cuboidId, record));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public void flush() {
-        checkError();
     }
 
     @Override
     public void close() {
-        checkError();
-        executorService.submit(new RunnableWrapper(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    blockingQueue.put(new Tuple2(new byte[0], new byte[0]));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }));
-        executorService.shutdown();
+        try {
+            blockingQueue.put(new Tuple2(new byte[0], new byte[0]));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+        }
     }
 
     @Override
