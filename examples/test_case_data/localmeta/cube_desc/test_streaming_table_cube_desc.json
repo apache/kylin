@@ -2,6 +2,7 @@
   "uuid": "901ed15e-7769-4c66-b7ae-fbdc971cd192",
   "name": "test_streaming_table_cube_desc",
   "description": "",
+  "engine_type": 2,
   "dimensions": [
     {
       "id": 1,

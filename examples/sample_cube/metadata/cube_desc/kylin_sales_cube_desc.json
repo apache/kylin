@@ -2,6 +2,7 @@
   "uuid" : "9ac9b7a8-3929-4dff-b59d-2100aadc8dbf",
   "name" : "kylin_sales_cube_desc",
   "description" : null,
+  "engine_type": 2,
   "dimensions" : [ {
     "id" : 0,
     "name" : "CAL_DT",
