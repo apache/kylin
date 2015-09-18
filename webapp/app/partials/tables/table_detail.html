@@ -16,187 +16,300 @@
 * limitations under the License.
 -->
 
-<div  ng-controller="SourceMetaCtrl" class="nav-tabs-custom">
-    <div class="col-xs-12" ng-show="tableModel.selectedSrcDb&&tableModel.selectedSrcTable.name">
-        <h3 class="text-info">Table Schema:{{ tableModel.selectedSrcTable.name}}</h3>
-        <div class="tabbable nav-tabs-custom">
-            <ul class="nav nav-tabs">
-                <li class="active">
-                    <a data-toggle="tab" href="#column">Columns</a>
-                </li>
-                <li>
-                    <a data-toggle="tab" href="#schema">Extend Information</a>
-                </li>
-            </ul>
-            <div class="tab-content">
-                <!--Schema-->
-                <div id="schema" class="tab-pane">
-                    <div ng-if="tableModel.selectedSrcTable.uuid" class="table-responsive">
-                        <table class="table">
-                            <tbody>
-                            <tr>
-                                <th style="width:20%">NAME</th>
-                                <td>{{ tableModel.selectedSrcTable.name}}</td>
-                            </tr>
-                            <tr>
-                                <th>Hive DATABASE</th>
-                                <td>{{tableModel.selectedSrcTable.database}}</td>
-                            </tr>
-                            <tr>
-                                <th>SNAPSHOT TIME</th>
-                                <td>{{tableModel.selectedSrcTable.exd.lastUpdateTime | utcToConfigTimeZone}}</td>
-                            </tr>
-                            <tr>
-                                <th>LOCATION</th>
-                                <td>{{tableModel.selectedSrcTable.exd.location}}</td>
-                            </tr>
-                            <tr>
-                                <th>INPUT FORMAT</th>
-                                <td>{{tableModel.selectedSrcTable.exd.inputformat}}</td>
-                            </tr>
-                            <tr>
-                                <th>OUTPUT FORMAT</th>
-                                <td>{{tableModel.selectedSrcTable.exd.outputformat}}</td>
-                            </tr>
-                            <tr>
-                                <th>OWNER</th>
-                                <td><a href="mailto:{{tableModel.selectedSrcTable.exd.owner}}">{{tableModel.selectedSrcTable.exd.owner}}</a></td>
-                            </tr>
-                            <tr>
-                                <th>TOTAL FILE NUMBER</th>
-                                <td>{{tableModel.selectedSrcTable.exd.totalNumberFiles}}</td>
-                            </tr>
-                            <tr>
-                                <th>TOTAL FILE SIZE</th>
-                                <td>{{tableModel.selectedSrcTable.exd.totalFileSize}}</td>
-                            </tr>
-                            <tr>
-                                <th>PARTITIONED</th>
-                                <td>{{tableModel.selectedSrcTable.exd.partitioned}}</td>
-                            </tr>
-                            <tr>
-                                <th>PARTITION COLUMNS</th>
-                                <td>{{tableModel.selectedSrcTable.exd.partitionColumns}}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <!--Columns-->
-                <div id="column" class="tab-pane active">
-                    <div class="profile-user-info">
-                        <div>
-                            <label class="table-header-text">Columns</label>
+<div ng-controller="SourceMetaCtrl" class="nav-tabs-custom">
+  <div class="col-xs-12" ng-show="tableModel.selectedSrcDb&&tableModel.selectedSrcTable.name">
+    <h3 class="text-info">Table Schema:{{ tableModel.selectedSrcTable.name}}</h3>
+
+    <div class="tabbable nav-tabs-custom">
+      <ul class="nav nav-tabs">
+        <li class="active">
+          <a data-toggle="tab" href="#column">Columns</a>
+        </li>
+        <li>
+          <a data-toggle="tab" href="#schema">Extend Information</a>
+        </li>
+      </ul>
+      <div class="tab-content">
+        <!--Schema-->
+        <div id="schema" class="tab-pane">
+          <div ng-if="tableModel.selectedSrcTable.uuid" class="table-responsive">
+            <table class="table">
+              <tbody>
+              <tr>
+                <th style="width:20%">NAME</th>
+                <td>{{ tableModel.selectedSrcTable.name}}</td>
+              </tr>
+              <tr>
+                <th>Hive DATABASE</th>
+                <td>{{tableModel.selectedSrcTable.database}}</td>
+              </tr>
+              <tr>
+                <th>SNAPSHOT TIME</th>
+                <td>{{tableModel.selectedSrcTable.exd.lastUpdateTime | utcToConfigTimeZone}}</td>
+              </tr>
+              <tr>
+                <th>LOCATION</th>
+                <td>{{tableModel.selectedSrcTable.exd.location}}</td>
+              </tr>
+              <tr>
+                <th>INPUT FORMAT</th>
+                <td>{{tableModel.selectedSrcTable.exd.inputformat}}</td>
+              </tr>
+              <tr>
+                <th>OUTPUT FORMAT</th>
+                <td>{{tableModel.selectedSrcTable.exd.outputformat}}</td>
+              </tr>
+              <tr>
+                <th>OWNER</th>
+                <td><a
+                  href="mailto:{{tableModel.selectedSrcTable.exd.owner}}">{{tableModel.selectedSrcTable.exd.owner}}</a>
+                </td>
+              </tr>
+              <tr>
+                <th>TOTAL FILE NUMBER</th>
+                <td>{{tableModel.selectedSrcTable.exd.totalNumberFiles}}</td>
+              </tr>
+              <tr>
+                <th>TOTAL FILE SIZE</th>
+                <td>{{tableModel.selectedSrcTable.exd.totalFileSize}}</td>
+              </tr>
+              <tr>
+                <th>PARTITIONED</th>
+                <td>{{tableModel.selectedSrcTable.exd.partitioned}}</td>
+              </tr>
+              <tr>
+                <th>PARTITION COLUMNS</th>
+                <td>{{tableModel.selectedSrcTable.exd.partitionColumns}}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!--Columns-->
+        <div id="column" class="tab-pane active">
+          <div class="profile-user-info">
+            <div>
+              <label class="table-header-text">Columns</label>
                             <span class="input-icon form-search nav-search pull-right">
-                                <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="columnName"/>
+                                <input type="text" placeholder="Filter ..." class="nav-search-input"
+                                       ng-model="columnName"/>
                                 <i class="ace-icon fa fa-search nav-search-icon"></i>
                             </span>
-                        </div>
-                        <div class="space-6"></div>
-                        <div ng-if="(tableModel.selectedSrcTable.columns | filter: columnName).length>0">
-                            <table class="table table-hover table-striped list">
-                                <thead>
-                                <tr style="cursor: pointer">
-                                    <th ng-repeat="theaditem in tableConfig.theaditems"
-                                        ng-click="state.filterAttr= theaditem.attr;state.reverseColumn=theaditem.attr;state.filterReverse=!state.filterReverse;">
-                                        {{theaditem.name}}
-                                        <i ng-if="state.reverseColumn!= theaditem.attr"
-                                           class="fa fa-unsorted"></i>
-                                        <i ng-if="state.reverseColumn== theaditem.attr && !state.filterReverse"
-                                           class="fa fa-sort-asc"></i>
-                                        <i ng-if="state.reverseColumn== theaditem.attr && state.filterReverse"
-                                           class="fa fa-sort-desc"></i>
-                                    </th>
-                                </tr>
-                                </thead>
-
-                                <tr ng-repeat="column in tableModel.selectedSrcTable.columns | filter: columnName | orderObjectBy:state.filterAttr:state.filterReverse">
-                                    <td style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
-                                        {{ column.id}}
-                                    </td>
-                                    <td style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
-                                        {{ column.name}}
-                                    </td>
-                                    <td style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
-                                        {{ column.datatype}}
-                                    </td>
-                                    <td style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
-                                        <!--{{ tableModel.selectedSrcTable.cardinality[column.name]}}-->
-                                        {{column.cardinality}}
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div ng-if="(tableModel.selectedSrcTable.columns | filter: columnName).length == 0" no-result
-                             text="No Matched Table Column."></div>
-                        <div ng-if="!!!tableModel.selectedSrcTable.uuid">
-                            <div no-result text="No Table Selected."></div>
-                        </div>
-                    </div>
-                </div>
             </div>
+            <div class="space-6"></div>
+            <div ng-if="(tableModel.selectedSrcTable.columns | filter: columnName).length>0">
+              <table class="table table-hover table-striped list">
+                <thead>
+                <tr style="cursor: pointer">
+                  <th ng-repeat="theaditem in tableConfig.theaditems"
+                      ng-click="state.filterAttr= theaditem.attr;state.reverseColumn=theaditem.attr;state.filterReverse=!state.filterReverse;">
+                    {{theaditem.name}}
+                    <i ng-if="state.reverseColumn!= theaditem.attr"
+                       class="fa fa-unsorted"></i>
+                    <i ng-if="state.reverseColumn== theaditem.attr && !state.filterReverse"
+                       class="fa fa-sort-asc"></i>
+                    <i ng-if="state.reverseColumn== theaditem.attr && state.filterReverse"
+                       class="fa fa-sort-desc"></i>
+                  </th>
+                </tr>
+                </thead>
+
+                <tr
+                  ng-repeat="column in tableModel.selectedSrcTable.columns | filter: columnName | orderObjectBy:state.filterAttr:state.filterReverse">
+                  <td
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                    {{ column.id}}
+                  </td>
+                  <td
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                    {{ column.name}}
+                  </td>
+                  <td
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                    {{ column.datatype}}
+                  </td>
+                  <td
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                    <!--{{ tableModel.selectedSrcTable.cardinality[column.name]}}-->
+                    {{column.cardinality}}
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div ng-if="(tableModel.selectedSrcTable.columns | filter: columnName).length == 0" no-result
+                 text="No Matched Table Column."></div>
+            <div ng-if="!!!tableModel.selectedSrcTable.uuid">
+              <div no-result text="No Table Selected."></div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
 
-    <!--show load hive table tip when no models list-->
-    <div ng-show="!tableModel.selectedSrcDb.length" style="margin-top:40px;">
+  <!--show load hive table tip when no models list-->
+  <div ng-show="!tableModel.selectedSrcDb.length" style="margin-top:40px;">
 
-        <!--project selected tip-->
-        <div ng-if="projectModel.getSelectedProject();" class="box box-primary">
-            <div class="box-header with-border">
-                <i class="fa fa-bullhorn"></i>
-                <h3 class="box-title">No tables</h3>
-            </div>
-            <div class="box-body">
-                <div>
-                    <a tooltip="Load Hive Table" href="javascript:void(0);" ng-if="userService.hasRole('ROLE_MODELER')" ng-click="openModal()">Click here to load your hive table</a>
-                </div>
-            </div><!-- /.box-body -->
+    <!--project selected tip-->
+    <div ng-if="projectModel.getSelectedProject();" class="box box-primary">
+      <div class="box-header with-border">
+        <i class="fa fa-bullhorn"></i>
+
+        <h3 class="box-title">No tables</h3>
+      </div>
+      <div class="box-body">
+        <div>
+          <a tooltip="Load Hive Table" href="javascript:void(0);" ng-if="userService.hasRole('ROLE_MODELER')"
+             ng-click="openModal()">Click here to load your hive table</a>
         </div>
-        <!--roject not selected tip-->
-        <div ng-if="!projectModel.getSelectedProject();" class="box box-primary">
-            <div class="box-header with-border">
-                <i class="icon fa fa-warning"></i>
-                <h3 class="box-title">No project selected</h3>
-            </div>
-            <div class="box-body">
-                <div class="callout callout-danger">
-                    <p  class="text-danger">
-                       Please select your project first
-                    </p>
-                </div>
-            </div><!-- /.box-body -->
-        </div>
+      </div>
+      <!-- /.box-body -->
     </div>
+    <!--roject not selected tip-->
+    <div ng-if="!projectModel.getSelectedProject();" class="box box-primary">
+      <div class="box-header with-border">
+        <i class="icon fa fa-warning"></i>
 
-    <!--show load hive table tip when no models list-->
-    <div ng-show="tableModel.selectedSrcDb.length&&!tableModel.selectedSrcTable.name" style="margin-top:40px;">
-        <div class="box box-primary">
-            <div class="box-header with-border">
-                <i class="fa fa-bullhorn"></i>
-                <h3 class="box-title">No table selected</h3>
-            </div>
-            <div class="box-body">
-                Select your table
-            </div><!-- /.box-body -->
+        <h3 class="box-title">No project selected</h3>
+      </div>
+      <div class="box-body">
+        <div class="callout callout-danger">
+          <p class="text-danger">
+            Please select your project first
+          </p>
         </div>
+      </div>
+      <!-- /.box-body -->
     </div>
+  </div>
+
+  <!--show load hive table tip when no models list-->
+  <div ng-show="tableModel.selectedSrcDb.length&&!tableModel.selectedSrcTable.name" style="margin-top:40px;">
+    <div class="box box-primary">
+      <div class="box-header with-border">
+        <i class="fa fa-bullhorn"></i>
+
+        <h3 class="box-title">No table selected</h3>
+      </div>
+      <div class="box-body">
+        Select your table
+      </div>
+      <!-- /.box-body -->
+    </div>
+  </div>
 
 
-    <script type="text/ng-template" id="addHiveTable.html">
-        <div class="modal-header">
-            <h4>Load Hive Table Metadata</h4>
-        </div>
-        <div class="modal-body">
-            <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
-            <label for="tables"> Table Names:(Seperate with comma)</label>
+  <script type="text/ng-template" id="addHiveTable.html">
+    <div class="modal-header">
+      <h4>Load Hive Table Metadata</h4>
+    </div>
+    <div class="modal-body">
+      <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
+      <label for="tables"> Table Names:(Seperate with comma)</label>
             <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
                       placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="add()">Sync</button>
+      <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+    </div>
+  </script>
+
+  <script type="text/ng-template" id="addStreamingSource.html">
+    <div class="modal-header">
+      <h2>Create Streaming Table Schema</h2>
+    </div>
+
+    <div class="modal-body streaming-source" style="height: 480px;">
+      <div class="col-xs-5">
+        <p class="text-info">
+          Need to input streaming source record here, will detect the source schema and create a table schema for
+          streaming.
+        </p>
+
+        <div style="padding:15px;" class="has-error">
+          <small class="help-block" ng-show="streaming.sourceSchema==''&&form.setStreamingSchema.$sbumitted">Please
+            input Streaming source record to generate schema.
+          </small>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" ng-click="add()">Sync</button>
-            <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+        <div style="margin-bottom: 20px;">
+          <span class="label label-info">JSON</span>
         </div>
-    </script>
+        <div ng-model="streaming.sourceSchema" ui-ace="{
+    useWrapMode : true,
+    mode:'json',
+    onLoad: streamingOnLoad
+  }">
+
+        </div>
+      </div>
+      <div class="col-xs-1" style="margin-top:300px;text-align:center;">
+        <button type="button" class="btn btn-primary" ng-click="streamingOnChange()"><i
+          class="fa fa-angle-double-right fa-5" style="font-size:2em;"></i></button>
+      </div>
+      <div class="col-xs-6" ng-show="table.sourceValid">
+        <ol class="text-info" style="margin-bottom: 30px;">
+          <li>Choose one 'timestamp' type column for streaming table.</li>
+          <li>Uncheck the 'timestamp' type column which will not be used.</li>
+        </ol>
+        <form class="form-horizontal" name="form.setStreamingSchema" novalidate>
+          <div class="form-group required">
+            <label class="col-xs-4 control-label" style="text-align: left;">Table Name</label>
+
+            <div class="col-xs-8"
+                 ng-class="{'has-error':form.setStreamingSchema.streamingObject.$invalid && (form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$sbumitted)}">
+              <input type="text" name="streamingObject" required="" ng-model="table.name" class="form-control"/>
+              <small class="help-block"
+                     ng-show="form.setStreamingSchema.streamingObject.$error.required&&(form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$sbumitted)">
+                Table name is required.
+              </small>
+            </div>
+          </div>
+        </form>
+        <table class="table table-hover table-bordered">
+          <tr>
+            <th>Check As Column</th>
+            <th>Column</th>
+            <th>Column Type</th>
+            <th>Comment</th>
+          </tr>
+          <tr ng-repeat="column in columnList">
+            <td><label style="width:100%;cursor: pointer;" for="{{column.name}}"><input style="width:1em;height:1em;"
+                                                                                        type="checkbox"
+                                                                                        id="{{column.name}}"
+                                                                                        ng-model="column.checked"
+                                                                                        ng-true-value="Y"
+                                                                                        ng-false-value="N"/></label>
+            </td>
+            <td>{{column.name}}</td>
+            <td>
+              <select chosen ng-model="column.type"
+                      ng-options="type as type for type in tableConfig.dataTypes"
+                      data-placeholder="select a column type"
+                      style="width: 200px !important;"
+                      class="chosen-select">
+              </select>
+            </td>
+            <td>
+              <label ng-if="column.type=='timestamp'&&column.fromSource=='Y'" class="badge badge-info">TIMESTAMP</label>
+              <label ng-if="column.fromSource=='N'" class="badge badge-info">AUTO APPEND</label>
+            </td>
+          </tr>
+        </table>
+
+        <div class="has-error" ng-if="rule.timestampColumnConflict">
+          <small class="help-block">
+            You should choose one, and only one 'timestamp' type column generated from source schema.
+          </small>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="syncStreamingSchema()" ng-disabled="form.setStreamingSchema.$invalid">
+        Submit
+      </button>
+      <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+    </div>
+  </script>
 </div>

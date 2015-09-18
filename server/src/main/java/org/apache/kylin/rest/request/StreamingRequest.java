@@ -16,14 +16,28 @@
  * limitations under the License.
  */
 
-KylinApp.factory('TableService', ['$resource', function ($resource, config) {
-  return $resource(Config.service.url + 'tables/:tableName/:action', {}, {
-    list: {method: 'GET', params: {}, cache: true, isArray: true},
-    get: {method: 'GET', params: {}, isArray: false},
-    getExd: {method: 'GET', params: {action: 'exd-map'}, isArray: false},
-    reload: {method: 'PUT', params: {action: 'reload'}, isArray: false},
-    loadHiveTable: {method: 'POST', params: {}, isArray: false},
-    addStreamingSrc: {method: 'POST', params: {action:'addStreamingSrc'}, isArray: false},
-    genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false}
-  });
-}]);
+
+package org.apache.kylin.rest.request;
+
+import java.lang.String;public class StreamingRequest {
+
+    private String project;
+
+    private String tableData;
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
+    public String getTableData() {
+        return tableData;
+    }
+
+    public void setTableData(String tableData) {
+        this.tableData = tableData;
+    }
+}
