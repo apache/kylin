@@ -43,6 +43,11 @@
           <li ng-if="userService.hasRole('ROLE_ADMIN')">
             <a href="models/add"  ng-if="userService.hasRole('ROLE_MODELER')"><i class="fa fa-star"></i> New Model</a>
           </li>
+
+          <li ng-if="userService.hasRole('ROLE_ADMIN')">
+            <a href="streaming/add"  ng-if="userService.hasRole('ROLE_MODELER')"><i class="fa fa-area-chart"></i>New Streaming</a>
+          </li>
+
         </ul>
       </div>
 

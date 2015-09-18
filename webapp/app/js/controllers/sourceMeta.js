@@ -152,12 +152,211 @@ KylinApp
         })
       }
     };
-    $scope.trimType = function (typeName) {
-      if (typeName.match(/VARCHAR/i)) {
-        typeName = "VARCHAR";
+
+
+    //streaming model
+    $scope.openStreamingSourceModal = function () {
+      $modal.open({
+        templateUrl: 'addStreamingSource.html',
+        controller: StreamingSourceCtrl,
+        resolve: {
+          tableNames: function () {
+            return $scope.tableNames;
+          },
+          projectName: function () {
+            return $scope.projectModel.selectedProject;
+          },
+          scope: function () {
+            return $scope;
+          }
+        }
+      });
+    };
+
+    var StreamingSourceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig) {
+      $scope.streamingPrefix = "STREAMING_";
+      $scope.projectName = projectName;
+      $scope.tableConfig = tableConfig;
+      $scope.streaming = {
+        sourceSchema: '',
+        'parseResult': {}
       }
 
-      return typeName.trim().toLowerCase();
-    }
+      $scope.table = {
+        name: '',
+        sourceValid:false
+      }
+
+      $scope.cancel = function () {
+        $modalInstance.dismiss('cancel');
+      };
+
+      $scope.streamingOnLoad = function () {
+        console.log($scope.streaming.sourceSchema);
+      }
+
+      $scope.columnList = [];
+
+      $scope.streamingOnChange = function () {
+        console.log($scope.streaming.sourceSchema);
+        try {
+          $scope.streaming.parseResult = JSON.parse($scope.streaming.sourceSchema);
+        } catch (error) {
+          $scope.table.sourceValid = false;
+          console.log(error);
+          return;
+        }
+        $scope.table.sourceValid = true;
+        var columnList = [];
+        for (var key in $scope.streaming.parseResult) {
+          var defaultType="varchar(256)";
+          var _value = $scope.streaming.parseResult[key];
+          var defaultChecked = "Y";
+          if(typeof _value ==="string"){
+            defaultType="varchar(256)";
+          }else if(typeof _value ==="number"){
+            if(_value <= 2147483647){
+              if(_value.toString().indexOf(".")!=-1){
+                defaultType="decimal";
+              }else{
+                defaultType="int";
+              }
+            }else{
+              defaultType="timestamp";
+            }
+          }
+          if(defaultType=="timestamp"){
+            defaultChecked = "N";
+          }
+          columnList.push({
+            'name': key,
+            'checked': defaultChecked,
+            'type': defaultType,
+            'fromSource':'Y'
+          });
+
+
+
+          //var formatList = [];
+          //var
+          columnList = _.sortBy(columnList, function (i) { return i.type; });
+        }
+
+          var timeMeasure = ['year_start','month_start','day_start','hour_start','min_start'];
+          for(var i = 0;i<timeMeasure.length;i++){
+            var defaultCheck = 'Y';
+            if(timeMeasure[i]=='min_start'){
+              defaultCheck = 'N';
+            }
+            columnList.push({
+              'name': timeMeasure[i],
+              'checked': defaultCheck,
+              'type': 'timestamp',
+              'fromSource':'N'
+            });
+          }
+
+        if($scope.columnList.length==0){
+          $scope.columnList = columnList;
+        }
+
+        angular.forEach(columnList,function(item){
+          var included = false;
+          for(var i=0;i<$scope.columnList.length;i++){
+            if($scope.columnList[i].name==item.name){
+              included = true;
+              break;
+            }
+          }
+          if(!included){
+            $scope.columnList.push(item);
+          }
+        })
+
+      }
+
+      $scope.form={};
+      $scope.rule={
+        'timestampColumnConflict':false
+      }
+      $scope.syncStreamingSchema = function () {
+        $scope.form['setStreamingSchema'].$sbumitted = true;
+        if(!$scope.streaming.sourceSchema||$scope.streaming.sourceSchema===""){
+          return;
+        }
+
+        if(!$scope.table.name||$scope.table.name===""){
+          return;
+        }
+
+        var timestampCount = 0;
+        angular.forEach($scope.columnList,function(item){
+          if(item.checked == "Y"&&item.type=="timestamp"&&item.fromSource=='Y'){
+            timestampCount++;
+          }
+        })
+
+        if(timestampCount!=1){
+          $scope.rule.timestampColumnConflict = true;
+          return;
+        }
+
+        var columns = [];
+        angular.forEach($scope.columnList,function(column,$index){
+          if (column.checked == "Y") {
+            var columnInstance = {
+              "id": ++$index,
+              "name": column.name,
+              "datatype": column.type
+            }
+            columns.push(columnInstance);
+          }
+        })
+
+
+        $scope.tableData = {
+          "name": $scope.streamingPrefix+$scope.table.name,
+          "columns": columns,
+          'database':'Default'
+        }
+
+        SweetAlert.swal({
+          title: '',
+          text: 'Are you sure to create the streaming table info?',
+          type: '',
+          showCancelButton: true,
+          confirmButtonColor: '#DD6B55',
+          confirmButtonText: "Yes",
+          closeOnConfirm: true
+        }, function (isConfirm) {
+          if (isConfirm) {
+            loadingRequest.show();
+            TableService.addStreamingSrc({}, {project: $scope.projectName,tableData:angular.toJson($scope.tableData)}, function (request) {
+              if(request.success){
+                loadingRequest.hide();
+                SweetAlert.swal('', 'Create Streaming Table Schema Successfully.', 'success');
+                $scope.cancel();
+                scope.aceSrcTbLoaded(true);
+                return;
+              }else{
+                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+              }
+              //end loading
+              loadingRequest.hide();
+            }, function (e) {
+              if (e.data && e.data.exception) {
+                var message = e.data.exception;
+                var msg = !!(message) ? message : 'Failed to take action.';
+                SweetAlert.swal('Oops...', msg, 'error');
+              } else {
+                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+              }
+              loadingRequest.hide();
+            });
+          }
+        });
+      }
+    };
+
   });
 

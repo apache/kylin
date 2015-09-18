@@ -19,19 +19,18 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CardinalityRequest;
+import org.apache.kylin.rest.request.StreamingRequest;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.slf4j.Logger;
@@ -128,6 +127,22 @@ public class TableController extends BasicController {
         result.put("result.unloaded", new String[] {});
         return result;
     }
+
+
+    @RequestMapping(value = "/addStreamingSrc", method = { RequestMethod.POST })
+    @ResponseBody
+    public Map<String, String> addStreamingTable(@RequestBody StreamingRequest request) throws IOException {
+        Map<String, String> result = new HashMap<String, String>();
+        String project = request.getProject();
+        TableDesc desc = JsonUtil.readValue(request.getTableData(),TableDesc.class);
+        desc.setUuid(UUID.randomUUID().toString());
+        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        metaMgr.saveSourceTable(desc);
+        cubeMgmtService.syncTableToProject(new String[]{desc.getName()},project);
+        result.put("success","true");
+        return result;
+    }
+
 
     /**
      * Regenerate table cardinality
