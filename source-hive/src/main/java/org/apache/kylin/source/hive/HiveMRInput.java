@@ -21,6 +21,8 @@ package org.apache.kylin.source.hive;
 import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
@@ -134,6 +136,7 @@ public class HiveMRInput implements IMRInput {
             GarbageCollectionStep step = new GarbageCollectionStep();
             step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
             step.setIntermediateTableIdentity(getIntermediateTableIdentity());
+            step.setExternalDataPath(JoinedFlatTable.getTableDir(flatHiveTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobFlow.getId())));
             jobFlow.addTask(step);
         }
 
@@ -148,7 +151,6 @@ public class HiveMRInput implements IMRInput {
     }
 
     public static class GarbageCollectionStep extends AbstractExecutable {
-
         @Override
         protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
             KylinConfig config = context.getConfig();
@@ -161,6 +163,13 @@ public class HiveMRInput implements IMRInput {
                 try {
                     config.getCliCommandExecutor().execute(dropHiveCMD);
                     output.append("Hive table " + hiveTable + " is dropped. \n");
+
+                    Path externalDataPath = new Path(getExternalDataPath());
+                    FileSystem fs = FileSystem.get(externalDataPath.toUri(), HadoopUtil.getCurrentConfiguration());
+                    if (fs.exists(externalDataPath)) {
+                        fs.delete(externalDataPath, true);
+                        output.append("Hive table " + hiveTable + " external data path " + externalDataPath + " is deleted. \n");
+                    }
                 } catch (IOException e) {
                     logger.error("job:" + getId() + " execute finished with exception", e);
                     return new ExecuteResult(ExecuteResult.State.ERROR, e.getMessage());
@@ -176,6 +185,14 @@ public class HiveMRInput implements IMRInput {
 
         private String getIntermediateTableIdentity() {
             return getParam("oldHiveTable");
+        }
+
+        public void setExternalDataPath(String externalDataPath) {
+            setParam("externalDataPath", externalDataPath);
+        }
+
+        private String getExternalDataPath() {
+            return getParam("externalDataPath");
         }
     }
 
