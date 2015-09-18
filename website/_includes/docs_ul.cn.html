@@ -16,7 +16,7 @@
 
   {% for p in site.docs %}
     {% if p.url == item_url %}
-      <li><a href="{{ p.url }}" class="list-group-item-lay pjaxlink">{{p.title}}</a></li>      
+      <li><a href="{{ p.url }}" class="list-group-item-lay pjaxlink" id="navlist">{{p.title}}</a></li>      
       {% break %}
     {% endif %}
   {% endfor %}
