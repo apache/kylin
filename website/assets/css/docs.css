@@ -34,7 +34,7 @@
   font-weight: 600;
   font-family: 'Open sans';
   font-size: 15px;
-  padding: 10px 10px;
+  padding: 0px 30px 5px 0px;
 }
 
 .aside1> .nav > li > a:hover {
@@ -57,6 +57,7 @@
   overflow-y: auto;
   background-color: #fff;
   overflow-x: hidden;
+  padding: 8px 0px 0px 60px;
 }
 
 .post-title {
@@ -104,7 +105,7 @@
 }
 
 .nside {
-  color: #fb8d08;
+  color: #fb8d08 !important;
 }
 
 .nnav {
@@ -122,5 +123,14 @@
 #navtitle:hover, #navtitle:focus{
   color:#000000;
 }
+
+#navlist {
+  color:#454545;
+}
+
+#navlist:hover, #navlist:focus{
+  color:#000000;
+}
+
 
 
