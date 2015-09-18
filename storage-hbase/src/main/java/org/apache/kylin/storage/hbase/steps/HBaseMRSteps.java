@@ -1,5 +1,6 @@
 package org.apache.kylin.storage.hbase.steps;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.cube.CubeSegment;
@@ -129,6 +130,16 @@ public class HBaseMRSteps extends JobBuilderSupport {
         return mergingHTables;
     }
 
+    public List<String> getMergingHDFSPaths() {
+        final List<CubeSegment> mergingSegments = seg.getCubeInstance().getMergingSegments(seg);
+        Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
+        final List<String> mergingHDFSPaths = Lists.newArrayList();
+        for (CubeSegment merging : mergingSegments) {
+            mergingHDFSPaths.add(getJobWorkingDir(merging.getLastBuildJobID()));
+        }
+        return mergingHDFSPaths;
+    }
+
     public String getHFilePath(String jobId) {
         return HadoopUtil.makeQualifiedPathInHBaseCluster(getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/hfile/");
     }
@@ -137,4 +148,43 @@ public class HBaseMRSteps extends JobBuilderSupport {
         return HadoopUtil.makeQualifiedPathInHBaseCluster(getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/rowkey_stats");
     }
 
+    public void addMergingGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
+        String jobId = jobFlow.getId();
+
+        jobFlow.addTask(createMergeGCStep());
+
+        List<String> toDeletePathsOnHadoopCluster = new ArrayList<>();
+        toDeletePathsOnHadoopCluster.addAll(getMergingHDFSPaths());
+
+        List<String> toDeletePathsOnHbaseCluster = new ArrayList<>();
+        toDeletePathsOnHbaseCluster.add(getRowkeyDistributionOutputPath(jobId));
+        toDeletePathsOnHbaseCluster.add(getHFilePath(jobId));
+
+        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
+        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
+        step.setDeletePathsOnHadoopCluster(toDeletePathsOnHadoopCluster);
+        step.setDeletePathsOnHBaseCluster(toDeletePathsOnHbaseCluster);
+        step.setJobId(jobId);
+
+        jobFlow.addTask(step);
+    }
+
+    public void addCubingGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
+        String jobId = jobFlow.getId();
+
+        List<String> toDeletePathsOnHadoopCluster = new ArrayList<>();
+        toDeletePathsOnHadoopCluster.add(getFactDistinctColumnsPath(jobId));
+
+        List<String> toDeletePathsOnHbaseCluster = new ArrayList<>();
+        toDeletePathsOnHbaseCluster.add(getRowkeyDistributionOutputPath(jobId));
+        toDeletePathsOnHbaseCluster.add(getHFilePath(jobId));
+
+        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
+        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
+        step.setDeletePathsOnHadoopCluster(toDeletePathsOnHadoopCluster);
+        step.setDeletePathsOnHBaseCluster(toDeletePathsOnHbaseCluster);
+        step.setJobId(jobId);
+
+        jobFlow.addTask(step);
+    }
 }

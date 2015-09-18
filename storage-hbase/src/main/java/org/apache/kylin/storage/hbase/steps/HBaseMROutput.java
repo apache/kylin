@@ -21,7 +21,6 @@ package org.apache.kylin.storage.hbase.steps;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMROutput;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.storage.hbase.steps.HBaseMRSteps;
 
 public class HBaseMROutput implements IMROutput {
 
@@ -37,7 +36,7 @@ public class HBaseMROutput implements IMROutput {
 
             @Override
             public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-                // nothing to do
+                steps.addCubingGarbageCollectionSteps(jobFlow);
             }
         };
     }
@@ -54,7 +53,7 @@ public class HBaseMROutput implements IMROutput {
 
             @Override
             public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(steps.createMergeGCStep());
+                steps.addMergingGarbageCollectionSteps(jobFlow);
             }
         };
     }
