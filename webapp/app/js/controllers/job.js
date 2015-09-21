@@ -25,7 +25,6 @@ KylinApp
     JobList.removeAll();
     $scope.jobConfig = jobConfig;
     $scope.cubeName = null;
-    $scope.projects = [];
     $scope.action = {};
 
     $scope.status = [];
@@ -48,12 +47,6 @@ KylinApp
       reverseColumn: 'last_modified',
       projectName: $scope.projectModel.selectedProject
     };
-
-    ProjectService.list({}, function (projects) {
-      angular.forEach(projects, function (project, index) {
-        $scope.projects.push(project.name);
-      });
-    });
 
     $scope.list = function (offset, limit) {
       var defer = $q.defer();
