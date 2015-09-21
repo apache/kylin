@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -84,14 +83,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         segment.setInputRecordsSize(sourceSizeBytes);
 
         try {
-            if (isBuildAndMerge(cubingJob)) {
-                // don't mark the segment ready yet, it's going to be merged right after
-                CubeUpdate cubeBuilder = new CubeUpdate(cube);
-                cubeBuilder.setToUpdateSegs(segment);
-                cubeManager.updateCube(cubeBuilder);
-            } else {
-                cubeManager.promoteNewlyBuiltSegments(cube, segment);
-            }
+            cubeManager.promoteNewlyBuiltSegments(cube, segment);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to update cube after build", e);
@@ -99,11 +91,4 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         }
     }
     
-    private boolean isBuildAndMerge(CubingJob cubingJob) {
-        for (AbstractExecutable task : cubingJob.getTasks()) {
-            if (task instanceof UpdateCubeInfoAfterMergeStep)
-                return true;
-        }
-        return false;
-    }
 }
