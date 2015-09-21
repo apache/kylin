@@ -49,12 +49,13 @@ public class MapContextGTRecordWriter implements ICuboidWriter {
     public void write(long cuboidId, GTRecord record) throws IOException {
 
         if (lastCuboidId == null || !lastCuboidId.equals(cuboidId)) {
-            // output another cuboid
-            initVariables(cuboidId);
             if (lastCuboidId != null) {
                 logger.info("Cuboid " + lastCuboidId + " has " + cuboidRowCount + " rows");
                 cuboidRowCount = 0;
             }
+            // output another cuboid
+            initVariables(cuboidId);
+            lastCuboidId = cuboidId;
         }
 
         cuboidRowCount++;
