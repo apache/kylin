@@ -46,8 +46,9 @@ public class DebugTomcat {
             if (System.getProperty("catalina.home") == null)
                 System.setProperty("catalina.home", ".");
 
-            if (System.getProperty("hdp.version") == null)
-                System.setProperty("hdp.version", "2.2.4.2-2"); // mapred-site.xml ref this
+            if (System.getProperty("hdp.version") == null) {
+                throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
+            }
 
             // workaround for job submission from win to linux -- https://issues.apache.org/jira/browse/MAPREDUCE-4052
             if (Shell.WINDOWS) {
