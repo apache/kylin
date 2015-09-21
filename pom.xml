@@ -700,10 +700,6 @@
                                     <name>useSandbox</name>
                                     <value>true</value>
                                 </property>
-                                <property>
-                                    <name>hdp.version</name>
-                                    <value>2.2.4.2-2</value>
-                                </property>
                             </systemProperties>
                         </configuration>
                     </plugin>
