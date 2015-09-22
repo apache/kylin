@@ -29,6 +29,7 @@ import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -77,6 +78,15 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
                 }
             }
         }
+        
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            if (measureDesc.getFunction().isTopN()) {
+                List<TblColRef> colRefs = measureDesc.getFunction().getParameter().getColRefs();
+                TblColRef col = colRefs.get(colRefs.size() - 1);
+                dictionaryMap.put(col, cubeSegment.getDictionary(col));
+            }
+        }
+        
 
         DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
         ExecutorService executorService = Executors.newSingleThreadExecutor();

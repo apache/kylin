@@ -152,19 +152,6 @@
     },
     {
       "id": 7,
-      "name": "SELLER_CNT_LONG",
-      "function": {
-        "expression": "COUNT_DISTINCT",
-        "parameter": {
-          "type": "column",
-          "value": "SELLER_ID"
-        },
-        "returntype": "bigint"
-      },
-      "dependent_measure_ref": "SELLER_CNT_HLL"
-    },
-    {
-      "id": 8,
       "name": "SELLER_FORMAT_CNT",
       "function": {
         "expression": "COUNT_DISTINCT",
@@ -258,7 +245,6 @@
               "gmv_min",
               "gmv_max",
               "trans_cnt",
-              "seller_cnt_long",
               "item_count_sum"
             ]
           }

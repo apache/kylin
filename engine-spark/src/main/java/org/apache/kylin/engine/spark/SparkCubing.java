@@ -314,6 +314,16 @@ public class SparkCubing extends AbstractSparkApplication {
                 }
             }
         }
+        
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            if (measureDesc.getFunction().isTopN()) {
+                List<TblColRef> colRefs = measureDesc.getFunction().getParameter().getColRefs();
+                TblColRef col = colRefs.get(colRefs.size() - 1);
+                dictionaryMap.put(col, cubeSegment.getDictionary(col));
+            }
+        }
+
+        
         final JavaPairRDD<byte[], byte[]> javaPairRDD = javaRDD.glom().mapPartitionsToPair(new PairFlatMapFunction<Iterator<List<List<String>>>, byte[], byte[]>() {
 
             @Override
