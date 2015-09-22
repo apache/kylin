@@ -820,7 +820,10 @@
                                 <exclude>**/*.dic</exclude>
                                 <exclude>**/*.snapshot</exclude>
                                 <exclude>**/*.pdf</exclude>
+                                <exclude>**/*.docx</exclude>
+                                <exclude>**/*.doc</exclude>
                                 <exclude>**/*.log</exclude>
+                                <exclude>**/*.txt</exclude>
 
                                 <exclude>**/.checkstyle</exclude>
                                 <!--Job's Test Data-->
@@ -858,6 +861,18 @@
                                 <!-- HBase MiniCluster Testing Data, for testing only -->
                                 <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
                                 <exclude>examples/test_case_data/**/*.xml</exclude>
+                                
+                                <!--ODBC sub project is a VS project, exclude related files -->
+                                <exclude>**/*.sln</exclude>
+                                <exclude>**/*.vcxproj</exclude>
+                                <exclude>**/*.vcxproj.filters</exclude>
+                                <exclude>**/*.vcxproj.user</exclude>
+                                <exclude>**/*.props</exclude>
+                                <exclude>**/*.RC</exclude>
+                                <exclude>**/*.dsp</exclude>
+                                <exclude>**/*.DEF</exclude>
+                                <exclude>**/*.isl</exclude>
+                                <exclude>**/*.isproj</exclude>
 
                             </excludes>
                         </configuration>
