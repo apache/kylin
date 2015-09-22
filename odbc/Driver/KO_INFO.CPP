@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ 
 
 // ----------------------------------------------------------------------------
 //
@@ -66,7 +84,7 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
             
         /*
             An SQLUINTEGER bitmask enumerating the SQL-92 datetime literals supported by the data source. Note that these are the datetime literals listed in the SQL-92 specification and are separate from the datetime literal escape clauses defined by ODBC. For more information about the ODBC datetime literal escape clauses, see Date, Time, and Timestamp Literals.
-            A FIPS Transitional level¨Cconformant driver will always return the "1" value in the bitmask for the bits in the following list. A value of "0" means that SQL-92 datetime literals are not supported.
+            A FIPS Transitional levelï¿½Cconformant driver will always return the "1" value in the bitmask for the bits in the following list. A value of "0" means that SQL-92 datetime literals are not supported.
             The following bitmasks are used to determine which literals are supported:
             SQL_DL_SQL92_DATESQL_DL_SQL92_TIMESQL_DL_SQL92_TIMESTAMPSQL_DL_SQL92_INTERVAL_YEARSQL_DL_SQL92_INTERVAL_MONTHSQL_DL_SQL92_INTERVAL_DAYSQL_DL_SQL92_INTERVAL_HOURSQL_DL_SQL92_INTERVAL_MINUTESQL_DL_SQL92_INTERVAL_SECONDSQL_DL_SQL92_INTERVAL_YEAR_TO_MONTHSQL_DL_SQL92_INTERVAL_DAY_TO_HOUR
             SQL_DL_SQL92_INTERVAL_DAY_TO_MINUTESQL_DL_SQL92_INTERVAL_DAY_TO_SECONDSQL_DL_SQL92_INTERVAL_HOUR_TO_MINUTESQL_DL_SQL92_INTERVAL_HOUR_TO_SECONDSQL_DL_SQL92_INTERVAL_MINUTE_TO_SECOND
@@ -96,7 +114,7 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
             An SQLUINTEGER bitmask enumerating the timestamp intervals supported by the driver and associated data source for the TIMESTAMPADD scalar function.
             The following bitmasks are used to determine which intervals are supported:
             SQL_FN_TSI_FRAC_SECONDSQL_FN_TSI_SECONDSQL_FN_TSI_MINUTESQL_FN_TSI_HOURSQL_FN_TSI_DAYSQL_FN_TSI_WEEKSQL_FN_TSI_MONTHSQL_FN_TSI_QUARTERSQL_FN_TSI_YEAR
-            An FIPS Transitional level¨Cconformant driver will always return a bitmask in which all of these bits are set.SQL_DATETIME_LITERALS(ODBC 3.0)
+            An FIPS Transitional levelï¿½Cconformant driver will always return a bitmask in which all of these bits are set.SQL_DATETIME_LITERALS(ODBC 3.0)
         */
         case SQL_TIMEDATE_ADD_INTERVALS : // 109 called
             * ( ( Long* ) pInfoValuePtr ) =
@@ -115,7 +133,7 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
             An SQLUINTEGER bitmask enumerating the timestamp intervals supported by the driver and associated data source for the TIMESTAMPDIFF scalar function.
             The following bitmasks are used to determine which intervals are supported:
             SQL_FN_TSI_FRAC_SECONDSQL_FN_TSI_SECONDSQL_FN_TSI_MINUTESQL_FN_TSI_HOURSQL_FN_TSI_DAYSQL_FN_TSI_WEEKSQL_FN_TSI_MONTHSQL_FN_TSI_QUARTERSQL_FN_TSI_YEAR
-            An FIPS Transitional level¨Cconformant driver will always return a bitmask in which all of these bits are set.
+            An FIPS Transitional levelï¿½Cconformant driver will always return a bitmask in which all of these bits are set.
         */
         case SQL_TIMEDATE_DIFF_INTERVALS : //110 called
             * ( ( Long* ) pInfoValuePtr ) =
@@ -610,7 +628,7 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC         pConn,
             
         /*
             An SQLUINTEGER bitmask enumerating the SQL-92 datetime literals supported by the data source. Note that these are the datetime literals listed in the SQL-92 specification and are separate from the datetime literal escape clauses defined by ODBC. For more information about the ODBC datetime literal escape clauses, see Date, Time, and Timestamp Literals.
-            A FIPS Transitional level¨Cconformant driver will always return the "1" value in the bitmask for the bits in the following list. A value of "0" means that SQL-92 datetime literals are not supported.
+            A FIPS Transitional levelï¿½Cconformant driver will always return the "1" value in the bitmask for the bits in the following list. A value of "0" means that SQL-92 datetime literals are not supported.
             The following bitmasks are used to determine which literals are supported:
             SQL_DL_SQL92_DATESQL_DL_SQL92_TIMESQL_DL_SQL92_TIMESTAMPSQL_DL_SQL92_INTERVAL_YEARSQL_DL_SQL92_INTERVAL_MONTHSQL_DL_SQL92_INTERVAL_DAYSQL_DL_SQL92_INTERVAL_HOURSQL_DL_SQL92_INTERVAL_MINUTESQL_DL_SQL92_INTERVAL_SECONDSQL_DL_SQL92_INTERVAL_YEAR_TO_MONTHSQL_DL_SQL92_INTERVAL_DAY_TO_HOUR
             SQL_DL_SQL92_INTERVAL_DAY_TO_MINUTESQL_DL_SQL92_INTERVAL_DAY_TO_SECONDSQL_DL_SQL92_INTERVAL_HOUR_TO_MINUTESQL_DL_SQL92_INTERVAL_HOUR_TO_SECONDSQL_DL_SQL92_INTERVAL_MINUTE_TO_SECOND
@@ -640,7 +658,7 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC         pConn,
             An SQLUINTEGER bitmask enumerating the timestamp intervals supported by the driver and associated data source for the TIMESTAMPADD scalar function.
             The following bitmasks are used to determine which intervals are supported:
             SQL_FN_TSI_FRAC_SECONDSQL_FN_TSI_SECONDSQL_FN_TSI_MINUTESQL_FN_TSI_HOURSQL_FN_TSI_DAYSQL_FN_TSI_WEEKSQL_FN_TSI_MONTHSQL_FN_TSI_QUARTERSQL_FN_TSI_YEAR
-            An FIPS Transitional level¨Cconformant driver will always return a bitmask in which all of these bits are set.SQL_DATETIME_LITERALS(ODBC 3.0)
+            An FIPS Transitional levelï¿½Cconformant driver will always return a bitmask in which all of these bits are set.SQL_DATETIME_LITERALS(ODBC 3.0)
         */
         case SQL_TIMEDATE_ADD_INTERVALS : // 109 called
             * ( ( Long* ) pInfoValuePtr ) =
@@ -659,7 +677,7 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC         pConn,
             An SQLUINTEGER bitmask enumerating the timestamp intervals supported by the driver and associated data source for the TIMESTAMPDIFF scalar function.
             The following bitmasks are used to determine which intervals are supported:
             SQL_FN_TSI_FRAC_SECONDSQL_FN_TSI_SECONDSQL_FN_TSI_MINUTESQL_FN_TSI_HOURSQL_FN_TSI_DAYSQL_FN_TSI_WEEKSQL_FN_TSI_MONTHSQL_FN_TSI_QUARTERSQL_FN_TSI_YEAR
-            An FIPS Transitional level¨Cconformant driver will always return a bitmask in which all of these bits are set.
+            An FIPS Transitional levelï¿½Cconformant driver will always return a bitmask in which all of these bits are set.
         */
         case SQL_TIMEDATE_DIFF_INTERVALS : //110 called
             * ( ( Long* ) pInfoValuePtr ) =
