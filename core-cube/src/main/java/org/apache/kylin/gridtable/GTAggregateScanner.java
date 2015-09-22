@@ -12,6 +12,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.measure.HLLCAggregator;
 import org.apache.kylin.metadata.measure.LDCAggregator;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.metadata.measure.TopNAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,7 +167,7 @@ public class GTAggregateScanner implements IGTScanner {
 
             // skip expensive aggregation
             for (int i = 0; i < totalSum.length; i++) {
-                if (totalSum[i] instanceof HLLCAggregator || totalSum[i] instanceof LDCAggregator)
+                if (totalSum[i] instanceof HLLCAggregator || totalSum[i] instanceof LDCAggregator || totalSum[i] instanceof TopNAggregator )
                     totalSum[i] = null;
             }
 
