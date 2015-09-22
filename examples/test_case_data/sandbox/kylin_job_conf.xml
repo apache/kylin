@@ -10,6 +10,10 @@
         </description>
     </property>
 
+    <property>
+        <name>mapreduce.map.maxattempts</name>
+        <value>2</value>
+    </property>
 
     <!--
     <property>

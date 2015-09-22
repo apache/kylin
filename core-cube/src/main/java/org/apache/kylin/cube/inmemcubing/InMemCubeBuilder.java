@@ -17,6 +17,7 @@
 package org.apache.kylin.cube.inmemcubing;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -36,6 +37,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.Dictionary;
@@ -84,7 +86,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private CuboidResult baseResult;
     private Object[] totalSumForSanityCheck;
-    private ICuboidCollector resultCollector;
+    private ICuboidCollector resultCollector;    
+    private Map<Integer, Dictionary<String>> topNDisplayColDictMap;
+
 
     public InMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         super(cubeDesc, dictionaryMap);
@@ -106,8 +110,25 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             measureIndexMap.put(measureDesc.getName(), i);
         }
         this.metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
+
+        initTopNDisplayColDictionaryMap();
     }
 
+    private void initTopNDisplayColDictionaryMap() {
+        topNDisplayColDictMap = Maps.newHashMap();
+        for (int measureIdx = 0; measureIdx < cubeDesc.getMeasures().size(); measureIdx++) {
+            MeasureDesc measureDesc = cubeDesc.getMeasures().get(measureIdx);
+            FunctionDesc func = measureDesc.getFunction();
+            if (func.isTopN()) {
+                int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
+                int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
+                TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
+                Dictionary<String> dictionary = (Dictionary<String>)dictionaryMap.get(displayCol);
+                topNDisplayColDictMap.put(displayColIdx, dictionary);
+            }
+        }
+    }
+    
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
 
@@ -513,6 +534,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         GTInfo info;
         GTRecord record;
         BlockingQueue<List<String>> input;
+        ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
         public InputConverter(GTInfo info, BlockingQueue<List<String>> input) {
             this.info = info;
@@ -597,11 +619,30 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 Object value = null;
                 int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[i];
                 FunctionDesc function = cubeDesc.getMeasures().get(i).getFunction();
-                if (function.isCount() || function.isHolisticCountDistinct()) {
+                if (flatTableIdx == null) {
+                    value = measureCodec.getSerializer(i).valueOf(measureDesc.getFunction().getParameter().getValue());
+                }
+                else if (function.isCount() || function.isHolisticCountDistinct()) {
                     // note for holistic count distinct, this value will be ignored
                     value = ONE;
-                } else if (flatTableIdx == null) {
-                    value = measureCodec.getSerializer(i).valueOf(measureDesc.getFunction().getParameter().getValue());
+                } else if (function.isTopN()) {
+                    // encode the key column with dict, and get the counter column;
+                    int keyColIndex = flatTableIdx[flatTableIdx.length - 1];
+                    Dictionary<String> displayColDict = topNDisplayColDictMap.get(keyColIndex);
+                    int keyColEncoded = displayColDict.getIdFromValue(row.get(keyColIndex));
+                    valueBuf.clear();
+                    valueBuf.putInt(displayColDict.getSizeOfId());
+                    valueBuf.putInt(keyColEncoded);
+                    if (flatTableIdx.length == 1) {
+                        // only displayCol, use 1.0 as counter
+                        valueBuf.putDouble(1.0);
+                    } else {
+                        // get the counter column value
+                        valueBuf.putDouble(Double.valueOf(row.get(flatTableIdx[0])));
+                    }
+
+                    value = measureCodec.getSerializer(i).valueOf(valueBuf.array());
+
                 } else if (flatTableIdx.length == 1) {
                     value = measureCodec.getSerializer(i).valueOf(toBytes(row.get(flatTableIdx[0])));
                 } else {
