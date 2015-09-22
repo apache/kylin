@@ -133,7 +133,7 @@ public class BuildCubeWithEngineTest {
     }
 
     private void testLeft() throws Exception {
-        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2", "testLeftJoinTopNCube" };
+        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2" };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -184,19 +184,6 @@ public class BuildCubeWithEngineTest {
                 countDownLatch.countDown();
             }
         }
-    }
-
-
-    @SuppressWarnings("unused")
-    // called by reflection
-    private List<String> testLeftJoinTopNCube() throws Exception {
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
-        f.setTimeZone(TimeZone.getTimeZone("GMT"));
-        long date1 = 0;
-        long date2 = f.parse("2050-01-01").getTime();
-        List<String> result = Lists.newArrayList();
-        result.add(buildSegment("test_kylin_cube_topn", date1, date2));
-        return result;
     }
 
     @SuppressWarnings("unused")

@@ -363,6 +363,12 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
                 calculatedCost += COST_WEIGHT_INNER_JOIN;
             }
         }
+        
+        if (CubeCapabilityChecker.isMatchedWithTopN(CubeDimensionDeriver.getDimensionColumns(digest), this, digest)) {
+            // this is topN query
+            calculatedCost = calculatedCost / 3;
+        }
+
         return calculatedCost;
     }
 

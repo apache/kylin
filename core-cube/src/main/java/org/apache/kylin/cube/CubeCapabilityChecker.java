@@ -79,7 +79,7 @@ public class CubeCapabilityChecker {
         return true;
     }
 
-    private static boolean isMatchedWithTopN(Collection<TblColRef> dimensionColumns, CubeInstance cube, SQLDigest digest) {
+    public static boolean isMatchedWithTopN(Collection<TblColRef> dimensionColumns, CubeInstance cube, SQLDigest digest) {
 
         CubeDesc cubeDesc = cube.getDescriptor();
         List<FunctionDesc> cubeFunctions = cubeDesc.listAllFunctions();
