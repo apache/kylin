@@ -19,7 +19,6 @@ package org.apache.kylin.storage.hbase.steps;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.engine.mr.HadoopUtil;
@@ -40,6 +39,7 @@ import java.util.List;
  */
 public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
 
+    public static final String TO_DELETE_PATHS = "toDeletePaths";
     private StringBuffer output;
     private JobEngineConfig config;
 
@@ -52,8 +52,12 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         try {
             config = new JobEngineConfig(context.getConfig());
-            dropHdfsPathOnCluster(getDeletePathsOnHadoopCluster(), FileSystem.get(HadoopUtil.getCurrentConfiguration()));
-            dropHdfsPathOnCluster(getDeletePathsOnHBaseCluster(), FileSystem.get(HadoopUtil.getCurrentHBaseConfiguration()));
+            List<String> toDeletePaths = getDeletePaths();
+            dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HadoopUtil.getCurrentConfiguration()));
+            
+            if (StringUtils.isNotEmpty(context.getConfig().getHBaseClusterFs())) {
+                dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HadoopUtil.getCurrentHBaseConfiguration()));
+            }
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
             output.append("\n").append(e.getLocalizedMessage());
@@ -94,24 +98,16 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
         }
     }
 
-    public void setDeletePathsOnHadoopCluster(List<String> deletePaths) {
-        setArrayParam("toDeletePathsOnHadoopCluster", deletePaths);
-    }
-
-    public void setDeletePathsOnHBaseCluster(List<String> deletePaths) {
-        setArrayParam("toDeletePathsOnHBaseCluster", deletePaths);
+    public void setDeletePaths(List<String> deletePaths) {
+        setArrayParam(TO_DELETE_PATHS, deletePaths);
     }
 
     public void setJobId(String jobId) {
         setParam("jobId", jobId);
     }
 
-    public List<String> getDeletePathsOnHadoopCluster() {
-        return getArrayParam("toDeletePathsOnHadoopCluster");
-    }
-
-    public List<String> getDeletePathsOnHBaseCluster() {
-        return getArrayParam("toDeletePathsOnHBaseCluster");
+    public List<String> getDeletePaths() {
+        return getArrayParam(TO_DELETE_PATHS);
     }
 
     public String getJobId() {
