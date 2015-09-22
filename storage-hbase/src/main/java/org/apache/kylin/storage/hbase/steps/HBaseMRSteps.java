@@ -153,17 +153,12 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
         jobFlow.addTask(createMergeGCStep());
 
-        List<String> toDeletePathsOnHadoopCluster = new ArrayList<>();
-        toDeletePathsOnHadoopCluster.addAll(getMergingHDFSPaths());
-
-        List<String> toDeletePathsOnHbaseCluster = new ArrayList<>();
-        toDeletePathsOnHbaseCluster.add(getRowkeyDistributionOutputPath(jobId));
-        toDeletePathsOnHbaseCluster.add(getHFilePath(jobId));
+        List<String> toDeletePaths = new ArrayList<>();
+        toDeletePaths.addAll(getMergingHDFSPaths());
 
         HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
         step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
-        step.setDeletePathsOnHadoopCluster(toDeletePathsOnHadoopCluster);
-        step.setDeletePathsOnHBaseCluster(toDeletePathsOnHbaseCluster);
+        step.setDeletePaths(toDeletePaths);
         step.setJobId(jobId);
 
         jobFlow.addTask(step);
@@ -172,17 +167,12 @@ public class HBaseMRSteps extends JobBuilderSupport {
     public void addCubingGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
         String jobId = jobFlow.getId();
 
-        List<String> toDeletePathsOnHadoopCluster = new ArrayList<>();
-        toDeletePathsOnHadoopCluster.add(getFactDistinctColumnsPath(jobId));
-
-        List<String> toDeletePathsOnHbaseCluster = new ArrayList<>();
-        toDeletePathsOnHbaseCluster.add(getRowkeyDistributionOutputPath(jobId));
-        toDeletePathsOnHbaseCluster.add(getHFilePath(jobId));
+        List<String> toDeletePaths = new ArrayList<>();
+        toDeletePaths.add(getFactDistinctColumnsPath(jobId));
 
         HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
         step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
-        step.setDeletePathsOnHadoopCluster(toDeletePathsOnHadoopCluster);
-        step.setDeletePathsOnHBaseCluster(toDeletePathsOnHbaseCluster);
+        step.setDeletePaths(toDeletePaths);
         step.setJobId(jobId);
 
         jobFlow.addTask(step);
