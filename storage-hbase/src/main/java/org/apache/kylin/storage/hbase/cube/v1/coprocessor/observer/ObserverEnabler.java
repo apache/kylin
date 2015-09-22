@@ -106,12 +106,16 @@ public class ObserverEnabler {
 
         String forceFlag = System.getProperty(FORCE_COPROCESSOR);
         if (forceFlag != null) {
-            return Boolean.parseBoolean(forceFlag);
+            boolean r = Boolean.parseBoolean(forceFlag);
+            logger.info("Coprocessor is " + (r ? "enabled" : "disabled") + " according to sys prop " + FORCE_COPROCESSOR);
+            return r;
         }
 
         Boolean cubeOverride = CUBE_OVERRIDES.get(cube.getName());
         if (cubeOverride != null) {
-            return cubeOverride.booleanValue();
+            boolean r = cubeOverride.booleanValue();
+            logger.info("Coprocessor is " + (r ? "enabled" : "disabled") + " according to cube overrides");
+            return r;
         }
 
         //        if (RowValueDecoder.hasMemHungryCountDistinct(rowValueDecoders)) {
