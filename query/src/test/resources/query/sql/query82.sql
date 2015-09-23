@@ -16,9 +16,7 @@
 -- limitations under the License.
 --
 
-SELECT 
- cal_dt, seller_id from (select
-  test_kylin_fact.cal_dt, seller_id, sum(test_kylin_fact.price) as gmv
+select  test_kylin_fact.cal_dt, seller_id
   FROM test_kylin_fact
  inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
@@ -26,5 +24,4 @@ SELECT
  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id
  AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id 
  group by 
- test_kylin_fact.cal_dt, test_kylin_fact.seller_id order by gmv desc limit 100
- ) as abc
+ test_kylin_fact.cal_dt, test_kylin_fact.seller_id order by sum(test_kylin_fact.price) desc limit 100
