@@ -364,7 +364,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
             }
         }
         
-        if (CubeCapabilityChecker.isMatchedWithTopN(CubeDimensionDeriver.getDimensionColumns(digest), this, digest)) {
+        if (CubeCapabilityChecker.isMatchedWithTopN(this, digest)) {
             // this is topN query
             calculatedCost = calculatedCost / 3;
         }

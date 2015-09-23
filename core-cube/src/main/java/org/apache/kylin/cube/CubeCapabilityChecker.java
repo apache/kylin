@@ -79,14 +79,42 @@ public class CubeCapabilityChecker {
         return true;
     }
 
-    public static boolean isMatchedWithTopN(Collection<TblColRef> dimensionColumns, CubeInstance cube, SQLDigest digest) {
+    /**
+     * Check whether the cube can match the sql digest with TopN measure
+     * @param cube
+     * @param digest
+     * @return
+     */
+    public static boolean isMatchedWithTopN(CubeInstance cube, SQLDigest digest) {
+        Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(digest);
+        
+        boolean matchDimensions = isMatchedWithDimensions(dimensionColumns, cube);
 
-        CubeDesc cubeDesc = cube.getDescriptor();
-        List<FunctionDesc> cubeFunctions = cubeDesc.listAllFunctions();
+        if (matchDimensions == true) {
+            return false;
+        }
+
         Collection<FunctionDesc> functions = digest.aggregations;
-        Collection<MeasureDesc> sortMeasures = digest.sortMeasures;
-        Collection<SQLDigest.OrderEnum> sortOrders = digest.sortOrders;
+        if (functions == null || functions.size() != 1) {
+            // topN only allow one measure
+            return false;
+        }
 
+        return isMatchedWithTopN(dimensionColumns, cube, digest);
+    }
+
+    /**
+     * This is the method for internal, consumer need do the check as the public method did
+     * @param dimensionColumns
+     * @param cube
+     * @param digest
+     * @return
+     */
+    private static boolean isMatchedWithTopN(Collection<TblColRef> dimensionColumns, CubeInstance cube, SQLDigest digest) {
+        
+        CubeDesc cubeDesc = cube.getDescriptor();
+        Collection<FunctionDesc> functions = digest.aggregations;
+        
         FunctionDesc onlyFunction = functions.iterator().next();
         if (onlyFunction.isSum() == false) {
             // topN only support SUM expression
