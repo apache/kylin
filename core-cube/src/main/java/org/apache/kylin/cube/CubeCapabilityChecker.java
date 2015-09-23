@@ -86,6 +86,13 @@ public class CubeCapabilityChecker {
      * @return
      */
     public static boolean isMatchedWithTopN(CubeInstance cube, SQLDigest digest) {
+
+        boolean hasTopN = hasTopNMeasure(cube.getDescriptor());
+        
+        if (hasTopN == false) {
+            return false;
+        }
+        
         Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(digest);
         
         boolean matchDimensions = isMatchedWithDimensions(dimensionColumns, cube);
@@ -126,13 +133,15 @@ public class CubeCapabilityChecker {
             if (measure.getFunction().isTopN()) {
                 List<TblColRef> cols = measure.getFunction().getParameter().getColRefs();
                 TblColRef displayCol = cols.get(cols.size() - 1);
-                dimensionColumnsCopy.remove(displayCol);
-                if(isMatchedWithDimensions(dimensionColumnsCopy, cube)) {
-                    if (measure.getFunction().isCompatible(onlyFunction)) {
-                        return true;
+                if (digest.groupbyColumns.contains(displayCol)) {
+                    dimensionColumnsCopy.remove(displayCol);
+                    if (isMatchedWithDimensions(dimensionColumnsCopy, cube)) {
+                        if (measure.getFunction().isCompatible(onlyFunction)) {
+                            return true;
+                        }
                     }
+                    dimensionColumnsCopy.add(displayCol);
                 }
-                dimensionColumnsCopy.add(displayCol);
             }
         }
 
