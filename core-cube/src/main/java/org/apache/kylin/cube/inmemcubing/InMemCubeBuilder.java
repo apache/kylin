@@ -124,6 +124,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
                 TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
                 Dictionary<String> dictionary = (Dictionary<String>)dictionaryMap.get(displayCol);
+                assert dictionary != null;
                 topNDisplayColDictMap.put(displayColIdx, dictionary);
             }
         }
@@ -480,7 +481,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             }
 
             // disable sanity check for performance
-            sanityCheck(scanner.getTotalSumForSanityCheck());
+//            sanityCheck(scanner.getTotalSumForSanityCheck());
         } finally {
             scanner.close();
             builder.close();

@@ -173,7 +173,7 @@
           "value": "PRICE",
           "displaycolumn": "seller_id"
         },
-        "returntype": "topn(100)"
+        "returntype": "topn(20)"
       },
       "dependent_measure_ref": null
     }
