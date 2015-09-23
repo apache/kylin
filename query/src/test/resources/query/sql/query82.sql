@@ -24,4 +24,4 @@ select  test_kylin_fact.cal_dt, seller_id
  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id
  AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id 
  group by 
- test_kylin_fact.cal_dt, test_kylin_fact.seller_id order by sum(test_kylin_fact.price) desc limit 100
+ test_kylin_fact.cal_dt, test_kylin_fact.seller_id order by sum(test_kylin_fact.price) desc limit 20
