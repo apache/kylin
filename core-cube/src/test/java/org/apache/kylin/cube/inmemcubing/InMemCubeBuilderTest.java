@@ -42,6 +42,8 @@ import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -179,6 +181,22 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
                 result.put(col, dict);
             }
         }
+
+        for (int measureIdx = 0; measureIdx < cube.getDescriptor().getMeasures().size(); measureIdx++) {
+            MeasureDesc measureDesc = cube.getDescriptor().getMeasures().get(measureIdx);
+            FunctionDesc func = measureDesc.getFunction();
+            if (func.isTopN()) {
+                int[] flatTableIdx = flatTableDesc.getMeasureColumnIndexes()[measureIdx];
+                int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
+                TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
+                logger.info("Building dictionary for " + displayCol);
+                List<byte[]> valueList = readValueList(flatTable, nColumns, displayColIdx);
+                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(displayCol.getType(), valueList);
+
+                result.put(displayCol, dict);
+            }
+        }
+
         return result;
     }
 
