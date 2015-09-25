@@ -42,12 +42,14 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.metadata.MetadataConstants;
 
 /**
  */
@@ -84,6 +86,13 @@ public class KafkaConfig extends RootPersistentEntity {
     //"configA=1;configB=2"
     @JsonProperty("parserProperties")
     private String parserProperties;
+    public String getResourcePath() {
+        return getKafkaResourcePath(name);
+    }
+
+    public static String getKafkaResourcePath(String streamingName) {
+        return ResourceStore.KAfKA_RESOURCE_ROOT + "/" + streamingName + MetadataConstants.FILE_SURFIX;
+    }
 
     public List<KafkaClusterConfig> getKafkaClusterConfigs() {
         return kafkaClusterConfigs;

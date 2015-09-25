@@ -1,0 +1,114 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<div ng-controller="kafkaConfigCtrl">
+  <ng-form name="forms.kafka_config_form" novalidate>
+    <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+      <div class="row">
+        <label class="col-xs-12 col-sm-3 control-label no-padding-right">
+          <b>Topic</b>
+        </label>
+        <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.kafka_config_form.topic.$invalid && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.topic.$sbumitted)}">
+          <input  ng-if="state.mode=='edit'"  name="name" required ng-model="kafkaMeta.topic" type="text"
+                  placeholder="Input kafkaConfig topic"
+                  class="form-control"/>
+          <small class="help-block" ng-show="forms.kafka_config_form.topic.$error.required && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.$sbumitted)">Kafka topic is required.</small>
+          <span ng-if="state.mode=='view'">{{kafkaMeta.topic}}</span>
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <div ng-repeat="cluster in kafkaMeta.clusters | filter: state.measureFilter track by $index" class="box">
+      <div class="box-header">
+        <h3 class="box-title">Cluster-{{$index+1}}</h3>
+        <button type="button" ng-click="removeCluster(cluster)" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+      <div class="box-body no-padding">
+        <table class="table table-condensed" ng-if="cluster.brokers.length||cluster.newBroker">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Host</th>
+            <th>Port</th>
+            <th ng-if="state.mode=='edit'">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr ng-repeat="broker in cluster.brokers| filter: state.measureFilter track by $index">
+            <td>{{broker.id}}</td>
+            <td>{{broker.host}}</td>
+            <td>{{broker.port}}</td>
+            <td ng-if="state.mode=='edit'">
+              <!--Edit Button -->
+              <button class="btn btn-xs btn-info" ng-click="addBroker(cluster,broker)">
+                <i class="fa fa-pencil"></i>
+              </button>
+
+              <button class="btn btn-xs btn-danger" ng-click="removeElement(cluster,broker)"><i class="fa fa-trash-o"></i>
+              </button>
+            </td>
+          </tr>
+          <tr ng-if="cluster.newBroker">
+            <td>
+              <div class="input-group">
+                <input class="form-control" type="text" ng-model="cluster.newBroker.id" name="broker_id" placeholder="Input broker ID"/>
+              </div>
+            </td>
+            <td>
+              <div class="input-group">
+                <input class="form-control" type="text" ng-model="cluster.newBroker.host" name="broker_host" placeholder="Input broker host">
+              </div>
+            </td>
+            <td>
+              <div class="input-group">
+                <input class="form-control" type="text" ng-model="cluster.newBroker.port" name="broker_port" placeholder="Input broker port">
+              </div>
+            </td>
+            <td>
+              <button class="btn btn-xs btn-danger" ng-click="removeNewBroker(cluster)"><i class="fa fa-trash-o"></i>
+              </button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="box-footer">
+        <div>
+          <button class="btn btn-sm btn-success" ng-click="addBroker(cluster)" ng-show="state.mode=='edit'&&!cluster.newBroker">
+            <i class="fa fa-plus"></i> Broker
+          </button>
+          <button class="btn btn-sm btn-info" ng-click="saveNewBroker(cluster)" ng-show="state.mode=='edit'&&cluster.newBroker">
+            <i class="fa fa-saved"></i> Save
+          </button>
+          <button class="btn btn-link" ng-click="clearNewBroker(cluster)"  ng-show="state.mode=='edit'&&cluster.newBroker">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <!--Add Measures Button-->
+    <div class="form-group">
+      <button class="btn btn-sm btn-info" ng-click="addCluster()" ng-show="state.mode=='edit'">
+        <i class="fa fa-plus"></i> Cluster
+      </button>
+    </div>
+
+
+  </ng-form>
+</div>

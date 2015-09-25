@@ -41,6 +41,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 
@@ -96,6 +97,14 @@ public class StreamingConfig extends RootPersistentEntity {
 
     public void setMargin(long margin) {
         this.margin = margin;
+    }
+
+    public String getResourcePath() {
+        return concatResourcePath(name);
+    }
+
+    public static String concatResourcePath(String streamingName) {
+        return ResourceStore.STREAMING_RESOURCE_ROOT + "/" + streamingName + ".json";
     }
 
     @Override

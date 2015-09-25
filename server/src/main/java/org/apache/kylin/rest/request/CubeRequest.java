@@ -23,9 +23,12 @@ public class CubeRequest {
     private String uuid;
     private String cubeName;
     private String cubeDescData;
+    private String streamingData;
+    private String kafkaData;
     private boolean successful;
     private String message;
     private String project;
+    private String streamingCube;
 
     public String getUuid() {
         return uuid;
@@ -104,4 +107,27 @@ public class CubeRequest {
         this.project = project;
     }
 
+    public String getStreamingCube() {
+        return streamingCube;
+    }
+
+    public void setStreamingCube(String streamingCube) {
+        this.streamingCube = streamingCube;
+    }
+
+    public String getStreamingData() {
+        return streamingData;
+    }
+
+    public void setStreamingData(String streamingData) {
+        this.streamingData = streamingData;
+    }
+
+    public String getKafkaData() {
+        return kafkaData;
+    }
+
+    public void setKafkaData(String kafkaData) {
+        this.kafkaData = kafkaData;
+    }
 }

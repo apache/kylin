@@ -40,6 +40,7 @@
                 "app/components/angular-underscore/angular-underscore.js",
                 "app/components/jquery-ui/jquery-ui.min.js",
                 "app/components/angular-ui-sortable/sortable.js",
+                "app/components/angular-toggle-switch/angular-toggle-switch.js",
                 "tmp/js/scripts.js"
             ],
             "dest": "tmp/js/scripts.min.js"
@@ -62,6 +63,7 @@
                 "app/css/skins/_all-skins.min.css",
                 "app/components/bootstrap-sweetalert/lib/sweet-alert.css",
                 "app/components/angular-bootstrap-nav-tree/dist/abn_tree.css",
+                "app/components/angular-toggle-switch/angular-toggle-switch.css",
                 "tmp/css/styles.css"
             ],
             "dest": "tmp/css/styles.min.css"

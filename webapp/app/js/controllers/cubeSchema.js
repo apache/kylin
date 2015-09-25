@@ -18,8 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager) {
-
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService) {
     $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
@@ -34,6 +33,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     if (UserService.hasRole("ROLE_ADMIN")) {
             $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false,form:'cube_setting_form'});
     }
+    $scope.wizardSteps.push({title: 'Streaming', src: 'partials/cubeDesigner/streamingConfig.html', isComplete: false,form:'cube_streaming_form'});
     $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false,form:null});
 
     $scope.curStep = $scope.wizardSteps[0];
@@ -60,89 +60,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         return $scope.userService.hasRole('ROLE_ADMIN') || $scope.hasPermission(project,$scope.permissions.ADMINISTRATION.mask);
     };
 
-    $scope.addNewMeasure = function (measure) {
-        $scope.newMeasure = (!!measure)? measure:CubeDescModel.createMeasure();
-    };
-
-    $scope.clearNewMeasure = function () {
-        $scope.newMeasure = null;
-    };
-
-    $scope.saveNewMeasure = function () {
-        if ($scope.cubeMetaFrame.measures.indexOf($scope.newMeasure) === -1) {
-            $scope.cubeMetaFrame.measures.push($scope.newMeasure);
-        }
-        $scope.newMeasure = null;
-    };
-
-    //map right return type for param
-    $scope.measureReturnTypeUpdate = function(){
-        if($scope.newMeasure.function.parameter.type=="constant"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
-            switch($scope.newMeasure.function.expression){
-                case "SUM":
-                case "COUNT":
-                    $scope.newMeasure.function.returntype = "bigint";
-                    break;
-                default:
-                    $scope.newMeasure.function.returntype = "";
-                    break;
-            }
-        }
-        if($scope.newMeasure.function.parameter.type=="column"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
-
-            var column = $scope.newMeasure.function.parameter.value;
-            var colType = $scope.getColumnType(column, $scope.metaModel.model.fact_table); // $scope.getColumnType defined in cubeEdit.js
-
-            if(colType==""||!colType){
-                $scope.newMeasure.function.returntype = "";
-                return;
-            }
-
-
-            switch($scope.newMeasure.function.expression){
-                case "SUM":
-                    if(colType==="smallint"||colType==="int"||colType==="bigint"||colType==="integer"){
-                        $scope.newMeasure.function.returntype= 'bigint';
-                    }else{
-                        if(colType.indexOf('decimal')!=-1){
-                            $scope.newMeasure.function.returntype= colType;
-                        }else{
-                            $scope.newMeasure.function.returntype= 'decimal';
-                        }
-                    }
-                    break;
-                case "MIN":
-                case "MAX":
-                    $scope.newMeasure.function.returntype = colType;
-                    break;
-                case "COUNT":
-                    $scope.newMeasure.function.returntype = "bigint";
-                    break;
-                default:
-                    $scope.newMeasure.function.returntype = "";
-                    break;
-            }
-        }
-    }
-
-    $scope.addNewRowkeyColumn = function () {
-        $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
-            "column": "",
-            "length": 0,
-            "dictionary": "true",
-            "mandatory": false
-        });
-    };
-
-    $scope.addNewAggregationGroup = function () {
-        $scope.cubeMetaFrame.rowkey.aggregation_groups.push([]);
-    };
-
-    $scope.refreshAggregationGroup = function (list, index, aggregation_groups) {
-        if (aggregation_groups) {
-            list[index] = aggregation_groups;
-        }
-    };
 
     $scope.removeElement = function (arr, element) {
         var index = arr.indexOf(element);
@@ -214,6 +131,16 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
       }
       $scope.metaModel.model=modelsManager.getModel($scope.cubeMetaFrame.model_name);
 
+      StreamingService.getConfig({cubeName:$scope.cubeMetaFrame.name}, function (kfkConfigs) {
+        if(!!kfkConfigs[0]&&kfkConfigs[0].cubeName == $scope.cubeMetaFrame.name){
+          $scope.cubeState.isStreaming = true;
+          $scope.streamingMeta = kfkConfigs[0];
+          StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
+            $scope.kafkaMeta = streamings[0];
+          })
+        }
+      })
+
     }
   });
 
@@ -242,6 +169,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             }else{
                 //business rule check
                 switch($scope.curStep.form){
+                    case 'cube_info_form':
+                      return $scope.check_cube_info();
+                      break;
                     case 'cube_dimension_form':
                         return $scope.check_cube_dimension();
                         break;
@@ -250,6 +180,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                         break;
                     case 'cube_setting_form':
                         return $scope.check_cube_setting();
+                    case 'cube_streaming_form':
+                        return $scope.kafka_ad_config_form();
                     default:
                         return true;
                         break;
@@ -258,6 +190,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         }
     };
 
+  $scope.check_cube_info = function(){
+
+  }
 
     $scope.check_cube_dimension = function(){
         var errors = [];
@@ -326,6 +261,31 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             return true;
         }
     }
+
+  $scope.kafka_ad_config_form = function(){
+    if(!$scope.cubeState.isStreaming){
+      return true;
+    }
+    var errors = [];
+    if(!$scope.kafkaMeta.clusters.length){
+      errors.push("Cluster can't be null");
+    }
+    angular.forEach($scope.kafkaMeta.clusters,function(cluster,index){
+      if(!cluster.brokers.length){
+        errors.push("No broker under Cluster-"+(index+1));
+      }
+    })
+    var errorInfo = "";
+    angular.forEach(errors,function(item){
+      errorInfo+="\n"+item;
+    });
+    if(errors.length){
+      SweetAlert.swal('', errorInfo, 'warning');
+      return false;
+    }else{
+      return true;
+    }
+  }
 
 
     // ~ private methods

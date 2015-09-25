@@ -17,186 +17,188 @@
 -->
 
 <!-- Measures Summary -->
-<ng-form name="forms.cube_measure_form">
-    <div class="dataTables_wrapper form-inline no-footer" ng-if="cubeMetaFrame.measures.length > 0">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Expression</th>
-                        <th>Param Type</th>
-                        <th>Param Value</th>
-                        <th>Return Type</th>
-                        <th ng-if="state.mode=='edit'">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="measure in cubeMetaFrame.measures | filter: state.measureFilter track by $index">
-                        <td>
-                            <!--ID -->
-                            <b>{{measure.id = ($index + 1)}}</b>
-                        </td>
-                        <td>
-                            <!--Name -->
-                            <span tooltip="measure name..">{{measure.name}}</span>
-                        </td>
-                        <td>
-                            <!--Expression -->
-                            <span>{{measure.function.expression}}</span>
-                        </td>
-                        <td>
-                            <!--Param Type -->
-                            <span>{{measure.function.parameter.type}}</span>
-                        </td>
-                        <td>
-                            <!--Param Value -->
-                            <span>{{measure.function.parameter.value}}</span>
-                        </td>
-                        <td>
-                            <!--Return Type -->
-                            <span>{{measure.function.returntype}}</span>
-                        </td>
-                        <td ng-if="state.mode=='edit'">
-                            <!--Edit Button -->
-                            <button class="btn btn-xs btn-info" ng-click="addNewMeasure(measure)">
-                                <i class="fa fa-pencil"></i>
-                            </button>
-                            <!--Remove Button -->
-                            <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.measures, measure)">
-                                <i class="fa fa-trash-o"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-    </div>
-</ng-form>
+<div ng-controller="CubeMeasuresCtrl">
+  <ng-form name="forms.cube_measure_form">
+      <div class="dataTables_wrapper form-inline no-footer" ng-if="cubeMetaFrame.measures.length > 0">
+              <table class="table table-striped table-hover">
+                  <thead>
+                      <tr>
+                          <th>ID</th>
+                          <th>Name</th>
+                          <th>Expression</th>
+                          <th>Param Type</th>
+                          <th>Param Value</th>
+                          <th>Return Type</th>
+                          <th ng-if="state.mode=='edit'">Actions</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr ng-repeat="measure in cubeMetaFrame.measures | filter: state.measureFilter track by $index">
+                          <td>
+                              <!--ID -->
+                              <b>{{measure.id = ($index + 1)}}</b>
+                          </td>
+                          <td>
+                              <!--Name -->
+                              <span tooltip="measure name..">{{measure.name}}</span>
+                          </td>
+                          <td>
+                              <!--Expression -->
+                              <span>{{measure.function.expression}}</span>
+                          </td>
+                          <td>
+                              <!--Param Type -->
+                              <span>{{measure.function.parameter.type}}</span>
+                          </td>
+                          <td>
+                              <!--Param Value -->
+                              <span>{{measure.function.parameter.value}}</span>
+                          </td>
+                          <td>
+                              <!--Return Type -->
+                              <span>{{measure.function.returntype}}</span>
+                          </td>
+                          <td ng-if="state.mode=='edit'">
+                              <!--Edit Button -->
+                              <button class="btn btn-xs btn-info" ng-click="addNewMeasure(measure)">
+                                  <i class="fa fa-pencil"></i>
+                              </button>
+                              <!--Remove Button -->
+                              <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.measures, measure)">
+                                  <i class="fa fa-trash-o"></i>
+                              </button>
+                          </td>
+                      </tr>
+                  </tbody>
+              </table>
+      </div>
+  </ng-form>
 
-<!--Add Measures Button-->
-<div class="form-group">
-    <button class="btn btn-sm btn-info" ng-click="addNewMeasure()" ng-show="state.mode=='edit' && !newMeasure">
-        <i class="fa fa-plus"></i> Measure
-    </button>
+  <!--Add Measures Button-->
+  <div class="form-group">
+      <button class="btn btn-sm btn-info" ng-click="addNewMeasure()" ng-show="state.mode=='edit' && !newMeasure">
+          <i class="fa fa-plus"></i> Measure
+      </button>
+  </div>
+
+  <!--Edit Measure-->
+  <ng-form name="edit_mes_form">
+  <div class="box box-solid" ng-if="newMeasure">
+      <div class="box-header">
+          <h4 class="box-title text-info">Edit Measure</h4>
+      </div>
+      <div class="box-body">
+          <div class="row">
+              <div class="col-xs-8">
+                      <!--Name-->
+                      <div class="form-group">
+                          <div class="row">
+                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Name</b></label>
+                              <div class="col-xs-12 col-sm-6">
+                                  <input type="text" placeholder="Name.." class="form-control"
+                                      tooltip="measure name.." tooltip-trigger="focus"
+                                      ng-model="newMeasure.name" required />
+                              </div>
+                          </div>
+                      </div>
+                      <!--Expression-->
+                      <div class="form-group">
+                          <div class="row">
+                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Expression</b></label>
+                              <div class="col-xs-12 col-sm-6">
+                                  <select class="form-control"
+                                      ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:cubeConfig.dftSelections.measureExpression" chosen ng-model="newMeasure.function.expression" required
+                                      ng-change="measureReturnTypeUpdate();"
+                                      ng-options="me as me for me in cubeConfig.measureExpressions">
+                                      <option value=""></option>
+                                  </select>
+                              </div>
+                          </div>
+                      </div>
+                      <!--Param Type-->
+                      <div class="form-group">
+                          <div class="row">
+                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Type</b></label>
+                              <div class="col-xs-12 col-sm-6">
+                                  <select class="form-control" ng-if="newMeasure.function.expression != 'COUNT'"
+                                      ng-init="newMeasure.function.parameter.type=(!!newMeasure.function.parameter.type)?newMeasure.function.parameter.type: 'column' "
+                                      chosen ng-model="newMeasure.function.parameter.type" required
+                                      ng-change="measureReturnTypeUpdate();"
+                                      ng-options="mpt as mpt for mpt in cubeConfig.measureParamType">
+                                      <option value=""></option>
+                                  </select>
+                                  <span class="font-color-default"
+                                         ng-if="newMeasure.function.expression == 'COUNT'"
+                                         ng-init="newMeasure.function.parameter.type= 'constant' "><b>&nbsp;&nbsp;constant</b>
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
+                      <!--Param Value-->
+                      <div class="form-group">
+                          <div class="row">
+                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Value</b></label>
+                              <div class="col-xs-12 col-sm-6">
+                                  <span class="font-color-default"
+                                      ng-if="newMeasure.function.parameter.type == 'constant'"
+                                      ng-init="newMeasure.function.parameter.value = 1"><b>&nbsp;&nbsp;1</b></span>
+                                  <select class="form-control" chosen
+                                      ng-if="newMeasure.function.parameter.type == 'column'"
+                                      ng-model="newMeasure.function.parameter.value"
+                                      ng-change="measureReturnTypeUpdate();"
+                                      ng-options="columns.name as columns.name for columns in getMetricColumnsByTable(metaModel.model.fact_table)" >
+                                      <option value="">-- Select a Fact Table Column --</option>
+                                  </select>
+                              </div>
+                          </div>
+                      </div>
+                      <!--Return Type-->
+                      <div class="form-group">
+                          <div class="row">
+                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Return Type</b></label>
+                              <div class="col-xs-12 col-sm-6">
+                                  <select class="form-control"
+                                      ng-if="newMeasure.function.expression == 'COUNT_DISTINCT'"
+                                      ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:cubeConfig.dftSelections.distinctDataType.value"
+                                      chosen ng-model="newMeasure.function.returntype" required
+                                      ng-options="ddt.value as ddt.name for ddt in cubeConfig.distinctDataTypes">
+                                      <option value=""></option>
+                                  </select>
+                                  <span class="font-color-default"
+                                        ng-if="newMeasure.function.expression != 'COUNT_DISTINCT'"
+                                       ><b>&nbsp;&nbsp;{{newMeasure.function.returntype | uppercase}}</b>
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
+              </div>
+
+              <!--Tips-->
+              <div class="col-xs-4">
+                  <div class="box box-solid">
+                      <div class="box-header">
+                          <h4 class="box-title">Tips</h4>
+                      </div>
+                      <div class="box-body">
+                          <div class="row">
+                              <div class="col-xs-12">
+                                  <ol class="text-info">
+                                      <li>All cubes have to contain one measure for Count(1), suggest use "_Count_" as name (Has been generated automatically)</li>
+                                      <li>Only accept single column in param value with "Column" type</li>
+                                      <li>Distinct Count is approximate, please indicate Error Rate, higher accuracy degree accompanied with larger storage size and longer build time</li>
+                                  </ol>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <div class="box-footer">
+          <button class="btn btn-sm btn-info" ng-disabled="edit_mes_form.$invalid"
+                  ng-click="saveNewMeasure()" ng-show="state.mode=='edit'">OK</button>
+          <button class="btn btn-link" ng-click="clearNewMeasure()">Cancel</button>
+      </div>
+  </div>
+  </ng-form>
 </div>
-
-<!--Edit Measure-->
-<ng-form name="edit_mes_form">
-<div class="box box-solid" ng-if="newMeasure">
-    <div class="box-header">
-        <h4 class="box-title text-info">Edit Measure</h4>
-    </div>
-    <div class="box-body">
-        <div class="row">
-            <div class="col-xs-8">
-                    <!--Name-->
-                    <div class="form-group">
-                        <div class="row">
-                            <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Name</b></label>
-                            <div class="col-xs-12 col-sm-6">
-                                <input type="text" placeholder="Name.." class="form-control"
-                                    tooltip="measure name.." tooltip-trigger="focus"
-                                    ng-model="newMeasure.name" required />
-                            </div>
-                        </div>
-                    </div>
-                    <!--Expression-->
-                    <div class="form-group">
-                        <div class="row">
-                            <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Expression</b></label>
-                            <div class="col-xs-12 col-sm-6">
-                                <select class="form-control"
-                                    ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:cubeConfig.dftSelections.measureExpression" chosen ng-model="newMeasure.function.expression" required
-                                    ng-change="measureReturnTypeUpdate();"
-                                    ng-options="me as me for me in cubeConfig.measureExpressions">
-                                    <option value=""></option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <!--Param Type-->
-                    <div class="form-group">
-                        <div class="row">
-                            <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Type</b></label>
-                            <div class="col-xs-12 col-sm-6">
-                                <select class="form-control" ng-if="newMeasure.function.expression != 'COUNT'"
-                                    ng-init="newMeasure.function.parameter.type=(!!newMeasure.function.parameter.type)?newMeasure.function.parameter.type: 'column' "
-                                    chosen ng-model="newMeasure.function.parameter.type" required
-                                    ng-change="measureReturnTypeUpdate();"
-                                    ng-options="mpt as mpt for mpt in cubeConfig.measureParamType">
-                                    <option value=""></option>
-                                </select>
-                                <span class="font-color-default"
-                                       ng-if="newMeasure.function.expression == 'COUNT'"
-                                       ng-init="newMeasure.function.parameter.type= 'constant' "><b>&nbsp;&nbsp;constant</b>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <!--Param Value-->
-                    <div class="form-group">
-                        <div class="row">
-                            <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Value</b></label>
-                            <div class="col-xs-12 col-sm-6">
-                                <span class="font-color-default"
-                                    ng-if="newMeasure.function.parameter.type == 'constant'"
-                                    ng-init="newMeasure.function.parameter.value = 1"><b>&nbsp;&nbsp;1</b></span>
-                                <select class="form-control" chosen
-                                    ng-if="newMeasure.function.parameter.type == 'column'"
-                                    ng-model="newMeasure.function.parameter.value"
-                                    ng-change="measureReturnTypeUpdate();"
-                                    ng-options="columns.name as columns.name for columns in getMetricColumnsByTable(metaModel.model.fact_table)" >
-                                    <option value="">-- Select a Fact Table Column --</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <!--Return Type-->
-                    <div class="form-group">
-                        <div class="row">
-                            <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Return Type</b></label>
-                            <div class="col-xs-12 col-sm-6">
-                                <select class="form-control"
-                                    ng-if="newMeasure.function.expression == 'COUNT_DISTINCT'"
-                                    ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:cubeConfig.dftSelections.distinctDataType.value"
-                                    chosen ng-model="newMeasure.function.returntype" required
-                                    ng-options="ddt.value as ddt.name for ddt in cubeConfig.distinctDataTypes">
-                                    <option value=""></option>
-                                </select>
-                                <span class="font-color-default"
-                                      ng-if="newMeasure.function.expression != 'COUNT_DISTINCT'"
-                                     ><b>&nbsp;&nbsp;{{newMeasure.function.returntype | uppercase}}</b>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-
-            <!--Tips-->
-            <div class="col-xs-4">
-                <div class="box box-solid">
-                    <div class="box-header">
-                        <h4 class="box-title">Tips</h4>
-                    </div>
-                    <div class="box-body">
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <ol class="text-info">
-                                    <li>All cubes have to contain one measure for Count(1), suggest use "_Count_" as name (Has been generated automatically)</li>
-                                    <li>Only accept single column in param value with "Column" type</li>
-                                    <li>Distinct Count is approximate, please indicate Error Rate, higher accuracy degree accompanied with larger storage size and longer build time</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="box-footer">
-        <button class="btn btn-sm btn-info" ng-disabled="edit_mes_form.$invalid"
-                ng-click="saveNewMeasure()" ng-show="state.mode=='edit'">OK</button>
-        <button class="btn btn-link" ng-click="clearNewMeasure()">Cancel</button>
-    </div>
-</div>
-</ng-form>

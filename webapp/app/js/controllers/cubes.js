@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-  .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, cubeConfig, ProjectModel, ModelService, MetaModel, CubeList,modelsManager,cubesManager) {
+  .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, cubeConfig, ProjectModel, ModelService, MetaModel, CubeList,modelsManager,cubesManager,StreamingList) {
 
     $scope.cubeConfig = cubeConfig;
     $scope.cubeList = CubeList;
@@ -62,9 +62,21 @@ KylinApp
       $scope.loading = true;
 
       return CubeList.list(queryParam).then(function (resp) {
-        $scope.loading = false;
-        defer.resolve(resp);
-        return defer.promise;
+
+        StreamingList.list().then(function(_resp){
+          angular.forEach($scope.cubeList.cubes,function(item,index){
+            var result = StreamingList.checkCubeExist(item.name);
+            if(result.exist == true){
+              item.streaming = result.streaming;
+              var kfkConfig = StreamingList.getKafkaConfig(result.streaming.name);
+              item.kfkConfig = kfkConfig;
+            }
+          })
+          $scope.loading = false;
+          defer.resolve(resp);
+          return defer.promise;
+        })
+
       },function(resp){
         $scope.loading = false;
         defer.resolve([]);
@@ -355,7 +367,6 @@ KylinApp
     $scope.cubeEdit = function (cube) {
       $location.path("cubes/edit/" + cube.name);
     }
-
     $scope.startMerge = function (cube) {
       $scope.metaModel={
         model:modelsManager.getModelByCube(cube.name)

@@ -17,8 +17,8 @@
 */
 
 KylinApp.service('CubeList',function(CubeService,$q,AccessService){
-    var cubes=[];
     var _this = this;
+    this.cubes=[];
 
     this.list = function(queryParam){
 

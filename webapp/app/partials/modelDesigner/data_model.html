@@ -20,7 +20,7 @@
     <ng-form name="forms.data_model_form">
 
     <!-- Fact Table Name -->
-    <div class="form-group required">
+    <div class="form-group" ng-class="{'required':state.mode=='edit'}">
         <div class="row">
             <label class="col-xs-12 col-sm-2 control-label concube.detailtrol-label no-padding-right font-color-default">
                 <b>Fact Table</b>

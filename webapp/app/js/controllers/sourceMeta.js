@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-  .controller('SourceMetaCtrl', function ($scope, $cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService, $route, loadingRequest, SweetAlert, tableConfig, TableModel) {
+  .controller('SourceMetaCtrl', function ($scope, $cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService, $route, loadingRequest, SweetAlert, tableConfig, TableModel,cubeConfig) {
     var $httpDefaultCache = $cacheFactory.get('$http');
     $scope.tableModel = TableModel;
     $scope.tableModel.selectedSrcDb = [];
@@ -173,10 +173,11 @@ KylinApp
       });
     };
 
-    var StreamingSourceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig) {
+    var StreamingSourceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig) {
       $scope.streamingPrefix = "STREAMING_";
       $scope.projectName = projectName;
       $scope.tableConfig = tableConfig;
+      $scope.cubeConfig = cubeConfig;
       $scope.streaming = {
         sourceSchema: '',
         'parseResult': {}
@@ -242,12 +243,9 @@ KylinApp
           columnList = _.sortBy(columnList, function (i) { return i.type; });
         }
 
-          var timeMeasure = ['year_start','month_start','day_start','hour_start','min_start'];
+          var timeMeasure = $scope.cubeConfig.streamingAutoGenerateMeasure;
           for(var i = 0;i<timeMeasure.length;i++){
             var defaultCheck = 'Y';
-            if(timeMeasure[i]=='min_start'){
-              defaultCheck = 'N';
-            }
             columnList.push({
               'name': timeMeasure[i],
               'checked': defaultCheck,

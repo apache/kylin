@@ -20,7 +20,7 @@
     <div class="col-xs-8">
         <ng-form name="forms.cube_info_form" novalidate>
             <!--Project-->
-            <div class="form-group required">
+            <div class="form-group" ng-class="{'required':state.mode=='edit'}">
                 <div class="row">
                   <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                     <b>Model Name</b>
@@ -40,7 +40,7 @@
             </div>
 
             <!--Cube Name-->
-            <div class="form-group required">
+            <div class="form-group" ng-class="{'required':state.mode=='edit'}">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
                         <b>Cube Name</b>
