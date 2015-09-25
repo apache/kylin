@@ -624,7 +624,7 @@
 
                                 <exclude>**/.checkstyle</exclude>
                                 <!--Job's Test Data-->
-                                <exclude>**/src/test/resources/data/**</exclude>
+                                <exclude>**/src/test/resources/**</exclude>
 
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
