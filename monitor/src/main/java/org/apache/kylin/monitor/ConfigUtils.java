@@ -51,7 +51,7 @@ public class ConfigUtils {
     private ConfigUtils() {
     }
 
-    public static final String KYLIN_EXT_LOG_BASE_DIR = "ext.log.base.dir";
+    public static final String KYLIN_EXT_LOG_BASE_DIR = "kylin.monitor.ext.log.base.dir";
     public static final String KYLIN_METADATA_URL = "kylin.metadata.url";
 
     public static final String KYLIN_HOME = "KYLIN_HOME";
@@ -62,7 +62,7 @@ public class ConfigUtils {
     public static final String KYLIN_HDFS_WORKING_DIR = "kylin.hdfs.working.dir";
 
     public static final String KYLIN_MONITOR_CONF_PROP_FILE = "kylin.properties";
-    public static final String QUERY_LOG_PARSE_RESULT_TABLE = "query.log.parse.result.table";
+    public static final String QUERY_LOG_PARSE_RESULT_TABLE = "kylin.monitor.query.log.parse.result.table";
     public static final String DEFAULT_QUERY_LOG_PARSE_RESULT_TABLE = "kylin_query_log";
 
     public static final String HIVE_JDBC_CON_USERNAME = "kylin.hive.jdbc.connection.username";
@@ -72,7 +72,7 @@ public class ConfigUtils {
 
     public static final String DEPLOY_ENV = "deploy.env";
 
-    public static final String HIVE_JDBC_CON_URL = "kylin.hive.jdbc.connection.url";
+    public static final String HIVE_JDBC_CON_URL = "kylin.monitor.hive.jdbc.connection.url";
 
     public void loadMonitorParam() throws IOException {
         Properties props = new Properties();
