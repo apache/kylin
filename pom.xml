@@ -607,7 +607,6 @@
         <module>server</module>
         <module>jdbc</module>
         <module>invertedindex</module>
-        <module>streaming</module>
         <module>assembly</module>
     </modules>
 
