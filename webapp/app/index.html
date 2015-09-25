@@ -45,6 +45,7 @@
     <link rel="stylesheet" type="text/css" href="css/AdminLTE.css">
     <link rel="stylesheet" type="text/css" href="components/bootstrap-sweetalert/lib/sweet-alert.css">
     <link rel="stylesheet" type="text/css" href="components/angular-bootstrap-nav-tree/dist/abn_tree.css">
+    <link rel="stylesheet" type="text/css" href="components/angular-toggle-switch/angular-toggle-switch.css">
 
     <link rel="stylesheet/less" href="less/build.less">
     <!-- endref -->
@@ -102,6 +103,7 @@
 <script src="components/angular-underscore/angular-underscore.js"></script>
 <script src="components/jquery-ui/jquery-ui.min.js"></script>
 <script src="components/angular-ui-sortable/sortable.js"></script>
+<script src="components/angular-toggle-switch/angular-toggle-switch.js"></script>
 
 <script src="js/app.js"></script>
 <script src="js/config.js"></script>
@@ -120,6 +122,7 @@
 <script src="js/services/model.js"></script>
 
 <script src="js/services/cubes.js"></script>
+<script src="js/services/streaming.js"></script>
 <script src="js/services/graph.js"></script>
 <script src="js/services/jobs.js"></script>
 <script src="js/services/message.js"></script>
@@ -136,6 +139,8 @@
 <script src="js/model/jobConfig.js"></script>
 <script src="js/model/projectConfig.js"></script>
 <script src="js/model/tableConfig.js"></script>
+<script src="js/model/streamingModel.js"></script>
+<script src="js/model/streamingListModel.js"></script>
 <!--New GUI-->
 <script src="js/model/modelConfig.js"></script>
 
@@ -157,6 +162,7 @@
 <script src="js/controllers/job.js"></script>
 <script src="js/controllers/cube.js"></script>
 <script src="js/controllers/cubes.js"></script>
+<script src="js/controllers/streaming.js"></script>
 <script src="js/controllers/projects.js"></script>
 <script src="js/controllers/cubeEdit.js"></script>
 <script src="js/controllers/cubeSchema.js"></script>
@@ -166,14 +172,16 @@
 <script src="js/controllers/projectMeta.js"></script>
 <script src="js/controllers/cubeModel.js"></script>
 <script src="js/controllers/cubeDimensions.js"></script>
-<script src="js/controllers/cubeFilter.js"></script>
 <script src="js/controllers/cubeRefresh.js"></script>
 <script src="js/controllers/cubeAdvanceSetting.js"></script>
+<script src="js/controllers/cubeMeasures.js"></script>
 <!--New GUI-->
 <script src="js/controllers/modelSchema.js"></script>
 <script src="js/controllers/modelDimensions.js"></script>
 <script src="js/controllers/modelRefresh.js"></script>
 <script src="js/controllers/modelEdit.js"></script>
+
+<script src="js/controllers/streamingConfig.js"></script>
 
 <!--New GUI-->
 <script src="js/controllers/models.js"></script>
@@ -221,6 +229,28 @@
         <p>{{text}}</p>
     </div>
 </script>
+
+<!-- static template for cube save/update result notification -->
+<script type="text/ng-template" id="streamingResultError.html">
+  <div class="callout">
+    <h4>Error Message</h4>
+    <p>{{text}}</p>
+  </div>
+  <div class="callout callout-danger">
+    <h4>Streaming Schema</h4>
+    <pre>{{streamingSchema}}</pre>
+  </div>
+  <div class="callout callout-danger">
+    <h4>Kafka Schema</h4>
+    <pre>{{kfkSchema}}</pre>
+  </div>
+</script>
+
+<script type="text/ng-template" id="streamingResultSuccess.html">
+  <div class="callout callout-info">
+    <p>{{text}}</p>
+  </div>
+
 
 </body>
 </html>

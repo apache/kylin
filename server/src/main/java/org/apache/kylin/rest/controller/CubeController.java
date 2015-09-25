@@ -34,6 +34,7 @@ import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.exception.JobException;
@@ -46,10 +47,14 @@ import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.CubeSegmentRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
+import org.apache.kylin.rest.request.StreamingRequest;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.rest.service.KafkaConfigService;
+import org.apache.kylin.rest.service.StreamingService;
+import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,8 +75,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
- *
- * @author jianliu
  */
 @Controller
 @RequestMapping(value = "/cubes")
@@ -79,12 +82,18 @@ public class CubeController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(CubeController.class);
 
     @Autowired
+    private StreamingService streamingService;
+
+    @Autowired
+    private KafkaConfigService kafkaConfigService;
+
+    @Autowired
     private CubeService cubeService;
 
     @Autowired
     private JobService jobService;
 
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = {RequestMethod.GET})
     @ResponseBody
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return cubeService.getCubes(cubeName, projectName, modelName, limit, offset);
@@ -98,7 +107,7 @@ public class CubeController extends BasicController {
      * @throws UnknownHostException
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = {RequestMethod.GET})
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -120,7 +129,7 @@ public class CubeController extends BasicController {
      * @param notifyList
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/notify_list", method = {RequestMethod.PUT})
     @ResponseBody
     public void updateNotifyList(@PathVariable String cubeName, @RequestBody List<String> notifyList) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -138,7 +147,7 @@ public class CubeController extends BasicController {
 
     }
 
-    @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/cost", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
         try {
@@ -150,7 +159,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/coprocessor", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/coprocessor", method = {RequestMethod.PUT})
     @ResponseBody
     public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
         try {
@@ -168,7 +177,7 @@ public class CubeController extends BasicController {
      *
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName, @RequestParam(value = "lookupTable") String lookupTable) {
         try {
@@ -186,7 +195,7 @@ public class CubeController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/rebuild", method = {RequestMethod.PUT})
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest jobBuildRequest) {
         try {
@@ -203,7 +212,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/disable", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance disableCube(@PathVariable String cubeName) {
         try {
@@ -221,7 +230,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/purge", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance purgeCube(@PathVariable String cubeName) {
         try {
@@ -239,7 +248,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/enable", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance enableCube(@PathVariable String cubeName) {
         try {
@@ -256,7 +265,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{cubeName}", method = {RequestMethod.DELETE})
     @ResponseBody
     public void deleteCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -264,43 +273,125 @@ public class CubeController extends BasicController {
             throw new NotFoundException("Cube with name " + cubeName + " not found..");
         }
 
+        //drop related StreamingConfig KafkaConfig if exist
+        try {
+            List<StreamingConfig> configs= streamingService.listAllStreamingConfigs(cubeName);
+            for(StreamingConfig config:configs){
+                try {
+                    streamingService.dropStreamingConfig(config);
+                } catch (IOException e) {
+                    logger.error(e.getLocalizedMessage(), e);
+                    throw new InternalErrorException("Failed to delete StreamingConfig. " + " Caused by: " + e.getMessage(), e);
+                }
+                try {
+                    KafkaConfig kfkConfig = kafkaConfigService.getKafkaConfig(config.getName());
+                    kafkaConfigService.dropKafkaConfig(kfkConfig);
+                } catch (IOException e) {
+                    throw new InternalErrorException("Failed to delete KafkaConfig. " + " Caused by: " + e.getMessage(), e);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //drop Cube
         try {
             cubeService.deleteCube(cube);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to delete cube. " + " Caused by: " + e.getMessage(), e);
         }
+
     }
 
     /**
-     *save cubeDesc
+     * save cubeDesc
      *
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.POST })
+    @RequestMapping(value = "", method = {RequestMethod.POST})
     @ResponseBody
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
 
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
         if (desc == null) {
+            cubeRequest.setMessage("CubeDesc is null.");
             return cubeRequest;
         }
-
         String name = CubeService.getCubeNameFromDesc(desc.getName());
         if (StringUtils.isEmpty(name)) {
             logger.info("Cube name should not be empty.");
             throw new BadRequestException("Cube name should not be empty.");
         }
 
+        CubeInstance cubeInstance;
+
         try {
             desc.setUuid(UUID.randomUUID().toString());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
-            cubeService.createCubeAndDesc(name, projectName, desc);
+            cubeInstance = cubeService.createCubeAndDesc(name, projectName, desc);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
+
+        //streaming Cube
+        if (cubeRequest.getStreamingCube().equals("true")) {
+            StreamingConfig streamingConfig = deserializeStreamingDesc(cubeRequest);
+            KafkaConfig kafkaConfig = deserializeKafkaDesc(cubeRequest);
+            if (streamingConfig == null) {
+                cubeRequest.setMessage("No StreamingConfig info defined.");
+                return cubeRequest;
+            }
+            if (kafkaConfig == null) {
+                cubeRequest.setMessage("No KafkaConfig info defined.");
+                return cubeRequest;
+            }
+            if (StringUtils.isEmpty(streamingConfig.getName())) {
+                logger.info("StreamingConfig Name should not be empty.");
+                throw new BadRequestException("StremingConfig name should not be empty.");
+            }
+
+            if (StringUtils.isEmpty(kafkaConfig.getName())) {
+                logger.info("KafkaConfig Name should not be empty.");
+                throw new BadRequestException("KafkaConfig name should not be empty.");
+            }
+
+            try {
+                streamingConfig.setUuid(UUID.randomUUID().toString());
+                streamingService.createStreamingConfig(streamingConfig);
+
+            } catch (IOException e) {
+                try {
+                    cubeService.deleteCube(cubeInstance);
+                } catch (Exception ex) {
+                    throw new InternalErrorException("Failed to rollback on delete cube. " + " Caused by: " + e.getMessage(), ex);
+                }
+                logger.error("Failed to save StreamingConfig:" + e.getLocalizedMessage(), e);
+                throw new InternalErrorException("Failed to save StreamingConfig: " + e.getLocalizedMessage());
+            }
+            try {
+                kafkaConfig.setUuid(UUID.randomUUID().toString());
+                kafkaConfigService.createKafkaConfig(kafkaConfig);
+            } catch (IOException e) {
+                try {
+                    streamingService.dropStreamingConfig(streamingConfig);
+                } catch (IOException e1) {
+                    throw new InternalErrorException("StreamingConfig is created, but failed to create KafkaConfig: " + e.getLocalizedMessage());
+                }
+
+                try {
+                    cubeService.deleteCube(cubeInstance);
+                } catch (Exception ex) {
+                    throw new InternalErrorException("Failed to rollback on delete cube. " + " Caused by: " + e.getMessage(), ex);
+                }
+                logger.error("Failed to save KafkaConfig:" + e.getLocalizedMessage(), e);
+                throw new InternalErrorException("Failed to save KafkaConfig: " + e.getLocalizedMessage());
+            }
+
+        }
+
 
         cubeRequest.setUuid(desc.getUuid());
         cubeRequest.setSuccessful(true);
@@ -314,7 +405,7 @@ public class CubeController extends BasicController {
      * @throws JsonProcessingException
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.PUT })
+    @RequestMapping(value = "", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
 
@@ -356,6 +447,46 @@ public class CubeController extends BasicController {
             logger.warn("Cube " + desc.getName() + " fail to update because " + desc.getError());
             updateRequest(cubeRequest, false, omitMessage(desc.getError()));
         }
+
+        //streaming Cube
+        if (cubeRequest.getStreamingCube().equals("true")) {
+            StreamingConfig streamingConfig = deserializeStreamingDesc(cubeRequest);
+            KafkaConfig kafkaConfig = deserializeKafkaDesc(cubeRequest);
+            if (streamingConfig == null) {
+                cubeRequest.setMessage("No StreamingConfig info to update.");
+                return cubeRequest;
+            }
+            if (kafkaConfig == null) {
+                cubeRequest.setMessage("No KafkaConfig info to update.");
+                return cubeRequest;
+            }
+            if (StringUtils.isEmpty(streamingConfig.getName())) {
+                logger.info("StreamingConfig Name should not be empty.");
+                throw new BadRequestException("StremingConfig name should not be empty.");
+            }
+
+            if (StringUtils.isEmpty(kafkaConfig.getName())) {
+                logger.info("KafkaConfig Name should not be empty.");
+                throw new BadRequestException("KafkaConfig name should not be empty.");
+            }
+
+            try {
+                streamingService.updateStreamingConfig(streamingConfig);
+
+            } catch (IOException e) {
+                logger.error("Failed to update StreamingConfig:" + e.getLocalizedMessage(), e);
+                throw new InternalErrorException("Failed to update StreamingConfig: " + e.getLocalizedMessage());
+            }
+            try {
+                kafkaConfigService.updateKafkaConfig(kafkaConfig);
+            } catch (IOException e) {
+                logger.error("Failed to update KafkaConfig:" + e.getLocalizedMessage(), e);
+                throw new InternalErrorException("Failed to update KafkaConfig: " + e.getLocalizedMessage());
+            }
+
+        }
+
+
         String descData = JsonUtil.writeValueAsIndentString(desc);
         cubeRequest.setCubeDescData(descData);
         cubeRequest.setSuccessful(true);
@@ -363,12 +494,12 @@ public class CubeController extends BasicController {
     }
 
     /**
-     *get Hbase Info
+     * get Hbase Info
      *
      * @return true
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/hbase", method = {RequestMethod.GET})
     @ResponseBody
     public List<HBaseResponse> getHBaseInfo(@PathVariable String cubeName) {
         List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
@@ -405,7 +536,7 @@ public class CubeController extends BasicController {
         return hbase;
     }
 
-    @RequestMapping(value = "/{cubeName}/segments", method = { RequestMethod.POST })
+    @RequestMapping(value = "/{cubeName}/segments", method = {RequestMethod.POST})
     @ResponseBody
     public CubeSegmentRequest appendSegment(@PathVariable String cubeName, @RequestBody CubeSegmentRequest cubeSegmentRequest) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -470,12 +601,49 @@ public class CubeController extends BasicController {
         return desc;
     }
 
+    private StreamingConfig deserializeStreamingDesc(CubeRequest cubeRequest) {
+        StreamingConfig desc = null;
+        try {
+            logger.debug("Saving StreamingConfig " + cubeRequest.getStreamingData());
+            desc = JsonUtil.readValue(cubeRequest.getStreamingData(), StreamingConfig.class);
+        } catch (JsonParseException e) {
+            logger.error("The StreamingConfig definition is not valid.", e);
+            updateRequest(cubeRequest, false, e.getMessage());
+        } catch (JsonMappingException e) {
+            logger.error("The data StreamingConfig definition is not valid.", e);
+            updateRequest(cubeRequest, false, e.getMessage());
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
+        }
+        return desc;
+    }
+
+
+    private KafkaConfig deserializeKafkaDesc(CubeRequest cubeRequest) {
+        KafkaConfig desc = null;
+        try {
+            logger.debug("Saving KafkaConfig " + cubeRequest.getKafkaData());
+            desc = JsonUtil.readValue(cubeRequest.getKafkaData(), KafkaConfig.class);
+        } catch (JsonParseException e) {
+            logger.error("The KafkaConfig definition is not valid.", e);
+            updateRequest(cubeRequest, false, e.getMessage());
+        } catch (JsonMappingException e) {
+            logger.error("The data KafkaConfig definition is not valid.", e);
+            updateRequest(cubeRequest, false, e.getMessage());
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
+        }
+        return desc;
+    }
+
     /**
      * @return
      */
     private String omitMessage(List<String> errors) {
         StringBuffer buffer = new StringBuffer();
-        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext();) {
+        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext(); ) {
             String string = (String) iterator.next();
             buffer.append(string);
             buffer.append("\n");
@@ -497,4 +665,11 @@ public class CubeController extends BasicController {
         this.jobService = jobService;
     }
 
+    public void setStreamingService(StreamingService streamingService) {
+        this.streamingService = streamingService;
+    }
+
+    public void setKafkaConfigService(KafkaConfigService kafkaConfigService) {
+        this.kafkaConfigService = kafkaConfigService;
+    }
 }

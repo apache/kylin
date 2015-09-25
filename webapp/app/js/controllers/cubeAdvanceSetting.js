@@ -98,4 +98,32 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     })
   }
 
+
+  $scope.addNewRowkeyColumn = function () {
+    $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
+      "column": "",
+      "length": 0,
+      "dictionary": "true",
+      "mandatory": false
+    });
+  };
+
+  $scope.addNewAggregationGroup = function () {
+    $scope.cubeMetaFrame.rowkey.aggregation_groups.push([]);
+  };
+
+  $scope.refreshAggregationGroup = function (list, index, aggregation_groups) {
+    if (aggregation_groups) {
+      list[index] = aggregation_groups;
+    }
+  };
+
+  $scope.removeElement = function (arr, element) {
+    var index = arr.indexOf(element);
+    if (index > -1) {
+      arr.splice(index, 1);
+    }
+  };
+
+
 });

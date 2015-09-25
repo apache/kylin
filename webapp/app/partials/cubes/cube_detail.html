@@ -46,19 +46,17 @@
             ng-if="userService.hasRole('ROLE_ADMIN')">
             <a href="" ng-click="cube.visiblePage='hbase';getHbaseInfo(cube)">HBase</a>
         </li>
-
     </ul>
 
     <div class="cube-detail" ng-if="!cube.visiblePage || cube.visiblePage=='metadata'">
         <div ng-include="'partials/cubes/cube_schema.html'" ng-controller="CubeSchemaCtrl"
-             ng-init="state={mode:'view', cubeName:cube.name}"></div>
+             ng-init="state={mode:'view', cubeName:cube.name};cubeState={isStreaming:(!!cube.streaming)?true:false}"></div>
     </div>
 
     <div ng-show="cube.visiblePage=='sql'" class="cube-detail">
         <div ng-if="cube.sql">
             <pre style="background-color: white;border: 0px">{{cube.sql}}</pre>
         </div>
-
         <div ng-if="!cube.sql">
             <span calss="text-info">No SQL GENERATED.</span>
         </div>
@@ -101,7 +99,7 @@
         </div>
     </div>
 
-    <div class="cube-detail" ng-show="cube.visiblePage=='hbase'">
+  <div class="cube-detail" ng-show="cube.visiblePage=='hbase'">
         <div style="margin: 15px;">
             <div ng-repeat="table in cube.hbase">
                 <h5><b>HTable:</b> {{table.tableName}}</h5>
@@ -115,10 +113,12 @@
             <div ng-if="cube.hbase">
                 <div class="hr hr8 hr-double hr-dotted"></div>
                 <h5><b>Total Size:</b> <span class="red">{{cube.totalSize | bytes:2}}</span></h5>
+                <h5><b>Total Number:</b> <span class="red">{{cube.hbase.length}}</span></h5>
             </div>
             <div ng-if="cube.hbase.length == 0">
                 <h5>No HBase Info.</h5>
             </div>
         </div>
     </div>
-</div>
+  </div>
+

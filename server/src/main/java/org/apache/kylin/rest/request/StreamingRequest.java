@@ -25,6 +25,14 @@ import java.lang.String;public class StreamingRequest {
 
     private String tableData;
 
+    private String streamingConfig;
+
+    private String kafkaConfig;
+
+    private boolean successful;
+
+    private String message;
+
     public String getProject() {
         return project;
     }
@@ -40,4 +48,37 @@ import java.lang.String;public class StreamingRequest {
     public void setTableData(String tableData) {
         this.tableData = tableData;
     }
+
+    public boolean isSuccessful() {
+        return successful;
+    }
+
+    public void setSuccessful(boolean successful) {
+        this.successful = successful;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getStreamingConfig() {
+        return streamingConfig;
+    }
+
+    public void setStreamingConfig(String streamingConfig) {
+        this.streamingConfig = streamingConfig;
+    }
+
+    public String getKafkaConfig() {
+        return kafkaConfig;
+    }
+
+    public void setKafkaConfig(String kafkaConfig) {
+        this.kafkaConfig = kafkaConfig;
+    }
+
 }

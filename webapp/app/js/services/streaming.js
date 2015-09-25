@@ -16,8 +16,13 @@
  * limitations under the License.
 */
 
-'use strict';
-
-KylinApp.controller('CubeFilterCtrl', function ($scope, $modal,cubeConfig,MetaModel) {
-
-});
+KylinApp.factory('StreamingService', ['$resource', function ($resource, config) {
+    return $resource(Config.service.url + 'streaming/:streamingId/:propName/:propValue/:action', {}, {
+        list: {method: 'GET', params: {}, isArray: true},
+        'getConfig': {method: 'GET',params: {action:'getConfig'},isArray:true},
+        'getKfkConfig': {method: 'GET',params: {action:'getKfkConfig'},isArray:true},
+        drop: {method: 'DELETE', params: {}, isArray: false},
+        save: {method: 'POST', params: {}, isArray: false},
+        update: {method: 'PUT', params: {}, isArray: false}
+    });
+}]);

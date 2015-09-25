@@ -132,7 +132,11 @@
                     <div class="col-xs-12">
                         <ol class="text-info">
                             <li>Partition date column not required,leave as default if cube always need full build</li>
-                            <li>Partition date column will select 'date' or 'string' type column from fact table</li>
+                            <li>Partition date column will select 'date' type column from fact table</li>
+                            <li>Where clause to filter data from source</li>
+                            <li>Do not include date column which will be used for incremental refresh</li>
+                            <li>Do not include "Where"</li>
+                            <li>Please verify SQL when finish cube design from SQL view of cube</li>
                         </ol>
                     </div>
                 </div>

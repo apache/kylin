@@ -117,7 +117,7 @@ public class ModelController extends BasicController {
         try {
             modelDesc = modelService.updateModelAndDesc(modelDesc);
         } catch (AccessDeniedException accessDeniedException) {
-            throw new ForbiddenException("You don't have right to update this cube.");
+            throw new ForbiddenException("You don't have right to update this model.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());

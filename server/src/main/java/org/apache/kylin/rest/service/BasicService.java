@@ -43,6 +43,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -56,6 +57,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
+import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,6 +167,14 @@ public abstract class BasicService {
 
     public final CubeManager getCubeManager() {
         return CubeManager.getInstance(getConfig());
+    }
+
+    public final StreamingManager getSreamingManager() {
+        return StreamingManager.getInstance(getConfig());
+    }
+
+    public final KafkaConfigManager getKafkaManager() throws IOException {
+        return  KafkaConfigManager.getInstance(getConfig());
     }
 
     public final CubeDescManager getCubeDescManager() {
