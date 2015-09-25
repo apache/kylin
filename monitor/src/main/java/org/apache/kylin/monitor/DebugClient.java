@@ -39,7 +39,7 @@ public class DebugClient {
         // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
         ConfigUtils.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
 
-        //set log base dir ,will also get from $KYLIN_HOME/tomcat/logs and config [ext.log.base.dir] in kylin.properties
+        //set log base dir ,will also get from $KYLIN_HOME/tomcat/logs and config [kylin.monitor.ext.log.base.dir] in kylin.properties
         System.setProperty(ConfigUtils.KYLIN_LOG_CONF_HOME, "../server/logs");
 
         //get kylin.properties ,if not exist will get from $KYLIN_HOME/conf/

@@ -77,7 +77,7 @@ public class HiveJdbcClient {
             monitorConfig.loadMonitorParam();
             QUERY_LOG_TABLE_NAME = monitorConfig.getQueryLogResultTable();
             if (StringUtils.isEmpty(QUERY_LOG_TABLE_NAME)) {
-                logger.error("table name not defined ,please set param [query.log.parse.result.table] in kylin.properties");
+                logger.error("table name not defined ,please set param [kylin.monitor.query.log.parse.result.table] in kylin.properties");
             }
 
         } catch (Exception e) {
