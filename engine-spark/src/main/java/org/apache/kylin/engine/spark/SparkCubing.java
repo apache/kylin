@@ -350,14 +350,7 @@ public class SparkCubing extends AbstractSparkApplication {
         Preconditions.checkArgument(!FileSystem.get(conf).exists(path));
         String url = conf.get("fs.defaultFS") + path.toString();
         System.out.println("use " + url + " as hfile");
-        List<MeasureDesc> measuresDescs = Lists.newArrayList();
-        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
-            for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
-                for (MeasureDesc measure : colDesc.getMeasures()) {
-                    measuresDescs.add(measure);
-                }
-            }
-        }
+        List<MeasureDesc> measuresDescs = cubeDesc.getMeasures();
         final int measureSize = measuresDescs.size();
         final String[] dataTypes = new String[measureSize];
         for (int i = 0; i < dataTypes.length; i++) {
@@ -367,39 +360,7 @@ public class SparkCubing extends AbstractSparkApplication {
         writeToHFile2(javaPairRDD, dataTypes, measureSize, aggs, splitKeys, conf, url);
         return url;
     }
-
-    private void writeToHFile(final JavaPairRDD<byte[], byte[]> javaPairRDD, final String[] dataTypes, final int measureSize, final MeasureAggregators aggs, final byte[][] splitKeys, final Configuration conf, final String hFileLocation) {
-        javaPairRDD.reduceByKey(new Function2<byte[], byte[], byte[]>() {
-
-            @Override
-            public byte[] call(byte[] v1, byte[] v2) throws Exception {
-                MeasureCodec codec = new MeasureCodec(dataTypes);
-                Object[] input = new Object[measureSize];
-                Object[] result = new Object[measureSize];
-
-                codec.decode(ByteBuffer.wrap(v1), input);
-                aggs.aggregate(input);
-                codec.decode(ByteBuffer.wrap(v2), input);
-                aggs.aggregate(input);
-
-                aggs.collectStates(result);
-                final ByteBuffer buffer = ByteBuffer.allocate(Math.max(v1.length, v2.length));
-                buffer.clear();
-                codec.encode(result, buffer);
-                byte[] bytes = new byte[buffer.position()];
-                System.arraycopy(buffer.array(), buffer.arrayOffset(), bytes, 0, buffer.position());
-                return bytes;
-            }
-        }).sortByKey(UnsignedBytes.lexicographicalComparator()).mapToPair(new PairFunction<Tuple2<byte[], byte[]>, ImmutableBytesWritable, KeyValue>() {
-            @Override
-            public Tuple2<ImmutableBytesWritable, KeyValue> call(Tuple2<byte[], byte[]> tuple2) throws Exception {
-                ImmutableBytesWritable key = new ImmutableBytesWritable(tuple2._1());
-                KeyValue value = new KeyValue(tuple2._1(), "F1".getBytes(), "M".getBytes(), tuple2._2());
-                return new Tuple2(key, value);
-            }
-        }).saveAsNewAPIHadoopFile(hFileLocation, ImmutableBytesWritable.class, KeyValue.class, HFileOutputFormat.class, conf);
-    }
-
+    
     private void writeToHFile2(final JavaPairRDD<byte[], byte[]> javaPairRDD, final String[] dataTypes, final int measureSize, final MeasureAggregators aggs, final byte[][] splitKeys, final Configuration conf, final String hFileLocation) {
         javaPairRDD.repartitionAndSortWithinPartitions(new Partitioner() {
             @Override
