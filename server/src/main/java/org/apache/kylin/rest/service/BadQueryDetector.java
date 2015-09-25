@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.rest.request.SQLRequest;
@@ -36,19 +37,21 @@ public class BadQueryDetector extends Thread {
     private final long detectionInterval;
     private final int alertMB;
     private final int alertRunningSec;
+    private final int killRunningSec;
 
     private ArrayList<Notifier> notifiers = new ArrayList<Notifier>();
 
     public BadQueryDetector() {
-        this(60 * 1000, 100, 60); // 1 minute, 100 MB, 60 seconds
+        this(60 * 1000, 100, 60, 5 * 60); // 1 minute, 100 MB, 60 seconds, 5 minutes
     }
 
-    public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec) {
+    public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec, int killRunningSec) {
         super("BadQueryDetector");
         this.setDaemon(true);
         this.detectionInterval = detectionInterval;
         this.alertMB = alertMB;
         this.alertRunningSec = alertRunningSec;
+        this.killRunningSec = killRunningSec;
 
         this.notifiers.add(new Notifier() {
             @Override
@@ -121,15 +124,6 @@ public class BadQueryDetector extends Thread {
         ArrayList<Entry> entries = new ArrayList<Entry>(runningQueries.values());
         Collections.sort(entries);
         
-        // report if low memory
-        if (getSystemAvailMB() < alertMB) {
-            logger.info("System free memory less than " + alertMB + " MB. " + entries.size() + " queries running.");
-            for (int i = 0; i < entries.size(); i++) {
-                Entry e = entries.get(i);
-                notify("Low mem", (int) ((now - e.startTime) / 1000), e.sqlRequest.getSql());
-            }
-        }
-
         // report if query running long
         for (Entry e : entries) {
             int runningSec = (int) ((now - e.startTime) / 1000);
@@ -139,6 +133,27 @@ public class BadQueryDetector extends Thread {
                 break; // entries are sorted by startTime
             }
         }
+
+        // report if low memory
+        if (getSystemAvailMB() < alertMB) {
+            logger.info("System free memory less than " + alertMB + " MB. " + entries.size() + " queries running.");
+            
+            for (Map.Entry<Thread, Entry> mapEntry : runningQueries.entrySet()) {
+                Entry e = mapEntry.getValue();
+                int duration = (int) ((now - e.startTime) / 1000);
+                if (duration > killRunningSec) {
+                    notify("Kill", duration, e.sqlRequest.getSql());
+                    Thread queryThread = mapEntry.getKey();
+                    killQueryThread(queryThread);
+                } else {
+                    notify("Low mem", duration, e.sqlRequest.getSql());
+                }
+            }
+        }
+    }
+    
+    private void killQueryThread(Thread thread) {
+        thread.interrupt();
     }
 
     public static final int ONE_MB = 1024 * 1024;
