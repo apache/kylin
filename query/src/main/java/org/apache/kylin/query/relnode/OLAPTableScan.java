@@ -47,6 +47,7 @@ import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.rel.rules.FilterProjectTransposeRule;
 import org.apache.calcite.rel.rules.JoinCommuteRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
+import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -123,11 +124,21 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.addRule(OLAPLimitRule.INSTANCE);
         planner.addRule(OLAPSortRule.INSTANCE);
 
+        // CalcitePrepareImpl.CONSTANT_REDUCTION_RULES
+        planner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
+        planner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
+        planner.addRule(ReduceExpressionsRule.CALC_INSTANCE);
+        planner.addRule(ReduceExpressionsRule.JOIN_INSTANCE);
+        // the ValuesReduceRule breaks query test somehow...
+        //        planner.addRule(ValuesReduceRule.FILTER_INSTANCE);
+        //        planner.addRule(ValuesReduceRule.PROJECT_FILTER_INSTANCE);
+        //        planner.addRule(ValuesReduceRule.PROJECT_INSTANCE);
+
         // since join is the entry point, we can't push filter past join
         planner.removeRule(FilterJoinRule.FILTER_ON_JOIN);
         planner.removeRule(FilterJoinRule.JOIN);
 
-        // TODO : since we don't have statistic of table, the optimization of join is too cost
+        // since we don't have statistic of table, the optimization of join is too cost
         planner.removeRule(JoinCommuteRule.INSTANCE);
         planner.removeRule(JoinPushThroughJoinRule.LEFT);
         planner.removeRule(JoinPushThroughJoinRule.RIGHT);

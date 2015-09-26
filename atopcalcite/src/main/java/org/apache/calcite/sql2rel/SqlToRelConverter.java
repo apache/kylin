@@ -1,19 +1,13 @@
 /*
- * OVERRIDE POINT:
- * - getInSubqueryThreshold(), was `20`, now `Integer.MAX_VALUE`
- * - isTrimUnusedFields(), override to false
- * - AggConverter.visit(SqlCall), skip column reading for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
- */
-
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,26 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.calcite.sql2rel;
-
-import static org.apache.calcite.sql.SqlUtil.stripAs;
-import static org.apache.calcite.util.Static.RESOURCE;
-
-import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.Convention;
@@ -64,6 +40,7 @@ import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.Sample;
 import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalAggregate;
@@ -167,7 +144,6 @@ import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.NumberUtil;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
-import org.apache.calcite.util.mapping.Mappings;
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import com.google.common.base.Function;
@@ -178,6 +154,32 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.apache.calcite.sql.SqlUtil.stripAs;
+import static org.apache.calcite.util.Static.RESOURCE;
+
+/*
+ * OVERRIDE POINT:
+ * - getInSubqueryThreshold(), was `20`, now `Integer.MAX_VALUE`
+ * - isTrimUnusedFields(), override to false
+ * - AggConverter.visit(SqlCall), skip column reading for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
+ */
 
 /**
  * Converts a SQL parse tree (consisting of
@@ -1448,6 +1450,12 @@ public class SqlToRelConverter {
         SqlCall aggCall = call.operand(0);
         SqlNode windowOrRef = call.operand(1);
         final SqlWindow window = validator.resolveWindow(windowOrRef, bb.scope, true);
+        // ROW_NUMBER() expects specific kind of framing.
+        if (aggCall.getOperator() == SqlStdOperatorTable.ROW_NUMBER) {
+            window.setLowerBound(SqlWindow.createUnboundedPreceding(SqlParserPos.ZERO));
+            window.setUpperBound(SqlWindow.createCurrentRow(SqlParserPos.ZERO));
+            window.setRows(SqlLiteral.createBoolean(true, SqlParserPos.ZERO));
+        }
         final SqlNodeList partitionList = window.getPartitionList();
         final ImmutableList.Builder<RexNode> partitionKeys = ImmutableList.builder();
         for (SqlNode partition : partitionList) {
@@ -1576,11 +1584,15 @@ public class SqlToRelConverter {
             RelNode rightRel = rightBlackboard.root;
             JoinRelType convertedJoinType = convertJoinType(joinType);
             RexNode conditionExp;
+            final SqlValidatorNamespace leftNamespace = validator.getNamespace(left);
+            final SqlValidatorNamespace rightNamespace = validator.getNamespace(right);
             if (isNatural) {
-                final List<String> columnList = SqlValidatorUtil.deriveNaturalJoinColumnList(validator.getNamespace(left).getRowType(), validator.getNamespace(right).getRowType());
-                conditionExp = convertUsing(leftRel, rightRel, columnList);
+                final RelDataType leftRowType = leftNamespace.getRowType();
+                final RelDataType rightRowType = rightNamespace.getRowType();
+                final List<String> columnList = SqlValidatorUtil.deriveNaturalJoinColumnList(leftRowType, rightRowType);
+                conditionExp = convertUsing(leftNamespace, rightNamespace, columnList);
             } else {
-                conditionExp = convertJoinCondition(fromBlackboard, join.getCondition(), join.getConditionType(), leftRel, rightRel);
+                conditionExp = convertJoinCondition(fromBlackboard, leftNamespace, rightNamespace, join.getCondition(), join.getConditionType(), leftRel, rightRel);
             }
 
             final RelNode joinRel = createJoin(fromBlackboard, leftRel, rightRel, conditionExp, convertedJoinType);
@@ -1776,58 +1788,9 @@ public class SqlToRelConverter {
             }
         }
 
-        final List<RexNode> extraLeftExprs = new ArrayList<>();
-        final List<RexNode> extraRightExprs = new ArrayList<>();
-        final int leftCount = leftRel.getRowType().getFieldCount();
-        final int rightCount = rightRel.getRowType().getFieldCount();
-        if (!containsGet(joinCond)) {
-            joinCond = pushDownJoinConditions(joinCond, leftCount, rightCount, extraLeftExprs, extraRightExprs);
-        }
-        if (!extraLeftExprs.isEmpty()) {
-            final List<RelDataTypeField> fields = leftRel.getRowType().getFieldList();
-            leftRel = RelOptUtil.createProject(leftRel, new AbstractList<Pair<RexNode, String>>() {
-                @Override
-                public int size() {
-                    return leftCount + extraLeftExprs.size();
-                }
+        final Join originalJoin = (Join) RelFactories.DEFAULT_JOIN_FACTORY.createJoin(leftRel, rightRel, joinCond, joinType, ImmutableSet.<String> of(), false);
 
-                @Override
-                public Pair<RexNode, String> get(int index) {
-                    if (index < leftCount) {
-                        RelDataTypeField field = fields.get(index);
-                        return Pair.<RexNode, String> of(new RexInputRef(index, field.getType()), field.getName());
-                    } else {
-                        return Pair.of(extraLeftExprs.get(index - leftCount), null);
-                    }
-                }
-            }, true);
-        }
-        if (!extraRightExprs.isEmpty()) {
-            final List<RelDataTypeField> fields = rightRel.getRowType().getFieldList();
-            final int newLeftCount = leftCount + extraLeftExprs.size();
-            rightRel = RelOptUtil.createProject(rightRel, new AbstractList<Pair<RexNode, String>>() {
-                @Override
-                public int size() {
-                    return rightCount + extraRightExprs.size();
-                }
-
-                @Override
-                public Pair<RexNode, String> get(int index) {
-                    if (index < rightCount) {
-                        RelDataTypeField field = fields.get(index);
-                        return Pair.<RexNode, String> of(new RexInputRef(index, field.getType()), field.getName());
-                    } else {
-                        return Pair.of(RexUtil.shift(extraRightExprs.get(index - rightCount), -newLeftCount), null);
-                    }
-                }
-            }, true);
-        }
-        RelNode join = createJoin(leftRel, rightRel, joinCond, joinType, ImmutableSet.<String> of());
-        if (!extraLeftExprs.isEmpty() || !extraRightExprs.isEmpty()) {
-            Mappings.TargetMapping mapping = Mappings.createShiftMapping(leftCount + extraLeftExprs.size() + rightCount + extraRightExprs.size(), 0, 0, leftCount, leftCount, leftCount + extraLeftExprs.size(), rightCount);
-            return RelOptUtil.createProject(join, mapping);
-        }
-        return join;
+        return RelOptUtil.pushDownJoinConditions(originalJoin);
     }
 
     private static boolean containsGet(RexNode node) {
@@ -1844,92 +1807,6 @@ public class SqlToRelConverter {
             return false;
         } catch (Util.FoundOne e) {
             return true;
-        }
-    }
-
-    /**
-     * Pushes down parts of a join condition. For example, given
-     * "emp JOIN dept ON emp.deptno + 1 = dept.deptno", adds a project above
-     * "emp" that computes the expression
-     * "emp.deptno + 1". The resulting join condition is a simple combination
-     * of AND, equals, and input fields.
-     */
-    private RexNode pushDownJoinConditions(RexNode node, int leftCount, int rightCount, List<RexNode> extraLeftExprs, List<RexNode> extraRightExprs) {
-        switch (node.getKind()) {
-        case AND:
-        case OR:
-        case EQUALS:
-            final RexCall call = (RexCall) node;
-            final List<RexNode> list = new ArrayList<>();
-            List<RexNode> operands = Lists.newArrayList(call.getOperands());
-            for (int i = 0; i < operands.size(); i++) {
-                RexNode operand = operands.get(i);
-                final int left2 = leftCount + extraLeftExprs.size();
-                final int right2 = rightCount + extraRightExprs.size();
-                final RexNode e = pushDownJoinConditions(operand, leftCount, rightCount, extraLeftExprs, extraRightExprs);
-                final List<RexNode> remainingOperands = Util.skip(operands, i + 1);
-                final int left3 = leftCount + extraLeftExprs.size();
-                final int right3 = rightCount + extraRightExprs.size();
-                fix(remainingOperands, left2, left3);
-                fix(list, left2, left3);
-                list.add(e);
-            }
-            if (!list.equals(call.getOperands())) {
-                return call.clone(call.getType(), list);
-            }
-            return call;
-        case INPUT_REF:
-        case LITERAL:
-            return node;
-        default:
-            ImmutableBitSet bits = RelOptUtil.InputFinder.bits(node);
-            final int mid = leftCount + extraLeftExprs.size();
-            switch (Side.of(bits, mid)) {
-            case LEFT:
-                fix(extraRightExprs, mid, mid + 1);
-                extraLeftExprs.add(node);
-                return new RexInputRef(mid, node.getType());
-            case RIGHT:
-                final int index2 = mid + rightCount + extraRightExprs.size();
-                extraRightExprs.add(node);
-                return new RexInputRef(index2, node.getType());
-            case BOTH:
-            case EMPTY:
-            default:
-                return node;
-            }
-        }
-    }
-
-    private void fix(List<RexNode> operands, int before, int after) {
-        if (before == after) {
-            return;
-        }
-        for (int i = 0; i < operands.size(); i++) {
-            RexNode node = operands.get(i);
-            operands.set(i, RexUtil.shift(node, before, after - before));
-        }
-    }
-
-    /**
-     * Categorizes whether a bit set contains bits left and right of a
-     * line.
-     */
-    enum Side {
-        LEFT, RIGHT, BOTH, EMPTY;
-
-        static Side of(ImmutableBitSet bitSet, int middle) {
-            final int firstBit = bitSet.nextSetBit(0);
-            if (firstBit < 0) {
-                return EMPTY;
-            }
-            if (firstBit >= middle) {
-                return RIGHT;
-            }
-            if (bitSet.nextSetBit(middle) < 0) {
-                return LEFT;
-            }
-            return BOTH;
         }
     }
 
@@ -1985,7 +1862,7 @@ public class SqlToRelConverter {
         return Collections.emptyList();
     }
 
-    private RexNode convertJoinCondition(Blackboard bb, SqlNode condition, JoinConditionType conditionType, RelNode leftRel, RelNode rightRel) {
+    private RexNode convertJoinCondition(Blackboard bb, SqlValidatorNamespace leftNamespace, SqlValidatorNamespace rightNamespace, SqlNode condition, JoinConditionType conditionType, RelNode leftRel, RelNode rightRel) {
         if (condition == null) {
             return rexBuilder.makeLiteral(true);
         }
@@ -2003,7 +1880,7 @@ public class SqlToRelConverter {
                 String name = id.getSimple();
                 nameList.add(name);
             }
-            return convertUsing(leftRel, rightRel, nameList);
+            return convertUsing(leftNamespace, rightNamespace, nameList);
         default:
             throw Util.unexpected(conditionType);
         }
@@ -2014,23 +1891,24 @@ public class SqlToRelConverter {
      * from NATURAL JOIN. "a JOIN b USING (x, y)" becomes "a.x = b.x AND a.y =
      * b.y". Returns null if the column list is empty.
      *
-     * @param leftRel  Left input to the join
-     * @param rightRel Right input to the join
+     * @param leftNamespace Namespace of left input to join
+     * @param rightNamespace Namespace of right input to join
      * @param nameList List of column names to join on
      * @return Expression to match columns from name list, or true if name list
      * is empty
      */
-    private RexNode convertUsing(RelNode leftRel, RelNode rightRel, List<String> nameList) {
+    private RexNode convertUsing(SqlValidatorNamespace leftNamespace, SqlValidatorNamespace rightNamespace, List<String> nameList) {
         final List<RexNode> list = Lists.newArrayList();
         for (String name : nameList) {
-            final RelDataType leftRowType = leftRel.getRowType();
-            RelDataTypeField leftField = catalogReader.field(leftRowType, name);
-            RexNode left = rexBuilder.makeInputRef(leftField.getType(), leftField.getIndex());
-            final RelDataType rightRowType = rightRel.getRowType();
-            RelDataTypeField rightField = catalogReader.field(rightRowType, name);
-            RexNode right = rexBuilder.makeInputRef(rightField.getType(), leftRowType.getFieldList().size() + rightField.getIndex());
-            RexNode equalsCall = rexBuilder.makeCall(SqlStdOperatorTable.EQUALS, left, right);
-            list.add(equalsCall);
+            List<RexNode> operands = new ArrayList<>();
+            int offset = 0;
+            for (SqlValidatorNamespace n : ImmutableList.of(leftNamespace, rightNamespace)) {
+                final RelDataType rowType = n.getRowType();
+                final RelDataTypeField field = catalogReader.field(rowType, name);
+                operands.add(rexBuilder.makeInputRef(field.getType(), offset + field.getIndex()));
+                offset += rowType.getFieldList().size();
+            }
+            list.add(rexBuilder.makeCall(SqlStdOperatorTable.EQUALS, operands));
         }
         return RexUtil.composeConjunction(rexBuilder, list, false);
     }
@@ -2865,6 +2743,7 @@ public class SqlToRelConverter {
         for (int i = 0; i < joinList.size(); i++) {
             Object o = joinList.get(i);
             if (o instanceof List) {
+                @SuppressWarnings("unchecked")
                 List<SqlNode> projectList = (List<SqlNode>) o;
                 final List<RexNode> selectList = new ArrayList<>();
                 final List<String> fieldNameList = new ArrayList<>();
@@ -2891,26 +2770,9 @@ public class SqlToRelConverter {
         RelNode ret = (RelNode) joinList.get(0);
         for (int i = 1; i < joinList.size(); i++) {
             RelNode relNode = (RelNode) joinList.get(i);
-            ret = createJoin(ret, relNode, rexBuilder.makeLiteral(true), JoinRelType.INNER, ImmutableSet.<String> of());
+            ret = RelFactories.DEFAULT_JOIN_FACTORY.createJoin(ret, relNode, rexBuilder.makeLiteral(true), JoinRelType.INNER, ImmutableSet.<String> of(), false);
         }
         return ret;
-    }
-
-    /**
-     * Factory method that creates a join.
-     * A subclass can override to use a different kind of join.
-     *
-     * @param left             Left input
-     * @param right            Right input
-     * @param condition        Join condition
-     * @param joinType         Join type
-     * @param variablesStopped Set of names of variables which are set by the
-     *                         LHS and used by the RHS and are not available to
-     *                         nodes above this LogicalJoin in the tree
-     * @return A relational expression representing a join
-     */
-    protected RelNode createJoin(RelNode left, RelNode right, RexNode condition, JoinRelType joinType, Set<String> variablesStopped) {
-        return LogicalJoin.create(left, right, condition, joinType, variablesStopped);
     }
 
     private void convertSelectList(Blackboard bb, SqlSelect select, List<SqlNode> orderList) {
@@ -3778,6 +3640,10 @@ public class SqlToRelConverter {
                 // for now do not detect aggregates in subqueries.
                 return null;
             }
+            // ignore window aggregates and ranking functions (associated with OVER operator)
+            if (call.getOperator().getKind() == SqlKind.OVER) {
+                return null;
+            }
             if (call.getOperator().isAggregator()) {
                 translateAgg(call, null, call);
                 return null;
@@ -4066,7 +3932,7 @@ public class SqlToRelConverter {
                     exprs.set(0, reinterpretCast ? rexBuilder.makeReinterpretCast(histogramType, exprs.get(0), rexBuilder.makeLiteral(false)) : rexBuilder.makeCast(histogramType, exprs.get(0)));
                 }
 
-                RexCallBinding bind = new RexCallBinding(rexBuilder.getTypeFactory(), SqlStdOperatorTable.HISTOGRAM_AGG, exprs);
+                RexCallBinding bind = new RexCallBinding(rexBuilder.getTypeFactory(), SqlStdOperatorTable.HISTOGRAM_AGG, exprs, ImmutableList.<RelCollation> of());
 
                 RexNode over = rexBuilder.makeOver(SqlStdOperatorTable.HISTOGRAM_AGG.inferReturnType(bind), SqlStdOperatorTable.HISTOGRAM_AGG, exprs, partitionKeys, orderKeys, lowerBound, upperBound, window.isRows(), window.isAllowPartial(), false);
 
@@ -4151,6 +4017,10 @@ public class SqlToRelConverter {
 
         @Override
         public Void visit(SqlCall call) {
+            // ignore window aggregates and ranking functions (associated with OVER operator)
+            if (call.getOperator().getKind() == SqlKind.OVER) {
+                return null;
+            }
             if (call.getOperator().isAggregator()) {
                 list.add(call);
                 return null;

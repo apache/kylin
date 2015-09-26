@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -213,13 +214,32 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         }
     }
 
+    // workaround that EnumerableJoin constructor is protected
+    private static Constructor<EnumerableJoin> constr;
+    static {
+        try {
+            constr = EnumerableJoin.class.getDeclaredConstructor(RelOptCluster.class, //
+                    RelTraitSet.class, //
+                    RelNode.class, //
+                    RelNode.class, //
+                    RexNode.class, //
+                    ImmutableIntList.class, //
+                    ImmutableIntList.class, //
+                    JoinRelType.class, //
+                    Set.class);
+            constr.setAccessible(true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
         if (this.hasSubQuery) {
             try {
-                return new EnumerableJoin(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
+                return constr.newInstance(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
                         inputs.get(0), inputs.get(1), condition, leftKeys, rightKeys, joinType, variablesStopped);
-            } catch (InvalidRelException e) {
+            } catch (Exception e) {
                 throw new IllegalStateException("Can't create EnumerableJoin!", e);
             }
         } else {
