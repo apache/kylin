@@ -129,10 +129,8 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         if (filter == null)
             return null;
 
-        // In case of NOT(inEvaluatableFilter), we should immediately replace it as TRUE,
-        // Otherwise, inEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter) will
-        // always return FALSE
-        if (filter.getOperator() == TupleFilter.FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
+        // un-evaluatable filter is replaced with TRUE
+        if (!filter.isEvaluable()) {
             TupleFilter.collectColumns(filter, inevaluableColumns);
             return ConstantTupleFilter.TRUE;
         }
@@ -140,6 +138,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         if (!(filter instanceof CompareTupleFilter))
             return filter;
 
+        // double check all internal of CompareTupleFilter is evaluatable
         if (!TupleFilter.isEvaluableRecursively(filter)) {
             TupleFilter.collectColumns(filter, inevaluableColumns);
             return ConstantTupleFilter.TRUE;
