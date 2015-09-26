@@ -50,7 +50,7 @@ public class KylinMeta extends MetaImpl {
 
     // insert/update/delete go this path, ignorable for Kylin
     @Override
-    public StatementHandle prepare(ConnectionHandle ch, String sql, int maxRowCount) {
+    public StatementHandle prepare(ConnectionHandle ch, String sql, long maxRowCount) {
         StatementHandle result = super.createStatement(ch);
         result.signature = connection().mockPreparedSignature(sql);
         return result;
@@ -58,16 +58,15 @@ public class KylinMeta extends MetaImpl {
 
     // mimic from CalciteMetaImpl, real execution happens via callback in KylinResultSet.execute()
     @Override
-    public ExecuteResult prepareAndExecute(ConnectionHandle ch, String sql, int maxRowCount, PrepareCallback callback) {
-        final StatementHandle sh;
+    public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, PrepareCallback callback) {
         try {
             synchronized (callback.getMonitor()) {
                 callback.clear();
-                sh = prepare(ch, sql, maxRowCount);
+                sh.signature = connection().mockPreparedSignature(sql);
                 callback.assign(sh.signature, null, -1);
             }
             callback.execute();
-            final MetaResultSet metaResultSet = MetaResultSet.create(ch.id, sh.id, false, sh.signature, null);
+            final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
             return new ExecuteResult(ImmutableList.of(metaResultSet));
         } catch (SQLException e) {
             throw new RuntimeException(e);
