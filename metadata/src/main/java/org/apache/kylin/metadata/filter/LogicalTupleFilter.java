@@ -112,7 +112,27 @@ public class LogicalTupleFilter extends TupleFilter {
 
     @Override
     public boolean isEvaluable() {
-        return true;
+        switch (operator) {
+        case NOT:
+            // Un-evaluatable branch will be pruned and be replaced with TRUE.
+            // And this must happen at the top NOT, otherwise NOT (TRUE) becomes false.
+            for (TupleFilter child : children) {
+                if (TupleFilter.isEvaluableRecursively(child) == false)
+                    return false;
+            }
+            return true;
+        case OR:
+            // (anything OR un-evaluable) will become (anything or TRUE) which is effectively TRUE.
+            // The "anything" is not evaluated, kinda disabled, by the un-evaluable part.
+            // If it's partially un-evaluable, then "anything" is partially disabled, and the OR is still not fully evaluatable.
+            for (TupleFilter child : children) {
+                if (TupleFilter.isEvaluableRecursively(child) == false)
+                    return false;
+            }
+            return true;
+        default:
+            return true;
+        }
     }
 
     @Override

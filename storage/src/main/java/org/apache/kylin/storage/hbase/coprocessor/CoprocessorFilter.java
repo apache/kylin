@@ -30,7 +30,6 @@ import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer.Decorator;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -62,10 +61,8 @@ public class CoprocessorFilter {
             if (filter == null)
                 return null;
 
-            // In case of NOT(unEvaluatableFilter), we should immediatedly replace it as TRUE,
-            // Otherwise, unEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter) will
-            // always return FALSE
-            if (filter.getOperator() == FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
+            // un-evaluatable filter is replaced with TRUE
+            if (!filter.isEvaluable()) {
                 TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
                 return ConstantTupleFilter.TRUE;
             }
@@ -73,6 +70,7 @@ public class CoprocessorFilter {
             if (!(filter instanceof CompareTupleFilter))
                 return filter;
 
+            // double check all internal of CompareTupleFilter is evaluatable
             if (!TupleFilter.isEvaluableRecursively(filter)) {
                 TupleFilter.collectColumns(filter, unstrictlyFilteredColumns);
                 return ConstantTupleFilter.TRUE;
