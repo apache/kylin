@@ -621,6 +621,7 @@
                                 <exclude>**/*.snapshot</exclude>
                                 <exclude>**/*.pdf</exclude>
                                 <exclude>**/*.log</exclude>
+                                <exclude>dist/**</exclude>
 
                                 <exclude>**/.checkstyle</exclude>
                                 <!--Job's Test Data-->
