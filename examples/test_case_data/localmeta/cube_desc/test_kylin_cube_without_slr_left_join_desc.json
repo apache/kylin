@@ -162,20 +162,6 @@
         "returntype": "hllc(10)"
       },
       "dependent_measure_ref": null
-    },
-    {
-      "id": 8,
-      "name": "TOP_SELLER",
-      "function": {
-        "expression": "TOP_N",
-        "parameter": {
-          "type": "column",
-          "value": "PRICE",
-          "displaycolumn": "seller_id"
-        },
-        "returntype": "topn(20)"
-      },
-      "dependent_measure_ref": null
     }
   ],
   "rowkey": {
@@ -272,17 +258,6 @@
             "measure_refs": [
               "seller_cnt_hll",
               "seller_format_cnt"
-            ]
-          }
-        ]
-      },  
-      {
-        "name": "f3",
-        "columns": [
-          {
-            "qualifier": "m",
-            "measure_refs": [
-              "top_seller"
             ]
           }
         ]
