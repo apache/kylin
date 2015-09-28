@@ -195,7 +195,7 @@ public class BuildCubeWithEngineTest {
         long date1 = 0;
         long date2 = f.parse("2022-01-01").getTime();
         List<String> result = Lists.newArrayList();
-        result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
+        result.add(buildSegment("test_kylin_cube_topn", date1, date2));
         return result;
     }
     
