@@ -21,6 +21,7 @@ dir=$(dirname ${0})
 source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
 
+# start command
 if [ $1 == "start" ]
 then
 
@@ -80,6 +81,8 @@ then
     fi
     echo "You can check the log at ${tomcat_root}/logs/kylin.log"
     exit 0
+
+# stop command
 elif [ $1 == "stop" ]
 then
     if [ ! -f "${KYLIN_HOME}/pid" ]
@@ -98,6 +101,22 @@ then
     fi
     rm ${KYLIN_HOME}/pid
     exit 0
+
+# tool command
+elif [[ $1 = org.apache.kylin.* ]]
+then
+    #retrive $hive_dependency and $hbase_dependency
+    source ${dir}/find-hive-dependency.sh
+    source ${dir}/find-hbase-dependency.sh
+    #retrive $KYLIN_EXTRA_START_OPTS
+    if [ -f "${dir}/setenv-tool.sh" ]
+        then source ${dir}/setenv-tool.sh
+    fi
+
+    export HBASE_CLASSPATH=${KYLIN_HOME}/lib/*:$hive_dependency:${HBASE_CLASSPATH}
+
+    exec hbase "$@"
+
 else
     echo "usage: kylin.sh start or kylin.sh stop"
     exit 1
