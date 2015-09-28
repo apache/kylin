@@ -126,7 +126,7 @@ public class Cuboid implements Comparable<Cuboid> {
         long cuboidWithoutMandatory = cuboidID & ~rowkey.getMandatoryColumnMask();
         long leftover;
         for (AggrGroupMask mask : rowkey.getAggrGroupMasks()) {
-            if ((cuboidWithoutMandatory & mask.uniqueMask) == mask.uniqueMask) {
+            if ((cuboidWithoutMandatory & mask.uniqueMask) > 0) {
                 leftover = cuboidWithoutMandatory & ~mask.groupMask;
 
                 if (leftover == 0) {
