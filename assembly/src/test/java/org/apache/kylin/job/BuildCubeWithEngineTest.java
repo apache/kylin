@@ -128,12 +128,12 @@ public class BuildCubeWithEngineTest {
     }
 
     private void testInner() throws Exception {
-       String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2"};
+       String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", "testInnerJoinCube3"};
         runTestAndAssertSucceed(testCase);
     }
 
     private void testLeft() throws Exception {
-        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2" };
+        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2", "testLeftJoinCube3" };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -188,6 +188,20 @@ public class BuildCubeWithEngineTest {
 
     @SuppressWarnings("unused")
     // called by reflection
+    private List<String> testInnerJoinCube3() throws Exception {
+        clearSegment("test_kylin_cube_topn");
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        long date1 = 0;
+        long date2 = f.parse("2022-01-01").getTime();
+        List<String> result = Lists.newArrayList();
+        result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
+        return result;
+    }
+    
+
+    @SuppressWarnings("unused")
+    // called by reflection
     private List<String> testInnerJoinCube2() throws Exception {
         clearSegment("test_kylin_cube_with_slr_empty");
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -220,6 +234,20 @@ public class BuildCubeWithEngineTest {
         return result;
     }
 
+    @SuppressWarnings("unused")
+    // called by reflection
+    private List<String> testLeftJoinCube3() throws Exception {
+        clearSegment("test_kylin_cube_topn_left_join");
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        long date1 = 0;
+        long date2 = f.parse("2022-01-01").getTime();
+        List<String> result = Lists.newArrayList();
+        result.add(buildSegment("test_kylin_cube_topn_left_join", date1, date2));
+        return result;
+    }
+
+    
     @SuppressWarnings("unused")
     // called by reflection
     private List<String> testLeftJoinCube2() throws Exception {
