@@ -18,8 +18,7 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +27,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.Dictionary;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.roaringbitmap.RoaringBitmap;
 
 /**
  * @author yangli9
@@ -38,7 +37,7 @@ public class BitMapContainer implements ColumnValueContainer {
     int valueLen;
     int nValues;
     int size;
-    ConciseSet[] sets;
+    RoaringBitmap[] sets;
     boolean closedForChange;
 
     transient byte[] temp;
@@ -76,7 +75,7 @@ public class BitMapContainer implements ColumnValueContainer {
     }
 
     @Override
-    public ConciseSet getBitMap(Integer startId, Integer endId) {
+    public RoaringBitmap getBitMap(Integer startId, Integer endId) {
         if (startId == null && endId == null) {
             return sets[this.nValues];
         }
@@ -90,15 +89,10 @@ public class BitMapContainer implements ColumnValueContainer {
             end = endId;
         }
 
-        ConciseSet ret = new ConciseSet();
-        for (int i = start; i <= end; ++i) {
-            ConciseSet temp = getBitMap(i);
-            ret.addAll(temp);
-        }
-        return ret;
+        return RoaringBitmap.or(Arrays.copyOfRange(sets, start, end+1));
     }
 
-    private ConciseSet getBitMap(int valueId) {
+    private RoaringBitmap getBitMap(int valueId) {
         if (valueId >= 0 && valueId <= getMaxValueId())
             return sets[valueId];
         else
@@ -125,9 +119,9 @@ public class BitMapContainer implements ColumnValueContainer {
             throw new IllegalStateException();
         }
         if (sets == null) {
-            sets = new ConciseSet[nValues + 1];
+            sets = new RoaringBitmap[nValues + 1];
             for (int i = 0; i <= nValues; i++) {
-                sets[i] = new ConciseSet();
+                sets[i] = new RoaringBitmap();
             }
         }
     }
@@ -159,34 +153,92 @@ public class BitMapContainer implements ColumnValueContainer {
 
     public void fromBytes(List<ImmutableBytesWritable> bytes) {
         assert nValues + 1 == bytes.size();
-        sets = new ConciseSet[nValues + 1];
+        sets = new RoaringBitmap[nValues + 1];
         size = 0;
         for (int i = 0; i <= nValues; i++) {
             sets[i] = bytesToSet(bytes.get(i));
-            size += sets[i].size();
+            size += sets[i].getCardinality();
         }
         closedForChange = true;
     }
 
-    private ImmutableBytesWritable setToBytes(ConciseSet set) {
-        byte[] array;
-        if (set.isEmpty()) // ConciseSet.toByteBuffer() throws exception when
-                           // set is empty
-            array = BytesUtil.EMPTY_BYTE_ARRAY;
-        else
-            array = set.toByteBuffer().array();
+    private ImmutableBytesWritable setToBytes(RoaringBitmap set) {
+        // Serializing a bitmap to a byte array can be expected to be expensive, this should not be commonly done.
+        // If the purpose is to save the data to disk or to a network, then a direct serialization would be
+        // far more efficient. If the purpose is to enforce immutability, it is an expensive way to do it.
+        set.runOptimize(); //to improve compression
+        final byte[] array = new byte[set.serializedSizeInBytes()];
+        try {
+            set.serialize(new java.io.DataOutputStream(new java.io.OutputStream() {
+                int c = 0;
+
+                @Override
+                public void close() {
+                }
+
+                @Override
+                public void flush() {
+                }
+
+                @Override
+                public void write(int b) {
+                    array[c++] = (byte)b;
+                }
+
+                @Override
+                public void write(byte[] b) {
+                    write(b, 0, b.length);
+                }
+
+                @Override
+                public void write(byte[] b, int off, int l) {
+                    System.arraycopy(b, off, array, c, l);
+                    c += l;
+                }
+            }));
+        } catch (IOException ioe) {
+            // should never happen because we write to a byte array
+            throw new RuntimeException("unexpected error while serializing to a byte array");
+        }
+
         return new ImmutableBytesWritable(array);
     }
 
-    private ConciseSet bytesToSet(ImmutableBytesWritable bytes) {
-        if (bytes.get() == null || bytes.getLength() == 0) {
-            return new ConciseSet();
-        } else {
-            IntBuffer intBuffer = ByteBuffer.wrap(bytes.get(), bytes.getOffset(), bytes.getLength()).asIntBuffer();
-            int[] words = new int[intBuffer.capacity()];
-            intBuffer.get(words);
-            return new ConciseSet(words, false);
+    private RoaringBitmap bytesToSet(final ImmutableBytesWritable bytes) {
+        // converting a byte array to a bitmap can be expected to be expensive, hopefully this is not a common operation!
+        RoaringBitmap set = new RoaringBitmap();
+        if ((bytes.get() != null) && (bytes.getLength() > 0)) {
+            // here we could use an ImmutableRoaringBitmap and just "map" it.
+            // instead, we do a full deserialization
+            // Note: we deserializing a Roaring bitmap, there is no need to know the length, the format is self-describing
+            try {
+                set.deserialize(new java.io.DataInputStream(new java.io.InputStream() {
+                    byte[] array = bytes.get();
+                    int c = bytes.getOffset();
+
+                    @Override
+                    public int read() {
+                        return array[c++] & 0xff;
+                    }
+
+                    @Override
+                    public int read(byte b[]) {
+                        return read(b, 0, b.length);
+                    }
+
+                    @Override
+                    public int read(byte[] b, int off, int l) {
+                        System.arraycopy(array, c, b, off, l);
+                        c += l;
+                        return l;
+                    }
+                }));
+            } catch (IOException ioe) {
+                // should never happen because we read from a byte array
+                throw new RuntimeException("unexpected error while deserializing from a byte array");
+            }
         }
+        return set;
     }
 
     @Override

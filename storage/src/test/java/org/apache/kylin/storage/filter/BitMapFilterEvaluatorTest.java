@@ -21,6 +21,7 @@ package org.apache.kylin.storage.filter;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -36,7 +37,7 @@ import org.apache.kylin.storage.filter.BitMapFilterEvaluator.BitMapProvider;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.roaringbitmap.RoaringBitmap;
 
 public class BitMapFilterEvaluatorTest {
 
@@ -65,41 +66,40 @@ public class BitMapFilterEvaluatorTest {
         private static final int REC_COUNT = 10;
 
         @Override
-        public ConciseSet getBitMap(TblColRef col, Integer startId, Integer endId) {
+        public RoaringBitmap getBitMap(final TblColRef col, Integer startId, Integer endId) {
             if (!col.equals(colA))
                 return null;
 
             // i-th record has value ID i, and last record has value null
             if (startId == null && endId == null) {
                 //entry for getting null value
-                ConciseSet s = new ConciseSet();
-                s.add(getRecordCount() - 1);
-                return s;
+                return RoaringBitmap.bitmapOf(getRecordCount() - 1);
             }
 
-            int start = 0;
-            int end = MAX_ID;
-            if (startId != null) {
-                start = startId;
-            }
-            if (endId != null) {
-                end = endId;
-            }
+            final int start = (startId != null) ? startId : 0;
+            final int end = (endId != null) ? endId : MAX_ID;
+            return RoaringBitmap.or(
+                    new Iterator<RoaringBitmap>() {
+                        int i = start;
+                        @Override
+                        public boolean hasNext() {
+                            return i <= end;
+                        }
 
-            ConciseSet ret = new ConciseSet();
-            for (int i = start; i <= end; ++i) {
-                ConciseSet temp = getBitMap(col, i);
-                ret.addAll(temp);
-            }
-            return ret;
+                        @Override
+                        public RoaringBitmap next() {
+                            return getBitMap(col, i++);
+                        }
+                    }
+            );
         }
 
-        public ConciseSet getBitMap(TblColRef col, int valueId) {
+        public RoaringBitmap getBitMap(TblColRef col, int valueId) {
             if (!col.equals(colA))
                 return null;
 
             // i-th record has value ID i, and last record has value null
-            ConciseSet bitMap = new ConciseSet();
+            RoaringBitmap bitMap = new RoaringBitmap();
             if (valueId < 0 || valueId > getMaxValueId(col)) // null
                 bitMap.add(getRecordCount() - 1);
             else
@@ -121,7 +121,7 @@ public class BitMapFilterEvaluatorTest {
 
     BitMapFilterEvaluator eval = new BitMapFilterEvaluator(new MockBitMapProivder());
     ArrayList<CompareTupleFilter> basicFilters = Lists.newArrayList();
-    ArrayList<ConciseSet> basicResults = Lists.newArrayList();
+    ArrayList<RoaringBitmap> basicResults = Lists.newArrayList();
 
     public BitMapFilterEvaluatorTest() {
         basicFilters.add(compare(colA, FilterOperatorEnum.ISNULL));
@@ -167,8 +167,8 @@ public class BitMapFilterEvaluatorTest {
         for (int i = 0; i < basicFilters.size(); i++) {
             for (int j = 0; j < basicFilters.size(); j++) {
                 LogicalTupleFilter f = logical(FilterOperatorEnum.AND, basicFilters.get(i), basicFilters.get(j));
-                ConciseSet r = basicResults.get(i).clone();
-                r.retainAll(basicResults.get(j));
+                RoaringBitmap r = basicResults.get(i).clone();
+                r.and(basicResults.get(j));
                 assertEquals(r, eval.evaluate(f));
             }
         }
@@ -179,8 +179,8 @@ public class BitMapFilterEvaluatorTest {
         for (int i = 0; i < basicFilters.size(); i++) {
             for (int j = 0; j < basicFilters.size(); j++) {
                 LogicalTupleFilter f = logical(FilterOperatorEnum.OR, basicFilters.get(i), basicFilters.get(j));
-                ConciseSet r = basicResults.get(i).clone();
-                r.addAll(basicResults.get(j));
+                RoaringBitmap r = basicResults.get(i).clone();
+                r.or(basicResults.get(j));
                 assertEquals(r, eval.evaluate(f));
             }
         }
@@ -223,11 +223,8 @@ public class BitMapFilterEvaluatorTest {
         return new ConstantTupleFilter(idToStr(id));
     }
 
-    public static ConciseSet set(int... ints) {
-        ConciseSet set = new ConciseSet();
-        for (int i : ints)
-            set.add(i);
-        return set;
+    public static RoaringBitmap set(int... ints) {
+        return RoaringBitmap.bitmapOf(ints);
     }
 
     public static String idToStr(int id) {
