@@ -40,9 +40,6 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.calcite.sql.parser.impl.ParseException;
-import org.apache.calcite.sql.validate.SqlValidatorException;
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.Get;
@@ -65,7 +62,7 @@ import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.util.HiveRerouteUtil;
+import org.apache.kylin.rest.util.HiveReroute;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.slf4j.Logger;
@@ -102,7 +99,7 @@ public class QueryService extends BasicService {
         tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         userTableName = tableNameBase + USER_TABLE_NAME;
-        
+
         badQueryDetector.start();
     }
 
@@ -113,9 +110,9 @@ public class QueryService extends BasicService {
     public SQLResponse query(SQLRequest sqlRequest) throws Exception {
         try {
             badQueryDetector.queryStart(Thread.currentThread(), sqlRequest);
-            
+
             return queryWithSqlMassage(sqlRequest);
-            
+
         } finally {
             badQueryDetector.queryEnd(Thread.currentThread());
         }
@@ -373,33 +370,22 @@ public class QueryService extends BasicService {
                     oneRow.add((resultSet.getString(i + 1)));
                 }
 
-                results.add(new LinkedList<String>(oneRow));
+                results.add(new ArrayList<String>(oneRow));
                 oneRow.clear();
             }
         } catch (SQLException sqlException) {
-            // unsuccessful statement execution, retry with Hive on Spark. Code modification as part of the jira https://issues.apache.org/jira/browse/KYLIN-742
-	    boolean isExpectedCause = (ExceptionUtils.getRootCause(sqlException).getClass().equals(SqlValidatorException.class)) || (ExceptionUtils.getRootCause(sqlException).getClass().equals(ParseException.class));
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-    	    if (isExpectedCause && kylinConfig.isHiveReroutingEnabled()) {
-        	logger.debug("query rerouting option enabled for Kylin");
-        	// running query to hive
-                HiveRerouteUtil rerouteUtil = new HiveRerouteUtil();
-                try {
-                    conn = rerouteUtil.createConnection(kylinConfig.getHiveRerouteUrl(), kylinConfig.getHiveRerouteUsername(), kylinConfig.getHiveReroutePassword());
-                    resultSet = rerouteUtil.executQuery(conn, sql);
-                    columnMetas = rerouteUtil.extractColumnMetadata(resultSet, columnMetas);
-                    results = rerouteUtil.extractResults(resultSet, results);
-                } catch (Exception exception) {
-                    logger.error("exception in re-routing the query to hive", exception);
-                    throw exception;
-                } finally {
-                    rerouteUtil.closeConnection(conn);
-                } 
-            } else {
-                logger.error("exception in running the query: " + sql);
-		throw sqlException;
-    	    }
-	    } finally {
+            // hive maybe able to answer where kylin failed
+            HiveReroute reroute = new HiveReroute();
+            if (reroute.shouldReroute(sqlException) == false) {
+                throw sqlException;
+            }
+            try {
+                reroute.query(sql, results, columnMetas);
+            } catch (Throwable ex) {
+                logger.error("Reroute hive failed", ex);
+                throw sqlException;
+            }
+        } finally {
             close(resultSet, stat, conn);
         }
 
