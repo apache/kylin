@@ -46,16 +46,6 @@
       "name": "test_kylin_hybrid_inner_join",
       "type": "HYBRID",
       "realization": "test_kylin_hybrid_inner_join"
-    },
-    {
-      "name": "test_kylin_cube_topn",
-      "type": "CUBE",
-      "realization": "test_kylin_cube_topn"
-    },
-    {
-      "name": "test_kylin_cube_topn_left_join",
-      "type": "CUBE",
-      "realization": "test_kylin_cube_topn_left_join"
     }
   ]
 }
