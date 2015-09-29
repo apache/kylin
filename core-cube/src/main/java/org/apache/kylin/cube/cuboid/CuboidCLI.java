@@ -64,15 +64,17 @@ public class CuboidCLI {
                 cuboidQueue.push(sc);
             }
         }
-
+        
+        /** disable this due to poor performance when dimension number is big
         TreeSet<Long> enumCuboids = enumCalcCuboidCount(cube);
         if (enumCuboids.equals(cuboidSet) == false) {
             throw new IllegalStateException("Expected cuboid set " + enumCuboids + "; but actual cuboid set " + cuboidSet);
         }
+         */
 
         int mathCount = mathCalcCuboidCount(cube);
-        if (mathCount != enumCuboids.size()) {
-            throw new IllegalStateException("Math cuboid count " + mathCount + ", but actual cuboid count " + enumCuboids.size());
+        if (mathCount != cuboidSet.size()) {
+            throw new IllegalStateException("Math cuboid count " + mathCount + ", but actual cuboid count " + cuboidSet.size());
         }
 
         return mathCount;
