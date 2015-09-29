@@ -94,6 +94,11 @@
         </dependency>
 
         <dependency>
+            <groupId>net.sf.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <version>0.5.0.M6</version>
@@ -360,10 +365,10 @@
                 </exclusion>
             </exclusions>
           </dependency>
-
         <dependency>
-            <groupId>net.sf.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-jdbc</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Tomcat Env -->
