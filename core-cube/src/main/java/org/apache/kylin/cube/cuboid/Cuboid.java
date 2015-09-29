@@ -18,20 +18,12 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.RowKeyColDesc;
-import org.apache.kylin.cube.model.RowKeyDesc;
+import org.apache.kylin.cube.model.*;
 import org.apache.kylin.cube.model.RowKeyDesc.AggrGroupMask;
 import org.apache.kylin.cube.model.RowKeyDesc.HierarchyMask;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -97,8 +89,97 @@ public class Cuboid implements Comparable<Cuboid> {
         return findById(cube, getBaseCuboidId(cube));
     }
 
-    // Breadth-First-Search
-    private static long translateToValidCuboid(CubeDesc cube, long cuboidID) {
+    private static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
+        // add mandantory
+        RowKeyDesc rowkey = cubeDesc.getRowkey();
+        long mandatoryColumnMask = rowkey.getMandatoryColumnMask();
+        if (cuboidID < mandatoryColumnMask) {
+            cuboidID = cuboidID | mandatoryColumnMask;
+        }
+
+        // add hierarchy
+        for (DimensionDesc dimension : cubeDesc.getDimensions()) {
+            HierarchyDesc[] hierarchies = dimension.getHierarchy();
+            boolean found = false;
+            long result = 0;
+            if (hierarchies != null && hierarchies.length > 0) {
+                for (int i = hierarchies.length - 1; i >= 0; i--) {
+                    TblColRef hColumn = hierarchies[i].getColumnRef();
+                    Integer index = rowkey.getColumnBitIndex(hColumn);
+                    long bit = 1L << index;
+
+                    if ((rowkey.getTailMask() & bit) > 0)
+                        continue; // ignore levels in tail, they don't participate
+
+                    if ((bit & cuboidID) > 0) {
+                        found = true;
+                    }
+
+                    if (found == true) {
+                        result = result | bit;
+                    }
+                }
+                cuboidID = cuboidID | result;
+            }
+        }
+
+        // find the left-most aggregation group
+        long cuboidWithoutMandatory = cuboidID & ~rowkey.getMandatoryColumnMask();
+        long leftover;
+        for (AggrGroupMask mask : rowkey.getAggrGroupMasks()) {
+            if ((cuboidWithoutMandatory & mask.uniqueMask) > 0) {
+                leftover = cuboidWithoutMandatory & ~mask.groupMask;
+
+                if (leftover == 0) {
+                    return cuboidID;
+                }
+
+                if (leftover != 0) {
+                    cuboidID = cuboidID | mask.leftoverMask;
+                    return cuboidID;
+                }
+            }
+        }
+
+        // doesn't have column in aggregation groups
+        leftover = cuboidWithoutMandatory & rowkey.getTailMask();
+        if (leftover == 0) {
+            // doesn't have column in tail group
+            if (cuboidWithoutMandatory != 0) {
+                return cuboidID;
+            } else {
+                // no column (except mandatory), add one column
+                long toAddCol = (1 << (BitSet.valueOf(new long[]{rowkey.getTailMask()}).cardinality()));
+                // check if the toAddCol belongs to any hierarchy
+                List<HierarchyMask> hierarchyMaskList = rowkey.getHierarchyMasks();
+                if (hierarchyMaskList != null && hierarchyMaskList.size() > 0) {
+                    for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
+                        long result = toAddCol & hierarchyMasks.fullMask;
+                        if (result > 0) {
+                            // replace it with the root col in hierarchy
+                            toAddCol = hierarchyMasks.allMasks[0];
+                            break;
+                        }
+                    }
+                }
+                cuboidID = cuboidID | toAddCol;
+                return cuboidID;
+            }
+        }
+
+        // has column in tail group
+        cuboidID = cuboidID | rowkey.getTailMask();
+        return cuboidID;
+
+    }
+
+    /** Breadth-First-Search
+     * @deprecated due to poor performance
+     * @param cube
+     * @param cuboidID
+     * @return
+     */
+    private static long translateToValidCuboidDeprecated(CubeDesc cube, long cuboidID) {
         if (Cuboid.isValid(cube, cuboidID)) {
             return cuboidID;
         }
