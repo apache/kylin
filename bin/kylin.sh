@@ -63,6 +63,7 @@ then
     hbase ${KYLIN_EXTRA_START_OPTS} \
     -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
+    -Dlog4j.configuration=kylin-log4j.properties \
     -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
     -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
     -Djava.endorsed.dirs=${tomcat_root}/endorsed  \
@@ -115,7 +116,7 @@ then
 
     export HBASE_CLASSPATH=${KYLIN_HOME}/lib/*:$hive_dependency:${HBASE_CLASSPATH}
 
-    exec hbase "$@"
+    exec hbase -Dlog4j.configuration=kylin-log4j.properties "$@"
 
 else
     echo "usage: kylin.sh start or kylin.sh stop"

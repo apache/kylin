@@ -32,7 +32,7 @@ limitations under the License. See accompanying LICENSE file.
 
     <context-param>
         <param-name>log4jConfigLocation</param-name>
-        <param-value>classpath:log4j.properties</param-value>
+        <param-value>classpath:kylin-log4j.properties</param-value>
     </context-param>
     <context-param>
         <param-name>contextConfigLocation</param-name>
