@@ -35,6 +35,8 @@ public class DebugTomcat {
 
     public static void setupDebugEnv() {
         try {
+            System.setProperty("log4j.configuration", "kylin-log4j.properties");
+            
             // test_case_data/sandbox/ contains HDP 2.2 site xmls which is dev sandbox
             ClasspathUtil.addClasspath(new File("../examples/test_case_data/sandbox").getAbsolutePath());
             System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
