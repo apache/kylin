@@ -51,7 +51,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.roaringbitmap.RoaringBitmap;
 
 /**
  * Created by honma on 11/7/14.
@@ -128,7 +128,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
         for (Slice slice : slices) {
-            ConciseSet result = null;
+            RoaringBitmap result = null;
             if (filter != null) {
                 result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
             }
@@ -158,7 +158,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
     private IIProtos.IIResponse getNonAggregatedResponse(Iterable<Slice> slices, CoprocessorFilter filter, CoprocessorRowType type) {
         IIProtos.IIResponse.Builder responseBuilder = IIProtos.IIResponse.newBuilder();
         for (Slice slice : slices) {
-            ConciseSet result = null;
+            RoaringBitmap result = null;
             if (filter != null) {
                 result = new BitMapFilterEvaluator(new SliceBitMapProvider(slice, type)).evaluate(filter.getFilter());
             }

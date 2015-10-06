@@ -89,9 +89,13 @@
             <artifactId>compress-lzf</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+        </dependency>
+        <!--<dependency>
             <groupId>com.n3twork.druid</groupId>
             <artifactId>extendedset</artifactId>
-        </dependency>
+        </dependency>-->
 
         <!-- Env & Test -->
 
