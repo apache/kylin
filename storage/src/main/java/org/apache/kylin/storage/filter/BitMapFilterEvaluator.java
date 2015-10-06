@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.roaringbitmap.RoaringBitmap;
 
 /**
  * @author yangli9
@@ -39,7 +39,7 @@ public class BitMapFilterEvaluator {
     public static interface BitMapProvider {
 
         /** return records whose specified column having specified value */
-        ConciseSet getBitMap(TblColRef col, Integer startId, Integer endId);
+        RoaringBitmap getBitMap(TblColRef col, Integer startId, Integer endId);
 
         /** return the size of the group */
         int getRecordCount();
@@ -58,7 +58,7 @@ public class BitMapFilterEvaluator {
      * @param filter
      * @return a set of records that match the filter; or null if filter is null or unable to evaluate
      */
-    public ConciseSet evaluate(TupleFilter filter) {
+    public RoaringBitmap evaluate(TupleFilter filter) {
         if (filter == null)
             return null;
 
@@ -71,7 +71,7 @@ public class BitMapFilterEvaluator {
         return null; // unable to evaluate
     }
 
-    private ConciseSet evalCompare(CompareTupleFilter filter) {
+    private RoaringBitmap evalCompare(CompareTupleFilter filter) {
         switch (filter.getOperator()) {
         case ISNULL:
             return evalCompareIsNull(filter);
@@ -98,86 +98,88 @@ public class BitMapFilterEvaluator {
         }
     }
 
-    private ConciseSet evalCompareLT(CompareTupleFilter filter) {
+    private RoaringBitmap evalCompareLT(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
         return collectRange(filter.getColumn(), null, id - 1);
     }
 
-    private ConciseSet evalCompareLTE(CompareTupleFilter filter) {
+    private RoaringBitmap evalCompareLTE(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
         return collectRange(filter.getColumn(), null, id);
     }
 
-    private ConciseSet evalCompareGT(CompareTupleFilter filter) {
+    private RoaringBitmap evalCompareGT(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
         return collectRange(filter.getColumn(), id + 1, null);
     }
 
-    private ConciseSet evalCompareGTE(CompareTupleFilter filter) {
+    private RoaringBitmap evalCompareGTE(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
         return collectRange(filter.getColumn(), id, null);
     }
 
-    private ConciseSet collectRange(TblColRef column, Integer startId, Integer endId) {
+    private RoaringBitmap collectRange(TblColRef column, Integer startId, Integer endId) {
         return provider.getBitMap(column, startId, endId);
     }
 
-    private ConciseSet evalCompareEqual(CompareTupleFilter filter) {
+    private RoaringBitmap evalCompareEqual(CompareTupleFilter filter) {
         int id = Dictionary.stringToDictId(filter.getFirstValue());
-        ConciseSet bitMap = provider.getBitMap(filter.getColumn(), id, id);
+        RoaringBitmap bitMap = provider.getBitMap(filter.getColumn(), id, id);
         if (bitMap == null)
             return null;
-        return bitMap.clone(); // NOTE the clone() to void messing provider's cache
+        return bitMap.clone(); // NOTE the clone() to void messing provider's cache // If the object is immutable, this is likely wasteful
     }
 
-    private ConciseSet evalCompareNotEqual(CompareTupleFilter filter) {
-        ConciseSet set = evalCompareEqual(filter);
+    private RoaringBitmap evalCompareNotEqual(CompareTupleFilter filter) {
+        RoaringBitmap set = evalCompareEqual(filter);
         not(set);
         dropNull(set, filter);
         return set;
     }
 
-    private ConciseSet evalCompareIn(CompareTupleFilter filter) {
-        ConciseSet set = new ConciseSet();
+    private RoaringBitmap evalCompareIn(CompareTupleFilter filter) {
+        java.util.ArrayList<RoaringBitmap> buffer = new java.util.ArrayList<RoaringBitmap>();
+        // an iterator would be better than an ArrayList, but there is
+        // the convention that says that if one bitmap is null, we return null...
         for (String value : filter.getValues()) {
             int id = Dictionary.stringToDictId(value);
-            ConciseSet bitMap = provider.getBitMap(filter.getColumn(), id, id);
+            RoaringBitmap bitMap = provider.getBitMap(filter.getColumn(), id, id);
             if (bitMap == null)
                 return null;
-            set.addAll(bitMap);
+            buffer.add(bitMap);
         }
-        return set;
+        return RoaringBitmap.or(buffer.iterator());
     }
 
-    private ConciseSet evalCompareNotIn(CompareTupleFilter filter) {
-        ConciseSet set = evalCompareIn(filter);
+    private RoaringBitmap evalCompareNotIn(CompareTupleFilter filter) {
+        RoaringBitmap set = evalCompareIn(filter);
         not(set);
         dropNull(set, filter);
         return set;
     }
 
-    private void dropNull(ConciseSet set, CompareTupleFilter filter) {
+    private void dropNull(RoaringBitmap set, CompareTupleFilter filter) {
         if (set == null)
             return;
 
-        ConciseSet nullSet = evalCompareIsNull(filter);
-        set.removeAll(nullSet);
+        RoaringBitmap nullSet = evalCompareIsNull(filter);
+        set.andNot(nullSet);
     }
 
-    private ConciseSet evalCompareIsNull(CompareTupleFilter filter) {
-        ConciseSet bitMap = provider.getBitMap(filter.getColumn(), null, null);
+    private RoaringBitmap evalCompareIsNull(CompareTupleFilter filter) {
+        RoaringBitmap bitMap = provider.getBitMap(filter.getColumn(), null, null);
         if (bitMap == null)
             return null;
-        return bitMap.clone(); // NOTE the clone() to void messing provider's cache
+        return bitMap.clone(); // NOTE the clone() to void messing provider's cache // If the object is immutable, this is likely wasteful
     }
 
-    private ConciseSet evalCompareIsNotNull(CompareTupleFilter filter) {
-        ConciseSet set = evalCompareIsNull(filter);
+    private RoaringBitmap evalCompareIsNotNull(CompareTupleFilter filter) {
+        RoaringBitmap set = evalCompareIsNull(filter);
         not(set);
         return set;
     }
 
-    private ConciseSet evalLogical(LogicalTupleFilter filter) {
+    private RoaringBitmap evalLogical(LogicalTupleFilter filter) {
         List<? extends TupleFilter> children = filter.getChildren();
 
         switch (filter.getOperator()) {
@@ -192,51 +194,51 @@ public class BitMapFilterEvaluator {
         }
     }
 
-    private ConciseSet evalLogicalAnd(List<? extends TupleFilter> children) {
-        ConciseSet set = new ConciseSet();
-        not(set);
-
-        for (TupleFilter c : children) {
-            ConciseSet t = evaluate(c);
+    private RoaringBitmap evalLogicalAnd(List<? extends TupleFilter> children) {
+        int i = 0;
+        RoaringBitmap answer = null;
+        // we identify the first non-null
+        for(; (i < children.size()) && (answer == null); ++i) {
+            RoaringBitmap t = evaluate(children.get(i));
             if (t == null)
-                continue; // because it's AND
-
-            set.retainAll(t);
+                continue; // because it's AND // following convention
+            answer = t;
         }
-        return set;
-    }
-
-    private ConciseSet evalLogicalOr(List<? extends TupleFilter> children) {
-        ConciseSet set = new ConciseSet();
-
-        for (TupleFilter c : children) {
-            ConciseSet t = evaluate(c);
+        // then we compute the intersections
+        for(; i < children.size(); ++i) {
+            RoaringBitmap t = evaluate(children.get(i));
             if (t == null)
-                return null; // because it's OR
-
-            set.addAll(t);
+                continue; // because it's AND // following convention
+            answer.and(t);
         }
-        return set;
+        if(answer == null)
+            answer = new RoaringBitmap();
+        return answer;
     }
 
-    private ConciseSet evalLogicalNot(List<? extends TupleFilter> children) {
-        ConciseSet set = evaluate(children.get(0));
+    private RoaringBitmap evalLogicalOr(List<? extends TupleFilter> children) {
+        java.util.ArrayList<RoaringBitmap> buffer = new java.util.ArrayList<RoaringBitmap>();
+        // could be done with iterator but there is the rule if that if there is a null, then we need to return null
+        for (TupleFilter c : children) {
+            RoaringBitmap t = evaluate(c);
+            if (t == null)
+                return null; // because it's OR // following convention
+            buffer.add(t);
+        }
+        return RoaringBitmap.or(buffer.iterator());
+    }
+
+    private RoaringBitmap evalLogicalNot(List<? extends TupleFilter> children) {
+        RoaringBitmap set = evaluate(children.get(0));
         not(set);
         return set;
     }
 
-    private void not(ConciseSet set) {
+    private void not(RoaringBitmap set) {
         if (set == null)
             return;
-
-        set.add(provider.getRecordCount());
-        set.complement();
+        set.flip(0,provider.getRecordCount());
     }
 
-    public static void main(String[] args) {
-        ConciseSet s = new ConciseSet();
-        s.add(5);
-        s.complement();
-        System.out.println(s);
-    }
+
 }

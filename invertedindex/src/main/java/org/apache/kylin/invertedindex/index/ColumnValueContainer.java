@@ -20,7 +20,7 @@ package org.apache.kylin.invertedindex.index;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.roaringbitmap.RoaringBitmap;
 
 /**
  * @author yangli9
@@ -36,7 +36,7 @@ public interface ColumnValueContainer {
     // works only after closeForChange()
     void getValueAt(int i, ImmutableBytesWritable valueBytes);
 
-    ConciseSet getBitMap(Integer startId, Integer endId);
+    RoaringBitmap getBitMap(Integer startId, Integer endId);
 
     int getMaxValueId();
 

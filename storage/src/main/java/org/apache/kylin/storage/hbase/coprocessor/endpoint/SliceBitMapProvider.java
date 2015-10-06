@@ -23,7 +23,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.filter.BitMapFilterEvaluator;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.roaringbitmap.RoaringBitmap;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/24/14.
@@ -41,7 +41,7 @@ public class SliceBitMapProvider implements BitMapFilterEvaluator.BitMapProvider
     }
 
     @Override
-    public ConciseSet getBitMap(TblColRef col, Integer startId, Integer endId) {
+    public RoaringBitmap getBitMap(TblColRef col, Integer startId, Integer endId) {
         return slice.getColumnValueContainer(type.getColIndexByTblColRef(col)).getBitMap(startId, endId);
     }
 
