@@ -21,6 +21,8 @@ package org.apache.kylin.common.util;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 12/2/13 Time: 11:43 AM To
  * change this template use File | Settings | File Templates.
@@ -56,7 +58,11 @@ public class StringUtil {
             }
         }
     }
-
+    
+    public static String noBlank(String str, String dft) {
+        return StringUtils.isBlank(str) ? dft : str;
+    }
+    
     public static String dropSuffix(String str, String suffix) {
         if (str.endsWith(suffix))
             return str.substring(0, str.length() - suffix.length());
