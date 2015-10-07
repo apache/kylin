@@ -29,6 +29,7 @@ import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -122,9 +123,6 @@ public class CubingJob extends DefaultChainedExecutable {
         default:
             return null;
         }
-        if (logMsg == null) {
-            logMsg = "no error message";
-        }
         String content = ExecutableConstants.NOTIFY_EMAIL_TEMPLATE;
         content = content.replaceAll("\\$\\{job_name\\}", getName());
         content = content.replaceAll("\\$\\{result\\}", state.toString());
@@ -134,8 +132,8 @@ public class CubingJob extends DefaultChainedExecutable {
         content = content.replaceAll("\\$\\{duration\\}", getDuration() / 60000 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", getMapReduceWaitTime() / 60000 + "mins");
         content = content.replaceAll("\\$\\{last_update_time\\}", new Date(getLastModified()).toString());
-        content = content.replaceAll("\\$\\{submitter\\}", getSubmitter());
-        content = content.replaceAll("\\$\\{error_log\\}", logMsg);
+        content = content.replaceAll("\\$\\{submitter\\}", StringUtil.noBlank(getSubmitter(), "missing submitter"));
+        content = content.replaceAll("\\$\\{error_log\\}", StringUtil.noBlank(logMsg, "no error message"));
 
         try {
             InetAddress inetAddress = InetAddress.getLocalHost();
