@@ -17,7 +17,8 @@
  limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-storage</artifactId>
@@ -127,7 +128,8 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>coprocessor</shadedClassifierName>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                             <artifactSet>
                                 <includes>
@@ -138,7 +140,8 @@
                                     <include>org.apache.kylin:kylin-storage</include>
                                     <include>org.apache.kylin:kylin-invertedindex</include>
                                     <include>com.ning:compress-lzf</include>
-                                    <include>com.n3twork.druid:extendedset</include>
+                                    <!--<include>com.n3twork.druid:extendedset</include>-->
+                                    <include>org.roaringbitmap:RoaringBitmap</include>
                                     <include>net.sf.trove4j:*</include>
                                     <!-- include>com.fasterxml.jackson.core:*</include -->
                                     <!-- include>org.apache.commons:commons-lang3</include -->
@@ -181,7 +184,9 @@
                             <numUnapprovedLicenses>0</numUnapprovedLicenses>
                             <excludes>
                                 <!-- protobuf -->
-                                <exclude>src/main/java/org/apache/kylin/storage/hbase/coprocessor/endpoint/generated/IIProtos.java</exclude>
+                                <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/coprocessor/endpoint/generated/IIProtos.java
+                                </exclude>
                                 <exclude>**/*.proto</exclude>
                             </excludes>
                         </configuration>
