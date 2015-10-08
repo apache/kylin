@@ -12,6 +12,7 @@ _Send a quick description of your organization and usage to the [mailing list](m
 __Companies__
 
 * [eBay](http://www.ebay.com), Apache Kylin is used at eBay for Big Data Analytics on Hadoop. This powers various data products including Behavior Analytics, Traffic Reporting, Account Manager Application and Streaming Dashboard.
+* [JCloud](http://www.jcloud.com), Apache Kylin is used as Data Analytics Engine to analyse JOS <http://jos.jd.com/> API access behavior and report.
 * [MiningLAMP](http://www.mininglamp.com/), Kylin is part of MiningLAMP's Big Data Analytics product offering OLAP capability 
 * [Meituan](http://www.meituan.com)
 * 
