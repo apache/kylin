@@ -25,6 +25,16 @@ mkdir -p ${KYLIN_HOME}/logs
 if [ $1 == "start" ]
 then
 
+    if [ -f "${KYLIN_HOME}/pid" ]
+    then
+        PID=`cat $KYLIN_HOME/pid`
+        if ps -p $PID > /dev/null
+        then
+          echo "Kylin is running, stop it first"
+          exit 1
+        fi
+    fi
+    
     tomcat_root=${dir}/../tomcat
     export tomcat_root
 
@@ -85,23 +95,25 @@ then
 # stop command
 elif [ $1 == "stop" ]
 then
-    if [ ! -f "${KYLIN_HOME}/pid" ]
+    if [ -f "${KYLIN_HOME}/pid" ]
     then
-        echo "kylin is not running, please check"
-        exit 1
-    fi
-    pid=`cat ${KYLIN_HOME}/pid`
-    if [ "$pid" = "" ]
-    then
-        echo "kylin is not running, please check"
-        exit 1
+        PID=`cat $KYLIN_HOME/pid`
+        if ps -p $PID > /dev/null
+        then
+           echo "stopping Kylin:$PID"
+           kill $PID
+           rm ${KYLIN_HOME}/pid
+           exit 0
+        else
+           echo "Kylin is not running, please check"
+           exit 1
+        fi
+        
     else
-        echo "stopping kylin:$pid"
-        kill $pid
+        echo "Kylin is not running, please check"
+        exit 1    
     fi
-    rm ${KYLIN_HOME}/pid
-    exit 0
-
+    
 # tool command
 elif [[ $1 = org.apache.kylin.* ]]
 then
