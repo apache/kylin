@@ -837,7 +837,7 @@
                                     <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                                     <appendAssemblyId>true</appendAssemblyId>
                                     <descriptor>src/main/config/assemblies/source-assembly.xml</descriptor>
-                                    <finalName>apache-kylin-${project.version}-src</finalName>
+                                    <finalName>apache-kylin-${project.version}</finalName>
                                 </configuration>
                             </execution>
                         </executions>
