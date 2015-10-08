@@ -7,7 +7,16 @@ mkdir -p ${KYLIN_HOME}/logs
 # start command
 if [ $1 == "start" ]
 then
-
+    if [ -f "${KYLIN_HOME}/pid" ]
+    then
+        PID=`cat $KYLIN_HOME/pid`
+        if ps -p $PID > /dev/null
+        then
+          echo "Kylin is running, stop it first"
+          exit 1
+        fi
+    fi
+    
     tomcat_root=${dir}/../tomcat
     export tomcat_root
 
@@ -69,22 +78,24 @@ then
 # stop command
 elif [ $1 == "stop" ]
 then
-    if [ ! -f "${KYLIN_HOME}/pid" ]
+    if [ -f "${KYLIN_HOME}/pid" ]
     then
-        echo "kylin is not running, please check"
-        exit 1
-    fi
-    pid=`cat ${KYLIN_HOME}/pid`
-    if [ "$pid" = "" ]
-    then
-        echo "kylin is not running, please check"
-        exit 1
+        PID=`cat $KYLIN_HOME/pid`
+        if ps -p $PID > /dev/null
+        then
+           echo "stopping Kylin:$PID"
+           kill $PID
+           rm ${KYLIN_HOME}/pid
+           exit 0
+        else
+           echo "Kylin is not running, please check"
+           exit 1
+        fi
+        
     else
-        echo "stopping kylin:$pid"
-        kill $pid
+        echo "Kylin is not running, please check"
+        exit 1    
     fi
-    rm ${KYLIN_HOME}/pid
-    exit 0
 
 # streaming command
 elif [ $1 == "streaming" ]
@@ -126,24 +137,24 @@ then
     elif [ $2 == "stop" ]
     then
         if [ ! -f "${KYLIN_HOME}/$3_$4" ]
-        then
-            echo "streaming is not running, please check"
-            exit 1
-        fi
-        pid=`cat ${KYLIN_HOME}/$3_$4`
-        if [ "$pid" = "" ]
-        then
-            echo "streaming is not running, please check"
-            exit 1
+            then
+                echo "streaming is not running, please check"
+                exit 1
+            fi
+            pid=`cat ${KYLIN_HOME}/$3_$4`
+            if [ "$pid" = "" ]
+            then
+                echo "streaming is not running, please check"
+                exit 1
+            else
+                echo "stopping streaming:$pid"
+                kill $pid
+            fi
+            rm ${KYLIN_HOME}/$3_$4
+            exit 0
         else
-            echo "stopping streaming:$pid"
-            kill $pid
+            echo
         fi
-        rm ${KYLIN_HOME}/$3_$4
-        exit 0
-    else
-        echo
-    fi
 
 # monitor command
 elif [ $1 == "monitor" ]
