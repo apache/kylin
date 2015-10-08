@@ -72,7 +72,7 @@ limitations under the License.
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?\.gitignore(/.*)?]
                 </exclude>
 
-                <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?docs/website(/.*)?]
+                <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?website(/.*)?]
                 </exclude>
 
                 <!-- release-plugin temp files -->
