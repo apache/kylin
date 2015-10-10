@@ -31,7 +31,10 @@ _All new RSA keys generated should be at least 4096 bits. Do not generate new DS
 Verify your key:  
 `gpg --list-sigs YOUR_NAME`
 
-Then add your key to your apache account, for example:  
+Get the fingerprint of your key:
+`gpg --fingerprint YOUR_NAME`
+
+It will display the fingerprint like "Key fingerprint = XXXX XXXX ...", then add the fingerprint to your apache account at https://id.apache.org/ in "OpenPGP Public Key Primary Fingerprint" field; wait for a while the key will added to https://people.apache.org/keys/, for example:  
 [https://people.apache.org/keys/committer/lukehan.asc](https://people.apache.org/keys/committer/lukehan.asc)  
 Generate ASCII Amromed Key:  
 `gpg -a --export YOUR_MAIL_ADDRESS > YOUR_NAME.asc &`
@@ -70,6 +73,52 @@ mvn -Papache-release clean rat:rat
 
 Fix license issue if any.
 
+__Configure Apache repository server in Maven__
+If you're the first time to do release, you need update the server authentication information in ~/.m2/settings.xml; If this file doesn't exist, copy a template from $M2_HOME/conf/settings.xml;
+
+In the "servers" section, make sure the following servers be added, and replace #YOUR_APACHE_ID#, #YOUR_APACHE_PWD#, #YOUR_GPG_PASSPHRASE# with your ID, password, and passphrase:
+{% highlight bash %}
+<servers>
+    <!-- To publish a snapshot of some part of Maven -->
+    <server>
+      <id>apache.snapshots.https</id>
+      <username>#YOUR_APACHE_ID#</username>
+      <password>#YOUR_APACHE_PWD#</password>
+    </server>
+    <!-- To stage a release of some part of Maven -->
+    <server>
+      <id>apache.releases.https</id>
+      <username>#YOUR_APACHE_ID#</username>
+      <password>#YOUR_APACHE_PWD#</password>
+    </server>
+
+    <!-- To publish a website of some part of Maven -->
+    <server>
+      <id>apache.website</id>
+      <username>#YOUR_APACHE_ID#</username>
+      <password>#YOUR_APACHE_PWD#</password>
+      <!-- Either
+      <privateKey>...</privateKey>
+      --> 
+      <filePermissions>664</filePermissions>
+      <directoryPermissions>775</directoryPermissions>
+    </server>
+
+    <!-- To stage a website of some part of Maven -->
+    <server>
+      <id>stagingSite</id> 
+      <!-- must match hard-coded repository identifier in site:stage-deploy -->
+      <username>#YOUR_APACHE_ID#</username>
+      <filePermissions>664</filePermissions>
+      <directoryPermissions>775</directoryPermissions>
+    </server>
+    <server>
+      <id>gpg.passphrase</id>
+      <passphrase>#YOUR_GPG_PASSPHRASE#</passphrase>
+    </server>
+  </servers>
+{% endhighlight %}
+
 __Making a snapshot__  
 {% highlight bash %}
 # Set passphrase variable without putting it into shell history
@@ -81,7 +130,10 @@ $ mvn clean
 
 $ mvn -Papache-release -Dgpg.passphrase=${GPG_PASSPHRASE} install
 {% endhighlight %}
-When the dry-run has succeeded, change install to deploy.
+When the dry-run has succeeded, change install to deploy:
+{% highlight bash %}
+$ mvn -Papache-release -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
+{% endhighlight %}
 
 __Making a release__
 
@@ -104,20 +156,20 @@ $ git clean -xn
 $ mvn clean
 
 # Do a dry run of the release:prepare step, which sets version numbers.
-$ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z-incubating -DdevelopmentVersion=X.Y.Z+1-incubating-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare 2>&1 | tee /tmp/prepare-dry.log
+$ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z-incubating -DdevelopmentVersion=(X.Y.Z+1)-incubating-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare 2>&1 | tee /tmp/prepare-dry.log
 {% endhighlight %}
 
 __Check the artifacts:__
 
 * In the `target` directory should be these 8 files, among others:
-  * apache-kylin-X.Y.Z-incubating-src.tar.gz
-  * apache-kylin-X.Y.Z-incubating-src.tar.gz.asc
-  * apache-kylin-X.Y.Z-incubating-src.tar.gz.md5
-  * apache-kylin-X.Y.Z-incubating-src.tar.gz.sha1
-  * apache-kylin-X.Y.Z-incubating-src.zip
-  * apache-kylin-X.Y.Z-incubating-src.zip.asc
-  * apache-kylin-X.Y.Z-incubating-src.zip.md5
-  * apache-kylin-X.Y.Z-incubating-src.zip.sha1
+  * apache-kylin-X.Y.Z-incubating-SNAPSHOT-src.tar.gz
+  * apache-kylin-X.Y.Z-incubating-SNAPSHOT-src.tar.gz.asc
+  * apache-kylin-X.Y.Z-incubating-SNAPSHOT-src.tar.gz.md5
+  * apache-kylin-X.Y.Z-incubating-SNAPSHOT-src.tar.gz.sha1
+  * apache-kylin-X.Y.Z-incubating-SNAPSHOT-src.zip
+  * apache-kylin-X.Y.Z-incubating-SNAPSHOT-src.zip.asc
+  * apache-kylin-X.Y.Z-incubating-SNAPSHOT-src.zip.md5
+  * apache-kylin-X.Y.Z-incubating-SNAPSHOT-src.zip.sha1
 * Note that the file names start `apache-kylin-` and include
   `incubating` in the version.
 * In the two source distros `.tar.gz` and `.zip`, check that all files belong to a directory called
@@ -162,7 +214,7 @@ $ mv apache-kylin-* ~/dist/dev/kylin/apache-kylin-X.Y.Z-incubating-rcN
 ## Check in
 $ cd ~/dist/dev/kylin
 $ svn add apache-kylin-X.Y.Z-incubating-rcN
-$ svn commit -m 'Upload release artifacts to staging'
+$ svn commit -m 'Upload release artifacts to staging' --username <YOUR_APACHE_ID>
 {% endhighlight %}
 
 __Cleaning up after a failed release attempt:__
