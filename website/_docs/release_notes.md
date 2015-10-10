@@ -23,7 +23,7 @@ __New Feature__
     * [KYLIN-222] - Web UI to Display CubeInstance Information
     * [KYLIN-906] - cube retention
     * [KYLIN-910] - Allow user to enter "retention range" in days on Cube UI
-    
+
 __Bug__
 
     * [KYLIN-457] - log4j error and dup lines in kylin.log
@@ -54,7 +54,6 @@ __Bug__
     * [KYLIN-1020] - Although "kylin.query.scan.threshold" is set, it still be restricted to less than 4 million 
     * [KYLIN-1026] - Error message for git check is not correct in package.sh
 
-
 __Improvement__
 
     * [KYLIN-343] - Enable timeout on query 
@@ -80,6 +79,9 @@ __Improvement__
     * [KYLIN-1047] - Upgrade to Calcite 1.4
     * [KYLIN-1048] - CPU and memory killer in Cuboid.findById()
     * [KYLIN-1061] - "kylin.sh start" should check whether kylin has already been running
+    * [KYLIN-1048] - CPU and memory killer in Cuboid.findById()
+    * [KYLIN-1061] - "kylin.sh start" should check whether kylin has already been running
+
 
 ## v1.0-incubating - 2015-09-06
 _Tag:_ [kylin-1.0-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.0-incubating)
