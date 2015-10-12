@@ -101,7 +101,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         }
     }
 
-    private void cleanUnusedHBaseTables(Configuration conf) throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
+    private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         IIManager iiManager = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
 
@@ -117,6 +117,8 @@ public class StorageCleanupJob extends AbstractHadoopJob {
                 //only take care htables that belongs to self, and created more than 2 days
                 if (StringUtils.isEmpty(creationTime) || (System.currentTimeMillis() - Long.valueOf(creationTime) > TIME_THREADSHOLD)) {
                     allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+                } else {
+                    logger.info("Exclude table " + desc.getTableName().getNameAsString() + " from drop list, as it is newly created");
                 }
             }
         }

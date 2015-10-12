@@ -21,8 +21,6 @@ package org.apache.kylin.common.topn;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.Pair;
 
-import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
@@ -36,29 +34,12 @@ import java.util.*;
  * @param <T> type of data in the stream to be summarized
  */
 public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
-    
+
     public static final int EXTRA_SPACE_RATE = 50;
-
-
-    protected class Bucket {
-
-        protected DoublyLinkedList<Counter<T>> counterList;
-
-        private double count;
-
-        public Bucket(double count) {
-            this.count = count;
-            this.counterList = new DoublyLinkedList<Counter<T>>();
-        }
-
-        public int size() {
-            return counterList.size();
-        }
-    }
 
     protected int capacity;
     private HashMap<T, ListNode2<Counter<T>>> counterMap;
-    protected DoublyLinkedList<Bucket> bucketList;
+    protected DoublyLinkedList<Counter<T>> counterList;
 
     /**
      * @param capacity maximum size (larger capacities improve accuracy)
@@ -66,7 +47,7 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
     public TopNCounter(int capacity) {
         this.capacity = capacity;
         counterMap = new HashMap<T, ListNode2<Counter<T>>>();
-        bucketList = new DoublyLinkedList<Bucket>();
+        counterList = new DoublyLinkedList<Counter<T>>();
     }
 
     public int getCapacity() {
@@ -114,15 +95,14 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
         if (isNewItem) {
 
             if (size() < capacity) {
-                counterNode = bucketList.enqueue(new Bucket(0)).getValue().counterList.add(new Counter<T>(bucketList.tail(), item));
+                counterNode = counterList.enqueue(new Counter<T>(item));
             } else {
-                Bucket min = bucketList.first();
-                counterNode = min.counterList.tail();
+                counterNode = counterList.tail();
                 Counter<T> counter = counterNode.getValue();
                 droppedItem = counter.item;
                 counterMap.remove(droppedItem);
                 counter.item = item;
-                counter.error = min.count;
+                counter.count = 0.0;
             }
             counterMap.put(item, counterNode);
         }
@@ -133,56 +113,35 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
     }
 
     protected void incrementCounter(ListNode2<Counter<T>> counterNode, double incrementCount) {
-        Counter<T> counter = counterNode.getValue(); // count_i
-        ListNode2<Bucket> oldNode = counter.bucketNode;
-        Bucket bucket = oldNode.getValue(); // Let Bucket_i be the bucket of count_i
-        bucket.counterList.remove(counterNode); // Detach count_i from Bucket_i's child-list
-        counter.count = counter.count + incrementCount;
+        Counter<T> counter = counterNode.getValue();
+        counter.count += incrementCount;
 
-        // Finding the right bucket for count_i
-        // Because we allow a single call to increment count more than once, this may not be the adjacent bucket. 
-        ListNode2<Bucket> bucketNodePrev = oldNode;
-        ListNode2<Bucket> bucketNodeNext = bucketNodePrev.getNext();
-        while (bucketNodeNext != null) {
-            Bucket bucketNext = bucketNodeNext.getValue(); // Let Bucket_i^+ be Bucket_i's neighbor of larger value
-            if (counter.count == bucketNext.count) {
-                bucketNext.counterList.add(counterNode); // Attach count_i to Bucket_i^+'s child-list
-                break;
-            } else if (counter.count > bucketNext.count) {
-                bucketNodePrev = bucketNodeNext;
-                bucketNodeNext = bucketNodePrev.getNext(); // Continue hunting for an appropriate bucket
-            } else {
-                // A new bucket has to be created
-                bucketNodeNext = null;
-            }
+        ListNode2<Counter<T>> nodeNext = counterNode.getNext();
+        counterList.remove(counterNode);
+        counterNode.prev = null;
+        counterNode.next = null;
+        while (nodeNext != null && counter.count >= nodeNext.getValue().count) {
+            nodeNext = nodeNext.getNext();
         }
 
-        if (bucketNodeNext == null) {
-            Bucket bucketNext = new Bucket(counter.count);
-            bucketNext.counterList.add(counterNode);
-            bucketNodeNext = bucketList.addAfter(bucketNodePrev, bucketNext);
+        if (nodeNext != null) {
+            counterList.addBefore(nodeNext, counterNode);
+        } else {
+            counterList.add(counterNode);
         }
-        counter.bucketNode = bucketNodeNext;
 
-        //Cleaning up
-        if (bucket.counterList.isEmpty()) // If Bucket_i's child-list is empty
-        {
-            bucketList.remove(oldNode); // Detach Bucket_i from the Stream-Summary
-        }
     }
 
     @Override
     public List<T> peek(int k) {
         List<T> topK = new ArrayList<T>(k);
 
-        for (ListNode2<Bucket> bNode = bucketList.head(); bNode != null; bNode = bNode.getPrev()) {
-            Bucket b = bNode.getValue();
-            for (Counter<T> c : b.counterList) {
-                if (topK.size() == k) {
-                    return topK;
-                }
-                topK.add(c.item);
+        for (ListNode2<Counter<T>> bNode = counterList.head(); bNode != null; bNode = bNode.getPrev()) {
+            Counter<T> b = bNode.getValue();
+            if (topK.size() == k) {
+                return topK;
             }
+            topK.add(b.item);
         }
 
         return topK;
@@ -191,14 +150,12 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
     public List<Counter<T>> topK(int k) {
         List<Counter<T>> topK = new ArrayList<Counter<T>>(k);
 
-        for (ListNode2<Bucket> bNode = bucketList.head(); bNode != null; bNode = bNode.getPrev()) {
-            Bucket b = bNode.getValue();
-            for (Counter<T> c : b.counterList) {
-                if (topK.size() == k) {
-                    return topK;
-                }
-                topK.add(c);
+        for (ListNode2<Counter<T>> bNode = counterList.head(); bNode != null; bNode = bNode.getPrev()) {
+            Counter<T> b = bNode.getValue();
+            if (topK.size() == k) {
+                return topK;
             }
+            topK.add(b);
         }
 
         return topK;
@@ -215,48 +172,27 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append('[');
-        for (ListNode2<Bucket> bNode = bucketList.head(); bNode != null; bNode = bNode.getPrev()) {
-            Bucket b = bNode.getValue();
-            sb.append('{');
+        for (ListNode2<Counter<T>> bNode = counterList.head(); bNode != null; bNode = bNode.getPrev()) {
+            Counter<T> b = bNode.getValue();
+            sb.append(b.item);
+            sb.append(':');
             sb.append(b.count);
-            sb.append(":[");
-            for (Counter<T> c : b.counterList) {
-                sb.append('{');
-                sb.append(c.item);
-                sb.append(':');
-                sb.append(c.error);
-                sb.append("},");
-            }
-            if (b.counterList.size() > 0) {
-                sb.deleteCharAt(sb.length() - 1);
-            }
-            sb.append("]},");
-        }
-        if (bucketList.size() > 0) {
-            sb.deleteCharAt(sb.length() - 1);
         }
         sb.append(']');
         return sb.toString();
     }
 
-    public void fromExternal(int size, double[] counters, List<T> items) {
-        this.bucketList = new DoublyLinkedList<Bucket>();
-
-        this.counterMap = new HashMap<T, ListNode2<Counter<T>>>(size);
-
-        Bucket currentBucket = null;
-        ListNode2<Bucket> currentBucketNode = null;
-        for (int i = 0; i < size; i++) {
-            Counter<T> c = new Counter<T>();
-            c.count = counters[i];
-            c.item = items.get(i);
-            if (currentBucket == null || c.count != currentBucket.count) {
-                currentBucket = new Bucket(c.count);
-                currentBucketNode = bucketList.add(currentBucket);
-            }
-            c.bucketNode = currentBucketNode;
-            counterMap.put(c.item, currentBucket.counterList.add(c));
-        }
+    /**
+     * Put element to the head position;
+     * The consumer should call this method with count in ascending way; the item will be directly put to the head of the list, without comparison for best performance;
+     * @param item
+     * @param count
+     */
+    public void offerToHead(T item, double count) {
+        Counter<T> c = new Counter<T>(item);
+        c.count = count;
+        ListNode2<Counter<T>> node = counterList.add(c);
+        counterMap.put(c.item, node);
     }
 
     /**
@@ -273,33 +209,29 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
     public TopNCounter<T> merge(TopNCounter<T> another) {
         double m1 = 0.0, m2 = 0.0;
         if (this.size() >= this.capacity) {
-            m1 = this.bucketList.tail().getValue().count;
+            m1 = this.counterList.tail().getValue().count;
         }
 
         if (another.size() >= another.capacity) {
-            m2 = another.bucketList.tail().getValue().count;
+            m2 = another.counterList.tail().getValue().count;
         }
-
+        
         for (Map.Entry<T, ListNode2<Counter<T>>> entry : this.counterMap.entrySet()) {
             T item = entry.getKey();
             ListNode2<Counter<T>> existing = another.counterMap.get(item);
             if (existing != null) {
                 this.offer(item, another.counterMap.get(item).getValue().count);
-                this.counterMap.get(item).getValue().error = entry.getValue().getValue().error + another.counterMap.get(item).getValue().error;
 
                 another.counterMap.remove(item);
             } else {
                 this.offer(item, m2);
-                this.counterMap.get(item).getValue().error = entry.getValue().getValue().error + m2;
             }
         }
 
         for (Map.Entry<T, ListNode2<Counter<T>>> entry : another.counterMap.entrySet()) {
             T item = entry.getKey();
             double counter = entry.getValue().getValue().count;
-            double error = entry.getValue().getValue().error;
             this.offer(item, counter + m1);
-            this.counterMap.get(item).getValue().error = error + m1;
         }
 
         return this;
@@ -313,17 +245,13 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
         assert newCapacity > 0;
         this.capacity = newCapacity;
         if (newCapacity < this.size()) {
-            ListNode2<Bucket> tail = bucketList.tail;
+            ListNode2<Counter<T>> tail = counterList.tail();
             while (tail != null && this.size() > newCapacity) {
-                Bucket bucket = tail.getValue();
-
-                for (Counter<T> counter : bucket.counterList) {
-                    this.counterMap.remove(counter.getItem());
-                }
-                tail = tail.getNext();
+                Counter<T> bucket = tail.getValue();
+                this.counterMap.remove(bucket.getItem());
+                this.counterList.remove(tail);
+                tail = this.counterList.tail();
             }
-
-            tail.next = null;
         }
 
     }
@@ -336,14 +264,13 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
         double[] counters = new double[size()];
         int index = 0;
 
-        for (ListNode2<Bucket> bNode = bucketList.tail(); bNode != null; bNode = bNode.getNext()) {
-            Bucket b = bNode.getValue();
-            for (Counter<T> c : b.counterList) {
-                counters[index] = c.count;
-                index ++;
-            }
+        for (ListNode2<Counter<T>> bNode = counterList.tail(); bNode != null; bNode = bNode.getNext()) {
+            Counter<T> b = bNode.getValue();
+            counters[index] = b.count;
+            index++;
         }
 
+        assert index == size();
         return counters;
     }
 
@@ -353,13 +280,12 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
      */
     public List<T> getItems() {
         List<T> items = Lists.newArrayList();
-        for (ListNode2<Bucket> bNode = bucketList.tail(); bNode != null; bNode = bNode.getNext()) {
-            Bucket b = bNode.getValue();
-            for (Counter<T> c : b.counterList) {
-                items.add(c.item);
-            }
+        for (ListNode2<Counter<T>> bNode = counterList.tail(); bNode != null; bNode = bNode.getNext()) {
+            Counter<T> b = bNode.getValue();
+            items.add(b.item);
         }
 
+        assert items.size() == this.size();
         return items;
 
     }
@@ -368,46 +294,34 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
     public Iterator<Counter<T>> iterator() {
         return new TopNCounterIterator();
     }
-    
+
+    /**
+     * Iterator from the tail (smallest) to head (biggest);
+     */
     private class TopNCounterIterator implements Iterator {
 
-        private ListNode2<Bucket> currentBNode;
-        private Iterator<Counter<T>> currentCounterIterator;
-        
+        private ListNode2<Counter<T>> currentBNode;
+
         private TopNCounterIterator() {
-            currentBNode = bucketList.head();
-            if (currentBNode != null && currentBNode.getValue() != null) {
-                currentCounterIterator = currentBNode.getValue().counterList.iterator();
-            }
+            currentBNode = counterList.tail();
         }
-        
+
         @Override
         public boolean hasNext() {
-            if (currentCounterIterator == null) {
-                return false;
-            }
-            
-            if (currentCounterIterator.hasNext()) {
-                return true;
-            }
+            return currentBNode != null;
 
-            currentBNode = currentBNode.getPrev();
-            
-            if (currentBNode == null)
-                return false;
-
-            currentCounterIterator = currentBNode.getValue().counterList.iterator();
-            return hasNext();
         }
 
         @Override
         public Counter<T> next() {
-            return currentCounterIterator.next();
+            Counter<T> counter = currentBNode.getValue();
+            currentBNode = currentBNode.getNext();
+            return counter;
         }
 
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
-    } 
+    }
 }

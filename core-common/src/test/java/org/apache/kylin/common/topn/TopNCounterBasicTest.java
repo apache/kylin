@@ -37,7 +37,7 @@ public class TopNCounterBasicTest {
         List<Counter<String>> topk = vs.topK(6);
 
         for (Counter<String> top : topk) {
-            System.out.println(top.getItem() + ":" + top.getCount() + ":" + top.getError());
+            System.out.println(top.getItem() + ":" + top.getCount());
         }
 
     }
@@ -110,7 +110,7 @@ public class TopNCounterBasicTest {
     public void testMerge() {
 
         TopNCounter<String> vs = new TopNCounter<String>(10);
-        String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "B" };
+        String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "B", "A" };
         for (String i : stream) {
             vs.offer(i);
         }

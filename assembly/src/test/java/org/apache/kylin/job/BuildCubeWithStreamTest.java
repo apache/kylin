@@ -113,7 +113,10 @@ public class BuildCubeWithStreamTest {
     private static void backup() throws Exception {
         int exitCode = cleanupOldStorage();
         if (exitCode == 0) {
-            exportHBaseData();
+            String exportHTables = System.getProperty("kylinExportHTables");
+            if (Boolean.parseBoolean(exportHTables) == true) {
+                exportHBaseData();
+            }
         }
     }
 

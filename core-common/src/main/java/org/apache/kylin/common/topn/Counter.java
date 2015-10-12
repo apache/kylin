@@ -31,11 +31,9 @@ import java.io.ObjectOutput;
  */
 public class Counter<T> implements Externalizable {
 
-    protected ListNode2<TopNCounter<T>.Bucket> bucketNode;
-
     protected T item;
     protected double count;
-    protected double error;
+//    protected double error;
 
     /**
      * For de-serialization
@@ -43,10 +41,9 @@ public class Counter<T> implements Externalizable {
     public Counter() {
     }
 
-    public Counter(ListNode2<TopNCounter<T>.Bucket> bucket, T item) {
-        this.bucketNode = bucket;
+    public Counter(T item) {
         this.count = 0;
-        this.error = 0;
+//        this.error = 0;
         this.item = item;
     }
 
@@ -58,13 +55,14 @@ public class Counter<T> implements Externalizable {
         return count;
     }
 
-    public double getError() {
-        return error;
-    }
+//    public double getError() {
+//        return error;
+//    }
 
     @Override
     public String toString() {
-        return item + ":" + count + ':' + error;
+//        return item + ":" + count + ':' + error;
+        return item + ":" + count;
     }
 
     @SuppressWarnings("unchecked")
