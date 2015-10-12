@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteArray>> {
 
-    private DoubleDeltaSerializer dds = new DoubleDeltaSerializer();
+    private DoubleDeltaSerializer dds = new DoubleDeltaSerializer(3);
 
     private int precision;
 

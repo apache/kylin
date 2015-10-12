@@ -30,10 +30,9 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.common.util.MemoryBudgetController;
-import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.topn.Counter;
+import org.apache.kylin.common.topn.TopNCounter;
+import org.apache.kylin.common.util.*;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
@@ -463,10 +462,10 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             mask = mask >> 1;
         }
 
-        return scanAndAggregateGridTable(parent.table, cuboidId, childDimensions, measureColumns);
+        return scanAndAggregateGridTable(parent.table, parent.cuboidId, cuboidId, childDimensions, measureColumns);
     }
 
-    private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
+    private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long parentId, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid " + cuboidId);
 
@@ -489,10 +488,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 builder.write(newRecord);
             }
 
-            // disable sanity check for performance
-            long t = System.currentTimeMillis();
-            sanityCheck(scanner.getTotalSumForSanityCheck());
-            logger.info("sanity check for Cuboid " + cuboidId + " cost " + (System.currentTimeMillis() - t) + "ms");
+            //long t = System.currentTimeMillis();
+            //sanityCheck(parentId, cuboidId, scanner.getTotalSumForSanityCheck());
+            //logger.info("sanity check for Cuboid " + cuboidId + " cost " + (System.currentTimeMillis() - t) + "ms");
         } finally {
             scanner.close();
             builder.close();
@@ -505,12 +503,22 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     //@SuppressWarnings("unused")
-    private void sanityCheck(Object[] totalSum) {
+    private void sanityCheck(long parentId, long cuboidId, Object[] totalSum) {
         // double sum introduces error and causes result not exactly equal
         for (int i = 0; i < totalSum.length; i++) {
             if (totalSum[i] instanceof DoubleMutable) {
                 totalSum[i] = Math.round(((DoubleMutable) totalSum[i]).get());
+            } else if (totalSum[i] instanceof TopNCounter) {
+                TopNCounter counter = (TopNCounter) totalSum[i];
+                Iterator<Counter> iterator = counter.iterator();
+                double total = 0.0;
+                while (iterator.hasNext()) {
+                    Counter aCounter = iterator.next();
+                    total += aCounter.getCount();
+                }
+                totalSum[i] = Math.round(total);
             }
+            
         }
 
         if (totalSumForSanityCheck == null) {
@@ -518,6 +526,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             return;
         }
         if (Arrays.equals(totalSumForSanityCheck, totalSum) == false) {
+            logger.info("sanityCheck failed when calculate " + cuboidId + " from parent " + parentId);
+            logger.info("Expected: " + Arrays.toString(totalSumForSanityCheck));
+            logger.info("Actually: " + Arrays.toString(totalSum));
             throw new IllegalStateException();
         }
     }
