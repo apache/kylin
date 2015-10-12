@@ -32,6 +32,9 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.yarn.conf.HAUtil;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.RMHAUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -198,7 +201,12 @@ public class MapReduceExecutable extends AbstractExecutable {
         } else {
             logger.info(KylinConfig.KYLIN_JOB_YARN_APP_REST_CHECK_URL + " is not set, read from job configuration");
         }
-        String rmWebHost = job.getConfiguration().get("yarn.resourcemanager.webapp.address");
+        String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, job.getConfiguration());
+        if(HAUtil.isHAEnabled(job.getConfiguration())) {
+            YarnConfiguration conf = new YarnConfiguration(job.getConfiguration());
+            String active = RMHAUtils.findActiveRMHAId(conf);
+            rmWebHost = HAUtil.getConfValueForRMInstance(HAUtil.addSuffix(YarnConfiguration.RM_WEBAPP_ADDRESS, active), YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);
+        }
         if (StringUtils.isEmpty(rmWebHost)) {
             return null;
         }
