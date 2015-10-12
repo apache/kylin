@@ -18,8 +18,7 @@
 
 package org.apache.kylin.metadata.measure.serializer;
 
-import com.google.common.collect.Lists;
-
+import org.apache.kylin.common.topn.Counter;
 import org.apache.kylin.common.topn.DoubleDeltaSerializer;
 import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
@@ -27,6 +26,7 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.DataType;
 
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -83,15 +83,15 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
     @Override
     public void serialize(TopNCounter<ByteArray> value, ByteBuffer out) {
         double[] counters = value.getCounters();
-        List<ByteArray> items = value.getItems();
-        int keyLength = items.size() > 0 ? items.get(0).length() : 0;
+        List<ByteArray> peek = value.peek(1);
+        int keyLength = peek.size() > 0 ? peek.get(0).length() : 0;
         out.putInt(value.getCapacity());
         out.putInt(value.size());
         out.putInt(keyLength);
         dds.serialize(counters, out);
-
-        for (ByteArray item : items) {
-            out.put(item.array());
+        Iterator<Counter<ByteArray>> iterator = value.iterator();
+        while (iterator.hasNext()) {
+            out.put(iterator.next().getItem().array());
         }
     }
 
@@ -101,16 +101,15 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
         int size = in.getInt();
         int keyLength = in.getInt();
         double[] counters = dds.deserialize(in);
-        List<ByteArray> items = Lists.newArrayList();
-
-        for (int i = 0; i < size; i++) {
-            ByteArray byteArray = new ByteArray(keyLength);
-            in.get(byteArray.array());
-            items.add(byteArray);
-        }
 
         TopNCounter<ByteArray> counter = new TopNCounter<ByteArray>(capacity);
-        counter.fromExternal(size, counters, items);
+        ByteArray byteArray;
+        for (int i = 0; i < size; i++) {
+            byteArray = new ByteArray(keyLength);
+            in.get(byteArray.array());
+            counter.offerToHead(byteArray, counters[i]);
+        }
+
         return counter;
     }
 

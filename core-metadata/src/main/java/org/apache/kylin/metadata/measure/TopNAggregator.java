@@ -38,8 +38,8 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
     @Override
     public void aggregate(TopNCounter<ByteArray> value) {
         if (sum == null) {
-            sum = new TopNCounter<ByteArray>(Integer.MAX_VALUE);
             capacity = value.getCapacity();
+            sum = new TopNCounter<ByteArray>(capacity);
         }
 
         sum.merge(value);
@@ -48,13 +48,13 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
     @Override
     public TopNCounter<ByteArray> getState() {
         
-        sum.retain(capacity);
+        //sum.retain(capacity);
         return sum;
     }
 
     @Override
     public int getMemBytesEstimate() {
-        return 8 * capacity;
+        return 8 * capacity / 4;
     }
 
 }

@@ -69,7 +69,6 @@ public class IITest extends LocalFileMetadataTestCase {
     String iiName = "test_kylin_ii_inner_join";
     IIInstance ii;
     IIDesc iiDesc;
-    String cubeName = "test_kylin_cube_with_slr_empty";
 
     List<IIRow> iiRows;
 

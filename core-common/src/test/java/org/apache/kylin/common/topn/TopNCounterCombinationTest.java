@@ -29,7 +29,6 @@ public class TopNCounterCombinationTest extends TopNCounterTest {
 
     @Parameterized.Parameters
     public static Collection<Integer[]> configs() {
-        //       return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
         return Arrays.asList(new Integer[][] {
                 // with 20X space
                 { 10, 20 }, // top 10%

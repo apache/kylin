@@ -46,11 +46,11 @@ public class DataGenTest extends LocalFileMetadataTestCase {
     @Test
     public void testBasics() throws Exception {
         String content = FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "1", null);// default  settings
-        System.out.println(content);
+        //System.out.println(content);
         assertTrue(content.contains("FP-non GTC"));
         assertTrue(content.contains("ABIN"));
 
-        DeployUtil.overrideFactTableData(content, "default.test_kylin_fact");
+        //DeployUtil.overrideFactTableData(content, "default.test_kylin_fact");
     }
 
 }

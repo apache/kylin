@@ -26,11 +26,11 @@ import java.util.Iterator;
  * 
  * @param <T>
  */
-public class DoublyLinkedList<T> implements Iterable<T> {
+public class DoublyLinkedList<T> {
 
-    protected int size;
-    protected ListNode2<T> tail;
-    protected ListNode2<T> head;
+    private int size;
+    private ListNode2<T> tail;
+    private ListNode2<T> head;
 
     /**
      * Append to head of list
@@ -54,6 +54,11 @@ public class DoublyLinkedList<T> implements Iterable<T> {
      */
     public ListNode2<T> enqueue(T value) {
         ListNode2<T> node = new ListNode2<T>(value);
+       
+        return enqueue(node);
+    }
+
+    public ListNode2<T> enqueue(ListNode2<T> node) {
         if (size++ == 0) {
             head = node;
         } else {
@@ -97,6 +102,19 @@ public class DoublyLinkedList<T> implements Iterable<T> {
         size++;
     }
 
+
+    public void addBefore(ListNode2<T> node, ListNode2<T> newNode) {
+        newNode.prev = node.prev;
+        newNode.next = node;
+        node.prev = newNode;
+        if (newNode.prev == null) {
+            tail = newNode;
+        } else {
+            newNode.prev.next = newNode;
+        }
+        size++;
+    }
+
     public void remove(ListNode2<T> node) {
         if (node == tail) {
             tail = node.next;
@@ -115,54 +133,7 @@ public class DoublyLinkedList<T> implements Iterable<T> {
     public int size() {
         return size;
     }
-
-
-    @Override
-    public Iterator<T> iterator() {
-        return new DoublyLinkedListIterator(this);
-    }
-
-    protected class DoublyLinkedListIterator implements Iterator<T> {
-
-        protected DoublyLinkedList<T> list;
-        protected ListNode2<T> itr;
-        protected int length;
-
-        public DoublyLinkedListIterator(DoublyLinkedList<T> list) {
-            this.length = list.size;
-            this.list = list;
-            this.itr = list.tail;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return itr != null;
-        }
-
-        @Override
-        public T next() {
-            if (length != list.size) {
-                throw new ConcurrentModificationException();
-            }
-            T next = itr.value;
-            itr = itr.next;
-            return next;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-    }
-
-    public T first() {
-        return tail == null ? null : tail.getValue();
-    }
-
-    public T last() {
-        return head == null ? null : head.getValue();
-    }
+    
 
     public ListNode2<T> head() {
         return head;
@@ -176,13 +147,4 @@ public class DoublyLinkedList<T> implements Iterable<T> {
         return size == 0;
     }
 
-    @SuppressWarnings("unchecked")
-    public T[] toArray() {
-        T[] a = (T[]) new Object[size];
-        int i = 0;
-        for (T v : this) {
-            a[i++] = v;
-        }
-        return a;
-    }
 }

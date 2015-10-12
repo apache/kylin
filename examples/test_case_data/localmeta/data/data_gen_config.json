@@ -26,6 +26,14 @@
         "2000000"
       ],
       "asRange": true
+    },
+    {
+      "columnName": "PRICE",
+      "valueSet": [
+        "0",
+        "1000"
+      ],
+      "asRange": true
     }
   ]
 }

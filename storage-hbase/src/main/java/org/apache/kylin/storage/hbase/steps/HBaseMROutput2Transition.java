@@ -370,6 +370,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             htable.close();
             
             int reducerNum = regions * 3;
+            reducerNum = Math.max(1, reducerNum);
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             reducerNum = Math.min(kylinConfig.getHadoopJobMaxReducerNumber(), reducerNum);
 

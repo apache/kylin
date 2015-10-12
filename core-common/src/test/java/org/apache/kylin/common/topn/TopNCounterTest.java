@@ -165,7 +165,7 @@ public class TopNCounterTest {
         if (consumers.length == 1)
             return consumers;
 
-        TopNCounterTest.SpaceSavingConsumer merged = new TopNCounterTest.SpaceSavingConsumer(TOP_K * SPACE_SAVING_ROOM * PARALLEL);
+        TopNCounterTest.SpaceSavingConsumer merged = new TopNCounterTest.SpaceSavingConsumer(TOP_K * SPACE_SAVING_ROOM);
         
         for (int i=0, n=consumers.length; i<n; i++) {
             merged.vs.merge(consumers[i].vs);
