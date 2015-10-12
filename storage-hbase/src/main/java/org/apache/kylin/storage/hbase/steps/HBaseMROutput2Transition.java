@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -37,14 +38,14 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.Mapper.Context;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.kv.RowConstants;
@@ -359,6 +360,18 @@ public class HBaseMROutput2Transition implements IMROutput2 {
         @Override
         public void configureOutput(Class<? extends Reducer> reducer, String jobFlowId, Job job) throws IOException {
             job.setReducerClass(reducer);
+
+            // estimate the reducer number
+            String htableName = seg.getStorageLocationIdentifier();
+            Configuration conf = HBaseConfiguration.create(job.getConfiguration());
+            HTable htable = new HTable(conf, htableName);
+            
+            int regions = htable.getStartKeys().length + 1;
+            int reducerNum = regions * 10;
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            reducerNum = Math.min(kylinConfig.getHadoopJobMaxReducerNumber(), reducerNum);
+
+            job.setNumReduceTasks(reducerNum);
 
             // the cuboid file and KV class must be compatible with 0.7 version for smooth upgrade
             job.setOutputFormatClass(SequenceFileOutputFormat.class);
