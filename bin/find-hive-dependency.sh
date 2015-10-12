@@ -36,9 +36,9 @@ do
         hive_conf_path=$data
     fi
 done
-hdp_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
+hive_home=`echo $hive_exec_path | awk -F '/lib/' '{print $1}'`/
 
-hcatalog=`find $hdp_home -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
+hcatalog=`find $hive_home -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
 hive_lib=`find "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
 
 if [ -z "$hcatalog" ]
