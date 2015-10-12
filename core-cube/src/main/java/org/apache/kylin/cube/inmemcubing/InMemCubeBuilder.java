@@ -86,9 +86,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private CuboidResult baseResult;
     private Object[] totalSumForSanityCheck;
-    private ICuboidCollector resultCollector;    
+    private ICuboidCollector resultCollector;
     private Map<Integer, Dictionary<String>> topNDisplayColDictMap;
-
 
     public InMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         super(cubeDesc, dictionaryMap);
@@ -100,7 +99,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         this.measureCount = cubeDesc.getMeasures().size();
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
-        
+
         Map<String, Integer> measureIndexMap = Maps.newHashMap();
         List<String> metricsAggrFuncsList = Lists.newArrayList();
 
@@ -123,13 +122,14 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
                 int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
                 TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
-                Dictionary<String> dictionary = (Dictionary<String>)dictionaryMap.get(displayCol);
+                @SuppressWarnings("unchecked")
+                Dictionary<String> dictionary = (Dictionary<String>) dictionaryMap.get(displayCol);
                 assert dictionary != null;
                 topNDisplayColDictMap.put(displayColIdx, dictionary);
             }
         }
     }
-    
+
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
 
@@ -346,7 +346,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private void makeMemoryBudget() {
         int systemAvailMB = getSystemAvailMB();
         logger.info("System avail " + systemAvailMB + " MB");
-        int reserve = Math.max(reserveMemoryMB, baseResult.aggrCacheMB / 3);
+        int reserve = reserveMemoryMB;
         logger.info("Reserve " + reserve + " MB for system basics");
 
         int budget = systemAvailMB - reserve;
@@ -391,9 +391,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         int mbBaseAggrCacheOnHeap = mbAfter == 0 ? 0 : mbBefore - mbAfter;
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
-        int mbBaseAggrCache = Math.max((int) (mbBaseAggrCacheOnHeap * 1.1), mbEstimateBaseAggrCache);
+        int mbBaseAggrCache = mbBaseAggrCacheOnHeap;
         mbBaseAggrCache = Math.max(mbBaseAggrCache, 10); // let it be at least 10 MB
-        mbBaseAggrCache = Math.min(mbBaseAggrCache, mbBaseAggrCacheOnHeap * 2); // let it be at most heap * 2, estimate like topn can be very wild..
         logger.info("Base aggr cache is " + mbBaseAggrCache + " MB (heap " + mbBaseAggrCacheOnHeap + " MB, estimate " + mbEstimateBaseAggrCache + " MB)");
 
         return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, mbBaseAggrCache);
@@ -482,7 +481,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             }
 
             // disable sanity check for performance
-//            sanityCheck(scanner.getTotalSumForSanityCheck());
+            sanityCheck(scanner.getTotalSumForSanityCheck());
         } finally {
             scanner.close();
             builder.close();
@@ -623,8 +622,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 FunctionDesc function = cubeDesc.getMeasures().get(i).getFunction();
                 if (flatTableIdx == null) {
                     value = measureCodec.getSerializer(i).valueOf(measureDesc.getFunction().getParameter().getValue());
-                }
-                else if (function.isCount() || function.isHolisticCountDistinct()) {
+                } else if (function.isCount() || function.isHolisticCountDistinct()) {
                     // note for holistic count distinct, this value will be ignored
                     value = ONE;
                 } else if (function.isTopN()) {
