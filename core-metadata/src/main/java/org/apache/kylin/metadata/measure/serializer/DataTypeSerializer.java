@@ -32,6 +32,8 @@ import com.google.common.collect.Maps;
 /**
  * @author yangli9
  * 
+ * Note: the implementations MUST be thread-safe.
+ * 
  */
 abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 

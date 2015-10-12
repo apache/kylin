@@ -41,7 +41,8 @@ public class DoubleDeltaSerializer {
     final private int precision;
     final private int multiplier;
 
-    transient long[] reuseDeltas;
+
+    transient ThreadLocal<long[]> deltasThreadLocal;
 
     public DoubleDeltaSerializer() {
         this(2);
@@ -55,6 +56,7 @@ public class DoubleDeltaSerializer {
 
         this.precision = precision;
         this.multiplier = (int) Math.pow(10, precision);
+        this.deltasThreadLocal = new ThreadLocal<long[]>();
     }
 
     public void serialize(double values[], ByteBuffer buf) {
@@ -110,21 +112,24 @@ public class DoubleDeltaSerializer {
     private long[] calculateDeltas(double[] values) {
         int len = values.length - 1;
         len = Math.max(0, len);
-        if (reuseDeltas == null || reuseDeltas.length < len) {
-            reuseDeltas = new long[len];
+
+        long[] deltas = deltasThreadLocal.get();
+        if (deltas == null || deltas.length < len) {
+            deltas = new long[len];
+            deltasThreadLocal.set(deltas);
         }
-        
+                
         if (len == 0)
-            return reuseDeltas;
+            return deltas;
 
         long current = roundAndPromote(values[0]);
         for (int i = 0; i < len; i++) {
             long next = roundAndPromote(values[i + 1]);
-            reuseDeltas[i] = next - current;
-            assert reuseDeltas[i] >= 0;
+            deltas[i] = next - current;
+            assert deltas[i] >= 0;
             current = next;
         }
-        return reuseDeltas;
+        return deltas;
     }
 
     private long roundAndPromote(double value) {
@@ -142,6 +147,7 @@ public class DoubleDeltaSerializer {
         
         double[] result = new double[len];
         deserialize(buf, meta, result);
+        
         return result;
     }
     

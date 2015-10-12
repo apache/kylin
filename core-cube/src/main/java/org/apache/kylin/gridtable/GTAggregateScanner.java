@@ -167,7 +167,7 @@ public class GTAggregateScanner implements IGTScanner {
 
             // skip expensive aggregation
             for (int i = 0; i < totalSum.length; i++) {
-                if (totalSum[i] instanceof HLLCAggregator || totalSum[i] instanceof LDCAggregator || totalSum[i] instanceof TopNAggregator )
+                if (totalSum[i] instanceof HLLCAggregator || totalSum[i] instanceof LDCAggregator || totalSum[i] instanceof TopNAggregator)
                     totalSum[i] = null;
             }
 

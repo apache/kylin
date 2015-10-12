@@ -19,6 +19,7 @@
 package org.apache.kylin.common.topn;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Pair;
 
 import java.util.*;
@@ -116,19 +117,39 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
         Counter<T> counter = counterNode.getValue();
         counter.count += incrementCount;
 
-        ListNode2<Counter<T>> nodeNext = counterNode.getNext();
+        ListNode2<Counter<T>> nodeNext; 
+                
+        if (incrementCount > 0) {
+            nodeNext = counterNode.getNext();
+        } else {
+            nodeNext = counterNode.getPrev();
+        }
         counterList.remove(counterNode);
         counterNode.prev = null;
         counterNode.next = null;
-        while (nodeNext != null && counter.count >= nodeNext.getValue().count) {
-            nodeNext = nodeNext.getNext();
+
+        if (incrementCount > 0) {
+            while (nodeNext != null && counter.count >= nodeNext.getValue().count) {
+                nodeNext = nodeNext.getNext();
+            }
+            if (nodeNext != null) {
+                counterList.addBefore(nodeNext, counterNode);
+            } else {
+                counterList.add(counterNode);
+            }
+            
+        } else {
+            while (nodeNext != null && counter.count < nodeNext.getValue().count) {
+                nodeNext = nodeNext.getPrev();
+            }
+            if (nodeNext != null) {
+                counterList.addAfter(nodeNext, counterNode);
+            } else {
+                counterList.enqueue(counterNode);
+            }
         }
 
-        if (nodeNext != null) {
-            counterList.addBefore(nodeNext, counterNode);
-        } else {
-            counterList.add(counterNode);
-        }
+       
 
     }
 
@@ -196,13 +217,7 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
     }
 
     /**
-     * For de-serialization
-     */
-    public TopNCounter() {
-    }
-
-    /**
-     * Merge another counter into this counter; Note, the other counter will be changed in this method; please make a copy and passed in here;
+     * Merge another counter into this counter;
      * @param another
      * @return
      */
@@ -216,22 +231,33 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
             m2 = another.counterList.tail().getValue().count;
         }
         
+        Set<T> duplicateItems = Sets.newHashSet(); 
+        List<T> notDuplicateItems = Lists.newArrayList();
+        
         for (Map.Entry<T, ListNode2<Counter<T>>> entry : this.counterMap.entrySet()) {
             T item = entry.getKey();
             ListNode2<Counter<T>> existing = another.counterMap.get(item);
             if (existing != null) {
-                this.offer(item, another.counterMap.get(item).getValue().count);
-
-                another.counterMap.remove(item);
+                duplicateItems.add(item);
             } else {
-                this.offer(item, m2);
+                notDuplicateItems.add(item);
             }
+        }
+
+        for(T item : duplicateItems) {
+            this.offer(item, another.counterMap.get(item).getValue().count);
+        }
+        
+        for(T item : notDuplicateItems) {
+            this.offer(item, m2);
         }
 
         for (Map.Entry<T, ListNode2<Counter<T>>> entry : another.counterMap.entrySet()) {
             T item = entry.getKey();
-            double counter = entry.getValue().getValue().count;
-            this.offer(item, counter + m1);
+            if (duplicateItems.contains(item) == false) {
+                double counter = entry.getValue().getValue().count;
+                this.offer(item, counter + m1);
+            }
         }
 
         return this;
@@ -274,22 +300,6 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
         return counters;
     }
 
-    /**
-     * Get the item list order by counter values in ascending order
-     * @return
-     */
-    public List<T> getItems() {
-        List<T> items = Lists.newArrayList();
-        for (ListNode2<Counter<T>> bNode = counterList.tail(); bNode != null; bNode = bNode.getNext()) {
-            Counter<T> b = bNode.getValue();
-            items.add(b.item);
-        }
-
-        assert items.size() == this.size();
-        return items;
-
-    }
-
     @Override
     public Iterator<Counter<T>> iterator() {
         return new TopNCounterIterator();
@@ -324,4 +334,5 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
             throw new UnsupportedOperationException();
         }
     }
+    
 }

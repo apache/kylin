@@ -16,6 +16,7 @@
 
 package org.apache.kylin.common.topn;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;

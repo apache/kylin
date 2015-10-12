@@ -196,8 +196,8 @@ public class BuildCubeWithEngineTest {
         long date2 = f.parse("2013-01-01").getTime();
         long date3 = f.parse("2022-01-01").getTime();
         List<String> result = Lists.newArrayList();
-        result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date3));
-//        result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));
+        result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
+        result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));
         return result;
     }
 
@@ -230,7 +230,6 @@ public class BuildCubeWithEngineTest {
         // this cube's start date is 0, end date is 20120601000000
         long dateStart = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
         
-        /*
         long dateEnd = f.parse("2012-06-01").getTime();
 
         clearSegment(cubeName);
@@ -238,20 +237,15 @@ public class BuildCubeWithEngineTest {
 
         // then submit an append job, start date is 20120601000000, end
         // date is 20220101000000
-        dateStart = f.parse("2012-06-01").getTime();
+        dateStart = dateEnd;
         dateEnd = f.parse("2022-01-01").getTime();
         result.add(buildSegment(cubeName, dateStart, dateEnd));
 
         // build an empty segment which doesn't have data
-        dateStart = f.parse("2022-01-01").getTime();
+        dateStart = dateEnd;
         dateEnd = f.parse("2023-01-01").getTime();
         result.add(buildSegment(cubeName, dateStart, dateEnd));
 
-*/
-        long dateEnd = f.parse("2023-01-01").getTime();
-
-        clearSegment(cubeName);
-        result.add(buildSegment(cubeName, dateStart, dateEnd));
         return result;
 
     }

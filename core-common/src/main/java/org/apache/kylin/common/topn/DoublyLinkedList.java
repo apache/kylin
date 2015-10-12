@@ -28,7 +28,7 @@ import java.util.Iterator;
  */
 public class DoublyLinkedList<T> {
 
-    private int size;
+    private int size = 0;
     private ListNode2<T> tail;
     private ListNode2<T> head;
 
@@ -37,14 +37,7 @@ public class DoublyLinkedList<T> {
      */
     public ListNode2<T> add(T value) {
         ListNode2<T> node = new ListNode2<T>(value);
-        if (size++ == 0) {
-            tail = node;
-        } else {
-            node.prev = head;
-            head.next = node;
-        }
-
-        head = node;
+        add(node);
 
         return node;
     }

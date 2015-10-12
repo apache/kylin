@@ -13,16 +13,17 @@ fi
 
 #package tar.gz
 echo 'package tar.gz'
+package_name=apache-kylin-${version}-bin
 cd build/
-rm -rf kylin-${version}
-mkdir kylin-${version}
-cp -r lib bin conf tomcat ../examples/sample_cube commit_SHA1 kylin-${version}
+rm -rf ${package_name}
+mkdir ${package_name}
+cp -r lib bin conf tomcat ../examples/sample_cube commit_SHA1 ${package_name}
 rm -rf lib tomcat commit_SHA1
-find kylin-${version} -type d -exec chmod 755 {} \;
-find kylin-${version} -type f -exec chmod 644 {} \;
-find kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
+find ${package_name} -type d -exec chmod 755 {} \;
+find ${package_name} -type f -exec chmod 644 {} \;
+find ${package_name} -type f -name "*.sh" -exec chmod 755 {} \;
 mkdir -p ../dist
-tar -cvzf ../dist/kylin-${version}.tar.gz kylin-${version}
-rm -rf kylin-${version}
+tar -cvzf ../dist/${package_name}.tar.gz ${package_name}
+rm -rf ${package_name}
 
-echo "Package ready: dist/kylin-${version}.tar.gz"
+echo "Package ready: dist/${package_name}.tar.gz"
