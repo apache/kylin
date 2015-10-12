@@ -93,7 +93,7 @@ public class BuildCubeWithStreamTest {
         //Use a random topic for kafka data stream
         KafkaConfig streamingConfig = KafkaConfigManager.getInstance(kylinConfig).getKafkaConfig(streamingName);
         streamingConfig.setTopic(UUID.randomUUID().toString());
-        KafkaConfigManager.getInstance(kylinConfig).saveStreamingConfig(streamingConfig);
+        KafkaConfigManager.getInstance(kylinConfig).saveKafkaConfig(streamingConfig);
 
         DeployUtil.prepareTestDataForStreamingCube(startTime, endTime, config.getCubeName(), streamingConfig);
     }

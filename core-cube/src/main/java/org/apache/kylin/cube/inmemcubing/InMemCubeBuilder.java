@@ -490,7 +490,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             }
 
             // disable sanity check for performance
+            long t = System.currentTimeMillis();
             sanityCheck(scanner.getTotalSumForSanityCheck());
+            logger.info("sanity check for Cuboid " + cuboidId + " cost " + (System.currentTimeMillis() - t) + "ms");
         } finally {
             scanner.close();
             builder.close();
