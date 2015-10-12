@@ -69,7 +69,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private class BuildOnce {
-
+        
         public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
             final List<SplitThread> splits = new ArrayList<SplitThread>();
             final Merger merger = new Merger();
@@ -244,7 +244,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
             logger.debug(splitRowCount + " records went into split #" + nSplit + "; " + systemAvailMB + " MB left, " + reserveMemoryMB + " MB threshold");
 
-            return splitRowCount >= splitRowThreshold || systemAvailMB <= reserveMemoryMB;
+            return splitRowCount >= splitRowThreshold || systemAvailMB <= reserveMemoryMB * 1.5;
         }
     }
 
