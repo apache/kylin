@@ -115,7 +115,7 @@ public class KafkaConfigManager {
         }
     }
 
-    public void saveStreamingConfig(KafkaConfig kafkaConfig) throws IOException {
+    public void saveKafkaConfig(KafkaConfig kafkaConfig) throws IOException {
         if (kafkaConfig == null || StringUtils.isEmpty(kafkaConfig.getName())) {
             throw new IllegalArgumentException();
         }
