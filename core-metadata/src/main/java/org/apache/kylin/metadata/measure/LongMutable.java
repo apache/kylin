@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.measure;
 
 import java.io.Serializable;
 
+@SuppressWarnings("serial")
 public class LongMutable implements Comparable<LongMutable>, Serializable {
 
     private long v;

@@ -21,9 +21,8 @@ package org.apache.kylin.metadata.measure;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 
 /**
- * @author yangli9
- * 
  */
+@SuppressWarnings("serial")
 public class HLLCAggregator extends MeasureAggregator<HyperLogLogPlusCounter> {
 
     final int precision;

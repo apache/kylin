@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.measure;
 
 /**
  */
+@SuppressWarnings("serial")
 public class DoubleMinAggregator extends MeasureAggregator<DoubleMutable> {
 
     DoubleMutable min = null;

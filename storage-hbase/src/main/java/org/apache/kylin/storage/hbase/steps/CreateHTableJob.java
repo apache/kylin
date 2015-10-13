@@ -315,9 +315,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
             DataType returnType = measureDesc.getFunction().getReturnDataType();
             if (returnType.isHLLC()) {
                 // for HLL, it will be compressed when export to bytes
-                space += returnType.getSpaceEstimate() * 0.75;
+                space += returnType.getStorageBytesEstimate() * 0.75;
             } else {
-                space += returnType.getSpaceEstimate();
+                space += returnType.getStorageBytesEstimate();
             }
         }
         bytesLength += space;

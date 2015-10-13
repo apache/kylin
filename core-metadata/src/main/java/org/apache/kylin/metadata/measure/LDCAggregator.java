@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.measure;
 /**
  * Long Distinct Count
  */
+@SuppressWarnings("serial")
 public class LDCAggregator extends MeasureAggregator<LongMutable> {
 
     private static LongMutable ZERO = new LongMutable(0);

@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.measure;
 
 /**
  */
+@SuppressWarnings("serial")
 public class DoubleSumAggregator extends MeasureAggregator<DoubleMutable> {
 
     DoubleMutable sum = new DoubleMutable();

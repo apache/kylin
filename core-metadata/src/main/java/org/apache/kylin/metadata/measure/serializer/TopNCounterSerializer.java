@@ -36,7 +36,7 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
     private DoubleDeltaSerializer dds = new DoubleDeltaSerializer();
 
     private int precision;
-    
+
     public TopNCounterSerializer(DataType dataType) {
         this.precision = dataType.getPrecision();
     }
@@ -44,7 +44,6 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
     @Override
     public int peekLength(ByteBuffer in) {
         int mark = in.position();
-        int capacity = in.getInt();
         int size = in.getInt();
         int keyLength = in.getInt();
         dds.deserialize(in);
@@ -59,6 +58,11 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
     }
 
     @Override
+    public int getStorageBytesEstimate() {
+        return precision * TopNCounter.EXTRA_SPACE_RATE * 8;
+    }
+
+    @Override
     public TopNCounter<ByteArray> valueOf(byte[] value) {
         ByteBuffer buffer = ByteBuffer.wrap(value);
         int sizeOfId = buffer.getInt();
@@ -67,7 +71,7 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
 
         ByteArray key = new ByteArray(sizeOfId);
         BytesUtil.writeUnsigned(keyEncodedValue, key.array(), 0, sizeOfId);
-        
+
         TopNCounter<ByteArray> topNCounter = new TopNCounter<ByteArray>(precision * TopNCounter.EXTRA_SPACE_RATE);
         topNCounter.offer(key, counter);
         return topNCounter;
@@ -95,15 +99,16 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
         int keyLength = in.getInt();
         double[] counters = dds.deserialize(in);
         List<ByteArray> items = Lists.newArrayList();
-        
-        for(int i=0; i<size; i++) {
+
+        for (int i = 0; i < size; i++) {
             ByteArray byteArray = new ByteArray(keyLength);
             in.get(byteArray.array());
             items.add(byteArray);
         }
-        
+
         TopNCounter<ByteArray> counter = new TopNCounter<ByteArray>(capacity);
         counter.fromExternal(size, counters, items);
         return counter;
     }
+
 }

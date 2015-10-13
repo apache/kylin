@@ -333,7 +333,8 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
         int rowSizeEst = dimensions.size() * 3;
         for (FunctionDesc func : metrics) {
-            rowSizeEst += func.getReturnDataType().getSpaceEstimate();
+            // FIXME getStorageBytesEstimate() is not appropriate as here we want size in memory (not in storage)
+            rowSizeEst += func.getReturnDataType().getStorageBytesEstimate();
         }
 
         long rowEst = MEM_BUDGET_PER_QUERY / rowSizeEst;

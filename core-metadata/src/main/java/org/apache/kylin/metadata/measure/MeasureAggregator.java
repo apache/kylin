@@ -24,9 +24,8 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import java.io.Serializable;
 
 /**
- * @author yangli9
- * 
  */
+@SuppressWarnings("serial")
 abstract public class MeasureAggregator<V> implements Serializable {
 
     public static MeasureAggregator<?> create(String funcName, String returnType) {

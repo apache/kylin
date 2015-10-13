@@ -66,6 +66,11 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleMutable> {
     }
 
     @Override
+    public int getStorageBytesEstimate() {
+        return 8;
+    }
+
+    @Override
     public DoubleMutable valueOf(byte[] value) {
         DoubleMutable d = current();
         if (value == null)

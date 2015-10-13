@@ -77,12 +77,15 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
             throw new RuntimeException(e); // never happen
         }
     }
-
+    
     /** peek into buffer and return the length of serialization */
     abstract public int peekLength(ByteBuffer in);
 
     /** return the max number of bytes to the longest serialization */
     abstract public int maxLength();
+
+    /** get an estimate of size in bytes of the serialized data */
+    abstract public int getStorageBytesEstimate();
 
     /** convert from String to obj (string often come as byte[] in mapred) */
     abstract public T valueOf(byte[] value);

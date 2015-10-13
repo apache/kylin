@@ -24,6 +24,7 @@ import org.apache.kylin.common.util.ByteArray;
 /**
  * 
  */
+@SuppressWarnings("serial")
 public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
 
     int capacity = 0;
@@ -45,7 +46,7 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
     }
 
     @Override
-    public TopNCounter getState() {
+    public TopNCounter<ByteArray> getState() {
         
         sum.retain(capacity);
         return sum;

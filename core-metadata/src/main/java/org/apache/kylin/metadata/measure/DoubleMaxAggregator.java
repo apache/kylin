@@ -19,9 +19,8 @@
 package org.apache.kylin.metadata.measure;
 
 /**
- * @author yangli9
- * 
  */
+@SuppressWarnings("serial")
 public class DoubleMaxAggregator extends MeasureAggregator<DoubleMutable> {
 
     DoubleMutable max = null;
