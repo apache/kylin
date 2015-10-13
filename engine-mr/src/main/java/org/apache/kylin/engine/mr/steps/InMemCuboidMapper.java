@@ -87,8 +87,12 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
             }
         }
         
-
         DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
+        // Some may want to left out memory for "mapreduce.task.io.sort.mb", but that is not
+        // necessary, because the output phase is after all in-mem cubing is done, and at that
+        // time all memory has been released, cuboid data is read from ConcurrentDiskStore.
+        //cubeBuilder.setReserveMemoryMB(mapreduce.task.io.sort.mb);
+        
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new MapContextGTRecordWriter(context, cubeDesc, cubeSegment)));
 

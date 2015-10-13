@@ -385,7 +385,7 @@ public class KylinConfig implements Serializable {
     }
 
     public int getHadoopJobMaxReducerNumber() {
-        return Integer.parseInt(getOptional(KYLIN_JOB_MAPREDUCE_MAX_REDUCER_NUMBER, "5000"));
+        return Integer.parseInt(getOptional(KYLIN_JOB_MAPREDUCE_MAX_REDUCER_NUMBER, "500"));
     }
 
     public boolean getRunAsRemoteCommand() {

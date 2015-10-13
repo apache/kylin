@@ -69,7 +69,22 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private class BuildOnce {
-        
+        private int cutAheadMB;
+
+        BuildOnce() {
+            int systemAvailMB = MemoryBudgetController.getSystemAvailMB();
+
+            // InMemCubeBuilder will over-estimate base cuboid size by a factor, must cut ahead at least the same factor
+            cutAheadMB = (int) (systemAvailMB * InMemCubeBuilder.BASE_CUBOID_CACHE_OVERSIZE_FACTOR);
+            logger.info("Cut ahead MB is " + cutAheadMB);
+
+            int half = systemAvailMB / 2;
+            if (getReserveMemoryMB() > half) {
+                logger.info("Reserve " + getReserveMemoryMB() + " MB is more than half of system avail " + systemAvailMB + " MB, override to " + half);
+                setReserveMemoryMB(half);
+            }
+        }
+
         public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
             final List<SplitThread> splits = new ArrayList<SplitThread>();
             final Merger merger = new Merger();
@@ -244,7 +259,17 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
             logger.debug(splitRowCount + " records went into split #" + nSplit + "; " + systemAvailMB + " MB left, " + reserveMemoryMB + " MB threshold");
 
-            return splitRowCount >= splitRowThreshold || systemAvailMB <= reserveMemoryMB * 1.5;
+            if (splitRowCount >= splitRowThreshold) {
+                logger.info("Split cut due to hitting splitRowThreshold " + splitRowThreshold);
+                return true;
+            }
+
+            if (systemAvailMB <= reserveMemoryMB + cutAheadMB) {
+                logger.info("Split cut due to hitting memory threshold, system avail " + systemAvailMB + " MB <= reserve " + reserveMemoryMB + " MB + cut ahead " + cutAheadMB + " MB");
+                return true;
+            }
+
+            return false;
         }
     }
 

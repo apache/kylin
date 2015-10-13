@@ -38,13 +38,14 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
@@ -365,9 +366,10 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             String htableName = seg.getStorageLocationIdentifier();
             Configuration conf = HBaseConfiguration.create(job.getConfiguration());
             HTable htable = new HTable(conf, htableName);
-            
             int regions = htable.getStartKeys().length + 1;
-            int reducerNum = regions * 10;
+            htable.close();
+            
+            int reducerNum = regions * 3;
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             reducerNum = Math.min(kylinConfig.getHadoopJobMaxReducerNumber(), reducerNum);
 
