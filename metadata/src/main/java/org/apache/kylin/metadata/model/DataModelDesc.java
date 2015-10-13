@@ -150,6 +150,7 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     public void init(Map<String, TableDesc> tables) {
+        this.factTable = factTable.toUpperCase();
         initJoinColumns(tables);
         initPartitionDesc(tables);
     }
