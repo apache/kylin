@@ -20,7 +20,6 @@ package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.rest.request.SQLRequest;
@@ -140,13 +139,11 @@ public class BadQueryDetector extends Thread {
         if (getSystemAvailMB() < alertMB) {
             logger.info("System free memory less than " + alertMB + " MB. " + entries.size() + " queries running.");
 
-            for (Map.Entry<Thread, Entry> mapEntry : runningQueries.entrySet()) {
-                Entry e = mapEntry.getValue();
+            for (Entry e : entries) {
                 int duration = (int) ((now - e.startTime) / 1000);
                 if (duration > killRunningSec) {
                     notify("Kill", duration, e.sqlRequest.getSql(), e.thread);
-                    Thread queryThread = mapEntry.getKey();
-                    killQueryThread(queryThread);
+                    killQueryThread(e.thread);
                 } else {
                     notify("Low mem", duration, e.sqlRequest.getSql(), e.thread);
                 }
@@ -154,8 +151,17 @@ public class BadQueryDetector extends Thread {
         }
     }
 
-    private void killQueryThread(Thread thread) {
-        thread.interrupt();
+    private void killQueryThread(Thread t) {
+        StackTraceElement[] stackTrace = t.getStackTrace();
+        t.interrupt();
+        
+        // log the stack trace of bad query thread for further analysis
+        StringBuilder buf = new StringBuilder("Interrupted thread 0x" + Long.toHexString(t.getId()));
+        buf.append("\n");
+        for (StackTraceElement e : stackTrace) {
+            buf.append("\t").append("at ").append(e.toString()).append("\n");
+        }
+        logger.info(buf.toString());
     }
 
     public static final int ONE_MB = 1024 * 1024;
