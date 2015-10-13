@@ -68,6 +68,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(InMemCubeBuilder.class);
     private static final LongMutable ONE = new LongMutable(1l);
+    static final double BASE_CUBOID_CACHE_OVERSIZE_FACTOR = 0.1;
 
     private final CuboidScheduler cuboidScheduler;
     private final long baseCuboidId;
@@ -391,7 +392,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         int mbBaseAggrCacheOnHeap = mbAfter == 0 ? 0 : mbBefore - mbAfter;
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
-        int mbBaseAggrCache = mbBaseAggrCacheOnHeap;
+        int mbBaseAggrCache = (int) (mbBaseAggrCacheOnHeap * (1 + BASE_CUBOID_CACHE_OVERSIZE_FACTOR));
         mbBaseAggrCache = Math.max(mbBaseAggrCache, 10); // let it be at least 10 MB
         logger.info("Base aggr cache is " + mbBaseAggrCache + " MB (heap " + mbBaseAggrCacheOnHeap + " MB, estimate " + mbEstimateBaseAggrCache + " MB)");
 

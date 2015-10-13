@@ -42,7 +42,7 @@ abstract public class AbstractInMemCubeBuilder {
     final protected Map<TblColRef, Dictionary<?>> dictionaryMap;
 
     protected int taskThreadCount = 4;
-    protected int reserveMemoryMB = 100;
+    protected int reserveMemoryMB = 200;
 
     public AbstractInMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         if (cubeDesc == null)
@@ -60,6 +60,10 @@ abstract public class AbstractInMemCubeBuilder {
 
     public void setReserveMemoryMB(int mb) {
         this.reserveMemoryMB = mb;
+    }
+    
+    public int getReserveMemoryMB() {
+        return this.reserveMemoryMB;
     }
 
     public Runnable buildAsRunnable(final BlockingQueue<List<String>> input, final ICuboidWriter output) {
