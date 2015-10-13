@@ -79,6 +79,11 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
     }
 
     @Override
+    public int getStorageBytesEstimate() {
+        return current().maxLength();
+    }
+
+    @Override
     public HyperLogLogPlusCounter valueOf(byte[] value) {
         HyperLogLogPlusCounter hllc = current();
         hllc.clear();

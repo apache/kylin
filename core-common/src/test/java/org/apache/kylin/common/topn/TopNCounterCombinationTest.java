@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 @RunWith(Parameterized.class)
-@Ignore ("For collecting accuracy statistics, not for functional test")
+@Ignore("For collecting accuracy statistics, not for functional test")
 public class TopNCounterCombinationTest extends TopNCounterTest {
 
     @Parameterized.Parameters

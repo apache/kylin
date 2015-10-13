@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.measure;
 
 /**
  */
+@SuppressWarnings("serial")
 public class LongMaxAggregator extends MeasureAggregator<LongMutable> {
 
     LongMutable max = null;

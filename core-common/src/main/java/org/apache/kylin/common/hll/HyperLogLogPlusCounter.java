@@ -37,6 +37,7 @@ import com.google.common.hash.Hashing;
  * 
  * @author yangli9
  */
+@SuppressWarnings("serial")
 public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLogLogPlusCounter> {
 
     private final int p;

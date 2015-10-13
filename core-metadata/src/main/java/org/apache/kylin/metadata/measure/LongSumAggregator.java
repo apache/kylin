@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.measure;
 
 /**
  */
+@SuppressWarnings("serial")
 public class LongSumAggregator extends MeasureAggregator<LongMutable> {
 
     LongMutable sum = new LongMutable();

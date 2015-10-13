@@ -686,7 +686,8 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             BitSet projectionIndex = decoder.getProjectionIndex();
             for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
                 FunctionDesc func = measures[i].getFunction();
-                rowSizeEst += func.getReturnDataType().getSpaceEstimate();
+                // FIXME getStorageBytesEstimate() is not appropriate as here we want size in memory (not in storage)
+                rowSizeEst += func.getReturnDataType().getStorageBytesEstimate();
             }
         }
 

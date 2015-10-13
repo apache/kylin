@@ -18,8 +18,6 @@ import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
 import org.apache.kylin.metadata.measure.serializer.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by shaoshi on 3/23/15.
@@ -28,7 +26,6 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class CubeCodeSystem implements IGTCodeSystem {
-    private static final Logger logger = LoggerFactory.getLogger(CubeCodeSystem.class);
 
     // ============================================================================
 
@@ -173,6 +170,11 @@ public class CubeCodeSystem implements IGTCodeSystem {
         }
 
         @Override
+        public int getStorageBytesEstimate() {
+            return fieldSize;
+        }
+
+        @Override
         public Object valueOf(byte[] value) {
             throw new UnsupportedOperationException();
         }
@@ -222,6 +224,11 @@ public class CubeCodeSystem implements IGTCodeSystem {
             return dictionary.getSizeOfId();
         }
 
+        @Override
+        public int getStorageBytesEstimate() {
+            return dictionary.getSizeOfId();
+        }
+        
         @Override
         public Object valueOf(byte[] value) {
             throw new UnsupportedOperationException();
@@ -293,6 +300,11 @@ public class CubeCodeSystem implements IGTCodeSystem {
             return fixLen;
         }
 
+        @Override
+        public int getStorageBytesEstimate() {
+            return fixLen;
+        }
+        
         @Override
         public Object valueOf(byte[] value) {
             try {

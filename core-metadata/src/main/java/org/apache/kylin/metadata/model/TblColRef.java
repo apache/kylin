@@ -24,6 +24,7 @@ import java.io.Serializable;
 
 /**
  */
+@SuppressWarnings("serial")
 public class TblColRef implements Serializable {
 
     private static final String INNER_TABLE_NAME = "_kylin_table";

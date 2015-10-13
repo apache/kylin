@@ -47,6 +47,11 @@ public class DateTimeSerializer extends DataTypeSerializer<LongMutable> {
     }
 
     @Override
+    public int getStorageBytesEstimate() {
+        return 8;
+    }
+
+    @Override
     public LongMutable valueOf(byte[] value) {
         LongMutable l = current();
         if (value == null)

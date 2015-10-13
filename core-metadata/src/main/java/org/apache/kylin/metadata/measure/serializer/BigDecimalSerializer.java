@@ -95,6 +95,11 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     }
 
     @Override
+    public int getStorageBytesEstimate() {
+        return 8;
+    }
+
+    @Override
     public BigDecimal valueOf(byte[] value) {
         if (value == null)
             return new BigDecimal(0);

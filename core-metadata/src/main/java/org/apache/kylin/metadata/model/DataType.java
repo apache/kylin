@@ -28,10 +28,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
+
 /**
- * @author yangli9
- * 
  */
+@SuppressWarnings("serial")
 public class DataType implements Serializable {
 
     public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|binary" //
@@ -167,27 +168,8 @@ public class DataType implements Serializable {
         return replace == null ? str : replace;
     }
 
-    public int getSpaceEstimate() {
-        if (isTinyInt()) {
-            return 1;
-        } else if (isSmallInt()) {
-            return 2;
-        } else if (isInt()) {
-            return 4;
-        } else if (isBigInt()) {
-            return 8;
-        } else if (isFloat()) {
-            return 4;
-        } else if (isDouble()) {
-            return 8;
-        } else if (isDecimal()) {
-            return 8;
-        } else if (isHLLC()) {
-            return 1 << precision;
-        } else if (isTopN()) {
-            return 8 * precision * 50;
-        }
-        throw new IllegalStateException("The return type : " + name + " is not recognized;");
+    public int getStorageBytesEstimate() {
+        return DataTypeSerializer.create(this).getStorageBytesEstimate();
     }
 
     public boolean isStringFamily() {

@@ -43,6 +43,11 @@ public class StringSerializer extends DataTypeSerializer<String> {
     }
 
     @Override
+    public int getStorageBytesEstimate() {
+        return maxLength;
+    }
+
+    @Override
     public String valueOf(byte[] value) {
         return Bytes.toString(value);
     }

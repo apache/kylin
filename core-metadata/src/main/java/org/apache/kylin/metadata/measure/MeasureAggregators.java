@@ -27,10 +27,8 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
- * @author yangli9
- * 
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
 public class MeasureAggregators implements Serializable {
 
     private final MeasureAggregator[] aggs;

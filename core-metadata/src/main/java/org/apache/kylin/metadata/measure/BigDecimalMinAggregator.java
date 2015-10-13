@@ -21,9 +21,8 @@ package org.apache.kylin.metadata.measure;
 import java.math.BigDecimal;
 
 /**
- * @author yangli9
- * 
  */
+@SuppressWarnings("serial")
 public class BigDecimalMinAggregator extends MeasureAggregator<BigDecimal> {
 
     BigDecimal max = null;
