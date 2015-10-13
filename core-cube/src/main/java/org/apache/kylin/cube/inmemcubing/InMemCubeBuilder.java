@@ -335,9 +335,17 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private int getSystemAvailMB() {
+        // GC to be precise on memory left
         Runtime.getRuntime().gc();
         try {
-            Thread.sleep(500);
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            logger.error("", e);
+        }
+        // GC again to be precise on memory left
+        Runtime.getRuntime().gc();
+        try {
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             logger.error("", e);
         }
