@@ -38,7 +38,7 @@ public class BadQueryDetectorTest {
         BadQueryDetector badQueryDetector = new BadQueryDetector(alertRunningSec * 1000, alertMB, alertRunningSec, alertRunningSec * 5);
         badQueryDetector.registerNotifier(new BadQueryDetector.Notifier() {
             @Override
-            public void badQueryFound(String adj, int runningSec, String sql) {
+            public void badQueryFound(String adj, int runningSec, String sql, Thread t) {
                 alerts.add(new String[] { adj, sql });
             }
         });
