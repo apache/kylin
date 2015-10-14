@@ -2465,6 +2465,7 @@ RETCODE SQL_API _SQLGetIRDItemField ( const pODBCIRD pDesc, const pIRDItem pDesc
             * ( ( Long* ) pDataPtr ) = 0;
             break;
             
+		case SQL_COLUMN_LENGTH://3
         case SQL_DESC_LENGTH://1003
         case SQL_DESC_DISPLAY_SIZE://6
             if ( isANSI )
@@ -2554,7 +2555,8 @@ RETCODE SQL_API _SQLGetIRDItemField ( const pODBCIRD pDesc, const pIRDItem pDesc
             }
             
             break;
-            
+
+		case SQL_COLUMN_PRECISION: //4
         case SQL_DESC_PRECISION: //1005
             * ( ( Long* ) pDataPtr ) = pDescItem->precision;
             __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "precision is returned as %i ", * ( ( Word* ) pDataPtr ) ) );
@@ -2565,6 +2567,7 @@ RETCODE SQL_API _SQLGetIRDItemField ( const pODBCIRD pDesc, const pIRDItem pDesc
             * ( ( Word* ) pDataPtr ) = SQL_FALSE;
             break;
             
+		case SQL_COLUMN_SCALE: //5
         case SQL_DESC_SCALE://1006
             * ( ( Long* ) pDataPtr ) = pDescItem->scale;
             __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "scale is returned as %i ", * ( ( Word* ) pDataPtr ) ) );

@@ -179,6 +179,18 @@ std::unique_ptr<char[]> make_unique_str ( int size ) {
     return std::unique_ptr<char[]> ( new char[size + 1] );
 }
 
+void remove_char(char *src, const char tgt)
+{
+    char * fp = src;
+    while (*src) {
+        if (*src != tgt) {
+            *fp = *src;
+            fp++;
+        }
+        src++;
+    }
+    *fp = '\0' ;
+}
 
 
 

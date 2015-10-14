@@ -50,6 +50,7 @@
 //
 // ----------------------------------------------------------------------------
 #include "stdafx.h"
+#include "JsonConverter.h"
 
 // -----------------------------------------------------------------------
 // to get driver related information
@@ -592,9 +593,10 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
                                       pBufferLength, pStringLengthPtr ) );
     }
     
-    if ( pStringLengthPtr ) {
+	//// *2 is already done in _SQLCopyWCharData()
+    /*if ( pStringLengthPtr ) {
         *pStringLengthPtr = ( *pStringLengthPtr ) * 2;
-    }
+    }*/
     
     return SQL_SUCCESS;
 }
@@ -1137,19 +1139,44 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC         pConn,
     return SQL_SUCCESS;
 }
 
-
 // -----------------------------------------------------------------------
 // to get type related information, this communicates with the server
 // -----------------------------------------------------------------------
+RETCODE SQL_API _SQLGetTypeInfoBasic ( HSTMT pStmt, SWORD pDataType ) {
+    __CHK_HANDLE(pStmt,SQL_HANDLE_STMT,SQL_ERROR);
+    
+	std::unique_ptr<SQLResponse> p;
+	try {
+		wstring info = U("{\"columnMetas\":[{\"isNullable\":0,\"displaySize\":10,\"label\":\"TYPE_NAME\",\"name\":\"TYPE_NAME\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":128,\"scale\":0,\"columnType\":12,\"columnTypeName\":\"VARCHAR(128)\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":0,\"displaySize\":5,\"label\":\"DATA_TYPE\",\"name\":\"DATA_TYPE\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":10,\"label\":\"COLUMN_SIZE\",\"name\":\"COLUMN_SIZE\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":10,\"scale\":0,\"columnType\":4,\"columnTypeName\":\"INTEGER\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":10,\"label\":\"LITERAL_PREFIX?\",\"name\":\"LITERAL_PREFIX?\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":128,\"scale\":0,\"columnType\":12,\"columnTypeName\":\"VARCHAR(128)\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":10,\"label\":\"LITERAL_SUFFIX?\",\"name\":\"LITERAL_SUFFIX?\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":128,\"scale\":0,\"columnType\":12,\"columnTypeName\":\"VARCHAR(128)\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":10,\"label\":\"CREATE_PARAMS?\",\"name\":\"CREATE_PARAMS?\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":128,\"scale\":0,\"columnType\":12,\"columnTypeName\":\"VARCHAR(128)\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":0,\"displaySize\":5,\"label\":\"NULLABLE\",\"name\":\"NULLABLE\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":0,\"displaySize\":5,\"label\":\"CASE_SENSITIVE?\",\"name\":\"CASE_SENSITIVE?\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":0,\"displaySize\":5,\"label\":\"SEARCHABLE?\",\"name\":\"SEARCHABLE?\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":5,\"label\":\"UNSIGNED_ATTRIBUTE??\",\"name\":\"UNSIGNED_ATTRIBUTE??\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":0,\"displaySize\":5,\"label\":\"FIXED_PREC_SCALE???\",\"name\":\"FIXED_PREC_SCALE???\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":5,\"label\":\"AUTO_UNIQUE_VALUE?\",\"name\":\"AUTO_UNIQUE_VALUE???\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":5,\"label\":\"LOCAL_TYPE_NAME???\",\"name\":\"LOCAL_TYPE_NAME???\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":128,\"scale\":0,\"columnType\":12,\"columnTypeName\":\"VARCHAR(128)\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":5,\"label\":\"MINIMUM_SCALE???\",\"name\":\"MINIMUM_SCALE???\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":5,\"label\":\"MAXIMUM_SCALE???\",\"name\":\"MAXIMUM_SCALE???\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":0,\"displaySize\":5,\"label\":\"SQL_DATA_TYPE?? ?\",\"name\":\"SQL_DATA_TYPE?? ?\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":5,\"label\":\"SQL_DATETIME_SUB?? ??\",\"name\":\"SQL_DATETIME_SUB?? ??\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":10,\"label\":\"NUM_PREC_RADIX?? ? ?\",\"name\":\"NUM_PREC_RADIX?? ? ?\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":10,\"scale\":0,\"columnType\":4,\"columnTypeName\":\"INTEGER\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false},{\"isNullable\":1,\"displaySize\":5,\"label\":\"INTERVAL_PRECISION?? ? ?\",\"name\":\"INTERVAL_PRECISION?? ? ?\",\"schemaName\":null,\"catelogName\":null,\"tableName\":null,\"precision\":5,\"scale\":0,\"columnType\":5,\"columnTypeName\":\"SMALLINT\",\"readOnly\":true,\"writable\":false,\"caseSensitive\":true,\"searchable\":false,\"currency\":false,\"signed\":true,\"autoIncrement\":false,\"definitelyWritable\":false}],\"results\":[[\"char\",\"1\",\"255\",\"'\",\"'\",null,\"1\",\"0\",\"3\",null,\"0\",null,\"char\",null,null,\"1\",null,null,null]],\"affectedRowCount\":0,\"isException\":false,\"exceptionMessage\":null,\"duration\":0,\"partial\":false}");
+		web::json::value v = web::json::value::parse ( info );
+		p = SQLResponseFromJSON ( v );
+	}
+    catch ( const exception& e ) {
+        std::stringstream ss;
+        ss << "The error message is: " << e.what();
+        std::string s = ss.str();
+        __ODBCLOG ( _ODBCLogMsg ( LogLevel_ERROR, s.c_str() ) );
+        _SQLPutDiagRow ( SQL_HANDLE_STMT, pStmt, "SQLGetTypeInfoW", "01000", -1, ( char* ) s.c_str() );
+        return SQL_ERROR;
+    }
 
-//TODO
-RETCODE SQL_API SQLGetTypeInfo ( HSTMT pStmt, SWORD pDataType ) {
-    __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLGetTypeInfo called, Stmt: %d, DataType: %d", ( Long ) pStmt,
-                              pDataType ) );
-    __ODBCPOPMSG ( _ODBCPopMsg ( "SQLGetType Info is not supported" ) );
+	if ( p == NULL ||  p->isException == true || PutRespToStmt ( ( pODBCStmt ) pStmt, std::move ( p ) ) != GOOD ) {
+        return SQL_ERROR;
+    }
     return SQL_SUCCESS;
 }
 
+RETCODE SQL_API SQLGetTypeInfo ( HSTMT pStmt, SWORD pDataType ) {
+	__ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLGetTypeInfo called, Stmt: %d, DataType: %d", ( Long ) pStmt, pDataType ) );
+
+	return _SQLGetTypeInfoBasic(pStmt, pDataType);
+}
+
+RETCODE SQL_API SQLGetTypeInfoW ( HSTMT pStmt, SWORD pDataType ) {
+	__ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLGetTypeInfoW called, Stmt: %d, DataType: %d", ( Long ) pStmt, pDataType ) );
+
+	return _SQLGetTypeInfoBasic(pStmt, pDataType);
+}
 
 // -----------------------------------------------------------------------
 // to get function related information

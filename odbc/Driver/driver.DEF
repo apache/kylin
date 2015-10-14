@@ -33,6 +33,7 @@ EXPORTS
 	SQLGetInfo
 	SQLGetInfoW
 	SQLGetTypeInfo
+	SQLGetTypeInfoW
 	SQLParamData
 	SQLPutData
 	SQLStatistics

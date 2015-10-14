@@ -127,6 +127,10 @@ RETCODE SQL_API SQLColumns ( SQLHSTMT        pStmt,
                               pCtlgName, pCtlgNameLen, pSchemaName, pSchemaNameLen, pTableName, pTableNameLen, pColumnName, pColumnNameLen ) );
     __CHK_HANDLE ( pStmt, SQL_HANDLE_STMT, SQL_ERROR );
     _SQLFreeDiag ( _DIAGSTMT ( pStmt ) );
+
+	// Some application will bring '\\' into table name
+	remove_char(( char* )pTableName, '\\');
+
     // feed stmt structure with response
     std::unique_ptr<SQLResponse> p = SQLResponse::MakeResp4SQLColumns ( ( ( pODBCStmt ) pStmt )->Conn->meta.get(),
                                      ( char* ) pTableName, ( char* ) pColumnName );
@@ -137,7 +141,6 @@ RETCODE SQL_API SQLColumns ( SQLHSTMT        pStmt,
     
     return SQL_SUCCESS;
 }
-
 
 // -----------------------------------------------------------------------
 // to get the list of column names which make a row unqiue or r updateable

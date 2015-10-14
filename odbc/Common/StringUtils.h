@@ -42,3 +42,5 @@ std::unique_ptr<char[]> str_base64_encode ( char* raw );
 std::unique_ptr<char[]> str_base64_decode ( char* enc );
 
 std::unique_ptr<char[]> make_unique_str ( int size );
+
+void remove_char(char *src, const char tgt);

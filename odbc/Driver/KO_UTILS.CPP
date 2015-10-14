@@ -80,7 +80,7 @@ eGoodBad GetDateFromString ( const char* pDateStr, struct tagDATE_STRUCT* pDateS
     }
 }
 
-//Timestamps in text files have to use the format yyyy-mm-dd hh:mm:ss[.f...]
+//Timestamps in text files have to use the format yyyy-mm-dd or yyyy-mm-dd hh:mm:ss[.f...]
 eGoodBad    GetTimestampFromString ( const char* pStr, struct tagTIMESTAMP_STRUCT* pTimestampStruct ) {
     char    val[10];
     short   x;
@@ -93,7 +93,7 @@ eGoodBad    GetTimestampFromString ( const char* pStr, struct tagTIMESTAMP_STRUC
         p++;
     }
     
-    if ( ( p - pStr ) != 10 || ( x < 19 ) ) {
+    if ( ( p - pStr ) != 10 || ( x < 19 && x != 10) ) {
         __ODBCPOPMSG ( _ODBCPopMsg ( "Invalid timestamp string for conversion: %s", pStr ) );
         return BAD;
     }
@@ -116,19 +116,29 @@ eGoodBad    GetTimestampFromString ( const char* pStr, struct tagTIMESTAMP_STRUC
     strncpy ( val, pStr, 4 );
     val[4] = 0;
     pTimestampStruct->year   = atoi ( val );
-    //convert hour
-    strncpy ( val, pStr + hour, 2 );
-    val[2] = 0;
-    pTimestampStruct->hour = atoi ( val );
-    //convert minute
-    strncpy ( val, pStr + minute, 2 );
-    val[2] = 0;
-    pTimestampStruct->minute = atoi ( val );
-    //convert second
-    strncpy ( val, pStr + second, 2 );
-    val[2] = 0;
-    pTimestampStruct->second = atoi ( val );
-    
+
+	if (x > 10)
+	{
+		//convert hour
+		strncpy ( val, pStr + hour, 2 );
+		val[2] = 0;
+		pTimestampStruct->hour = atoi ( val );
+		//convert minute
+		strncpy ( val, pStr + minute, 2 );
+		val[2] = 0;
+		pTimestampStruct->minute = atoi ( val );
+		//convert second
+		strncpy ( val, pStr + second, 2 );
+		val[2] = 0;
+		pTimestampStruct->second = atoi ( val );
+	}
+	else
+	{
+		pTimestampStruct->hour = 0;
+		pTimestampStruct->minute = 0;
+		pTimestampStruct->second = 0;
+	}
+
     if ( x >= 21 ) {
         pTimestampStruct->fraction = atoi ( pStr + frag );
     }
@@ -283,7 +293,7 @@ RETCODE SQL_API _SQLCopyWCharDataW ( pODBCDiag pDiag, void* pTgtDataPtr, Long pD
             // does all of it fit with null char
             if ( pDataBufSize >= ( n + 1 ) ) {
                 memcpy ( ( StrPtr ) pTgtDataPtr, pSrcData, 2 * ( n + 1 ) );
-                ( ( wchar_t* ) pTgtDataPtr ) [n] = '\0';
+                ( ( wchar_t* ) pTgtDataPtr ) [n] = L'\0';
                 //__ODBCLOG(_ODBCLogMsg(LogLevel_DEBUG,"_SQLCopyWCharDataW has been called, the target string(not truncated) is :"));
                 //unique_ptr<char[]> temp2(wchar2char( (wchar_t*)pTgtDataPtr));
                 //__ODBCLOG(_ODBCLogMsg(LogLevel_DEBUG,temp2.get()));
@@ -297,7 +307,7 @@ RETCODE SQL_API _SQLCopyWCharDataW ( pODBCDiag pDiag, void* pTgtDataPtr, Long pD
                 memcpy ( ( StrPtr ) pTgtDataPtr, pSrcData, 2 * ( pDataBufSize - 1 ) );
                 ( ( wchar_t* ) pTgtDataPtr ) [pDataBufSize - 1] = 0;
                 //__ODBCLOG(_ODBCLogMsg(LogLevel_WARN,"_SQLCopyWCharDataW has been called, the target string is(truncated) :"));
-                unique_ptr<char[]> temp ( wchar2char ( ( wchar_t* ) pTgtDataPtr ) );
+                //unique_ptr<char[]> temp ( wchar2char ( ( wchar_t* ) pTgtDataPtr ) );
                 //__ODBCLOG(_ODBCLogMsg(LogLevel_DEBUG, temp.get()));
                 //return SQL_SUCCESS_WITH_INFO may cause error in tableau
                 //if ( pDiag )

@@ -149,19 +149,20 @@ void constructUnflattenResults ( SQLResponse* result, web::json::value& o_result
 
 std::unique_ptr<SQLResponse> SQLResponseFromJSON ( web::json::value & object ) {
     std::unique_ptr<SQLResponse> result ( new SQLResponse() );
-    web::json::value& o_columnMetas = object[U ( "columnMetas" )];
-    web::json::value& o_results = object[U ( "results" )];
+
     result->affectedRowCount = object[U ( "affectedRowCount" )].as_integer();
     result->isException = object[U ( "isException" )].as_bool();
+
     ASSIGN_IF_NOT_NULL ( result->exceptionMessage, object[U ( "exceptionMessage" )], as_string() );
     
-    if ( !o_columnMetas.is_null() ) {
-        for ( auto iter = o_columnMetas.as_array().begin(); iter != o_columnMetas.as_array().end(); ++iter ) {
+	if ( object[U ( "columnMetas" )].is_array()) {
+		web::json::array& columnMetasArray = object[U ( "columnMetas" )].as_array();
+        for ( auto iter = columnMetasArray.begin(); iter != columnMetasArray.end(); ++iter ) {
             result->columnMetas.push_back ( SelectedColumnMetaFromJSON ( *iter ) );
         }
     }
     
-    constructUnflattenResults ( result.get(), o_results );
+    constructUnflattenResults ( result.get(), object[U ( "results" )] );
     return result;
 }
 
