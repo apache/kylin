@@ -201,12 +201,13 @@ public class CubeControllerTest extends ServiceTestBase {
             rowkeyColumns[i] = rowkeyColumns[j];
             rowkeyColumns[j] = tmp;
         }
+        req = new CubeRequest();
         req.setCubeDescData(JsonUtil.writeValueAsIndentString(newCubeDesc));
+        req.setModelDescData(JsonUtil.writeValueAsIndentString(newCubeDesc.getModel()));
         res = cubeController.updateCubeDesc(req);
         Assert.assertTrue(res.getSuccessful());
 
         resultDesc = getCubeDescByName(TEST_CUBE_NAME);
-        ;
         Assert.assertNotEquals(newCubeDesc.getSignature(), resultDesc.getSignature());
         Assert.assertEquals(newCubeDesc.calculateSignature(), resultDesc.getSignature());
     }
