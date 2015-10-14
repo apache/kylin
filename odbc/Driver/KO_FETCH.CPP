@@ -162,6 +162,10 @@ RETCODE  _SQLColAttribute_basic ( SQLHSTMT        pStmt,
         case SQL_DESC_UNNAMED:
         case SQL_DESC_UNSIGNED:
         case SQL_DESC_UPDATABLE:
+		// added for Excel
+        case SQL_COLUMN_LENGTH:
+		case SQL_COLUMN_PRECISION:
+		case SQL_COLUMN_SCALE:
             _SQLGetIRDItemField ( & ( ( ( pODBCStmt ) pStmt )->IRD ), col, pColNum, pFldID, pNumValuePtr, -1, NULL , isANSI );
             break;
             
@@ -324,15 +328,21 @@ SQLRETURN SQL_API _SQLDescribeCol_basic ( SQLHSTMT        pStmt,
     }
     
     // COL-NAME ie title
-    
     if ( pColNamePtr ) {
         _SQLGetIRDItemField ( & ( ( ( pODBCStmt ) pStmt )->IRD ), col, pColNum, SQL_DESC_BASE_COLUMN_NAME, pColNamePtr,
                               pColNameSize, pColNameSizePtr ? &n : NULL, isANSI );
                               
-        if ( pColNameSizePtr )
-        { *pColNameSizePtr = ( Word ) n; }
+	    // here should return length of characters
+        if ( pColNameSizePtr ) { 
+			if (isANSI) {
+				*pColNameSizePtr = ( Word ) n; 
+			}
+			else {
+		     	*pColNameSizePtr = ( Word ) ( n / 2 ); 
+			}
+		}
         
-        __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "name: %s", pColNamePtr ) );
+        __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, (wchar_t*)pColNamePtr ) );
     }
     
     // COL-DATA TYPE
@@ -405,7 +415,7 @@ SQLRETURN SQL_API SQLDescribeCol ( SQLHSTMT        pStmt,
 
 // -----------------------------------------------------------------------
 // to bind a column to with details from application --- TO ARD
-// kylin specific, no chagne required
+// kylin specific, no change required
 // -----------------------------------------------------------------------
 
 /*
@@ -613,21 +623,6 @@ RETCODE SQL_API SQLFetchScroll ( SQLHSTMT        pStatementHandle,
     return SQL_ERROR;
 }
 
-// -----------------------------------------------------------------------
-// to retrieve long data for a single column in the result set using multiple calls
-// -----------------------------------------------------------------------
-
-RETCODE SQL_API SQLGetData ( SQLHSTMT        pStmt,
-                             SQLUSMALLINT    pColNum,
-                             SQLSMALLINT     pgtType,
-                             SQLPOINTER      pDataPtr,
-                             SQLINTEGER      pDataSize,
-                             SQLINTEGER*     pDataSizePtr ) {
-    __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLGetData called" ) );
-    __ODBCPOPMSG ( _ODBCPopMsg ( "SQLGetData not implemented" ) );
-    return SQL_ERROR;
-}
-
 
 // -----------------------------------------------------------------------
 // to send data for a parameter or column to the driver at statement execution time
@@ -647,8 +642,30 @@ RETCODE SQL_API SQLPutData ( SQLHSTMT       pStmt,
 
 RETCODE SQL_API SQLMoreResults ( HSTMT pStmt ) {
     __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLMoreResults called" ) );
-    __ODBCPOPMSG ( _ODBCPopMsg ( "SQLMoreResults not implemented" ) );
-    return SQL_ERROR;
+
+	pODBCStmt odbcStmt = (pODBCStmt)pStmt;
+	if (odbcStmt->IRD.RowDesc != NULL ) {
+        // ------- THIS CASE SHOULD NOT OCCUR ----------
+        // check if position is currently unknown
+        if ( odbcStmt->CurRowsetStartRow == NULL && odbcStmt->CurRowsetStartRowPos == 0 ) {
+            // position to first row ( both the pointers )
+            if (GetIfExist ( odbcStmt->IRD.RowDesc->results, 1 ) )
+			{
+				return SQL_SUCCESS;
+			}
+        }
+        // -----------------------------------------------
+        // position to next row if already position is known
+        else if ( odbcStmt->CurRowsetEndRow != NULL ) {
+            // position to next row
+			if (GetIfExist ( odbcStmt->IRD.RowDesc->results, odbcStmt->CurRowsetEndRowPos ) )
+			{
+				return SQL_SUCCESS;
+			}
+        }
+		return SQL_NO_DATA;
+    }
+	return SQL_ERROR;
 }
 
 // -----------------------------------------------------------------------
@@ -1010,8 +1027,7 @@ RETCODE SQL_API _SQLFetchMoveNext ( pODBCStmt pStmt ) {
     __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "_SQLFetch MoveNext is called" ) );
     
     // check if there is some response of type resultset
-    if (
-        pStmt->IRD.RowDesc != NULL ) {
+    if (pStmt->IRD.RowDesc != NULL ) {
         // ------- THIS CASE SHOULD NOT OCCUR ----------
         
         // check if position is currently unknown
@@ -1181,7 +1197,7 @@ RETCODE SQL_API _SQLFetch ( pODBCStmt    pStmt,
         // LOOP to fetch cols of one row
         
         // loop to put data in all bound cols
-        for ( ardcol = ard->BindCols; ardcol != NULL; ardcol = ardcol->Next ) {
+		for ( ardcol = ard->BindCols; ardcol != NULL; ardcol = ardcol->Next ) {
             __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "Get one column:" ) );
             // get data using _SQLFetchCol
             s = _SQLFetchCol ( pStmt, ardcol, rowdesc, rowdata );
@@ -1229,3 +1245,85 @@ RETCODE SQL_API _SQLFetch ( pODBCStmt    pStmt,
     }
 }
 
+
+// -----------------------------------------------------------------------
+// to retrieve long data for a single column in the result set using multiple calls
+// -----------------------------------------------------------------------
+
+RETCODE SQL_API SQLGetData ( SQLHSTMT        pStmt,
+								SQLUSMALLINT    pColNum,
+								SQLSMALLINT     pDataType,
+								SQLPOINTER      pDataPtr,
+								SQLLEN      pDataSize,
+								SQLLEN*     pDataSizePtr ) {
+	__CHK_HANDLE ( pStmt, SQL_HANDLE_STMT, SQL_ERROR );
+
+	__ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLGetData called, ColNum: %d, TgtType: %d, ValuePtr: %d, Capacity: %d",
+                              pColNum, pDataType, pDataPtr, pDataSize ) );
+	
+	if ( pColNum < 1 || pColNum > (( pODBCStmt )pStmt)->IRD.DescCount ) {
+		_SQLPutDiagRow ( SQL_HANDLE_STMT, pStmt, "", "07009", -1, "Dynamic SQL error-invalid descriptor index" );
+        return SQL_ERROR;
+	}
+	
+	pODBCARD		ard;
+	pARDItem		ardcol;
+	SQLRowContent*	rowdata;
+	SQLResponse*	rowdesc;
+	SQLSMALLINT		tgtPDataType;
+
+	ard = & ( ( ( pODBCStmt ) pStmt )->ARD );
+	rowdata = ((pODBCStmt)pStmt)->CurRowsetEndRow;
+	rowdesc = ( ( pODBCStmt ) pStmt )->IRD.RowDesc.get();
+
+	if ( rowdata == NULL ) {
+		_SQLPutDiagRow ( SQL_HANDLE_STMT, pStmt, "", "HY010", -1, "CLI-specific condition-function sequence error" );
+        return SQL_ERROR;
+	}
+	
+	ardcol = _SQLGetARDItem ( ard, pColNum );
+	if (ardcol != NULL) {
+		/* It's illegal to call SQLGetdata for a "bound" Column */
+		_SQLPutDiagRow ( SQL_HANDLE_STMT, pStmt, "", "07009", -1, "dynamic SQL error-invalid descriptor index" );
+        return SQL_ERROR;
+	}
+
+	// convert C data type to SQL data type
+	switch (pDataType)
+	{
+		case SQL_C_SBIGINT:
+		case SQL_C_SLONG:
+		case SQL_C_SSHORT:
+		case SQL_C_STINYINT:
+			tgtPDataType = pDataType - SQL_SIGNED_OFFSET;
+			break;
+		case SQL_C_ULONG:
+		case SQL_C_USHORT:
+		case SQL_C_UTINYINT:
+		case SQL_C_UBIGINT:
+			tgtPDataType = pDataType - SQL_UNSIGNED_OFFSET;
+			break;
+		default:
+			tgtPDataType = pDataType;
+			break;
+	}
+
+	// manually bind column information to output
+	RETCODE ret = SQLBindCol(pStmt, pColNum, tgtPDataType, pDataPtr, pDataSize, pDataSizePtr);
+	if (ret != SQL_SUCCESS) {
+		return ret;
+	}
+
+	ardcol = _SQLGetARDItem ( ard, pColNum );
+	ret = _SQLFetchCol ( (pODBCStmt)pStmt, ardcol, rowdesc, rowdata );
+	if (ret != SQL_SUCCESS) {
+		return ret;
+	}
+	_SQLDetachARDItem(ard, ardcol);
+
+	/*unique_ptr<char[]> temp2 ( wchar2char ( ( wchar_t* ) pDataPtr ) );
+	__ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "Data1: %s", temp2.get()));
+	__ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "Size1: %d", *pDataSizePtr));*/
+
+	return SQL_SUCCESS;
+}

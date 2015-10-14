@@ -3,7 +3,7 @@
 
 ODBC Driver to interactive with Kylin REST server
 
-The projects is written as a Visual Studio 2012 project. The entry of the project is KylinODBC.sln. Mind the VS version.
+The projects are organized as a Visual Studio 2012 solution. The entry of the solution is KylinODBC.sln. Mind the VS version.
 
 
 ## Contents in the folder
@@ -13,7 +13,7 @@ KylinODBC                  - Root folder containing the workspace. All the proje
 
 KylinODBC\TestDll         - Contains a simple ODBC client that can be used to test your driver as well as connect to any ODBC data source. 
 
-KylinODBC\Common           - Shared data types, utiliy tools, etc.
+KylinODBC\Common           - Shared data types, utility tools, etc.
 
 KylinODBC\Driver           - Contains code for Kylin ODBC driver. Note that the entire functionality has not been implemented but is enough to get you data into most standard ODBC clients like Tableau, provided you have set up a rest server to serve the query requests. Note that the header file is a very important starting point for understanding this driver.
 

@@ -530,7 +530,7 @@ eGoodBad CvtStrToKeyValues ( CStrPtr pStr, Word pMaxLen, Word* pNumPair, struct 
         else {
             //There may exist ; in PWD
             for ( x = 0;  i < len; x ++, i ++ ) {
-                if ( strncmp ( &pStr[i], ";SERVER=", 8 ) == 0 )
+                if ( strnicmp ( &pStr[i], ";SERVER=", 8 ) == 0 )
                 { break; }
             }
         }
