@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.UnsignedBytes;
@@ -202,34 +203,53 @@ public class SparkCubing extends AbstractSparkApplication {
     }
 
     private Map<Long, HyperLogLogPlusCounter> sampling(final JavaRDD<List<String>> rowJavaRDD, final String cubeName) throws Exception {
-        final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
-        HashMap<Long, HyperLogLogPlusCounter> zeroValue = Maps.newHashMap();
-        for (Long id : new CuboidScheduler(cubeInstance.getDescriptor()).getAllCuboidIds()) {
+        CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
+        CubeDesc cubeDesc = cubeInstance.getDescriptor();
+        CuboidScheduler cuboidScheduler = new CuboidScheduler(cubeDesc);
+        List<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
+        final HashMap<Long, HyperLogLogPlusCounter> zeroValue = Maps.newHashMap();
+        for (Long id : allCuboidIds) {
             zeroValue.put(id, new HyperLogLogPlusCounter(14));
         }
 
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        CubeDesc cubeDesc = CubeManager.getInstance(kylinConfig).getCube(cubeName).getDescriptor();
         CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
-        CuboidScheduler cuboidScheduler = new CuboidScheduler(cubeDesc);
+        
         final int[] rowKeyColumnIndexes = flatTableDesc.getRowKeyColumnIndexes();
         final int nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
         final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        final List<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
+        
+        final Map<Long, Integer[]> allCuboidsBitSet = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
+        for (Long cuboidId : allCuboidIds) {
+            BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
+            Integer[] cuboidBitSet = new Integer[bitSet.cardinality()];
 
+            long mask = Long.highestOneBit(baseCuboidId);
+            int position = 0;
+            for (int i = 0; i < nRowKey; i++) {
+                if ((mask & cuboidId) > 0) {
+                    cuboidBitSet[position] = i;
+                    position++;
+                }
+                mask = mask >> 1;
+            }
+            allCuboidsBitSet.put(cuboidId, cuboidBitSet);
+        }
+        final ByteArray[] row_hashcodes = new ByteArray[nRowKey];
+        for (int i = 0; i < nRowKey; ++i) {
+            row_hashcodes[i] = new ByteArray();
+        }
+        
         final HashMap<Long, HyperLogLogPlusCounter> samplingResult = rowJavaRDD.aggregate(zeroValue,
                 new Function2<HashMap<Long, HyperLogLogPlusCounter>,
                         List<String>,
                         HashMap<Long, HyperLogLogPlusCounter>>() {
+                    
+                    final HashFunction hashFunction = Hashing.murmur3_32();
 
                     @Override
                     public HashMap<Long, HyperLogLogPlusCounter> call(HashMap<Long, HyperLogLogPlusCounter> v1, List<String> v2) throws Exception {
-                        ByteArray[] row_hashcodes = new ByteArray[nRowKey];
-                        for (int i = 0; i < nRowKey; ++i) {
-                            row_hashcodes[i] = new ByteArray();
-                        }
                         for (int i = 0; i < nRowKey; i++) {
-                            Hasher hc = Hashing.murmur3_32().newHasher();
+                            Hasher hc = hashFunction.newHasher();
                             String colValue = v2.get(rowKeyColumnIndexes[i]);
                             if (colValue != null) {
                                 row_hashcodes[i].set(hc.putString(colValue).hash().asBytes());
@@ -238,27 +258,10 @@ public class SparkCubing extends AbstractSparkApplication {
                             }
                         }
 
-                        final Map<Long, Integer[]> allCuboidsBitSet = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
-                        for (Long cuboidId : allCuboidIds) {
-                            BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
-                            Integer[] cuboidBitSet = new Integer[bitSet.cardinality()];
-
-                            long mask = Long.highestOneBit(baseCuboidId);
-                            int position = 0;
-                            for (int i = 0; i < nRowKey; i++) {
-                                if ((mask & cuboidId) > 0) {
-                                    cuboidBitSet[position] = i;
-                                    position++;
-                                }
-                                mask = mask >> 1;
-                            }
-                            allCuboidsBitSet.put(cuboidId, cuboidBitSet);
-                        }
-
-                        for (Long cuboidId : allCuboidIds) {
-                            Hasher hc = Hashing.murmur3_32().newHasher();
-                            HyperLogLogPlusCounter counter = v1.get(cuboidId);
-                            final Integer[] cuboidBitSet = allCuboidsBitSet.get(cuboidId);
+                        for (Map.Entry<Long, Integer[]> entry : allCuboidsBitSet.entrySet()) {
+                            Hasher hc = hashFunction.newHasher();
+                            HyperLogLogPlusCounter counter = v1.get(entry.getKey());
+                            final Integer[] cuboidBitSet = entry.getValue();
                             for (int position = 0; position < cuboidBitSet.length; position++) {
                                 hc.putBytes(row_hashcodes[cuboidBitSet[position]].array());
                             }
@@ -277,9 +280,7 @@ public class SparkCubing extends AbstractSparkApplication {
                         for (Map.Entry<Long, HyperLogLogPlusCounter> entry : v1.entrySet()) {
                             final HyperLogLogPlusCounter counter1 = entry.getValue();
                             final HyperLogLogPlusCounter counter2 = v2.get(entry.getKey());
-                            if (counter2 != null) {
-                                counter1.merge(counter2);
-                            }
+                            counter1.merge(Preconditions.checkNotNull(counter2, "counter cannot be null"));
                         }
                         return v1;
                     }
@@ -446,6 +447,7 @@ public class SparkCubing extends AbstractSparkApplication {
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
         final Map<Long, Long> cubeSizeMap = CreateHTableJob.getCubeRowCountMapFromCuboidStatistics(samplingResult, 100);
+        System.out.println("cube size estimation:" + cubeSizeMap);
         final byte[][] splitKeys = CreateHTableJob.getSplitsFromCuboidStatistics(cubeSizeMap, kylinConfig, cubeSegment);
         CubeHTableUtil.createHTable(cubeDesc, cubeSegment.getStorageLocationIdentifier(), splitKeys);
         System.out.println(cubeSegment.getStorageLocationIdentifier() + " table created");
