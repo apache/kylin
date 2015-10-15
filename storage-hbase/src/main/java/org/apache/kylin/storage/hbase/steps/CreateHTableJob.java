@@ -173,24 +173,23 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(is);
             IOUtils.closeStream(tempFileStream);
         }
-
-        Map<Long, Long> cuboidSizeMap = Maps.newHashMap();
+        Map<Long, HyperLogLogPlusCounter> counterMap = Maps.newHashMap();
+        
         FileSystem fs = HadoopUtil.getFileSystem("file:///" + tempFile.getAbsolutePath());
+        int samplingPercentage = 25;
         SequenceFile.Reader reader = null;
         try {
             reader = new SequenceFile.Reader(fs, new Path(tempFile.getAbsolutePath()), conf);
             LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-            int samplingPercentage = 25;
             while (reader.next(key, value)) {
-                if (key.get() == 0l) {
+                if (key.get() == 0L) {
                     samplingPercentage = Bytes.toInt(value.getBytes());
                 } else {
                     HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
                     ByteArray byteArray = new ByteArray(value.getBytes());
                     hll.readRegisters(byteArray.asBuffer());
-
-                    cuboidSizeMap.put(key.get(), hll.getCountEstimate() * 100 / samplingPercentage);
+                    counterMap.put(key.get(), hll);
                 }
 
             }
@@ -201,7 +200,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(reader);
             tempFile.delete();
         }
-        return cuboidSizeMap;
+        return getCubeRowCountMapFromCuboidStatistics(counterMap, samplingPercentage);
     }
 
     public static Map<Long, Long> getCubeRowCountMapFromCuboidStatistics(Map<Long, HyperLogLogPlusCounter> counterMap, final int samplingPercentage) throws IOException {
