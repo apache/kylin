@@ -332,6 +332,10 @@ public class KylinConfig {
         }
         return getFileName(kylinHome + File.separator + "lib", JOB_JAR_NAME_PATTERN);
     }
+    
+    public String getKylinJobMRLibDir() {
+        return getOptional("kylin.job.mr.lib.dir", "");
+    }
 
     public void overrideKylinJobJarPath(String path) {
         logger.info("override " + KYLIN_JOB_JAR + " to " + path);
