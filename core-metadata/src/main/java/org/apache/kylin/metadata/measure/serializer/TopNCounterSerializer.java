@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.measure.serializer;
 
 import com.google.common.collect.Lists;
+
 import org.apache.kylin.common.topn.DoubleDeltaSerializer;
 import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
@@ -44,6 +45,8 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
     @Override
     public int peekLength(ByteBuffer in) {
         int mark = in.position();
+        @SuppressWarnings("unused")
+        int capacity = in.getInt();
         int size = in.getInt();
         int keyLength = in.getInt();
         dds.deserialize(in);
