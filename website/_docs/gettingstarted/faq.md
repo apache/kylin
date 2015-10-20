@@ -48,3 +48,11 @@ Kylin uses dictionary to encode the values in each column, this greatly reduce t
 
 #### Why Kylin calculate the HIVE table cardinality?
 The cardinality of dimensions is an important measure of cube complexity. The higher the cardinality, the bigger the cube, and thus the longer to build and the slower to query. Cardinality > 1,000 is worth attention and > 1,000,000 should be avoided at best effort. For optimal cube performance, try reduce high cardinality by categorize values or derive features.
+
+#### How to add new user or change the default password?
+Kylin web's security is implemented with Spring security framework, where the kylinSecurity.xml is the main configuration file:
+{% highlight Groff markup %}
+${KYLIN_HOME}/tomcat/webapps/kylin/WEB-INF/classes/kylinSecurity.xml
+{% endhighlight %}
+The password hash for pre-defined test users can be found in the profile "sandbox,testing" part; To change the default password, you need generate a new hash and then update it here, please refer to the code snippet in: [https://stackoverflow.com/questions/25844419/spring-bcryptpasswordencoder-generate-different-password-for-same-input](https://stackoverflow.com/questions/25844419/spring-bcryptpasswordencoder-generate-different-password-for-same-input)
+When you deploy Kylin for more users, switch to LDAP authentication is recommended; To enable LDAP authentication, update "kylin.sandbox" in conf/kylin.properties to false, and also configure the ldap.* properties in ${KYLIN_HOME}/conf/kylin.properties
