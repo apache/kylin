@@ -100,7 +100,7 @@ public class QueryService extends BasicService {
         tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         userTableName = tableNameBase + USER_TABLE_NAME;
-        
+
         badQueryDetector.start();
     }
 
@@ -111,9 +111,9 @@ public class QueryService extends BasicService {
     public SQLResponse query(SQLRequest sqlRequest) throws Exception {
         try {
             badQueryDetector.queryStart(Thread.currentThread(), sqlRequest);
-            
+
             return queryWithSqlMassage(sqlRequest);
-            
+
         } finally {
             badQueryDetector.queryEnd(Thread.currentThread());
         }
@@ -385,9 +385,11 @@ public class QueryService extends BasicService {
         long totalScanCount = 0;
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
-                isPartialResult |= ctx.storageContext.isPartialResultReturned();
-                cube = ctx.realization.getName();
-                totalScanCount += ctx.storageContext.getTotalScanCount();
+                if (ctx.realization != null) {
+                    isPartialResult |= ctx.storageContext.isPartialResultReturned();
+                    cube = ctx.realization.getName();
+                    totalScanCount += ctx.storageContext.getTotalScanCount();
+                }
             }
         }
 
