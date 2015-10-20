@@ -315,6 +315,10 @@ public class KylinConfig implements Serializable {
         return getFileName(kylinHome + File.separator + "lib", JOB_JAR_NAME_PATTERN);
     }
 
+    public String getKylinJobMRLibDir() {
+        return getOptional("kylin.job.mr.lib.dir", "");
+    }
+
     public String getKylinSparkJobJarPath() {
         final String jobJar = getOptional(KYLIN_JOB_JAR_SPARK);
         if (StringUtils.isNotEmpty(jobJar)) {
@@ -508,7 +512,7 @@ public class KylinConfig implements Serializable {
     }
 
     public String getHbaseDefaultCompressionCodec() {
-        return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC,"");
+        return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC, "");
     }
 
     public boolean isHiveKeepFlatTable() {
