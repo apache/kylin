@@ -37,6 +37,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -181,6 +182,66 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         jobConf.set(MAP_REDUCE_CLASSPATH, classpath);
         logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
+
+        // set extra dependencies as tmpjars & tmpfiles if configured
+        setJobTmpJarsAndFiles(job);
+    }
+
+    private void setJobTmpJarsAndFiles(Job job) {
+        String mrLibDir = KylinConfig.getInstanceFromEnv().getKylinJobMRLibDir();
+        if (StringUtils.isBlank(mrLibDir))
+            return;
+
+        try {
+            Configuration jobConf = job.getConfiguration();
+            FileSystem fs = FileSystem.get(new Configuration(jobConf));
+            FileStatus[] fList = fs.listStatus(new Path(mrLibDir));
+
+            StringBuilder jarList = new StringBuilder();
+            StringBuilder fileList = new StringBuilder();
+
+            for (FileStatus file : fList) {
+                Path p = file.getPath();
+                StringBuilder list = (p.getName().endsWith(".jar")) ? jarList : fileList;
+                if (list.length() > 0)
+                    list.append(",");
+                list.append(mrLibDir + "/" + file.getPath().getName());
+            }
+
+            appendTmpFiles(fileList.toString(), jobConf);
+            appendTmpJars(jarList.toString(), jobConf);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void appendTmpJars(String jarList, Configuration conf) {
+        if (StringUtils.isBlank(jarList))
+            return;
+
+        String tmpJars = conf.get("tmpjars", null);
+        if (tmpJars == null) {
+            tmpJars = jarList;
+        } else {
+            tmpJars += "," + jarList;
+        }
+        conf.set("tmpjars", tmpJars);
+        logger.info("Job 'tmpjars' updated -- " + tmpJars);
+    }
+
+    private void appendTmpFiles(String fileList, Configuration conf) {
+        if (StringUtils.isBlank(fileList))
+            return;
+
+        String tmpFiles = conf.get("tmpfiles", null);
+        if (tmpFiles == null) {
+            tmpFiles = fileList;
+        } else {
+            tmpFiles += "," + fileList;
+        }
+        conf.set("tmpfiles", tmpFiles);
+        logger.info("Job 'tmpfiles' updated -- " + tmpFiles);
     }
 
     private String getDefaultMapRedClasspath() {
@@ -200,7 +261,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     public static void addInputDirs(String input, Job job) throws IOException {
         addInputDirs(StringSplitter.split(input, ","), job);
     }
-    
+
     public static void addInputDirs(String[] inputs, Job job) throws IOException {
         for (String inp : inputs) {
             inp = inp.trim();
@@ -283,7 +344,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         else
             hdfsMetaDir = "file:///" + hdfsMetaDir;
         logger.info("HDFS meta dir is: " + hdfsMetaDir);
-        conf.set("tmpfiles", hdfsMetaDir);
+
+        appendTmpFiles(hdfsMetaDir, conf);
     }
 
     protected void cleanupTempConfFile(Configuration conf) {
