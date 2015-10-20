@@ -225,7 +225,7 @@ class ProjectL2Cache {
             // auto-define table required by realization for some legacy test case
             if (prjCache.tables.get(table.getIdentity()) == null) {
                 prjCache.tables.put(table.getIdentity(), new TableCache(table));
-                logger.warn("Realization '" + realization.getCanonicalName() + "' reports columcn '" + col.getCanonicalName() + "' whose table is not defined in project '" + prjCache.project + "'");
+                logger.warn("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "' whose table is not defined in project '" + prjCache.project + "'");
             }
         }
 
