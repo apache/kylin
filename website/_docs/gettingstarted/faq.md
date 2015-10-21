@@ -59,16 +59,18 @@ When you deploy Kylin for more users, switch to LDAP authentication is recommend
 
 #### Using sub-query for un-supported SQL
 
-`` Original SQL:
+{% highlight Groff markup %}
+Original SQL:
 select fact.slr_sgmt,
 sum(case when cal.RTL_WEEK_BEG_DT = '2015-09-06' then gmv else 0 end) as W36,
 sum(case when cal.RTL_WEEK_BEG_DT = '2015-08-30' then gmv else 0 end) as W35
 from ih_daily_fact fact
 inner join dw_cal_dt cal on fact.cal_dt = cal.cal_dt
 group by fact.slr_sgmt
-``
+{% endhighlight %}
 
-``Using sub-query
+{% highlight Groff markup %}
+Using sub-query
 select a.slr_sgmt,
 sum(case when a.RTL_WEEK_BEG_DT = '2015-09-06' then gmv else 0 end) as W36,
 sum(case when a.RTL_WEEK_BEG_DT = '2015-08-30' then gmv else 0 end) as W35
@@ -82,7 +84,7 @@ from (
     group by fact.slr_sgmt, cal.RTL_WEEK_BEG_DT
 ) a
 group by a.slr_sgmt
-``
+{% endhighlight %}
 
 
 
