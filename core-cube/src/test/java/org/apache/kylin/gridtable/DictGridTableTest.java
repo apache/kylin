@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.NumberDictionaryBuilder;
@@ -48,6 +49,7 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -55,39 +57,120 @@ import com.google.common.collect.Maps;
 
 public class DictGridTableTest {
 
-    @Test
-    public void test() throws IOException {
-        GridTable table = newTestTable();
-        verifyScanRangePlanner(table);
-        verifyFirstRow(table);
-        verifyScanWithUnevaluatableFilter(table);
-        verifyScanWithEvaluatableFilter(table);
-        verifyConvertFilterConstants1(table);
-        verifyConvertFilterConstants2(table);
-        verifyConvertFilterConstants3(table);
-        verifyConvertFilterConstants4(table);
+    private GridTable table;
+    private GTInfo info;
+    private CompareTupleFilter timeComp0;
+    private CompareTupleFilter timeComp1;
+    private CompareTupleFilter timeComp2;
+    private CompareTupleFilter timeComp3;
+    private CompareTupleFilter timeComp4;
+    private CompareTupleFilter timeComp5;
+    private CompareTupleFilter timeComp6;
+    private CompareTupleFilter ageComp1;
+    private CompareTupleFilter ageComp2;
+    private CompareTupleFilter ageComp3;
+    private CompareTupleFilter ageComp4;
+
+    @Before
+    public void setup() throws IOException {
+        table = newTestTable();
+        info = table.getInfo();
+
+        timeComp0 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-14"));
+        timeComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
+        timeComp2 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-13"));
+        timeComp3 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-15"));
+        timeComp4 = compare(info.colRef(0), FilterOperatorEnum.EQ, enc(info, 0, "2015-01-15"));
+        timeComp5 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-15"));
+        timeComp6 = compare(info.colRef(0), FilterOperatorEnum.EQ, enc(info, 0, "2015-01-14"));
+        ageComp1 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "10"));
+        ageComp2 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "20"));
+        ageComp3 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "30"));
+        ageComp4 = compare(info.colRef(1), FilterOperatorEnum.NEQ, enc(info, 1, "30"));
     }
 
-    private void verifyScanRangePlanner(GridTable table) {
-        GTInfo info = table.getInfo();
-        GTScanRangePlanner planner = new GTScanRangePlanner(info);
+    @Test
+    public void verifySegmentSkipping() {
 
-        CompareTupleFilter timeComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
-        CompareTupleFilter timeComp2 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-13"));
-        CompareTupleFilter timeComp3 = compare(info.colRef(0), FilterOperatorEnum.LT, enc(info, 0, "2015-01-15"));
-        CompareTupleFilter timeComp4 = compare(info.colRef(0), FilterOperatorEnum.EQ, enc(info, 0, "2015-01-15"));
-        CompareTupleFilter ageComp1 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "10"));
-        CompareTupleFilter ageComp2 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "20"));
-        CompareTupleFilter ageComp3 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "30"));
-        CompareTupleFilter ageComp4 = compare(info.colRef(1), FilterOperatorEnum.NEQ, enc(info, 1, "30"));
+        ByteArray segmentStart = enc(info, 0, "2015-01-14");
+        ByteArray segmentStartX = enc(info, 0, "2015-01-14 00:00:00");//when partition col is dict encoded, time format will be free
+        ByteArray segmentEnd = enc(info, 0, "2015-01-15");
+        assertEquals(segmentStart, segmentStartX);
+
+        GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0));
+
+        {
+            LogicalTupleFilter filter = and(timeComp0, ageComp1);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(1, r.size());//scan range are [close,close]
+            assertEquals("[null, 10]-[1421193600000, 10]", r.get(0).toString());
+            assertEquals(1, r.get(0).fuzzyKeys.size());
+            assertEquals("[[10]]", r.get(0).fuzzyKeys.toString());
+        }
+        {
+            LogicalTupleFilter filter = and(timeComp2, ageComp1);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(0, r.size());
+        }
+        {
+            LogicalTupleFilter filter = and(timeComp4, ageComp1);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(0, r.size());
+        }
+        {
+            LogicalTupleFilter filter = and(timeComp5, ageComp1);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(0, r.size());
+        }
+        {
+            LogicalTupleFilter filter = or(and(timeComp2, ageComp1), and(timeComp1, ageComp1), and(timeComp6, ageComp1));
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(1, r.size());
+            assertEquals("[1421193600000, 10]-[null, 10]", r.get(0).toString());
+            assertEquals("[[10], [1421193600000, 10]]", r.get(0).fuzzyKeys.toString());
+        }
+        {
+            LogicalTupleFilter filter = or(timeComp2, timeComp1, timeComp6);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(1, r.size());
+            assertEquals("[1421193600000, null]-[null, null]", r.get(0).toString());
+            assertEquals(0, r.get(0).fuzzyKeys.size());
+        }
+    }
+
+    @Test
+    public void verifySegmentSkipping2() {
+        ByteArray segmentEnd = enc(info, 0, "2015-01-15");
+        GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd), info.colRef(0));
+
+        {
+            LogicalTupleFilter filter = and(timeComp0, ageComp1);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(1, r.size());//scan range are [close,close]
+            assertEquals("[null, 10]-[1421193600000, 10]", r.get(0).toString());
+            assertEquals(1, r.get(0).fuzzyKeys.size());
+            assertEquals("[[10]]", r.get(0).fuzzyKeys.toString());
+        }
+
+        {
+            LogicalTupleFilter filter = and(timeComp5, ageComp1);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(0, r.size());//scan range are [close,close]
+        }
+    }
+
+    @Test
+    public void verifyScanRangePlanner() {
+
+        GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null);
 
         // flatten or-and & hbase fuzzy value
         {
             LogicalTupleFilter filter = and(timeComp1, or(ageComp1, ageComp2));
             List<GTScanRange> r = planner.planScanRanges(filter);
             assertEquals(1, r.size());
-            assertEquals("[1421193600000, 10]-[null, null]", r.get(0).toString());
-            assertEquals("[[10], [20]]", r.get(0).hbaseFuzzyKeys.toString());
+            assertEquals("[1421193600000, 10]-[null, 20]", r.get(0).toString());
+            assertEquals("[[10], [20]]", r.get(0).fuzzyKeys.toString());
         }
 
         // pre-evaluate ever false
@@ -124,11 +207,13 @@ public class DictGridTableTest {
         }
     }
 
-    private void verifyFirstRow(GridTable table) throws IOException {
+    @Test
+    public void verifyFirstRow() throws IOException {
         doScanAndVerify(table, new GTScanRequest(table.getInfo()), "[1421193600000, 30, Yang, 10, 10.5]");
     }
 
-    private void verifyScanWithUnevaluatableFilter(GridTable table) throws IOException {
+    @Test
+    public void verifyScanWithUnevaluatableFilter() throws IOException {
         GTInfo info = table.getInfo();
 
         CompareTupleFilter fComp = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
@@ -144,7 +229,8 @@ public class DictGridTableTest {
         doScanAndVerify(table, req, "[1421280000000, 20, null, 20, null]");
     }
 
-    private void verifyScanWithEvaluatableFilter(GridTable table) throws IOException {
+    @Test
+    public void verifyScanWithEvaluatableFilter() throws IOException {
         GTInfo info = table.getInfo();
 
         CompareTupleFilter fComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
@@ -159,7 +245,8 @@ public class DictGridTableTest {
         doScanAndVerify(table, req, "[1421280000000, 20, null, 30, null]", "[1421366400000, 20, null, 40, null]");
     }
 
-    private void verifyConvertFilterConstants1(GridTable table) {
+    @Test
+    public void verifyConvertFilterConstants1() {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
@@ -178,7 +265,8 @@ public class DictGridTableTest {
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 EQ [\\x00]]", newFilter.toString());
     }
 
-    private void verifyConvertFilterConstants2(GridTable table) {
+    @Test
+    public void verifyConvertFilterConstants2() {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
@@ -198,7 +286,8 @@ public class DictGridTableTest {
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 LT [\\x00]]", newFilter.toString());
     }
 
-    private void verifyConvertFilterConstants3(GridTable table) {
+    @Test
+    public void verifyConvertFilterConstants3() {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
@@ -218,7 +307,8 @@ public class DictGridTableTest {
         assertEquals("AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], []]", newFilter.toString());
     }
 
-    private void verifyConvertFilterConstants4(GridTable table) {
+    @Test
+    public void verifyConvertFilterConstants4() {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
@@ -252,7 +342,7 @@ public class DictGridTableTest {
         scanner.close();
     }
 
-    private Object enc(GTInfo info, int col, String value) {
+    private ByteArray enc(GTInfo info, int col, String value) {
         ByteBuffer buf = ByteBuffer.allocate(info.getMaxColumnLength());
         info.codeSystem.encodeColumnValue(col, value, buf);
         return ByteArray.copyOf(buf.array(), buf.arrayOffset(), buf.position());

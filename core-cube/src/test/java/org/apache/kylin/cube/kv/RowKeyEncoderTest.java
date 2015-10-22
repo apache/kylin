@@ -35,10 +35,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author George Song (ysong1)
- * 
- */
 public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
 
     @Before
@@ -74,9 +70,11 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         AbstractRowKeyEncoder rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cube.getFirstSegment(), baseCuboid);
 
         byte[] encodedKey = rowKeyEncoder.encode(data);
-        assertEquals(30, encodedKey.length);
-        byte[] cuboidId = Arrays.copyOfRange(encodedKey, 0, 8);
-        byte[] rest = Arrays.copyOfRange(encodedKey, 8, encodedKey.length);
+        assertEquals(22 + RowConstants.ROWKEY_HEADER_LEN, encodedKey.length);
+        byte[] shard = Arrays.copyOfRange(encodedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
+        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.ROWKEY_HEADER_LEN);
+        byte[] rest = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_HEADER_LEN, encodedKey.length);
+        assertEquals(0, Bytes.toShort(shard));
         assertEquals(255, Bytes.toLong(cuboidId));
         assertArrayEquals(new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
     }
@@ -104,10 +102,12 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         AbstractRowKeyEncoder rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cube.getFirstSegment(), baseCuboid);
 
         byte[] encodedKey = rowKeyEncoder.encode(data);
-        assertEquals(48, encodedKey.length);
-        byte[] sellerId = Arrays.copyOfRange(encodedKey, 8, 26);
-        byte[] cuboidId = Arrays.copyOfRange(encodedKey, 0, 8);
-        byte[] rest = Arrays.copyOfRange(encodedKey, 26, encodedKey.length);
+        assertEquals(40 + RowConstants.ROWKEY_HEADER_LEN, encodedKey.length);
+        byte[] shard = Arrays.copyOfRange(encodedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
+        byte[] sellerId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_HEADER_LEN, 18 + RowConstants.ROWKEY_HEADER_LEN);
+        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.ROWKEY_HEADER_LEN);
+        byte[] rest = Arrays.copyOfRange(encodedKey, 18 + RowConstants.ROWKEY_HEADER_LEN, encodedKey.length);
+        assertEquals(0, Bytes.toShort(shard));
         assertTrue(Bytes.toString(sellerId).startsWith("123456789"));
         assertEquals(511, Bytes.toLong(cuboidId));
         assertArrayEquals(new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
@@ -136,10 +136,12 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         AbstractRowKeyEncoder rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cube.getFirstSegment(), baseCuboid);
 
         byte[] encodedKey = rowKeyEncoder.encode(data);
-        assertEquals(48, encodedKey.length);
-        byte[] sellerId = Arrays.copyOfRange(encodedKey, 8, 26);
-        byte[] cuboidId = Arrays.copyOfRange(encodedKey, 0, 8);
-        byte[] rest = Arrays.copyOfRange(encodedKey, 26, encodedKey.length);
+        assertEquals(40 + RowConstants.ROWKEY_HEADER_LEN, encodedKey.length);
+        byte[] shard = Arrays.copyOfRange(encodedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
+        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.ROWKEY_HEADER_LEN);
+        byte[] sellerId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_HEADER_LEN, 18 + RowConstants.ROWKEY_HEADER_LEN);
+        byte[] rest = Arrays.copyOfRange(encodedKey, 18 + RowConstants.ROWKEY_HEADER_LEN, encodedKey.length);
+        assertEquals(0, Bytes.toShort(shard));
         assertTrue(Bytes.toString(sellerId).startsWith("123456789"));
         assertEquals(511, Bytes.toLong(cuboidId));
         assertArrayEquals(new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, rest);

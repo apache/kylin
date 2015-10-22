@@ -27,10 +27,10 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private final Set<FunctionDesc> selectedMetrics;
     private final TupleInfo tupleInfo;
     private final Tuple tuple;
-    private final Iterator<CubeScanner> scannerIterator;
+    private final Iterator<CubeSegmentScanner> scannerIterator;
     private final StorageContext context;
 
-    private CubeScanner curScanner;
+    private CubeSegmentScanner curScanner;
     private Iterator<GTRecord> curRecordIterator;
     private CubeTupleConverter curTupleConverter;
     private Tuple next;
@@ -38,7 +38,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private int scanCount;
     private int scanCountDelta;
 
-    public SequentialCubeTupleIterator(List<CubeScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
+    public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
             Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context) {
         this.cuboid = cuboid;
         this.selectedDimensions = selectedDimensions;
@@ -112,7 +112,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         }
     }
 
-    private void close(CubeScanner scanner) {
+    private void close(CubeSegmentScanner scanner) {
         try {
             scanner.close();
         } catch (IOException e) {

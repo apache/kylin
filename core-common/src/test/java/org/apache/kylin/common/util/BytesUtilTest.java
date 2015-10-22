@@ -18,17 +18,15 @@
 
 package org.apache.kylin.common.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
-/**
- * by honma
- */
-public class BytesUtilTest extends TestCase {
+public class BytesUtilTest {
     @Test
     public void test() {
         ByteBuffer buffer = ByteBuffer.allocate(10000);
@@ -77,6 +75,7 @@ public class BytesUtilTest extends TestCase {
         assertTrue(Arrays.equals(anOtherNewBytes, ba.array()));
     }
 
+    @Test
     public void testReadable() {
         String x = "\\x00\\x00\\x00\\x00\\x00\\x01\\xFC\\xA8";
         byte[] bytes = BytesUtil.fromReadableText(x);

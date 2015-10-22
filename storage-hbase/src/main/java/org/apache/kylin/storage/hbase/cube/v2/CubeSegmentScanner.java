@@ -1,6 +1,7 @@
 package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,7 +11,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
@@ -30,7 +34,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class CubeScanner implements IGTScanner {
+public class CubeSegmentScanner implements IGTScanner {
 
     private static final int MAX_SCAN_RANGES = 200;
 
@@ -41,7 +45,7 @@ public class CubeScanner implements IGTScanner {
     final Scanner scanner;
     final Cuboid cuboid;
 
-    public CubeScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
+    public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
             Collection<FunctionDesc> metrics, TupleFilter filter, boolean allowPreAggregate) {
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
@@ -57,8 +61,18 @@ public class CubeScanner implements IGTScanner {
         ImmutableBitSet gtAggrMetrics = makeGridTableColumns(mapping, metrics);
         String[] gtAggrFuncs = makeAggrFuncs(mapping, metrics);
 
-        //TODO: should remove this in endpoint scenario
-        GTScanRangePlanner scanRangePlanner = new GTScanRangePlanner(info);
+        GTScanRangePlanner scanRangePlanner;
+        if (cubeSeg.getCubeDesc().getModel().getPartitionDesc().isPartitioned()) {
+            TblColRef tblColRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
+            Pair<ByteArray, ByteArray> segmentStartAndEnd = null;
+            int index = mapping.getIndexOf(tblColRef);
+            if (index >= 0) {
+                segmentStartAndEnd = getSegmentStartAndEnd(tblColRef, index);
+            }
+            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd, tblColRef);
+        } else {
+            scanRangePlanner = new GTScanRangePlanner(info, null, null);
+        }
         List<GTScanRange> scanRanges = scanRangePlanner.planScanRanges(gtFilter, MAX_SCAN_RANGES);
 
         scanRequests = Lists.newArrayListWithCapacity(scanRanges.size());
@@ -71,6 +85,44 @@ public class CubeScanner implements IGTScanner {
         }
 
         scanner = new Scanner();
+    }
+
+    private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(TblColRef tblColRef, int index) {
+
+        String partitionColType = tblColRef.getColumnDesc().getDatatype();
+
+        ByteArray start;
+        if (cubeSeg.getDateRangeStart() != Long.MIN_VALUE) {
+            start = translateTsToString(cubeSeg.getDateRangeStart(), partitionColType, index);
+        } else {
+            start = new ByteArray();
+        }
+
+        ByteArray end;
+        if (cubeSeg.getDateRangeEnd() != Long.MAX_VALUE) {
+            end = translateTsToString(cubeSeg.getDateRangeEnd(), partitionColType, index);
+        } else {
+            end = new ByteArray();
+        }
+        return Pair.newPair(start, end);
+
+    }
+
+    private ByteArray translateTsToString(long ts, String partitionColType, int index) {
+        String value;
+        if ("date".equalsIgnoreCase(partitionColType)) {
+            value = DateFormat.formatToDateStr(ts);
+        } else if ("timestamp".equalsIgnoreCase(partitionColType)) {
+            //TODO: if partition col is not dict encoded, value's format may differ from expected. Though by default it is not the case
+            value = DateFormat.formatToTimeWithoutMilliStr(ts);
+        } else {
+            throw new RuntimeException("Type " + partitionColType + " is not valid partition column type");
+        }
+
+        ByteBuffer buffer = ByteBuffer.allocate(info.getMaxColumnLength());
+        info.getCodeSystem().encodeColumnValue(index, value, buffer);
+
+        return ByteArray.copyOf(buffer.array(), 0, buffer.position());
     }
 
     private Set<TblColRef> replaceDerivedColumns(Set<TblColRef> input, CubeDesc cubeDesc) {
@@ -150,38 +202,6 @@ public class CubeScanner implements IGTScanner {
         return scanner.getScannedRowCount();
     }
 
-    static class RemoteGTRecordAdapter implements Iterable<GTRecord> {
-
-        private final GTInfo info;
-        private final Iterator<GTRecord> input;
-
-        public RemoteGTRecordAdapter(GTInfo info, Iterator<GTRecord> input) {
-            this.info = info;
-            this.input = input;
-        }
-
-        @Override
-        public Iterator<GTRecord> iterator() {
-            return new Iterator<GTRecord>() {
-                @Override
-                public boolean hasNext() {
-                    return input.hasNext();
-                }
-
-                @Override
-                public GTRecord next() {
-                    GTRecord x = input.next();
-                    return new GTRecord(info, x.getInternal());
-                }
-
-                @Override
-                public void remove() {
-
-                }
-            };
-        }
-    }
-
     private class Scanner {
         final IGTScanner[] inputScanners = new IGTScanner[scanRequests.size()];
         int cur = 0;
@@ -201,10 +221,15 @@ public class CubeScanner implements IGTScanner {
                             return false;
 
                         try {
+
                             CubeHBaseRPC rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);
+                            //CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
+
+                            //change previous line to CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
+                            //to debug locally
+
                             inputScanners[cur] = rpc.getGTScanner(scanRequests.get(cur));
                             curIterator = inputScanners[cur].iterator();
-                            //curIterator = new RemoteGTRecordAdapter(info, inputScanners[cur].iterator()).iterator();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }

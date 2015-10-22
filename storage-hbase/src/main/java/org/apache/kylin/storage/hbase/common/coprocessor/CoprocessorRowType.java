@@ -131,7 +131,7 @@ public class CoprocessorRowType {
 
     private void init() {
         int[] offsets = new int[columns.length];
-        int o = RowConstants.ROWKEY_CUBOIDID_LEN;
+        int o = RowConstants.ROWKEY_HEADER_LEN;
         for (int i = 0; i < columns.length; i++) {
             offsets[i] = o;
             o += columnSizes[i];

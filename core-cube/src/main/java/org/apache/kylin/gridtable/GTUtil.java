@@ -33,10 +33,6 @@ public class GTUtil {
         return convertFilter(rootFilter, info, null, false, unevaluatableColumnCollector);
     }
 
-    public static TupleFilter convertFilterConstants(TupleFilter rootFilter, GTInfo info) {
-        return convertFilter(rootFilter, info, null, true, null);
-    }
-
     public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, GTInfo info, //
             List<TblColRef> colMapping, Set<TblColRef> unevaluatableColumnCollector) {
         return convertFilter(rootFilter, info, colMapping, true, unevaluatableColumnCollector);

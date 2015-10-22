@@ -34,10 +34,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author George Song (ysong1)
- * 
- */
 public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
     @Before
@@ -57,7 +53,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
 
-        byte[] key = { 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
+        byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
 
         rowKeyDecoder.decode(key);
         List<String> values = rowKeyDecoder.getValues();
@@ -70,7 +66,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
 
-        byte[] key = { 0, 0, 0, 0, 0, 0, 1, -1, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 54, -105, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
+        byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 54, -105, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
 
         rowKeyDecoder.decode(key);
         List<String> values = rowKeyDecoder.getValues();
@@ -97,7 +93,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
         AbstractRowKeyEncoder rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cube.getFirstSegment(), baseCuboid);
 
         byte[] encodedKey = rowKeyEncoder.encode(data);
-        assertEquals(30, encodedKey.length);
+        assertEquals(22 + RowConstants.ROWKEY_HEADER_LEN, encodedKey.length);
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
         rowKeyDecoder.decode(encodedKey);

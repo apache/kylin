@@ -43,9 +43,13 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.ShardingHash;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
@@ -68,12 +72,14 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
     private final HTableInterface hTable;
     private final ByteBuffer byteBuffer;
     private final CubeDesc cubeDesc;
+    private final CubeSegment cubeSegment;
     private final Object[] measureValues;
     private List<Put> puts = Lists.newArrayList();
 
-    public HBaseCuboidWriter(CubeDesc cubeDesc, HTableInterface hTable) {
+    public HBaseCuboidWriter(CubeSegment segment, HTableInterface hTable) {
         this.keyValueCreators = Lists.newArrayList();
-        this.cubeDesc = cubeDesc;
+        this.cubeSegment = segment;
+        this.cubeDesc = cubeSegment.getCubeDesc();
         for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
                 keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
@@ -81,7 +87,7 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
         }
         this.nColumns = keyValueCreators.size();
         this.hTable = hTable;
-        this.byteBuffer = ByteBuffer.allocate(1 << 20);
+        this.byteBuffer = ByteBuffer.allocate(RowConstants.ROWKEY_BUFFER_SIZE);
         this.measureValues = new Object[cubeDesc.getMeasures().size()];
     }
 
@@ -93,12 +99,22 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
 
     private ByteBuffer createKey(Long cuboidId, GTRecord record) {
         byteBuffer.clear();
-        byteBuffer.put(Bytes.toBytes(cuboidId));
+        byteBuffer.put(Bytes.toBytes((short) 0), 0, RowConstants.ROWKEY_SHARDID_LEN);//occupy space first
+        byteBuffer.put(Bytes.toBytes(cuboidId), 0, RowConstants.ROWKEY_CUBOIDID_LEN);
         final int cardinality = BitSet.valueOf(new long[] { cuboidId }).cardinality();
         for (int i = 0; i < cardinality; i++) {
             final ByteArray byteArray = record.get(i);
             byteBuffer.put(byteArray.array(), byteArray.offset(), byteArray.length());
         }
+
+        //fill shard
+        short cuboidShardNum = cubeSegment.getCuboidShardNum(cuboidId);
+        short shardOffset = ShardingHash.getShard(byteBuffer.array(), //
+                RowConstants.ROWKEY_HEADER_LEN, byteBuffer.position() - RowConstants.ROWKEY_HEADER_LEN, cuboidShardNum);
+        Short cuboidShardBase = cubeSegment.getCuboidBaseShard(cuboidId);
+        short finalShard = ShardingHash.normalize(cuboidShardBase, shardOffset, cubeSegment.getTotalShards());
+        BytesUtil.writeShort(finalShard, byteBuffer.array(), 0, RowConstants.ROWKEY_SHARDID_LEN);
+
         return byteBuffer;
     }
 
@@ -108,7 +124,7 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
         final Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
         final int nDims = cuboid.getColumns().size();
         final ImmutableBitSet bitSet = new ImmutableBitSet(nDims, nDims + cubeDesc.getMeasures().size());
-        
+
         for (int i = 0; i < nColumns; i++) {
             final Object[] values = record.getValues(bitSet, measureValues);
             final KeyValue keyValue = keyValueCreators.get(i).create(key.array(), 0, key.position(), values);

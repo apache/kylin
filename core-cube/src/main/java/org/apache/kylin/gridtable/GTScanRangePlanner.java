@@ -1,6 +1,7 @@
 package org.apache.kylin.gridtable;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -11,35 +12,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.common.FuzzyValueCombination;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class GTScanRangePlanner {
 
+    private static final Logger logger = LoggerFactory.getLogger(GTScanRangePlanner.class);
+
     private static final int MAX_HBASE_FUZZY_KEYS = 100;
 
     final private GTInfo info;
-    final private ComparatorEx<ByteArray> byteUnknownIsSmaller;
-    final private ComparatorEx<ByteArray> byteUnknownIsBigger;
-    final private ComparatorEx<GTRecord> recordUnknownIsSmaller;
-    final private ComparatorEx<GTRecord> recordUnknownIsBigger;
+    final private Pair<ByteArray, ByteArray> segmentStartAndEnd;
+    final private TblColRef partitionColRef;
 
-    public GTScanRangePlanner(GTInfo info) {
+    final private RecordComparator rangeStartComparator;
+    final private RecordComparator rangeEndComparator;
+    final private RecordComparator rangeStartEndComparator;
+
+    public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> segmentStartAndEnd, TblColRef partitionColRef) {
         this.info = info;
+        this.segmentStartAndEnd = segmentStartAndEnd;
+        this.partitionColRef = partitionColRef;
 
         IGTComparator comp = info.codeSystem.getComparator();
-        this.byteUnknownIsSmaller = byteComparatorTreatsUnknownSmaller(comp);
-        this.byteUnknownIsBigger = byteComparatorTreatsUnknownBigger(comp);
-        this.recordUnknownIsSmaller = recordComparatorTreatsUnknownSmaller(comp);
-        this.recordUnknownIsBigger = recordComparatorTreatsUnknownBigger(comp);
+
+        //start key GTRecord compare to start key GTRecord
+        this.rangeStartComparator = getRangeStartComparator(comp);
+        //stop key GTRecord compare to stop key GTRecord
+        this.rangeEndComparator = getRangeEndComparator(comp);
+        //start key GTRecord compare to stop key GTRecord
+        this.rangeStartEndComparator = getRangeStartEndComparator(comp);
     }
 
     // return empty list meaning filter is always false
@@ -57,7 +73,8 @@ public class GTScanRangePlanner {
         List<GTScanRange> scanRanges = Lists.newArrayListWithCapacity(orAndDimRanges.size());
         for (Collection<ColumnRange> andDimRanges : orAndDimRanges) {
             GTScanRange scanRange = newScanRange(andDimRanges);
-            scanRanges.add(scanRange);
+            if (scanRange != null)
+                scanRanges.add(scanRange);
         }
 
         List<GTScanRange> mergedRanges = mergeOverlapRanges(scanRanges);
@@ -69,28 +86,64 @@ public class GTScanRangePlanner {
     private GTScanRange newScanRange(Collection<ColumnRange> andDimRanges) {
         GTRecord pkStart = new GTRecord(info);
         GTRecord pkEnd = new GTRecord(info);
-        List<GTRecord> hbaseFuzzyKeys = Lists.newArrayList();
+        Map<Integer, Set<ByteArray>> fuzzyValues = Maps.newHashMap();
+
+        List<GTRecord> fuzzyKeys;
 
         for (ColumnRange range : andDimRanges) {
+
+            if (partitionColRef != null && range.column.equals(partitionColRef)) {
+
+                if (rangeStartEndComparator.comparator.compare(segmentStartAndEnd.getFirst(), range.end) <= 0 //
+                        && rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) < 0) {
+                    //segment range is [Closed,Open)
+                } else {
+                    return null;
+                }
+            }
+
             int col = range.column.getColumnDesc().getZeroBasedIndex();
-            if (info.primaryKey.get(col) == false)
+            if (!info.primaryKey.get(col))
                 continue;
 
             pkStart.set(col, range.begin);
             pkEnd.set(col, range.end);
 
-            if (range.equals != null) {
-                ImmutableBitSet fuzzyMask = new ImmutableBitSet(col);
-                for (ByteArray v : range.equals) {
-                    GTRecord fuzzy = new GTRecord(info);
-                    fuzzy.set(col, v);
-                    fuzzy.maskForEqualHashComp(fuzzyMask);
-                    hbaseFuzzyKeys.add(fuzzy);
-                }
+            if (range.valueSet != null && !range.valueSet.isEmpty()) {
+                fuzzyValues.put(col, range.valueSet);
             }
         }
 
-        return new GTScanRange(pkStart, pkEnd, hbaseFuzzyKeys);
+        fuzzyKeys = buildFuzzyKeys(fuzzyValues);
+
+        return new GTScanRange(pkStart, pkEnd, fuzzyKeys);
+    }
+
+    private List<GTRecord> buildFuzzyKeys(Map<Integer, Set<ByteArray>> fuzzyValueSet) {
+        ArrayList<GTRecord> result = Lists.newArrayList();
+
+        if (fuzzyValueSet.isEmpty())
+            return result;
+
+        // debug/profiling purpose
+        if (BackdoorToggles.getDisableFuzzyKey()) {
+            logger.info("The execution of this query will not use fuzzy key");
+            return result;
+        }
+
+        List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, MAX_HBASE_FUZZY_KEYS);
+
+        for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
+            GTRecord fuzzy = new GTRecord(info);
+            BitSet bitSet = new BitSet(info.getColumnCount());
+            for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
+                bitSet.set(entry.getKey());
+                fuzzy.set(entry.getKey(), entry.getValue());
+            }
+            fuzzy.maskForEqualHashComp(new ImmutableBitSet(bitSet));
+            result.add(fuzzy);
+        }
+        return result;
     }
 
     private TupleFilter flattenToOrAndFilter(TupleFilter filter) {
@@ -194,7 +247,7 @@ public class GTScanRangePlanner {
         Collections.sort(ranges, new Comparator<GTScanRange>() {
             @Override
             public int compare(GTScanRange a, GTScanRange b) {
-                return recordUnknownIsSmaller.compare(a.pkStart, b.pkStart);
+                return rangeStartComparator.compare(a.pkStart, b.pkStart);
             }
         });
 
@@ -202,13 +255,12 @@ public class GTScanRangePlanner {
         List<GTScanRange> mergedRanges = new ArrayList<GTScanRange>();
         int mergeBeginIndex = 0;
         GTRecord mergeEnd = ranges.get(0).pkEnd;
-        for (int index = 0; index < ranges.size(); index++) {
+        for (int index = 1; index < ranges.size(); index++) {
             GTScanRange range = ranges.get(index);
 
             // if overlap, swallow it
-            if (recordUnknownIsSmaller.min(range.pkStart, mergeEnd) == range.pkStart //
-                    || recordUnknownIsBigger.max(mergeEnd, range.pkStart) == mergeEnd) {
-                mergeEnd = recordUnknownIsBigger.max(mergeEnd, range.pkEnd);
+            if (rangeStartEndComparator.compare(range.pkStart, mergeEnd) <= 0) {
+                mergeEnd = rangeEndComparator.max(mergeEnd, range.pkEnd);
                 continue;
             }
 
@@ -218,7 +270,7 @@ public class GTScanRangePlanner {
 
             // start new split
             mergeBeginIndex = index;
-            mergeEnd = recordUnknownIsBigger.max(mergeEnd, range.pkEnd);
+            mergeEnd = range.pkEnd;
         }
 
         // don't miss the last range
@@ -239,9 +291,9 @@ public class GTScanRangePlanner {
 
         boolean hasNonFuzzyRange = false;
         for (GTScanRange range : ranges) {
-            hasNonFuzzyRange = hasNonFuzzyRange || range.hbaseFuzzyKeys.isEmpty();
-            newFuzzyKeys.addAll(range.hbaseFuzzyKeys);
-            end = recordUnknownIsBigger.max(end, range.pkEnd);
+            hasNonFuzzyRange = hasNonFuzzyRange || range.fuzzyKeys.isEmpty();
+            newFuzzyKeys.addAll(range.fuzzyKeys);
+            end = rangeEndComparator.max(end, range.pkEnd);
         }
 
         // if any range is non-fuzzy, then all fuzzy keys must be cleared
@@ -269,7 +321,7 @@ public class GTScanRangePlanner {
         private TblColRef column;
         private ByteArray begin = ByteArray.EMPTY;
         private ByteArray end = ByteArray.EMPTY;
-        private Set<ByteArray> equals;
+        private Set<ByteArray> valueSet;
 
         public ColumnRange(TblColRef column, Set<ByteArray> values, FilterOperatorEnum op) {
             this.column = column;
@@ -277,16 +329,16 @@ public class GTScanRangePlanner {
             switch (op) {
             case EQ:
             case IN:
-                equals = new HashSet<ByteArray>(values);
+                valueSet = new HashSet<ByteArray>(values);
                 refreshBeginEndFromEquals();
                 break;
             case LT:
             case LTE:
-                end = byteUnknownIsBigger.max(values);
+                end = rangeEndComparator.comparator.max(values);
                 break;
             case GT:
             case GTE:
-                begin = byteUnknownIsSmaller.min(values);
+                begin = rangeStartComparator.comparator.min(values);
                 break;
             case NEQ:
             case NOTIN:
@@ -303,16 +355,16 @@ public class GTScanRangePlanner {
             this.column = column;
             this.begin = beginValue;
             this.end = endValue;
-            this.equals = equalValues;
+            this.valueSet = equalValues;
         }
 
         private void refreshBeginEndFromEquals() {
-            if (equals.isEmpty()) {
+            if (valueSet.isEmpty()) {
                 begin = ByteArray.EMPTY;
                 end = ByteArray.EMPTY;
             } else {
-                begin = byteUnknownIsSmaller.min(equals);
-                end = byteUnknownIsBigger.max(equals);
+                begin = rangeStartComparator.comparator.min(valueSet);
+                end = rangeEndComparator.comparator.max(valueSet);
             }
         }
 
@@ -321,8 +373,8 @@ public class GTScanRangePlanner {
         }
 
         public boolean satisfyNone() {
-            if (equals != null) {
-                return equals.isEmpty();
+            if (valueSet != null) {
+                return valueSet.isEmpty();
             } else if (begin.array() != null && end.array() != null) {
                 return info.codeSystem.getComparator().compare(begin, end) > 0;
             } else {
@@ -338,36 +390,36 @@ public class GTScanRangePlanner {
             }
 
             if (this.satisfyAll()) {
-                copy(another.column, another.begin, another.end, another.equals);
+                copy(another.column, another.begin, another.end, another.valueSet);
                 return;
             }
 
-            if (this.equals != null && another.equals != null) {
-                this.equals.retainAll(another.equals);
+            if (this.valueSet != null && another.valueSet != null) {
+                this.valueSet.retainAll(another.valueSet);
                 refreshBeginEndFromEquals();
                 return;
             }
 
-            if (this.equals != null) {
-                this.equals = filter(this.equals, another.begin, another.end);
+            if (this.valueSet != null) {
+                this.valueSet = filter(this.valueSet, another.begin, another.end);
                 refreshBeginEndFromEquals();
                 return;
             }
 
-            if (another.equals != null) {
-                this.equals = filter(another.equals, this.begin, this.end);
+            if (another.valueSet != null) {
+                this.valueSet = filter(another.valueSet, this.begin, this.end);
                 refreshBeginEndFromEquals();
                 return;
             }
 
-            this.begin = byteUnknownIsSmaller.max(this.begin, another.begin);
-            this.end = byteUnknownIsBigger.min(this.end, another.end);
+            this.begin = rangeStartComparator.comparator.max(this.begin, another.begin);
+            this.end = rangeEndComparator.comparator.min(this.end, another.end);
         }
 
         private Set<ByteArray> filter(Set<ByteArray> equalValues, ByteArray beginValue, ByteArray endValue) {
             Set<ByteArray> result = Sets.newHashSetWithExpectedSize(equalValues.size());
             for (ByteArray v : equalValues) {
-                if (byteUnknownIsSmaller.compare(beginValue, v) <= 0 && byteUnknownIsBigger.compare(v, endValue) <= 0) {
+                if (rangeStartEndComparator.comparator.compare(beginValue, v) <= 0 && rangeStartEndComparator.comparator.compare(v, endValue) <= 0) {
                     result.add(v);
                 }
             }
@@ -375,10 +427,10 @@ public class GTScanRangePlanner {
         }
 
         public String toString() {
-            if (equals == null) {
+            if (valueSet == null) {
                 return column.getName() + " between " + begin + " and " + end;
             } else {
-                return column.getName() + " in " + equals;
+                return column.getName() + " in " + valueSet;
             }
         }
     }
@@ -424,40 +476,55 @@ public class GTScanRangePlanner {
         }
     }
 
-    public static ComparatorEx<ByteArray> byteComparatorTreatsUnknownSmaller(final IGTComparator comp) {
-        return new ComparatorEx<ByteArray>() {
+    public static RecordComparator getRangeStartComparator(final IGTComparator comp) {
+        return new RecordComparator(new ComparatorEx<ByteArray>() {
             @Override
             public int compare(ByteArray a, ByteArray b) {
-                if (a.array() == null)
-                    return -1;
-                else if (b.array() == null)
+                if (a.array() == null) {
+                    if (b.array() == null) {
+                        return 0;
+                    } else {
+                        return -1;
+                    }
+                } else if (b.array() == null) {
                     return 1;
-                else
+                } else {
                     return comp.compare(a, b);
+                }
             }
-        };
+        });
     }
 
-    public static ComparatorEx<ByteArray> byteComparatorTreatsUnknownBigger(final IGTComparator comp) {
-        return new ComparatorEx<ByteArray>() {
+    public static RecordComparator getRangeEndComparator(final IGTComparator comp) {
+        return new RecordComparator(new ComparatorEx<ByteArray>() {
             @Override
             public int compare(ByteArray a, ByteArray b) {
-                if (a.array() == null)
-                    return 1;
-                else if (b.array() == null)
+                if (a.array() == null) {
+                    if (b.array() == null) {
+                        return 0;
+                    } else {
+                        return 1;
+                    }
+                } else if (b.array() == null) {
                     return -1;
-                else
+                } else {
                     return comp.compare(a, b);
+                }
             }
-        };
+        });
     }
 
-    public static ComparatorEx<GTRecord> recordComparatorTreatsUnknownSmaller(IGTComparator comp) {
-        return new RecordComparator(byteComparatorTreatsUnknownSmaller(comp));
-    }
-
-    public static ComparatorEx<GTRecord> recordComparatorTreatsUnknownBigger(IGTComparator comp) {
-        return new RecordComparator(byteComparatorTreatsUnknownBigger(comp));
+    public static RecordComparator getRangeStartEndComparator(final IGTComparator comp) {
+        return new AsymmetricRecordComparator(new ComparatorEx<ByteArray>() {
+            @Override
+            public int compare(ByteArray a, ByteArray b) {
+                if (a.array() == null || b.array() == null) {
+                    return -1;
+                } else {
+                    return comp.compare(a, b);
+                }
+            }
+        });
     }
 
     private static class RecordComparator extends ComparatorEx<GTRecord> {
@@ -473,7 +540,7 @@ public class GTScanRangePlanner {
             assert a.maskForEqualHashComp() == b.maskForEqualHashComp();
             ImmutableBitSet mask = a.maskForEqualHashComp();
 
-            int comp = 0;
+            int comp;
             for (int i = 0; i < mask.trueBitCount(); i++) {
                 int c = mask.trueBitAt(i);
                 comp = comparator.compare(a.cols[c], b.cols[c]);
@@ -481,6 +548,37 @@ public class GTScanRangePlanner {
                     return comp;
             }
             return 0; // equals
+        }
+    }
+
+    /**
+     * asymmetric means compare(a,b) > 0 does not cause compare(b,a) < 0 
+     * so min max functions will not bu supported
+     */
+    private static class AsymmetricRecordComparator extends RecordComparator {
+
+        AsymmetricRecordComparator(ComparatorEx<ByteArray> byteComparator) {
+            super(byteComparator);
+        }
+
+        public GTRecord min(Collection<GTRecord> v) {
+            throw new UnsupportedOperationException();
+        }
+
+        public GTRecord max(Collection<GTRecord> v) {
+            throw new UnsupportedOperationException();
+        }
+
+        public GTRecord min(GTRecord a, GTRecord b) {
+            throw new UnsupportedOperationException();
+        }
+
+        public GTRecord max(GTRecord a, GTRecord b) {
+            throw new UnsupportedOperationException();
+        }
+
+        public boolean between(GTRecord v, GTRecord start, GTRecord end) {
+            throw new UnsupportedOperationException();
         }
     }
 }

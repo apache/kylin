@@ -74,15 +74,12 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
     @Override
     public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
         DataTypeSerializer serializer = serializers[col];
-        if (serializer instanceof CubeCodeSystem.TrimmedDictionarySerializer || serializer instanceof CubeCodeSystem.DictionarySerializer) {
-            //TODO: remove this check
-            throw new IllegalStateException("Encode dictionary value in coprocessor");
-        } else {
-            if ((!(serializer instanceof StringSerializer || serializer instanceof CubeCodeSystem.FixLenSerializer)) && (value instanceof String)) {
-                value = serializer.valueOf((String) value);
-            }
-            serializer.serialize(value, buf);
-        }
+
+//        if (((value instanceof String) && !(serializer instanceof StringSerializer || serializer instanceof CubeCodeSystem.FixLenSerializer))) {
+//            value = serializer.valueOf((String) value);
+//        }
+        
+        serializer.serialize(value, buf);
     }
 
     @Override

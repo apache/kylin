@@ -23,6 +23,8 @@ import java.util.Collection;
 
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -30,6 +32,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -49,6 +52,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private Text outputKey = new Text();
     private String cubeName;
     private String segmentName;
+    private CubeSegment cubeSegment;
     private CubeDesc cubeDesc;
     private CuboidScheduler cuboidScheduler;
 
@@ -68,7 +72,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+        cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
         cubeDesc = cube.getDescriptor();
 
         // initialize CubiodScheduler
@@ -80,16 +84,21 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private int buildKey(Cuboid parentCuboid, Cuboid childCuboid, SplittedBytes[] splitBuffers) {
         int offset = 0;
 
+        //shard id will be filled after other contents
+        offset += RowConstants.ROWKEY_SHARDID_LEN;
+
         // cuboid id
         System.arraycopy(childCuboid.getBytes(), 0, keyBuf, offset, childCuboid.getBytes().length);
-        offset += childCuboid.getBytes().length;
+        offset += RowConstants.ROWKEY_CUBOIDID_LEN;
+
+        int bodyOffset = offset;
 
         // rowkey columns
         long mask = Long.highestOneBit(parentCuboid.getId());
         long parentCuboidId = parentCuboid.getId();
         long childCuboidId = childCuboid.getId();
         long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
-        int index = 1; // skip cuboidId
+        int index = 2; // skip shard and cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & parentCuboidId) > 0) {// if the this bit position equals
                                               // 1
@@ -103,12 +112,18 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
             mask = mask >> 1;
         }
 
+        //fill shard
+        short cuboidShardNum = cubeSegment.getCuboidShardNum(childCuboidId);
+        short shardOffset = ShardingHash.getShard(keyBuf, bodyOffset, offset - bodyOffset, cuboidShardNum);
+        short finalShard = ShardingHash.normalize(cubeSegment.getCuboidBaseShard(childCuboidId), shardOffset, cubeSegment.getTotalShards());
+        BytesUtil.writeShort(finalShard, keyBuf, 0, RowConstants.ROWKEY_SHARDID_LEN);
+
         return offset;
     }
 
     @Override
     public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-        long cuboidId = rowKeySplitter.split(key.getBytes(), key.getLength());
+        long cuboidId = rowKeySplitter.split(key.getBytes());
         Cuboid parentCuboid = Cuboid.findById(cubeDesc, cuboidId);
 
         Collection<Long> myChildren = cuboidScheduler.getSpanningCuboid(cuboidId);

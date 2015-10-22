@@ -14,6 +14,10 @@ option optimize_for = SPEED;
 message CubeVisitRequest {
     required bytes gtScanRequest = 1;
     required bytes hbaseRawScan = 2;
+    repeated IntList hbaseColumnsToGT = 3;
+    message IntList {
+        repeated int32 ints = 1;
+    }
 }
 
 message CubeVisitResponse {

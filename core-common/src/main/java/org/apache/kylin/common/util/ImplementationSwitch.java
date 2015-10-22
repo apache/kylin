@@ -26,14 +26,16 @@ import org.slf4j.LoggerFactory;
  * Provide switch between different implementations of a same interface.
  * Each implementation is identified by an integer ID.
  */
-public class ImplementationSwitch {
+public class ImplementationSwitch<I> {
 
     private static final Logger logger = LoggerFactory.getLogger(ImplementationSwitch.class);
 
     final private Object[] instances;
+    private Class<I> interfaceClz;
 
-    public ImplementationSwitch(Map<Integer, String> impls) {
-        instances = initInstances(impls);
+    public ImplementationSwitch(Map<Integer, String> impls, Class<I> interfaceClz) {
+        this.interfaceClz = interfaceClz;
+        this.instances = initInstances(impls);
     }
 
     private Object[] initInstances(Map<Integer, String> impls) {
@@ -58,13 +60,13 @@ public class ImplementationSwitch {
         return result;
     }
 
-    public <I> I get(int id, Class<I> interfaceClz) {
+    public I get(int id) {
         @SuppressWarnings("unchecked")
         I result = (I) instances[id];
 
         if (result == null)
             throw new IllegalArgumentException("Implementations missing, ID " + id + ", interafce " + interfaceClz.getName());
-        
+
         return result;
     }
 }

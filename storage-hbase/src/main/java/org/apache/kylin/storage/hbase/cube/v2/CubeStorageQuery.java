@@ -36,6 +36,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 
+@SuppressWarnings("unused")
 public class CubeStorageQuery implements ICachableStorageQuery {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeStorageQuery.class);
@@ -91,13 +92,11 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         TupleFilter filterD = translateDerived(filter, groupsD);
 
         setThreshold(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
-        // TODO enable coprocessor
-        //        setCoprocessor(groupsCopD, valueDecoders, context); // enable coprocessor if beneficial
         setLimit(filter, context);
 
-        List<CubeScanner> scanners = Lists.newArrayList();
+        List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
-            scanners.add(new CubeScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation));
+            scanners.add(new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation));
         }
 
         if (scanners.isEmpty())

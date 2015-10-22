@@ -26,18 +26,23 @@ public class RowConstants {
     public static final byte ROWKEY_LOWER_BYTE = 0;
     // row key upper bound
     public static final byte ROWKEY_UPPER_BYTE = (byte) 0xff;
+
     // row key cuboid id length
     public static final int ROWKEY_CUBOIDID_LEN = 8;
+    // row key shard length
+    public static final int ROWKEY_SHARDID_LEN = 2;
 
-    // fuzzy mask
-    public static final byte FUZZY_MASK_ZERO = 0;
-    public static final byte FUZZY_MASK_ONE = 1;
+    public static final int ROWKEY_HEADER_LEN = ROWKEY_CUBOIDID_LEN + ROWKEY_SHARDID_LEN;
+    
+    public static final byte BYTE_ZERO = 0;
+    public static final byte BYTE_ONE = 1;
 
     // row value delimiter
     public static final byte ROWVALUE_DELIMITER_BYTE = 7;
     public static final String ROWVALUE_DELIMITER_STRING = String.valueOf((char) 7);
     public static final byte[] ROWVALUE_DELIMITER_BYTES = { 7 };
 
+    public static final int ROWKEY_BUFFER_SIZE = 1024 * 1024; // 1 MB
     public static final int ROWVALUE_BUFFER_SIZE = 1024 * 1024; // 1 MB
 
     // marker class

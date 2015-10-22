@@ -35,6 +35,7 @@ import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.junit.After;
 import org.junit.Before;
@@ -73,7 +74,7 @@ public class NDCuboidMapperTest extends LocalFileMetadataTestCase {
         mapReduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
         mapReduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
 
-        byte[] key = { 0, 0, 0, 0, 0, 0, 1, -1, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 54, -105, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
+        byte[] key = { 0,0,0, 0, 0, 0, 0, 0, 1, -1, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 54, -105, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
         byte[] value = { 14, 7, 23, -16, 56, 92, 114, -80, 118, 14, 7, 23, -16, 56, 92, 114, -80, 118, 14, 7, 23, -16, 56, 92, 114, -80, 118, 1, 1 };
         Pair<Text, Text> input1 = new Pair<Text, Text>(new Text(key), new Text(value));
 
@@ -83,7 +84,7 @@ public class NDCuboidMapperTest extends LocalFileMetadataTestCase {
 
         assertEquals(4, result.size());
 
-        byte[] resultKey = { 0, 0, 0, 0, 0, 0, 1, 127, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
+        byte[] resultKey = { 0,0,0, 0, 0, 0, 0, 0, 1, 127, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
         byte[] resultValue = { 14, 7, 23, -16, 56, 92, 114, -80, 118, 14, 7, 23, -16, 56, 92, 114, -80, 118, 14, 7, 23, -16, 56, 92, 114, -80, 118, 1, 1 };
         Pair<Text, Text> output1 = new Pair<Text, Text>(new Text(resultKey), new Text(resultValue));
 
@@ -103,7 +104,7 @@ public class NDCuboidMapperTest extends LocalFileMetadataTestCase {
         System.out.println(Bytes.toLong(new byte[] { 0, 0, 0, 0, 0, 0, 1, -1 }));
         for (int i = 0; i < result.size(); i++) {
             byte[] bytes = new byte[result.get(i).getFirst().getLength()];
-            System.arraycopy(result.get(i).getFirst().getBytes(), 0, bytes, 0, result.get(i).getFirst().getLength());
+            System.arraycopy(result.get(i).getFirst().getBytes(), RowConstants.ROWKEY_SHARDID_LEN, bytes, 0, result.get(i).getFirst().getLength()-RowConstants.ROWKEY_SHARDID_LEN);
             System.out.println(Bytes.toLong(bytes));
             keySet[i] = Bytes.toLong(bytes);
         }

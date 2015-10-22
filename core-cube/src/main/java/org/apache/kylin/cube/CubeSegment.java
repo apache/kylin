@@ -25,6 +25,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
@@ -37,6 +38,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.collect.Maps;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, IBuildable {
@@ -67,6 +69,10 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
     private String lastBuildJobID;
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
+    @JsonProperty("cuboid_shard_nums")
+    private Map<Long, Short> cuboidShardNums = Maps.newHashMap();
+    @JsonProperty("total_shards")
+    private int totalShards = 0;
 
     @JsonProperty("binary_signature")
     private String binarySignature; // a hash of cube schema and dictionary ID, used for sanity check
@@ -75,6 +81,8 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
     private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
     @JsonProperty("snapshots")
     private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
+
+    private volatile Map<Long, Short> cuboidBaseShards = Maps.newHashMap();//cuboid id ==> base(starting) shard for this cuboid
 
     public CubeDesc getCubeDesc() {
         return getCubeInstance().getDescriptor();
@@ -358,6 +366,48 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
     @Override
     public int getStorageType() {
         return cubeInstance.getStorageType();
+    }
+
+    /**
+     * get the number of shards where each cuboid will distribute
+     * @return
+     */
+    public Short getCuboidShardNum(Long cuboidId) {
+        Short ret = this.cuboidShardNums.get(cuboidId);
+        if (ret == null) {
+            return 1;
+        } else {
+            return ret;
+        }
+    }
+
+    //    /**
+    //     * get the number of shards where each cuboid will distribute
+    //     * @return
+    //     */
+    //    public Map<Long, Short> getCuboidShards() {
+    //        return this.cuboidShards;
+    //    }
+
+    public void setCuboidShardNums(Map<Long, Short> newCuboidShards) {
+        this.cuboidShardNums = newCuboidShards;
+    }
+
+    public int getTotalShards() {
+        return totalShards;
+    }
+
+    public void setTotalShards(int totalShards) {
+        this.totalShards = totalShards;
+    }
+
+    public short getCuboidBaseShard(Long cuboidId) {
+        Short ret = cuboidBaseShards.get(cuboidId);
+        if (ret == null) {
+            ret = ShardingHash.getShard(cuboidId, totalShards);
+            cuboidBaseShards.put(cuboidId, ret);
+        }
+        return ret;
     }
 
 }

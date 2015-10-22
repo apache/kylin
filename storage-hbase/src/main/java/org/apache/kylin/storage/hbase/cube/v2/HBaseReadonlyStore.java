@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.hbase.Cell;
-import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTInfo;
@@ -34,20 +34,22 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.gridtable.IGTWriter;
 
+import com.google.common.base.Preconditions;
+
 public class HBaseReadonlyStore implements IGTStore {
 
     private CellListIterator cellListIterator;
 
     private GTInfo info;
     private List<Pair<byte[], byte[]>> hbaseColumns;
-    private ImmutableBitSet selectedColBlocks;
+    private List<List<Integer>> hbaseColumnsToGT;
 
-    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns) {
+    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT) {
         this.cellListIterator = cellListIterator;
 
         this.info = gtScanRequest.getInfo();
         this.hbaseColumns = hbaseColumns;
-        this.selectedColBlocks = gtScanRequest.getSelectedColBlocks().set(0);
+        this.hbaseColumnsToGT = hbaseColumnsToGT;
     }
 
     @Override
@@ -56,20 +58,31 @@ public class HBaseReadonlyStore implements IGTStore {
     }
 
     @Override
-    public IGTWriter rebuild(int shard) throws IOException {
+    public IGTWriter rebuild() throws IOException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IGTWriter append(int shard) throws IOException {
+    public IGTWriter append() throws IOException {
         throw new UnsupportedOperationException();
+    }
+
+    //TODO: possible to use binary search as cells might be sorted?
+    public static Cell findCell(List<Cell> cells, byte[] familyName, byte[] columnName) {
+        for (Cell c : cells) {
+            if (BytesUtil.compareBytes(familyName, 0, c.getFamilyArray(), c.getFamilyOffset(), familyName.length) == 0 && //
+                    BytesUtil.compareBytes(columnName, 0, c.getQualifierArray(), c.getQualifierOffset(), columnName.length) == 0) {
+                return c;
+            }
+        }
+        return null;
     }
 
     @Override
     public IGTScanner scan(GTScanRequest scanRequest) throws IOException {
         return new IGTScanner() {
             int count;
-            
+
             @Override
             public void close() throws IOException {
                 cellListIterator.close();
@@ -79,7 +92,7 @@ public class HBaseReadonlyStore implements IGTStore {
             public Iterator<GTRecord> iterator() {
                 return new Iterator<GTRecord>() {
                     GTRecord oneRecord = new GTRecord(info); // avoid object creation
-                    
+
                     @Override
                     public boolean hasNext() {
                         return cellListIterator.hasNext();
@@ -87,26 +100,24 @@ public class HBaseReadonlyStore implements IGTStore {
 
                     @Override
                     public GTRecord next() {
+                        count++;
                         List<Cell> oneRow = cellListIterator.next();
                         if (oneRow.size() < 1) {
                             throw new IllegalStateException("cell list's size less than 1");
                         }
 
-                        ByteBuffer buf;
-                        
                         // dimensions, set to primary key, also the 0th column block
                         Cell firstCell = oneRow.get(0);
-                        buf = byteBuffer(firstCell.getRowArray(), RowConstants.ROWKEY_CUBOIDID_LEN + firstCell.getRowOffset(), firstCell.getRowLength() - RowConstants.ROWKEY_CUBOIDID_LEN);
+                        ByteBuffer buf = byteBuffer(firstCell.getRowArray(), RowConstants.ROWKEY_HEADER_LEN + firstCell.getRowOffset(), firstCell.getRowLength() - RowConstants.ROWKEY_HEADER_LEN);
                         oneRecord.loadCellBlock(0, buf);
 
                         // metrics
-                        int hbaseColIdx = 0;
-                        for (int i = 1; i < selectedColBlocks.trueBitCount(); i++) {
-                            int colBlockIdx = selectedColBlocks.trueBitAt(i);
-                            Pair<byte[], byte[]> hbaseColumn = hbaseColumns.get(hbaseColIdx++);
-                            Cell cell = CubeHBaseRPC.findCell(oneRow, hbaseColumn.getFirst(), hbaseColumn.getSecond());
+                        for (int i = 0; i < hbaseColumns.size(); i++) {
+                            Pair<byte[], byte[]> hbaseColumn = hbaseColumns.get(i);
+                            Cell cell = HBaseReadonlyStore.findCell(oneRow, hbaseColumn.getFirst(), hbaseColumn.getSecond());
+                            Preconditions.checkNotNull(cell);
                             buf = byteBuffer(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
-                            oneRecord.loadCellBlock(colBlockIdx, buf);
+                            oneRecord.loadColumns(hbaseColumnsToGT.get(i), buf);
                         }
                         return oneRecord;
 
@@ -116,7 +127,7 @@ public class HBaseReadonlyStore implements IGTStore {
                     public void remove() {
                         throw new UnsupportedOperationException();
                     }
-                    
+
                     private ByteBuffer byteBuffer(byte[] array, int offset, int length) {
                         return ByteBuffer.wrap(array, offset, length);
                     }

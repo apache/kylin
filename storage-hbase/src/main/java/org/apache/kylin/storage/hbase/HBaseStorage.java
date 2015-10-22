@@ -35,10 +35,7 @@ import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.cache.CacheFledgedDynamicQuery;
 import org.apache.kylin.storage.cache.CacheFledgedStaticQuery;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput;
-import org.apache.kylin.storage.hbase.steps.HBaseMROutput2;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
-import org.apache.kylin.storage.hybrid.HybridInstance;
-import org.apache.kylin.storage.hybrid.HybridStorageQuery;
 
 import com.google.common.base.Preconditions;
 
@@ -46,7 +43,7 @@ import com.google.common.base.Preconditions;
 public class HBaseStorage implements IStorage {
 
     private final static boolean allowStorageLayerCache = true;
-    private final static String defaultCubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery";
+    private final static String defaultCubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery";
     private final static String defaultIIStorageQuery = "org.apache.kylin.storage.hbase.ii.InvertedIndexStorageQuery";
 
     @Override

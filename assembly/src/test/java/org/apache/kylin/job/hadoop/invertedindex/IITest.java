@@ -10,9 +10,13 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+
 import com.google.common.base.Function;
 import kafka.message.Message;
 import kafka.message.MessageAndOffset;
+
+import com.google.protobuf.HBaseZeroCopyByteString;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -232,7 +236,7 @@ public class IITest extends LocalFileMetadataTestCase {
         System.out.println(response.getRowsList().size());
         Set<String> answers = Sets.newHashSet("120.4747", "26.8551");
         for (IIProtos.IIResponseInternal.IIRow responseRow : response.getRowsList()) {
-            byte[] measuresBytes = responseRow.getMeasures().toByteArray();
+            byte[] measuresBytes = HBaseZeroCopyByteString.zeroCopyGetBytes(responseRow.getMeasures());
             List<Object> metrics = aggregators.deserializeMetricValues(measuresBytes, 0);
             Assert.assertTrue(answers.contains(metrics.get(0)));
         }

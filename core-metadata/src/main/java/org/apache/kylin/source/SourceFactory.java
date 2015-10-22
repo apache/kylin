@@ -18,25 +18,26 @@
 
 package org.apache.kylin.source;
 
+import static org.apache.kylin.metadata.model.ISourceAware.ID_HIVE;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.metadata.model.ISourceAware;
-import static org.apache.kylin.metadata.model.ISourceAware.*;
 import org.apache.kylin.metadata.model.TableDesc;
 
 public class SourceFactory {
 
-    private static ImplementationSwitch sources;
+    private static ImplementationSwitch<ISource> sources;
     static {
         Map<Integer, String> impls = new HashMap<>();
         impls.put(ID_HIVE, "org.apache.kylin.source.hive.HiveSource");
-        sources = new ImplementationSwitch(impls);
+        sources = new ImplementationSwitch<ISource>(impls, ISource.class);
     }
 
     public static ISource tableSource(ISourceAware aware) {
-        return sources.get(aware.getSourceType(), ISource.class);
+        return sources.get(aware.getSourceType());
     }
 
     public static ReadableTable createReadableTable(TableDesc table) {

@@ -37,7 +37,7 @@ public class FuzzyKeyEncoder extends RowKeyEncoder {
     @Override
     protected byte[] defaultValue(int length) {
         byte[] keyBytes = new byte[length];
-        Arrays.fill(keyBytes, RowConstants.FUZZY_MASK_ZERO);
+        Arrays.fill(keyBytes, RowConstants.BYTE_ZERO);
         return keyBytes;
     }
 }

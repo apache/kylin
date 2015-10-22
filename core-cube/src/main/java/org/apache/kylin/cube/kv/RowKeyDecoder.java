@@ -53,12 +53,12 @@ public class RowKeyDecoder {
     public long decode(byte[] bytes) throws IOException {
         this.values.clear();
 
-        long cuboidId = rowKeySplitter.split(bytes, bytes.length);
+        long cuboidId = rowKeySplitter.split(bytes);
         initCuboid(cuboidId);
 
         SplittedBytes[] splits = rowKeySplitter.getSplitBuffers();
 
-        int offset = 1; // skip cuboid id part
+        int offset = 2; // skip shard and cuboid id part
 
         for (int i = 0; i < this.cuboid.getColumns().size(); i++) {
             TblColRef col = this.cuboid.getColumns().get(i);

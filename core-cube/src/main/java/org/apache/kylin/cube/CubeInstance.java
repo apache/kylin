@@ -48,10 +48,9 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity implements IRealization, IBuildable {
-    private static final int COST_WEIGHT_DIMENSION = 1;
     private static final int COST_WEIGHT_MEASURE = 1;
-    private static final int COST_WEIGHT_LOOKUP_TABLE = 1;
-    private static final int COST_WEIGHT_INNER_JOIN = 2;
+    private static final int COST_WEIGHT_DIMENSION = 10;
+    private static final int COST_WEIGHT_INNER_JOIN = 100;
 
     public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
@@ -67,7 +66,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         return cubeInstance;
     }
-    
+
     @JsonIgnore
     private KylinConfig config;
     @JsonProperty("name")
@@ -122,7 +121,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
         return mergingSegments;
     }
-    
+
     public CubeDesc getDescriptor() {
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
@@ -355,7 +354,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         for (LookupDesc lookupDesc : this.getDescriptor().getModel().getLookups()) {
             // more tables, more cost
-            calculatedCost += COST_WEIGHT_LOOKUP_TABLE;
             if ("inner".equals(lookupDesc.getJoin().getType())) {
                 // inner join cost is bigger than left join, as it will filter some records
                 calculatedCost += COST_WEIGHT_INNER_JOIN;
@@ -444,12 +442,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     public int getStorageType() {
         return getDescriptor().getStorageType();
     }
-    
 
     @Override
     public int getEngineType() {
         return getDescriptor().getEngineType();
     }
-
 
 }

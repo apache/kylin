@@ -20,13 +20,14 @@ package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.util.List;
 
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Pair;
 
 public class RawScan {
 
     public byte[] startKey;
     public byte[] endKey;
-    public List<Pair<byte[], byte[]>> hbaseColumns;
+    public List<Pair<byte[], byte[]>> hbaseColumns;//only contain interested columns
     public List<Pair<byte[], byte[]>> fuzzyKey;
 
     public RawScan(byte[] startKey, byte[] endKey, List<Pair<byte[], byte[]>> hbaseColumns, List<Pair<byte[], byte[]>> fuzzyKey) {
@@ -35,6 +36,25 @@ public class RawScan {
         this.endKey = endKey;
         this.hbaseColumns = hbaseColumns;
         this.fuzzyKey = fuzzyKey;
+    }
+
+    public String getStartKeyAsString() {
+        return BytesUtil.toHex(this.startKey);
+    }
+
+    public String getEndKeyAsString() {
+        return BytesUtil.toHex(this.endKey);
+    }
+
+    public String getFuzzyKeyAsString() {
+        StringBuilder buf = new StringBuilder();
+        for (Pair<byte[], byte[]> fuzzyKey : this.fuzzyKey) {
+            buf.append(BytesUtil.toHex(fuzzyKey.getFirst()));
+            buf.append(" ");
+            buf.append(BytesUtil.toHex(fuzzyKey.getSecond()));
+            buf.append(System.lineSeparator());
+        }
+        return buf.toString();
     }
 
 }

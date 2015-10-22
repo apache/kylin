@@ -2,6 +2,7 @@ package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.hadoop.hbase.Cell;
@@ -14,6 +15,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
@@ -27,6 +29,7 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public abstract class CubeHBaseRPC {
@@ -69,58 +72,141 @@ public abstract class CubeHBaseRPC {
         return scan;
     }
 
-    protected RawScan prepareRawScan(GTRecord pkStart, GTRecord pkEnd, List<Pair<byte[], byte[]>> selectedColumns) {
-        byte[] start = makeRowKeyToScan(pkStart, (byte) 0x00);
-        byte[] end = makeRowKeyToScan(pkEnd, (byte) 0xff);
+    protected List<RawScan> preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
+        final List<Pair<byte[], byte[]>> selectedColumns = makeHBaseColumns(selectedColBlocks);
+        List<RawScan> ret = Lists.newArrayList();
 
-        //TODO fuzzy match
+        byte[] start = makeRowKeyToScan(pkStart, RowConstants.ROWKEY_LOWER_BYTE);
+        byte[] end = makeRowKeyToScan(pkEnd, RowConstants.ROWKEY_UPPER_BYTE);
+        List<Pair<byte[], byte[]>> hbaseFuzzyKeys = translateFuzzyKeys(fuzzyKeys);
 
-        return new RawScan(start, end, selectedColumns, null);
+        short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
+
+        for (short i = 0; i < cuboidShardNum; ++i) {
+            short shard = ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), i, cubeSeg.getTotalShards());
+
+            byte[] shardStart = Arrays.copyOf(start, start.length);
+            byte[] shardEnd = new byte[end.length + 1];//append extra 0 to the end key to make it inclusive while scanning
+            System.arraycopy(end, 0, shardEnd, 0, end.length);
+
+            BytesUtil.writeShort(shard, shardStart, 0, RowConstants.ROWKEY_SHARDID_LEN);
+            BytesUtil.writeShort(shard, shardEnd, 0, RowConstants.ROWKEY_SHARDID_LEN);
+
+            ret.add(new RawScan(shardStart, shardEnd, selectedColumns, hbaseFuzzyKeys));
+        }
+        return ret;
+
+    }
+
+    /**
+     * translate GTRecord format fuzzy keys to hbase expected format
+     * @return
+     */
+    private List<Pair<byte[], byte[]>> translateFuzzyKeys(List<GTRecord> fuzzyKeys) {
+        if (fuzzyKeys == null || fuzzyKeys.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Pair<byte[], byte[]>> ret = Lists.newArrayList();
+        int coreLength = fullGTInfo.getMaxColumnLength(fullGTInfo.getPrimaryKey());
+        for (GTRecord gtRecordFuzzyKey : fuzzyKeys) {
+            byte[] hbaseFuzzyKey = new byte[coreLength + RowConstants.ROWKEY_HEADER_LEN];
+            byte[] hbaseFuzzyMask = new byte[coreLength + RowConstants.ROWKEY_HEADER_LEN];
+
+            int pos = 0;
+            //shard part
+            Arrays.fill(hbaseFuzzyMask, pos, pos + RowConstants.ROWKEY_SHARDID_LEN, RowConstants.BYTE_ONE);//shard part should better be FIXED, for simplicity we make it non-fixed
+            pos += RowConstants.ROWKEY_SHARDID_LEN;
+
+            //cuboid part
+            Arrays.fill(hbaseFuzzyMask, pos, pos + RowConstants.ROWKEY_CUBOIDID_LEN, RowConstants.BYTE_ZERO);
+            System.arraycopy(cuboid.getBytes(), 0, hbaseFuzzyKey, pos, RowConstants.ROWKEY_CUBOIDID_LEN);
+            pos += RowConstants.ROWKEY_CUBOIDID_LEN;
+
+            //row key core part
+            ByteArray coreKey = HBaseScan.exportScanKey(gtRecordFuzzyKey, RowConstants.BYTE_ZERO);
+            System.arraycopy(coreKey.array(), coreKey.offset(), hbaseFuzzyKey, pos, coreKey.length());
+            ByteArray coreMask = HBaseScan.exportScanMask(gtRecordFuzzyKey);
+            System.arraycopy(coreMask.array(), coreMask.offset(), hbaseFuzzyMask, pos, coreMask.length());
+
+            Preconditions.checkState(coreKey.length() == coreMask.length(), "corekey length not equal coremask length");
+            pos += coreKey.length();
+            Preconditions.checkState(hbaseFuzzyKey.length == pos, "HBase fuzzy key not completely populated");
+
+            ret.add(new Pair<byte[], byte[]>(hbaseFuzzyKey, hbaseFuzzyMask));
+        }
+
+        return ret;
     }
 
     private byte[] makeRowKeyToScan(GTRecord pkRec, byte fill) {
-        ByteArray pk = GTRecord.exportScanKey(pkRec);
-        int pkMaxLen = pkRec.getInfo().getMaxColumnLength(pkRec.getInfo().getPrimaryKey());
+        ByteArray pk = HBaseScan.exportScanKey(pkRec, fill);
 
-        byte[] buf = new byte[pkMaxLen + RowConstants.ROWKEY_CUBOIDID_LEN];
+        byte[] buf = new byte[pk.length() + RowConstants.ROWKEY_HEADER_LEN];
         Arrays.fill(buf, fill);
 
-        System.arraycopy(cuboid.getBytes(), 0, buf, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
+        //for scanning/reading, later all possible shard will be applied 
+
+        System.arraycopy(cuboid.getBytes(), 0, buf, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.ROWKEY_CUBOIDID_LEN);
         if (pk != null && pk.array() != null) {
-            System.arraycopy(pk.array(), pk.offset(), buf, RowConstants.ROWKEY_CUBOIDID_LEN, pk.length());
+            System.arraycopy(pk.array(), pk.offset(), buf, RowConstants.ROWKEY_HEADER_LEN, pk.length());
         }
         return buf;
     }
 
+    /**
+     * prune untouched hbase columns
+     */
     protected List<Pair<byte[], byte[]>> makeHBaseColumns(ImmutableBitSet selectedColBlocks) {
         List<Pair<byte[], byte[]>> result = Lists.newArrayList();
 
-        int colBlockIdx = 1; // start from 1; the 0th column block is primary key which maps to rowkey
+        int colBlkIndex = 1;
         HBaseMappingDesc hbaseMapping = cubeSeg.getCubeDesc().getHbaseMapping();
         for (HBaseColumnFamilyDesc familyDesc : hbaseMapping.getColumnFamily()) {
             byte[] byteFamily = Bytes.toBytes(familyDesc.getName());
             for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
-                if (selectedColBlocks.get(colBlockIdx)) {
+                if (selectedColBlocks.get(colBlkIndex)) {
                     byte[] byteQualifier = Bytes.toBytes(hbaseColDesc.getQualifier());
                     result.add(new Pair<byte[], byte[]>(byteFamily, byteQualifier));
                 }
-                colBlockIdx++;
+                colBlkIndex++;
             }
         }
 
         return result;
     }
 
-    //possible to use binary search as cells might be sorted
-    public static Cell findCell(List<Cell> cells, byte[] familyName, byte[] columnName) {
-        for (Cell c : cells) {
-            if (BytesUtil.compareBytes(familyName, 0, c.getFamilyArray(), c.getFamilyOffset(), familyName.length) == 0 && //
-                    BytesUtil.compareBytes(columnName, 0, c.getQualifierArray(), c.getQualifierOffset(), columnName.length) == 0) {
-                return c;
+    /**
+     * for each selected hbase column, it might contain values of multiple GT columns.
+     * The mapping should be passed down to storage
+     */
+    protected List<List<Integer>> getHBaseColumnsGTMapping(ImmutableBitSet selectedColBlocks) {
+
+        List<List<Integer>> ret = Lists.newArrayList();
+
+        int colBlkIndex = 1;
+        int metricOffset = fullGTInfo.getPrimaryKey().trueBitCount();
+
+        HBaseMappingDesc hbaseMapping = cubeSeg.getCubeDesc().getHbaseMapping();
+        for (HBaseColumnFamilyDesc familyDesc : hbaseMapping.getColumnFamily()) {
+            for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
+                if (selectedColBlocks.get(colBlkIndex)) {
+                    int[] metricIndexes = hbaseColDesc.getMeasureIndex();
+                    Integer[] gtIndexes = new Integer[metricIndexes.length];
+                    for (int i = 0; i < gtIndexes.length; i++) {
+                        gtIndexes[i] = metricIndexes[i] + metricOffset;
+                    }
+                    ret.add(Arrays.asList(gtIndexes));
+                }
+                colBlkIndex++;
             }
         }
-        return null;
+
+        Preconditions.checkState(selectedColBlocks.trueBitCount() == ret.size() + 1);
+        return ret;
     }
+
+  
 
     public static void applyHBaseColums(Scan scan, List<Pair<byte[], byte[]>> hbaseColumns) {
         for (Pair<byte[], byte[]> hbaseColumn : hbaseColumns) {
@@ -155,6 +241,35 @@ public abstract class CubeHBaseRPC {
         }
 
         return result;
+    }
+
+    protected void logScan(RawScan rawScan, String tableName) {
+        StringBuilder info = new StringBuilder();
+        info.append("\nVisiting hbase table ").append(tableName).append(": ");
+        if (cuboid.requirePostAggregation()) {
+            info.append("cuboid require post aggregation, from ");
+        } else {
+            info.append("cuboid exact match, from ");
+        }
+        info.append(cuboid.getInputID());
+        info.append(" to ");
+        info.append(cuboid.getId());
+        info.append("\nStart: ");
+        info.append(rawScan.getStartKeyAsString());
+        info.append(" - ");
+        info.append(Bytes.toStringBinary(rawScan.startKey));
+        info.append("\nStop:  ");
+        info.append(rawScan.getEndKeyAsString());
+        info.append(" - ");
+        info.append(Bytes.toStringBinary(rawScan.endKey));
+        if (rawScan.fuzzyKey != null) {
+            info.append("\nFuzzy key counts: " + rawScan.fuzzyKey.size());
+            info.append("\nFuzzy: ");
+            info.append(rawScan.getFuzzyKeyAsString());
+        } else {
+            info.append("\nNo Fuzzy Key");
+        }
+        logger.info(info.toString());
     }
 
 }

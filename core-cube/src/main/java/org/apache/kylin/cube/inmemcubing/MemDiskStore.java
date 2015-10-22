@@ -88,12 +88,12 @@ public class MemDiskStore implements IGTStore, Closeable {
     }
 
     @Override
-    public IGTWriter rebuild(int shard) throws IOException {
+    public IGTWriter rebuild() throws IOException {
         return newWriter(0);
     }
 
     @Override
-    public IGTWriter append(int shard) throws IOException {
+    public IGTWriter append() throws IOException {
         return newWriter(length());
     }
 

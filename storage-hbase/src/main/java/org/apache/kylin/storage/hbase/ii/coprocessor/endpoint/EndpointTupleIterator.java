@@ -51,9 +51,9 @@ import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.cache.TsConditionExtractor;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
-import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.generated.IIProtos;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
 import org.apache.kylin.storage.hbase.common.coprocessor.FilterDecorator;
+import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.generated.IIProtos;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
@@ -67,7 +67,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Ranges;
 import com.google.common.collect.Sets;
-import com.google.protobuf.ByteString;
+import com.google.protobuf.HBaseZeroCopyByteString;
 
 /**
  */
@@ -152,7 +152,7 @@ public class EndpointTupleIterator implements ITupleIterator {
         //decompress
         Collection<IIProtos.IIResponseInternal> shardResults = new ArrayList<>();
         for (IIProtos.IIResponse input : compressedShardResults) {
-            byte[] compressed = input.getBlob().toByteArray();
+            byte[] compressed = HBaseZeroCopyByteString.zeroCopyGetBytes(input.getBlob());
             try {
                 byte[] decompressed = CompressionUtils.decompress(compressed);
                 shardResults.add(IIProtos.IIResponseInternal.parseFrom(decompressed));
@@ -275,20 +275,19 @@ public class EndpointTupleIterator implements ITupleIterator {
 
         if (this.tsRange != null) {
             byte[] tsRangeBytes = SerializationUtils.serialize(this.tsRange);
-            builder.setTsRange(ByteString.copyFrom(tsRangeBytes));
+            builder.setTsRange(HBaseZeroCopyByteString.wrap(tsRangeBytes));
         }
 
-        builder.setType(ByteString.copyFrom(CoprocessorRowType.serialize(pushedDownRowType))) //
-                .setFilter(ByteString.copyFrom(CoprocessorFilter.serialize(pushedDownFilter))) //
-                .setProjector(ByteString.copyFrom(CoprocessorProjector.serialize(pushedDownProjector))) //
-                .setAggregator(ByteString.copyFrom(EndpointAggregators.serialize(pushedDownAggregators)));
+        builder.setType(HBaseZeroCopyByteString.wrap(CoprocessorRowType.serialize(pushedDownRowType))) //
+                .setFilter(HBaseZeroCopyByteString.wrap(CoprocessorFilter.serialize(pushedDownFilter))) //
+                .setProjector(HBaseZeroCopyByteString.wrap(CoprocessorProjector.serialize(pushedDownProjector))) //
+                .setAggregator(HBaseZeroCopyByteString.wrap(EndpointAggregators.serialize(pushedDownAggregators)));
 
         IIProtos.IIRequest request = builder.build();
 
         return request;
     }
 
-    //TODO : async callback
     private Collection<IIProtos.IIResponse> getResults(final IIProtos.IIRequest request, HTableInterface table) throws Throwable {
         Map<byte[], IIProtos.IIResponse> results = table.coprocessorService(IIProtos.RowsService.class, null, null, new Batch.Call<IIProtos.RowsService, IIProtos.IIResponse>() {
             public IIProtos.IIResponse call(IIProtos.RowsService rowsService) throws IOException {
@@ -338,10 +337,10 @@ public class EndpointTupleIterator implements ITupleIterator {
             }
 
             IIProtos.IIResponseInternal.IIRow currentRow = rows.get(index);
-            byte[] columnsBytes = currentRow.getColumns().toByteArray();
+            byte[] columnsBytes = HBaseZeroCopyByteString.zeroCopyGetBytes(currentRow.getColumns());
             this.tableRecord.setBytes(columnsBytes, 0, columnsBytes.length);
             if (currentRow.hasMeasures()) {
-                byte[] measuresBytes = currentRow.getMeasures().toByteArray();
+                byte[] measuresBytes = HBaseZeroCopyByteString.zeroCopyGetBytes(currentRow.getMeasures());
 
                 this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBytes, 0);
             }

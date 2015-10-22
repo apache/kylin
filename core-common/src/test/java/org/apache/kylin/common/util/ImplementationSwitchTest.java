@@ -17,7 +17,7 @@
  */
 package org.apache.kylin.common.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,34 +25,34 @@ import java.util.Map;
 import org.junit.Test;
 
 public class ImplementationSwitchTest {
-    
-    ImplementationSwitch sw;
+
+    ImplementationSwitch<I> sw;
 
     public ImplementationSwitchTest() {
         Map<Integer, String> impls = new HashMap<>();
         impls.put(0, "non.exist.class");
         impls.put(1, Impl1.class.getName());
         impls.put(2, Impl2.class.getName());
-        sw = new ImplementationSwitch(impls);
+        sw = new ImplementationSwitch<I>(impls, I.class);
     }
-    
-    public static interface I {
+
+    public interface I {
     }
-    
+
     public static class Impl1 implements I {
     }
-    
+
     public static class Impl2 implements I {
     }
-    
+
     @Test
     public void test() {
-        assertTrue(sw.get(1, I.class) instanceof Impl1);
-        assertTrue(sw.get(2, I.class) instanceof Impl2);
+        assertTrue(sw.get(1) instanceof Impl1);
+        assertTrue(sw.get(2) instanceof Impl2);
     }
-    
-    @Test(expected = IllegalArgumentException.class)  
+
+    @Test(expected = IllegalArgumentException.class)
     public void testException() {
-        sw.get(0, I.class);
+        sw.get(0);
     }
 }

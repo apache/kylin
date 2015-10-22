@@ -47,6 +47,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.CuboidStatsUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
@@ -144,7 +145,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         //output the hll info;
         if (collectStatistics) {
             writeMapperAndCuboidStatistics(context); // for human check
-            writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), cuboidHLLMap, SAMPING_PERCENTAGE); // for CreateHTableJob
+            CuboidStatsUtil.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), cuboidHLLMap, SAMPING_PERCENTAGE); // for CreateHTableJob
         }
     }
 
@@ -202,27 +203,4 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
     }
 
-    public static void writeCuboidStatistics(Configuration conf, Path outputPath, Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage) throws IOException {
-        Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
-        SequenceFile.Writer writer = SequenceFile.createWriter(conf, SequenceFile.Writer.file(seqFilePath), SequenceFile.Writer.keyClass(LongWritable.class), SequenceFile.Writer.valueClass(BytesWritable.class));
-
-        List<Long> allCuboids = new ArrayList<Long>();
-        allCuboids.addAll(cuboidHLLMap.keySet());
-        Collections.sort(allCuboids);
-
-        // persist the sample percentage with key 0
-        writer.append(new LongWritable(0l), new BytesWritable(Bytes.toBytes(samplingPercentage)));
-        ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        try {
-            for (long i : allCuboids) {
-                valueBuf.clear();
-                cuboidHLLMap.get(i).writeRegisters(valueBuf);
-                valueBuf.flip();
-                writer.append(new LongWritable(i), new BytesWritable(valueBuf.array(), valueBuf.limit()));
-            }
-        } finally {
-            writer.close();
-        }
-
-    }
 }

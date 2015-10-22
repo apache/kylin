@@ -2,7 +2,7 @@ package org.apache.kylin.gridtable;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.BitSet;
+import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -159,7 +159,7 @@ public class GTRecord implements Comparable<GTRecord> {
             return false;
         for (int i = 0; i < maskForEqualHashComp.trueBitCount(); i++) {
             int c = maskForEqualHashComp.trueBitAt(i);
-            if (this.cols[c].equals(o.cols[c]) == false) {
+            if (!this.cols[c].equals(o.cols[c])) {
                 return false;
             }
         }
@@ -228,19 +228,6 @@ public class GTRecord implements Comparable<GTRecord> {
         buf.setLength(pos);
     }
 
-    /** write data to given buffer, like serialize, UNLIKE other export this will put a prefix indicating null or not*/
-    public void exportAllColumns(ByteBuffer buf) {
-        for (int i = 0; i < info.colAll.trueBitCount(); i++) {
-            int c = info.colAll.trueBitAt(i);
-            if (cols[c] == null || cols[c].array() == null) {
-                buf.put((byte) 0);
-            } else {
-                buf.put((byte) 1);
-                buf.put(cols[c].array(), cols[c].offset(), cols[c].length());
-            }
-        }
-    }
-
     /** write data to given buffer, like serialize */
     public void exportColumns(ImmutableBitSet selectedCols, ByteBuffer buf) {
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
@@ -261,31 +248,8 @@ public class GTRecord implements Comparable<GTRecord> {
     }
 
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
-    public void loadPrimaryKey(ByteBuffer buf) {
-        loadColumns(info.primaryKey, buf);
-    }
-
-    /** change pointers to point to data in given buffer, UNLIKE deserialize */
     public void loadCellBlock(int c, ByteBuffer buf) {
         loadColumns(info.colBlocks[c], buf);
-    }
-
-    /** change pointers to point to data in given buffer, UNLIKE deserialize */
-    public void loadAllColumns(ByteBuffer buf) {
-        int pos = buf.position();
-        for (int i = 0; i < info.colAll.trueBitCount(); i++) {
-            int c = info.colAll.trueBitAt(i);
-
-            byte exist = buf.get();
-            pos++;
-
-            if (exist == 1) {
-                int len = info.codeSystem.codeLength(c, buf);
-                cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
-                pos += len;
-                buf.position(pos);
-            }
-        }
     }
 
     /** change pointers to point to data in given buffer, UNLIKE deserialize */
@@ -300,30 +264,19 @@ public class GTRecord implements Comparable<GTRecord> {
         }
     }
 
-    /** similar to export(primaryKey) but will stop at the first null value */
-    public static ByteArray exportScanKey(GTRecord rec) {
-        if (rec == null)
-            return null;
-
-        GTInfo info = rec.getInfo();
-
-        BitSet selectedColumns = new BitSet();
-        int len = 0;
-        for (int i = 0; i < info.primaryKey.trueBitCount(); i++) {
-            int c = info.primaryKey.trueBitAt(i);
-            if (rec.cols[c].array() == null) {
-                break;
-            }
-            selectedColumns.set(c);
-            len += rec.cols[c].length();
+    /** change pointers to point to data in given buffer, UNLIKE deserialize
+     *  unlike loadColumns(ImmutableBitSet selectedCols, ByteBuffer buf), this
+     *  method allows to defined specific columns(in order) to load
+     */
+    public void loadColumns(List<Integer> selectedCols, ByteBuffer buf) {
+        int pos = buf.position();
+        for (int i = 0; i < selectedCols.size(); i++) {
+            int c = selectedCols.get(i);
+            int len = info.codeSystem.codeLength(c, buf);
+            cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
+            pos += len;
+            buf.position(pos);
         }
-
-        if (selectedColumns.cardinality() == 0)
-            return null;
-
-        ByteArray buf = ByteArray.allocate(len);
-        rec.exportColumns(new ImmutableBitSet(selectedColumns), buf);
-        return buf;
     }
 
 }

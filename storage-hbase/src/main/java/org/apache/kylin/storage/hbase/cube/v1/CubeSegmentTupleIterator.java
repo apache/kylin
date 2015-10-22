@@ -186,7 +186,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         info.append(keyRange.getCuboid().getId());
         info.append("\nStart: ");
         info.append(keyRange.getStartKeyAsString());
-        info.append("     - ");
+        info.append(" - ");
         info.append(Bytes.toStringBinary(keyRange.getStartKey()));
         info.append("\nStop:  ");
         info.append(keyRange.getStopKeyAsString());
