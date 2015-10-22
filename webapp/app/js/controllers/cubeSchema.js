@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService,modelsManager, ProjectService, AuthenticationService,$filter,ModelService,MetaModel,CubeDescModel,CubeList,TableModel,ProjectModel,ModelDescService,SweetAlert,cubesManager,StreamingService,CubeService) {
     $scope.modelsManager = modelsManager;
     $scope.cubesManager = cubesManager;
     $scope.projects = [];
@@ -38,12 +38,25 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.curStep = $scope.wizardSteps[0];
 
+    $scope.allCubes = [];
 
 
   // ~ init
     if (!$scope.state) {
         $scope.state = {mode: "view"};
     }
+
+  var queryParam = {offset: 0, limit: 65535};
+
+  CubeService.list(queryParam, function (all_cubes) {
+    if($scope.allCubes.length > 0){
+      $scope.allCubes.splice(0,$scope.allCubes.length);
+    }
+
+    for (var i = 0; i < all_cubes.length; i++) {
+      $scope.allCubes.push(all_cubes[i].name.toUpperCase());
+    }
+  });
 
     $scope.$watch('cubeMetaFrame', function (newValue, oldValue) {
         if(!newValue){
@@ -191,7 +204,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
   $scope.check_cube_info = function(){
-
+    if(($scope.state.mode === "edit") &&($scope.allCubes.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
+      SweetAlert.swal('Oops...', "The cube named [" + $scope.cubeMetaFrame.name.toUpperCase() + "] already exists", 'warning');
+      return false;
+    }
+    return true;
   }
 
     $scope.check_cube_dimension = function(){
