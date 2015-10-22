@@ -49,13 +49,10 @@ public abstract class RoutingRule {
 
     public static void applyRules(List<IRealization> realizations, OLAPContext olapContext) {
         for (RoutingRule rule : rules) {
-            logger.info("Initial realizations order:");
-            logger.info(getPrintableText(realizations));
-            logger.info("Applying rule " + rule);
-
+            logger.info("Realizations order before: " + getPrintableText(realizations));
+            logger.info("Applying rule : " + rule);
             rule.apply(realizations, olapContext);
-
-            logger.info(getPrintableText(realizations));
+            logger.info("Realizations order after: " + getPrintableText(realizations));
             logger.info("===================================================");
         }
     }

@@ -14,17 +14,14 @@ public class GridTable implements Closeable {
     }
 
     public GTBuilder rebuild() throws IOException {
-        assert info.isShardingEnabled() == false;
         return rebuild(-1);
     }
 
     public GTBuilder rebuild(int shard) throws IOException {
-        assert shard < info.nShards;
         return new GTBuilder(info, shard, store);
     }
 
     public GTBuilder append() throws IOException {
-        assert info.isShardingEnabled() == false;
         return append(-1);
     }
 

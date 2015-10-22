@@ -34,7 +34,7 @@ import org.apache.kylin.common.util.ClassUtil;
  * It is desinged to run in hadoop CLI, both in sandbox or in real hadoop environment
  */
 public class SandboxMetastoreCLI {
-
+    
     private static final Log logger = LogFactory.getLog(SandboxMetastoreCLI.class);
 
     public static void main(String[] args) throws Exception {

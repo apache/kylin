@@ -33,7 +33,7 @@ import org.apache.kylin.common.util.BytesUtil;
  */
 public class TupleFilterSerializer {
 
-    public static interface Decorator {
+    public interface Decorator {
         TupleFilter onSerialize(TupleFilter filter);
     }
 
@@ -69,20 +69,20 @@ public class TupleFilterSerializer {
 
         if (filter.hasChildren()) {
             // serialize filter+true
-            serializeFilter(1, filter, decorator, buffer, cs);
+            serializeFilter(1, filter, buffer, cs);
             // serialize children
             for (TupleFilter child : filter.getChildren()) {
                 internalSerialize(child, decorator, buffer, cs);
             }
             // serialize none
-            serializeFilter(-1, filter, decorator, buffer, cs);
+            serializeFilter(-1, filter, buffer, cs);
         } else {
             // serialize filter+false
-            serializeFilter(0, filter, decorator, buffer, cs);
+            serializeFilter(0, filter, buffer, cs);
         }
     }
 
-    private static void serializeFilter(int flag, TupleFilter filter, Decorator decorator, ByteBuffer buffer, IFilterCodeSystem<?> cs) {
+    private static void serializeFilter(int flag, TupleFilter filter, ByteBuffer buffer, IFilterCodeSystem<?> cs) {
         if (flag < 0) {
             BytesUtil.writeVInt(-1, buffer);
         } else {

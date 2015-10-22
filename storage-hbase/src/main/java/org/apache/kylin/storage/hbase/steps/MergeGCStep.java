@@ -56,8 +56,16 @@ public class MergeGCStep extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
 
+        try {
+            logger.info("Sleep one minute before deleting the Htables");
+            Thread.sleep(60000);
+        } catch (InterruptedException e) {
+            logger.warn("Thread interrupted");
+        }
+        
+        logger.info("Start doing merge gc work");
+        
         StringBuffer output = new StringBuffer();
-
         List<String> oldTables = getOldHTables();
         if (oldTables != null && oldTables.size() > 0) {
             String metadataUrlPrefix = KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();

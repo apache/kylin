@@ -124,11 +124,16 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
 
         Preconditions.checkState(key.offset() == 0);
 
-        long cuboidID = rowKeySplitter.split(key.array(), key.length());
+        long cuboidID = rowKeySplitter.split(key.array());
+        short shard = rowKeySplitter.getLastSplittedShard();
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidID);
 
         SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();
         int bufOffset = 0;
+
+        BytesUtil.writeShort(shard, newKeyBuf, bufOffset, RowConstants.ROWKEY_SHARDID_LEN);
+        bufOffset += RowConstants.ROWKEY_SHARDID_LEN;
+        
         BytesUtil.writeLong(cuboidID, newKeyBuf, bufOffset, RowConstants.ROWKEY_CUBOIDID_LEN);
         bufOffset += RowConstants.ROWKEY_CUBOIDID_LEN;
 

@@ -7,42 +7,26 @@ public class GTScanRange {
 
     final public GTRecord pkStart; // inclusive, record must not be null, col[pk].array() can be null to mean unbounded
     final public GTRecord pkEnd; // inclusive, record must not be null, col[pk].array() can be null to mean unbounded
-    final public List<GTRecord> hbaseFuzzyKeys; // partial matching primary keys
+    final public List<GTRecord> fuzzyKeys; // partial matching primary keys
 
     public GTScanRange(GTRecord pkStart, GTRecord pkEnd) {
         this(pkStart, pkEnd, null);
     }
 
-    public GTScanRange(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> hbaseFuzzyKeys) {
+    public GTScanRange(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys) {
         GTInfo info = pkStart.info;
         assert info == pkEnd.info;
 
-        validateRangeKey(pkStart);
-        validateRangeKey(pkEnd);
-
         this.pkStart = pkStart;
         this.pkEnd = pkEnd;
-        this.hbaseFuzzyKeys = hbaseFuzzyKeys == null ? Collections.<GTRecord> emptyList() : hbaseFuzzyKeys;
-    }
-
-    private void validateRangeKey(GTRecord pk) {
-        pk.maskForEqualHashComp(pk.info.primaryKey);
-        boolean afterNull = false;
-        for (int i = 0; i < pk.info.primaryKey.trueBitCount(); i++) {
-            int c = pk.info.primaryKey.trueBitAt(i);
-            if (afterNull) {
-                pk.cols[c].set(null, 0, 0);
-            } else {
-                afterNull = pk.cols[c].array() == null;
-            }
-        }
+        this.fuzzyKeys = fuzzyKeys == null ? Collections.<GTRecord> emptyList() : fuzzyKeys;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((hbaseFuzzyKeys == null) ? 0 : hbaseFuzzyKeys.hashCode());
+        result = prime * result + ((fuzzyKeys == null) ? 0 : fuzzyKeys.hashCode());
         result = prime * result + ((pkEnd == null) ? 0 : pkEnd.hashCode());
         result = prime * result + ((pkStart == null) ? 0 : pkStart.hashCode());
         return result;
@@ -57,10 +41,10 @@ public class GTScanRange {
         if (getClass() != obj.getClass())
             return false;
         GTScanRange other = (GTScanRange) obj;
-        if (hbaseFuzzyKeys == null) {
-            if (other.hbaseFuzzyKeys != null)
+        if (fuzzyKeys == null) {
+            if (other.fuzzyKeys != null)
                 return false;
-        } else if (!hbaseFuzzyKeys.equals(other.hbaseFuzzyKeys))
+        } else if (!fuzzyKeys.equals(other.fuzzyKeys))
             return false;
         if (pkEnd == null) {
             if (other.pkEnd != null)

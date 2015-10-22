@@ -18,7 +18,8 @@
 
 package org.apache.kylin.storage;
 
-import static org.apache.kylin.metadata.model.IStorageAware.*;
+import static org.apache.kylin.metadata.model.IStorageAware.ID_HBASE;
+import static org.apache.kylin.metadata.model.IStorageAware.ID_HYBRID;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,22 +32,22 @@ import org.apache.kylin.metadata.realization.IRealization;
  */
 public class StorageFactory {
 
-    private static ImplementationSwitch storages;
+    private static ImplementationSwitch<IStorage> storages;
     static {
         Map<Integer, String> impls = new HashMap<>();
         impls.put(ID_HBASE, "org.apache.kylin.storage.hbase.HBaseStorage");
         impls.put(ID_HYBRID, "org.apache.kylin.storage.hybrid.HybridStorage");
-        storages = new ImplementationSwitch(impls);
+        storages = new ImplementationSwitch<IStorage>(impls, IStorage.class);
     }
-    
+
     public static IStorage storage(IStorageAware aware) {
-        return storages.get(aware.getStorageType(), IStorage.class);
+        return storages.get(aware.getStorageType());
     }
-    
+
     public static IStorageQuery createQuery(IRealization realization) {
         return storage(realization).createQuery(realization);
     }
-    
+
     public static <T> T createEngineAdapter(IStorageAware aware, Class<T> engineInterface) {
         return storage(aware).adaptToBuildEngine(engineInterface);
     }

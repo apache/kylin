@@ -30,6 +30,31 @@ public final class CubeVisitProtos {
      * <code>required bytes hbaseRawScan = 2;</code>
      */
     com.google.protobuf.ByteString getHbaseRawScan();
+
+    // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> 
+        getHbaseColumnsToGTList();
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList getHbaseColumnsToGT(int index);
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    int getHbaseColumnsToGTCount();
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    java.util.List<? extends org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> 
+        getHbaseColumnsToGTOrBuilderList();
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder getHbaseColumnsToGTOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code CubeVisitRequest}
@@ -92,6 +117,14 @@ public final class CubeVisitProtos {
               hbaseRawScan_ = input.readBytes();
               break;
             }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                hbaseColumnsToGT_ = new java.util.ArrayList<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              hbaseColumnsToGT_.add(input.readMessage(org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -100,6 +133,9 @@ public final class CubeVisitProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          hbaseColumnsToGT_ = java.util.Collections.unmodifiableList(hbaseColumnsToGT_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -129,6 +165,510 @@ public final class CubeVisitProtos {
     @java.lang.Override
     public com.google.protobuf.Parser<CubeVisitRequest> getParserForType() {
       return PARSER;
+    }
+
+    public interface IntListOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+
+      // repeated int32 ints = 1;
+      /**
+       * <code>repeated int32 ints = 1;</code>
+       */
+      java.util.List<java.lang.Integer> getIntsList();
+      /**
+       * <code>repeated int32 ints = 1;</code>
+       */
+      int getIntsCount();
+      /**
+       * <code>repeated int32 ints = 1;</code>
+       */
+      int getInts(int index);
+    }
+    /**
+     * Protobuf type {@code CubeVisitRequest.IntList}
+     */
+    public static final class IntList extends
+        com.google.protobuf.GeneratedMessage
+        implements IntListOrBuilder {
+      // Use IntList.newBuilder() to construct.
+      private IntList(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+        super(builder);
+        this.unknownFields = builder.getUnknownFields();
+      }
+      private IntList(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+      private static final IntList defaultInstance;
+      public static IntList getDefaultInstance() {
+        return defaultInstance;
+      }
+
+      public IntList getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+
+      private final com.google.protobuf.UnknownFieldSet unknownFields;
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+          getUnknownFields() {
+        return this.unknownFields;
+      }
+      private IntList(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        initFields();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 8: {
+                if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                  ints_ = new java.util.ArrayList<java.lang.Integer>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                ints_.add(input.readInt32());
+                break;
+              }
+              case 10: {
+                int length = input.readRawVarint32();
+                int limit = input.pushLimit(length);
+                if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
+                  ints_ = new java.util.ArrayList<java.lang.Integer>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                while (input.getBytesUntilLimit() > 0) {
+                  ints_.add(input.readInt32());
+                }
+                input.popLimit(limit);
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e.getMessage()).setUnfinishedMessage(this);
+        } finally {
+          if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+            ints_ = java.util.Collections.unmodifiableList(ints_);
+          }
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.internal_static_CubeVisitRequest_IntList_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.internal_static_CubeVisitRequest_IntList_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.class, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder.class);
+      }
+
+      public static com.google.protobuf.Parser<IntList> PARSER =
+          new com.google.protobuf.AbstractParser<IntList>() {
+        public IntList parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new IntList(input, extensionRegistry);
+        }
+      };
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<IntList> getParserForType() {
+        return PARSER;
+      }
+
+      // repeated int32 ints = 1;
+      public static final int INTS_FIELD_NUMBER = 1;
+      private java.util.List<java.lang.Integer> ints_;
+      /**
+       * <code>repeated int32 ints = 1;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getIntsList() {
+        return ints_;
+      }
+      /**
+       * <code>repeated int32 ints = 1;</code>
+       */
+      public int getIntsCount() {
+        return ints_.size();
+      }
+      /**
+       * <code>repeated int32 ints = 1;</code>
+       */
+      public int getInts(int index) {
+        return ints_.get(index);
+      }
+
+      private void initFields() {
+        ints_ = java.util.Collections.emptyList();
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        for (int i = 0; i < ints_.size(); i++) {
+          output.writeInt32(1, ints_.get(i));
+        }
+        getUnknownFields().writeTo(output);
+      }
+
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        {
+          int dataSize = 0;
+          for (int i = 0; i < ints_.size(); i++) {
+            dataSize += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(ints_.get(i));
+          }
+          size += dataSize;
+          size += 1 * getIntsList().size();
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList)) {
+          return super.equals(obj);
+        }
+        org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList other = (org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList) obj;
+
+        boolean result = true;
+        result = result && getIntsList()
+            .equals(other.getIntsList());
+        result = result &&
+            getUnknownFields().equals(other.getUnknownFields());
+        return result;
+      }
+
+      private int memoizedHashCode = 0;
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptorForType().hashCode();
+        if (getIntsCount() > 0) {
+          hash = (37 * hash) + INTS_FIELD_NUMBER;
+          hash = (53 * hash) + getIntsList().hashCode();
+        }
+        hash = (29 * hash) + getUnknownFields().hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input);
+      }
+      public static org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return PARSER.parseFrom(input, extensionRegistry);
+      }
+
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code CubeVisitRequest.IntList}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.internal_static_CubeVisitRequest_IntList_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.internal_static_CubeVisitRequest_IntList_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.class, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder.class);
+        }
+
+        // Construct using org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+
+        public Builder clear() {
+          super.clear();
+          ints_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          return this;
+        }
+
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.internal_static_CubeVisitRequest_IntList_descriptor;
+        }
+
+        public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList getDefaultInstanceForType() {
+          return org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.getDefaultInstance();
+        }
+
+        public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList build() {
+          org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList buildPartial() {
+          org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList result = new org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList(this);
+          int from_bitField0_ = bitField0_;
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            ints_ = java.util.Collections.unmodifiableList(ints_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.ints_ = ints_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList) {
+            return mergeFrom((org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList other) {
+          if (other == org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.getDefaultInstance()) return this;
+          if (!other.ints_.isEmpty()) {
+            if (ints_.isEmpty()) {
+              ints_ = other.ints_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureIntsIsMutable();
+              ints_.addAll(other.ints_);
+            }
+            onChanged();
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList) e.getUnfinishedMessage();
+            throw e;
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        // repeated int32 ints = 1;
+        private java.util.List<java.lang.Integer> ints_ = java.util.Collections.emptyList();
+        private void ensureIntsIsMutable() {
+          if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+            ints_ = new java.util.ArrayList<java.lang.Integer>(ints_);
+            bitField0_ |= 0x00000001;
+           }
+        }
+        /**
+         * <code>repeated int32 ints = 1;</code>
+         */
+        public java.util.List<java.lang.Integer>
+            getIntsList() {
+          return java.util.Collections.unmodifiableList(ints_);
+        }
+        /**
+         * <code>repeated int32 ints = 1;</code>
+         */
+        public int getIntsCount() {
+          return ints_.size();
+        }
+        /**
+         * <code>repeated int32 ints = 1;</code>
+         */
+        public int getInts(int index) {
+          return ints_.get(index);
+        }
+        /**
+         * <code>repeated int32 ints = 1;</code>
+         */
+        public Builder setInts(
+            int index, int value) {
+          ensureIntsIsMutable();
+          ints_.set(index, value);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated int32 ints = 1;</code>
+         */
+        public Builder addInts(int value) {
+          ensureIntsIsMutable();
+          ints_.add(value);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated int32 ints = 1;</code>
+         */
+        public Builder addAllInts(
+            java.lang.Iterable<? extends java.lang.Integer> values) {
+          ensureIntsIsMutable();
+          super.addAll(values, ints_);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated int32 ints = 1;</code>
+         */
+        public Builder clearInts() {
+          ints_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+          return this;
+        }
+
+        // @@protoc_insertion_point(builder_scope:CubeVisitRequest.IntList)
+      }
+
+      static {
+        defaultInstance = new IntList(true);
+        defaultInstance.initFields();
+      }
+
+      // @@protoc_insertion_point(class_scope:CubeVisitRequest.IntList)
     }
 
     private int bitField0_;
@@ -164,9 +704,46 @@ public final class CubeVisitProtos {
       return hbaseRawScan_;
     }
 
+    // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;
+    public static final int HBASECOLUMNSTOGT_FIELD_NUMBER = 3;
+    private java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> hbaseColumnsToGT_;
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    public java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> getHbaseColumnsToGTList() {
+      return hbaseColumnsToGT_;
+    }
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    public java.util.List<? extends org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> 
+        getHbaseColumnsToGTOrBuilderList() {
+      return hbaseColumnsToGT_;
+    }
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    public int getHbaseColumnsToGTCount() {
+      return hbaseColumnsToGT_.size();
+    }
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList getHbaseColumnsToGT(int index) {
+      return hbaseColumnsToGT_.get(index);
+    }
+    /**
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+     */
+    public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder getHbaseColumnsToGTOrBuilder(
+        int index) {
+      return hbaseColumnsToGT_.get(index);
+    }
+
     private void initFields() {
       gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
       hbaseRawScan_ = com.google.protobuf.ByteString.EMPTY;
+      hbaseColumnsToGT_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -194,6 +771,9 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, hbaseRawScan_);
       }
+      for (int i = 0; i < hbaseColumnsToGT_.size(); i++) {
+        output.writeMessage(3, hbaseColumnsToGT_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -210,6 +790,10 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, hbaseRawScan_);
+      }
+      for (int i = 0; i < hbaseColumnsToGT_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, hbaseColumnsToGT_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -244,6 +828,8 @@ public final class CubeVisitProtos {
         result = result && getHbaseRawScan()
             .equals(other.getHbaseRawScan());
       }
+      result = result && getHbaseColumnsToGTList()
+          .equals(other.getHbaseColumnsToGTList());
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
       return result;
@@ -264,6 +850,10 @@ public final class CubeVisitProtos {
       if (hasHbaseRawScan()) {
         hash = (37 * hash) + HBASERAWSCAN_FIELD_NUMBER;
         hash = (53 * hash) + getHbaseRawScan().hashCode();
+      }
+      if (getHbaseColumnsToGTCount() > 0) {
+        hash = (37 * hash) + HBASECOLUMNSTOGT_FIELD_NUMBER;
+        hash = (53 * hash) + getHbaseColumnsToGTList().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -366,6 +956,7 @@ public final class CubeVisitProtos {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getHbaseColumnsToGTFieldBuilder();
         }
       }
       private static Builder create() {
@@ -378,6 +969,12 @@ public final class CubeVisitProtos {
         bitField0_ = (bitField0_ & ~0x00000001);
         hbaseRawScan_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (hbaseColumnsToGTBuilder_ == null) {
+          hbaseColumnsToGT_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          hbaseColumnsToGTBuilder_.clear();
+        }
         return this;
       }
 
@@ -414,6 +1011,15 @@ public final class CubeVisitProtos {
           to_bitField0_ |= 0x00000002;
         }
         result.hbaseRawScan_ = hbaseRawScan_;
+        if (hbaseColumnsToGTBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            hbaseColumnsToGT_ = java.util.Collections.unmodifiableList(hbaseColumnsToGT_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.hbaseColumnsToGT_ = hbaseColumnsToGT_;
+        } else {
+          result.hbaseColumnsToGT_ = hbaseColumnsToGTBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -435,6 +1041,32 @@ public final class CubeVisitProtos {
         }
         if (other.hasHbaseRawScan()) {
           setHbaseRawScan(other.getHbaseRawScan());
+        }
+        if (hbaseColumnsToGTBuilder_ == null) {
+          if (!other.hbaseColumnsToGT_.isEmpty()) {
+            if (hbaseColumnsToGT_.isEmpty()) {
+              hbaseColumnsToGT_ = other.hbaseColumnsToGT_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureHbaseColumnsToGTIsMutable();
+              hbaseColumnsToGT_.addAll(other.hbaseColumnsToGT_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.hbaseColumnsToGT_.isEmpty()) {
+            if (hbaseColumnsToGTBuilder_.isEmpty()) {
+              hbaseColumnsToGTBuilder_.dispose();
+              hbaseColumnsToGTBuilder_ = null;
+              hbaseColumnsToGT_ = other.hbaseColumnsToGT_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              hbaseColumnsToGTBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getHbaseColumnsToGTFieldBuilder() : null;
+            } else {
+              hbaseColumnsToGTBuilder_.addAllMessages(other.hbaseColumnsToGT_);
+            }
+          }
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -541,6 +1173,246 @@ public final class CubeVisitProtos {
         hbaseRawScan_ = getDefaultInstance().getHbaseRawScan();
         onChanged();
         return this;
+      }
+
+      // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;
+      private java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> hbaseColumnsToGT_ =
+        java.util.Collections.emptyList();
+      private void ensureHbaseColumnsToGTIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          hbaseColumnsToGT_ = new java.util.ArrayList<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList>(hbaseColumnsToGT_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> hbaseColumnsToGTBuilder_;
+
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> getHbaseColumnsToGTList() {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(hbaseColumnsToGT_);
+        } else {
+          return hbaseColumnsToGTBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public int getHbaseColumnsToGTCount() {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          return hbaseColumnsToGT_.size();
+        } else {
+          return hbaseColumnsToGTBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList getHbaseColumnsToGT(int index) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          return hbaseColumnsToGT_.get(index);
+        } else {
+          return hbaseColumnsToGTBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder setHbaseColumnsToGT(
+          int index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList value) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureHbaseColumnsToGTIsMutable();
+          hbaseColumnsToGT_.set(index, value);
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder setHbaseColumnsToGT(
+          int index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder builderForValue) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          ensureHbaseColumnsToGTIsMutable();
+          hbaseColumnsToGT_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder addHbaseColumnsToGT(org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList value) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureHbaseColumnsToGTIsMutable();
+          hbaseColumnsToGT_.add(value);
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder addHbaseColumnsToGT(
+          int index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList value) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureHbaseColumnsToGTIsMutable();
+          hbaseColumnsToGT_.add(index, value);
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder addHbaseColumnsToGT(
+          org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder builderForValue) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          ensureHbaseColumnsToGTIsMutable();
+          hbaseColumnsToGT_.add(builderForValue.build());
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder addHbaseColumnsToGT(
+          int index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder builderForValue) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          ensureHbaseColumnsToGTIsMutable();
+          hbaseColumnsToGT_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder addAllHbaseColumnsToGT(
+          java.lang.Iterable<? extends org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> values) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          ensureHbaseColumnsToGTIsMutable();
+          super.addAll(values, hbaseColumnsToGT_);
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder clearHbaseColumnsToGT() {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          hbaseColumnsToGT_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public Builder removeHbaseColumnsToGT(int index) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          ensureHbaseColumnsToGTIsMutable();
+          hbaseColumnsToGT_.remove(index);
+          onChanged();
+        } else {
+          hbaseColumnsToGTBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder getHbaseColumnsToGTBuilder(
+          int index) {
+        return getHbaseColumnsToGTFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder getHbaseColumnsToGTOrBuilder(
+          int index) {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          return hbaseColumnsToGT_.get(index);  } else {
+          return hbaseColumnsToGTBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public java.util.List<? extends org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> 
+           getHbaseColumnsToGTOrBuilderList() {
+        if (hbaseColumnsToGTBuilder_ != null) {
+          return hbaseColumnsToGTBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(hbaseColumnsToGT_);
+        }
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder addHbaseColumnsToGTBuilder() {
+        return getHbaseColumnsToGTFieldBuilder().addBuilder(
+            org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder addHbaseColumnsToGTBuilder(
+          int index) {
+        return getHbaseColumnsToGTFieldBuilder().addBuilder(
+            index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 3;</code>
+       */
+      public java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder> 
+           getHbaseColumnsToGTBuilderList() {
+        return getHbaseColumnsToGTFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> 
+          getHbaseColumnsToGTFieldBuilder() {
+        if (hbaseColumnsToGTBuilder_ == null) {
+          hbaseColumnsToGTBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder>(
+                  hbaseColumnsToGT_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          hbaseColumnsToGT_ = null;
+        }
+        return hbaseColumnsToGTBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:CubeVisitRequest)
@@ -2158,6 +3030,11 @@ public final class CubeVisitProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_CubeVisitRequest_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_CubeVisitRequest_IntList_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_CubeVisitRequest_IntList_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_CubeVisitResponse_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -2178,18 +3055,20 @@ public final class CubeVisitProtos {
     java.lang.String[] descriptorData = {
       "\npstorage-hbase/src/main/java/org/apache" +
       "/kylin/storage/hbase/cube/v2/coprocessor" +
-      "/endpoint/protobuf/CubeVisit.proto\"?\n\020Cu" +
-      "beVisitRequest\022\025\n\rgtScanRequest\030\001 \002(\014\022\024\n" +
-      "\014hbaseRawScan\030\002 \002(\014\"\304\001\n\021CubeVisitRespons" +
-      "e\022\026\n\016compressedRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\013" +
-      "2\030.CubeVisitResponse.Stats\032n\n\005Stats\022\030\n\020s" +
-      "erviceStartTime\030\001 \001(\003\022\026\n\016serviceEndTime\030" +
-      "\002 \001(\003\022\027\n\017scannedRowCount\030\003 \001(\005\022\032\n\022aggreg" +
-      "atedRowCount\030\004 \001(\0052F\n\020CubeVisitService\0222",
-      "\n\tvisitCube\022\021.CubeVisitRequest\032\022.CubeVis" +
-      "itResponseB`\nEorg.apache.kylin.storage.h" +
-      "base.cube.v2.coprocessor.endpoint.genera" +
-      "tedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
+      "/endpoint/protobuf/CubeVisit.proto\"\215\001\n\020C" +
+      "ubeVisitRequest\022\025\n\rgtScanRequest\030\001 \002(\014\022\024" +
+      "\n\014hbaseRawScan\030\002 \002(\014\0223\n\020hbaseColumnsToGT" +
+      "\030\003 \003(\0132\031.CubeVisitRequest.IntList\032\027\n\007Int" +
+      "List\022\014\n\004ints\030\001 \003(\005\"\304\001\n\021CubeVisitResponse" +
+      "\022\026\n\016compressedRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132" +
+      "\030.CubeVisitResponse.Stats\032n\n\005Stats\022\030\n\020se" +
+      "rviceStartTime\030\001 \001(\003\022\026\n\016serviceEndTime\030\002",
+      " \001(\003\022\027\n\017scannedRowCount\030\003 \001(\005\022\032\n\022aggrega" +
+      "tedRowCount\030\004 \001(\0052F\n\020CubeVisitService\0222\n" +
+      "\tvisitCube\022\021.CubeVisitRequest\032\022.CubeVisi" +
+      "tResponseB`\nEorg.apache.kylin.storage.hb" +
+      "ase.cube.v2.coprocessor.endpoint.generat" +
+      "edB\017CubeVisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2201,7 +3080,13 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitRequest_descriptor,
-              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", });
+              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", "HbaseColumnsToGT", });
+          internal_static_CubeVisitRequest_IntList_descriptor =
+            internal_static_CubeVisitRequest_descriptor.getNestedTypes().get(0);
+          internal_static_CubeVisitRequest_IntList_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_CubeVisitRequest_IntList_descriptor,
+              new java.lang.String[] { "Ints", });
           internal_static_CubeVisitResponse_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_CubeVisitResponse_fieldAccessorTable = new

@@ -62,6 +62,7 @@ public abstract class AbstractRowKeyEncoder {
 
     protected final Cuboid cuboid;
     protected byte blankByte = DEFAULT_BLANK_BYTE;
+    protected boolean encodeShard = true;
 
     protected AbstractRowKeyEncoder(Cuboid cuboid) {
         this.cuboid = cuboid;
@@ -69,6 +70,10 @@ public abstract class AbstractRowKeyEncoder {
 
     public void setBlankByte(byte blankByte) {
         this.blankByte = blankByte;
+    }
+
+    public void setEncodeShard(boolean encodeShard) {
+        this.encodeShard = encodeShard;
     }
 
     abstract public byte[] encode(Map<TblColRef, String> valueMap);

@@ -2,6 +2,7 @@ package org.apache.kylin.gridtable;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -88,7 +89,7 @@ public class GTScanRequest {
     }
 
     private void validateFilterPushDown(GTInfo info) {
-        if (hasFilterPushDown() == false)
+        if (!hasFilterPushDown())
             return;
 
         Set<TblColRef> filterColumns = Sets.newHashSet();
@@ -102,7 +103,7 @@ public class GTScanRequest {
         }
 
         // un-evaluatable filter must be removed
-        if (TupleFilter.isEvaluableRecursively(filterPushDown) == false) {
+        if (!TupleFilter.isEvaluableRecursively(filterPushDown)) {
             Set<TblColRef> unevaluableColumns = Sets.newHashSet();
             filterPushDown = GTUtil.convertFilterUnevaluatable(filterPushDown, info, unevaluableColumns);
 
@@ -145,6 +146,10 @@ public class GTScanRequest {
 
     public GTRecord getPkEnd() {
         return range.pkEnd;
+    }
+
+    public List<GTRecord> getFuzzyKeys() {
+        return range.fuzzyKeys;
     }
 
     public ImmutableBitSet getSelectedColBlocks() {

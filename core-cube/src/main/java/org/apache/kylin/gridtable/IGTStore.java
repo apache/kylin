@@ -6,9 +6,9 @@ public interface IGTStore {
 
     GTInfo getInfo();
 
-    IGTWriter rebuild(int shard) throws IOException;
+    IGTWriter rebuild() throws IOException;
 
-    IGTWriter append(int shard) throws IOException;
+    IGTWriter append() throws IOException;
 
     IGTScanner scan(GTScanRequest scanRequest) throws IOException;
 

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.measure.LongMutable;
 
@@ -153,7 +154,7 @@ public class TableRecord implements Cloneable {
 
     public short getShard() {
         int timestampID = rawRecord.getValueID(info.getTimestampColumn());
-        return (short) (Math.abs(ShardingHash.hashInt(timestampID)) % info.getDescriptor().getSharding());
+        return ShardingHash.getShard(timestampID, info.getDescriptor().getSharding());
     }
 
     @Override

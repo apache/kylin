@@ -22,9 +22,6 @@ public class GTSimpleMemStore implements IGTStore {
     public GTSimpleMemStore(GTInfo info) {
         this.info = info;
         this.rowList = new ArrayList<byte[]>();
-
-        if (info.isShardingEnabled())
-            throw new UnsupportedOperationException();
     }
 
     @Override
@@ -41,13 +38,13 @@ public class GTSimpleMemStore implements IGTStore {
     }
 
     @Override
-    public IGTWriter rebuild(int shard) {
+    public IGTWriter rebuild() {
         rowList.clear();
         return new Writer();
     }
 
     @Override
-    public IGTWriter append(int shard) {
+    public IGTWriter append() {
         return new Writer();
     }
 

@@ -32,23 +32,21 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-/**
- * @author yangli9
- * 
- */
 public class FuzzyValueCombination {
 
-    private static class Dim {
+    private static class Dim<E> {
         TblColRef col;
-        Set<String> values;
+        Set<E> values;
     }
 
-    private static final Set<String> SINGLE_NULL_SET = Sets.newHashSet();
+    private static final Set SINGLE_NULL_SET = Sets.newHashSet();
+
     static {
         SINGLE_NULL_SET.add(null);
     }
 
-    public static List<Map<TblColRef, String>> calculate(Map<TblColRef, Set<String>> fuzzyValues, long cap) {
+    public static <E> List<Map<TblColRef, E>> calculate(Map<TblColRef, Set<E>> fuzzyValues, long cap) {
+        Collections.emptyMap();
         Dim[] dims = toDims(fuzzyValues);
         // If a query has many IN clause and each IN clause has many values, then it will easily generate 
         // thousands of fuzzy keys. When there are lots of fuzzy keys, the scan performance is bottle necked 
@@ -61,9 +59,9 @@ public class FuzzyValueCombination {
     }
 
     @SuppressWarnings("unchecked")
-    private static List<Map<TblColRef, String>> combination(Dim[] dims) {
+    private static <E> List<Map<TblColRef, E>> combination(Dim[] dims) {
 
-        List<Map<TblColRef, String>> result = Lists.newArrayList();
+        List<Map<TblColRef, E>> result = Lists.newArrayList();
 
         int emptyDims = 0;
         for (Dim dim : dims) {
@@ -76,8 +74,8 @@ public class FuzzyValueCombination {
             return result;
         }
 
-        Map<TblColRef, String> r = Maps.newHashMap();
-        Iterator<String>[] iters = new Iterator[dims.length];
+        Map<TblColRef, E> r = Maps.newHashMap();
+        Iterator<E>[] iters = new Iterator[dims.length];
         int level = 0;
         while (true) {
             Dim dim = dims[level];
@@ -85,7 +83,7 @@ public class FuzzyValueCombination {
                 iters[level] = dim.values.iterator();
             }
 
-            Iterator<String> it = iters[level];
+            Iterator<E> it = iters[level];
             if (it.hasNext() == false) {
                 if (level == 0)
                     break;
@@ -97,7 +95,7 @@ public class FuzzyValueCombination {
 
             r.put(dim.col, it.next());
             if (level == dims.length - 1) {
-                result.add(new HashMap<TblColRef, String>(r));
+                result.add(new HashMap<TblColRef, E>(r));
             } else {
                 level++;
             }
@@ -105,10 +103,10 @@ public class FuzzyValueCombination {
         return result;
     }
 
-    private static Dim[] toDims(Map<TblColRef, Set<String>> fuzzyValues) {
+    private static <E> Dim[] toDims(Map<TblColRef, Set<E>> fuzzyValues) {
         Dim[] dims = new Dim[fuzzyValues.size()];
         int i = 0;
-        for (Entry<TblColRef, Set<String>> entry : fuzzyValues.entrySet()) {
+        for (Entry<TblColRef, Set<E>> entry : fuzzyValues.entrySet()) {
             dims[i] = new Dim();
             dims[i].col = entry.getKey();
             dims[i].values = entry.getValue();

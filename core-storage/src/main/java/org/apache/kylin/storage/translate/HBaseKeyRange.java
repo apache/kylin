@@ -119,7 +119,8 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
         }
 
         AbstractRowKeyEncoder encoder = AbstractRowKeyEncoder.createInstance(cubeSeg, cuboid);
-
+        encoder.setEncodeShard(false);//will enumerate all possible shards when scanning
+        
         encoder.setBlankByte(RowConstants.ROWKEY_LOWER_BYTE);
 
         this.startKey = encoder.encode(startValues);
@@ -133,7 +134,8 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
         // restore encoder defaults for later reuse (note
         // AbstractRowKeyEncoder.createInstance() caches instances)
         encoder.setBlankByte(AbstractRowKeyEncoder.DEFAULT_BLANK_BYTE);
-
+        
+        encoder.setEncodeShard(true);
         // always fuzzy match cuboid ID to lock on the selected cuboid
         this.fuzzyKeys = buildFuzzyKeys(fuzzyValues);
     }

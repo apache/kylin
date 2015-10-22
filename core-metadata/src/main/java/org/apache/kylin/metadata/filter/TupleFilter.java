@@ -115,6 +115,17 @@ public abstract class TupleFilter {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * flatten to OR-AND filter, (A AND B AND ..) OR (C AND D AND ..) OR ..
+     * flatten filter will ONLY contain AND and OR , no NOT will exist.
+     * This will help to decide scan ranges.
+     * 
+     * Notice that the flatten filter will ONLY be used for determining scan ranges,
+     * The filter that is later pushed down into storage level is still the ORIGINAL
+     * filter, since the flattened filter will be too "fat" to evaluate
+     * 
+     * @return
+     */
     public TupleFilter flatFilter() {
         return flattenInternal(this);
     }

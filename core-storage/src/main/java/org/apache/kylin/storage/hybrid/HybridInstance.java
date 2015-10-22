@@ -163,7 +163,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     @Override
     public int getCost(SQLDigest digest) {
-        cost = 100;
+        cost = Integer.MAX_VALUE;
         for (IRealization realization : this.getRealizations()) {
             if (realization.isCapable(digest))
                 cost = Math.min(cost, realization.getCost(digest));

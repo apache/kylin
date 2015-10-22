@@ -25,14 +25,23 @@ public class BytesUtil {
 
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
-    public static void writeLong(long num, byte[] bytes, int offset, int size) {
+    public static void writeShort(short num, byte[] bytes, int offset, int size) {
         for (int i = offset + size - 1; i >= offset; i--) {
             bytes[i] = (byte) num;
             num >>>= 8;
         }
     }
 
-    public static void writeUnsigned(int num, byte[] bytes, int offset, int size) {
+    public static long readShort(byte[] bytes, int offset, int size) {
+        short num = 0;
+        for (int i = offset, n = offset + size; i < n; i++) {
+            num <<= 8;
+            num |= (short) bytes[i] & 0xFF;
+        }
+        return num;
+    }
+
+    public static void writeLong(long num, byte[] bytes, int offset, int size) {
         for (int i = offset + size - 1; i >= offset; i--) {
             bytes[i] = (byte) num;
             num >>>= 8;
@@ -46,6 +55,13 @@ public class BytesUtil {
             integer |= (long) bytes[i] & 0xFF;
         }
         return integer;
+    }
+
+    public static void writeUnsigned(int num, byte[] bytes, int offset, int size) {
+        for (int i = offset + size - 1; i >= offset; i--) {
+            bytes[i] = (byte) num;
+            num >>>= 8;
+        }
     }
 
     public static int readUnsigned(byte[] bytes, int offset, int size) {

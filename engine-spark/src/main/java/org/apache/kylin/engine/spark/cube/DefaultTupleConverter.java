@@ -17,18 +17,21 @@
 */
 package org.apache.kylin.engine.spark.cube;
 
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.metadata.model.TblColRef;
-import scala.Tuple2;
-
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.Map;
+
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ShardingHash;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.metadata.model.TblColRef;
+
+import scala.Tuple2;
 
 /**
  */
@@ -36,13 +39,13 @@ public final class DefaultTupleConverter implements TupleConverter {
 
     private final static ThreadLocal<ByteBuffer> valueBuf = new ThreadLocal<>();
     private final static ThreadLocal<int[]> measureColumnsIndex = new ThreadLocal<>();
-    private final CubeDesc cubeDesc;
+    private final CubeSegment segment;
     private final int measureCount;
     private final Map<TblColRef, Integer> columnLengthMap;
 
-    public DefaultTupleConverter(CubeDesc cubeDesc, Map<TblColRef, Integer> columnLengthMap) {
-        this.cubeDesc = cubeDesc;
-        this.measureCount = cubeDesc.getMeasures().size();
+    public DefaultTupleConverter(CubeSegment segment, Map<TblColRef, Integer> columnLengthMap) {
+        this.segment = segment;
+        this.measureCount = segment.getCubeDesc().getMeasures().size();
         this.columnLengthMap = columnLengthMap;
     }
 
@@ -59,16 +62,16 @@ public final class DefaultTupleConverter implements TupleConverter {
         }
         return measureColumnsIndex.get();
     }
-    
+
     @Override
     public final Tuple2<byte[], byte[]> convert(long cuboidId, GTRecord record) {
-        int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
-        Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
+        int bytesLength = RowConstants.ROWKEY_HEADER_LEN;
+        Cuboid cuboid = Cuboid.findById(segment.getCubeDesc(), cuboidId);
         for (TblColRef column : cuboid.getColumns()) {
             bytesLength += columnLengthMap.get(column);
         }
 
-        final int dimensions = BitSet.valueOf(new long[]{cuboidId}).cardinality();
+        final int dimensions = BitSet.valueOf(new long[] { cuboidId }).cardinality();
         int[] measureColumnsIndex = getMeasureColumnsIndex();
         for (int i = 0; i < measureCount; i++) {
             measureColumnsIndex[i] = dimensions + i;
@@ -76,12 +79,20 @@ public final class DefaultTupleConverter implements TupleConverter {
 
         byte[] key = new byte[bytesLength];
         System.arraycopy(Bytes.toBytes(cuboidId), 0, key, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
-        int offSet = RowConstants.ROWKEY_CUBOIDID_LEN;
+        int header = RowConstants.ROWKEY_HEADER_LEN;
+        int offSet = header;
         for (int x = 0; x < dimensions; x++) {
             final ByteArray byteArray = record.get(x);
             System.arraycopy(byteArray.array(), byteArray.offset(), key, offSet, byteArray.length());
             offSet += byteArray.length();
         }
+
+        //fill shard
+        short cuboidShardNum = segment.getCuboidShardNum(cuboidId);
+        short shardOffset = ShardingHash.getShard(key, header, offSet - header, cuboidShardNum);
+        short cuboidShardBase = segment.getCuboidBaseShard(cuboidId);
+        short finalShard = ShardingHash.normalize(cuboidShardBase, shardOffset, segment.getTotalShards());
+        BytesUtil.writeShort(finalShard, key, 0, RowConstants.ROWKEY_SHARDID_LEN);
 
         ByteBuffer valueBuf = getValueBuf();
         valueBuf.clear();

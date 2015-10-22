@@ -34,12 +34,10 @@ public class GTInfo {
     ImmutableBitSet colBlocksAll;
     int rowBlockSize; // 0: disable row block
 
-    // sharding
-    int nShards; // 0: no sharding
-
     // must create from builder
     private GTInfo() {
     }
+
 
     public String getTableName() {
         return tableName;
@@ -56,13 +54,9 @@ public class GTInfo {
     public ImmutableBitSet getPrimaryKey() {
         return primaryKey;
     }
-    
+
     public ImmutableBitSet getAllColumns() {
         return colAll;
-    }
-
-    public boolean isShardingEnabled() {
-        return nShards > 0;
     }
 
     public boolean isRowBlockEnabled() {
@@ -119,7 +113,7 @@ public class GTInfo {
 
     public void validateColRef(TblColRef ref) {
         TblColRef expected = colRef(ref.getColumnDesc().getZeroBasedIndex());
-        if (expected.equals(ref) == false)
+        if (!expected.equals(ref))
             throw new IllegalArgumentException();
     }
 
@@ -162,11 +156,11 @@ public class GTInfo {
         for (int i = 0; i < colBlocks.length; i++) {
             merge = merge.or(colBlocks[i]);
         }
-        if (merge.equals(colAll) == false)
+        if (!merge.equals(colAll))
             throw new IllegalStateException();
 
         // primary key must be the first column block
-        if (primaryKey.equals(colBlocks[0]) == false)
+        if (!primaryKey.equals(colBlocks[0]))
             throw new IllegalStateException();
 
         // drop empty column block
@@ -177,7 +171,7 @@ public class GTInfo {
             if (cb.isEmpty())
                 it.remove();
         }
-        colBlocks = (ImmutableBitSet[]) list.toArray(new ImmutableBitSet[list.size()]);
+        colBlocks = list.toArray(new ImmutableBitSet[list.size()]);
     }
 
     public static class Builder {
@@ -228,12 +222,6 @@ public class GTInfo {
         }
 
         /** optional */
-        public Builder enableSharding(int nShards) {
-            info.nShards = nShards;
-            return this;
-        }
-
-        /** optional */
         public Builder setColumnPreferIndex(ImmutableBitSet colPreferIndex) {
             info.colPreferIndex = colPreferIndex;
             return this;
@@ -256,8 +244,12 @@ public class GTInfo {
             return KryoUtils.serialize(info);
         }
     }
-    
+
     public static GTInfo deserialize(byte[] bytes) {
         return KryoUtils.deserialize(bytes, GTInfo.class);
+    }
+
+    public IGTCodeSystem getCodeSystem() {
+        return codeSystem;
     }
 }

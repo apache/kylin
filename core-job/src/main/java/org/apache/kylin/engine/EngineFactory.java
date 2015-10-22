@@ -18,6 +18,9 @@
 
 package org.apache.kylin.engine;
 
+import static org.apache.kylin.metadata.model.IEngineAware.ID_MR_V1;
+import static org.apache.kylin.metadata.model.IEngineAware.ID_MR_V2;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,30 +28,29 @@ import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IEngineAware;
-import static org.apache.kylin.metadata.model.IEngineAware.*;
 
 public class EngineFactory {
-    
-    private static ImplementationSwitch batchEngines;
-    private static ImplementationSwitch streamingEngines;
+
+    private static ImplementationSwitch<IBatchCubingEngine> batchEngines;
+    private static ImplementationSwitch<IStreamingCubingEngine> streamingEngines;
     static {
         Map<Integer, String> impls = new HashMap<>();
         impls.put(ID_MR_V1, "org.apache.kylin.engine.mr.MRBatchCubingEngine");
         impls.put(ID_MR_V2, "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
-        batchEngines = new ImplementationSwitch(impls);
-        
+        batchEngines = new ImplementationSwitch<IBatchCubingEngine>(impls, IBatchCubingEngine.class);
+
         impls.clear();
-        streamingEngines = new ImplementationSwitch(impls); // TODO
+        streamingEngines = new ImplementationSwitch<IStreamingCubingEngine>(impls, IStreamingCubingEngine.class); // TODO
     }
-    
+
     public static IBatchCubingEngine batchEngine(IEngineAware aware) {
-        return batchEngines.get(aware.getEngineType(), IBatchCubingEngine.class);
+        return batchEngines.get(aware.getEngineType());
     }
-    
+
     public static IStreamingCubingEngine streamingEngine(IEngineAware aware) {
-        return streamingEngines.get(aware.getEngineType(), IStreamingCubingEngine.class);
+        return streamingEngines.get(aware.getEngineType());
     }
-    
+
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
     public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
         return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter);
@@ -58,7 +60,7 @@ public class EngineFactory {
     public static DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
         return batchEngine(mergeSegment).createBatchMergeJob(mergeSegment, submitter);
     }
-    
+
     public static Runnable createStreamingCubingBuilder(CubeSegment seg) {
         return streamingEngine(seg).createStreamingCubingBuilder(seg);
     }

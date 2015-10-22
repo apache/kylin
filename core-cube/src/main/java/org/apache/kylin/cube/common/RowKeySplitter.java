@@ -27,10 +27,6 @@ import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-/**
- * @author George Song (ysong1)
- * 
- */
 public class RowKeySplitter {
 
     private CubeDesc cubeDesc;
@@ -39,12 +35,23 @@ public class RowKeySplitter {
     private SplittedBytes[] splitBuffers;
     private int bufferSize;
 
+    private long lastSplittedCuboidId;
+    private short lastSplittedShard;
+
     public SplittedBytes[] getSplitBuffers() {
         return splitBuffers;
     }
 
     public int getBufferSize() {
         return bufferSize;
+    }
+
+    public long getLastSplittedCuboidId() {
+        return lastSplittedCuboidId;
+    }
+
+    public short getLastSplittedShard() {
+        return lastSplittedShard;
     }
 
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
@@ -60,12 +67,17 @@ public class RowKeySplitter {
 
     /**
      * @param bytes
-     * @param byteLen
      * @return cuboid ID
      */
-    public long split(byte[] bytes, int byteLen) {
+    public long split(byte[] bytes) {
         this.bufferSize = 0;
         int offset = 0;
+
+        // extract shard
+        SplittedBytes shardSplit = this.splitBuffers[this.bufferSize++];
+        shardSplit.length = RowConstants.ROWKEY_SHARDID_LEN;
+        System.arraycopy(bytes, offset, shardSplit.value, 0, RowConstants.ROWKEY_SHARDID_LEN);
+        offset += RowConstants.ROWKEY_SHARDID_LEN;
 
         // extract cuboid id
         SplittedBytes cuboidIdSplit = this.splitBuffers[this.bufferSize++];
@@ -73,8 +85,9 @@ public class RowKeySplitter {
         System.arraycopy(bytes, offset, cuboidIdSplit.value, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
         offset += RowConstants.ROWKEY_CUBOIDID_LEN;
 
-        long cuboidId = Bytes.toLong(cuboidIdSplit.value, 0, cuboidIdSplit.length);
-        Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
+        lastSplittedCuboidId = Bytes.toLong(cuboidIdSplit.value, 0, cuboidIdSplit.length);
+        lastSplittedShard = Bytes.toShort(shardSplit.value, 0, shardSplit.length);
+        Cuboid cuboid = Cuboid.findById(cubeDesc, lastSplittedCuboidId);
 
         // rowkey columns
         for (int i = 0; i < cuboid.getColumns().size(); i++) {
@@ -86,6 +99,6 @@ public class RowKeySplitter {
             offset += colLength;
         }
 
-        return cuboidId;
+        return lastSplittedCuboidId;
     }
 }

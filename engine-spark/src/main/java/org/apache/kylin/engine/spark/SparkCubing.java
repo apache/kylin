@@ -298,7 +298,7 @@ public class SparkCubing extends AbstractSparkApplication {
     private String build(JavaRDD<List<String>> javaRDD, final String cubeName, final String segmentId, final byte[][] splitKeys) throws Exception {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
-        CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
+        final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
         List<TblColRef> baseCuboidColumn = Cuboid.findById(cubeDesc, Cuboid.getBaseCuboidId(cubeDesc)).getColumns();
         final Map<TblColRef, Integer> columnLengthMap = Maps.newHashMap();
         for (TblColRef tblColRef : baseCuboidColumn) {
@@ -341,7 +341,7 @@ public class SparkCubing extends AbstractSparkApplication {
                 LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue();
                 System.out.println("load properties finished");
                 AbstractInMemCubeBuilder inMemCubeBuilder = new DoggedCubeBuilder(cubeInstance.getDescriptor(), dictionaryMap);
-                final SparkCuboidWriter sparkCuboidWriter = new BufferedCuboidWriter(new DefaultTupleConverter(cubeDesc, columnLengthMap));
+                final SparkCuboidWriter sparkCuboidWriter = new BufferedCuboidWriter(new DefaultTupleConverter(cubeSegment, columnLengthMap));
                 Executors.newCachedThreadPool().submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, sparkCuboidWriter));
                 try {
                     while (listIterator.hasNext()) {

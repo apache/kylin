@@ -11,19 +11,54 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTInfo;
+import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+
 /**
  * for test use only
  */
 public class CubeHBaseScanRPC extends CubeHBaseRPC {
+
+    static class TrimmedInfoGTRecordAdapter implements Iterable<GTRecord> {
+
+        private final GTInfo info;
+        private final Iterator<GTRecord> input;
+
+        public TrimmedInfoGTRecordAdapter(GTInfo info, Iterator<GTRecord> input) {
+            this.info = info;
+            this.input = input;
+        }
+
+        @Override
+        public Iterator<GTRecord> iterator() {
+            return new Iterator<GTRecord>() {
+                @Override
+                public boolean hasNext() {
+                    return input.hasNext();
+                }
+
+                @Override
+                public GTRecord next() {
+                    GTRecord x = input.next();
+                    return new GTRecord(info, x.getInternal());
+                }
+
+                @Override
+                public void remove() {
+
+                }
+            };
+        }
+    }
 
     public CubeHBaseScanRPC(CubeSegment cubeSeg, Cuboid cuboid, GTInfo fullGTInfo) {
         super(cubeSeg, cuboid, fullGTInfo);
@@ -34,34 +69,47 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
 
         // primary key (also the 0th column block) is always selected
         final ImmutableBitSet selectedColBlocks = scanRequest.getSelectedColBlocks().set(0);
-
         // globally shared connection, does not require close
         HConnection hbaseConn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
-
         final HTableInterface hbaseTable = hbaseConn.getTable(cubeSeg.getStorageLocationIdentifier());
-        final List<Pair<byte[], byte[]>> hbaseColumns = makeHBaseColumns(selectedColBlocks);
 
-        RawScan rawScan = prepareRawScan(scanRequest.getPkStart(), scanRequest.getPkEnd(), hbaseColumns);
-        Scan hbaseScan = buildScan(rawScan);
+        List<RawScan> rawScans = preparedHBaseScan(scanRequest.getPkStart(), scanRequest.getPkEnd(), scanRequest.getFuzzyKeys(), selectedColBlocks);
+        List<List<Integer>> hbaseColumnsToGT = getHBaseColumnsGTMapping(selectedColBlocks);
 
-        final ResultScanner scanner = hbaseTable.getScanner(hbaseScan);
-        final Iterator<Result> iterator = scanner.iterator();
+        final List<ResultScanner> scanners = Lists.newArrayList();
+        final List<Iterator<Result>> resultIterators = Lists.newArrayList();
+
+        for (RawScan rawScan : rawScans) {
+
+            logScan(rawScan, cubeSeg.getStorageLocationIdentifier());
+            Scan hbaseScan = buildScan(rawScan);
+
+            final ResultScanner scanner = hbaseTable.getScanner(hbaseScan);
+            final Iterator<Result> iterator = scanner.iterator();
+
+            scanners.add(scanner);
+            resultIterators.add(iterator);
+        }
+
+        final Iterator<Result> allResultsIterator = Iterators.concat(resultIterators.iterator());
 
         CellListIterator cellListIterator = new CellListIterator() {
             @Override
             public void close() throws IOException {
-                scanner.close();
+                for (ResultScanner scanner : scanners) {
+                    scanner.close();
+                }
                 hbaseTable.close();
             }
 
             @Override
             public boolean hasNext() {
-                return iterator.hasNext();
+                return allResultsIterator.hasNext();
             }
 
             @Override
             public List<Cell> next() {
-                return iterator.next().listCells();
+                return allResultsIterator.next().listCells();
             }
 
             @Override
@@ -70,8 +118,32 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             }
         };
 
-        IGTStore store = new HBaseReadonlyStore(cellListIterator, scanRequest, hbaseColumns);
+        IGTStore store = new HBaseReadonlyStore(cellListIterator, scanRequest, rawScans.get(0).hbaseColumns, hbaseColumnsToGT);
         IGTScanner rawScanner = store.scan(scanRequest);
-        return scanRequest.decorateScanner(rawScanner);
+
+        final IGTScanner decorateScanner = scanRequest.decorateScanner(rawScanner);
+        final TrimmedInfoGTRecordAdapter trimmedInfoGTRecordAdapter = new TrimmedInfoGTRecordAdapter(fullGTInfo, decorateScanner.iterator());
+
+        return new IGTScanner() {
+            @Override
+            public GTInfo getInfo() {
+                return fullGTInfo;
+            }
+
+            @Override
+            public int getScannedRowCount() {
+                return decorateScanner.getScannedRowCount();
+            }
+
+            @Override
+            public void close() throws IOException {
+                decorateScanner.close();
+            }
+
+            @Override
+            public Iterator<GTRecord> iterator() {
+                return trimmedInfoGTRecordAdapter.iterator();
+            }
+        };
     }
 }

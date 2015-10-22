@@ -53,15 +53,15 @@ import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorConstants;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
 import org.apache.kylin.storage.hbase.common.coprocessor.FilterDecorator;
 import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.generated.IIProtos;
-import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Range;
-import com.google.protobuf.ByteString;
+import com.google.protobuf.HBaseZeroCopyByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
@@ -88,7 +88,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         scan.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES);
 
         if (request.hasTsRange()) {
-            Range<Long> tsRange = (Range<Long>) SerializationUtils.deserialize(request.getTsRange().toByteArray());
+            Range<Long> tsRange = (Range<Long>) SerializationUtils.deserialize(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getTsRange()));
             byte[] regionStartKey = region.getStartKey();
             if (!ArrayUtils.isEmpty(regionStartKey)) {
                 shard = BytesUtil.readUnsigned(regionStartKey, 0, IIKeyValueCodec.SHARD_LEN);
@@ -148,15 +148,15 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
             innerScanner = region.getScanner(prepareScan(request, region));
 
-            CoprocessorRowType type = CoprocessorRowType.deserialize(request.getType().toByteArray());
-            CoprocessorProjector projector = CoprocessorProjector.deserialize(request.getProjector().toByteArray());
-            EndpointAggregators aggregators = EndpointAggregators.deserialize(request.getAggregator().toByteArray());
-            CoprocessorFilter filter = CoprocessorFilter.deserialize(request.getFilter().toByteArray());
+            CoprocessorRowType type = CoprocessorRowType.deserialize(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getType()));
+            CoprocessorProjector projector = CoprocessorProjector.deserialize(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getProjector()));
+            EndpointAggregators aggregators = EndpointAggregators.deserialize(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getAggregator()));
+            CoprocessorFilter filter = CoprocessorFilter.deserialize(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getFilter()));
 
             //compression
             IIProtos.IIResponseInternal response = getResponse(innerScanner, type, projector, aggregators, filter);
             byte[] compressed = CompressionUtils.compress(response.toByteArray());
-            IIProtos.IIResponse compressedR = IIProtos.IIResponse.newBuilder().setBlob(ByteString.copyFrom(compressed)).build();
+            IIProtos.IIResponse compressedR = IIProtos.IIResponse.newBuilder().setBlob(HBaseZeroCopyByteString.wrap(compressed)).build();
 
             done.run(compressedR);
         } catch (IOException ioe) {
@@ -257,7 +257,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                     if (totalByteFormLen >= MEMORY_LIMIT) {
                         throw new RuntimeException("the query has exceeded the memory limit, please check the query");
                     }
-                    IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(recordBuffer));
+                    IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(HBaseZeroCopyByteString.wrap(recordBuffer));
                     responseBuilder.addRows(rowBuilder.build());
                     totalByteFormLen += byteFormLen;
                 }
@@ -269,9 +269,9 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         if (needAgg) {
             for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
                 AggrKey aggrKey = entry.getKey();
-                IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(ByteString.copyFrom(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
+                IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(HBaseZeroCopyByteString.wrap(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
                 int length = aggregators.serializeMetricValues(entry.getValue(), buffer);
-                rowBuilder.setMeasures(ByteString.copyFrom(buffer, 0, length));
+                rowBuilder.setMeasures(HBaseZeroCopyByteString.wrap(buffer, 0, length));
                 responseBuilder.addRows(rowBuilder.build());
             }
         }

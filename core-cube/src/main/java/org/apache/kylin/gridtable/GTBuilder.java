@@ -19,9 +19,9 @@ public class GTBuilder implements Closeable {
         this.info = info;
 
         if (append) {
-            storeWriter = store.append(shard);
+            storeWriter = store.append();
         } else {
-            storeWriter = store.rebuild(shard);
+            storeWriter = store.rebuild();
         }
     }
 

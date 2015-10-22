@@ -24,12 +24,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.cli.Options;
+import org.apache.commons.math3.primes.Primes;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -47,6 +49,8 @@ import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -55,6 +59,7 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.engine.mr.common.CuboidShardUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -79,6 +84,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
     CubeDesc cubeDesc = null;
     String segmentName = null;
     KylinConfig kylinConfig;
+    public static final boolean ENABLE_CUBOID_SHARDING = true;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -92,7 +98,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         parseOptions(options, args);
 
         Path partitionFilePath = new Path(getOptionValue(OPTION_PARTITION_FILE_PATH));
-        boolean statistics_enabled = Boolean.parseBoolean(getOptionValue(OPTION_STATISTICS_ENABLED));
+        boolean statsEnabled = Boolean.parseBoolean(getOptionValue(OPTION_STATISTICS_ENABLED));
 
         String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -106,9 +112,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 
         try {
-
             byte[][] splitKeys;
-            if (statistics_enabled) {
+            if (statsEnabled) {
                 final Map<Long, Long> cuboidSizeMap = getCubeRowCountMapFromCuboidStatistics(cubeSegment, kylinConfig, conf);
                 splitKeys = getSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment);
             } else {
@@ -203,6 +208,17 @@ public class CreateHTableJob extends AbstractHadoopJob {
         return getCubeRowCountMapFromCuboidStatistics(counterMap, samplingPercentage);
     }
 
+    //one region for one shard
+    private static byte[][] getSplitsByRegionCount(int regionCount) {
+        byte[][] result = new byte[regionCount - 1][];
+        for (int i = 1; i < regionCount; ++i) {
+            byte[] split = new byte[Bytes.SIZEOF_SHORT];
+            BytesUtil.writeUnsigned(i, split, 0, Bytes.SIZEOF_SHORT);
+            result[i - 1] = split;
+        }
+        return result;
+    }
+
     public static Map<Long, Long> getCubeRowCountMapFromCuboidStatistics(Map<Long, HyperLogLogPlusCounter> counterMap, final int samplingPercentage) throws IOException {
         Preconditions.checkArgument(samplingPercentage > 0);
         return Maps.transformValues(counterMap, new Function<HyperLogLogPlusCounter, Long>() {
@@ -233,58 +249,109 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         logger.info("Cube capacity " + cubeCapacity.toString() + ", chosen cut for HTable is " + cut + "GB");
 
-        long totalSizeInM = 0;
+        double totalSizeInM = 0;
 
         List<Long> allCuboids = Lists.newArrayList();
         allCuboids.addAll(cubeRowCountMap.keySet());
         Collections.sort(allCuboids);
 
-        Map<Long, Long> cubeSizeMap = Maps.transformEntries(cubeRowCountMap, new Maps.EntryTransformer<Long, Long, Long>() {
-            @Override
-            public Long transformEntry(@Nullable Long key, @Nullable Long value) {
-                return estimateCuboidStorageSize(cubeDesc, key, value, baseCuboidId, rowkeyColumnSize);
-            }
-        });
-        for (Long cuboidSize : cubeSizeMap.values()) {
+        Map<Long, Double> cubeSizeMap = Maps.newHashMap();
+        for (Map.Entry<Long, Long> entry : cubeRowCountMap.entrySet()) {
+            cubeSizeMap.put(entry.getKey(), estimateCuboidStorageSize(cubeDesc, entry.getKey(), entry.getValue(), baseCuboidId, rowkeyColumnSize));
+        }
+
+        for (Double cuboidSize : cubeSizeMap.values()) {
             totalSizeInM += cuboidSize;
         }
 
-        int nRegion = Math.round((float) totalSizeInM / (cut * 1024L));
+        int nRegion = Math.round((float) (totalSizeInM / (cut * 1024L)));
         nRegion = Math.max(kylinConfig.getHBaseRegionCountMin(), nRegion);
         nRegion = Math.min(kylinConfig.getHBaseRegionCountMax(), nRegion);
 
-        int mbPerRegion = (int) (totalSizeInM / (nRegion));
+        if (ENABLE_CUBOID_SHARDING) {//&& (nRegion > 1)) {
+            //use prime nRegions to help random sharding
+            int original = nRegion;
+            nRegion = Primes.nextPrime(nRegion);//return 2 for input 1
+
+            if (nRegion > Short.MAX_VALUE) {
+                logger.info("Too many regions! reduce to " + Short.MAX_VALUE);
+                nRegion = Short.MAX_VALUE;
+            }
+
+            if (nRegion != original) {
+                logger.info("Region count is adjusted from " + original + " to " + nRegion + " to help random sharding");
+            }
+        }
+
+        int mbPerRegion = (int) (totalSizeInM / nRegion);
         mbPerRegion = Math.max(1, mbPerRegion);
 
         logger.info("Total size " + totalSizeInM + "M (estimated)");
-        logger.info(nRegion + " regions (estimated)");
-        logger.info(mbPerRegion + " MB per region (estimated)");
+        logger.info("Expecting " + nRegion + " regions.");
+        logger.info("Expecting " + mbPerRegion + " MB per region.");
 
-        List<Long> regionSplit = Lists.newArrayList();
+        if (ENABLE_CUBOID_SHARDING) {
+            //each cuboid will be split into different number of shards
+            HashMap<Long, Short> cuboidShards = Maps.newHashMap();
+            double[] regionSizes = new double[nRegion];
+            for (long cuboidId : allCuboids) {
+                double estimatedSize = cubeSizeMap.get(cuboidId);
+                double magic = 23;
+                int shardNum = (int) (estimatedSize * magic / mbPerRegion + 1);
+                if (shardNum < 1) {
+                    shardNum = 1;
+                }
 
-        long size = 0;
-        int regionIndex = 0;
-        int cuboidCount = 0;
-        for (int i = 0; i < allCuboids.size(); i++) {
-            long cuboidId = allCuboids.get(i);
-            if (size >= mbPerRegion || (size + cubeSizeMap.get(cuboidId)) >= mbPerRegion * 1.2) {
-                // if the size already bigger than threshold, or it will exceed by 20%, cut for next region
-                regionSplit.add(cuboidId);
-                logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboids < " + cuboidId + " (" + cuboidCount + ") cuboids");
-                size = 0;
-                cuboidCount = 0;
-                regionIndex++;
+                if (shardNum > nRegion) {
+                    logger.info(String.format("Cuboid %d 's estimated size %.2f MB will generate %d regions, reduce to %d", cuboidId, estimatedSize, shardNum, nRegion));
+                    shardNum = nRegion;
+                } else {
+                    logger.info(String.format("Cuboid %d 's estimated size %.2f MB will generate %d regions", cuboidId, estimatedSize, shardNum));
+                }
+
+                cuboidShards.put(cuboidId, (short) shardNum);
+                short startShard = ShardingHash.getShard(cuboidId, nRegion);
+                for (short i = startShard; i < startShard + shardNum; ++i) {
+                    short j = (short) (i % nRegion);
+                    regionSizes[j] = regionSizes[j] + estimatedSize / shardNum;
+                }
             }
-            size += cubeSizeMap.get(cuboidId);
-            cuboidCount++;
-        }
 
-        byte[][] result = new byte[regionSplit.size()][];
-        for (int i = 0; i < regionSplit.size(); i++) {
-            result[i] = Bytes.toBytes(regionSplit.get(i));
-        }
+            for (int i = 0; i < nRegion; ++i) {
+                logger.info(String.format("Region %d's estimated size is %.2f MB, accounting for %.2f percent", i, regionSizes[i], 100.0 * regionSizes[i] / totalSizeInM));
+            }
 
-        return result;
+            CuboidShardUtil.saveCuboidShards(cubeSegment, cuboidShards, nRegion);
+
+            return getSplitsByRegionCount(nRegion);
+
+        } else {
+            List<Long> regionSplit = Lists.newArrayList();
+
+            long size = 0;
+            int regionIndex = 0;
+            int cuboidCount = 0;
+            for (int i = 0; i < allCuboids.size(); i++) {
+                long cuboidId = allCuboids.get(i);
+                if (size >= mbPerRegion || (size + cubeSizeMap.get(cuboidId)) >= mbPerRegion * 1.2) {
+                    // if the size already bigger than threshold, or it will exceed by 20%, cut for next region
+                    regionSplit.add(cuboidId);
+                    logger.info("Region " + regionIndex + " will be " + size + " MB, contains cuboids < " + cuboidId + " (" + cuboidCount + ") cuboids");
+                    size = 0;
+                    cuboidCount = 0;
+                    regionIndex++;
+                }
+                size += cubeSizeMap.get(cuboidId);
+                cuboidCount++;
+            }
+
+            byte[][] result = new byte[regionSplit.size()][];
+            for (int i = 0; i < regionSplit.size(); i++) {
+                result[i] = Bytes.toBytes(regionSplit.get(i));
+            }
+
+            return result;
+        }
     }
 
     /**
@@ -295,9 +362,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
      * @param rowCount
      * @return the cuboid size in M bytes
      */
-    private static long estimateCuboidStorageSize(CubeDesc cubeDesc, long cuboidId, long rowCount, long baseCuboidId, List<Integer> rowKeyColumnLength) {
+    private static double estimateCuboidStorageSize(CubeDesc cubeDesc, long cuboidId, long rowCount, long baseCuboidId, List<Integer> rowKeyColumnLength) {
 
-        int bytesLength = RowConstants.ROWKEY_CUBOIDID_LEN;
+        int bytesLength = RowConstants.ROWKEY_HEADER_LEN;
 
         long mask = Long.highestOneBit(baseCuboidId);
         long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
@@ -321,9 +388,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
         bytesLength += space;
 
-        logger.info("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength + " bytes.");
-        logger.info("Cuboid " + cuboidId + " total size is " + (bytesLength * rowCount / (1024L * 1024L)) + "M.");
-        return bytesLength * rowCount / (1024L * 1024L);
+        double ret = 1.0 * bytesLength * rowCount / (1024L * 1024L);
+        logger.info("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength + " bytes." + " Total size is " + ret + "M.");
+        return ret;
     }
 
     public static void main(String[] args) throws Exception {
