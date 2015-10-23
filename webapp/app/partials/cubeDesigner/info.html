@@ -44,7 +44,7 @@
                     <b>Cube Name</b>
                 </label>
                 <div class="col-xs-12 col-sm-6">
-                    <input ng-if="state.mode=='edit'" name="cube_name" type="text" class="form-control"
+                    <input ng-if="state.mode=='edit'" ng-disabled="{{isEdit}}" name="cube_name" type="text" class="form-control"
                            ng-model="cubeMetaFrame.name" required
                            placeholder="You can use letters, numbers, and '_'"
                            ng-maxlength=100 ng-pattern="/^\w+$/" />
@@ -100,8 +100,9 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <ol class="text-info">
-                            <li>Cube must belong to project which you have privilege to create</li>
                             <li>Cube name is unique name of entire system</li>
+                            <li>Can not edit cube name after created</li>
+                            <li>Cube must belong to project which you have privilege to create</li>
                         </ol>
                     </div>
                 </div>
