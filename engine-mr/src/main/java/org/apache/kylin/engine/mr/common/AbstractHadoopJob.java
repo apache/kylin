@@ -94,7 +94,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected Job job;
 
     public AbstractHadoopJob() {
-        super(HadoopUtil.newHadoopJobConfiguration());
+        super(HadoopUtil.getCurrentConfiguration());
     }
 
     protected void parseOptions(Options options, String[] args) throws ParseException {

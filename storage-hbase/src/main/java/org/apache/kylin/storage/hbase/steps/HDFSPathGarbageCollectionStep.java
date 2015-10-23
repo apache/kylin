@@ -17,7 +17,11 @@
 */
 package org.apache.kylin.storage.hbase.steps;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -28,11 +32,9 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Created by sunyerui on 15/9/17.
@@ -56,7 +58,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
             dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HadoopUtil.getCurrentConfiguration()));
             
             if (StringUtils.isNotEmpty(context.getConfig().getHBaseClusterFs())) {
-                dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HadoopUtil.getCurrentHBaseConfiguration()));
+                dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration()));
             }
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);

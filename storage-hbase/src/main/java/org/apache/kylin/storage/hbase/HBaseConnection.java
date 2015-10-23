@@ -19,16 +19,13 @@
 package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
@@ -39,6 +36,7 @@ import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.StorageException;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,71 +66,56 @@ public class HBaseConnection {
         });
     }
 
-    /**
-     * e.g.
-     * 0. hbase (recommended way)
-     * 1. hbase:zk-1.hortonworks.com,zk-2.hortonworks.com,zk-3.hortonworks.com:2181:/hbase-unsecure
-     * 2. hbase:zk-1.hortonworks.com,zk-2.hortonworks.com,zk-3.hortonworks.com:2181
-     * 3. hbase:zk-1.hortonworks.com:2181:/hbase-unsecure
-     * 4. hbase:zk-1.hortonworks.com:2181
-     */
-    public static Configuration newHBaseConfiguration(String url) {
-        Configuration conf = HBaseConfiguration.create();
-        // reduce rpc retry
-        conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
-        conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
-        conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
+    private static final ThreadLocal<Configuration> hbaseConfig = new ThreadLocal<>();
 
+    public static Configuration getCurrentHBaseConfiguration() {
+        if (hbaseConfig.get() == null) {
+            String storageUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
+            hbaseConfig.set(newHBaseConfiguration(storageUrl));
+        }
+        return hbaseConfig.get();
+    }
+
+    private static Configuration newHBaseConfiguration(String url) {
+        Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
+        
+        // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
+        assert (StringUtils.isEmpty(url) || "hbase".equals(url)) : "for hbase storage, pls set 'kylin.storage.url=hbase' in kylin.properties";
+
+        // support hbase using a different FS
         String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
         if (StringUtils.isNotEmpty(hbaseClusterFs)) {
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
         }
+        
+        // https://issues.apache.org/jira/browse/KYLIN-953
+        if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
+            conf.set("hadoop.tmp.dir", "/tmp");
+        }
+        if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
+            conf.set("hbase.fs.tmp.dir", "/tmp");
+        }
 
+        // reduce rpc retry
+        conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
+        conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
+        conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
         // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
-        if (StringUtils.isEmpty(url)) {
-            return conf;
-        }
-
-        // chop off "hbase"
-        if (url.startsWith("hbase") == false) {
-            throw new IllegalArgumentException("hbase url must start with 'hbase' -- " + url);
-        }
-
-        url = StringUtils.substringAfter(url, "hbase");
-        if (StringUtils.isEmpty(url)) {
-            return conf;
-        }
-
-        // case of "hbase:domain.com:2181:/hbase-unsecure"
-        Pattern urlPattern = Pattern.compile("[:]((?:[\\w\\-.]+)(?:\\,[\\w\\-.]+)*)[:](\\d+)(?:[:](.+))");
-        Matcher m = urlPattern.matcher(url);
-        if (m.matches() == false)
-            throw new IllegalArgumentException("HBase URL '" + url + "' is invalid, expected url is like '" + "hbase:domain.com:2181:/hbase-unsecure" + "'");
-
-        logger.debug("Creating hbase conf by parsing -- " + url);
-
-        String quorums = m.group(1);
-        String quorum = null;
-        try {
-            String[] tokens = quorums.split(",");
-            for (String s : tokens) {
-                quorum = s;
-                InetAddress.getByName(quorum);
-            }
-        } catch (UnknownHostException e) {
-            throw new IllegalArgumentException("Zookeeper quorum is invalid: " + quorum + "; urlString=" + url, e);
-        }
-        conf.set(HConstants.ZOOKEEPER_QUORUM, quorums);
-
-        String port = m.group(2);
-        conf.set(HConstants.ZOOKEEPER_CLIENT_PORT, port);
-
-        String znodePath = m.group(3);
-        conf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, znodePath);
 
         return conf;
     }
+    
+    public static String makeQualifiedPathInHBaseCluster(String path) {
+        try {
+            FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
+            return fs.makeQualified(new Path(path)).toString();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot create FileSystem from current hbase cluster conf", e);
+        }
+    }
 
+    // ============================================================================
+    
     // returned HConnection can be shared by multiple threads and does not require close()
     @SuppressWarnings("resource")
     public static HConnection get(String url) {

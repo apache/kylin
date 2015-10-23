@@ -3,8 +3,7 @@ package org.apache.kylin.storage.hbase.util;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.curator.RetryPolicy;
@@ -21,7 +20,8 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 
 /**
  */
@@ -68,7 +68,7 @@ public class ZookeeperJobLock implements JobLock {
     }
 
     private String getZKConnectString() {
-        Configuration conf = HBaseConnection.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl());
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
         final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
         return org.apache.commons.lang3.StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {

@@ -24,24 +24,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.kylin.common.KylinConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HadoopUtil {
-    private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
-
-    private static ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
-
-    private static ThreadLocal<Configuration> hbaseConfig = new ThreadLocal<>();
+    private static final ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
 
     public static void setCurrentConfiguration(Configuration conf) {
         hadoopConfig.set(conf);
@@ -49,21 +39,14 @@ public class HadoopUtil {
 
     public static Configuration getCurrentConfiguration() {
         if (hadoopConfig.get() == null) {
-            hadoopConfig.set(new Configuration());
+            Configuration conf = new Configuration();
+            
+            // why we have this hard code?
+            conf.set(DFSConfigKeys.DFS_CLIENT_BLOCK_WRITE_LOCATEFOLLOWINGBLOCK_RETRIES_KEY, "8");
+
+            hadoopConfig.set(conf);
         }
         return hadoopConfig.get();
-    }
-
-    public static Configuration getCurrentHBaseConfiguration() {
-        if (hbaseConfig.get() == null) {
-            Configuration configuration = HBaseConfiguration.create(new Configuration());
-            String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
-            if (StringUtils.isNotEmpty(hbaseClusterFs)) {
-                configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
-            }
-            hbaseConfig.set(configuration);
-        }
-        return hbaseConfig.get();
     }
 
     public static FileSystem getFileSystem(String path) throws IOException {
@@ -78,15 +61,6 @@ public class HadoopUtil {
         }
     }
 
-    public static String makeQualifiedPathInHBaseCluster(String path) {
-        try {
-            FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
-            return fs.makeQualified(new Path(path)).toString();
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Cannot create FileSystem from current hbase cluster conf", e);
-        }
-    }
-
     public static String fixWindowsPath(String path) {
         // fix windows path
         if (path.startsWith("file://") && !path.startsWith("file:///") && path.contains(":\\")) {
@@ -96,12 +70,6 @@ public class HadoopUtil {
             path = path.replace('\\', '/');
         }
         return path;
-    }
-
-    public static Configuration newHadoopJobConfiguration() {
-        Configuration conf = new Configuration();
-        conf.set(DFSConfigKeys.DFS_CLIENT_BLOCK_WRITE_LOCATEFOLLOWINGBLOCK_RETRIES_KEY, "8");
-        return conf;
     }
 
     /**
