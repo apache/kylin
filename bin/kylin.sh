@@ -127,7 +127,7 @@ then
 
     export HBASE_CLASSPATH=${KYLIN_HOME}/lib/*:$hive_dependency:${HBASE_CLASSPATH}
 
-    exec hbase "$@"
+    exec hbase -Dlog4j.configuration=kylin-log4j.properties "$@"
 
 else
     echo "usage: kylin.sh start or kylin.sh stop"
