@@ -45,6 +45,7 @@ import org.apache.kylin.engine.streaming.cube.StreamingCubeBuilder;
 import com.google.common.base.Preconditions;
 
 /**
+ * TODO: like MRUtil, use Factory pattern to allow config
  */
 public class StreamingUtils {
 

@@ -34,20 +34,24 @@
 
 package org.apache.kylin.source.kafka;
 
-import com.google.common.collect.Lists;
-import kafka.message.MessageAndOffset;
-import org.apache.kylin.engine.streaming.StreamingMessage;
-
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.List;
+
+import kafka.message.MessageAndOffset;
+
+import org.apache.kylin.engine.streaming.StreamingMessage;
+import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.Lists;
 
 /**
  */
-public final class StringStreamingParser implements StreamingParser {
+public final class StringStreamingParser extends StreamingParser {
 
-    public static final StringStreamingParser instance = new StringStreamingParser();
+    public static final StringStreamingParser instance = new StringStreamingParser(null, null);
 
-    private StringStreamingParser() {
+    private StringStreamingParser(List<TblColRef> allColumns, String propertiesStr) {
     }
 
     @Override
@@ -55,7 +59,7 @@ public final class StringStreamingParser implements StreamingParser {
         final ByteBuffer payload = kafkaMessage.message().payload();
         byte[] bytes = new byte[payload.limit()];
         payload.get(bytes);
-        return new StreamingMessage(Lists.newArrayList(new String(bytes).split(",")), kafkaMessage.offset(), kafkaMessage.offset(), Collections.<String, Object>emptyMap());
+        return new StreamingMessage(Lists.newArrayList(new String(bytes).split(",")), kafkaMessage.offset(), kafkaMessage.offset(), Collections.<String, Object> emptyMap());
     }
 
     @Override

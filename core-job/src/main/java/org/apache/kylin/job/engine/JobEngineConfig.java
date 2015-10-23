@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.job.common.OptionsHelper;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

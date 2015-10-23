@@ -54,7 +54,7 @@ import java.util.*;
 /**
  * each json message with a "timestamp" field
  */
-public final class TimedJsonStreamParser implements StreamingParser {
+public final class TimedJsonStreamParser extends StreamingParser {
 
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
 

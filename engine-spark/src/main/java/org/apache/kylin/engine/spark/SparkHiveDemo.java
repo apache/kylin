@@ -18,7 +18,8 @@
 package org.apache.kylin.engine.spark;
 
 import org.apache.commons.cli.Options;
-import org.apache.kylin.job.common.OptionsHelper;
+import org.apache.kylin.common.util.AbstractApplication;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
@@ -26,7 +27,7 @@ import org.apache.spark.sql.hive.HiveContext;
 
 /**
  */
-public class SparkHiveDemo extends AbstractSparkApplication {
+public class SparkHiveDemo extends AbstractApplication {
 
     private final Options options;
 

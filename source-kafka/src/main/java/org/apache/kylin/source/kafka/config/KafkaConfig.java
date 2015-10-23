@@ -71,9 +71,6 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("timeout")
     private int timeout;
 
-    @JsonProperty("maxReadCount")
-    private int maxReadCount;
-
     @JsonProperty("bufferSize")
     private int bufferSize;
 
@@ -86,6 +83,7 @@ public class KafkaConfig extends RootPersistentEntity {
     //"configA=1;configB=2"
     @JsonProperty("parserProperties")
     private String parserProperties;
+    
     public String getResourcePath() {
         return getKafkaResourcePath(name);
     }
@@ -112,14 +110,6 @@ public class KafkaConfig extends RootPersistentEntity {
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
-    }
-
-    public int getMaxReadCount() {
-        return maxReadCount;
-    }
-
-    public void setMaxReadCount(int maxReadCount) {
-        this.maxReadCount = maxReadCount;
     }
 
     public int getBufferSize() {

@@ -7,20 +7,10 @@ public class BootstrapConfig {
     private String streaming;
     private int partitionId = -1;
 
-    //one off default value set to true
-    private boolean oneOff = true;
     private long start = 0L;
     private long end = 0L;
 
     private boolean fillGap;
-
-    public boolean isOneOff() {
-        return oneOff;
-    }
-
-    public void setOneOff(boolean oneOff) {
-        this.oneOff = oneOff;
-    }
 
     public long getStart() {
         return start;
