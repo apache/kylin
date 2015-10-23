@@ -227,3 +227,15 @@ For english-words.80 (scowl-2015.05.18).txt:
 This product bundles SCOWL, which is available under a
 MIT-like license.  For details, see
 https://raw.githubusercontent.com/kevina/wordlist/master/scowl/Copyright
+
+==============================================================================
+For Google Fonts:
+==============================================================================
+This product bundles Google Fonts:
+
+Q: Can I use the Fonts API on any page?
+A: Yes. All the fonts on Google Fonts are licensed under open source licenses 
+that let you use them on any website, from a private blog to a big commercial site.
+https://developers.google.com/fonts/faq?hl=en.
+https://www.google.com/fonts/attribution
+
