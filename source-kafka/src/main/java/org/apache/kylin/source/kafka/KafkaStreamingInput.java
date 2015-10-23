@@ -33,7 +33,6 @@
  */
 package org.apache.kylin.source.kafka;
 
-import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -41,25 +40,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import javax.annotation.Nullable;
-
 import kafka.cluster.Broker;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.PartitionMetadata;
 import kafka.message.MessageAndOffset;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.streaming.IStreamingInput;
 import org.apache.kylin.engine.streaming.StreamingBatch;
-import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.engine.streaming.StreamingMessage;
-import org.apache.kylin.metadata.model.IntermediateColumnDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.source.kafka.util.KafkaRequester;
@@ -67,11 +57,9 @@ import org.apache.kylin.source.kafka.util.KafkaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
-/**
- */
+@SuppressWarnings("unused")
 public class KafkaStreamingInput implements IStreamingInput {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaStreamingInput.class);
@@ -83,7 +71,7 @@ public class KafkaStreamingInput implements IStreamingInput {
             final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             final KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
             final KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(streaming);
-            final StreamingParser streamingParser = getStreamingParser(kafkaConfig);
+            final StreamingParser streamingParser = StreamingParser.getStreamingParser(kafkaConfig);
             final ExecutorService executorService = Executors.newCachedThreadPool();
             final List<Future<List<StreamingMessage>>> futures = Lists.newArrayList();
             for (final KafkaClusterConfig kafkaClusterConfig : kafkaConfig.getKafkaClusterConfigs()) {
@@ -207,25 +195,6 @@ public class KafkaStreamingInput implements IStreamingInput {
                 logger.warn("this thread should not be interrupted, just stop fetching", e);
             }
             return result;
-        }
-    }
-
-    private StreamingParser getStreamingParser(KafkaConfig kafkaConfig) throws ReflectiveOperationException {
-        final String cubeName = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(kafkaConfig.getName()).getCubeName();
-        final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-        List<TblColRef> columns = Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(), new Function<IntermediateColumnDesc, TblColRef>() {
-            @Nullable
-            @Override
-            public TblColRef apply(IntermediateColumnDesc input) {
-                return input.getColRef();
-            }
-        });
-        if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
-            Class clazz = Class.forName(kafkaConfig.getParserName());
-            Constructor constructor = clazz.getConstructor(List.class, String.class);
-            return (StreamingParser) constructor.newInstance(columns, kafkaConfig.getParserProperties());
-        } else {
-            throw new IllegalStateException("invalid StreamingConfig:" + kafkaConfig.getName() + " missing property StreamingParser");
         }
     }
 

@@ -15,18 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.engine.spark;
+package org.apache.kylin.common.util;
 
 import java.io.Serializable;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.job.common.OptionsHelper;
 
 /**
  */
-public abstract class AbstractSparkApplication implements Serializable {
+public abstract class AbstractApplication implements Serializable {
 
     protected abstract Options getOptions();
 
@@ -34,15 +33,15 @@ public abstract class AbstractSparkApplication implements Serializable {
 
     public final void execute(String[] args) {
         OptionsHelper optionsHelper = new OptionsHelper();
-        System.out.println("Spark Application args:" + StringUtils.join(args, " "));
+        System.out.println("Abstract Application args:" + StringUtils.join(args, " "));
         try {
             optionsHelper.parseOptions(getOptions(), args);
             execute(optionsHelper);
         } catch (ParseException e) {
-            optionsHelper.printUsage("SparkExecutor", getOptions());
+            optionsHelper.printUsage(this.getClass().getName(), getOptions());
             throw new RuntimeException("error parsing args", e);
         } catch (Exception e) {
-            throw new RuntimeException("error execute Spark Application", e);
+            throw new RuntimeException("error execute " + this.getClass().getName(), e);
         }
     }
 }

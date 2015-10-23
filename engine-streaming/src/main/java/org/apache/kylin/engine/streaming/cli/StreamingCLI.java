@@ -66,9 +66,6 @@ public class StreamingCLI {
             while (i < args.length) {
                 String argName = args[i];
                 switch (argName) {
-                case "-oneoff":
-                    Boolean.parseBoolean(args[++i]);
-                    break;
                 case "-start":
                     bootstrapConfig.setStart(Long.parseLong(args[++i]));
                     break;

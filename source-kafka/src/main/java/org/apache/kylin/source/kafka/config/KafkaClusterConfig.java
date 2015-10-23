@@ -40,10 +40,6 @@ public class KafkaClusterConfig extends RootPersistentEntity {
         return kafkaConfig.getTimeout();
     }
 
-    public int getMaxReadCount() {
-        return kafkaConfig.getMaxReadCount();
-    }
-
     public List<BrokerConfig> getBrokerConfigs() {
         return brokerConfigs;
     }

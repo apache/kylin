@@ -64,9 +64,6 @@ public class StreamingConfig extends RootPersistentEntity {
     @JsonProperty("cubeName")
     private String cubeName;
 
-    @JsonProperty("margin")
-    private long margin;
-
     public String getCubeName() {
         return cubeName;
     }
@@ -89,14 +86,6 @@ public class StreamingConfig extends RootPersistentEntity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public long getMargin() {
-        return margin;
-    }
-
-    public void setMargin(long margin) {
-        this.margin = margin;
     }
 
     public String getResourcePath() {

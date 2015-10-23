@@ -45,6 +45,15 @@ import com.google.common.collect.TreeMultiset;
 public class BasicTest {
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(BasicTest.class);
 
+    class A {
+        public void foo() {
+            System.out.println(this.getClass().getName());
+        }
+    }
+
+    class B extends A {
+    }
+
     private void log(ByteBuffer a) {
         Integer x = 4;
         foo(x);
@@ -64,21 +73,9 @@ public class BasicTest {
 
     @Test
     public void testxx() {
-        byte[] temp = new byte[] { 1, 2, 3 };
-        byte[] temp2 = new byte[] { 1, 2, 3 };
-
-        System.out.println(temp.hashCode());
-        System.out.println(temp2.hashCode());
-
-        ByteBuffer buffer = ByteBuffer.allocateDirect(3);
-        buffer.put((byte) 1);
-        buffer.put((byte) 1);
-        buffer.put((byte) 1);
-        buffer.put((byte) 1);
-        System.out.println(buffer.position());
-        System.out.println(buffer.limit());
-        System.out.println(buffer.capacity());
-
+        B b= new B();
+        b.foo();;
+      
     }
 
     @Test

@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.common;
+package org.apache.kylin.common.util;
 
 import java.io.File;
 

@@ -18,11 +18,12 @@
 package org.apache.kylin.engine.spark;
 
 import org.apache.commons.cli.Options;
-import org.apache.kylin.job.common.OptionsHelper;
+import org.apache.kylin.common.util.AbstractApplication;
+import org.apache.kylin.common.util.OptionsHelper;
 
 /**
  */
-public class SparkHelloWorld extends AbstractSparkApplication {
+public class SparkHelloWorld extends AbstractApplication {
 
     @Override
     protected Options getOptions() {

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.source.kafka.util;
+package org.apache.kylin.source.kafka.diagnose;
 
 import java.io.BufferedReader;
 import java.io.File;

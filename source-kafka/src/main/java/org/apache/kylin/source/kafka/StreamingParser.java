@@ -34,20 +34,56 @@
 
 package org.apache.kylin.source.kafka;
 
+import java.lang.reflect.Constructor;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import kafka.message.MessageAndOffset;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.engine.streaming.StreamingMessage;
+import org.apache.kylin.metadata.model.IntermediateColumnDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.kafka.config.KafkaConfig;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
+ * By convention stream parsers should have a constructor with (List<TblColRef> allColumns, String propertiesStr) as params
  */
-public interface StreamingParser {
+public abstract class StreamingParser {
 
     /**
      * @param kafkaMessage
      * @return StreamingMessage must not be NULL
      */
-    StreamingMessage parse(MessageAndOffset kafkaMessage);
+    abstract public StreamingMessage parse(MessageAndOffset kafkaMessage);
 
-    boolean filter(StreamingMessage streamingMessage);
+    abstract public boolean filter(StreamingMessage streamingMessage);
 
+    public static StreamingParser getStreamingParser(KafkaConfig kafkaConfig) throws ReflectiveOperationException {
+        final String cubeName = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(kafkaConfig.getName()).getCubeName();
+        final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+        List<TblColRef> columns = Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(), new Function<IntermediateColumnDesc, TblColRef>() {
+            @Nullable
+            @Override
+            public TblColRef apply(IntermediateColumnDesc input) {
+                return input.getColRef();
+            }
+        });
+        if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
+            Class clazz = Class.forName(kafkaConfig.getParserName());
+            Constructor constructor = clazz.getConstructor(List.class, String.class);
+            return (StreamingParser) constructor.newInstance(columns, kafkaConfig.getParserProperties());
+        } else {
+            throw new IllegalStateException("invalid StreamingConfig:" + kafkaConfig.getName() + " missing property StreamingParser");
+        }
+    }
 }

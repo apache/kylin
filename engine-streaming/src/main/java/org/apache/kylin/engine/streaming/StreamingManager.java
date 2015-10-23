@@ -40,7 +40,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -72,7 +76,6 @@ public class StreamingManager {
 
     public static final Serializer<StreamingConfig> STREAMING_SERIALIZER = new JsonSerializer<StreamingConfig>(StreamingConfig.class);
 
-
     private KylinConfig config;
 
     // name ==> StreamingConfig
@@ -102,16 +105,16 @@ public class StreamingManager {
             if (r != null) {
                 return r;
             }
-            try{
-            r = new StreamingManager(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one streamingManager singleton exist");
+            try {
+                r = new StreamingManager(config);
+                CACHE.put(config, r);
+                if (CACHE.size() > 1) {
+                    logger.warn("More than one streamingManager singleton exist");
+                }
+                return r;
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to init StreamingManager from " + config, e);
             }
-            return r;
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to init StreamingManager from " + config, e);
-        }
         }
     }
 
@@ -131,7 +134,6 @@ public class StreamingManager {
         return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + StringUtils.join(partitions, "_") + ".json";
     }
 
-
     public StreamingConfig getStreamingConfig(String name) {
         return streamingMap.get(name);
     }
@@ -139,7 +141,6 @@ public class StreamingManager {
     public List<StreamingConfig> listAllStreaming() {
         return new ArrayList<>(streamingMap.values());
     }
-
 
     /**
      * Reload StreamingConfig from resource store It will be triggered by an desc
@@ -168,7 +169,6 @@ public class StreamingManager {
         streamingMap.remove(streamingConfig.getName());
     }
 
-
     public StreamingConfig getConfig(String name) {
         name = name.toUpperCase();
         return streamingMap.get(name);
@@ -195,7 +195,6 @@ public class StreamingManager {
             throw new IllegalArgumentException("StreamingConfig '" + name + "' does not exist.");
         }
 
-
         // Save Source
         String path = desc.getResourcePath();
         getStore().putResource(path, desc, STREAMING_SERIALIZER);
@@ -208,7 +207,6 @@ public class StreamingManager {
         return ndesc;
     }
 
-
     public StreamingConfig saveStreamingConfig(StreamingConfig streamingConfig) throws IOException {
         if (streamingConfig == null || StringUtils.isEmpty(streamingConfig.getName())) {
             throw new IllegalArgumentException();
@@ -219,7 +217,7 @@ public class StreamingManager {
 
         String path = formatStreamingConfigPath(streamingConfig.getName());
         getStore().putResource(path, streamingConfig, StreamingConfig.SERIALIZER);
-        streamingMap.put(streamingConfig.getName(),streamingConfig);
+        streamingMap.put(streamingConfig.getName(), streamingConfig);
         return streamingConfig;
     }
 
@@ -318,8 +316,8 @@ public class StreamingManager {
         }
 
         logger.debug("Loaded " + streamingMap.size() + " StreamingConfig(s)");
-    }    
-    
+    }
+
     private final ObjectMapper mapper = new ObjectMapper();
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(Integer.class), SimpleType.construct(Long.class));
 
