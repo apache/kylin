@@ -24,6 +24,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.UnsignedBytes;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -55,6 +56,7 @@ import org.apache.kylin.cube.model.*;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
 import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
 import org.apache.kylin.engine.spark.util.IteratorUtils;
@@ -78,6 +80,7 @@ import org.apache.spark.api.java.function.*;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
+
 import scala.Tuple2;
 
 import java.io.File;
@@ -455,7 +458,7 @@ public class SparkCubing extends AbstractSparkApplication {
     }
 
     private Configuration getConfigurationForHFile(String hTableName) throws IOException {
-        final Configuration conf = HBaseConnection.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl());
+        final Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         Job job = Job.getInstance(conf);
         job.setMapOutputKeyClass(ImmutableBytesWritable.class);
         job.setMapOutputValueClass(KeyValue.class);
@@ -469,7 +472,7 @@ public class SparkCubing extends AbstractSparkApplication {
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
-        final Configuration hbaseConf = HBaseConnection.newHBaseConfiguration(kylinConfig.getStorageUrl());
+        final Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
         FileSystem fs = FileSystem.get(hbaseConf);
         FsPermission permission = new FsPermission((short) 0777);
         for (HBaseColumnFamilyDesc cf : cubeDesc.getHBaseMapping().getColumnFamily()) {

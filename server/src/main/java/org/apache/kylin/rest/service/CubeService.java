@@ -443,10 +443,7 @@ public class CubeService extends BasicService {
             return htableInfoCache.get(tableName);
         }
 
-        // Get HBase storage conf.
-        String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-        Configuration hconf = HBaseConnection.newHBaseConfiguration(hbaseUrl);
-
+        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         HTable table = null;
         HBaseResponse hr = null;
         long tableSize = 0;

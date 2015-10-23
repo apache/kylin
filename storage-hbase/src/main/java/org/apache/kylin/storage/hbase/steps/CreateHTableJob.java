@@ -33,7 +33,6 @@ import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.LongWritable;
@@ -61,6 +60,7 @@ import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +103,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
-        Configuration conf = HadoopUtil.getCurrentHBaseConfiguration();
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 
         try {
 

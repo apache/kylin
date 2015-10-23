@@ -35,8 +35,8 @@ import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.storage.hbase.HBaseConnection;
-import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.apache.kylin.storage.hbase.cube.v1.HBaseClientKVIterator;
+import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,8 +61,7 @@ public class ITInvertedIndexHBaseTest extends HBaseMetadataTestCase {
         this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
         this.seg = ii.getFirstSegment();
 
-        String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-        Configuration hconf = HBaseConnection.newHBaseConfiguration(hbaseUrl);
+        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         hconn = HConnectionManager.createConnection(hconf);
 
         this.info = new TableRecordInfo(seg);
