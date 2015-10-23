@@ -430,10 +430,7 @@ public class CubeService extends BasicService {
      * @throws IOException Exception when HTable resource is not closed correctly.
      */
     public HBaseResponse getHTableInfo(String tableName) throws IOException {
-        // Get HBase storage conf.
-        String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-        Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
-
+        Configuration hconf = HadoopUtil.getCurrentHBaseConfiguration();
         HTable table = null;
         HBaseResponse hr = null;
         long tableSize = 0;

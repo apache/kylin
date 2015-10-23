@@ -19,12 +19,8 @@
 package org.apache.kylin.common.util;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -33,11 +29,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.common.KylinConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HadoopUtil {
-    private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
 
     private static ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
 
@@ -60,12 +53,8 @@ public class HadoopUtil {
 
     public static Configuration getCurrentHBaseConfiguration() {
         if (hbaseConfig.get() == null) {
-            Configuration configuration = HBaseConfiguration.create(new Configuration());
-            String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
-            if (StringUtils.isNotEmpty(hbaseClusterFs)) {
-                configuration.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
-            }
-            hbaseConfig.set(configuration);
+            String storageUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
+            hbaseConfig.set(newHBaseConfiguration(storageUrl));
         }
         return hbaseConfig.get();
     }
@@ -101,52 +90,26 @@ public class HadoopUtil {
     }
 
     /**
-     * e.g.
-     * 0. hbase (recommended way)
-     * 1. hbase:zk-1.hortonworks.com,zk-2.hortonworks.com,zk-3.hortonworks.com:2181:/hbase-unsecure
-     * 2. hbase:zk-1.hortonworks.com,zk-2.hortonworks.com,zk-3.hortonworks.com:2181
-     * 3. hbase:zk-1.hortonworks.com:2181:/hbase-unsecure
-     * 4. hbase:zk-1.hortonworks.com:2181
      */
     public static Configuration newHBaseConfiguration(String url) {
-        Configuration conf = HBaseConfiguration.create();
-        if (StringUtils.isEmpty(url))
-            return conf;
+        Configuration conf = HBaseConfiguration.create(getCurrentConfiguration());
+        
+        // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
+        assert (StringUtils.isEmpty(url) || "hbase".equals(url)) : "for hbase storage, pls set 'kylin.storage.url=hbase' in kylin.properties";
 
-        // chop off "hbase"
-        if (url.startsWith("hbase") == false)
-            throw new IllegalArgumentException("hbase url must start with 'hbase' -- " + url);
-
-        url = StringUtils.substringAfter(url, "hbase");
-        if (StringUtils.isEmpty(url))
-            return conf;
-
-        // case of "hbase:domain.com:2181:/hbase-unsecure"
-        Pattern urlPattern = Pattern.compile("[:]((?:[\\w\\-.]+)(?:\\,[\\w\\-.]+)*)[:](\\d+)(?:[:](.+))");
-        Matcher m = urlPattern.matcher(url);
-        if (m.matches() == false)
-            throw new IllegalArgumentException("HBase URL '" + url + "' is invalid, expected url is like '" + "hbase:domain.com:2181:/hbase-unsecure" + "'");
-
-        logger.debug("Creating hbase conf by parsing -- " + url);
-
-        String quorums = m.group(1);
-        String quorum = null;
-        try {
-            String[] tokens = quorums.split(",");
-            for (String s : tokens) {
-                quorum = s;
-                InetAddress.getByName(quorum);
-            }
-        } catch (UnknownHostException e) {
-            throw new IllegalArgumentException("Zookeeper quorum is invalid: " + quorum + "; urlString=" + url, e);
+        // support hbase using a different FS
+        String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
+        if (StringUtils.isNotEmpty(hbaseClusterFs)) {
+            conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
         }
-        conf.set(HConstants.ZOOKEEPER_QUORUM, quorums);
-
-        String port = m.group(2);
-        conf.set(HConstants.ZOOKEEPER_CLIENT_PORT, port);
-
-        String znodePath = m.group(3);
-        conf.set(HConstants.ZOOKEEPER_ZNODE_PARENT, znodePath);
+        
+        // https://issues.apache.org/jira/browse/KYLIN-953
+        if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
+            conf.set("hadoop.tmp.dir", "/tmp");
+        }
+        if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
+            conf.set("hbase.fs.tmp.dir", "/tmp");
+        }
 
         // reduce rpc retry
         conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
@@ -154,10 +117,6 @@ public class HadoopUtil {
         conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
         // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
 
-        String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
-        if (StringUtils.isNotEmpty(hbaseClusterFs)) {
-            conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
-        }
         return conf;
     }
 
