@@ -349,9 +349,10 @@ public class CubeController extends BasicController {
         }
 
         MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        // KYLIN-958: disallow data model change
+        // KYLIN-958: disallow data model structure change
+        DataModelDesc modelDesc = null;
         if (StringUtils.isNotEmpty(cubeRequest.getModelDescData())) {
-            DataModelDesc modelDesc = deserializeDataModelDesc(cubeRequest);
+            modelDesc = deserializeDataModelDesc(cubeRequest);
             if (modelDesc == null) {
                 return cubeRequest;
             }
@@ -380,6 +381,9 @@ public class CubeController extends BasicController {
         }
 
         try {
+            if (modelDesc != null)
+                metadataManager.updateDataModelDesc(modelDesc);
+            
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);

@@ -22,7 +22,8 @@ import java.util.Iterator;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.IntIterator;
 
 /**
  * Within a partition (per timestampGranularity), records are further sliced
@@ -75,7 +76,7 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
         return containers[col];
     }
 
-    public Iterator<RawTableRecord> iterateWithBitmap(final ConciseSet resultBitMap) {
+    public Iterator<RawTableRecord> iterateWithBitmap(final RoaringBitmap resultBitMap) {
         if (resultBitMap == null) {
             return this.iterator();
         } else {
@@ -83,27 +84,20 @@ public class Slice implements Iterable<RawTableRecord>, Comparable<Slice> {
             final ImmutableBytesWritable temp = new ImmutableBytesWritable();
 
             return new Iterator<RawTableRecord>() {
-                int i = 0;
-                int iteratedCount = 0;
-                int resultSize = resultBitMap.size();
+                IntIterator iter = resultBitMap.getIntIterator();
 
                 @Override
                 public boolean hasNext() {
-                    return iteratedCount < resultSize;
+                    return iter.hasNext();
                 }
 
                 @Override
                 public RawTableRecord next() {
-                    while (!resultBitMap.contains(i)) {
-                        i++;
-                    }
+                    int i = iter.next();
                     for (int col = 0; col < nColumns; col++) {
                         containers[col].getValueAt(i, temp);
                         rec.setValueBytes(col, temp);
                     }
-                    iteratedCount++;
-                    i++;
-
                     return rec;
                 }
 

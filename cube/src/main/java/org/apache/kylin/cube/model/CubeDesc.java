@@ -562,6 +562,17 @@ public class CubeDesc extends RootPersistentEntity {
     private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
+        
+        // Although FK derives PK automatically, user unaware of this can declare PK as derived dimension explicitly.
+        // In that case, derivedCols[] will contain a FK which is transformed from the PK by initDimensionColRef().
+        // Must drop FK from derivedCols[] before continue.
+        for (int i = 0; i < derivedCols.length; i++) {
+            if (ArrayUtils.contains(hostCols, derivedCols[i])) {
+                derivedCols = (TblColRef[]) ArrayUtils.remove(derivedCols, i);
+                extra = (String[]) ArrayUtils.remove(extra, i);
+                i--;
+            }
+        }
 
         Array<TblColRef> hostColArray = new Array<TblColRef>(hostCols);
         List<DeriveInfo> infoList = hostToDerivedMap.get(hostColArray);

@@ -44,6 +44,13 @@ import com.google.common.collect.Sets;
  * @author yangli9
  */
 public class KylinConfig {
+    
+    /*
+     * NO NEED TO DEFINE PUBLIC CONSTANTS FOR KEY NAMES!
+     * 
+     * Kylin configuration is exposed as public methods. A client never need to access key names directly.
+     * Feel free to hard code key names, as long as they are encapsulated in this class. It reads better!
+     */
 
     public static final String KYLIN_STORAGE_URL = "kylin.storage.url";
 
@@ -96,11 +103,6 @@ public class KylinConfig {
 
     public static final String KYLIN_HBASE_CLUSTER_FS = "kylin.hbase.cluster.fs";
 
-    public static final String HIVE_PASSWORD = "hive.password";
-
-    public static final String HIVE_USER = "hive.user";
-
-    public static final String HIVE_URL = "hive.url";
     /**
      * Kylin properties file
      */
@@ -132,7 +134,7 @@ public class KylinConfig {
 
     public static final String HBASE_REGION_COUNT_MIN = "kylin.hbase.region.count.min";
     public static final String HBASE_REGION_COUNT_MAX = "kylin.hbase.region.count.max";
-    
+
     // static cached instances
     private static KylinConfig ENV_INSTANCE = null;
 
@@ -265,20 +267,42 @@ public class KylinConfig {
 
     // ============================================================================
 
+    public boolean isHiveReroutingEnabled() {
+	return Boolean.parseBoolean(getOptional("kylin.route.hive.enabled", "false")); 
+    }
+
+    public String getHiveRerouteUrl() {
+        return getOptional("kylin.route.hive.url", "jdbc:hive2://");
+    }
+
+    public String getHiveRerouteUsername() {
+        return getOptional("kylin.route.hive.username", "");
+    }
+
+    public String getHiveReroutePassword() {
+        return getOptional("kylin.route.hive.password", "");
+    }
+
     public String getStorageUrl() {
         return storageUrl;
     }
 
+    /** Use the hive reroute feature instead */
+    @Deprecated
     public String getHiveUrl() {
-        return getOptional(HIVE_URL, "");
+        return getOptional("hive.url", "");
     }
 
+    /** Use the hive reroute feature instead */
+    @Deprecated
     public String getHiveUser() {
-        return getOptional(HIVE_USER, "");
+        return getOptional("hive.user", "");
     }
 
+    /** Use the hive reroute feature instead */
+    @Deprecated
     public String getHivePassword() {
-        return getOptional(HIVE_PASSWORD, "");
+        return getOptional("hive.password", "");
     }
 
     public String getHdfsWorkingDirectory() {

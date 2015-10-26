@@ -28,7 +28,7 @@ import org.apache.kylin.dict.Dictionary;
 
 import com.ning.compress.lzf.LZFDecoder;
 import com.ning.compress.lzf.LZFEncoder;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import org.roaringbitmap.RoaringBitmap;
 
 /**
  * @author yangli9
@@ -63,8 +63,8 @@ public class CompressedValueContainer implements ColumnValueContainer {
     }
 
     @Override
-    public ConciseSet getBitMap(Integer startId, Integer endId) {
-        ConciseSet ret = new ConciseSet();
+    public RoaringBitmap getBitMap(Integer startId, Integer endId) {
+        RoaringBitmap ret = new RoaringBitmap();
         int nullId = Dictionary.NULL_ID[valueLen];
 
         if (startId == null && endId == null) {

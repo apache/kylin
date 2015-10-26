@@ -41,9 +41,7 @@ Advanced Topics
 
 1.[Check Kylin Metadata Store](howto/howto_backup_metadata.html)
 
-2.[Clean/Export Kylin HBase data](howto/howto_backup.html)
-
-3.[Advanced settings of Kylin environment](install/advance_settings.html)
+2.[Advanced settings of Kylin environment](install/advance_settings.html)
 
 ---
 

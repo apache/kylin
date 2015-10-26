@@ -75,6 +75,11 @@
   githubId: xduo
   org: Alipay
   role: PMC
+- name: Ankur Bansal
+  apacheId: abansal
+  githubId: abansal
+  org: eBay
+  role: PMC
 - name: Xu Jiang (蒋旭)
   apacheId: jiangxu
   githubId: jiangxuchina

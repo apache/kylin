@@ -62,6 +62,7 @@ import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.util.HiveReroute;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.slf4j.Logger;
@@ -98,7 +99,7 @@ public class QueryService extends BasicService {
         tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         userTableName = tableNameBase + USER_TABLE_NAME;
-        
+
         badQueryDetector.start();
     }
 
@@ -109,9 +110,9 @@ public class QueryService extends BasicService {
     public SQLResponse query(SQLRequest sqlRequest) throws Exception {
         try {
             badQueryDetector.queryStart(Thread.currentThread(), sqlRequest);
-            
+
             return queryWithSqlMassage(sqlRequest);
-            
+
         } finally {
             badQueryDetector.queryEnd(Thread.currentThread());
         }
@@ -369,8 +370,20 @@ public class QueryService extends BasicService {
                     oneRow.add((resultSet.getString(i + 1)));
                 }
 
-                results.add(new LinkedList<String>(oneRow));
+                results.add(new ArrayList<String>(oneRow));
                 oneRow.clear();
+            }
+        } catch (SQLException sqlException) {
+            // hive maybe able to answer where kylin failed
+            HiveReroute reroute = new HiveReroute();
+            if (reroute.shouldReroute(sqlException) == false) {
+                throw sqlException;
+            }
+            try {
+                reroute.query(sql, results, columnMetas);
+            } catch (Throwable ex) {
+                logger.error("Reroute hive failed", ex);
+                throw sqlException;
             }
         } finally {
             close(resultSet, stat, conn);

@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>1.1-incubating-SNAPSHOT</version>
+        <version>1.1-incubating</version>
     </parent>
 
     <artifactId>kylin-job</artifactId>
@@ -79,10 +79,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

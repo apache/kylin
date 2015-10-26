@@ -16,28 +16,31 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.invertedindex.index;
+package org.apache.kylin.rest.util;
 
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import javax.servlet.ServletContextEvent;
 
-import org.roaringbitmap.RoaringBitmap;
+public class Log4jConfigListener extends org.springframework.web.util.Log4jConfigListener {
 
-/**
- * @author yangli9
- */
-public interface ColumnValueContainer {
+    private boolean isTesting;
 
-    void append(ImmutableBytesWritable valueBytes);
+    public Log4jConfigListener() {
+        // set by DebugTomcat
+        this.isTesting = "testing".equals(System.getProperty("spring.profiles.active"));
+    }
 
-    void closeForChange();
+    @Override
+    public void contextInitialized(ServletContextEvent event) {
+        if (!isTesting) {
+            super.contextInitialized(event);
+        }
+    }
 
-    int getSize();
-
-    // works only after closeForChange()
-    void getValueAt(int i, ImmutableBytesWritable valueBytes);
-
-    RoaringBitmap getBitMap(Integer startId, Integer endId);
-
-    int getMaxValueId();
+    @Override
+    public void contextDestroyed(ServletContextEvent event) {
+        if (!isTesting) {
+            super.contextDestroyed(event);
+        }
+    }
 
 }

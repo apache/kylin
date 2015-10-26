@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -91,8 +92,8 @@ public class CubingJob extends DefaultChainedExecutable {
         content = content.replaceAll("\\$\\{duration\\}", getDuration() / 60000 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", getMapReduceWaitTime() / 60000 + "mins");
         content = content.replaceAll("\\$\\{last_update_time\\}", new Date(getLastModified()).toString());
-        content = content.replaceAll("\\$\\{submitter\\}", getSubmitter());
-        content = content.replaceAll("\\$\\{error_log\\}", logMsg);
+        content = content.replaceAll("\\$\\{submitter\\}", StringUtil.noBlank(getSubmitter(), "missing submitter"));
+        content = content.replaceAll("\\$\\{error_log\\}", StringUtil.noBlank(logMsg, "no error log"));
 
         try {
             InetAddress inetAddress = InetAddress.getLocalHost();

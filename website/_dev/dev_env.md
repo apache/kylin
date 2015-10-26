@@ -75,8 +75,9 @@ Run a end-to-end cube building test, these special test cases will populate some
 It might take a while (maybe one hour), please keep patient.
  
 {% highlight Groff markup %}
-	mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false -P sandbox
-	mvn test -Dtest=org.apache.kylin.job.BuildIIWithEngineTest -DfailIfNoTests=false -P sandbox
+	mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false -Dhdp.version=<hdp-version> -P sandbox
+	
+	mvn test -Dtest=org.apache.kylin.job.BuildIIWithEngineTest -DfailIfNoTests=false -Dhdp.version=<hdp-version> -P sandbox
 {% endhighlight %}
 	
 Run other tests, the end-to-end cube building test is exclueded
