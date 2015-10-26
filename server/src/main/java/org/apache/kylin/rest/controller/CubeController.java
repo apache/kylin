@@ -47,7 +47,6 @@ import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.CubeSegmentRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
-import org.apache.kylin.rest.request.StreamingRequest;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.service.CubeService;
@@ -93,7 +92,7 @@ public class CubeController extends BasicController {
     @Autowired
     private JobService jobService;
 
-    @RequestMapping(value = "", method = {RequestMethod.GET})
+    @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return cubeService.getCubes(cubeName, projectName, modelName, limit, offset);
@@ -107,7 +106,7 @@ public class CubeController extends BasicController {
      * @throws UnknownHostException
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET })
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -129,7 +128,7 @@ public class CubeController extends BasicController {
      * @param notifyList
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/notify_list", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT })
     @ResponseBody
     public void updateNotifyList(@PathVariable String cubeName, @RequestBody List<String> notifyList) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -147,7 +146,7 @@ public class CubeController extends BasicController {
 
     }
 
-    @RequestMapping(value = "/{cubeName}/cost", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
         try {
@@ -159,7 +158,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/coprocessor", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/coprocessor", method = { RequestMethod.PUT })
     @ResponseBody
     public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
         try {
@@ -177,7 +176,7 @@ public class CubeController extends BasicController {
      *
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName, @RequestParam(value = "lookupTable") String lookupTable) {
         try {
@@ -195,7 +194,7 @@ public class CubeController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/rebuild", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest jobBuildRequest) {
         try {
@@ -212,7 +211,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/disable", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance disableCube(@PathVariable String cubeName) {
         try {
@@ -230,7 +229,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/purge", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance purgeCube(@PathVariable String cubeName) {
         try {
@@ -248,7 +247,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/enable", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance enableCube(@PathVariable String cubeName) {
         try {
@@ -265,7 +264,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}", method = {RequestMethod.DELETE})
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE })
     @ResponseBody
     public void deleteCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -275,8 +274,8 @@ public class CubeController extends BasicController {
 
         //drop related StreamingConfig KafkaConfig if exist
         try {
-            List<StreamingConfig> configs= streamingService.listAllStreamingConfigs(cubeName);
-            for(StreamingConfig config:configs){
+            List<StreamingConfig> configs = streamingService.listAllStreamingConfigs(cubeName);
+            for (StreamingConfig config : configs) {
                 try {
                     streamingService.dropStreamingConfig(config);
                 } catch (IOException e) {
@@ -310,7 +309,7 @@ public class CubeController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.POST})
+    @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
 
@@ -337,7 +336,7 @@ public class CubeController extends BasicController {
         }
 
         //streaming Cube
-        if (cubeRequest.getStreamingCube().equals("true")) {
+        if (cubeRequest.getStreamingCube() != null && cubeRequest.getStreamingCube().equals("true")) {
             StreamingConfig streamingConfig = deserializeStreamingDesc(cubeRequest);
             KafkaConfig kafkaConfig = deserializeKafkaDesc(cubeRequest);
             if (streamingConfig == null) {
@@ -392,7 +391,6 @@ public class CubeController extends BasicController {
 
         }
 
-
         cubeRequest.setUuid(desc.getUuid());
         cubeRequest.setSuccessful(true);
         return cubeRequest;
@@ -405,7 +403,7 @@ public class CubeController extends BasicController {
      * @throws JsonProcessingException
      * @throws IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.PUT})
+    @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
 
@@ -486,7 +484,6 @@ public class CubeController extends BasicController {
 
         }
 
-
         String descData = JsonUtil.writeValueAsIndentString(desc);
         cubeRequest.setCubeDescData(descData);
         cubeRequest.setSuccessful(true);
@@ -499,7 +496,7 @@ public class CubeController extends BasicController {
      * @return true
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/hbase", method = {RequestMethod.GET})
+    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET })
     @ResponseBody
     public List<HBaseResponse> getHBaseInfo(@PathVariable String cubeName) {
         List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
@@ -536,7 +533,7 @@ public class CubeController extends BasicController {
         return hbase;
     }
 
-    @RequestMapping(value = "/{cubeName}/segments", method = {RequestMethod.POST})
+    @RequestMapping(value = "/{cubeName}/segments", method = { RequestMethod.POST })
     @ResponseBody
     public CubeSegmentRequest appendSegment(@PathVariable String cubeName, @RequestBody CubeSegmentRequest cubeSegmentRequest) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -619,7 +616,6 @@ public class CubeController extends BasicController {
         return desc;
     }
 
-
     private KafkaConfig deserializeKafkaDesc(CubeRequest cubeRequest) {
         KafkaConfig desc = null;
         try {
@@ -643,7 +639,7 @@ public class CubeController extends BasicController {
      */
     private String omitMessage(List<String> errors) {
         StringBuffer buffer = new StringBuffer();
-        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext(); ) {
+        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext();) {
             String string = (String) iterator.next();
             buffer.append(string);
             buffer.append("\n");
