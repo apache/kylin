@@ -11,6 +11,7 @@ import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings("rawtypes")
@@ -32,8 +33,18 @@ public class CubeGridTable {
         return dictionaryMap;
     }
 
-    public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) {
+    public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) throws NotEnoughGTInfoException {
         Map<TblColRef, Dictionary<?>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
+        Cuboid cuboid = Cuboid.findById(cubeSeg.getCubeDesc(), cuboidId);
+        for (TblColRef dim : cuboid.getColumns()) {
+            if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(dim)) {
+                Dictionary dict = dictionaryMap.get(dim);
+                if (dict == null) {
+                    throw new NotEnoughGTInfoException();
+                }
+            }
+        }
+
         return newGTInfo(cubeSeg.getCubeDesc(), cuboidId, dictionaryMap);
     }
 
@@ -48,6 +59,7 @@ public class CubeGridTable {
             int colIndex = mapping.getIndexOf(dim);
             if (cubeDesc.getRowkey().isUseDictionary(dim)) {
                 Dictionary dict = dictionaryMap.get(dim);
+                Preconditions.checkState(dict != null);
                 dictionaryByColIdx.put(colIndex, dict);
             } else {
                 int len = cubeDesc.getRowkey().getColumnLength(dim);
@@ -66,5 +78,4 @@ public class CubeGridTable {
         builder.enableColumnBlock(mapping.getColumnBlocks());
         return builder.build();
     }
-
 }

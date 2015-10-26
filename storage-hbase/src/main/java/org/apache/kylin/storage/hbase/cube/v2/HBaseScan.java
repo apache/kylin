@@ -45,7 +45,7 @@ public class HBaseScan {
             int colLength = info.getCodeSystem().maxCodeLength(c);
 
             if (rec.get(c).array() != null) {
-                Preconditions.checkArgument(colLength == rec.get(c).length(), "ColLength :" + colLength + " not equals cols[c] length: " + rec.get(c).length() + " c is " + c);
+                Preconditions.checkArgument(colLength == rec.get(c).length(), "ColLength :" + colLength + " != cols[c].length: " + rec.get(c).length() + ", c is " + c);
                 System.arraycopy(rec.get(c).array(), rec.get(c).offset(), buf.array(), buf.offset() + pos, rec.get(c).length());
             } else {
                 Arrays.fill(buf.array(), buf.offset() + pos, buf.offset() + pos + colLength, fill);
