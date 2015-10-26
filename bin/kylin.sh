@@ -21,9 +21,20 @@ dir=$(dirname ${0})
 source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
 
+# start command
 if [ $1 == "start" ]
 then
 
+    if [ -f "${KYLIN_HOME}/pid" ]
+    then
+        PID=`cat $KYLIN_HOME/pid`
+        if ps -p $PID > /dev/null
+        then
+          echo "Kylin is running, stop it first"
+          exit 1
+        fi
+    fi
+    
     tomcat_root=${dir}/../tomcat
     export tomcat_root
 
@@ -71,7 +82,7 @@ then
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dkylin.hbase.dependency=${hbase_dependency} \
     -Dspring.profiles.active=${spring_profile} \
-    org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start > ${tomcat_root}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+    org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${tomcat_root}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
     if [ "$useSandbox" = "true" ]
         then echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
@@ -80,24 +91,44 @@ then
     fi
     echo "You can check the log at ${tomcat_root}/logs/kylin.log"
     exit 0
+
+# stop command
 elif [ $1 == "stop" ]
 then
-    if [ ! -f "${KYLIN_HOME}/pid" ]
+    if [ -f "${KYLIN_HOME}/pid" ]
     then
-        echo "kylin is not running, please check"
-        exit 1
-    fi
-    pid=`cat ${KYLIN_HOME}/pid`
-    if [ "$pid" = "" ]
-    then
-        echo "kylin is not running, please check"
-        exit 1
+        PID=`cat $KYLIN_HOME/pid`
+        if ps -p $PID > /dev/null
+        then
+           echo "stopping Kylin:$PID"
+           kill $PID
+           rm ${KYLIN_HOME}/pid
+           exit 0
+        else
+           echo "Kylin is not running, please check"
+           exit 1
+        fi
+        
     else
-        echo "stopping kylin:$pid"
-        kill $pid
+        echo "Kylin is not running, please check"
+        exit 1    
     fi
-    rm ${KYLIN_HOME}/pid
-    exit 0
+    
+# tool command
+elif [[ $1 = org.apache.kylin.* ]]
+then
+    #retrive $hive_dependency and $hbase_dependency
+    source ${dir}/find-hive-dependency.sh
+    source ${dir}/find-hbase-dependency.sh
+    #retrive $KYLIN_EXTRA_START_OPTS
+    if [ -f "${dir}/setenv-tool.sh" ]
+        then source ${dir}/setenv-tool.sh
+    fi
+
+    export HBASE_CLASSPATH=${KYLIN_HOME}/lib/*:$hive_dependency:${HBASE_CLASSPATH}
+
+    exec hbase "$@"
+
 else
     echo "usage: kylin.sh start or kylin.sh stop"
     exit 1

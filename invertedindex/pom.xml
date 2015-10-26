@@ -21,7 +21,7 @@
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
-        <version>1.1-incubating-SNAPSHOT</version>
+        <version>1.1-incubating</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kylin-invertedindex</artifactId>
@@ -87,9 +87,13 @@
             <artifactId>compress-lzf</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+        </dependency>
+        <!--<dependency>
             <groupId>com.n3twork.druid</groupId>
             <artifactId>extendedset</artifactId>
-        </dependency>
+        </dependency>-->
 
         <!-- Env & Test -->
 

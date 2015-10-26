@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>1.1-incubating-SNAPSHOT</version>
+        <version>1.1-incubating</version>
     </parent>
 
     <dependencies>
@@ -138,7 +138,8 @@
                                     <include>org.apache.kylin:kylin-storage</include>
                                     <include>org.apache.kylin:kylin-invertedindex</include>
                                     <include>com.ning:compress-lzf</include>
-                                    <include>com.n3twork.druid:extendedset</include>
+                                    <!--<include>com.n3twork.druid:extendedset</include>-->
+                                    <include>org.roaringbitmap:RoaringBitmap</include>
                                     <include>net.sf.trove4j:*</include>
                                     <!-- include>com.fasterxml.jackson.core:*</include -->
                                     <!-- include>org.apache.commons:commons-lang3</include -->
@@ -181,7 +182,9 @@
                             <numUnapprovedLicenses>0</numUnapprovedLicenses>
                             <excludes>
                                 <!-- protobuf -->
-                                <exclude>src/main/java/org/apache/kylin/storage/hbase/coprocessor/endpoint/generated/IIProtos.java</exclude>
+                                <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/coprocessor/endpoint/generated/IIProtos.java
+                                </exclude>
                                 <exclude>**/*.proto</exclude>
                             </excludes>
                         </configuration>

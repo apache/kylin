@@ -19,7 +19,7 @@ limitations under the License. See accompanying LICENSE file.
 		  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
          version="2.5">
 
-    <display-name>Kylin RESt Service</display-name>
+    <display-name>Kylin REST Service</display-name>
 
     <welcome-file-list>
         <welcome-file>/index.html</welcome-file>
@@ -32,7 +32,7 @@ limitations under the License. See accompanying LICENSE file.
 
     <context-param>
         <param-name>log4jConfigLocation</param-name>
-        <param-value>classpath:log4j.properties</param-value>
+        <param-value>classpath:kylin-server-log4j.properties</param-value>
     </context-param>
     <context-param>
         <param-name>contextConfigLocation</param-name>
@@ -44,7 +44,7 @@ limitations under the License. See accompanying LICENSE file.
     </context-param>
 
     <listener>
-        <listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+        <listener-class>org.apache.kylin.rest.util.Log4jConfigListener</listener-class>
     </listener>
 
     <listener>
