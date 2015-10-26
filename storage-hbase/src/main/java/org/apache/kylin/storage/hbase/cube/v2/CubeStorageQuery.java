@@ -11,6 +11,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.gridtable.NotEnoughGTInfoException;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
@@ -96,7 +97,14 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
-            scanners.add(new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation));
+            CubeSegmentScanner scanner;
+            try {
+                scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation);
+            } catch (NotEnoughGTInfoException e) {
+                logger.info("Cannot construct Segment {}'s GTInfo, this may due to empty segment or broken metadata");
+                continue;
+            }
+            scanners.add(scanner);
         }
 
         if (scanners.isEmpty())

@@ -69,11 +69,11 @@ public class CubeCodeSystem implements IGTCodeSystem {
         serializers = new DataTypeSerializer[info.getColumnCount()];
         for (int i = 0; i < info.getColumnCount(); i++) {
             // dimension with dictionary
-            if (dictionaryMap.get(i) != null) {
+            if (dictionaryMap.containsKey(i)) {
                 serializers[i] = new DictionarySerializer(dictionaryMap.get(i));
             }
             // dimension of fixed length
-            else if (fixLenMap.get(i) != null) {
+            else if (fixLenMap.containsKey(i)) {
                 serializers[i] = new FixLenSerializer(fixLenMap.get(i));
             }
             // metrics
@@ -229,7 +229,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
         public int getStorageBytesEstimate() {
             return dictionary.getSizeOfId();
         }
-        
+
         @Override
         public Object valueOf(byte[] value) {
             throw new UnsupportedOperationException();
@@ -305,7 +305,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
         public int getStorageBytesEstimate() {
             return fixLen;
         }
-        
+
         @Override
         public Object valueOf(byte[] value) {
             try {

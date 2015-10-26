@@ -19,6 +19,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
+import org.apache.kylin.cube.gridtable.NotEnoughGTInfoException;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
@@ -46,7 +47,7 @@ public class CubeSegmentScanner implements IGTScanner {
     final Cuboid cuboid;
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Collection<FunctionDesc> metrics, TupleFilter filter, boolean allowPreAggregate) {
+            Collection<FunctionDesc> metrics, TupleFilter filter, boolean allowPreAggregate) throws NotEnoughGTInfoException {
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
         this.info = CubeGridTable.newGTInfo(cubeSeg, cuboid.getId());
@@ -81,7 +82,8 @@ public class CubeSegmentScanner implements IGTScanner {
         GTInfo trimmedInfo = GTInfo.deserialize(trimmedInfoBytes);
 
         for (GTScanRange range : scanRanges) {
-            scanRequests.add(new GTScanRequest(trimmedInfo, range, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate));
+            scanRequests.add(new GTScanRequest(trimmedInfo, range,//range.replaceGTInfo(trimmedInfo),
+                    gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate));
         }
 
         scanner = new Scanner();

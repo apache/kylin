@@ -145,6 +145,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         byte[] scanRequestBytes = KryoUtils.serialize(scanRequest);
         final ByteString scanRequestBytesString = HBaseZeroCopyByteString.wrap(scanRequestBytes);
+        logger.info("Serialized scanRequestBytes's size is " + scanRequestBytes.length);
 
         ExecutorService executorService = Executors.newFixedThreadPool(rawScans.size());
         final List<byte[]> rowBlocks = Collections.synchronizedList(Lists.<byte[]> newArrayList());
