@@ -28,6 +28,7 @@ import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ServiceTestBase;
+import org.apache.kylin.rest.service.StreamingService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +49,8 @@ public class CubeControllerTest extends ServiceTestBase {
     CubeService cubeService;
     @Autowired
     JobService jobService;
+    @Autowired
+    StreamingService streamingService;
 
     @Before
     public void setup() throws Exception {
@@ -56,8 +59,12 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController = new CubeController();
         cubeController.setCubeService(cubeService);
         cubeController.setJobService(jobService);
+        cubeController.setStreamingService(streamingService);
+        
+        
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
+        
 
     }
 
