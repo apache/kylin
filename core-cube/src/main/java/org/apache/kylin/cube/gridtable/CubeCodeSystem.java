@@ -69,11 +69,11 @@ public class CubeCodeSystem implements IGTCodeSystem {
         serializers = new DataTypeSerializer[info.getColumnCount()];
         for (int i = 0; i < info.getColumnCount(); i++) {
             // dimension with dictionary
-            if (dictionaryMap.containsKey(i)) {
+            if (dictionaryMap.get(i) != null) {
                 serializers[i] = new DictionarySerializer(dictionaryMap.get(i));
             }
             // dimension of fixed length
-            else if (fixLenMap.containsKey(i)) {
+            else if (fixLenMap.get(i) != null) {
                 serializers[i] = new FixLenSerializer(fixLenMap.get(i));
             }
             // metrics
