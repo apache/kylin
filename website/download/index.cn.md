@@ -20,13 +20,13 @@ __二进制包 for HBase 0.98/0.99__
 __二进制包 for HBase 1.1__
 越来越多的用户开始部署使用HBase 1.1或更高版本，我们提供一个在HBase 1.1上编译的Kylin快照二进制包；请注意，这不是一个正式的发布版，没有经过完整的测试。
 
-  * [apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.2-incubating/apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz)
+  * [apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/incubator/kylin/apache-kylin-1.2-incubating-snapshot/apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz)
   * Git commit [3623dd6ff93d76141bb6a5fb623a3421ae78ca93](https://github.com/apache/incubator-kylin/commit/3623dd6ff93d76141bb6a5fb623a3421ae78ca93)
 
 对于HBase 1.0用户，建议您升级到1.1或降级到0.98/0.99.
 
 __构建二进制包__
-可以从各个版本或当前最新的开发分支中生成二进制包，请参考这篇[帮助文档](http://kylin.incubator.apache.org/docs/howto/howto_package.html)
+可以从各个版本或当前最新的开发分支中生成二进制包，请参考这篇[帮助文档](https://kylin.incubator.apache.org/development/howto_package.html)
 
 __以前的版本__
 Apache Kylin的旧版本可以从[归档](https://dist.apache.org/repos/dist/release/incubator/kylin/)中下载。

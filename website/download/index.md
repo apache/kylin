@@ -21,13 +21,13 @@ For convenience, there’s binary package also available:
 __Binary Package (for running on HBase 1.1)__
 As there are more and more HBase 1.1 deployments, an binary snapshot build for HBase 1.1 is provided; Please note this is not a formal release, and it is not fully tested:
 
-* [apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.2-incubating/apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz)
+* [apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/incubator/kylin/apache-kylin-1.2-incubating-snapshot/apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz)
 * Git commit [3623dd6ff93d76141bb6a5fb623a3421ae78ca93](https://github.com/apache/incubator-kylin/commit/3623dd6ff93d76141bb6a5fb623a3421ae78ca93) 
 
 If you're using HBase 1.0, we suggest you to upgrade to 1.1 or downgrade to 0.98/0.99.
 
 __Build Binary Package__
-To build binary package from any version even latest development branch, please refer to this [guide](http://kylin.incubator.apache.org/docs/howto/howto_package.html)
+To build binary package from any version even latest development branch, please refer to this [guide](https://kylin.incubator.apache.org/development/howto_package.html)
 
 __Previous Release__  
  Older releases may be found in the [archives](https://dist.apache.org/repos/dist/release/incubator/kylin/).
