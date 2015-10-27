@@ -19,7 +19,6 @@
 package org.apache.kylin.cube.kv;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -38,8 +37,6 @@ public abstract class AbstractRowKeyEncoder {
     public static final byte DEFAULT_BLANK_BYTE = Dictionary.NULL;
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractRowKeyEncoder.class);
-
-    private static final Map<String, Map<Long, AbstractRowKeyEncoder>> ENCODER_CACHE = new ConcurrentHashMap<String, Map<Long, AbstractRowKeyEncoder>>();
 
     public static AbstractRowKeyEncoder createInstance(CubeSegment cubeSeg, Cuboid cuboid) {
         return new RowKeyEncoder(cubeSeg, cuboid);
