@@ -83,7 +83,7 @@ public class CubeSegmentScanner implements IGTScanner {
         GTInfo trimmedInfo = GTInfo.deserialize(trimmedInfoBytes);
 
         for (GTScanRange range : scanRanges) {
-            scanRequests.add(new GTScanRequest(trimmedInfo, range,//range.replaceGTInfo(trimmedInfo),
+            scanRequests.add(new GTScanRequest(trimmedInfo, range.replaceGTInfo(trimmedInfo),
                     gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate));
         }
 

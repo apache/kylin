@@ -3,9 +3,6 @@ package org.apache.kylin.gridtable;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 public class GTScanRange {
@@ -28,15 +25,13 @@ public class GTScanRange {
     }
 
     public GTScanRange replaceGTInfo(final GTInfo gtInfo) {
+        List<GTRecord> newFuzzyKeys = Lists.newArrayList();
+        for (GTRecord input : fuzzyKeys) {
+            newFuzzyKeys.add(new GTRecord(gtInfo, input.maskForEqualHashComp(), input.cols));
+        }
         return new GTScanRange(new GTRecord(gtInfo, pkStart.maskForEqualHashComp(), pkStart.cols), //
                 new GTRecord(gtInfo, pkEnd.maskForEqualHashComp(), pkEnd.cols), //
-                Lists.transform(fuzzyKeys, new Function<GTRecord, GTRecord>() {
-                    @Nullable
-                    @Override
-                    public GTRecord apply(GTRecord input) {
-                        return new GTRecord(gtInfo, input.maskForEqualHashComp(), input.cols);
-                    }
-                }));
+                newFuzzyKeys);
     }
 
     @Override
