@@ -642,7 +642,7 @@ public class KylinConfig {
         String hbaseMetadataUrl = getMetadataUrl();
         String defaultPrefix = "kylin_metadata";
 
-        if (org.apache.commons.lang3.StringUtils.containsIgnoreCase(hbaseMetadataUrl, "hbase:")) {
+        if (hbaseMetadataUrl.indexOf("@hbase") > 0) {
             int cut = hbaseMetadataUrl.indexOf('@');
             String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
             return tmp;

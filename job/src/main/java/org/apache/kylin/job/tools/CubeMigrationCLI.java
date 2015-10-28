@@ -144,8 +144,8 @@ public class CubeMigrationCLI {
         logger.info("src metadata url is " + srcMetadataUrl);
         logger.info("dst metadata url is " + dstMetadataUrl);
 
-        int srcIndex = srcMetadataUrl.toLowerCase().indexOf("hbase:");
-        int dstIndex = dstMetadataUrl.toLowerCase().indexOf("hbase:");
+        int srcIndex = srcMetadataUrl.toLowerCase().indexOf("hbase");
+        int dstIndex = dstMetadataUrl.toLowerCase().indexOf("hbase");
         if (srcIndex < 0 || dstIndex < 0)
             throw new IllegalStateException("Both metadata urls should be hbase metadata url");
 
