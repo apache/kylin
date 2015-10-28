@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -224,8 +225,12 @@ public class CubeSegmentScanner implements IGTScanner {
 
                         try {
 
-                            CubeHBaseRPC rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);
-                            //CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
+                            CubeHBaseRPC rpc;
+                            if ("scan".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryProtocol())) {
+                                rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
+                            } else {
+                                rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);//default behavior
+                            }
 
                             //change previous line to CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
                             //to debug locally
