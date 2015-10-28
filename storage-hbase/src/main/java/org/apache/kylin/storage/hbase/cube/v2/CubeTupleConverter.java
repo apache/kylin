@@ -18,17 +18,24 @@
 
 package org.apache.kylin.storage.hbase.cube.v2;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.kylin.common.topn.Counter;
+import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -52,13 +59,18 @@ public class CubeTupleConverter {
     final int[] tupleIdx;
     final Object[] tmpValues;
     final int nSelectedDims;
+    final TblColRef topNCol;
+    int topNColTupleIdx;
+    int topNMeasureTupleIdx;
+    Dictionary<String> topNColDict;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
-            Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo) {
+            Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, TblColRef topNCol) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
         this.tupleInfo = returnTupleInfo;
         this.derivedColFillers = Lists.newArrayList();
+        this.topNCol = topNCol;
 
         List<TblColRef> cuboidDims = cuboid.getColumns();
         CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
@@ -91,6 +103,13 @@ public class CubeTupleConverter {
                 tupleIdx[iii] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
             }
             iii++;
+        }
+
+        if (this.topNCol != null) {
+            this.topNColTupleIdx = tupleInfo.hasColumn(this.topNCol) ? tupleInfo.getColumnIndex(this.topNCol) : -1;
+            this.topNMeasureTupleIdx = nSelectedDims;
+
+            this.topNColDict = (Dictionary<String>)cubeSeg.getDictionary(this.topNCol);
         }
 
         // prepare derived columns and filler
@@ -132,6 +151,12 @@ public class CubeTupleConverter {
         }
     }
 
+    public Iterator<Tuple> translateTopNResult(GTRecord record, Tuple tuple) {
+        translateResult(record, tuple);
+        Object topNCounterObj = tuple.getAllValues()[topNMeasureTupleIdx];
+        assert (topNCounterObj instanceof TopNCounter);
+        return new TopNCounterTupleIterator(tuple, (TopNCounter) topNCounterObj);
+    }
     private interface IDerivedColumnFiller {
         public void fillDerivedColumns(Object[] tmpValues, Tuple tuple);
     }
@@ -221,4 +246,38 @@ public class CubeTupleConverter {
     private static String toString(Object o) {
         return o == null ? null : o.toString();
     }
+
+    private class TopNCounterTupleIterator implements Iterator {
+
+        private Tuple tuple;
+        private Iterator<Counter> topNCounterIterator;
+        private Counter<ByteArray> counter;
+
+        private TopNCounterTupleIterator(Tuple tuple, TopNCounter topNCounter) {
+            this.tuple = tuple;
+            this.topNCounterIterator = topNCounter.iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return topNCounterIterator.hasNext();
+        }
+
+        @Override
+        public Tuple next() {
+            counter = topNCounterIterator.next();
+            int key = BytesUtil.readUnsigned(counter.getItem().array(), 0, counter.getItem().array().length);
+            String colValue = topNColDict.getValueFromId(key);
+            tuple.setDimensionValue(topNColTupleIdx, colValue);
+            tuple.setMeasureValue(topNMeasureTupleIdx, counter.getCount());
+
+            return tuple;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
 }
