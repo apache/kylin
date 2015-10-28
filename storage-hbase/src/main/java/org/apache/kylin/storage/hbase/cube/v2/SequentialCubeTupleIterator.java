@@ -22,18 +22,18 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(SequentialCubeTupleIterator.class);
 
-    private final Cuboid cuboid;
-    private final Set<TblColRef> selectedDimensions;
-    private final Set<FunctionDesc> selectedMetrics;
-    private final TupleInfo tupleInfo;
-    private final Tuple tuple;
-    private final Iterator<CubeSegmentScanner> scannerIterator;
-    private final StorageContext context;
+    protected final Cuboid cuboid;
+    protected final Set<TblColRef> selectedDimensions;
+    protected final Set<FunctionDesc> selectedMetrics;
+    protected final TupleInfo tupleInfo;
+    protected final Tuple tuple;
+    protected final Iterator<CubeSegmentScanner> scannerIterator;
+    protected final StorageContext context;
 
-    private CubeSegmentScanner curScanner;
-    private Iterator<GTRecord> curRecordIterator;
-    private CubeTupleConverter curTupleConverter;
-    private Tuple next;
+    protected CubeSegmentScanner curScanner;
+    protected Iterator<GTRecord> curRecordIterator;
+    protected CubeTupleConverter curTupleConverter;
+    protected Tuple next;
 
     private int scanCount;
     private int scanCountDelta;
@@ -58,7 +58,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             if (scannerIterator.hasNext()) {
                 curScanner = scannerIterator.next();
                 curRecordIterator = curScanner.iterator();
-                curTupleConverter = new CubeTupleConverter(curScanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
+                curTupleConverter = new CubeTupleConverter(curScanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo, null);
             } else {
                 return false;
             }
@@ -112,7 +112,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         }
     }
 
-    private void close(CubeSegmentScanner scanner) {
+    protected void close(CubeSegmentScanner scanner) {
         try {
             scanner.close();
         } catch (IOException e) {
