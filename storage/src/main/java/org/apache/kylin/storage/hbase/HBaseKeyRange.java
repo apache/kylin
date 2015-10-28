@@ -136,13 +136,8 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
         encoder.setBlankByte(RowConstants.ROWKEY_UPPER_BYTE);
 
-        // In order to make stopRow inclusive add a trailing 0 byte. #See
-        // Scan.setStopRow(byte [] stopRow)
+        // In order to make stopRow inclusive add a trailing 0 byte. #See Scan.setStopRow(byte [] stopRow)
         this.stopKey = Bytes.add(encoder.encode(stopValues), ZERO_TAIL_BYTES);
-
-        // restore encoder defaults for later reuse (note
-        // AbstractRowKeyEncoder.createInstance() caches instances)
-        encoder.setBlankByte(AbstractRowKeyEncoder.DEFAULT_BLANK_BYTE);
 
         // always fuzzy match cuboid ID to lock on the selected cuboid
         this.fuzzyKeys = buildFuzzyKeys(fuzzyValues);
