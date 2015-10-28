@@ -168,6 +168,7 @@
       <AdditionalDependencies>odbccp32.lib;odbc32.lib;mswsock.lib;ws2_32.lib;winhttp.lib;cpprest110_2_0.lib;Common.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\driver.DEF</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
       <Command>

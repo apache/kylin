@@ -234,13 +234,13 @@ RETCODE SQL_API _SQLCopyCharData ( pODBCDiag pDiag, void* pTgtDataPtr, Long pDat
 }
 
 RETCODE SQL_API _SQLCopyWCharData ( pODBCDiag pDiag, void* pTgtDataPtr, Long pDataBufSize, void* pSizePtr,
-                                    Word pSizePtrSize, CStrPtr pSrcData, Long pSrcDataSize ) {
+                                    Word pSizePtrSize, CStrPtr pSrcData, Long pSrcDataSize , bool returnByteSize) {
     unique_ptr<wchar_t[]> pWCS ( char2wchar ( pSrcData ) );
-    return _SQLCopyWCharDataW ( pDiag,  pTgtDataPtr,  pDataBufSize,  pSizePtr,  pSizePtrSize,  pWCS.get(),  pSrcDataSize );
+    return _SQLCopyWCharDataW ( pDiag,  pTgtDataPtr,  pDataBufSize,  pSizePtr,  pSizePtrSize,  pWCS.get(),  pSrcDataSize, returnByteSize);
 }
 //mhb added, for those ard that accept wchar
 RETCODE SQL_API _SQLCopyWCharDataW ( pODBCDiag pDiag, void* pTgtDataPtr, Long pDataBufSize, void* pSizePtr,
-                                     Word pSizePtrSize, const wchar_t* pSrcData, Long pSrcDataSize ) {
+                                     Word pSizePtrSize, const wchar_t* pSrcData, Long pSrcDataSize, bool returnByteSize ) {
     __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "_SQLCopyWCharDataW called, pTgtDataPtr is null? %d, pSizePtr == null? %d",
                               pTgtDataPtr == NULL, pSizePtr == NULL ) );
     __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "_SQLCopyWCharDataW called, the src string is :" ) );
@@ -265,11 +265,14 @@ RETCODE SQL_API _SQLCopyWCharDataW ( pODBCDiag pDiag, void* pTgtDataPtr, Long pD
         // set size as per ptr type 16-bt or 32-bit
         
         //should be number of characters
+		Long pPtrSizeBuf = n;
+		if (returnByteSize) { pPtrSizeBuf = 2 * n; }
+
         if ( pSizePtrSize == 16 )
-        { * ( ( Word* ) pSizePtr ) = ( Word ) ( 2 * n ); }
+        { * ( ( Word* ) pSizePtr ) = ( Word ) pPtrSizeBuf; }
         
         else
-        { * ( ( Long* ) pSizePtr ) = ( 2 * n ); }
+        { * ( ( Long* ) pSizePtr ) = pPtrSizeBuf; }
         
         __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "pSizePtr is set to %d", n ) );
     }

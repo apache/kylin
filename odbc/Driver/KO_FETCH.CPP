@@ -221,7 +221,9 @@ RETCODE  _SQLColAttribute_basic ( SQLHSTMT        pStmt,
             __ODBCPOPMSG ( _ODBCPopMsg ( "SQLColAttribute unknown attr, ColNum: %d, FldID: %d\n", pColNum, pFldID ) );
             return SQL_ERROR;
     }
-    
+	//unique_ptr<char[]> temp ( wchar2char ( ( wchar_t* ) pDataPtr ) );
+	//__ODBCLOG(_ODBCLogMsg(LogLevel_INFO, "_SQLColAttribute_basic was called - Stmt:%d, ColNum:%d, FldId:%d, pDataStr:%s, pDataSize:%d, pDataSizePtr:%d(n:%d), pNumValPtr:%d",
+	//	pStmt, pColNum, pFldID, temp.get(), pDataSize, pDataSizePtr, n, pNumValuePtr ? *(( Long* )pNumValuePtr):-1));
     return SQL_SUCCESS;
 }
 
@@ -849,8 +851,7 @@ RETCODE SQL_API _SQLColConvert ( pODBCStmt       pStmt,
                                       -1 );
         }
     }
-    
-    if ( pTgtDataType == SQL_WCHAR || pTgtDataType == SQL_WVARCHAR ) {
+    else if ( pTgtDataType == SQL_WCHAR || pTgtDataType == SQL_WVARCHAR ) {
         return _SQLCopyWCharDataW ( _DIAGSTMT ( pStmt ), pTgtDataPtr, pARDCol->DataSize, pTgtDataSizePtr, 32, pSrcColData, -1 );
     }
     
