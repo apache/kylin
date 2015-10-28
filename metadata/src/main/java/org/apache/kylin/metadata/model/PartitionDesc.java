@@ -43,6 +43,8 @@ public class PartitionDesc {
     private String partitionDateColumn;
     @JsonProperty("partition_date_start")
     private long partitionDateStart = 0L;
+    @JsonProperty("partition_date_format")
+    private String partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
     @JsonProperty("partition_type")
     private PartitionType partitionType = PartitionType.APPEND;
     @JsonProperty("partition_condition_builder")
@@ -96,6 +98,14 @@ public class PartitionDesc {
         this.partitionDateStart = partitionDateStart;
     }
 
+    public String getPartitionDateFormat() {
+        return partitionDateFormat;
+    }
+
+    public void setPartitionDateFormat(String partitionDateFormat) {
+        this.partitionDateFormat = partitionDateFormat;
+    }
+
     public PartitionType getCubePartitionType() {
         return partitionType;
     }
@@ -119,7 +129,6 @@ public class PartitionDesc {
     }
 
     public static class DefaultPartitionConditionBuilder implements IPartitionConditionBuilder {
-
         @Override
         public String buildDateRangeCondition(PartitionDesc partDesc, long startInclusive, long endExclusive, Map<String, String> tableAlias) {
             String partitionColumnName = partDesc.getPartitionDateColumn();
@@ -135,10 +144,10 @@ public class PartitionDesc {
             StringBuilder builder = new StringBuilder();
 
             if (startInclusive > 0) {
-                builder.append(partitionColumnName + " >= '" + DateFormat.formatToDateStr(startInclusive) + "' ");
+                builder.append(partitionColumnName + " >= '" + DateFormat.formatToDateStr(startInclusive, partDesc.getPartitionDateFormat()) + "' ");
                 builder.append("AND ");
             }
-            builder.append(partitionColumnName + " < '" + DateFormat.formatToDateStr(endExclusive) + "'");
+            builder.append(partitionColumnName + " < '" + DateFormat.formatToDateStr(endExclusive, partDesc.getPartitionDateFormat()) + "'");
 
             return builder.toString();
         }
