@@ -105,7 +105,7 @@ public class ColumnValueRange {
     }
 
     public boolean satisfyAll() {
-        return beginValue == null && endValue == null; // the NEQ case
+        return beginValue == null && endValue == null && equalValues == null; // the NEQ case
     }
 
     public boolean satisfyNone() {
@@ -187,19 +187,19 @@ public class ColumnValueRange {
 
         if (beginValue != null) {
             try {
-                beginValue = dict.getValueFromId(dict.getIdFromValue(beginValue, -1));
+                beginValue = dict.getValueFromId(dict.getIdFromValue(beginValue, 1));
             } catch (IllegalArgumentException e) {
-                // value is less than the smallest in dictionary
-                beginValue = null;
+                // beginValue is greater than the biggest in dictionary, mark FALSE
+                equalValues = Sets.newHashSet();
             }
         }
 
         if (endValue != null) {
             try {
-                endValue = dict.getValueFromId(dict.getIdFromValue(endValue, 1));
+                endValue = dict.getValueFromId(dict.getIdFromValue(endValue, -1));
             } catch (IllegalArgumentException e) {
-                // value is greater than the biggest in dictionary
-                endValue = null;
+                // endValue is lesser than the smallest in dictionary, mark FALSE
+                equalValues = Sets.newHashSet();
             }
         }
     }
