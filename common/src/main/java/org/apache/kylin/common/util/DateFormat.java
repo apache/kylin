@@ -47,7 +47,11 @@ public class DateFormat {
     }
 
     public static String formatToDateStr(long millis) {
-        return getDateFormat(DEFAULT_DATE_PATTERN).format(new Date(millis));
+        return formatToDateStr(millis, DEFAULT_DATE_PATTERN);
+    }
+
+    public static String formatToDateStr(long millis, String pattern) {
+        return getDateFormat(pattern).format(new Date(millis));
     }
 
     public static String formatToTimeStr(long millis) {
