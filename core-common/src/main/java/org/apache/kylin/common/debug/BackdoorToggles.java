@@ -34,6 +34,14 @@ public class BackdoorToggles {
         return getString(DEBUG_TOGGLE_OBSERVER_BEHAVIOR);
     }
 
+    public static String getHbaseCubeQueryVersion() {
+        return getString(DEBUG_TOGGLE_HBASE_CUBE_QUERY_VERSION);
+    }
+
+    public static String getHbaseCubeQueryProtocol() {
+        return getString(DEBUG_TOGGLE_HBASE_CUBE_QUERY_PROTOCOL);
+    }
+
     public static boolean getDisableFuzzyKey() {
         return getBoolean(DEBUG_TOGGLE_DISABLE_FUZZY_KEY);
     }
@@ -70,6 +78,27 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_DISABLE_FUZZY_KEY = "DEBUG_TOGGLE_DISABLE_FUZZY_KEY";
+
+    /**
+     * set DEBUG_TOGGLE_HBASE_CUBE_QUERY_VERSION=v1/v2 to control which version CubeStorageQuery to use
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_HBASE_CUBE_QUERY_VERSION": "v1"
+     }
+     */
+    public final static String DEBUG_TOGGLE_HBASE_CUBE_QUERY_VERSION = "DEBUG_TOGGLE_HBASE_CUBE_QUERY_VERSION";
+
+    /**
+     * set DEBUG_TOGGLE_HBASE_CUBE_QUERY_PROTOCOL=endpoint/scan to control how to visit hbase cube
+     * this param is only valid when DEBUG_TOGGLE_HBASE_CUBE_QUERY_VERSION set to v2(bdefault)
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_HBASE_CUBE_QUERY_PROTOCOL": "scan"
+     }
+     */
+    public final static String DEBUG_TOGGLE_HBASE_CUBE_QUERY_PROTOCOL = "DEBUG_TOGGLE_HBASE_CUBE_QUERY_PROTOCOL";
 
     /**
      * set DEBUG_TOGGLE_OBSERVER_BEHAVIOR=SCAN/SCAN_FILTER/SCAN_FILTER_AGGR to control observer behavior for debug/profile usage

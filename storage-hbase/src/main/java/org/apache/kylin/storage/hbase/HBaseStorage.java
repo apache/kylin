@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.engine.mr.IMROutput;
 import org.apache.kylin.engine.mr.IMROutput2;
@@ -39,11 +40,15 @@ import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
 
 import com.google.common.base.Preconditions;
 
-@SuppressWarnings("unused")//used by reflection
+@SuppressWarnings("unused")
+//used by reflection
 public class HBaseStorage implements IStorage {
 
     private final static boolean allowStorageLayerCache = true;
-    private final static String defaultCubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery";
+
+    private final static String v2CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery";
+    private final static String v1CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery";
+
     private final static String defaultIIStorageQuery = "org.apache.kylin.storage.hbase.ii.InvertedIndexStorageQuery";
 
     @Override
@@ -62,11 +67,19 @@ public class HBaseStorage implements IStorage {
                 return ret;
             }
         } else if (realization.getType() == RealizationType.CUBE) {
+
+            String cubeStorageQuery;
+            if ("v1".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryVersion())) {
+                cubeStorageQuery = v1CubeStorageQuery;
+            } else {
+                cubeStorageQuery = v2CubeStorageQuery;//by default use v2
+            }
+
             ICachableStorageQuery ret;
             try {
-                ret = (ICachableStorageQuery) Class.forName(defaultCubeStorageQuery).getConstructor(CubeInstance.class).newInstance((CubeInstance) realization);
+                ret = (ICachableStorageQuery) Class.forName(cubeStorageQuery).getConstructor(CubeInstance.class).newInstance((CubeInstance) realization);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to initialize storage query for " + defaultCubeStorageQuery, e);
+                throw new RuntimeException("Failed to initialize storage query for " + cubeStorageQuery, e);
             }
 
             if (allowStorageLayerCache) {
@@ -78,7 +91,7 @@ public class HBaseStorage implements IStorage {
             throw new IllegalArgumentException("Unknown realization type " + realization.getType());
         }
     }
-    
+
     private static IStorageQuery wrapWithCache(ICachableStorageQuery underlyingStorageEngine, IRealization realization) {
         if (underlyingStorageEngine.isDynamic()) {
             return new CacheFledgedDynamicQuery(underlyingStorageEngine, getPartitionCol(realization));
