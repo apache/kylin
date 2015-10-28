@@ -642,9 +642,9 @@ eGoodBad            PutRespToStmt ( pODBCStmt pStmt, std::unique_ptr<SQLResponse
 RETCODE SQL_API     _SQLCopyCharData ( pODBCDiag pDiag, void* pDataPtr, Long pDataBufSize, void* pSizePtr,
                                        Word pSizePtrSize, CStrPtr pSrcData, Long pSrcDataSize );
 RETCODE SQL_API     _SQLCopyWCharData ( pODBCDiag pDiag, void* pDataPtr, Long pDataBufSize, void* pSizePtr,
-                                        Word pSizePtrSize, CStrPtr pSrcData, Long pSrcDataSize );
+                                        Word pSizePtrSize, CStrPtr pSrcData, Long pSrcDataSize, bool returnByteSize = true );
 RETCODE SQL_API     _SQLCopyWCharDataW ( pODBCDiag pDiag, void* pDataPtr, Long pDataBufSize, void* pSizePtr,
-                                         Word pSizePtrSize, const wchar_t* pSrcData, Long pSrcDataSize );
+                                         Word pSizePtrSize, const wchar_t* pSrcData, Long pSrcDataSize, bool returnByteSize = true  );
 Word                _SQLCopyNumData ( pODBCDiag pDiag, void* pTgtDataPtr, Word pTgtDataType, CStrPtr pSrcData,
                                       Word pSrcDataType, Long* pTgtDataSizePtr );
 Word                _SQLCopyDateTimeData ( pODBCDiag pDiag, void* pTgtDataPtr, Word pTgtDataType, CStrPtr pSrcData,

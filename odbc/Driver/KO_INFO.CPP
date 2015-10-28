@@ -593,11 +593,6 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
                                       pBufferLength, pStringLengthPtr ) );
     }
     
-	//// *2 is already done in _SQLCopyWCharData()
-    /*if ( pStringLengthPtr ) {
-        *pStringLengthPtr = ( *pStringLengthPtr ) * 2;
-    }*/
-    
     return SQL_SUCCESS;
 }
 

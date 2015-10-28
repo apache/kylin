@@ -2414,8 +2414,31 @@ RETCODE SQL_API _SQLGetIRDItemField ( const pODBCIRD pDesc, const pIRDItem pDesc
             * ( ( Long* ) pDataPtr ) = pDescItem->isAutoIncrement;         // whether a col is auto-incrementing
             break;
             
-        case SQL_DESC_NAME://1011
         case SQL_DESC_LABEL://18
+			s = pDescItem->label.c_str();
+            
+            // transfer col label
+            if ( isANSI )
+            { _SQLCopyCharData ( _DIAGSTMT ( pDesc->Stmt ), pDataPtr, pDataSize, pDataSizePtr, 32, ( ( s ) ? s : "" ), -1 ); }
+            
+            else
+            { _SQLCopyWCharData ( _DIAGSTMT ( pDesc->Stmt ), pDataPtr, pDataSize, pDataSizePtr, 32, ( ( s ) ? s : "" ), -1 ); }
+            
+            break;
+
+        case SQL_DESC_NAME://1011
+			s = pDescItem->label.c_str();
+			if (!s) s = pDescItem->name.c_str();
+            
+            // transfer col desc
+            if ( isANSI )
+            { _SQLCopyCharData ( _DIAGSTMT ( pDesc->Stmt ), pDataPtr, pDataSize, pDataSizePtr, 32, ( ( s ) ? s : "" ), -1 ); }
+            
+            else
+            { _SQLCopyWCharData ( _DIAGSTMT ( pDesc->Stmt ), pDataPtr, pDataSize, pDataSizePtr, 32, ( ( s ) ? s : "" ), -1 ); }
+            
+            break;
+
         case SQL_DESC_BASE_COLUMN_NAME://22
             s = pDescItem->name.c_str();
             

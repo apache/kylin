@@ -454,7 +454,8 @@ RETCODE SQL_API SQLGetDiagRecW ( SQLSMALLINT     pHandleType,
     
     // msg
     __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "The message is %s", diagrow->Msg ) );
-    _SQLCopyWCharData ( diag, pMsgTxtPtr, pMsgTxtSize, pMsgTxtSizePtr, 16, diagrow->Msg, -1 );
+    _SQLCopyWCharData ( diag, pMsgTxtPtr, pMsgTxtSize, pMsgTxtSizePtr, 16, diagrow->Msg, -1, false );
+
     // debug
     //__ODBCLOG(_ODBCLogMsg(LogLevel_DEBUG,"SQLGetDiagRec msg: %s", pMsgTxtPtr ? ( StrPtr )pMsgTxtPtr : "(unknown)" ));
     RETCODE ret  = ( pMsgTxtSizePtr && ( *pMsgTxtSizePtr ) > pMsgTxtSize ) ? SQL_SUCCESS_WITH_INFO : SQL_SUCCESS;
