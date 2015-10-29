@@ -23,6 +23,7 @@ public class SequentialCubeTopNTupleIterator extends SequentialCubeTupleIterator
             TblColRef topNCol, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context) {
 
         super(scanners, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context);
+        this.topNCol = topNCol;
     }
 
     @Override
