@@ -74,7 +74,8 @@ KylinApp.service('MetaModel', function () {
       "partition_desc": {
         "partition_date_column": '',
         "partition_date_start": 0,
-        "partition_type": 'APPEND'
+        "partition_type": 'APPEND',
+        "partition_date_format":'yyyy-MM-dd'
       },
       last_modified: 0
     };
