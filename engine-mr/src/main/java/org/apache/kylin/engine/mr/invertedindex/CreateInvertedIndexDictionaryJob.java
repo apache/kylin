@@ -16,59 +16,55 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.invertedindex;
+package org.apache.kylin.engine.mr.invertedindex;
 
 import org.apache.commons.cli.Options;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.dict.DistinctColumnValuesProvider;
+import org.apache.kylin.engine.mr.DFSFileTable;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
-import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.ReadableTable;
 
 /**
  */
-public class IIBulkLoadJob extends AbstractHadoopJob {
+public class CreateInvertedIndexDictionaryJob extends AbstractHadoopJob {
 
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
         try {
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_HTABLE_NAME);
             options.addOption(OPTION_II_NAME);
+            options.addOption(OPTION_INPUT_PATH);
             parseOptions(options, args);
 
-            String tableName = getOptionValue(OPTION_HTABLE_NAME);
-            String input = getOptionValue(OPTION_INPUT_PATH);
-            String iiname = getOptionValue(OPTION_II_NAME);
+            final String iiname = getOptionValue(OPTION_II_NAME);
+            final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
+            final KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-            FileSystem fs = FileSystem.get(getConf());
-            FsPermission permission = new FsPermission((short) 0777);
-            fs.setPermission(new Path(input, IIDesc.HBASE_FAMILY), permission);
-
-            int hbaseExitCode = ToolRunner.run(new LoadIncrementalHFiles(getConf()), new String[] { input, tableName });
-
-            IIManager mgr = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
+            IIManager mgr = IIManager.getInstance(config);
             IIInstance ii = mgr.getII(iiname);
-            IISegment seg = ii.getFirstSegment();
-            seg.setStorageLocationIdentifier(tableName);
-            seg.setStatus(SegmentStatusEnum.READY);
-            mgr.updateII(ii);
 
-            return hbaseExitCode;
-
+            mgr.buildInvertedIndexDictionary(ii.getFirstSegment(), new DistinctColumnValuesProvider() {
+                @Override
+                public ReadableTable getDistinctValuesFor(TblColRef col) {
+                    return new DFSFileTable(factColumnsInputPath + "/" + col.getName(), -1);
+                }
+            });
+            return 0;
         } catch (Exception e) {
             printUsage(options);
             throw e;
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        int exitCode = ToolRunner.run(new CreateInvertedIndexDictionaryJob(), args);
+        System.exit(exitCode);
     }
 
 }

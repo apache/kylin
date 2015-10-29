@@ -100,7 +100,7 @@ public class StorageMockUtils {
     }
 
     public static CompareTupleFilter buildFilter1(TblColRef column) {
-        CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
+        CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.LTE);
         ColumnTupleFilter columnFilter1 = new ColumnTupleFilter(column);
         compareFilter.addChild(columnFilter1);
         ConstantTupleFilter constantFilter1 = new ConstantTupleFilter("2012-05-23");

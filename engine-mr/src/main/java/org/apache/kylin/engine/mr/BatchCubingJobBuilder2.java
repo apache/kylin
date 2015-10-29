@@ -37,13 +37,13 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     public BatchCubingJobBuilder2(CubeSegment newSegment, String submitter) {
         super(newSegment, submitter);
         this.inputSide = MRUtil.getBatchCubingInputSide(seg);
-        this.outputSide = MRUtil.getBatchCubingOutputSide2(seg);
+        this.outputSide = MRUtil.getBatchCubingOutputSide2((CubeSegment)seg);
     }
 
     public CubingJob build() {
         logger.info("MR_V2 new job to BUILD segment " + seg);
         
-        final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
+        final CubingJob result = CubingJob.createBuildJob((CubeSegment)seg, submitter, config);
         final String jobId = result.getId();
 
         // Phase 1: Create Flat Table
@@ -70,7 +70,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     private SaveStatisticsStep createSaveStatisticsStep(String jobId) {
         SaveStatisticsStep result = new SaveStatisticsStep();
         result.setName(ExecutableConstants.STEP_NAME_SAVE_STATISTICS);
-        result.setCubeName(seg.getCubeInstance().getName());
+        result.setCubeName(seg.getRealization().getName());
         result.setSegmentId(seg.getUuid());
         result.setStatisticsPath(getStatisticsPath(jobId));
         return result;
@@ -81,13 +81,13 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         MapReduceExecutable cubeStep = new MapReduceExecutable();
 
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, seg);
+        appendMapReduceParameters(cmd, ((CubeSegment)seg).getCubeDesc().getModel());
 
         cubeStep.setName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE);
 
-        appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "cubename", seg.getRealization().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
-        appendExecCmdParameters(cmd, "jobname", "Kylin_Cube_Builder_" + seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Cube_Builder_" + seg.getRealization().getName());
         appendExecCmdParameters(cmd, "jobflowid", jobId);
 
         cubeStep.setMapReduceParams(cmd.toString());

@@ -19,12 +19,17 @@
 package org.apache.kylin.engine.mr;
 
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public interface IMROutput {
 
     /** Return a helper to participate in batch cubing job flow. */
     public IMRBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg);
+
+
+    /** Return a helper to participate in batch cubing job flow. */
+    public IMRBatchInvertedIndexingOutputSide getBatchInvertedIndexingOutputSide(IISegment seg);
 
     /**
      * Participate the batch cubing flow as the output side. Responsible for saving
@@ -74,5 +79,27 @@ public interface IMROutput {
 
         /** Add step that does any necessary clean up. */
         public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow);
+    }
+
+
+    /**
+     * Participate the batch inverted indexing flow as the output side. Responsible for saving
+     * the output to storage (Phase 3).
+     *
+     * - Phase 1: Create Flat Table
+     * - Phase 2: Build Dictionary
+     * - Phase 3: Build II
+     * - Phase 4: Update Metadata & Cleanup
+     */
+    public interface IMRBatchInvertedIndexingOutputSide {
+
+        /**
+         * Add step that saves II output from HDFS to storage.
+         *
+         */
+        public void addStepPhase3_BuildII(DefaultChainedExecutable jobFlow, String rootPath);
+
+        /** Add step that does any necessary clean up. */
+        public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
     }
 }

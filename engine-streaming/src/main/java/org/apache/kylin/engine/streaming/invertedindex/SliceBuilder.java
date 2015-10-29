@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.invertedindex.streaming;
+package org.apache.kylin.engine.streaming.invertedindex;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;

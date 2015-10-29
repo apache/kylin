@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.invertedindex;
+package org.apache.kylin.storage.hbase.ii;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.security.User;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.storage.hbase.util.IIDeployCoprocessorCLI;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;

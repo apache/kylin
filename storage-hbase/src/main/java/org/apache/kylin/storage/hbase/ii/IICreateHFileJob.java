@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.invertedindex;
+package org.apache.kylin.storage.hbase.ii;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;

@@ -19,6 +19,7 @@
 package org.apache.kylin.invertedindex.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -70,7 +71,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
     private IIRow collectKeyValues(Slice slice, int col, CompressedValueContainer container) {
         ImmutableBytesWritable key = encodeKey(slice.getShard(), slice.getTimestamp(), col);
         ImmutableBytesWritable value = container.toBytes();
-        final Dictionary<?> dictionary = slice.getLocalDictionaries()[col];
+        final Dictionary<?> dictionary = slice.getLocalDictionaries() != null ? slice.getLocalDictionaries()[col] : null;
         if (dictionary == null) {
             return new IIRow(key, value, new ImmutableBytesWritable(BytesUtil.EMPTY_BYTE_ARRAY));
         } else {

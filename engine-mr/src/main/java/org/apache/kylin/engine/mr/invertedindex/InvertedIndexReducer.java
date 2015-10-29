@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.invertedindex;
+package org.apache.kylin.engine.mr.invertedindex;
 
 import java.io.IOException;
 

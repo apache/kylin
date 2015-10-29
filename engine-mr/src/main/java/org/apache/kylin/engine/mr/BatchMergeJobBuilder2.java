@@ -39,16 +39,17 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
 
     public BatchMergeJobBuilder2(CubeSegment mergeSegment, String submitter) {
         super(mergeSegment, submitter);
-        this.outputSide = MRUtil.getBatchMergeOutputSide2(seg);
+        this.outputSide = MRUtil.getBatchMergeOutputSide2((CubeSegment)seg);
     }
 
     public CubingJob build() {
         logger.info("MR_V2 new job to MERGE segment " + seg);
         
-        final CubingJob result = CubingJob.createMergeJob(seg, submitter, config);
+        final CubeSegment cubeSegment = (CubeSegment)seg;
+        final CubingJob result = CubingJob.createMergeJob(cubeSegment, submitter, config);
         final String jobId = result.getId();
 
-        final List<CubeSegment> mergingSegments = seg.getCubeInstance().getMergingSegments(seg);
+        final List<CubeSegment> mergingSegments = cubeSegment.getCubeInstance().getMergingSegments(cubeSegment);
         Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
         final List<String> mergingSegmentIds = Lists.newArrayList();
         final List<String> mergingHTables = Lists.newArrayList();
@@ -59,7 +60,7 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
 
         // Phase 1: Merge Dictionary
         result.addTask(createMergeDictionaryStep(mergingSegmentIds));
-        result.addTask(createMergeStatisticsStep(seg, mergingSegmentIds, getStatisticsPath(jobId)));
+        result.addTask(createMergeStatisticsStep(cubeSegment, mergingSegmentIds, getStatisticsPath(jobId)));
         outputSide.addStepPhase1_MergeDictionary(result);
 
         // Phase 2: Merge Cube
@@ -89,10 +90,10 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
         mergeCuboidDataStep.setName(ExecutableConstants.STEP_NAME_MERGE_CUBOID);
         StringBuilder cmd = new StringBuilder();
 
-        appendMapReduceParameters(cmd, seg);
-        appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
+        appendMapReduceParameters(cmd, ((CubeSegment)seg).getCubeDesc().getModel());
+        appendExecCmdParameters(cmd, "cubename", seg.getRealization().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
-        appendExecCmdParameters(cmd, "jobname", "Kylin_Merge_Cuboid_" + seg.getCubeInstance().getName() + "_Step");
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Merge_Cuboid_" + seg.getRealization().getName() + "_Step");
         appendExecCmdParameters(cmd, "jobflowid", jobId);
 
         mergeCuboidDataStep.setMapReduceParams(cmd.toString());
