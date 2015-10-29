@@ -17,7 +17,6 @@
 */
 package org.apache.kylin.cube.inmemcubing;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
@@ -47,7 +46,8 @@ public final class InMemCubeBuilderUtils {
                 TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
                 @SuppressWarnings("unchecked")
                 Dictionary<String> dictionary = (Dictionary<String>) dictionaryMap.get(displayCol);
-                result.put(displayColIdx, Preconditions.checkNotNull(dictionary));
+                //Preconditions.checkNotNull(dictionary);//FIXME disable check since dictionary is null when building empty segment
+                result.put(displayColIdx, dictionary);
             }
         }
         return result;
