@@ -17,14 +17,7 @@
 package org.apache.kylin.cube.inmemcubing;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -32,11 +25,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kylin.common.topn.Counter;
 import org.apache.kylin.common.topn.TopNCounter;
-import org.apache.kylin.common.util.*;
+import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.MemoryBudgetController;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.Dictionary;
@@ -50,14 +44,12 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.metadata.measure.DoubleMutable;
 import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Build a cube (many cuboids) in memory. Calculating multiple cuboids at the same time as long as memory permits.
@@ -87,7 +79,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private CuboidResult baseResult;
     private Object[] totalSumForSanityCheck;
     private ICuboidCollector resultCollector;
-    private Map<Integer, Dictionary<String>> topNDisplayColDictMap;
 
     public InMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         super(cubeDesc, dictionaryMap);
@@ -100,35 +91,16 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         this.measureCount = cubeDesc.getMeasures().size();
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
 
-        Map<String, Integer> measureIndexMap = Maps.newHashMap();
         List<String> metricsAggrFuncsList = Lists.newArrayList();
 
         for (int i = 0; i < measureCount; i++) {
             MeasureDesc measureDesc = measureDescs[i];
             metricsAggrFuncsList.add(measureDesc.getFunction().getExpression());
-            measureIndexMap.put(measureDesc.getName(), i);
         }
         this.metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
-
-        initTopNDisplayColDictionaryMap();
     }
 
-    private void initTopNDisplayColDictionaryMap() {
-        topNDisplayColDictMap = Maps.newHashMap();
-        for (int measureIdx = 0; measureIdx < cubeDesc.getMeasures().size(); measureIdx++) {
-            MeasureDesc measureDesc = cubeDesc.getMeasures().get(measureIdx);
-            FunctionDesc func = measureDesc.getFunction();
-            if (func.isTopN()) {
-                int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
-                int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
-                TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
-                @SuppressWarnings("unchecked")
-                Dictionary<String> dictionary = (Dictionary<String>) dictionaryMap.get(displayCol);
-                assert dictionary != null;
-                topNDisplayColDictMap.put(displayColIdx, dictionary);
-            }
-        }
-    }
+    
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
@@ -142,14 +114,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         return gridTable;
     }
 
-    private Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(long cuboidId) {
-        BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
-        BitSet dimension = new BitSet();
-        dimension.set(0, bitSet.cardinality());
-        BitSet metrics = new BitSet();
-        metrics.set(bitSet.cardinality(), bitSet.cardinality() + this.measureCount);
-        return new Pair<ImmutableBitSet, ImmutableBitSet>(new ImmutableBitSet(dimension), new ImmutableBitSet(metrics));
-    }
 
     @Override
     public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
@@ -376,7 +340,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         int mbBefore = getSystemAvailMB();
         int mbAfter = 0;
 
-        Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = getDimensionAndMetricColumnBitSet(baseCuboidId);
+        Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req);
 
@@ -442,27 +406,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private CuboidResult aggregateCuboid(CuboidResult parent, long cuboidId) throws IOException {
-        Pair<ImmutableBitSet, ImmutableBitSet> columnBitSets = getDimensionAndMetricColumnBitSet(parent.cuboidId);
-        ImmutableBitSet parentDimensions = columnBitSets.getFirst();
-        ImmutableBitSet measureColumns = columnBitSets.getSecond();
-        ImmutableBitSet childDimensions = parentDimensions;
-
-        long mask = Long.highestOneBit(parent.cuboidId);
-        long childCuboidId = cuboidId;
-        long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(parent.cuboidId);
-        int index = 0;
-        for (int i = 0; i < parentCuboidIdActualLength; i++) {
-            if ((mask & parent.cuboidId) > 0) {
-                if ((mask & childCuboidId) == 0) {
-                    // this dim will be aggregated
-                    childDimensions = childDimensions.set(index, false);
-                }
-                index++;
-            }
-            mask = mask >> 1;
-        }
-
-        return scanAndAggregateGridTable(parent.table, parent.cuboidId, cuboidId, childDimensions, measureColumns);
+        final Pair<ImmutableBitSet, ImmutableBitSet> allNeededColumns = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(parent.cuboidId, cuboidId, measureCount);
+        return scanAndAggregateGridTable(parent.table, parent.cuboidId, cuboidId, allNeededColumns.getFirst(), allNeededColumns.getSecond());
     }
 
     private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long parentId, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
@@ -557,12 +502,15 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         GTInfo info;
         GTRecord record;
         BlockingQueue<List<String>> input;
-        ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+        final InMemCubeBuilderInputConverter inMemCubeBuilderInputConverter;
 
         public InputConverter(GTInfo info, BlockingQueue<List<String>> input) {
             this.info = info;
             this.input = input;
             this.record = new GTRecord(info);
+            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, 
+                    InMemCubeBuilderUtils.createTopNDisplayColDictionaryMap(cubeDesc, intermediateTableDesc, dictionaryMap), 
+                    info);
         }
 
         @Override
@@ -586,7 +534,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                     if (currentObject.size() == 0)
                         throw new IllegalStateException();
 
-                    buildGTRecord(currentObject, record);
+                    inMemCubeBuilderInputConverter.convert(currentObject, record);
                     return record;
                 }
 
@@ -609,87 +557,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         @Override
         public int getScannedRowCount() {
             return 0;
-        }
-
-        private void buildGTRecord(List<String> row, GTRecord record) {
-            Object[] dimensions = buildKey(row);
-            Object[] metricsValues = buildValue(row);
-            Object[] recordValues = new Object[dimensions.length + metricsValues.length];
-            System.arraycopy(dimensions, 0, recordValues, 0, dimensions.length);
-            System.arraycopy(metricsValues, 0, recordValues, dimensions.length, metricsValues.length);
-            record.setValues(recordValues);
-        }
-
-        private Object[] buildKey(List<String> row) {
-            int keySize = intermediateTableDesc.getRowKeyColumnIndexes().length;
-            Object[] key = new Object[keySize];
-
-            for (int i = 0; i < keySize; i++) {
-                key[i] = row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]);
-            }
-
-            return key;
-        }
-
-        private Object[] buildValue(List<String> row) {
-
-            Object[] values = new Object[measureCount];
-            MeasureDesc measureDesc = null;
-
-            for (int i = 0; i < measureCount; i++) {
-                measureDesc = measureDescs[i];
-
-                Object value = null;
-                int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[i];
-                FunctionDesc function = cubeDesc.getMeasures().get(i).getFunction();
-                if (flatTableIdx == null) {
-                    value = measureCodec.getSerializer(i).valueOf(measureDesc.getFunction().getParameter().getValue());
-                } else if (function.isCount() || function.isHolisticCountDistinct()) {
-                    // note for holistic count distinct, this value will be ignored
-                    value = ONE;
-                } else if (function.isTopN()) {
-                    // encode the key column with dict, and get the counter column;
-                    int keyColIndex = flatTableIdx[flatTableIdx.length - 1];
-                    Dictionary<String> displayColDict = topNDisplayColDictMap.get(keyColIndex);
-                    int keyColEncoded = displayColDict.getIdFromValue(row.get(keyColIndex));
-                    valueBuf.clear();
-                    valueBuf.putInt(displayColDict.getSizeOfId());
-                    valueBuf.putInt(keyColEncoded);
-                    if (flatTableIdx.length == 1) {
-                        // only displayCol, use 1.0 as counter
-                        valueBuf.putDouble(1.0);
-                    } else {
-                        // get the counter column value
-                        valueBuf.putDouble(Double.valueOf(row.get(flatTableIdx[0])));
-                    }
-
-                    value = measureCodec.getSerializer(i).valueOf(valueBuf.array());
-
-                } else if (flatTableIdx.length == 1) {
-                    value = measureCodec.getSerializer(i).valueOf(toBytes(row.get(flatTableIdx[0])));
-                } else {
-
-                    byte[] result = null;
-                    for (int x = 0; x < flatTableIdx.length; x++) {
-                        byte[] split = toBytes(row.get(flatTableIdx[x]));
-                        if (result == null) {
-                            result = Arrays.copyOf(split, split.length);
-                        } else {
-                            byte[] newResult = new byte[result.length + split.length];
-                            System.arraycopy(result, 0, newResult, 0, result.length);
-                            System.arraycopy(split, 0, newResult, result.length, split.length);
-                            result = newResult;
-                        }
-                    }
-                    value = measureCodec.getSerializer(i).valueOf(result);
-                }
-                values[i] = value;
-            }
-            return values;
-        }
-
-        private byte[] toBytes(String v) {
-            return v == null ? null : Bytes.toBytes(v);
         }
 
     }
