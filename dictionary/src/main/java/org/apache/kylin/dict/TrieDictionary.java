@@ -101,7 +101,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             this.maxValueLength = headIn.readShort();
 
             String converterName = headIn.readUTF();
-            if (converterName.isEmpty() == false)
+            if (!converterName.isEmpty())
                 this.bytesConvert = (BytesConverter<T>) ClassUtil.forName(converterName, BytesConverter.class).newInstance();
 
             this.nValues = BytesUtil.readUnsigned(trieBytes, headSize + sizeChildOffset, sizeNoValuesBeneath);
@@ -392,7 +392,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     @Override
     public boolean equals(Object o) {
-        if ((o instanceof TrieDictionary) == false) {
+        if (!(o instanceof TrieDictionary)) {
             logger.info("Equals return false because o is not TrieDictionary");
             return false;
         }
