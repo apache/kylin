@@ -49,6 +49,10 @@ abstract public class Dictionary<T> implements Writable {
     abstract public int getMinId();
 
     abstract public int getMaxId();
+    
+    public int getSize() {
+        return getMaxId() - getMinId() + 1;
+    }
 
     /**
      * @return the size of an ID in bytes, determined by the cardinality of

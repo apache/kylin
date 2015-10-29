@@ -18,9 +18,6 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.calcite.linq4j.Enumerator;
-import org.apache.hadoop.fs.RemoteIterator;
-
 import java.io.IOException;
 
 /**

@@ -20,6 +20,7 @@ package org.apache.kylin.dict;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import org.apache.kylin.common.util.Bytes;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.List;
 /**
  * Created by dongli on 10/28/15.
  */
+@SuppressWarnings("rawtypes")
 public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumerator {
     private HashSet<byte[]> dedup = Sets.newHashSet();
     private int curDictIndex = 0;
