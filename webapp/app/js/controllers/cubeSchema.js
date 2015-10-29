@@ -118,6 +118,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   //map right return type for param
   $scope.measureReturnTypeUpdate = function () {
+
+    if($scope.newMeasure.function.expression == 'COUNT'){
+      $scope.newMeasure.function.parameter.type= 'constant';
+    }
+
     if ($scope.newMeasure.function.parameter.type == "constant" && $scope.newMeasure.function.expression !== "COUNT_DISTINCT") {
       switch ($scope.newMeasure.function.expression) {
         case "SUM":
