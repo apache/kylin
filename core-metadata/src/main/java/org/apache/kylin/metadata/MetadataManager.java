@@ -431,7 +431,7 @@ public class MetadataManager {
         os.close();
         is.close();
 
-        srcTableExdMap.putLocal(tableId, tableExdProperties);
+        srcTableExdMap.put(tableId, tableExdProperties);
     }
 
     public String appendDBName(String table) {

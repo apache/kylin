@@ -44,6 +44,8 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     public void put(K key, V value) {
         boolean exists = innerCache.containsKey(key);
+        
+        innerCache.put(key, value);
 
         if (!exists) {
             cacheUpdater.updateCache(key, value, Broadcaster.EVENT.CREATE, syncType, this);
