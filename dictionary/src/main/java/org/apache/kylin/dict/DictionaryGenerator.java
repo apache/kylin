@@ -21,22 +21,17 @@ package org.apache.kylin.dict;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.dict.lookup.ReadableTable;
-import org.apache.kylin.dict.lookup.ReadableTable.TableReader;
 import org.apache.kylin.metadata.model.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 /**
  * @author yangli9
@@ -48,7 +43,7 @@ public class DictionaryGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
-    private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd" };
+    private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd", "yyyyMMdd" };
 
     private static int getDictionaryMaxCardinality() {
         try {
@@ -58,22 +53,20 @@ public class DictionaryGenerator {
         }
     }
 
-    public static Dictionary<?> buildDictionaryFromValueList(DictionaryInfo info, List<byte[]> values) {
-        info.setCardinality(values.size());
-
+    public static Dictionary<?> buildDictionaryFromValueEnumerator(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator) throws IOException{
         Dictionary dict = null;
         int baseId = 0; // always 0 for now
-        int nSamples = 5;
-        ArrayList samples = new ArrayList();
+        final int nSamples = 5;
+        ArrayList samples = Lists.newArrayListWithCapacity(nSamples);
 
         // build dict, case by data type
         DataType dataType = DataType.getInstance(info.getDataType());
         if (dataType.isDateTimeFamily())
-            dict = buildDateStrDict(values, baseId, nSamples, samples);
+            dict = buildDateStrDict(info, valueEnumerator, baseId, nSamples, samples);
         else if (dataType.isNumberFamily())
-            dict = buildNumberDict(values, baseId, nSamples, samples);
+            dict = buildNumberDict(info, valueEnumerator, baseId, nSamples, samples);
         else
-            dict = buildStringDict(values, baseId, nSamples, samples);
+            dict = buildStringDict(info, valueEnumerator, baseId, nSamples, samples);
 
         // log a few samples
         StringBuilder buf = new StringBuilder();
@@ -83,33 +76,16 @@ public class DictionaryGenerator {
             buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
         }
         logger.info("Dictionary value samples: " + buf.toString());
-        logger.info("Dictionary cardinality " + info.getCardinality());
+        logger.info("Dictionary cardinality: " + info.getCardinality());
 
-        if (dict instanceof TrieDictionary && values.size() > DICT_MAX_CARDINALITY)
-            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- " + info.getSourceTable() + "." + info.getSourceColumn() + " cardinality: " + values.size());
+        if (dict instanceof TrieDictionary && info.getCardinality() > DICT_MAX_CARDINALITY)
+            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- " + info.getSourceTable() + "." + info.getSourceColumn() + " cardinality: " + info.getCardinality());
 
         return dict;
     }
 
-    public static Dictionary mergeDictionaries(DictionaryInfo targetInfo, List<DictionaryInfo> sourceDicts) {
-
-        HashSet<byte[]> dedup = new HashSet<byte[]>();
-
-        for (DictionaryInfo info : sourceDicts) {
-            Dictionary<?> dict = info.getDictionaryObject();
-            int minkey = dict.getMinId();
-            int maxkey = dict.getMaxId();
-            byte[] buffer = new byte[dict.getSizeOfValue()];
-            for (int i = minkey; i <= maxkey; ++i) {
-                int size = dict.getValueBytesFromId(i, buffer, 0);
-                dedup.add(Bytes.copy(buffer, 0, size));
-            }
-        }
-
-        List<byte[]> valueList = new ArrayList<byte[]>();
-        valueList.addAll(dedup);
-
-        return buildDictionaryFromValueList(targetInfo, valueList);
+    public static Dictionary mergeDictionaries(DictionaryInfo targetInfo, List<DictionaryInfo> sourceDicts) throws IOException {
+        return buildDictionaryFromValueEnumerator(targetInfo, new MultipleDictionaryValueEnumerator(sourceDicts));
     }
 
     public static Dictionary<?> buildDictionary(DictionaryInfo info, ReadableTable inpTable) throws IOException {
@@ -117,30 +93,40 @@ public class DictionaryGenerator {
         // currently all data types are casted to string to build dictionary
         // String dataType = info.getDataType();
 
-        logger.info("Building dictionary " + JsonUtil.writeValueAsString(info));
+        IDictionaryValueEnumerator columnValueEnumerator = null;
+        try {
+            logger.info("Building dictionary " + JsonUtil.writeValueAsString(info));
 
-        ArrayList<byte[]> values = loadColumnValues(inpTable, info.getSourceColumnIndex());
-
-        return buildDictionaryFromValueList(info, values);
+            columnValueEnumerator = new TableColumnValueEnumerator(inpTable.getReader(), info.getSourceColumnIndex());
+            return buildDictionaryFromValueEnumerator(info, columnValueEnumerator);
+        } finally {
+            if (columnValueEnumerator != null)
+                columnValueEnumerator.close();
+        }
     }
 
-    private static Dictionary buildDateStrDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildDateStrDict(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         final int BAD_THRESHOLD = 2;
         String matchPattern = null;
+        byte[] value;
 
         for (String ptn : DATE_PATTERNS) {
             matchPattern = ptn; // be optimistic
             int badCount = 0;
+            int totalCount = 0;
             SimpleDateFormat sdf = new SimpleDateFormat(ptn);
-            for (byte[] value : values) {
+
+            while (valueEnumerator.moveNext()) {
+                value = valueEnumerator.current();
                 if (value.length == 0)
                     continue;
 
                 String str = Bytes.toString(value);
                 try {
                     sdf.parse(str);
-                    if (samples.size() < nSamples && samples.contains(str) == false)
+                    if (samples.size() < nSamples && !samples.contains(str))
                         samples.add(str);
+                    totalCount++;
                 } catch (ParseException e) {
                     logger.info("Unrecognized datetime value: " + str);
                     badCount++;
@@ -150,28 +136,38 @@ public class DictionaryGenerator {
                     }
                 }
             }
-            if (matchPattern != null)
+            if (matchPattern != null) {
+                info.setCardinality(totalCount);
                 return new DateStrDictionary(matchPattern, baseId);
+            }
         }
         throw new IllegalStateException("Unrecognized datetime value");
     }
 
-    private static Dictionary buildStringDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildStringDict(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
-        for (byte[] value : values) {
+        byte[] value;
+        int totalCount = 0;
+        while (valueEnumerator.moveNext()) {
+            value = valueEnumerator.current();
             if (value == null)
                 continue;
             String v = Bytes.toString(value);
             builder.addValue(v);
-            if (samples.size() < nSamples && samples.contains(v) == false)
+            if (samples.size() < nSamples && !samples.contains(v))
                 samples.add(v);
+            totalCount++;
         }
+        info.setCardinality(totalCount);
         return builder.build(baseId);
     }
 
-    private static Dictionary buildNumberDict(List<byte[]> values, int baseId, int nSamples, ArrayList samples) {
+    private static Dictionary buildNumberDict(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
-        for (byte[] value : values) {
+        byte[] value;
+        int totalCount = 0;
+        while (valueEnumerator.moveNext()) {
+            value = valueEnumerator.current();
             if (value == null)
                 continue;
             String v = Bytes.toString(value);
@@ -179,46 +175,12 @@ public class DictionaryGenerator {
                 continue;
 
             builder.addValue(v);
-            if (samples.size() < nSamples && samples.contains(v) == false)
+            if (samples.size() < nSamples && !samples.contains(v))
                 samples.add(v);
+            totalCount++;
         }
+        info.setCardinality(totalCount);
         return builder.build(baseId);
-    }
-
-    static ArrayList<byte[]> loadColumnValues(ReadableTable inpTable, int colIndex) throws IOException {
-
-        TableReader reader = inpTable.getReader();
-
-        try {
-            ArrayList<byte[]> result = Lists.newArrayList();
-            HashSet<String> dedup = new HashSet<String>();
-
-            while (reader.next()) {
-                String[] split = reader.getRow();
-
-                String colValue;
-                // special single column file, e.g. common_indicator.txt
-                if (split.length == 1) {
-                    colValue = split[0];
-                }
-                // normal case
-                else {
-                    if (split.length <= colIndex) {
-                        throw new ArrayIndexOutOfBoundsException("Column no. " + colIndex + " not found, line split is " + Arrays.asList(split));
-                    }
-                    colValue = split[colIndex];
-                }
-
-                if (dedup.contains(colValue) == false) {
-                    dedup.add(colValue);
-                    result.add(Bytes.toBytes(colValue));
-                }
-            }
-            return result;
-
-        } finally {
-            reader.close();
-        }
     }
 
 }
