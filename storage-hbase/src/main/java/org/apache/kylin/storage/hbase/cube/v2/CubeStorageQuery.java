@@ -144,6 +144,11 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             if (sqlDigest.metricColumns.contains(column)) {
                 continue;
             }
+            
+            // skip topN display col
+            if (topNColumns.contains(column)) {
+                continue;
+            }
             dimensions.add(column);
         }
     }

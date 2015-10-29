@@ -107,7 +107,8 @@ public class CubeTupleConverter {
 
         if (this.topNCol != null) {
             this.topNColTupleIdx = tupleInfo.hasColumn(this.topNCol) ? tupleInfo.getColumnIndex(this.topNCol) : -1;
-            this.topNMeasureTupleIdx = nSelectedDims;
+            // topN only allow 1 measure
+            this.topNMeasureTupleIdx = tupleIdx[tupleIdx.length - 1];
 
             this.topNColDict = (Dictionary<String>)cubeSeg.getDictionary(this.topNCol);
         }
