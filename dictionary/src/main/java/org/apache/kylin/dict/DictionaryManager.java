@@ -122,6 +122,7 @@ public class DictionaryManager {
             return getDictionaryInfo(dupDict);
         }
 
+        newDictInfo.setCardinality(newDict.getSize());
         newDictInfo.setDictionaryObject(newDict);
         newDictInfo.setDictionaryClass(newDict.getClass().getName());
 

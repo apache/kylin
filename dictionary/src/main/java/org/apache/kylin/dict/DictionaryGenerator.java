@@ -49,7 +49,7 @@ public class DictionaryGenerator {
         try {
             return KylinConfig.getInstanceFromEnv().getDictionaryMaxCardinality();
         } catch (Throwable e) {
-            return 2000000; // some test case does not KylinConfig setup properly
+            return 5000000; // some test case does not KylinConfig setup properly
         }
     }
 
@@ -62,11 +62,11 @@ public class DictionaryGenerator {
         // build dict, case by data type
         DataType dataType = DataType.getInstance(info.getDataType());
         if (dataType.isDateTimeFamily())
-            dict = buildDateStrDict(info, valueEnumerator, baseId, nSamples, samples);
+            dict = buildDateStrDict(valueEnumerator, baseId, nSamples, samples);
         else if (dataType.isNumberFamily())
-            dict = buildNumberDict(info, valueEnumerator, baseId, nSamples, samples);
+            dict = buildNumberDict(valueEnumerator, baseId, nSamples, samples);
         else
-            dict = buildStringDict(info, valueEnumerator, baseId, nSamples, samples);
+            dict = buildStringDict(valueEnumerator, baseId, nSamples, samples);
 
         // log a few samples
         StringBuilder buf = new StringBuilder();
@@ -76,10 +76,10 @@ public class DictionaryGenerator {
             buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
         }
         logger.info("Dictionary value samples: " + buf.toString());
-        logger.info("Dictionary cardinality: " + info.getCardinality());
+        logger.info("Dictionary cardinality: " + dict.getSize());
 
-        if (dict instanceof TrieDictionary && info.getCardinality() > DICT_MAX_CARDINALITY)
-            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- " + info.getSourceTable() + "." + info.getSourceColumn() + " cardinality: " + info.getCardinality());
+        if (dict instanceof TrieDictionary && dict.getSize() > DICT_MAX_CARDINALITY)
+            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- " + info.getSourceTable() + "." + info.getSourceColumn() + " cardinality: " + dict.getSize());
 
         return dict;
     }
@@ -105,7 +105,7 @@ public class DictionaryGenerator {
         }
     }
 
-    private static Dictionary buildDateStrDict(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
+    private static Dictionary buildDateStrDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         final int BAD_THRESHOLD = 2;
         String matchPattern = null;
         byte[] value;
@@ -113,7 +113,6 @@ public class DictionaryGenerator {
         for (String ptn : DATE_PATTERNS) {
             matchPattern = ptn; // be optimistic
             int badCount = 0;
-            int totalCount = 0;
             SimpleDateFormat sdf = new SimpleDateFormat(ptn);
 
             while (valueEnumerator.moveNext()) {
@@ -126,7 +125,6 @@ public class DictionaryGenerator {
                     sdf.parse(str);
                     if (samples.size() < nSamples && !samples.contains(str))
                         samples.add(str);
-                    totalCount++;
                 } catch (ParseException e) {
                     logger.info("Unrecognized datetime value: " + str);
                     badCount++;
@@ -137,17 +135,15 @@ public class DictionaryGenerator {
                 }
             }
             if (matchPattern != null) {
-                info.setCardinality(totalCount);
                 return new DateStrDictionary(matchPattern, baseId);
             }
         }
         throw new IllegalStateException("Unrecognized datetime value");
     }
 
-    private static Dictionary buildStringDict(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
+    private static Dictionary buildStringDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
         byte[] value;
-        int totalCount = 0;
         while (valueEnumerator.moveNext()) {
             value = valueEnumerator.current();
             if (value == null)
@@ -156,16 +152,13 @@ public class DictionaryGenerator {
             builder.addValue(v);
             if (samples.size() < nSamples && !samples.contains(v))
                 samples.add(v);
-            totalCount++;
         }
-        info.setCardinality(totalCount);
         return builder.build(baseId);
     }
 
-    private static Dictionary buildNumberDict(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
+    private static Dictionary buildNumberDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         byte[] value;
-        int totalCount = 0;
         while (valueEnumerator.moveNext()) {
             value = valueEnumerator.current();
             if (value == null)
@@ -177,9 +170,7 @@ public class DictionaryGenerator {
             builder.addValue(v);
             if (samples.size() < nSamples && !samples.contains(v))
                 samples.add(v);
-            totalCount++;
         }
-        info.setCardinality(totalCount);
         return builder.build(baseId);
     }
 
