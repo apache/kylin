@@ -26,12 +26,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.model.LookupDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.*;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -48,7 +43,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IIInstance extends RootPersistentEntity implements IRealization {
+public class IIInstance extends RootPersistentEntity implements IRealization, IBuildable {
 
     public static IIInstance create(String iiName, String projectName, IIDesc iiDesc) {
         IIInstance iii = new IIInstance();
@@ -373,4 +368,13 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
         return IStorageAware.ID_HBASE;
     }
 
+    @Override
+    public int getEngineType() {
+        return getDescriptor().getEngineType();
+    }
+
+    @Override
+    public int getSourceType() {
+        return getDataModelDesc().getFactTableDesc().getSourceType();
+    }
 }

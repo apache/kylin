@@ -19,9 +19,9 @@
 package org.apache.kylin.engine.mr;
 
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.realization.IRealizationSegment;
 
 /**
  * Any ITableSource that wishes to serve as input of MapReduce build engine must adapt to this interface.
@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 public interface IMRInput {
 
     /** Return a helper to participate in batch cubing job flow. */
-    public IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg);
+    public IMRBatchCubingInputSide getBatchCubingInputSide(IRealizationSegment seg);
 
     /** Return an InputFormat that reads from specified table. */
     public IMRTableInputFormat getTableInputFormat(TableDesc table);

@@ -59,6 +59,7 @@ public final class ExecutableConstants {
 
     public static final String STEP_NAME_BUILD_II = "Build Inverted Index";
     public static final String STEP_NAME_CONVERT_II_TO_HFILE = "Convert Inverted Index Data to HFile";
+    public static final String STEP_NAME_UPDATE_II_INFO = "Update Inverted Index Info";
 
     public static final String PROP_ENGINE_CONTEXT = "jobengineConfig";
     public static final String PROP_JOB_FLOW = "jobFlow";

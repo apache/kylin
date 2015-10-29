@@ -44,7 +44,7 @@ public class ImplementationSwitch<I> {
             maxId = Math.max(maxId, id);
         }
         if (maxId > 100)
-            throw new IllegalArgumentException("you have more than 100 implentations?");
+            throw new IllegalArgumentException("you have more than 100 implementations?");
 
         Object[] result = new Object[maxId + 1];
 
@@ -65,7 +65,7 @@ public class ImplementationSwitch<I> {
         I result = (I) instances[id];
 
         if (result == null)
-            throw new IllegalArgumentException("Implementations missing, ID " + id + ", interafce " + interfaceClz.getName());
+            throw new IllegalArgumentException("Implementations missing, ID " + id + ", interface " + interfaceClz.getName());
 
         return result;
     }

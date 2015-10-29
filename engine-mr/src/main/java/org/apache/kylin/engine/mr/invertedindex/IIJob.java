@@ -16,9 +16,16 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.invertedindex;
+package org.apache.kylin.engine.mr.invertedindex;
 
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  */
@@ -45,6 +52,22 @@ public class IIJob extends DefaultChainedExecutable {
 
     public String getSegmentId() {
         return getParam(SEGMENT_ID);
+    }
+
+
+    public static IIJob createBuildJob(IISegment seg, String submitter, JobEngineConfig config) {
+        return initialJob(seg, "BUILD", submitter, config);
+    }
+
+    private static IIJob initialJob(IISegment seg, String type, String submitter, JobEngineConfig config) {
+        IIJob result = new IIJob();
+        SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
+        format.setTimeZone(TimeZone.getTimeZone(config.getTimeZone()));
+        result.setIIName(seg.getIIInstance().getName());
+        result.setSegmentId(seg.getUuid());
+        result.setName(seg.getIIInstance().getName() + " - " + seg.getName() + " - " + type + " - " + format.format(new Date(System.currentTimeMillis())));
+        result.setSubmitter(submitter);
+        return result;
     }
 
 }

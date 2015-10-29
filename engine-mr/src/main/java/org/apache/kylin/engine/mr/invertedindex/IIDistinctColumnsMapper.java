@@ -16,47 +16,56 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.invertedindex;
+package org.apache.kylin.engine.mr.invertedindex;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.ShortWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hive.hcatalog.data.HCatRecord;
-import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
-import org.apache.hive.hcatalog.data.schema.HCatSchema;
-import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.KylinMapper;
+import org.apache.kylin.engine.mr.MRUtil;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.invertedindex.IIInstance;
+import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
 
 /**
  * @author yangli9
  */
-public class IIDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRecord, ShortWritable, Text> {
+public class IIDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, Object, ShortWritable, Text> {
 
     private ShortWritable outputKey = new ShortWritable();
     private Text outputValue = new Text();
-    private HCatSchema schema = null;
-    private int columnSize = 0;
 
+    protected IMRInput.IMRTableInputFormat flatTableInputFormat;
+    
     @Override
     protected void setup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
-        schema = HCatInputFormat.getTableSchema(context.getConfiguration());
-        columnSize = schema.getFields().size();
+        Configuration conf = context.getConfiguration();
+        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
+
+        String iiName = conf.get(BatchConstants.CFG_II_NAME);
+        IIInstance iiInstance = IIManager.getInstance(config).getII(iiName);
+        IISegment seg = iiInstance.getFirstSegment();
+        flatTableInputFormat = MRUtil.getBatchCubingInputSide(seg).getFlatTableInputFormat();
     }
 
     @Override
-    public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
+    public void map(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
 
-        HCatFieldSchema fieldSchema = null;
-        for (short i = 0; i < columnSize; i++) {
+        String[] row = flatTableInputFormat.parseMapperInput(record);
+        
+        for (short i = 0; i < row.length; i++) {
             outputKey.set(i);
-            fieldSchema = schema.get(i);
-            Object fieldValue = record.get(fieldSchema.getName(), schema);
-            if (fieldValue == null)
+            if (row[i] == null)
                 continue;
-            byte[] bytes = Bytes.toBytes(fieldValue.toString());
+            byte[] bytes = Bytes.toBytes(row[i].toString());
             outputValue.set(bytes, 0, bytes.length);
             context.write(outputKey, outputValue);
         }

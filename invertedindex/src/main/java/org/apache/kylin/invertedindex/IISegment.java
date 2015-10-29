@@ -29,6 +29,9 @@ import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -37,6 +40,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationSegment;
 
 /**
  * @author honma
@@ -44,7 +49,7 @@ import com.google.common.base.Objects;
 
 // TODO: remove segment concept for II, append old hbase table
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IISegment implements Comparable<IISegment>, IDictionaryAware {
+public class IISegment implements Comparable<IISegment>, IDictionaryAware, IRealizationSegment {
 
     @JsonBackReference
     private IIInstance iiInstance;
@@ -108,6 +113,7 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware {
 
     // ============================================================================
 
+    @Override
     public String getUuid() {
         return uuid;
     }
@@ -116,6 +122,7 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware {
         this.uuid = id;
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -204,6 +211,7 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware {
         this.iiInstance = iiInstance;
     }
 
+    @Override
     public String getStorageLocationIdentifier() {
         return storageLocationIdentifier;
     }
@@ -289,4 +297,28 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware {
         this.createTimeUTC = createTimeUTC;
     }
 
+    @Override
+    public int getEngineType() {
+        return 0;
+    }
+
+    @Override
+    public int getSourceType() {
+        return 0;
+    }
+
+    @Override
+    public int getStorageType() {
+        return 0;
+    }
+
+    @Override
+    public IRealization getRealization() {
+        return iiInstance;
+    }
+
+    @Override
+    public IJoinedFlatTableDesc getJoinedFlatTableDesc() {
+        return new IIJoinedFlatTableDesc(this.getIIDesc());
+    }
 }

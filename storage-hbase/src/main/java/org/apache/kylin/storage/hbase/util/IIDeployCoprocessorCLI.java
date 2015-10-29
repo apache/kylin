@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.hadoop.invertedindex;
+package org.apache.kylin.storage.hbase.util;
 
 import java.io.File;
 import java.io.FileInputStream;

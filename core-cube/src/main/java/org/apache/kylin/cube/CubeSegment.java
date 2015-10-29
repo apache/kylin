@@ -27,9 +27,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
-import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -39,9 +40,11 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.IRealizationSegment;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, IBuildable {
+public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, IRealizationSegment {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -115,6 +118,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
         this.uuid = id;
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -211,6 +215,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
         this.cubeInstance = cubeInstance;
     }
 
+    @Override
     public String getStorageLocationIdentifier() {
 
         return storageLocationIdentifier;
@@ -410,4 +415,13 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
         return ret;
     }
 
+    @Override
+    public IRealization getRealization() {
+        return cubeInstance;
+    }
+
+    @Override
+    public IJoinedFlatTableDesc getJoinedFlatTableDesc() {
+        return new CubeJoinedFlatTableDesc(this.getCubeDesc(), this);
+    }
 }

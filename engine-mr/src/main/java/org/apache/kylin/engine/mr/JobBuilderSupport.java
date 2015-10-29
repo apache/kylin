@@ -25,15 +25,19 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
+import org.apache.kylin.engine.mr.invertedindex.UpdateInvertedIndexInfoAfterBuildStep;
 import org.apache.kylin.engine.mr.steps.CreateDictionaryJob;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsJob;
 import org.apache.kylin.engine.mr.steps.MergeDictionaryStep;
 import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterBuildStep;
 import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterMergeStep;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 
 import com.google.common.base.Preconditions;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.realization.IRealizationSegment;
 
 /**
  * Hold reusable steps for builders.
@@ -41,10 +45,10 @@ import com.google.common.base.Preconditions;
 public class JobBuilderSupport {
 
     final protected JobEngineConfig config;
-    final protected CubeSegment seg;
+    final protected IRealizationSegment seg;
     final protected String submitter;
 
-    public JobBuilderSupport(CubeSegment seg, String submitter) {
+    public JobBuilderSupport(IRealizationSegment seg, String submitter) {
         Preconditions.checkNotNull(seg, "segment cannot be null");
         this.config = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         this.seg = seg;
@@ -64,14 +68,14 @@ public class JobBuilderSupport {
         result.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
         result.setMapReduceJobClass(FactDistinctColumnsJob.class);
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, seg);
-        appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
+        appendMapReduceParameters(cmd, ((CubeSegment)seg).getCubeDesc().getModel());
+        appendExecCmdParameters(cmd, "cubename", seg.getRealization().getName());
         appendExecCmdParameters(cmd, "output", getFactDistinctColumnsPath(jobId));
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "statisticsenabled", String.valueOf(withStats));
         appendExecCmdParameters(cmd, "statisticsoutput", getStatisticsPath(jobId));
         appendExecCmdParameters(cmd, "statisticssamplingpercent", String.valueOf(config.getConfig().getCubingInMemSamplingPercent()));
-        appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + seg.getCubeInstance().getName() + "_Step");
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + seg.getRealization().getName() + "_Step");
 
         result.setMapReduceParams(cmd.toString());
         return result;
@@ -82,7 +86,7 @@ public class JobBuilderSupport {
         HadoopShellExecutable buildDictionaryStep = new HadoopShellExecutable();
         buildDictionaryStep.setName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY);
         StringBuilder cmd = new StringBuilder();
-        appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "cubename", seg.getRealization().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "input", getFactDistinctColumnsPath(jobId));
 
@@ -94,7 +98,7 @@ public class JobBuilderSupport {
     public UpdateCubeInfoAfterBuildStep createUpdateCubeInfoAfterBuildStep(String jobId) {
         final UpdateCubeInfoAfterBuildStep updateCubeInfoStep = new UpdateCubeInfoAfterBuildStep();
         updateCubeInfoStep.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
-        updateCubeInfoStep.setCubeName(seg.getCubeInstance().getName());
+        updateCubeInfoStep.setCubeName(seg.getRealization().getName());
         updateCubeInfoStep.setSegmentId(seg.getUuid());
         updateCubeInfoStep.setCubingJobId(jobId);
         return updateCubeInfoStep;
@@ -103,7 +107,7 @@ public class JobBuilderSupport {
     public MergeDictionaryStep createMergeDictionaryStep(List<String> mergingSegmentIds) {
         MergeDictionaryStep result = new MergeDictionaryStep();
         result.setName(ExecutableConstants.STEP_NAME_MERGE_DICTIONARY);
-        result.setCubeName(seg.getCubeInstance().getName());
+        result.setCubeName(seg.getRealization().getName());
         result.setSegmentId(seg.getUuid());
         result.setMergingSegmentIds(mergingSegmentIds);
         return result;
@@ -112,11 +116,22 @@ public class JobBuilderSupport {
     public UpdateCubeInfoAfterMergeStep createUpdateCubeInfoAfterMergeStep(List<String> mergingSegmentIds, String jobId) {
         UpdateCubeInfoAfterMergeStep result = new UpdateCubeInfoAfterMergeStep();
         result.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
-        result.setCubeName(seg.getCubeInstance().getName());
+        result.setCubeName(seg.getRealization().getName());
         result.setSegmentId(seg.getUuid());
         result.setMergingSegmentIds(mergingSegmentIds);
         result.setCubingJobId(jobId);
         return result;
+    }
+
+
+
+    public UpdateInvertedIndexInfoAfterBuildStep createUpdateInvertedIndexInfoAfterBuildStep(String jobId) {
+        final UpdateInvertedIndexInfoAfterBuildStep updateIIInfoStep = new UpdateInvertedIndexInfoAfterBuildStep();
+        updateIIInfoStep.setName(ExecutableConstants.STEP_NAME_UPDATE_II_INFO);
+        updateIIInfoStep.setInvertedIndexName(seg.getRealization().getName());
+        updateIIInfoStep.setSegmentId(seg.getUuid());
+        updateIIInfoStep.setJobId(jobId);
+        return updateIIInfoStep;
     }
 
     // ============================================================================
@@ -125,17 +140,20 @@ public class JobBuilderSupport {
         return getJobWorkingDir(config, jobId);
     }
 
+    public String getRealizationRootPath(String jobId) {
+        return getJobWorkingDir(jobId) + "/" + seg.getRealization().getName();
+    }
     public String getCuboidRootPath(String jobId) {
-        return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/cuboid/";
+        return getRealizationRootPath(jobId) + "/cuboid/";
     }
 
     public String getCuboidRootPath(CubeSegment seg) {
         return getCuboidRootPath(seg.getLastBuildJobID());
     }
 
-    public void appendMapReduceParameters(StringBuilder buf, CubeSegment seg) {
+    public void appendMapReduceParameters(StringBuilder buf, DataModelDesc modelDesc) {
         try {
-            String jobConf = config.getHadoopJobConfFilePath(seg.getCubeDesc().getModel().getCapacity());
+            String jobConf = config.getHadoopJobConfFilePath(modelDesc.getCapacity());
             if (jobConf != null && jobConf.length() > 0) {
                 buf.append(" -conf ").append(jobConf);
             }
@@ -145,11 +163,11 @@ public class JobBuilderSupport {
     }
 
     public String getFactDistinctColumnsPath(String jobId) {
-        return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/fact_distinct_columns";
+        return getRealizationRootPath(jobId) + "/fact_distinct_columns";
     }
 
     public String getStatisticsPath(String jobId) {
-        return getJobWorkingDir(jobId) + "/" + seg.getCubeInstance().getName() + "/statistics";
+        return getRealizationRootPath(jobId) + "/statistics";
     }
 
     // ============================================================================

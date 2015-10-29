@@ -35,14 +35,7 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.DimensionDesc;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.*;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -87,6 +80,13 @@ public class IIDesc extends RootPersistentEntity {
     private int sliceSize = 50000; // no. rows
     @JsonProperty("useLocalDictionary")
     private boolean useLocalDictionary = true;
+
+    @JsonProperty("engine_type")
+    private int engineType = IEngineAware.ID_MR_II;
+
+    @JsonProperty("storage_type")
+    private int storageType = IStorageAware.ID_HBASE;
+    
     @JsonProperty("signature")
     private String signature;
 
@@ -397,6 +397,22 @@ public class IIDesc extends RootPersistentEntity {
             throw new RuntimeException("Failed to calculate signature");
         }
 
+    }
+
+    public int getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(int storageType) {
+        this.storageType = storageType;
+    }
+
+    public int getEngineType() {
+        return engineType;
+    }
+
+    public void setEngineType(int engineType) {
+        this.engineType = engineType;
     }
 
 }
