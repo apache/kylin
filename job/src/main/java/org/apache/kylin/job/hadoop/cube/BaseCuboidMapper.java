@@ -228,8 +228,8 @@ public class BaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, Text
 
     private void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
 
-        System.err.println("Insane record: " + bytesSplitter);
         ex.printStackTrace(System.err);
+        System.err.println("Insane record: " + bytesSplitter);
 
         errorRecordCounter++;
         if (errorRecordCounter > BatchConstants.ERROR_RECORD_THRESHOLD) {
