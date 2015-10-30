@@ -27,8 +27,7 @@ KylinApp.constant('cubeConfig', {
   cubePartitionTypes: ['APPEND'],
   joinTypes: [
     {name: 'Left', value: 'left'},
-    {name: 'Inner', value: 'inner'},
-    {name: 'Right', value: 'right'}
+    {name: 'Inner', value: 'inner'}
   ],
   queryPriorities: [
     {name: 'NORMAL', value: 50},
