@@ -34,6 +34,7 @@
 
 package org.apache.kylin.invertedindex.util;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,6 +42,7 @@ import javax.annotation.Nullable;
 
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -55,7 +57,7 @@ public final class IIDictionaryBuilder {
     private IIDictionaryBuilder() {
     }
 
-    public static Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) {
+    public static Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) throws IOException{
         HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
         final List<TblColRef> allColumns = desc.listAllColumns();
         for (List<String> row : table) {
@@ -76,7 +78,7 @@ public final class IIDictionaryBuilder {
                     return input == null ? null : input.getBytes();
                 }
             });
-            final Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), bytes);
+            final Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(tblColRef.getType(), new IterableDictionaryValueEnumerator(bytes));
             result[desc.findColumn(tblColRef)] = dict;
         }
         return result;
