@@ -89,7 +89,6 @@
             <groupId>com.ning</groupId>
             <artifactId>compress-lzf</artifactId>
         </dependency>
-      
 
         <!-- Logging -->
         <dependency>
@@ -113,11 +112,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
             <scope>test</scope>
         </dependency>
 

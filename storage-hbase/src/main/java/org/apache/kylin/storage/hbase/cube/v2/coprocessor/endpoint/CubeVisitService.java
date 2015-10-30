@@ -56,6 +56,7 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
 
+@SuppressWarnings("unused")//used in hbase endpoint
 public class CubeVisitService extends CubeVisitProtos.CubeVisitService implements Coprocessor, CoprocessorService {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeVisitService.class);
