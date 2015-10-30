@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #pragma once
 
 #define prod_KServerAddr ""
@@ -45,3 +45,4 @@ void simpleQueryTest();
 void queryFlowTest();
 void restAPITest();
 void crossValidate();
+void validateSQLGetTypeInfo();

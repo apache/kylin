@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "Tests.h"
 #include <vector>
 
@@ -545,4 +545,68 @@ void crossValidate() {
         fprintf ( stdout, wstring2string ( *iter ).c_str() );
         fprintf ( stdout, "\n\n" );
     }
+}
+
+void validateSQLGetTypeInfo () {
+    Sleep ( 1000 );
+    SQLRETURN       status;
+    SQLHANDLE       hEnv = 0;
+    SQLHANDLE       hConn = 0;
+    SQLHANDLE       hStmt = 0;
+    wchar_t szConnStrOut[1024];
+    SQLSMALLINT     x;
+
+    // BEFORE U CONNECT
+    // allocate ENVIRONMENT
+    status = SQLAllocHandle ( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &hEnv );
+    // check for error
+    ODBC_CHK_ERROR ( SQL_HANDLE_ENV, hEnv, status, "" );
+    // set the ODBC version for behaviour expected
+    status = SQLSetEnvAttr ( hEnv,  SQL_ATTR_ODBC_VERSION, ( SQLPOINTER ) SQL_OV_ODBC3, 0 );
+    // check for error
+    ODBC_CHK_ERROR ( SQL_HANDLE_ENV, hEnv, status, "" );
+    // allocate CONNECTION
+    status = SQLAllocHandle ( SQL_HANDLE_DBC, hEnv, &hConn );
+    // check for error
+    ODBC_CHK_ERROR ( SQL_HANDLE_ENV, hEnv, status, "" );
+    #ifdef  _WIN64
+    // ----------- real connection takes place at this point
+    // ----------- option 1: user is prompted for DSN & options
+    status = SQLDriverConnect ( hConn, GetDesktopWindow(),
+                                ( unsigned char* ) "",
+                                SQL_NTS, szConnStrOut, 1024, &x,
+                                SQL_DRIVER_COMPLETE );
+    #else
+    status = SQLDriverConnectW ( hConn , GetDesktopWindow(),
+                                 //L"DSN=testDSN;",
+                                 L"DRIVER={KylinODBCDriver};PROJECT=default;UID=ADMIN;SERVER=http://localhost;PORT=80;",
+                                 SQL_NTS, szConnStrOut, 1024, &x,
+                                 SQL_DRIVER_COMPLETE );
+    #endif
+    // check for error
+    ODBC_CHK_ERROR ( SQL_HANDLE_DBC, hConn, status, "" );
+    // CONGRATUALTIONS ---- u r connected to a DBMS via an ODBC driver
+    // allocate STATEMENT
+    status = SQLAllocHandle ( SQL_HANDLE_STMT, hConn, &hStmt );
+    // check for error
+    ODBC_CHK_ERROR ( SQL_HANDLE_DBC, hConn, status, "" );
+    // execute the statement
+    //status = SQLExecDirect ( hStmt, ( unsigned char* )argv[1], SQL_NTS );
+	status = SQLGetTypeInfoW ( hStmt, SQL_ALL_TYPES);
+    // check for error
+    ODBC_CHK_ERROR ( SQL_HANDLE_STMT, hConn, status, "" );
+    // check for error
+    ODBC_CHK_ERROR ( SQL_HANDLE_STMT, hStmt, status, "" );
+Cleanup:
+
+    if ( hStmt )
+    { SQLFreeHandle ( SQL_HANDLE_STMT, hStmt ); }
+    
+    if ( hConn )
+    { SQLFreeHandle ( SQL_HANDLE_DBC, hConn ); }
+    
+    if ( hEnv )
+    { SQLFreeHandle ( SQL_HANDLE_ENV, hEnv ); }
+    
+    return;
 }

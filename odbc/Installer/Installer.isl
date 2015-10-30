@@ -1129,6 +1129,7 @@
 		<col def="I4">ISAttributes</col>
 		<col def="S255">ISFolderName</col>
 		<row><td>ALLUSERSPROFILE</td><td>TARGETDIR</td><td>.:ALLUSE~1|All Users</td><td/><td>0</td><td/></row>
+		<row><td>APACHE_KYLIN</td><td>ProgramFilesFolder</td><td>APACHE~1|Apache Kylin</td><td/><td>0</td><td/></row>
 		<row><td>AdminToolsFolder</td><td>TARGETDIR</td><td>.:Admint~1|AdminTools</td><td/><td>0</td><td/></row>
 		<row><td>AppDataFolder</td><td>TARGETDIR</td><td>.:APPLIC~1|Application Data</td><td/><td>0</td><td/></row>
 		<row><td>CommonAppDataFolder</td><td>TARGETDIR</td><td>.:Common~1|CommonAppData</td><td/><td>0</td><td/></row>
@@ -1139,11 +1140,12 @@
 		<row><td>FavoritesFolder</td><td>TARGETDIR</td><td>.:FAVORI~1|Favorites</td><td/><td>0</td><td/></row>
 		<row><td>FontsFolder</td><td>TARGETDIR</td><td>.:Fonts</td><td/><td>0</td><td/></row>
 		<row><td>GlobalAssemblyCache</td><td>TARGETDIR</td><td>.:Global~1|GlobalAssemblyCache</td><td/><td>0</td><td/></row>
-		<row><td>INSTALLDIR</td><td>KYLINODBCDRIVER__X86_</td><td>.</td><td/><td>0</td><td/></row>
+		<row><td>INSTALLDIR</td><td>KYLINODBCDRIVER__X86_1</td><td>.</td><td/><td>0</td><td/></row>
 		<row><td>ISCommonFilesFolder</td><td>CommonFilesFolder</td><td>Instal~1|InstallShield</td><td/><td>0</td><td/></row>
 		<row><td>ISYourDataBaseDir</td><td>INSTALLDIR</td><td>Database</td><td/><td>0</td><td/></row>
 		<row><td>KYLINODBCDRIVER</td><td>kylinolap</td><td>KYLINO~1|KylinODBCDriver</td><td/><td>0</td><td/></row>
 		<row><td>KYLINODBCDRIVER__X86_</td><td>kylinolap</td><td>KYLINO~1|KylinODBCDriver (x86)</td><td/><td>0</td><td/></row>
+		<row><td>KYLINODBCDRIVER__X86_1</td><td>APACHE_KYLIN</td><td>KYLINO~1|KylinODBCDriver (x86)</td><td/><td>0</td><td/></row>
 		<row><td>LocalAppDataFolder</td><td>TARGETDIR</td><td>.:LocalA~1|LocalAppData</td><td/><td>0</td><td/></row>
 		<row><td>MY_PRODUCT_NAME</td><td>kylinolap</td><td>MYPROD~1|My Product Name</td><td/><td>0</td><td/></row>
 		<row><td>MyPicturesFolder</td><td>TARGETDIR</td><td>.:MyPict~1|MyPictures</td><td/><td>0</td><td/></row>
@@ -2641,7 +2643,7 @@
 		<col def="I2">Encoded</col>
 		<col def="S0">Comment</col>
 		<col def="I4">TimeStamp</col>
-		<row><td>COMPANY_NAME</td><td>1033</td><td>kylinolap</td><td>0</td><td/><td>1965213424</td></row>
+		<row><td>COMPANY_NAME</td><td>1033</td><td>Apache Kylin</td><td>0</td><td/><td>-182247760</td></row>
 		<row><td>DN_AlwaysInstall</td><td>1033</td><td>Always Install</td><td>0</td><td/><td>-1977438387</td></row>
 		<row><td>IDPROP_EXPRESS_LAUNCH_CONDITION_COLOR</td><td>1033</td><td>The color settings of your system are not adequate for running [ProductName].</td><td>0</td><td/><td>-1977438387</td></row>
 		<row><td>IDPROP_EXPRESS_LAUNCH_CONDITION_OS</td><td>1033</td><td>The operating system is not adequate for running [ProductName].</td><td>0</td><td/><td>-1977438387</td></row>
@@ -3741,8 +3743,8 @@
 		<row><td>IDS__TargetReq_DESC_PROCESSOR</td><td>1033</td><td>The processor is not adequate for running [ProductName].</td><td>0</td><td/><td>-1977438387</td></row>
 		<row><td>IDS__TargetReq_DESC_RAM</td><td>1033</td><td>The amount of RAM is not adequate for running [ProductName].</td><td>0</td><td/><td>-1977438387</td></row>
 		<row><td>IDS__TargetReq_DESC_RESOLUTION</td><td>1033</td><td>The screen resolution is not adequate for running [ProductName].</td><td>0</td><td/><td>-1977438387</td></row>
-		<row><td>ID_STRING1</td><td>1033</td><td>http://kylin.io</td><td>0</td><td/><td>1965188880</td></row>
-		<row><td>ID_STRING2</td><td>1033</td><td>kylinolap</td><td>0</td><td/><td>1965213424</td></row>
+		<row><td>ID_STRING1</td><td>1033</td><td>http://kylin.apache.org/</td><td>0</td><td/><td>-182233424</td></row>
+		<row><td>ID_STRING2</td><td>1033</td><td>Apache Kylin</td><td>0</td><td/><td>-182247760</td></row>
 		<row><td>IIDS_UITEXT_FeatureUninstalled</td><td>1033</td><td>This feature will remain uninstalled.</td><td>0</td><td/><td>-1977438387</td></row>
 	</table>
 
@@ -4357,7 +4359,7 @@ UwBpAG4AZwBsAGUASQBtAGEAZwBlAAEARQB4AHAAcgBlAHMAcwA=
 		<row><td>PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS</td><td>##IDS_PROGMSG_IIS_ROLLBACKWEBSERVICEEXTENSIONS##</td><td/></row>
 		<row><td>ProductCode</td><td>{A920FB5E-591B-4537-901D-7D0303088884}</td><td/></row>
 		<row><td>ProductName</td><td>KylinODBCDriver (x86)</td><td/></row>
-		<row><td>ProductVersion</td><td>0.7.0000</td><td/></row>
+		<row><td>ProductVersion</td><td>1.1.0000</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
 		<row><td>ProgressType1</td><td>Installing</td><td/></row>
 		<row><td>ProgressType2</td><td>installed</td><td/></row>
