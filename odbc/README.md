@@ -1,4 +1,4 @@
-# Abount KylinODBC
+# About KylinODBC
 
 
 ODBC Driver to interactive with Kylin REST server

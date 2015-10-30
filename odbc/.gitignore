@@ -3,6 +3,8 @@
 *.lo
 *.o
 *.obj
+*.idb
+*.ilk
 
 # Precompiled Headers
 *.gch
@@ -22,23 +24,26 @@
 *.a
 *.lib
 
-*.exe
-
 # Executables
 *.out
 *.app
+*.exe
 
+# Temp files
 *.opensdf
 *.sdf
 *.log
 *.tlog
 *.pdb
 *.suo
-
-
+*.aps
 /UpgradeLog.*
 /_UpgradeReport_files*
 /ipch*
 *.unsuccessfulbuild
 *.successfulbuild
 *.lastbuildstate
+
+# Installer projects
+Installer/Installer/
+Installer(64bit)/Installer(64bit)/

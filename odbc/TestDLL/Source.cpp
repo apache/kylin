@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "vld.h"
 #include "Tests.h"
 using namespace std;
@@ -27,5 +27,6 @@ int main() {
     //regression test:
     //simpleQueryTest();
     //queryFlowTest();
-    crossValidate();
+    //crossValidate();
+	validateSQLGetTypeInfo();
 }
