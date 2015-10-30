@@ -224,7 +224,7 @@ public class BuildIIWithStreamTest {
         }
     }
     
-    private void build(SliceBuilder sliceBuilder, StreamingBatch batch, HTableInterface htable) {
+    private void build(SliceBuilder sliceBuilder, StreamingBatch batch, HTableInterface htable) throws IOException {
         final Slice slice = sliceBuilder.buildSlice(batch);
         try {
             loadToHBase(htable, slice, new IIKeyValueCodec(slice.getInfo()));

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -44,7 +45,7 @@ public final class SliceBuilder {
         this.sliceMaker = new BatchSliceMaker(desc, shard);
     }
 
-    public Slice buildSlice(StreamingBatch microStreamBatch) {
+    public Slice buildSlice(StreamingBatch microStreamBatch) throws IOException{
         final List<List<String>> messages = Lists.transform(microStreamBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
             @Nullable
             @Override

@@ -21,8 +21,8 @@ package org.apache.kylin.dict;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -46,15 +46,15 @@ public class NumberDictionaryTest {
     Random rand = new Random();
 
     @Test
-    public void testEmptyInput() {
+    public void testEmptyInput() throws IOException{
         String[] ints = new String[] { "", "0", "5", "100", "13" };
-        Collection<byte[]> intBytes = new ArrayList<byte[]>();
+        Collection<byte[]> intBytes = Lists.newArrayListWithCapacity(ints.length);
         for (String s : ints) {
             intBytes.add((s == null) ? null : Bytes.toBytes(s));
         }
 
         // check "" is treated as NULL, not a code of dictionary
-        Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(DataType.getInstance("integer"), intBytes);
+        Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(DataType.getInstance("integer"), new IterableDictionaryValueEnumerator(intBytes));
         assertEquals(4, dict.getSize());
 
         final int id = ((NumberDictionary<String>) dict).getIdFromValue("");

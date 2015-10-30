@@ -57,7 +57,7 @@ import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.*;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
-import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
 import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
 import org.apache.kylin.engine.spark.util.IteratorUtils;
@@ -169,7 +169,7 @@ public class SparkCubing extends AbstractApplication {
             final DataFrame frame = intermediateTable.select(column).distinct();
 
             final Row[] rows = frame.collect();
-            dictionaryMap.put(tblColRef, DictionaryGenerator.buildDictionaryFromValueList(tblColRef.getType(), new Iterable<byte[]>() {
+            dictionaryMap.put(tblColRef, DictionaryGenerator.buildDictionaryFromValueEnumerator(tblColRef.getType(), new IterableDictionaryValueEnumerator(new Iterable<byte[]>() {
                 @Override
                 public Iterator<byte[]> iterator() {
                     return new Iterator<byte[]>() {
@@ -197,7 +197,7 @@ public class SparkCubing extends AbstractApplication {
                         }
                     };
                 }
-            }));
+            })));
         }
         final long end = System.currentTimeMillis();
         CubingUtils.writeDictionary(cubeInstance.getSegmentById(segmentId), dictionaryMap, start, end);

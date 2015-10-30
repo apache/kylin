@@ -41,6 +41,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -177,7 +178,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             if (desc.getRowkey().isUseDictionary(col)) {
                 logger.info("Building dictionary for " + col);
                 List<byte[]> valueList = readValueList(flatTable, nColumns, flatTableDesc.getRowKeyColumnIndexes()[c]);
-                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(col.getType(), valueList);
+                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(col.getType(), new IterableDictionaryValueEnumerator(valueList));
                 result.put(col, dict);
             }
         }
@@ -191,7 +192,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
                 TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
                 logger.info("Building dictionary for " + displayCol);
                 List<byte[]> valueList = readValueList(flatTable, nColumns, displayColIdx);
-                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueList(displayCol.getType(), valueList);
+                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(displayCol.getType(), new IterableDictionaryValueEnumerator(valueList));
 
                 result.put(displayCol, dict);
             }
