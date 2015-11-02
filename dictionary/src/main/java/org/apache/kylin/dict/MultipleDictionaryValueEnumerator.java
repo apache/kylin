@@ -19,12 +19,9 @@
 package org.apache.kylin.dict;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
 import org.apache.kylin.common.util.Bytes;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -32,7 +29,6 @@ import java.util.List;
  */
 @SuppressWarnings("rawtypes")
 public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumerator {
-    private HashSet<byte[]> dedup = Sets.newHashSet();
     private int curDictIndex = 0;
     private Dictionary curDict;
     private int curKey;
@@ -69,11 +65,7 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
                 }
             }
 
-            if (dedup.contains(curValue)) {
-                return moveNext();
-            } else {
-                return true;
-            }
+            return true;
         }
         curValue = null;
         return false;

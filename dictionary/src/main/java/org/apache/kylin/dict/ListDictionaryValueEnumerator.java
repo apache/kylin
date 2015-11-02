@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.dict.lookup;
+package org.apache.kylin.dict;
 
 import org.apache.kylin.dict.IDictionaryValueEnumerator;
 

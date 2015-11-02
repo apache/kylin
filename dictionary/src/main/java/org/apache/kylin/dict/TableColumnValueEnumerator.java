@@ -18,13 +18,11 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.collect.Sets;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dict.lookup.ReadableTable;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Set;
 
 /**
  * Created by dongli on 10/28/15.
@@ -34,7 +32,6 @@ public class TableColumnValueEnumerator implements IDictionaryValueEnumerator {
     private ReadableTable.TableReader reader;
     private int colIndex;
     private byte[] colValue;
-    private Set<String> dedup = Sets.newHashSet();
 
     public TableColumnValueEnumerator(ReadableTable.TableReader reader, int colIndex) {
         this.reader = reader;
@@ -55,13 +52,9 @@ public class TableColumnValueEnumerator implements IDictionaryValueEnumerator {
                 }
                 colStrValue = split[colIndex];
             }
-            if (!dedup.contains(colStrValue)) {
-                dedup.add(colStrValue);
-                colValue = Bytes.toBytes(colStrValue);
-                return true;
-            } else {
-                return moveNext();
-            }
+
+            colValue = Bytes.toBytes(colStrValue);
+            return true;
 
         } else {
             colValue = null;
