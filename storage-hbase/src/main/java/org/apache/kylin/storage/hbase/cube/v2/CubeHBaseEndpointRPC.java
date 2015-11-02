@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.DataFormatException;
 
 import javax.annotation.Nullable;
@@ -37,6 +38,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
@@ -47,6 +49,7 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
@@ -64,11 +67,13 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         private GTInfo info;
         private Iterator<byte[]> blocks;
         private ImmutableBitSet columns;
+        private int totalScannedCount;
 
-        public EndpointResultsAsGTScanner(GTInfo info, Iterator<byte[]> blocks, ImmutableBitSet columns) {
+        public EndpointResultsAsGTScanner(GTInfo info, Iterator<byte[]> blocks, ImmutableBitSet columns, int totalScannedCount) {
             this.info = info;
             this.blocks = blocks;
             this.columns = columns;
+            this.totalScannedCount = totalScannedCount;
         }
 
         @Override
@@ -78,7 +83,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         @Override
         public int getScannedRowCount() {
-            return 0;
+            return totalScannedCount;
         }
 
         @Override
@@ -155,6 +160,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             logScan(rawScan, cubeSeg.getStorageLocationIdentifier());
         }
 
+        final AtomicInteger totalScannedCount = new AtomicInteger(0);
+
         for (int i = 0; i < rawScans.size(); ++i) {
             final int shardIndex = i;
             final RawScan rawScan = rawScans.get(i);
@@ -169,6 +176,15 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                         builder.addHbaseColumnsToGT(intList);
                     }
 
+                    // debug/profiling purpose
+                    String toggle = BackdoorToggles.getCoprocessorBehavior();
+                    if (toggle == null) {
+                        toggle = CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString(); //default behavior
+                    } else {
+                        logger.info("The execution of this query will use " + toggle + " as endpoint's behavior");
+                    }
+                    builder.setBehavior(toggle);
+
                     Collection<CubeVisitProtos.CubeVisitResponse> results;
                     try {
                         results = getResults(builder.build(), hbaseTable, rawScan.startKey, rawScan.endKey);
@@ -182,6 +198,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                     }
 
                     for (CubeVisitProtos.CubeVisitResponse result : results) {
+                        totalScannedCount.addAndGet(result.getStats().getScannedRowCount());
                         logger.info(getStatsString(result, shardIndex));
                     }
 
@@ -209,7 +226,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             throw new RuntimeException("Visiting cube by endpoint gets interrupted");
         }
 
-        return new EndpointResultsAsGTScanner(fullGTInfo, rowBlocks.iterator(), scanRequest.getColumns());
+        return new EndpointResultsAsGTScanner(fullGTInfo, rowBlocks.iterator(), scanRequest.getColumns(), totalScannedCount.get());
     }
 
     private String getStatsString(CubeVisitProtos.CubeVisitResponse result, int shardIndex) {

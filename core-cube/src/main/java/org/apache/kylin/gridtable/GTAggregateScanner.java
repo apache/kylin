@@ -9,10 +9,8 @@ import java.util.SortedMap;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.metadata.measure.HLLCAggregator;
-import org.apache.kylin.metadata.measure.LDCAggregator;
+import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.apache.kylin.metadata.measure.TopNAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +21,7 @@ public class GTAggregateScanner implements IGTScanner {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(GTAggregateScanner.class);
+    private int aggregatedRowCount = 0;
 
     final GTInfo info;
     final ImmutableBitSet dimensions; // dimensions to return, can be more than group by
@@ -31,19 +30,20 @@ public class GTAggregateScanner implements IGTScanner {
     final String[] metricsAggrFuncs;
     final IGTScanner inputScanner;
     final AggregationCache aggrCache;
+    final boolean enableMemCheck;
 
-    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
+    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, boolean enableMemCheck) {
         if (req.hasAggregation() == false)
             throw new IllegalStateException();
 
         this.info = inputScanner.getInfo();
-        //TODO bug? what if multiple metrics on same column? and what is this?
         this.dimensions = req.getColumns().andNot(req.getAggrMetrics());
         this.groupBy = req.getAggrGroupBy();
         this.metrics = req.getAggrMetrics();
         this.metricsAggrFuncs = req.getAggrMetricsFuncs();
         this.inputScanner = inputScanner;
         this.aggrCache = new AggregationCache();
+        this.enableMemCheck = enableMemCheck;
     }
 
     @Override
@@ -71,11 +71,7 @@ public class GTAggregateScanner implements IGTScanner {
 
     /** return the estimate memory size of aggregation cache */
     public long getEstimateSizeOfAggrCache() {
-        return aggrCache.esitmateMemSize();
-    }
-
-    public Object[] getTotalSumForSanityCheck() {
-        return aggrCache.calculateTotalSumSanityCheck();
+        return aggrCache.estimatedMemSize();
     }
 
     class AggregationCache {
@@ -145,6 +141,12 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         void aggregate(GTRecord r) {
+            if (enableMemCheck && (++aggregatedRowCount % 100000 == 0)) {
+                if (estimatedMemSize() > MemoryBudgetController.ONE_GB) {
+                    throw new RuntimeException("AggregationCache exceed 1GB");
+                }
+            }
+
             final byte[] key = createKey(r);
             MeasureAggregator[] aggrs = aggBufMap.get(key);
             if (aggrs == null) {
@@ -162,30 +164,7 @@ public class GTAggregateScanner implements IGTScanner {
             return info.codeSystem.newMetricsAggregators(metrics, metricsAggrFuncs);
         }
 
-        public Object[] calculateTotalSumSanityCheck() {
-            MeasureAggregator[] totalSum = newAggregators();
-
-            // skip expensive aggregation
-            for (int i = 0; i < totalSum.length; i++) {
-                if (totalSum[i] instanceof HLLCAggregator || totalSum[i] instanceof LDCAggregator || totalSum[i] instanceof TopNAggregator)
-                    totalSum[i] = null;
-            }
-
-            for (MeasureAggregator[] entry : aggBufMap.values()) {
-                for (int i = 0; i < totalSum.length; i++) {
-                    if (totalSum[i] != null)
-                        totalSum[i].aggregate(entry[i].getState());
-                }
-            }
-            Object[] result = new Object[totalSum.length];
-            for (int i = 0; i < totalSum.length; i++) {
-                if (totalSum[i] != null)
-                    result[i] = totalSum[i].getState();
-            }
-            return result;
-        }
-
-        public long esitmateMemSize() {
+        public long estimatedMemSize() {
             if (aggBufMap.isEmpty())
                 return 0;
 

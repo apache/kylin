@@ -20,9 +20,14 @@ package org.apache.kylin.common.debug;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  */
 public class BackdoorToggles {
+
+    private static final Logger logger = LoggerFactory.getLogger(BackdoorToggles.class);
 
     private static final ThreadLocal<Map<String, String>> _backdoorToggles = new ThreadLocal<Map<String, String>>();
 
@@ -30,8 +35,8 @@ public class BackdoorToggles {
         _backdoorToggles.set(toggles);
     }
 
-    public static String getObserverBehavior() {
-        return getString(DEBUG_TOGGLE_OBSERVER_BEHAVIOR);
+    public static String getCoprocessorBehavior() {
+        return getString(DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR);
     }
 
     public static String getHbaseCubeQueryVersion() {
@@ -101,14 +106,14 @@ public class BackdoorToggles {
     public final static String DEBUG_TOGGLE_HBASE_CUBE_QUERY_PROTOCOL = "DEBUG_TOGGLE_HBASE_CUBE_QUERY_PROTOCOL";
 
     /**
-     * set DEBUG_TOGGLE_OBSERVER_BEHAVIOR=SCAN/SCAN_FILTER/SCAN_FILTER_AGGR to control observer behavior for debug/profile usage
+     * set DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR=SCAN/SCAN_FILTER/SCAN_FILTER_AGGR/SCAN_FILTER_AGGR_CHECKMEM to control observer behavior for debug/profile usage
      *
      example:(put it into request body)
      "backdoorToggles": {
-        "DEBUG_TOGGLE_OBSERVER_BEHAVIOR": "SCAN"
+        "DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR": "SCAN"
      }
      */
-    public final static String DEBUG_TOGGLE_OBSERVER_BEHAVIOR = "DEBUG_TOGGLE_OBSERVER_BEHAVIOR";
+    public final static String DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR = "DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR";
 
     /**
      * set DEBUG_TOGGLE_LOCAL_COPROCESSOR=true to run coprocessor at client side (not in HBase region server)

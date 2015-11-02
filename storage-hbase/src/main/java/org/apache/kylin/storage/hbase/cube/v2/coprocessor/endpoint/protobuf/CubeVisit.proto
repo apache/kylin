@@ -12,16 +12,16 @@ option java_generate_equals_and_hash = true;
 option optimize_for = SPEED;
 
 message CubeVisitRequest {
-    required bytes gtScanRequest = 1;
-    required bytes hbaseRawScan = 2;
-    repeated IntList hbaseColumnsToGT = 3;
+    required string behavior = 1;
+    required bytes gtScanRequest = 2;
+    required bytes hbaseRawScan = 3;
+    repeated IntList hbaseColumnsToGT = 4;
     message IntList {
         repeated int32 ints = 1;
     }
 }
 
 message CubeVisitResponse {
-    //all entries in this struct be optional to conveniently add more entries in the future
     message Stats {
         optional int64 serviceStartTime = 1;
         optional int64 serviceEndTime = 2;

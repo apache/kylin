@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
@@ -38,9 +39,9 @@ import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
 public class AggregationScanner implements RegionScanner {
 
     private RegionScanner outerScanner;
-    private ObserverBehavior behavior;
+    private CoprocessorBehavior behavior;
 
-    public AggregationScanner(CoprocessorRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner, ObserverBehavior behavior) throws IOException {
+    public AggregationScanner(CoprocessorRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner, CoprocessorBehavior behavior) throws IOException {
 
         AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
 
@@ -64,6 +65,8 @@ public class AggregationScanner implements RegionScanner {
         ObserverTuple tuple = new ObserverTuple(type);
         boolean hasMore = true;
         List<Cell> results = new ArrayList<Cell>();
+        byte meaninglessByte = 0;
+
         while (hasMore) {
             results.clear();
             hasMore = innerScanner.nextRaw(results);
@@ -76,21 +79,34 @@ public class AggregationScanner implements RegionScanner {
             Cell cell = results.get(0);
             tuple.setUnderlying(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength());
 
-            if (behavior.ordinal() >= ObserverBehavior.SCAN_FILTER.ordinal()) {
-                if (filter != null && filter.evaluate(tuple) == false)
-                    continue;
+            if (behavior == CoprocessorBehavior.SCAN) {
+                //touch every byte of the cell so that the cost of scanning will be trully reflected
+                int endIndex = cell.getRowOffset() + cell.getRowLength();
+                for (int i = cell.getRowOffset(); i < endIndex; ++i) {
+                    meaninglessByte += cell.getRowArray()[i];
+                }
+            } else {
+                if (behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal()) {
+                    if (filter != null && filter.evaluate(tuple) == false)
+                        continue;
 
-                if (behavior.ordinal() >= ObserverBehavior.SCAN_FILTER_AGGR.ordinal()) {
-                    AggrKey aggKey = projector.getAggrKey(results);
-                    MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
-                    aggregators.aggregate(bufs, results);
+                    if (behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal()) {
+                        AggrKey aggKey = projector.getAggrKey(results);
+                        MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
+                        aggregators.aggregate(bufs, results);
 
-                    if (behavior.ordinal() >= ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
-                        aggCache.checkMemoryUsage();
+                        if (behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
+                            aggCache.checkMemoryUsage();
+                        }
                     }
                 }
             }
         }
+
+        if (behavior == CoprocessorBehavior.SCAN) {
+            System.out.println("meaningless byte is now " + meaninglessByte);
+        }
+        
         return aggCache;
     }
 

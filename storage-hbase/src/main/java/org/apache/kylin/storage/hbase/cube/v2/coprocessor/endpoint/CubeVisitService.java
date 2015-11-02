@@ -41,6 +41,7 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.cube.v2.CellListIterator;
 import org.apache.kylin.storage.hbase.cube.v2.CubeHBaseRPC;
 import org.apache.kylin.storage.hbase.cube.v2.HBaseReadonlyStore;
@@ -56,7 +57,8 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
 
-@SuppressWarnings("unused")//used in hbase endpoint
+@SuppressWarnings("unused")
+//used in hbase endpoint
 public class CubeVisitService extends CubeVisitProtos.CubeVisitService implements Coprocessor, CoprocessorService {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeVisitService.class);
@@ -144,7 +146,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScan.hbaseColumns, hbaseColumnsToGT);
             IGTScanner rawScanner = store.scan(scanReq);
-            IGTScanner finalScanner = scanReq.decorateScanner(rawScanner);
+
+            CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
+            IGTScanner finalScanner = scanReq.decorateScanner(rawScanner,//
+                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal(),//
+                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal(),//
+                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal());//
 
             ByteBuffer buffer = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
