@@ -343,7 +343,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
-        GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req, false);
+        GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req, true);
 
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid " + baseCuboidId);
