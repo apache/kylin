@@ -37,6 +37,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.util.RMHAUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -72,7 +73,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 return;
             }
             try {
-                Job job = new Cluster(new Configuration()).getJob(JobID.forName(mrJobId));
+                Configuration conf = HadoopUtil.getCurrentConfiguration();
+                Job job = new Cluster(conf).getJob(JobID.forName(mrJobId));
                 if (job.getJobState() == JobStatus.State.FAILED) {
                     //remove previous mr job info
                     super.onExecuteStart(executableContext);
@@ -101,7 +103,8 @@ public class MapReduceExecutable extends AbstractExecutable {
             Job job;
             final Map<String, String> extra = executableManager.getOutput(getId()).getExtra();
             if (extra.containsKey(ExecutableConstants.MR_JOB_ID)) {
-                job = new Cluster(new Configuration()).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
+                Configuration conf = HadoopUtil.getCurrentConfiguration();
+                job = new Cluster(conf).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
                 logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID + " resumed"));
             } else {
                 final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();

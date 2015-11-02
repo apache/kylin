@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,14 +40,25 @@ public class HadoopUtil {
 
     public static Configuration getCurrentConfiguration() {
         if (hadoopConfig.get() == null) {
-            Configuration conf = new Configuration();
+            Configuration conf = healSickConfig(new Configuration());
             
-            // why we have this hard code?
-            conf.set(DFSConfigKeys.DFS_CLIENT_BLOCK_WRITE_LOCATEFOLLOWINGBLOCK_RETRIES_KEY, "8");
-
             hadoopConfig.set(conf);
         }
         return hadoopConfig.get();
+    }
+
+    private static Configuration healSickConfig(Configuration conf) {
+        // why we have this hard code?
+        conf.set(DFSConfigKeys.DFS_CLIENT_BLOCK_WRITE_LOCATEFOLLOWINGBLOCK_RETRIES_KEY, "8");
+
+        // https://issues.apache.org/jira/browse/KYLIN-953
+        if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
+            conf.set("hadoop.tmp.dir", "/tmp");
+        }
+        if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
+            conf.set("hbase.fs.tmp.dir", "/tmp");
+        }
+        return conf;
     }
 
     public static FileSystem getFileSystem(String path) throws IOException {

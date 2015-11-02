@@ -34,6 +34,7 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.junit.After;
 import org.junit.Before;
@@ -71,7 +72,7 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
     @Test
     public void testBasic() throws Exception {
 
-        Configuration hconf = new Configuration();
+        Configuration hconf = HadoopUtil.getCurrentConfiguration();
         Context context = MockupMapContext.create(hconf, getTestConfig().getMetadataUrl(), cubeName, outKV);
 
         CubeHFileMapper mapper = new CubeHFileMapper();
