@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
-        conf = new Configuration();
+        conf = HadoopUtil.getCurrentConfiguration();
         conf.set("fs.default.name", "file:///");
         conf.set("mapred.job.tracker", "local");
 

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.storage.hbase.steps.CreateHTableJob;
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +40,7 @@ public class CreateHTableTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
-        conf = new Configuration();
+        conf = HadoopUtil.getCurrentConfiguration();
         conf.set("fs.default.name", "file:///");
         conf.set("mapred.job.tracker", "local");
         this.createTestMetadata();

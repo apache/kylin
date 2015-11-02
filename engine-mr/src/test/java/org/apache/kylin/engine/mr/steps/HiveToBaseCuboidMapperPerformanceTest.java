@@ -28,6 +28,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -45,7 +46,7 @@ public class HiveToBaseCuboidMapperPerformanceTest {
     @Ignore("convenient trial tool for dev")
     @Test
     public void test() throws IOException, InterruptedException {
-        Configuration hconf = new Configuration();
+        Configuration hconf = HadoopUtil.getCurrentConfiguration();
         HiveToBaseCuboidMapper mapper = new HiveToBaseCuboidMapper();
         Context context = MockupMapContext.create(hconf, metadataUrl, cubeName, null);
 

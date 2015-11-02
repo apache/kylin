@@ -76,7 +76,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
         final CubeInstance cube = mgr.getCube(getCubeName());
         final CubeSegment newSegment = cube.getSegmentById(getSegmentId());
 
-        Configuration conf = new Configuration();
+        Configuration conf = HadoopUtil.getCurrentConfiguration();
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
 
