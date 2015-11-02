@@ -7,7 +7,8 @@ version: v1.1
 since: v0.7.1
 ---
 
-To download latest release, please visit: [http://kylin.incubator.apache.org/download/](http://kylin.incubator.apache.org/download/), there are source code package, binary package, ODBC driver and installation guide avaliable.
+To download latest release, please visit: [http://kylin.incubator.apache.org/download/](http://kylin.incubator.apache.org/download/), 
+there are source code package, binary package, ODBC driver and installation guide avaliable.
 
 Any problem or issue, please report to Apache Kylin JIRA project: [https://issues.apache.org/jira/browse/KYLIN](https://issues.apache.org/jira/browse/KYLIN)
 
