@@ -29,6 +29,7 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionCoprocessorHost;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
@@ -84,15 +85,15 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         byte[] filterBytes = scan.getAttribute(FILTER);
         CoprocessorFilter filter = CoprocessorFilter.deserialize(filterBytes);
 
-        ObserverBehavior observerBehavior = ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM;
+        CoprocessorBehavior coprocessorBehavior = CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM;
         try {
             byte[] behavior = scan.getAttribute(BEHAVIOR);
             if (behavior != null && behavior.length != 0) {
-                observerBehavior = ObserverBehavior.valueOf(new String(behavior));
+                coprocessorBehavior = CoprocessorBehavior.valueOf(new String(behavior));
             }
         } catch (Exception e) {
             LOG.error("failed to parse behavior,using default behavior SCAN_FILTER_AGGR_CHECKMEM", e);
-            observerBehavior = ObserverBehavior.SCAN_FILTER_AGGR_CHECKMEM;
+            coprocessorBehavior = CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM;
         }
 
         // start/end region operation & sync on scanner is suggested by the
@@ -102,7 +103,7 @@ public class AggregateRegionObserver extends BaseRegionObserver {
         region.startRegionOperation();
         try {
             synchronized (innerScanner) {
-                return new AggregationScanner(type, filter, projector, aggregators, innerScanner, observerBehavior);
+                return new AggregationScanner(type, filter, projector, aggregators, innerScanner, coprocessorBehavior);
             }
         } finally {
             region.closeRegionOperation();

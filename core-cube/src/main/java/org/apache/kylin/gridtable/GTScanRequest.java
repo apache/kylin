@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -117,14 +118,52 @@ public class GTScanRequest {
     }
 
     public IGTScanner decorateScanner(IGTScanner scanner) throws IOException {
+        return decorateScanner(scanner, true, true, true);
+    }
+
+    /**
+     * doFilter,doAggr,doMemCheck are only for profiling use.
+     * in normal cases they are all true.
+     * 
+     * Refer to CoprocessorBehavior for explanation
+     */
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean doFilter, boolean doAggr, boolean doMemCheck) throws IOException {
         IGTScanner result = scanner;
-        if (this.hasFilterPushDown()) {
-            result = new GTFilterScanner(result, this);
+        if (!doFilter) { //Skip reading this section if you're not profiling! 
+            lookAndForget(result);
+            return new EmptyGTScanner();
+        } else {
+
+            if (this.hasFilterPushDown()) {
+                result = new GTFilterScanner(result, this);
+            }
+
+            if (!doAggr) {//Skip reading this section if you're not profiling! 
+                lookAndForget(result);
+                return new EmptyGTScanner();
+            }
+
+            if (this.allowPreAggregation && this.hasAggregation()) {
+                result = new GTAggregateScanner(result, this, doMemCheck);
+            }
+            return result;
         }
-        if (this.allowPreAggregation && this.hasAggregation()) {
-            result = new GTAggregateScanner(result, this);
+    }
+
+    //touch every byte of the cell so that the cost of scanning will be trully reflected
+    private void lookAndForget(IGTScanner scanner) {
+        byte meaninglessByte = 0;
+        for (GTRecord gtRecord : scanner) {
+            for (ByteArray col : gtRecord.getInternal()) {
+                if (col != null) {
+                    int endIndex = col.offset() + col.length();
+                    for (int i = col.offset(); i < endIndex; ++i) {
+                        meaninglessByte += col.array()[i];
+                    }
+                }
+            }
         }
-        return result;
+        System.out.println("meaningless byte is now " + meaninglessByte);
     }
 
     public boolean hasFilterPushDown() {

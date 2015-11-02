@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kylin.common.topn.Counter;
 import org.apache.kylin.common.topn.TopNCounter;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.Pair;
@@ -342,7 +343,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
-        GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req);
+        GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req, false);
 
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid " + baseCuboidId);
@@ -463,7 +464,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                 }
                 totalSum[i] = Math.round(total);
             }
-            
+
         }
 
         if (totalSumForSanityCheck == null) {
