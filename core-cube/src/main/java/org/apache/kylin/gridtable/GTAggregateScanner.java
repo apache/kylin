@@ -142,8 +142,9 @@ public class GTAggregateScanner implements IGTScanner {
 
         void aggregate(GTRecord r) {
             if (enableMemCheck && (++aggregatedRowCount % 100000 == 0)) {
-                if (estimatedMemSize() > MemoryBudgetController.ONE_GB) {
-                    throw new RuntimeException("AggregationCache exceed 1GB");
+                long estimated = estimatedMemSize();
+                if (estimated > 10 * MemoryBudgetController.ONE_GB) {
+                    throw new RuntimeException("AggregationCache exceed 10GB, estimated size is: " + estimated);
                 }
             }
 
