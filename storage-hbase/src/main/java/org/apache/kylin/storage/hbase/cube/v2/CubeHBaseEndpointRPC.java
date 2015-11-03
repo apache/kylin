@@ -161,6 +161,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
 
         final AtomicInteger totalScannedCount = new AtomicInteger(0);
+        final String toggle = BackdoorToggles.getCoprocessorBehavior() == null ? CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString() : BackdoorToggles.getCoprocessorBehavior();
+        logger.info("The execution of this query will use " + toggle + " as endpoint's behavior");
 
         for (int i = 0; i < rawScans.size(); ++i) {
             final int shardIndex = i;
@@ -176,13 +178,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                         builder.addHbaseColumnsToGT(intList);
                     }
 
-                    // debug/profiling purpose
-                    String toggle = BackdoorToggles.getCoprocessorBehavior();
-                    if (toggle == null) {
-                        toggle = CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString(); //default behavior
-                    } else {
-                        logger.info("The execution of this query will use " + toggle + " as endpoint's behavior");
-                    }
                     builder.setBehavior(toggle);
 
                     Collection<CubeVisitProtos.CubeVisitResponse> results;
