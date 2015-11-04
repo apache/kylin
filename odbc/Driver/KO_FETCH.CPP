@@ -251,7 +251,10 @@ RETCODE SQL_API SQLColAttribute ( SQLHSTMT        pStmt,
                                   SQLSMALLINT*    pDataSizePtr,
                                   SQLLEN*      pNumValuePtr ) {
     __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLColAttributeW called, ColNum: %d, FldID: %d", pColNum, pFldID ) );
-    return _SQLColAttribute_basic ( pStmt, pColNum, pFldID, pDataPtr, pDataSize, pDataSizePtr, pNumValuePtr, true );
+    RETCODE code =  _SQLColAttribute_basic ( pStmt, pColNum, pFldID, pDataPtr, pDataSize, pDataSizePtr, pNumValuePtr,
+                                             true );
+    __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "the return code is %d", code ) );
+    return code;
 }
 
 #else
@@ -494,6 +497,7 @@ RETCODE SQL_API SQLBindCol ( SQLHSTMT        pStmt,
     ardcol = new ARDItem;
     // reset
     _SQLSetARDItemFieldsDefault ( ardcol, pColNum );
+
     // set all values - bind
     _SQLSetARDItemField ( ard, ardcol, pColNum, SQL_DESC_DATA_PTR, pDataPtr, -1 );
     _SQLSetARDItemField ( ard, ardcol, pColNum, SQL_DESC_CONCISE_TYPE, ( void* ) pDataType, -1 );
@@ -949,7 +953,7 @@ RETCODE SQL_API _SQLFetchCol ( pODBCStmt pStmt,
         // move both data and size ptr in the array
         //TODO find out where the pARDCol->DataSize if set
         tgtdataptr = ( void* ) ( ( ( Char* ) ( pARDCol->DataPtr ) ) + j + ( i * pARDCol->DataSize ) ); // use based on data type
-        tgtsizeptr = ( Long* ) ( ( ( Char* ) ( pARDCol->SizePtr ) ) + j + ( i * sizeof ( Long ) ) );
+        tgtsizeptr = ( Long* ) ( ( ( Char* ) ( pARDCol->SizePtr ) ) + j + ( i * sizeof ( SQLLEN ) ) );
     }
     
     // PRECAUTION

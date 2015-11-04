@@ -431,6 +431,11 @@ RETCODE SQL_API SQLSetStmtAttrW ( SQLHSTMT       pStmt,
     _SQLFreeDiag ( _DIAGSTMT ( pStmt ) );
     
     switch ( pAttr ) {
+		case 1226:/* MS SQL Server Extension */
+        case 1227:
+        case 1228:
+            break;
+
         case SQL_ATTR_APP_PARAM_DESC:
             __ODBCPOPMSG ( _ODBCPopMsg ( "SQL_ATTR_APP_PARAM_DESC - Cannot set descriptor" ) );
             return SQL_ERROR;

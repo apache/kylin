@@ -72,6 +72,31 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
             break;
             
         case SQL_CONVERT_FUNCTIONS ://48 called
+		case SQL_CONVERT_BIGINT:
+		case SQL_CONVERT_BINARY:
+		case SQL_CONVERT_BIT:
+		case SQL_CONVERT_CHAR: 
+		case SQL_CONVERT_GUID:
+		case SQL_CONVERT_DATE:
+		case SQL_CONVERT_DECIMAL:
+		case SQL_CONVERT_DOUBLE:
+		case SQL_CONVERT_FLOAT:
+		case SQL_CONVERT_INTEGER:
+		case SQL_CONVERT_INTERVAL_YEAR_MONTH:
+		case SQL_CONVERT_INTERVAL_DAY_TIME:
+		case SQL_CONVERT_LONGVARBINARY:
+		case SQL_CONVERT_LONGVARCHAR:
+		case SQL_CONVERT_NUMERIC:
+		case SQL_CONVERT_REAL:
+		case SQL_CONVERT_SMALLINT:
+		case SQL_CONVERT_TIME:
+		case SQL_CONVERT_TIMESTAMP:
+		case SQL_CONVERT_TINYINT:
+		case SQL_CONVERT_VARBINARY:
+		case SQL_CONVERT_VARCHAR:
+		case SQL_CONVERT_WCHAR:              
+		case SQL_CONVERT_WLONGVARCHAR:       
+		case SQL_CONVERT_WVARCHAR:
             break;
             
         case SQL_MAX_IDENTIFIER_LEN : //10005 called
@@ -210,12 +235,15 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
             
             break;
             
+		case SQL_DTC_TRANSITION_COST:							// 1750
+			break;
+
         case SQL_DATA_SOURCE_READ_ONLY:                         // 25
             //MessageBox ( GetDesktopWindow(), "SQL_DATA_SOURCE_READ_ONLY", "SQLGetInfo", MB_OK );
             _SQLCopyWCharData ( _DIAGCONN ( pConn ), pInfoValuePtr, pBufferLength, pStringLengthPtr, 16, "N", -1 );
             break;
             
-        case SQL_DRIVER_NAME:                                   // 6 //called by tb
+        case SQL_DRIVER_NAME:                                   // 6
             //MessageBox ( GetDesktopWindow(), "SQL_DRIVER_NAME", "SQLGetInfo", MB_OK );
             _SQLCopyWCharData ( _DIAGCONN ( pConn ), pInfoValuePtr, pBufferLength, pStringLengthPtr, 16, "driver.DLL", -1 );
             break;
@@ -275,11 +303,11 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
             _SQLCopyWCharData ( _DIAGCONN ( pConn ), pInfoValuePtr, pBufferLength, pStringLengthPtr, 16, "\"", -1 );
             break;
             
-        case SQL_MAX_SCHEMA_NAME_LEN:
+        case SQL_MAX_SCHEMA_NAME_LEN:							// 32
             * ( ( short* ) pInfoValuePtr ) = 128;
             break;
             
-        case SQL_USER_NAME:
+        case SQL_USER_NAME:										// 47
             _SQLCopyWCharData ( _DIAGCONN ( pConn ), pInfoValuePtr, pBufferLength, pStringLengthPtr, 16, "default", -1 );
             break;
             
@@ -399,6 +427,9 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC                    pConn,
             //__ODBCPOPMSG(_ODBCPopMsg("SQLGetInfo, SQL_CATALOG_LOCATION" ));
             break;
             
+		case SQL_CATALOG_NAME:                                  // 10003
+            break;
+
         case SQL_CONCAT_NULL_BEHAVIOR:                           // 22
             * ( ( Word* ) pInfoValuePtr ) = SQL_CB_NULL;
             //__ODBCPOPMSG(_ODBCPopMsg("SQLGetInfo, SQL_CONCAT_NULL_BEHAVIOR" ));
@@ -612,6 +643,31 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC         pConn,
             break;
             
         case SQL_CONVERT_FUNCTIONS ://48 called
+		case SQL_CONVERT_BIGINT:
+		case SQL_CONVERT_BINARY:
+		case SQL_CONVERT_BIT:
+		case SQL_CONVERT_CHAR: 
+		case SQL_CONVERT_GUID:
+		case SQL_CONVERT_DATE:
+		case SQL_CONVERT_DECIMAL:
+		case SQL_CONVERT_DOUBLE:
+		case SQL_CONVERT_FLOAT:
+		case SQL_CONVERT_INTEGER:
+		case SQL_CONVERT_INTERVAL_YEAR_MONTH:
+		case SQL_CONVERT_INTERVAL_DAY_TIME:
+		case SQL_CONVERT_LONGVARBINARY:
+		case SQL_CONVERT_LONGVARCHAR:
+		case SQL_CONVERT_NUMERIC:
+		case SQL_CONVERT_REAL:
+		case SQL_CONVERT_SMALLINT:
+		case SQL_CONVERT_TIME:
+		case SQL_CONVERT_TIMESTAMP:
+		case SQL_CONVERT_TINYINT:
+		case SQL_CONVERT_VARBINARY:
+		case SQL_CONVERT_VARCHAR:
+		case SQL_CONVERT_WCHAR:              
+		case SQL_CONVERT_WLONGVARCHAR:       
+		case SQL_CONVERT_WVARCHAR:
             break;
             
         case SQL_MAX_IDENTIFIER_LEN : //10005 called
@@ -621,7 +677,7 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC         pConn,
             break;
             
         case SQL_SQL_CONFORMANCE: //118 called
-            break;
+			break;
             
         /*
             An SQLUINTEGER bitmask enumerating the SQL-92 datetime literals supported by the data source. Note that these are the datetime literals listed in the SQL-92 specification and are separate from the datetime literal escape clauses defined by ODBC. For more information about the ODBC datetime literal escape clauses, see Date, Time, and Timestamp Literals.
@@ -748,6 +804,9 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC         pConn,
             if ( pInfoValuePtr ) { * ( ( Word* ) pInfoValuePtr ) = SQL_OAC_NONE; }    // for MS Access
             
             break;
+
+		case SQL_DTC_TRANSITION_COST:							// 1750
+			break;
             
         case SQL_DATA_SOURCE_READ_ONLY:                         // 25
             //MessageBox ( GetDesktopWindow(), "SQL_DATA_SOURCE_READ_ONLY", "SQLGetInfo", MB_OK );
@@ -937,7 +996,10 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC         pConn,
             * ( ( Word* ) pInfoValuePtr ) = SQL_CL_START;
             //__ODBCPOPMSG(_ODBCPopMsg("SQLGetInfo, SQL_CATALOG_LOCATION" ));
             break;
-            
+            		
+		case SQL_CATALOG_NAME:                                   // 10003
+            break;
+
         case SQL_CONCAT_NULL_BEHAVIOR:                           // 22
             * ( ( Word* ) pInfoValuePtr ) = SQL_CB_NULL;
             //__ODBCPOPMSG(_ODBCPopMsg("SQLGetInfo, SQL_CONCAT_NULL_BEHAVIOR" ));
