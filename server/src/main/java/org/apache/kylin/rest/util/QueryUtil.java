@@ -107,12 +107,12 @@ public class QueryUtil {
 
         int limit = sqlRequest.getLimit();
         if (limit > 0 && !sql.toLowerCase().contains("limit")) {
-            sql += (" LIMIT " + limit);
+            sql += ("\nLIMIT " + limit);
         }
 
         int offset = sqlRequest.getOffset();
         if (offset > 0 && !sql.toLowerCase().contains("offset")) {
-            sql += (" OFFSET " + offset);
+            sql += ("\nOFFSET " + offset);
         }
         
         return healSickSql(sql);
