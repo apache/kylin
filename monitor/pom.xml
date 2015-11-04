@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>1.1.1-incubating-SNAPSHOT</version>
+        <version>1.1.1-incubating</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
