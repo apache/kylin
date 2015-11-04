@@ -794,6 +794,12 @@
 
                                 <!-- MIT license -->
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
+                                
+                                <!--configuration file -->
+                                <exclude>webapp/app/routes.json</exclude>
+                                <exclude>webapp/bower.json</exclude>
+                                <exclude>webapp/grunt.json</exclude>
+                                <exclude>webapp/package.json</exclude>
 
                                 <!-- jdbc log -->
                                 <exclude>jdbc/kylin_jdbc.log*</exclude>
@@ -846,7 +852,6 @@
                                     <appendAssemblyId>true</appendAssemblyId>
                                     <descriptor>src/main/config/assemblies/source-assembly.xml</descriptor>
                                     <finalName>apache-kylin-${project.version}</finalName>
-                                    <tarLongFileMode>gnu</tarLongFileMode>
                                 </configuration>
                             </execution>
                         </executions>
