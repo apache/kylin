@@ -274,7 +274,7 @@ RETCODE SQL_API _SQLCopyWCharDataW ( pODBCDiag pDiag, void* pTgtDataPtr, Long pD
         else
         { * ( ( Long* ) pSizePtr ) = pPtrSizeBuf; }
         
-        __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "pSizePtr is set to %d", n ) );
+		__ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "pSizePtr %d is set to %d", pSizePtr, * ( ( SQLLEN* ) pSizePtr ) ) );
     }
     
     // check if src data but no size holder

@@ -2477,7 +2477,7 @@ RETCODE SQL_API _SQLGetIRDItemField ( const pODBCIRD pDesc, const pIRDItem pDesc
             
         case SQL_DESC_TYPE://1002
         case SQL_DESC_CONCISE_TYPE://2
-            * ( ( Long* ) pDataPtr ) = pDescItem->columnType;
+            * ( ( SQLLEN* ) pDataPtr ) = pDescItem->columnType;
             break;
             
         case SQL_DESC_DATETIME_INTERVAL_CODE://1007

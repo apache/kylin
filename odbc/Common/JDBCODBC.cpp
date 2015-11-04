@@ -68,13 +68,13 @@ ODBCTypes JDBC2ODBC ( int jtype ) {
             break;
             
         case JDBC_CHAR:
-            //return ODBCTypes::ODBC_Char;
-            return ODBCTypes::ODBC_WChar;//it's a unicode dirver
+            return ODBCTypes::ODBC_Char;
+            //return ODBCTypes::ODBC_WChar;//it's a unicode dirver
             break;
             
         case JDBC_VARCHAR:
-            //return ODBCTypes::ODBC_VarChar;
-            return ODBCTypes::ODBC_WChar;//it's a unicode dirver
+            return ODBCTypes::ODBC_VarChar;
+            //return ODBCTypes::ODBC_WChar;//it's a unicode dirver
             break;
             
         case 2000://"ANY" type in KYLIN
