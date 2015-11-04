@@ -29,7 +29,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>1.1.1-incubating-SNAPSHOT</version>
+    <version>1.1.1-incubating</version>
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.incubator.apache.org</url>
     <inceptionYear>2014</inceptionYear>
@@ -141,7 +141,7 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</url>
-        <tag>kylin-1.1-incubating</tag>
+        <tag>kylin-1.1.1-incubating</tag>
     </scm>
 
     <dependencyManagement>
