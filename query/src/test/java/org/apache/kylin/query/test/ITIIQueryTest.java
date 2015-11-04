@@ -36,7 +36,6 @@ import com.google.common.collect.Maps;
 /**
  */
 @RunWith(Parameterized.class)
-@Ignore ("Temporarily ignore this as seems II couldn't serve topN query correctly")
 public class ITIIQueryTest extends ITKylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
