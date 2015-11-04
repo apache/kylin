@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +29,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.google.protobuf.ByteString;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -340,9 +342,8 @@ public class EndpointTupleIterator implements ITupleIterator {
             byte[] columnsBytes = HBaseZeroCopyByteString.zeroCopyGetBytes(currentRow.getColumns());
             this.tableRecord.setBytes(columnsBytes, 0, columnsBytes.length);
             if (currentRow.hasMeasures()) {
-                byte[] measuresBytes = HBaseZeroCopyByteString.zeroCopyGetBytes(currentRow.getMeasures());
-
-                this.measureValues = pushedDownAggregators.deserializeMetricValues(measuresBytes, 0);
+                ByteBuffer buffer = currentRow.getMeasures().asReadOnlyByteBuffer();
+                this.measureValues = pushedDownAggregators.deserializeMetricValues(buffer);
             }
 
             index++;

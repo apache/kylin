@@ -205,7 +205,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
 
         byte[] recordBuffer = new byte[recordInfo.getByteFormLen()];
-        final byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+        byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
 
         int iteratedSliceCount = 0;
         long latestSliceTs = Long.MIN_VALUE;
@@ -267,11 +267,18 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         logger.info("Iterated Slices count: " + iteratedSliceCount);
 
         if (needAgg) {
+            int offset = 0;
+            int measureLength = aggregators.getMeasureSerializeLength();
             for (Map.Entry<AggrKey, MeasureAggregator[]> entry : aggCache.getAllEntries()) {
                 AggrKey aggrKey = entry.getKey();
                 IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(HBaseZeroCopyByteString.wrap(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
-                int length = aggregators.serializeMetricValues(entry.getValue(), buffer);
-                rowBuilder.setMeasures(HBaseZeroCopyByteString.wrap(buffer, 0, length));
+                if (offset + measureLength > buffer.length) {
+                    buffer =  new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+                    offset = 0;
+                }
+                int length = aggregators.serializeMetricValues(entry.getValue(), buffer, offset);
+                rowBuilder.setMeasures(HBaseZeroCopyByteString.wrap(buffer, offset, length));
+                offset += length;
                 responseBuilder.addRows(rowBuilder.build());
             }
         }

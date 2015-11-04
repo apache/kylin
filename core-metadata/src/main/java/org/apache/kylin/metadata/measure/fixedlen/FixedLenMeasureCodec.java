@@ -20,6 +20,8 @@ package org.apache.kylin.metadata.measure.fixedlen;
 
 import org.apache.kylin.metadata.model.DataType;
 
+import java.nio.ByteBuffer;
+
 abstract public class FixedLenMeasureCodec<T> {
 
     public static FixedLenMeasureCodec<?> get(DataType type) {
@@ -41,5 +43,7 @@ abstract public class FixedLenMeasureCodec<T> {
     abstract public T read(byte[] buf, int offset);
 
     abstract public void write(T v, byte[] buf, int offset);
+
+    abstract public T read(ByteBuffer buffer);
 
 }

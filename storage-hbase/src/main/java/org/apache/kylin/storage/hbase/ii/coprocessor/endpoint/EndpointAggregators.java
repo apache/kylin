@@ -199,26 +199,26 @@ public class EndpointAggregators {
      * @param buffer byte buffer to get the metric data
      * @return length of metric data
      */
-    public int serializeMetricValues(MeasureAggregator[] aggrs, byte[] buffer) {
+    public int serializeMetricValues(MeasureAggregator[] aggrs, byte[] buffer, int offset) {
         for (int i = 0; i < funcNames.length; i++) {
             metricValues[i] = aggrs[i].getState();
         }
 
-        int metricBytesOffset = 0;
+        int metricBytesOffset = offset;
+        int length = 0;
         for (int i = 0; i < measureSerializers.length; i++) {
             measureSerializers[i].write(metricValues[i], buffer, metricBytesOffset);
             metricBytesOffset += measureSerializers[i].getLength();
+            length += measureSerializers[i].getLength();
         }
-        return metricBytesOffset;
+        return length;
     }
-
-    public List<Object> deserializeMetricValues(byte[] metricBytes, int offset) {
+    
+    public List<Object> deserializeMetricValues(ByteBuffer buffer) {
         List<Object> ret = Lists.newArrayList();
-        int metricBytesOffset = offset;
         for (int i = 0; i < measureSerializers.length; i++) {
-            measureSerializers[i].read(metricBytes, metricBytesOffset);
+            measureSerializers[i].read(buffer);
             Object valueString = measureSerializers[i].getValue();
-            metricBytesOffset += measureSerializers[i].getLength();
             ret.add(valueString);
         }
         return ret;
@@ -279,4 +279,11 @@ public class EndpointAggregators {
 
     }
 
+    public int getMeasureSerializeLength() {
+        int length = 0;
+        for (int i = 0; i < this.measureSerializers.length; ++i) {
+            length += this.measureSerializers[i].getLength();
+        }
+        return length;
+    }
 }
