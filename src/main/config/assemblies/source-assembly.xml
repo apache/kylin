@@ -98,6 +98,8 @@ limitations under the License.
                 </exclude>
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?lib(/.*)?]
                 </exclude>
+                <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?docs(/.*)?]
+                </exclude>
             </excludes>
         </fileSet>
         <!-- LICENSE, NOTICE, DEPENDENCIES, git.properties, etc. calculated at build time -->
