@@ -1,6 +1,7 @@
 package org.apache.kylin.job.hadoop.invertedindex;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -14,8 +15,6 @@ import javax.annotation.Nullable;
 import com.google.common.base.Function;
 import kafka.message.Message;
 import kafka.message.MessageAndOffset;
-
-import com.google.protobuf.HBaseZeroCopyByteString;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.hbase.Cell;
@@ -235,9 +234,10 @@ public class IITest extends LocalFileMetadataTestCase {
         System.out.println(response.getRowsList().size());
         Set<String> answers = Sets.newHashSet("120.4747", "26.8551");
         for (IIProtos.IIResponseInternal.IIRow responseRow : response.getRowsList()) {
-            byte[] measuresBytes = HBaseZeroCopyByteString.zeroCopyGetBytes(responseRow.getMeasures());
-            List<Object> metrics = aggregators.deserializeMetricValues(measuresBytes, 0);
+            ByteBuffer bf = responseRow.getMeasures().asReadOnlyByteBuffer();
+            List<Object> metrics = aggregators.deserializeMetricValues(bf);
             Assert.assertTrue(answers.contains(metrics.get(0)));
+            answers.remove(metrics.get(0));
         }
     }
 

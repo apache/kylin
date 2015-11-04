@@ -57,6 +57,16 @@ public class BytesUtil {
         return integer;
     }
 
+
+    public static long readLong(ByteBuffer buffer, int size) {
+        long integer = 0;
+        for (int i = 0; i < size; i++) {
+            integer <<= 8;
+            integer |= (long) buffer.get() & 0xFF;
+        }
+        return integer;
+    }
+
     public static void writeUnsigned(int num, byte[] bytes, int offset, int size) {
         for (int i = offset + size - 1; i >= offset; i--) {
             bytes[i] = (byte) num;

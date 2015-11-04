@@ -22,6 +22,8 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.DataType;
 
+import java.nio.ByteBuffer;
+
 public class FixedPointLongCodec extends FixedLenMeasureCodec<LongMutable> {
 
     private static final int SIZE = 8;
@@ -105,5 +107,11 @@ public class FixedPointLongCodec extends FixedLenMeasureCodec<LongMutable> {
     @Override
     public void write(LongMutable v, byte[] buf, int offset) {
         BytesUtil.writeLong(v == null ? 0 : v.get(), buf, offset, SIZE);
+    }
+
+    @Override
+    public LongMutable read(ByteBuffer buffer) {
+        current.set(BytesUtil.readLong(buffer, SIZE));
+        return current;
     }
 }
