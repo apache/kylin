@@ -26,7 +26,6 @@ import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -47,7 +46,9 @@ public class CoprocessorRowType {
         for (int i = 0; i < cols.size(); i++) {
             colSizes[i] = tableRecordInfo.getDigest().length(i);
         }
-        return new CoprocessorRowType(cols.toArray(new TblColRef[cols.size()]), colSizes);
+        
+        //TODO:check0
+        return new CoprocessorRowType(cols.toArray(new TblColRef[cols.size()]), colSizes, 0);
     }
 
     //for observer
@@ -59,7 +60,7 @@ public class CoprocessorRowType {
         for (int i = 0; i < cols.length; i++) {
             colSizes[i] = colIO.getColumnLength(cols[i]);
         }
-        return new CoprocessorRowType(cols, colSizes);
+        return new CoprocessorRowType(cols, colSizes, seg.getRowKeyPreambleSize());
     }
 
     public static byte[] serialize(CoprocessorRowType o) {
@@ -82,6 +83,7 @@ public class CoprocessorRowType {
         public void serialize(CoprocessorRowType o, ByteBuffer out) {
             int n = o.columns.length;
             BytesUtil.writeVInt(o.columns.length, out);
+            BytesUtil.writeVInt(o.bodyOffset, out);
             for (int i = 0; i < n; i++) {
                 BytesUtil.writeAsciiString(o.columns[i].getTable(), out);
                 BytesUtil.writeAsciiString(o.columns[i].getName(), out);
@@ -92,6 +94,7 @@ public class CoprocessorRowType {
         @Override
         public CoprocessorRowType deserialize(ByteBuffer in) {
             int n = BytesUtil.readVInt(in);
+            int bodyOffset = BytesUtil.readVInt(in);
             TblColRef[] cols = new TblColRef[n];
             int[] colSizes = new int[n];
             for (int i = 0; i < n; i++) {
@@ -108,18 +111,20 @@ public class CoprocessorRowType {
                 int colSize = BytesUtil.readVInt(in);
                 colSizes[i] = colSize;
             }
-            return new CoprocessorRowType(cols, colSizes);
+            return new CoprocessorRowType(cols, colSizes, bodyOffset);
         }
     }
 
     // ============================================================================
 
     public TblColRef[] columns;
+    private int bodyOffset;
     public int[] columnSizes;
     public int[] columnOffsets;
     public HashMap<TblColRef, Integer> columnIdxMap;
 
-    public CoprocessorRowType(TblColRef[] columns, int[] columnSizes) {
+    public CoprocessorRowType(TblColRef[] columns, int[] columnSizes, int bodyOffset) {
+        this.bodyOffset = bodyOffset;
         this.columns = columns;
         this.columnSizes = columnSizes;
         init();
@@ -131,7 +136,7 @@ public class CoprocessorRowType {
 
     private void init() {
         int[] offsets = new int[columns.length];
-        int o = RowConstants.ROWKEY_HEADER_LEN;
+        int o = bodyOffset;
         for (int i = 0; i < columns.length; i++) {
             offsets[i] = o;
             o += columnSizes[i];

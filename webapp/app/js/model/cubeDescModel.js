@@ -51,7 +51,8 @@ KylinApp.service('CubeDescModel', function () {
       },
       "retention_range": "0",
       "auto_merge_time_ranges": [604800000, 2419200000],
-      "engine_type": 2
+      "engine_type": 2,
+      "storage_type":2
     };
 
     return cubeMeta;

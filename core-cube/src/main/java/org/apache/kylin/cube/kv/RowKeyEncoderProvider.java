@@ -6,43 +6,41 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.cube.kv;
+
+import java.util.HashMap;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 
-/**
- * 
- * @author xjiang
- * 
- */
-public class FuzzyKeyEncoder extends RowKeyEncoder {
+import com.google.common.collect.Maps;
 
-    public FuzzyKeyEncoder(CubeSegment seg, Cuboid cuboid) {
-        super(seg, cuboid);
+public class RowKeyEncoderProvider {
+
+    private CubeSegment cubeSegment;
+    private HashMap<Long, RowKeyEncoder> rowKeyEncoders;
+
+    public RowKeyEncoderProvider(CubeSegment cubeSegment) {
+        this.cubeSegment = cubeSegment;
+        this.rowKeyEncoders = Maps.newHashMap();
     }
 
-    @Override
-    protected short calculateShard(byte[] key) {
-        if (enableSharding) {
-            return 0;
-        } else {
-            throw new RuntimeException("If enableSharding false, you should never calculate shard");
+    public RowKeyEncoder getRowkeyEncoder(Cuboid cuboid) {
+        RowKeyEncoder rowKeyEncoder = rowKeyEncoders.get(cuboid.getId());
+        if (rowKeyEncoder == null) {
+            rowKeyEncoder = new RowKeyEncoder(cubeSegment, cuboid);
+            rowKeyEncoders.put(cuboid.getId(), rowKeyEncoder);
         }
-    }
-
-    @Override
-    protected byte defaultValue() {
-        return RowConstants.BYTE_ZERO;
+        return rowKeyEncoder;
     }
 }

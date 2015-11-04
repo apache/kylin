@@ -254,7 +254,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         flushScanCountDelta();
 
         if (logger.isDebugEnabled() && scan != null) {
-            logger.debug("Scan " + scan.toString());
             byte[] metricsBytes = scan.getAttribute(Scan.SCAN_ATTRIBUTES_METRICS_DATA);
             if (metricsBytes != null) {
                 ScanMetrics scanMetrics = ProtobufUtil.toScanMetrics(metricsBytes);

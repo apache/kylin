@@ -32,8 +32,8 @@ public class RowConstants {
     // row key shard length
     public static final int ROWKEY_SHARDID_LEN = 2;
 
-    public static final int ROWKEY_HEADER_LEN = ROWKEY_CUBOIDID_LEN + ROWKEY_SHARDID_LEN;
-    
+    public static final int ROWKEY_SHARD_AND_CUBOID_LEN = ROWKEY_CUBOIDID_LEN + ROWKEY_SHARDID_LEN;
+
     public static final byte BYTE_ZERO = 0;
     public static final byte BYTE_ONE = 1;
 
@@ -42,7 +42,7 @@ public class RowConstants {
     public static final String ROWVALUE_DELIMITER_STRING = String.valueOf((char) 7);
     public static final byte[] ROWVALUE_DELIMITER_BYTES = { 7 };
 
-    public static final int ROWKEY_BUFFER_SIZE = 1024 * 1024; // 1 MB
+    public static final int ROWKEY_BUFFER_SIZE = 65 * 256;// a little more than 64 dimensions * 256 bytes each
     public static final int ROWVALUE_BUFFER_SIZE = 1024 * 1024; // 1 MB
 
     // marker class

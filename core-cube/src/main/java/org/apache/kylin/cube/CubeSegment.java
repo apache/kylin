@@ -26,11 +26,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ShardingHash;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
-import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -373,6 +374,14 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
         return cubeInstance.getStorageType();
     }
 
+    public boolean isEnableSharding() {
+        return getCubeDesc().isEnableSharding();
+    }
+
+    public int getRowKeyPreambleSize() {
+        return isEnableSharding() ? RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN : RowConstants.ROWKEY_CUBOIDID_LEN;
+    }
+
     /**
      * get the number of shards where each cuboid will distribute
      * @return
@@ -385,14 +394,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
             return ret;
         }
     }
-
-    //    /**
-    //     * get the number of shards where each cuboid will distribute
-    //     * @return
-    //     */
-    //    public Map<Long, Short> getCuboidShards() {
-    //        return this.cuboidShards;
-    //    }
 
     public void setCuboidShardNums(Map<Long, Short> newCuboidShards) {
         this.cuboidShardNums = newCuboidShards;

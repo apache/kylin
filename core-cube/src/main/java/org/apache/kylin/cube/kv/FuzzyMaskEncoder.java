@@ -20,8 +20,12 @@ package org.apache.kylin.cube.kv;
 
 import java.util.Arrays;
 
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.gridtable.GTInfo;
+import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -36,11 +40,40 @@ public class FuzzyMaskEncoder extends RowKeyEncoder {
     }
 
     @Override
-    protected int fillHeader(byte[] bytes) {
-        Arrays.fill(bytes, 0, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.BYTE_ONE);
+    public void encode(GTRecord record, ImmutableBitSet keyColumns, byte[] buf) {
+        ByteArray byteArray = new ByteArray(buf, getHeaderLength(), 0);
+
+        GTInfo info = record.getInfo();
+        byte fill;
+        int pos = 0;
+        for (int i = 0; i < info.getPrimaryKey().trueBitCount(); i++) {
+            int c = info.getPrimaryKey().trueBitAt(i);
+            int colLength = info.getCodeSystem().maxCodeLength(c);
+
+            if (record.get(c).array() != null) {
+                fill = RowConstants.BYTE_ZERO;
+            } else {
+                fill = RowConstants.BYTE_ONE;
+            }
+            Arrays.fill(byteArray.array(), byteArray.offset() + pos, byteArray.offset() + pos + colLength, fill);
+            pos += colLength;
+        }
+        byteArray.setLength(pos);
+
+        //fill shard and cuboid
+        fillHeader(buf);
+    }
+
+    @Override
+    protected void fillHeader(byte[] bytes) {
+        int offset = 0;
+        if (enableSharding) {
+            Arrays.fill(bytes, 0, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.BYTE_ONE);
+            offset += RowConstants.ROWKEY_SHARDID_LEN;
+        }
         // always fuzzy match cuboid ID to lock on the selected cuboid
-        Arrays.fill(bytes, RowConstants.ROWKEY_SHARDID_LEN, RowConstants.ROWKEY_HEADER_LEN, RowConstants.BYTE_ZERO);
-        return this.headerLength;
+        int headerLength = this.getHeaderLength();
+        Arrays.fill(bytes, offset, headerLength, RowConstants.BYTE_ZERO);
     }
 
     @Override

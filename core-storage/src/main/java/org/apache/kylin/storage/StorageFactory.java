@@ -20,6 +20,7 @@ package org.apache.kylin.storage;
 
 import static org.apache.kylin.metadata.model.IStorageAware.ID_HBASE;
 import static org.apache.kylin.metadata.model.IStorageAware.ID_HYBRID;
+import static org.apache.kylin.metadata.model.IStorageAware.ID_SHARDED_HBASE;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class StorageFactory {
     static {
         Map<Integer, String> impls = new HashMap<>();
         impls.put(ID_HBASE, "org.apache.kylin.storage.hbase.HBaseStorage");
+        impls.put(ID_SHARDED_HBASE, "org.apache.kylin.storage.hbase.HBaseStorage");//ID_SHARDED_HBASE is a special HBaseStorage
         impls.put(ID_HYBRID, "org.apache.kylin.storage.hybrid.HybridStorage");
         storages = new ImplementationSwitch<IStorage>(impls, IStorage.class);
     }

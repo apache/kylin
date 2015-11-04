@@ -25,9 +25,12 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.DataFormatException;
 
@@ -163,12 +166,13 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         final AtomicInteger totalScannedCount = new AtomicInteger(0);
         final String toggle = BackdoorToggles.getCoprocessorBehavior() == null ? CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString() : BackdoorToggles.getCoprocessorBehavior();
         logger.info("The execution of this query will use " + toggle + " as endpoint's behavior");
+        List<Future<?>> futures = Lists.newArrayList();
 
         for (int i = 0; i < rawScans.size(); ++i) {
             final int shardIndex = i;
             final RawScan rawScan = rawScans.get(i);
 
-            executorService.submit(new Runnable() {
+            Future<?> future = executorService.submit(new Runnable() {
                 @Override
                 public void run() {
                     final byte[] rawScanBytes = KryoUtils.serialize(rawScan);
@@ -177,7 +181,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                     for (IntList intList : hbaseColumnsToGTIntList) {
                         builder.addHbaseColumnsToGT(intList);
                     }
-
+                    builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
                     builder.setBehavior(toggle);
 
                     Collection<CubeVisitProtos.CubeVisitResponse> results;
@@ -211,14 +215,19 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                     rowBlocks.addAll(part);
                 }
             });
+            futures.add(future);
         }
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(1, TimeUnit.HOURS)) {
-                throw new RuntimeException("Visiting cube by endpoint timeout");
+            for (Future<?> future : futures) {
+                future.get(1, TimeUnit.HOURS);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Visiting cube by endpoint gets interrupted");
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Visiting cube throw exception", e);
+        } catch (TimeoutException e) {
+            throw new RuntimeException("Visiting cube by endpoint timeout");
         }
 
         return new EndpointResultsAsGTScanner(fullGTInfo, rowBlocks.iterator(), scanRequest.getColumns(), totalScannedCount.get());
@@ -227,10 +236,11 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     private String getStatsString(CubeVisitProtos.CubeVisitResponse result, int shardIndex) {
         StringBuilder sb = new StringBuilder();
         Stats stats = result.getStats();
-        sb.append("Shard " + shardIndex + ": ");
+        sb.append("Shard " + shardIndex + " on host: " + stats.getHostname());
         sb.append("Total scanned row: " + stats.getScannedRowCount() + ". ");
         sb.append("Total filtered/aggred row: " + stats.getAggregatedRowCount() + ". ");
         sb.append("Time elapsed in EP: " + (stats.getServiceEndTime() - stats.getServiceStartTime()) + "(ms). ");
+        sb.append("Server CPU usage: " + stats.getSystemCpuLoad() + ", server physical mem left: " + stats.getFreePhysicalMemorySize() + ", server swap mem left:" + stats.getFreeSwapSpaceSize());
         return sb.toString();
 
     }

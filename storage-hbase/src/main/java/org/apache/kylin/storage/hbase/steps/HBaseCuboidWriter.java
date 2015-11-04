@@ -34,22 +34,16 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.List;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
-import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
@@ -70,11 +64,13 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
     private final List<KeyValueCreator> keyValueCreators;
     private final int nColumns;
     private final HTableInterface hTable;
-    private final ByteBuffer byteBuffer;
     private final CubeDesc cubeDesc;
     private final CubeSegment cubeSegment;
     private final Object[] measureValues;
+
     private List<Put> puts = Lists.newArrayList();
+    private AbstractRowKeyEncoder rowKeyEncoder;
+    private byte[] keybuf;
 
     public HBaseCuboidWriter(CubeSegment segment, HTableInterface hTable) {
         this.keyValueCreators = Lists.newArrayList();
@@ -87,7 +83,6 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
         }
         this.nColumns = keyValueCreators.size();
         this.hTable = hTable;
-        this.byteBuffer = ByteBuffer.allocate(RowConstants.ROWKEY_BUFFER_SIZE);
         this.measureValues = new Object[cubeDesc.getMeasures().size()];
     }
 
@@ -97,38 +92,28 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
         return result;
     }
 
-    private ByteBuffer createKey(Long cuboidId, GTRecord record) {
-        byteBuffer.clear();
-        byteBuffer.put(Bytes.toBytes((short) 0), 0, RowConstants.ROWKEY_SHARDID_LEN);//occupy space first
-        byteBuffer.put(Bytes.toBytes(cuboidId), 0, RowConstants.ROWKEY_CUBOIDID_LEN);
-        final int cardinality = BitSet.valueOf(new long[] { cuboidId }).cardinality();
-        for (int i = 0; i < cardinality; i++) {
-            final ByteArray byteArray = record.get(i);
-            byteBuffer.put(byteArray.array(), byteArray.offset(), byteArray.length());
+    //TODO:shardingonstreaming
+    private byte[] createKey(Long cuboidId, GTRecord record) {
+        if (rowKeyEncoder == null || rowKeyEncoder.getCuboidID() != cuboidId) {
+            rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, Cuboid.findById(cubeDesc, cuboidId));
+            keybuf = rowKeyEncoder.createBuf();
         }
+        rowKeyEncoder.encode(record, record.getInfo().getPrimaryKey(), keybuf);
+        return keybuf;
 
-        //fill shard
-        short cuboidShardNum = cubeSegment.getCuboidShardNum(cuboidId);
-        short shardOffset = ShardingHash.getShard(byteBuffer.array(), //
-                RowConstants.ROWKEY_HEADER_LEN, byteBuffer.position() - RowConstants.ROWKEY_HEADER_LEN, cuboidShardNum);
-        Short cuboidShardBase = cubeSegment.getCuboidBaseShard(cuboidId);
-        short finalShard = ShardingHash.normalize(cuboidShardBase, shardOffset, cubeSegment.getTotalShards());
-        BytesUtil.writeShort(finalShard, byteBuffer.array(), 0, RowConstants.ROWKEY_SHARDID_LEN);
-
-        return byteBuffer;
     }
 
     @Override
     public void write(long cuboidId, GTRecord record) throws IOException {
-        final ByteBuffer key = createKey(cuboidId, record);
+        byte[] key = createKey(cuboidId, record);
         final Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
         final int nDims = cuboid.getColumns().size();
         final ImmutableBitSet bitSet = new ImmutableBitSet(nDims, nDims + cubeDesc.getMeasures().size());
 
         for (int i = 0; i < nColumns; i++) {
             final Object[] values = record.getValues(bitSet, measureValues);
-            final KeyValue keyValue = keyValueCreators.get(i).create(key.array(), 0, key.position(), values);
-            final Put put = new Put(copy(key.array(), 0, key.position()));
+            final KeyValue keyValue = keyValueCreators.get(i).create(key, 0, key.length, values);
+            final Put put = new Put(copy(key, 0, key.length));
             byte[] family = copy(keyValue.getFamilyArray(), keyValue.getFamilyOffset(), keyValue.getFamilyLength());
             byte[] qualifier = copy(keyValue.getQualifierArray(), keyValue.getQualifierOffset(), keyValue.getQualifierLength());
             byte[] value = copy(keyValue.getValueArray(), keyValue.getValueOffset(), keyValue.getValueLength());
@@ -158,7 +143,7 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
 
     @Override
     public void close() {
-        
+
     }
 
 }

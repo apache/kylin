@@ -20,9 +20,12 @@ package org.apache.kylin.cube.kv;
 
 import java.util.Map;
 
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,29 +37,50 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractRowKeyEncoder {
 
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractRowKeyEncoder.class);
     public static final byte DEFAULT_BLANK_BYTE = Dictionary.NULL;
 
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractRowKeyEncoder.class);
+    protected byte blankByte = DEFAULT_BLANK_BYTE;
+    protected final CubeSegment cubeSeg;
+    protected Cuboid cuboid;
 
     public static AbstractRowKeyEncoder createInstance(CubeSegment cubeSeg, Cuboid cuboid) {
         return new RowKeyEncoder(cubeSeg, cuboid);
     }
 
-    protected final Cuboid cuboid;
-    protected byte blankByte = DEFAULT_BLANK_BYTE;
-    protected boolean encodeShard = true;
-
-    protected AbstractRowKeyEncoder(Cuboid cuboid) {
+    protected AbstractRowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
         this.cuboid = cuboid;
+        this.cubeSeg = cubeSeg;
     }
 
     public void setBlankByte(byte blankByte) {
         this.blankByte = blankByte;
     }
 
-    public void setEncodeShard(boolean encodeShard) {
-        this.encodeShard = encodeShard;
+    public long getCuboidID() {
+        return cuboid.getId();
     }
+
+    public void setCuboid(Cuboid cuboid) {
+        this.cuboid = cuboid;
+    }
+
+    abstract public byte[] createBuf();
+
+    /**
+     * encode a gtrecord into a given byte[] buffer
+     * @param record
+     * @param keyColumns
+     * @param buf
+     */
+    abstract public void encode(GTRecord record, ImmutableBitSet keyColumns, byte[] buf);
+
+    /**
+     * when a rowkey's body is provided, help to encode cuboid & shard (if apply)
+     * @param bodyBytes
+     * @param outputBuf
+     */
+    abstract public void encode(ByteArray bodyBytes, ByteArray outputBuf);
 
     abstract public byte[] encode(Map<TblColRef, String> valueMap);
 

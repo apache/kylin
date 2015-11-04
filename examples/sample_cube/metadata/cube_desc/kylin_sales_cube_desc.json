@@ -1,166 +1,225 @@
 {
-  "uuid" : "9ac9b7a8-3929-4dff-b59d-2100aadc8dbf",
-  "name" : "kylin_sales_cube_desc",
-  "description" : null,
+  "uuid": "9ac9b7a8-3929-4dff-b59d-2100aadc8dbf",
+  "name": "kylin_sales_cube_desc",
+  "description": null,
+  "dimensions": [
+    {
+      "id": 0,
+      "name": "CAL_DT",
+      "table": "DEFAULT.KYLIN_CAL_DT",
+      "column": null,
+      "derived": [
+        "WEEK_BEG_DT"
+      ],
+      "hierarchy": false
+    },
+    {
+      "id": 1,
+      "name": "CATEGORY",
+      "table": "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+      "column": null,
+      "derived": [
+        "USER_DEFINED_FIELD1",
+        "USER_DEFINED_FIELD3",
+        "UPD_DATE",
+        "UPD_USER"
+      ],
+      "hierarchy": false
+    },
+    {
+      "id": 2,
+      "name": "CATEGORY_HIERARCHY",
+      "table": "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+      "column": [
+        "META_CATEG_NAME",
+        "CATEG_LVL2_NAME",
+        "CATEG_LVL3_NAME"
+      ],
+      "derived": null,
+      "hierarchy": true
+    },
+    {
+      "id": 3,
+      "name": "LSTG_FORMAT_NAME",
+      "table": "DEFAULT.KYLIN_SALES",
+      "column": [
+        "LSTG_FORMAT_NAME"
+      ],
+      "derived": null,
+      "hierarchy": false
+    }
+  ],
+  "measures": [
+    {
+      "id": 1,
+      "name": "GMV_SUM",
+      "function": {
+        "expression": "SUM",
+        "parameter": {
+          "type": "column",
+          "value": "PRICE"
+        },
+        "returntype": "decimal(19,4)"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 2,
+      "name": "GMV_MIN",
+      "function": {
+        "expression": "MIN",
+        "parameter": {
+          "type": "column",
+          "value": "PRICE"
+        },
+        "returntype": "decimal(19,4)"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 3,
+      "name": "GMV_MAX",
+      "function": {
+        "expression": "MAX",
+        "parameter": {
+          "type": "column",
+          "value": "PRICE"
+        },
+        "returntype": "decimal(19,4)"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 4,
+      "name": "TRANS_CNT",
+      "function": {
+        "expression": "COUNT",
+        "parameter": {
+          "type": "constant",
+          "value": "1"
+        },
+        "returntype": "bigint"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 5,
+      "name": "SELLER_CNT_HLL",
+      "function": {
+        "expression": "COUNT_DISTINCT",
+        "parameter": {
+          "type": "column",
+          "value": "SELLER_ID"
+        },
+        "returntype": "hllc(10)"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 6,
+      "name": "SELLER_FORMAT_CNT",
+      "function": {
+        "expression": "COUNT_DISTINCT",
+        "parameter": {
+          "type": "column",
+          "value": "LSTG_FORMAT_NAME"
+        },
+        "returntype": "hllc(10)"
+      },
+      "dependent_measure_ref": null
+    }
+  ],
+  "rowkey": {
+    "rowkey_columns": [
+      {
+        "column": "part_dt",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "leaf_categ_id",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "meta_categ_name",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "categ_lvl2_name",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "categ_lvl3_name",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      },
+      {
+        "column": "lstg_format_name",
+        "length": 12,
+        "dictionary": null,
+        "mandatory": false
+      },
+      {
+        "column": "lstg_site_id",
+        "length": 0,
+        "dictionary": "true",
+        "mandatory": false
+      }
+    ],
+    "aggregation_groups": [
+      [
+        "part_dt",
+        "lstg_site_id",
+        "leaf_categ_id",
+        "meta_categ_name",
+        "categ_lvl3_name",
+        "categ_lvl2_name",
+        "lstg_format_name"
+      ]
+    ]
+  },
+  "last_modified": 1426255280419,
+  "model_name": "kylin_sales_model",
+  "null_string": null,
+  "hbase_mapping": {
+    "column_family": [
+      {
+        "name": "f1",
+        "columns": [
+          {
+            "qualifier": "m",
+            "measure_refs": [
+              "gmv_sum",
+              "gmv_min",
+              "gmv_max",
+              "trans_cnt"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "f2",
+        "columns": [
+          {
+            "qualifier": "m",
+            "measure_refs": [
+              "seller_cnt_hll",
+              "seller_format_cnt"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "notify_list": null,
   "engine_type": 2,
-  "dimensions" : [ {
-    "id" : 0,
-    "name" : "CAL_DT",
-    "table" : "DEFAULT.KYLIN_CAL_DT",
-    "column" : null,
-    "derived" : [ "WEEK_BEG_DT" ],
-    "hierarchy" : false
-  }, {
-    "id" : 1,
-    "name" : "CATEGORY",
-    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
-    "column" : null,
-    "derived" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER" ],
-    "hierarchy" : false
-  }, {
-    "id" : 2,
-    "name" : "CATEGORY_HIERARCHY",
-    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
-    "column" : [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ],
-    "derived" : null,
-    "hierarchy" : true
-  }, {
-    "id" : 3,
-    "name" : "LSTG_FORMAT_NAME",
-    "table" : "DEFAULT.KYLIN_SALES",
-    "column" : [ "LSTG_FORMAT_NAME" ],
-    "derived" : null,
-    "hierarchy" : false
-  } ],
-  "measures" : [ {
-    "id" : 1,
-    "name" : "GMV_SUM",
-    "function" : {
-      "expression" : "SUM",
-      "parameter" : {
-        "type" : "column",
-        "value" : "PRICE"
-      },
-      "returntype" : "decimal(19,4)"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 2,
-    "name" : "GMV_MIN",
-    "function" : {
-      "expression" : "MIN",
-      "parameter" : {
-        "type" : "column",
-        "value" : "PRICE"
-      },
-      "returntype" : "decimal(19,4)"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 3,
-    "name" : "GMV_MAX",
-    "function" : {
-      "expression" : "MAX",
-      "parameter" : {
-        "type" : "column",
-        "value" : "PRICE"
-      },
-      "returntype" : "decimal(19,4)"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 4,
-    "name" : "TRANS_CNT",
-    "function" : {
-      "expression" : "COUNT",
-      "parameter" : {
-        "type" : "constant",
-        "value" : "1"
-      },
-      "returntype" : "bigint"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 5,
-    "name" : "SELLER_CNT_HLL",
-    "function" : {
-      "expression" : "COUNT_DISTINCT",
-      "parameter" : {
-        "type" : "column",
-        "value" : "SELLER_ID"
-      },
-      "returntype" : "hllc(10)"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "id" : 6,
-    "name" : "SELLER_FORMAT_CNT",
-    "function" : {
-      "expression" : "COUNT_DISTINCT",
-      "parameter" : {
-        "type" : "column",
-        "value" : "LSTG_FORMAT_NAME"
-      },
-      "returntype" : "hllc(10)"
-    },
-    "dependent_measure_ref" : null
-  } ],
-  "rowkey" : {
-    "rowkey_columns" : [ {
-      "column" : "part_dt",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "leaf_categ_id",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "meta_categ_name",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "categ_lvl2_name",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "categ_lvl3_name",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    }, {
-      "column" : "lstg_format_name",
-      "length" : 12,
-      "dictionary" : null,
-      "mandatory" : false
-    }, {
-      "column" : "lstg_site_id",
-      "length" : 0,
-      "dictionary" : "true",
-      "mandatory" : false
-    } ],
-    "aggregation_groups" : [ [ "part_dt", "lstg_site_id", "leaf_categ_id", "meta_categ_name", "categ_lvl3_name", "categ_lvl2_name", "lstg_format_name" ] ]
-  },
-  "last_modified" : 1426255280419,
-  "model_name" : "kylin_sales_model",
-  "null_string" : null,
-  "hbase_mapping" : {
-    "column_family" : [ {
-      "name" : "f1",
-      "columns" : [ {
-        "qualifier" : "m",
-        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt" ]
-      } ]
-    }, {
-      "name" : "f2",
-      "columns" : [ {
-        "qualifier" : "m",
-        "measure_refs" : [ "seller_cnt_hll", "seller_format_cnt" ]
-      } ]
-    } ]
-  },
-  "notify_list" : null
+  "storage_type": 2
 }

@@ -18,13 +18,23 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
-import org.apache.kylin.cube.model.*;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.cube.model.HierarchyDesc;
+import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.model.RowKeyDesc.AggrGroupMask;
 import org.apache.kylin.cube.model.RowKeyDesc.HierarchyMask;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -147,7 +157,7 @@ public class Cuboid implements Comparable<Cuboid> {
                 return cuboidID;
             } else {
                 // no column (except mandatory), add one column
-                long toAddCol = (1 << (BitSet.valueOf(new long[]{rowkey.getTailMask()}).cardinality()));
+                long toAddCol = (1 << (BitSet.valueOf(new long[] { rowkey.getTailMask() }).cardinality()));
                 // check if the toAddCol belongs to any hierarchy
                 List<HierarchyMask> hierarchyMaskList = rowkey.getHierarchyMasks();
                 if (hierarchyMaskList != null && hierarchyMaskList.size() > 0) {

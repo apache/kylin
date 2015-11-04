@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +26,7 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
@@ -35,6 +35,8 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowKeyEncoder;
+import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryManager;
@@ -60,8 +62,10 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private Text outputKey = new Text();
 
-    private byte[] newKeyBuf;
+    private byte[] newKeyBodyBuf;
+    private ByteArray newKeyBuf;
     private RowKeySplitter rowKeySplitter;
+    private RowKeyEncoderProvider rowKeyEncoderProvider;
 
     private HashMap<TblColRef, Boolean> dictsNeedMerging = new HashMap<TblColRef, Boolean>();
 
@@ -95,13 +99,15 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         mergedCubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         // int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
-        newKeyBuf = new byte[256];// size will auto-grow
+        newKeyBodyBuf = new byte[RowConstants.ROWKEY_BUFFER_SIZE];// size will auto-grow
+        newKeyBuf = ByteArray.allocate(RowConstants.ROWKEY_BUFFER_SIZE);
 
         // decide which source segment
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
         sourceCubeSegment = findSourceSegment(fileSplit, cube);
 
         rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
+        rowKeyEncoderProvider = new RowKeyEncoderProvider(mergedCubeSegment);
     }
 
     private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
@@ -135,17 +141,15 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     @Override
     public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
         long cuboidID = rowKeySplitter.split(key.getBytes());
-        short shard = rowKeySplitter.getLastSplittedShard();
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidID);
+        RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(cuboid);
 
         SplittedBytes[] splittedByteses = rowKeySplitter.getSplitBuffers();
         int bufOffset = 0;
-        BytesUtil.writeShort(shard, newKeyBuf, bufOffset, RowConstants.ROWKEY_SHARDID_LEN);
-        bufOffset += RowConstants.ROWKEY_SHARDID_LEN;
-        BytesUtil.writeLong(cuboidID, newKeyBuf, bufOffset, RowConstants.ROWKEY_CUBOIDID_LEN);
-        bufOffset += RowConstants.ROWKEY_CUBOIDID_LEN;
+        int bodySplitOffset = rowKeySplitter.getBodySplitOffset();
 
         for (int i = 0; i < cuboid.getColumns().size(); ++i) {
+            int useSplit = i + bodySplitOffset;
             TblColRef col = cuboid.getColumns().get(i);
 
             if (this.checkNeedMerging(col)) {
@@ -154,38 +158,47 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                 Dictionary<?> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(col));
                 Dictionary<?> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(col));
 
-                while (sourceDict.getSizeOfValue() > newKeyBuf.length - bufOffset || mergedDict.getSizeOfValue() > newKeyBuf.length - bufOffset) {
-                    byte[] oldBuf = newKeyBuf;
-                    newKeyBuf = new byte[2 * newKeyBuf.length];
-                    System.arraycopy(oldBuf, 0, newKeyBuf, 0, oldBuf.length);
+                while (sourceDict.getSizeOfValue() > newKeyBodyBuf.length - bufOffset || //
+                        mergedDict.getSizeOfValue() > newKeyBodyBuf.length - bufOffset || //
+                        mergedDict.getSizeOfId() > newKeyBodyBuf.length - bufOffset) {
+                    byte[] oldBuf = newKeyBodyBuf;
+                    newKeyBodyBuf = new byte[2 * newKeyBodyBuf.length];
+                    System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
                 }
 
-                int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[i + 1].value, 0, splittedByteses[i + 1].length);
+                int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[useSplit].value, 0, splittedByteses[useSplit].length);
                 int idInMergedDict;
 
-                int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBuf, bufOffset);
+                int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBodyBuf, bufOffset);
                 if (size < 0) {
                     idInMergedDict = mergedDict.nullId();
                 } else {
-                    idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBuf, bufOffset, size);
+                    idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBodyBuf, bufOffset, size);
                 }
 
-                BytesUtil.writeUnsigned(idInMergedDict, newKeyBuf, bufOffset, mergedDict.getSizeOfId());
+                BytesUtil.writeUnsigned(idInMergedDict, newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());
                 bufOffset += mergedDict.getSizeOfId();
             } else {
                 // keep as it is
-                while (splittedByteses[i + 1].length > newKeyBuf.length - bufOffset) {
-                    byte[] oldBuf = newKeyBuf;
-                    newKeyBuf = new byte[2 * newKeyBuf.length];
-                    System.arraycopy(oldBuf, 0, newKeyBuf, 0, oldBuf.length);
+                while (splittedByteses[useSplit].length > newKeyBodyBuf.length - bufOffset) {
+                    byte[] oldBuf = newKeyBodyBuf;
+                    newKeyBodyBuf = new byte[2 * newKeyBodyBuf.length];
+                    System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
                 }
 
-                System.arraycopy(splittedByteses[i + 1].value, 0, newKeyBuf, bufOffset, splittedByteses[i + 1].length);
-                bufOffset += splittedByteses[i + 1].length;
+                System.arraycopy(splittedByteses[useSplit].value, 0, newKeyBodyBuf, bufOffset, splittedByteses[useSplit].length);
+                bufOffset += splittedByteses[useSplit].length;
             }
         }
-        byte[] newKey = Arrays.copyOf(newKeyBuf, bufOffset);
-        outputKey.set(newKey, 0, newKey.length);
+
+        int fullKeySize = rowkeyEncoder.getBytesLength();
+        while (newKeyBuf.array().length < fullKeySize) {
+            newKeyBuf.set(new byte[newKeyBuf.length() * 2]);
+        }
+        newKeyBuf.set(0, fullKeySize);
+
+        rowkeyEncoder.encode(new ByteArray(newKeyBodyBuf, 0, bufOffset), newKeyBuf);
+        outputKey.set(newKeyBuf.array(), 0, fullKeySize);
 
         context.write(outputKey, value);
     }
