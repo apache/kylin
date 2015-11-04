@@ -23,8 +23,7 @@ import java.util.Collection;
 
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.ShardingHash;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -33,6 +32,8 @@ import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.cube.kv.RowKeyEncoder;
+import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -59,8 +60,10 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private int handleCounter;
     private int skipCounter;
 
-    private byte[] keyBuf = new byte[4096];
+    private byte[] newKeyBodyBuf = new byte[RowConstants.ROWKEY_BUFFER_SIZE];
+    private ByteArray newKeyBuf = ByteArray.allocate(RowConstants.ROWKEY_BUFFER_SIZE);
     private RowKeySplitter rowKeySplitter;
+    private RowKeyEncoderProvider rowKeyEncoderProvider;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -79,32 +82,26 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         cuboidScheduler = new CuboidScheduler(cubeDesc);
 
         rowKeySplitter = new RowKeySplitter(cubeSegment, 65, 256);
+        rowKeyEncoderProvider = new RowKeyEncoderProvider(cubeSegment);
     }
 
     private int buildKey(Cuboid parentCuboid, Cuboid childCuboid, SplittedBytes[] splitBuffers) {
+        RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(childCuboid);
+
         int offset = 0;
-
-        //shard id will be filled after other contents
-        offset += RowConstants.ROWKEY_SHARDID_LEN;
-
-        // cuboid id
-        System.arraycopy(childCuboid.getBytes(), 0, keyBuf, offset, childCuboid.getBytes().length);
-        offset += RowConstants.ROWKEY_CUBOIDID_LEN;
-
-        int bodyOffset = offset;
 
         // rowkey columns
         long mask = Long.highestOneBit(parentCuboid.getId());
         long parentCuboidId = parentCuboid.getId();
         long childCuboidId = childCuboid.getId();
         long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
-        int index = 2; // skip shard and cuboidId
+        int index = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & parentCuboidId) > 0) {// if the this bit position equals
                                               // 1
                 if ((mask & childCuboidId) > 0) {// if the child cuboid has this
                                                  // column
-                    System.arraycopy(splitBuffers[index].value, 0, keyBuf, offset, splitBuffers[index].length);
+                    System.arraycopy(splitBuffers[index].value, 0, newKeyBodyBuf, offset, splitBuffers[index].length);
                     offset += splitBuffers[index].length;
                 }
                 index++;
@@ -112,13 +109,15 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
             mask = mask >> 1;
         }
 
-        //fill shard
-        short cuboidShardNum = cubeSegment.getCuboidShardNum(childCuboidId);
-        short shardOffset = ShardingHash.getShard(keyBuf, bodyOffset, offset - bodyOffset, cuboidShardNum);
-        short finalShard = ShardingHash.normalize(cubeSegment.getCuboidBaseShard(childCuboidId), shardOffset, cubeSegment.getTotalShards());
-        BytesUtil.writeShort(finalShard, keyBuf, 0, RowConstants.ROWKEY_SHARDID_LEN);
+        int fullKeySize = rowkeyEncoder.getBytesLength();
+        while (newKeyBuf.array().length < fullKeySize) {
+            newKeyBuf.set(new byte[newKeyBuf.length() * 2]);
+        }
+        newKeyBuf.set(0, fullKeySize);
 
-        return offset;
+        rowkeyEncoder.encode(new ByteArray(newKeyBodyBuf, 0, offset), newKeyBuf);
+
+        return fullKeySize;
     }
 
     @Override
@@ -147,8 +146,8 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
         for (Long child : myChildren) {
             Cuboid childCuboid = Cuboid.findById(cubeDesc, child);
-            int keyLength = buildKey(parentCuboid, childCuboid, rowKeySplitter.getSplitBuffers());
-            outputKey.set(keyBuf, 0, keyLength);
+            int fullKeySize = buildKey(parentCuboid, childCuboid, rowKeySplitter.getSplitBuffers());
+            outputKey.set(newKeyBuf.array(), 0, fullKeySize);
             context.write(outputKey, value);
         }
 

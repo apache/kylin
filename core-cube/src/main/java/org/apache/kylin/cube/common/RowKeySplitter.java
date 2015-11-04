@@ -36,25 +36,27 @@ public class RowKeySplitter {
     private int bufferSize;
 
     private long lastSplittedCuboidId;
-    private short lastSplittedShard;
+    private boolean enableSharding;
 
     public SplittedBytes[] getSplitBuffers() {
         return splitBuffers;
+    }
+
+    public int getBodySplitOffset() {
+        if (enableSharding) {
+            return 2;//shard+cuboid
+        } else {
+            return 1;//cuboid
+        }
     }
 
     public int getBufferSize() {
         return bufferSize;
     }
 
-    public long getLastSplittedCuboidId() {
-        return lastSplittedCuboidId;
-    }
-
-    public short getLastSplittedShard() {
-        return lastSplittedShard;
-    }
 
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
+        this.enableSharding = cubeSeg.isEnableSharding();
         this.cubeDesc = cubeSeg.getCubeDesc();
         this.colIO = new RowKeyColumnIO(cubeSeg);
 
@@ -73,11 +75,14 @@ public class RowKeySplitter {
         this.bufferSize = 0;
         int offset = 0;
 
-        // extract shard
-        SplittedBytes shardSplit = this.splitBuffers[this.bufferSize++];
-        shardSplit.length = RowConstants.ROWKEY_SHARDID_LEN;
-        System.arraycopy(bytes, offset, shardSplit.value, 0, RowConstants.ROWKEY_SHARDID_LEN);
-        offset += RowConstants.ROWKEY_SHARDID_LEN;
+        if (enableSharding) {
+            // extract shard
+            SplittedBytes shardSplit = this.splitBuffers[this.bufferSize++];
+            shardSplit.length = RowConstants.ROWKEY_SHARDID_LEN;
+            System.arraycopy(bytes, offset, shardSplit.value, 0, RowConstants.ROWKEY_SHARDID_LEN);
+            offset += RowConstants.ROWKEY_SHARDID_LEN;
+            //lastSplittedShard = Bytes.toShort(shardSplit.value, 0, shardSplit.length);
+        }
 
         // extract cuboid id
         SplittedBytes cuboidIdSplit = this.splitBuffers[this.bufferSize++];
@@ -86,7 +91,6 @@ public class RowKeySplitter {
         offset += RowConstants.ROWKEY_CUBOIDID_LEN;
 
         lastSplittedCuboidId = Bytes.toLong(cuboidIdSplit.value, 0, cuboidIdSplit.length);
-        lastSplittedShard = Bytes.toShort(shardSplit.value, 0, shardSplit.length);
         Cuboid cuboid = Cuboid.findById(cubeDesc, lastSplittedCuboidId);
 
         // rowkey columns

@@ -29,22 +29,28 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 public class BatchCubingJobBuilder extends JobBuilderSupport {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(BatchCubingJobBuilder.class);
-    
+
     private final IMRBatchCubingInputSide inputSide;
     private final IMRBatchCubingOutputSide outputSide;
 
     public BatchCubingJobBuilder(CubeSegment newSegment, String submitter) {
         super(newSegment, submitter);
+
+        Preconditions.checkArgument(!newSegment.isEnableSharding(), "V1 job engine does not support building sharded cubes");
+
         this.inputSide = MRUtil.getBatchCubingInputSide(seg);
         this.outputSide = MRUtil.getBatchCubingOutputSide((CubeSegment)seg);
     }
 
     public CubingJob build() {
         logger.info("MR_V1 new job to BUILD segment " + seg);
-        final CubingJob result = CubingJob.createBuildJob((CubeSegment)seg, submitter, config);
+
+        final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
         final String jobId = result.getId();
         final String cuboidRootPath = getCuboidRootPath(jobId);
 

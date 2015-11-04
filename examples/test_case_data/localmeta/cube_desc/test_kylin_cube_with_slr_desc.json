@@ -2,7 +2,6 @@
   "uuid": "a24ca905-1fc6-4f67-985c-38fa5aeafd92",
   "name": "test_kylin_cube_with_slr_desc",
   "description": null,
-  "engine_type": 2,
   "dimensions": [
     {
       "id": 0,
@@ -237,5 +236,7 @@
       }
     ]
   },
-  "notify_list": null
+  "notify_list": null,
+  "engine_type": 2,
+  "storage_type": 2
 }

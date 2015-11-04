@@ -553,7 +553,7 @@ public class GTScanRangePlanner {
 
     /**
      * asymmetric means compare(a,b) > 0 does not cause compare(b,a) < 0 
-     * so min max functions will not bu supported
+     * so min max functions will not be supported
      */
     private static class AsymmetricRecordComparator extends RecordComparator {
 

@@ -32,10 +32,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author ysong1
- * 
- */
 public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
 
     private Configuration conf;

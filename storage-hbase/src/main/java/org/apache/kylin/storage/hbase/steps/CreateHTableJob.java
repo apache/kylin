@@ -55,7 +55,6 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -84,7 +83,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
     CubeDesc cubeDesc = null;
     String segmentName = null;
     KylinConfig kylinConfig;
-    public static final boolean ENABLE_CUBOID_SHARDING = true;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -179,7 +177,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             IOUtils.closeStream(tempFileStream);
         }
         Map<Long, HyperLogLogPlusCounter> counterMap = Maps.newHashMap();
-        
+
         FileSystem fs = HadoopUtil.getFileSystem("file:///" + tempFile.getAbsolutePath());
         int samplingPercentage = 25;
         SequenceFile.Reader reader = null;
@@ -257,7 +255,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         Map<Long, Double> cubeSizeMap = Maps.newHashMap();
         for (Map.Entry<Long, Long> entry : cubeRowCountMap.entrySet()) {
-            cubeSizeMap.put(entry.getKey(), estimateCuboidStorageSize(cubeDesc, entry.getKey(), entry.getValue(), baseCuboidId, rowkeyColumnSize));
+            cubeSizeMap.put(entry.getKey(), estimateCuboidStorageSize(cubeSegment, entry.getKey(), entry.getValue(), baseCuboidId, rowkeyColumnSize));
         }
 
         for (Double cuboidSize : cubeSizeMap.values()) {
@@ -268,7 +266,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         nRegion = Math.max(kylinConfig.getHBaseRegionCountMin(), nRegion);
         nRegion = Math.min(kylinConfig.getHBaseRegionCountMax(), nRegion);
 
-        if (ENABLE_CUBOID_SHARDING) {//&& (nRegion > 1)) {
+        if (cubeSegment.isEnableSharding()) {//&& (nRegion > 1)) {
             //use prime nRegions to help random sharding
             int original = nRegion;
             nRegion = Primes.nextPrime(nRegion);//return 2 for input 1
@@ -290,7 +288,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         logger.info("Expecting " + nRegion + " regions.");
         logger.info("Expecting " + mbPerRegion + " MB per region.");
 
-        if (ENABLE_CUBOID_SHARDING) {
+        if (cubeSegment.isEnableSharding()) {
             //each cuboid will be split into different number of shards
             HashMap<Long, Short> cuboidShards = Maps.newHashMap();
             double[] regionSizes = new double[nRegion];
@@ -357,14 +355,11 @@ public class CreateHTableJob extends AbstractHadoopJob {
     /**
      * Estimate the cuboid's size
      *
-     * @param cubeDesc
-     * @param cuboidId
-     * @param rowCount
      * @return the cuboid size in M bytes
      */
-    private static double estimateCuboidStorageSize(CubeDesc cubeDesc, long cuboidId, long rowCount, long baseCuboidId, List<Integer> rowKeyColumnLength) {
+    private static double estimateCuboidStorageSize(CubeSegment cubeSegment, long cuboidId, long rowCount, long baseCuboidId, List<Integer> rowKeyColumnLength) {
 
-        int bytesLength = RowConstants.ROWKEY_HEADER_LEN;
+        int bytesLength = cubeSegment.getRowKeyPreambleSize();
 
         long mask = Long.highestOneBit(baseCuboidId);
         long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
@@ -377,7 +372,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         // add the measure length
         int space = 0;
-        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+        for (MeasureDesc measureDesc : cubeSegment.getCubeDesc().getMeasures()) {
             DataType returnType = measureDesc.getFunction().getReturnDataType();
             if (returnType.isHLLC()) {
                 // for HLL, it will be compressed when export to bytes

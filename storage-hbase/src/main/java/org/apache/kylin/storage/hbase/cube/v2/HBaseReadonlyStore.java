@@ -43,13 +43,14 @@ public class HBaseReadonlyStore implements IGTStore {
     private GTInfo info;
     private List<Pair<byte[], byte[]>> hbaseColumns;
     private List<List<Integer>> hbaseColumnsToGT;
+    private int rowkeyPreambleSize;
 
-    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT) {
+    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT, int rowkeyPreambleSize) {
         this.cellListIterator = cellListIterator;
-
         this.info = gtScanRequest.getInfo();
         this.hbaseColumns = hbaseColumns;
         this.hbaseColumnsToGT = hbaseColumnsToGT;
+        this.rowkeyPreambleSize = rowkeyPreambleSize;
     }
 
     @Override
@@ -108,7 +109,7 @@ public class HBaseReadonlyStore implements IGTStore {
 
                         // dimensions, set to primary key, also the 0th column block
                         Cell firstCell = oneRow.get(0);
-                        ByteBuffer buf = byteBuffer(firstCell.getRowArray(), RowConstants.ROWKEY_HEADER_LEN + firstCell.getRowOffset(), firstCell.getRowLength() - RowConstants.ROWKEY_HEADER_LEN);
+                        ByteBuffer buf = byteBuffer(firstCell.getRowArray(), rowkeyPreambleSize + firstCell.getRowOffset(), firstCell.getRowLength() - rowkeyPreambleSize);
                         oneRecord.loadCellBlock(0, buf);
 
                         // metrics

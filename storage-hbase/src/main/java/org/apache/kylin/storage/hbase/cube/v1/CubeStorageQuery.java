@@ -33,9 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
@@ -75,6 +72,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 
 @SuppressWarnings("unused")
 public class CubeStorageQuery implements ICachableStorageQuery {
@@ -482,7 +482,10 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         dropUnhitSegments(result);
         logger.info("hbasekeyrange count after dropping unhit :" + result.size());
 
-        result = duplicateRangeByShard(result);
+        //TODO: should use LazyRowKeyEncoder.getRowKeysDifferentShards like CubeHBaseRPC, not do so because v1 query engine is retiring. not worth changing it
+        if (cubeDesc.isEnableSharding()) {
+            result = duplicateRangeByShard(result);
+        }
         logger.info("hbasekeyrange count after dropping duplicatebyshard :" + result.size());
 
         return result;

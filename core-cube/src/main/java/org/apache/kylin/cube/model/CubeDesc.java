@@ -134,6 +134,11 @@ public class CubeDesc extends RootPersistentEntity {
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
 
+    public boolean isEnableSharding() {
+        //in the future may extend to other storage that is shard-able
+        return storageType == IStorageAware.ID_SHARDED_HBASE;
+    }
+
     /**
      * Error messages during resolving json metadata
      */
@@ -669,7 +674,7 @@ public class CubeDesc extends RootPersistentEntity {
 
             if (colRefs.isEmpty() == false)
                 p.setColRefs(colRefs);
-            
+
             // verify holistic count distinct as a dependent measure
             if (m.getFunction().isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
                 throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
@@ -829,17 +834,16 @@ public class CubeDesc extends RootPersistentEntity {
         this.engineType = engineType;
     }
 
-    
     public List<TblColRef> getAllColumnsNeedDictionary() {
         List<TblColRef> result = Lists.newArrayList();
-        
+
         for (RowKeyColDesc rowKeyColDesc : rowkey.getRowKeyColumns()) {
             TblColRef colRef = rowKeyColDesc.getColRef();
             if (rowkey.isUseDictionary(colRef)) {
                 result.add(colRef);
             }
         }
-        
+
         for (TblColRef colRef : measureDisplayColumns) {
             if (!result.contains(colRef))
                 result.add(colRef);

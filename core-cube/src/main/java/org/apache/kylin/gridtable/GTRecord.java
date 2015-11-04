@@ -7,6 +7,8 @@ import java.util.List;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 
+import com.google.common.base.Preconditions;
+
 public class GTRecord implements Comparable<GTRecord> {
 
     final GTInfo info;
@@ -222,8 +224,26 @@ public class GTRecord implements Comparable<GTRecord> {
         int pos = 0;
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
             int c = selectedCols.trueBitAt(i);
+            Preconditions.checkNotNull(cols[c].array());
             System.arraycopy(cols[c].array(), cols[c].offset(), buf.array(), buf.offset() + pos, cols[c].length());
             pos += cols[c].length();
+        }
+        buf.setLength(pos);
+    }
+
+    /** write data to given buffer, like serialize, use defaultValue when required column is not set*/
+    public void exportColumns(ImmutableBitSet selectedCols, ByteArray buf, byte defaultValue) {
+        int pos = 0;
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            if (cols[c].array() != null) {
+                System.arraycopy(cols[c].array(), cols[c].offset(), buf.array(), buf.offset() + pos, cols[c].length());
+                pos += cols[c].length();
+            } else {
+                int maxLength = info.codeSystem.maxCodeLength(c);
+                Arrays.fill(buf.array(), buf.offset() + pos, buf.offset() + pos + maxLength, defaultValue);
+                pos += maxLength;
+            }
         }
         buf.setLength(pos);
     }

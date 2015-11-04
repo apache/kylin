@@ -20,6 +20,8 @@ package org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -56,6 +58,7 @@ import com.google.protobuf.HBaseZeroCopyByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
+import com.sun.management.OperatingSystemMXBean;
 
 @SuppressWarnings("unused")
 //used in hbase endpoint
@@ -144,7 +147,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             innerScanner = region.getScanner(scan);
             InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
 
-            IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScan.hbaseColumns, hbaseColumnsToGT);
+            IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScan.hbaseColumns, hbaseColumnsToGT, request.getRowkeyPreambleSize());
             IGTScanner rawScanner = store.scan(scanReq);
 
             CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
@@ -165,6 +168,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 outputStream.write(buffer.array(), buffer.arrayOffset() - buffer.position(), buffer.remaining());
                 finalRowCount++;
             }
+
+            OperatingSystemMXBean operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+            double systemCpuLoad = operatingSystemMXBean.getSystemCpuLoad();
+            double freePhysicalMemorySize = operatingSystemMXBean.getFreePhysicalMemorySize();
+            double freeSwapSpaceSize = operatingSystemMXBean.getFreeSwapSpaceSize();
+
             //outputStream.close() is not necessary
             byte[] allRows = outputStream.toByteArray();
             CubeVisitProtos.CubeVisitResponse.Builder responseBuilder = CubeVisitProtos.CubeVisitResponse.newBuilder();
@@ -174,7 +183,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                             setAggregatedRowCount(finalScanner.getScannedRowCount() - finalRowCount).//
                             setScannedRowCount(finalScanner.getScannedRowCount()).//
                             setServiceStartTime(serviceStartTime).//
-                            setServiceEndTime(System.currentTimeMillis()).build()).//
+                            setServiceEndTime(System.currentTimeMillis()).//
+                            setSystemCpuLoad(systemCpuLoad).//
+                            setFreePhysicalMemorySize(freePhysicalMemorySize).//
+                            setFreeSwapSpaceSize(freeSwapSpaceSize).//
+                            setHostname(InetAddress.getLocalHost().getHostName()).//
+                            build()).//
                     build());
 
         } catch (IOException ioe) {

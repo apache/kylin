@@ -90,6 +90,11 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
         set(o.data, o.offset, o.length);
     }
 
+    public void set(int offset, int length) {
+        this.offset = offset;
+        this.length = length;
+    }
+
     public void setLength(int length) {
         this.length = length;
     }

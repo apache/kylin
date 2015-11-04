@@ -206,7 +206,7 @@ public class AggregateRegionObserverTest {
         t.setDatabase("DEFAULT");
         TblColRef[] cols = new TblColRef[] { newCol(1, "A", t), newCol(2, "B", t), newCol(3, "C", t), newCol(4, "D", t) };
         int[] sizes = new int[] { 1, 1, 1, 1 };
-        return new CoprocessorRowType(cols, sizes);
+        return new CoprocessorRowType(cols, sizes,0);
     }
 
     private TblColRef newCol(int i, String name, TableDesc t) {

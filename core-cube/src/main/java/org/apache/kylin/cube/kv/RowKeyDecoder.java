@@ -58,7 +58,7 @@ public class RowKeyDecoder {
 
         SplittedBytes[] splits = rowKeySplitter.getSplitBuffers();
 
-        int offset = 2; // skip shard and cuboid id part
+        int offset = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboid id part
 
         for (int i = 0; i < this.cuboid.getColumns().size(); i++) {
             TblColRef col = this.cuboid.getColumns().get(i);

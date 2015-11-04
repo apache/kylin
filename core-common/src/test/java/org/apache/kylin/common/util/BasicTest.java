@@ -24,6 +24,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -33,13 +34,14 @@ import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultiset;
 
 /**
-* <p/>
-* Keep this test case to test basic java functionality
-* development concept proving use
-*/
+ * <p/>
+ * Keep this test case to test basic java functionality
+ * development concept proving use
+ */
 @Ignore("convenient trial tool for dev")
 @SuppressWarnings("unused")
 public class BasicTest {
@@ -71,11 +73,46 @@ public class BasicTest {
         Count, DimensionAsMetric, DistinctCount, Normal
     }
 
+    public static int counter = 1;
+
+    class X {
+        byte[] mm = new byte[100];
+
+        public X() {
+            counter++;
+        }
+    }
+
     @Test
-    public void testxx() {
-        B b= new B();
-        b.foo();;
-      
+    public void testxx() throws InterruptedException {
+        byte[][] data = new byte[10000000][];
+        byte[] temp = new byte[100];
+        for (int i = 0; i < 100; i++) {
+            temp[i] = (byte) i;
+        }
+        for (int i = 0; i < 10000000; i++) {
+            data[i] = new byte[100];
+        }
+
+        long wallClock = System.currentTimeMillis();
+
+        for (int i = 0; i < 10000000; i++) {
+            System.arraycopy(temp, 0, data[i], 0, 100);
+        }
+        System.out.println("Time Consumed: " + (System.currentTimeMillis() - wallClock));
+    }
+
+    @Test
+    public void testyy() throws InterruptedException {
+        long wallClock = System.currentTimeMillis();
+
+        HashMap<Integer, byte[]> map = Maps.newHashMap();
+        for (int i = 0; i < 10000000; i++) {
+            byte[] a = new byte[100];
+            map.put(i, a);
+        }
+
+        System.out.println("Time Consumed: " + (System.currentTimeMillis() - wallClock));
     }
 
     @Test

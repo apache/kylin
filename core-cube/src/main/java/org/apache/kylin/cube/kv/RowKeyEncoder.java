@@ -23,32 +23,79 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.base.Preconditions;
 
 public class RowKeyEncoder extends AbstractRowKeyEncoder {
 
-    private int bytesLength;
-    protected int headerLength;
+    private int bodyLength = 0;
     private RowKeyColumnIO colIO;
-    CubeSegment cubeSeg;
+    protected boolean enableSharding;
 
-    protected RowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
-        super(cuboid);
-        this.cubeSeg = cubeSeg;
+    public RowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
+        super(cubeSeg, cuboid);
+        enableSharding = cubeSeg.isEnableSharding();
         colIO = new RowKeyColumnIO(cubeSeg);
-        bytesLength = headerLength = RowConstants.ROWKEY_HEADER_LEN; // include shard and cuboidid 
         for (TblColRef column : cuboid.getColumns()) {
-            bytesLength += colIO.getColumnLength(column);
+            bodyLength += colIO.getColumnLength(column);
+        }
+    }
+
+    public int getHeaderLength() {
+        return cubeSeg.getRowKeyPreambleSize();
+    }
+
+    public int getBytesLength() {
+        return getHeaderLength() + bodyLength;
+    }
+
+    protected short calculateShard(byte[] key) {
+        if (enableSharding) {
+            int bodyOffset = RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN;
+            short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
+            short shardOffset = ShardingHash.getShard(key, bodyOffset, bodyLength, cuboidShardNum);
+            return ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), shardOffset, cubeSeg.getTotalShards());
+        } else {
+            throw new RuntimeException("If enableSharding false, you should never calculate shard");
         }
     }
 
     public int getColumnLength(TblColRef col) {
         return colIO.getColumnLength(col);
+    }
+
+    @Override
+    public byte[] createBuf() {
+        return new byte[this.getBytesLength()];
+    }
+
+    @Override
+    public void encode(GTRecord record, ImmutableBitSet keyColumns, byte[] buf) {
+        ByteArray byteArray = new ByteArray(buf, getHeaderLength(), 0);
+        record.exportColumns(keyColumns, byteArray, defaultValue());
+
+        //fill shard and cuboid
+        fillHeader(buf);
+    }
+
+    @Override
+    public void encode(ByteArray bodyBytes, ByteArray outputBuf) {
+        Preconditions.checkState(bodyBytes.length() == bodyLength);
+        Preconditions.checkState(bodyBytes.length() + getHeaderLength() == outputBuf.length(),//
+                "bodybytes length: " + bodyBytes.length() + " outputBuf length: " + outputBuf.length() + " header length: " + getHeaderLength());
+        System.arraycopy(bodyBytes.array(), bodyBytes.offset(), outputBuf.array(), getHeaderLength(), bodyLength);
+
+        //fill shard and cuboid
+        fillHeader(outputBuf.array());
     }
 
     @Override
@@ -71,9 +118,8 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
 
     @Override
     public byte[] encode(byte[][] values) {
-        byte[] bytes = new byte[this.bytesLength];
-        int bodyOffset = RowConstants.ROWKEY_HEADER_LEN;
-        int offset = bodyOffset;
+        byte[] bytes = new byte[this.getBytesLength()];
+        int offset = getHeaderLength();
 
         for (int i = 0; i < cuboid.getColumns().size(); i++) {
             TblColRef column = cuboid.getColumns().get(i);
@@ -93,44 +139,32 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
         return bytes;
     }
 
-    protected int fillHeader(byte[] bytes) {
+    protected void fillHeader(byte[] bytes) {
         int offset = 0;
 
-        if (encodeShard) {
-            short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
-            short shardOffset = ShardingHash.getShard(bytes, RowConstants.ROWKEY_HEADER_LEN, bytes.length - RowConstants.ROWKEY_HEADER_LEN, cuboidShardNum);
-            short finalShard = ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), shardOffset, cubeSeg.getTotalShards());
-            BytesUtil.writeShort(finalShard, bytes, offset, RowConstants.ROWKEY_SHARDID_LEN);
-        } else {
-            BytesUtil.writeShort((short) 0, bytes, offset, RowConstants.ROWKEY_SHARDID_LEN);
+        if (enableSharding) {
+            short shard = calculateShard(bytes);
+            BytesUtil.writeShort(shard, bytes, offset, RowConstants.ROWKEY_SHARDID_LEN);
+            offset += RowConstants.ROWKEY_SHARDID_LEN;
         }
-        offset += RowConstants.ROWKEY_SHARDID_LEN;
 
         System.arraycopy(cuboid.getBytes(), 0, bytes, offset, RowConstants.ROWKEY_CUBOIDID_LEN);
-        offset += RowConstants.ROWKEY_CUBOIDID_LEN;
-
-        if (this.headerLength != offset) {
-            throw new IllegalStateException("Expected header length is " + headerLength + ". But the offset is " + offset);
-        }
-        
-        return offset;
+        //offset += RowConstants.ROWKEY_CUBOIDID_LEN;
+        //return offset;
     }
 
     protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen, byte[] outputValue, int outputValueOffset) {
         // special null value case
         if (value == null) {
-            byte[] valueBytes = defaultValue(columnLen);
-            System.arraycopy(valueBytes, 0, outputValue, outputValueOffset, columnLen);
+            Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen, defaultValue());
             return;
         }
 
         colIO.writeColumn(column, value, valueLen, this.blankByte, outputValue, outputValueOffset);
     }
 
-    protected byte[] defaultValue(int length) {
-        byte[] values = new byte[length];
-        Arrays.fill(values, this.blankByte);
-        return values;
+    protected byte defaultValue() {
+        return this.blankByte;
     }
 
 }

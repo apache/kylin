@@ -15,7 +15,8 @@ message CubeVisitRequest {
     required string behavior = 1;
     required bytes gtScanRequest = 2;
     required bytes hbaseRawScan = 3;
-    repeated IntList hbaseColumnsToGT = 4;
+    required int32 rowkeyPreambleSize = 4;
+    repeated IntList hbaseColumnsToGT = 5;
     message IntList {
         repeated int32 ints = 1;
     }
@@ -27,6 +28,10 @@ message CubeVisitResponse {
         optional int64 serviceEndTime = 2;
         optional int32 scannedRowCount = 3;
         optional int32 aggregatedRowCount = 4;
+        optional double systemCpuLoad = 5;
+        optional double freePhysicalMemorySize = 6;
+        optional double freeSwapSpaceSize = 7;
+        optional string hostname = 8;
     }
     required bytes compressedRows = 1;
     required Stats stats = 2;
