@@ -813,6 +813,12 @@
 
                                 <!-- MIT license -->
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
+                                
+                                <!--configuration file -->
+                                <exclude>webapp/app/routes.json</exclude>
+                                <exclude>webapp/bower.json</exclude>
+                                <exclude>webapp/grunt.json</exclude>
+                                <exclude>webapp/package.json</exclude>
 
                                 <!-- jdbc log -->
                                 <exclude>jdbc/kylin_jdbc.log*</exclude>
