@@ -544,12 +544,6 @@
                     <version>${maven-assembly.version}</version>
                 </plugin>
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>2.15</version>
-                </plugin>
-
                 <!--
                 <plugin>
                     <groupId>com.mycila</groupId>
@@ -582,6 +576,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.15</version>
                     <executions>
                         <execution>
                             <id>validate</id>
