@@ -651,7 +651,6 @@
                                 <exclude>dictionary/metastore_db/**</exclude>
 
                                 <!-- MIT license -->
-                                <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
 
                                 <!-- jdbc log -->
