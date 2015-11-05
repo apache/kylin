@@ -16,6 +16,13 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.incubator.apache.org](mailto:user@kylin.incubator.apache.org)
 * Development relative: [dev@kylin.incubator.apache.org](mailto:dev@kylin.incubator.apache.org)
 
+## v1.1.1-incubating - 2015-11-04
+_Tag:_ [kylin-1.1.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.1.1-incubating)
+
+__Improvement__
+
+    * [KYLIN-999] - License check and cleanup for release
+
 ## v1.1-incubating - 2015-10-25
 _Tag:_ [kylin-1.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.1-incubating)
 

@@ -17,13 +17,15 @@ __二进制包 for HBase 0.98/0.99__
   * [apache-kylin-1.1-incubating-bin.tar.gz](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.1-incubating/apache-kylin-1.1-incubating-bin.tar.gz)
   * [安装帮助](http://kylin.incubator.apache.org/docs/install)
 
-__二进制包 for HBase 1.1__
-越来越多的用户开始部署使用HBase 1.1或更高版本，我们提供一个在HBase 1.1上编译的Kylin快照二进制包；请注意，这不是一个正式的发布版，没有经过完整的测试。
+__二进制包 for HBase 1.1.3及更高版本__
+越来越多的用户开始部署使用HBase 1.1或更高版本，我们提供一个在HBase 1.1上编译的Kylin快照二进制包；
+请注意此安装包需要HBase 1.1.3或更高版本，之前版本中有一个已知的关于fuzzy key过滤器的缺陷，会导致Kylin查询结果缺少记录: [HBASE-14269](https://issues.apache.org/jira/browse/HBASE-14269)
+此外请注意，这不是一个正式的发布版，没有经过完整的测试。
 
   * [apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/incubator/kylin/apache-kylin-1.2-incubating-snapshot/apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz)
   * Git commit [3623dd6ff93d76141bb6a5fb623a3421ae78ca93](https://github.com/apache/incubator-kylin/commit/3623dd6ff93d76141bb6a5fb623a3421ae78ca93)
 
-对于HBase 1.0用户，建议您升级到1.1或降级到0.98/0.99.
+对于HBase 1.0用户，建议您升级到1.1.3或降级到0.98/0.99.
 
 __构建二进制包__
 可以从各个版本或当前最新的开发分支中生成二进制包，请参考这篇[帮助文档](https://kylin.incubator.apache.org/development/howto_package.html)
