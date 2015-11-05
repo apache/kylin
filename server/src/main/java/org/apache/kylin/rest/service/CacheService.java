@@ -20,10 +20,6 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 
-import javax.annotation.PostConstruct;
-
-import org.apache.kylin.common.cache.CacheUpdater;
-import org.apache.kylin.common.restclient.AbstractRestCache;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -43,28 +39,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Preconditions;
-
 /**
  */
 @Component("cacheService")
 public class CacheService extends BasicService {
 
     @Autowired
-    private CacheUpdater cacheUpdater;
-
-    @Autowired
     private CubeService cubeService;
-
-    @PostConstruct
-    public void init() throws IOException {
-        initCacheUpdater(cacheUpdater);
-    }
-
-    public void initCacheUpdater(CacheUpdater cacheUpdater) {
-        Preconditions.checkNotNull(cacheUpdater, "cacheManager is not injected yet");
-        AbstractRestCache.setCacheUpdater(cacheUpdater);
-    }
 
     public void setCubeService(CubeService cubeService) {
         this.cubeService = cubeService;

@@ -59,7 +59,11 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
     }
 
     public void remove(K key) {
-        if (innerCache.containsKey(key)) {
+        boolean exists = innerCache.containsKey(key);
+        
+        innerCache.remove(key);
+        
+        if (exists) {
             cacheUpdater.updateCache(key, null, Broadcaster.EVENT.DROP, syncType, this);
         }
     }

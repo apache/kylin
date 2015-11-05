@@ -19,7 +19,7 @@
 package org.apache.kylin.common.restclient;
 
 import org.apache.kylin.common.cache.CacheUpdater;
-import org.apache.kylin.common.cache.LocalCacheUpdater;
+import org.apache.kylin.common.cache.RemoteCacheUpdater;
 
 /**
  * @author xjiang
@@ -27,7 +27,7 @@ import org.apache.kylin.common.cache.LocalCacheUpdater;
  */
 public abstract class AbstractRestCache<K, V> {
 
-    protected static CacheUpdater cacheUpdater = new LocalCacheUpdater();
+    protected static CacheUpdater cacheUpdater = new RemoteCacheUpdater();
 
     public static void setCacheUpdater(CacheUpdater cu) {
         cacheUpdater = cu;
