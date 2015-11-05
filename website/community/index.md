@@ -4,6 +4,10 @@ title: Community
 permalink: /community/index.html
 ---
 
+### Powered By Apache Kylin
+For information about who are using Apache Kylin, please refer to [Powered By](/community/poweredby.html) page.
+
+
 ### Apache Kylin Mailing List
 
 These are the mailing lists that have been established for this project. For each list, there is a subscribe, unsubscribe, and an archive link.

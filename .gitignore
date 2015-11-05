@@ -7,10 +7,14 @@ tmp/
 *.bak
 *.swp
 *~.nib
-*.versionsBackup
+
 local.properties
 release.properties
 .loadpath
+
+# maven release files
+*.versionsBackup
+**/pom.xml.tag
 
 #IDEA
 *.iml
