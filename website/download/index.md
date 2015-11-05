@@ -18,13 +18,16 @@ For convenience, there’s binary package also available:
 * [apache-kylin-1.1-incubating-bin.tar.gz](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.1-incubating/apache-kylin-1.1-incubating-bin.tar.gz)
 * [Installation Guide](http://kylin.incubator.apache.org/docs/install)
 
-__Binary Package (for running on HBase 1.1)__
-As there are more and more HBase 1.1 deployments, an binary snapshot build for HBase 1.1 is provided; Please note this is not a formal release, and it is not fully tested:
+__Binary Package (for running on HBase 1.1.3 or above)__
+As there are more and more HBase 1.1 deployments, an binary snapshot build for HBase 1.1.3+ is provided; 
+Note the requirement of HBase version 1.1.3 (or above). There is a known bug in HBase earlier versions about fuzzy key filter that will cause
+missing rows or lesser aggregations in Kylin query result: [HBASE-14269](https://issues.apache.org/jira/browse/HBASE-14269)
+Also, please aware this is not a formal release, and it is not fully tested:
 
 * [apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/incubator/kylin/apache-kylin-1.2-incubating-snapshot/apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz)
 * Git commit [3623dd6ff93d76141bb6a5fb623a3421ae78ca93](https://github.com/apache/incubator-kylin/commit/3623dd6ff93d76141bb6a5fb623a3421ae78ca93) 
 
-If you're using HBase 1.0, we suggest you to upgrade to 1.1 or downgrade to 0.98/0.99.
+If you're using HBase 1.0, we suggest you to upgrade to 1.1.3+ or downgrade to 0.98/0.99.
 
 __Build Binary Package__
 To build binary package from any version even latest development branch, please refer to this [guide](https://kylin.incubator.apache.org/development/howto_package.html)
