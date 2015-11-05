@@ -18,9 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -28,7 +26,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.cache.RemoteCacheUpdater;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
@@ -55,10 +52,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
-
 public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     private static Server server;
@@ -66,7 +63,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     private static KylinConfig configA;
     private static KylinConfig configB;
 
-    private static final Logger logger = org.slf4j.LoggerFactory.getLogger(CacheServiceTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(CacheServiceTest.class);
 
     private static AtomicLong counter = new AtomicLong();
 
@@ -108,9 +105,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
             }
         };
 
-        serviceA.initCacheUpdater(new RemoteCacheUpdater());
         serviceA.setCubeService(cubeServiceA);
-        serviceB.initCacheUpdater(new RemoteCacheUpdater());
         serviceB.setCubeService(cubeServiceB);
 
         context.addServlet(new ServletHolder(new BroadcasterReceiveServlet(new BroadcasterReceiveServlet.BroadcasterHandler() {

@@ -5,6 +5,7 @@ import org.apache.kylin.common.restclient.Broadcaster;
 
 /**
  */
+@SuppressWarnings("rawtypes")
 public class RemoteCacheUpdater implements CacheUpdater {
     @Override
     public void updateCache(Object key, Object value, Broadcaster.EVENT syncAction, Broadcaster.TYPE type, AbstractRestCache cache) {
