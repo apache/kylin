@@ -102,7 +102,7 @@ public class IITest extends LocalFileMetadataTestCase {
         StreamingBatch batch = new StreamingBatch(streamingMessages, Pair.newPair(0L, System.currentTimeMillis()));
 
         iiRows = Lists.newArrayList();
-        final Slice slice = new SliceBuilder(iiDesc, (short) 0, true).buildSlice((batch));
+        final Slice slice = new SliceBuilder(iiDesc, (short) 0).buildSlice((batch));
         IIKeyValueCodec codec = new IIKeyValueCodec(slice.getInfo());
         for (IIRow iiRow : codec.encodeKeyValue(slice)) {
             iiRows.add(iiRow);

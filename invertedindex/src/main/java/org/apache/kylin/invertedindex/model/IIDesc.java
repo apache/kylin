@@ -78,8 +78,6 @@ public class IIDesc extends RootPersistentEntity {
     private short sharding = 1; // parallelism
     @JsonProperty("slice_size")
     private int sliceSize = 50000; // no. rows
-    @JsonProperty("useLocalDictionary")
-    private boolean useLocalDictionary = true;
 
     @JsonProperty("engine_type")
     private int engineType = IEngineAware.ID_MR_II;
@@ -372,14 +370,6 @@ public class IIDesc extends RootPersistentEntity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public boolean isUseLocalDictionary() {
-        return useLocalDictionary;
-    }
-
-    public void setUseLocalDictionary(boolean useLocalDictionary) {
-        this.useLocalDictionary = useLocalDictionary;
     }
 
     public String calculateSignature() {

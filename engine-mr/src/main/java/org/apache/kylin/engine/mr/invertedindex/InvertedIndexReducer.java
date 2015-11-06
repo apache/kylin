@@ -73,7 +73,7 @@ public class InvertedIndexReducer extends KylinReducer<LongWritable, Object, Imm
         sliceSize = ii.getDescriptor().getSliceSize();
         short shard = (short) context.getTaskAttemptID().getTaskID().getId();
         System.out.println("Generating to shard - " + shard);
-        sliceBuilder = new SliceBuilder(seg.getIIDesc(), shard, true);
+        sliceBuilder = new SliceBuilder(seg.getIIDesc(), shard);
         messages = Lists.newArrayListWithCapacity(sliceSize);
         immutableBytesWritable = new ImmutableBytesWritable();
         valueBuf = ByteBuffer.allocate(1024 * 1024); // 1MB
