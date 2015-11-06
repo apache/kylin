@@ -54,7 +54,7 @@ public class HBaseMROutput implements IMROutput {
 
             @Override
             public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-                steps.addCubingGarbageCollectionSteps(jobFlow);
+                steps.addInvertedIndexGarbageCollectionSteps(jobFlow);
             }
         };
     }

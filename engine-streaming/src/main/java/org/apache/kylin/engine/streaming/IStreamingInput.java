@@ -33,6 +33,8 @@
  */
 package org.apache.kylin.engine.streaming;
 
+import org.apache.kylin.common.util.StreamingBatch;
+
 /**
  */
 public interface IStreamingInput {

@@ -36,13 +36,12 @@ import java.io.IOException;
 
 /**
  */
-public class UpdateInvertedIndexInfoAfterBuildStep extends AbstractExecutable {
+public class UpdateIIInfoAfterBuildStep extends AbstractExecutable {
 
-    private static final String SEGMENT_ID = "segmentId";
     private static final String II_NAME = "iiName";
     private static final String JOB_ID = "jobId";
 
-    public UpdateInvertedIndexInfoAfterBuildStep() {
+    public UpdateIIInfoAfterBuildStep() {
         super();
     }
 
@@ -54,14 +53,6 @@ public class UpdateInvertedIndexInfoAfterBuildStep extends AbstractExecutable {
         return getParam(II_NAME);
     }
 
-    public void setSegmentId(String segmentId) {
-        this.setParam(SEGMENT_ID, segmentId);
-    }
-
-    private String getSegmentId() {
-        return getParam(SEGMENT_ID);
-    }
-    
     public void setJobId(String id) {
         setParam(JOB_ID, id);
     }

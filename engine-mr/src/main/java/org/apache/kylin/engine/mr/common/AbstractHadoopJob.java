@@ -337,9 +337,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             TableDesc table = metaMgr.getTableDesc(tableName);
             dumpList.add(table.getResourcePath());
         }
-        for (IISegment segment : ii.getSegments()) {
-            dumpList.addAll(segment.getDictionaryPaths());
-        }
 
         attachKylinPropsAndMetadata(dumpList, conf);
     }

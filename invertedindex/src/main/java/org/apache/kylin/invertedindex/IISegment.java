@@ -19,18 +19,14 @@
 package org.apache.kylin.invertedindex;
 
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -49,7 +45,7 @@ import org.apache.kylin.metadata.realization.IRealizationSegment;
 
 // TODO: remove segment concept for II, append old hbase table
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class IISegment implements Comparable<IISegment>, IDictionaryAware, IRealizationSegment {
+public class IISegment implements Comparable<IISegment>, IRealizationSegment {
 
     @JsonBackReference
     private IIInstance iiInstance;
@@ -82,11 +78,6 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware, IReal
     @JsonProperty("binary_signature")
     private String binarySignature; // a hash of schema and dictionary ID,
     // used for sanity check
-
-    @JsonProperty("dictionaries")
-    private ConcurrentHashMap<String, String> dictionaries; // table/column ==>
-    // dictionary
-    // resource path
 
     private transient TableRecordInfo tableRecordInfo;
 
@@ -216,28 +207,6 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware, IReal
         return storageLocationIdentifier;
     }
 
-    public Map<String, String> getDictionaries() {
-        if (dictionaries == null)
-            dictionaries = new ConcurrentHashMap<String, String>();
-        return dictionaries;
-    }
-
-    public Collection<String> getDictionaryPaths() {
-        return getDictionaries().values();
-    }
-
-    public String getDictResPath(TblColRef col) {
-        return getDictionaries().get(dictKey(col));
-    }
-
-    public void putDictResPath(TblColRef col, String dictResPath) {
-        getDictionaries().put(dictKey(col), dictResPath);
-    }
-
-    private String dictKey(TblColRef col) {
-        return col.getTable() + "/" + col.getName();
-    }
-
     /**
      * @param storageLocationIdentifier the storageLocationIdentifier to set
      */
@@ -262,10 +231,6 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware, IReal
         return tableRecordInfo;
     }
 
-    //    public void updateDictionary(List<Dictionary<?>> dicts) {
-    //        getTableRecordInfo().updateDictionary( dicts);
-    //    }
-
     public List<TblColRef> getColumns() {
         return this.getTableRecordInfo().getColumns();
     }
@@ -273,20 +238,6 @@ public class IISegment implements Comparable<IISegment>, IDictionaryAware, IReal
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("name", name).add("last_build_job_id", lastBuildJobID).add("status", status).toString();
-    }
-
-    @Override
-    public int getColumnLength(TblColRef col) {
-
-        int index = getTableRecordInfo().findColumn(col);
-        return getTableRecordInfo().getDigest().length(index);
-    }
-
-    @Override
-    public Dictionary<?> getDictionary(TblColRef col) {
-
-        int index = getTableRecordInfo().findColumn(col);
-        return getTableRecordInfo().dict(index);
     }
 
     public long getCreateTimeUTC() {

@@ -4,26 +4,8 @@
   "owner": null,
   "version": null,
   "cost": 10,
-  "status": "READY",
-  "segments": [
-    {
-      "uuid": null,
-      "name": "19700101000000_20190901000000",
-      "status": "READY",
-      "dictionaries": {
-      },
-      "storage_location_identifier": "KYLIN_2STEAMTEST",
-      "date_range_start": 0,
-      "date_range_end": 0,
-      "size_kb": 0,
-      "input_records": 0,
-      "input_records_size": 0,
-      "last_build_time": 0,
-      "last_build_job_id": null,
-      "create_time": null,
-      "binary_signature": null
-    }
-  ],
+  "status": "DISABLED",
+  "segments": [],
   "last_modified": 0,
   "descriptor": "test_streaming_table_ii_desc",
   "create_time": null,

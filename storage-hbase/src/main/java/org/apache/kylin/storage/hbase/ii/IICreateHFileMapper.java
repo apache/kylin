@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.hbase.ii;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
@@ -43,13 +44,29 @@ public class IICreateHFileMapper extends KylinMapper<ImmutableBytesWritable, Imm
     @Override
     protected void map(ImmutableBytesWritable key, ImmutableBytesWritable value, Context context) throws IOException, InterruptedException {
 
+        ByteBuffer buffer = ByteBuffer.wrap(value.get(), value.getOffset(), value.getLength());
+        int totalLength = value.getLength();
+        int valueLength = buffer.getInt();
+        int dictionaryLength = totalLength - valueLength - 4;
         KeyValue kv = new KeyValue(key.get(), key.getOffset(), key.getLength(), //
                 IIDesc.HBASE_FAMILY_BYTES, 0, IIDesc.HBASE_FAMILY_BYTES.length, //
                 IIDesc.HBASE_QUALIFIER_BYTES, 0, IIDesc.HBASE_QUALIFIER_BYTES.length, //
                 timestamp, Type.Put, //
-                value.get(), value.getOffset(), value.getLength());
+                buffer.array(), buffer.position(), valueLength);
 
+        // write value
         context.write(key, kv);
+
+        kv = new KeyValue(key.get(), key.getOffset(), key.getLength(), //
+                IIDesc.HBASE_FAMILY_BYTES, 0, IIDesc.HBASE_FAMILY_BYTES.length, //
+                IIDesc.HBASE_DICTIONARY_BYTES, 0, IIDesc.HBASE_DICTIONARY_BYTES.length, //
+                timestamp, Type.Put, //
+                buffer.array(), buffer.position() + valueLength, dictionaryLength);
+
+
+        // write dictionary
+        context.write(key, kv);
+        
     }
 
 }

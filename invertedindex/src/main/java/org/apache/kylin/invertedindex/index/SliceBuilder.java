@@ -15,17 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.engine.streaming.invertedindex;
+package org.apache.kylin.invertedindex.index;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.engine.streaming.StreamingBatch;
-import org.apache.kylin.engine.streaming.StreamingMessage;
-import org.apache.kylin.invertedindex.index.BatchSliceMaker;
-import org.apache.kylin.invertedindex.index.Slice;
-import org.apache.kylin.invertedindex.index.TableRecord;
-import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.common.util.StreamingBatch;
+import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.util.IIDictionaryBuilder;
 import org.slf4j.Logger;

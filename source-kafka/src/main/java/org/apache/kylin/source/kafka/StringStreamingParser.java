@@ -40,7 +40,7 @@ import java.util.List;
 
 import kafka.message.MessageAndOffset;
 
-import org.apache.kylin.engine.streaming.StreamingMessage;
+import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;

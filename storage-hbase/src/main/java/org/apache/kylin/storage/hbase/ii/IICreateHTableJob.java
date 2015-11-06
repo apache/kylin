@@ -47,7 +47,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
-
+        HBaseAdmin admin = null;
         try {
             options.addOption(OPTION_II_NAME);
             options.addOption(OPTION_HTABLE_NAME);
@@ -60,6 +60,22 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             IIManager iiManager = IIManager.getInstance(config);
             IIInstance ii = iiManager.getII(iiName);
             int sharding = ii.getDescriptor().getSharding();
+
+
+            Configuration conf = HBaseConfiguration.create(getConf());
+            // check if the table already exists
+            admin = new HBaseAdmin(conf);
+            if (admin.tableExists(tableName)) {
+                if (admin.isTableEnabled(tableName)) {
+                    logger.info("Table " + tableName + " already exists and is enabled, no need to create.");
+                    return 0;
+                } else {
+                    logger.error("Table " + tableName + " is disabled, couldn't append data");
+                    return 1;
+                }
+            }
+        
+            // table doesn't exist, need to create
 
             HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
             HColumnDescriptor cf = new HColumnDescriptor(IIDesc.HBASE_FAMILY);
@@ -100,7 +116,6 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             tableDesc.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
             tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
 
-            Configuration conf = HBaseConfiguration.create(getConf());
             if (User.isHBaseSecurityEnabled(conf)) {
                 // add coprocessor for bulk load
                 tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
@@ -108,13 +123,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
 
             IIDeployCoprocessorCLI.deployCoprocessor(tableDesc);
 
-            // drop the table first
-            HBaseAdmin admin = new HBaseAdmin(conf);
-            if (admin.tableExists(tableName)) {
-                admin.disableTable(tableName);
-                admin.deleteTable(tableName);
-            }
-
+          
             // create table
             byte[][] splitKeys = getSplits(sharding);
             if (splitKeys.length == 0)
@@ -126,12 +135,14 @@ public class IICreateHTableJob extends AbstractHadoopJob {
                 }
             }
             System.out.println("create hbase table " + tableName + " done.");
-            admin.close();
 
             return 0;
         } catch (Exception e) {
             printUsage(options);
             throw e;
+        } finally {
+            if (admin != null)
+                admin.close();
         }
     }
 

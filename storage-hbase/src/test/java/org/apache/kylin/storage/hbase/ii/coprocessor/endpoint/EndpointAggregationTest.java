@@ -18,20 +18,11 @@
 
 package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
@@ -45,7 +36,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.*;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -90,6 +85,10 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
     @Test
     public void testSerializeAggregator() {
         final IIInstance ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
+        if (ii.getFirstSegment() == null) {
+            IISegment segment = IIManager.getInstance(getTestConfig()).buildSegment(ii, 0, System.currentTimeMillis());
+            ii.getSegments().add(segment);
+        }
         final TableRecordInfo tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
         final EndpointAggregators endpointAggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
         byte[] x = EndpointAggregators.serialize(endpointAggregators);
@@ -139,6 +138,10 @@ public class EndpointAggregationTest extends LocalFileMetadataTestCase {
     @Test
     public void basicTest() {
         final IIInstance ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
+        if (ii.getFirstSegment() == null) {
+            IISegment segment = IIManager.getInstance(getTestConfig()).buildSegment(ii, 0, System.currentTimeMillis());
+            ii.getSegments().add(segment);
+        }
         final TableRecordInfo tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
         final EndpointAggregators aggregators = EndpointAggregators.fromFunctions(tableRecordInfo, buildAggregations());
         final EndpointAggregationCache aggCache = new EndpointAggregationCache(aggregators);

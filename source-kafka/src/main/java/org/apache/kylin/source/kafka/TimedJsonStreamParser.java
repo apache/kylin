@@ -43,7 +43,7 @@ import kafka.message.MessageAndOffset;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.TimeUtil;
-import org.apache.kylin.engine.streaming.StreamingMessage;
+import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

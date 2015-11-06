@@ -51,8 +51,8 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
-import org.apache.kylin.engine.streaming.StreamingBatch;
-import org.apache.kylin.engine.streaming.StreamingMessage;
+import org.apache.kylin.common.util.StreamingBatch;
+import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
@@ -61,7 +61,7 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
-import org.apache.kylin.engine.streaming.invertedindex.SliceBuilder;
+import org.apache.kylin.invertedindex.index.SliceBuilder;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -196,14 +196,13 @@ public class BuildIIWithStreamTest {
         int count = sorted.size();
         ArrayList<StreamingMessage> messages = Lists.newArrayList();
         for (String[] row : sorted) {
-            if (messages.size() < iiDesc.getSliceSize()) {
-                messages.add(parse(row));
-            } else {
+            messages.add((parse(row)));
+            if (messages.size() >= iiDesc.getSliceSize()) {
                 build(sliceBuilder, new StreamingBatch(messages, Pair.newPair(System.currentTimeMillis(), System.currentTimeMillis())), htable);
-                messages = Lists.newArrayList();
-                messages.add((parse(row)));
+                messages.clear();
             }
         }
+        
         if (!messages.isEmpty()) {
             build(sliceBuilder, new StreamingBatch(messages, Pair.newPair(System.currentTimeMillis(), System.currentTimeMillis())), htable);
         }

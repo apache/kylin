@@ -4,7 +4,6 @@ import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 
 /**
- * Created by shaoshi on 10/30/15.
  */
 public interface IRealizationSegment extends IBuildable {
 
