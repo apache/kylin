@@ -190,7 +190,7 @@ public class BuildIIWithStreamTest {
         ToolRunner.run(new IICreateHTableJob(), args);
 
         final IIDesc iiDesc = segment.getIIDesc();
-        final SliceBuilder sliceBuilder = new SliceBuilder(desc, (short) 0, iiDesc.isUseLocalDictionary());
+        final SliceBuilder sliceBuilder = new SliceBuilder(desc, (short) 0);
 
         List<String[]> sorted = getSortedRows(reader, desc.getTimestampColumn());
         int count = sorted.size();
