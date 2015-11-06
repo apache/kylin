@@ -184,7 +184,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
     }
 
     public void addSaveIIToHTableSteps(DefaultChainedExecutable jobFlow, String rootPath) {
-        // create htable step
+        // create htable if it doesn't exist
         jobFlow.addTask(createCreateIIHTableStep(seg));
 
         final String iiPath = rootPath + "*";
@@ -197,6 +197,22 @@ public class HBaseMRSteps extends JobBuilderSupport {
         
     }
 
+
+    public void addInvertedIndexGarbageCollectionSteps(DefaultChainedExecutable jobFlow) {
+        String jobId = jobFlow.getId();
+
+        List<String> toDeletePaths = new ArrayList<>();
+        toDeletePaths.add(getJobWorkingDir(jobId));
+
+        HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
+        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
+        step.setDeletePaths(toDeletePaths);
+        step.setJobId(jobId);
+
+        jobFlow.addTask(step);
+    }
+
+    
 
     private HadoopShellExecutable createCreateIIHTableStep(IRealizationSegment seg) {
         HadoopShellExecutable createHtableStep = new HadoopShellExecutable();

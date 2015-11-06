@@ -11,7 +11,7 @@ import kafka.javaapi.PartitionMetadata;
 import kafka.message.MessageAndOffset;
 
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.engine.streaming.StreamingMessage;
+import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.source.kafka.StreamingParser;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.slf4j.Logger;

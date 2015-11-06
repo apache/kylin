@@ -1,4 +1,4 @@
-package org.apache.kylin.engine.streaming;
+package org.apache.kylin.common.util;
 
 import java.util.Collections;
 import java.util.List;

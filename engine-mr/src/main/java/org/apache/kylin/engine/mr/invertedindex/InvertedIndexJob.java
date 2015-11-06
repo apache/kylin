@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -44,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author yangli9
  */
 public class InvertedIndexJob extends AbstractHadoopJob {
     protected static final Logger logger = LoggerFactory.getLogger(InvertedIndexJob.class);
@@ -56,13 +56,11 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         try {
             options.addOption(OPTION_JOB_NAME);
             options.addOption(OPTION_II_NAME);
-            options.addOption(OPTION_TABLE_NAME);
             options.addOption(OPTION_OUTPUT_PATH);
             parseOptions(options, args);
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             String iiname = getOptionValue(OPTION_II_NAME);
-            String intermediateTable = getOptionValue(OPTION_TABLE_NAME);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
             // ----------------------------------------------------------------------------
@@ -111,17 +109,11 @@ public class InvertedIndexJob extends AbstractHadoopJob {
    
     private void setupMapper(IISegment segment) throws IOException {
 
-//        String[] dbTableNames = HadoopUtil.parseHiveTableName(intermediateTable);
-//        HCatInputFormat.setInput(job, dbTableNames[0], dbTableNames[1]);
-//
-//        job.setInputFormatClass(HCatInputFormat.class);
         IMRInput.IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(segment).getFlatTableInputFormat();
         flatTableInputFormat.configureJob(job);
 
-
         job.setMapperClass(InvertedIndexMapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
-        job.setMapOutputValueClass(ImmutableBytesWritable.class);
         job.setPartitionerClass(InvertedIndexPartitioner.class);
     }
 

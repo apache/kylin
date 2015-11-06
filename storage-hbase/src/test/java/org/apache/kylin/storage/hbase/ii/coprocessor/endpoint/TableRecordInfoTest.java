@@ -25,6 +25,7 @@ import java.io.IOException;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
+import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.junit.After;
@@ -41,6 +42,10 @@ public class TableRecordInfoTest extends LocalFileMetadataTestCase {
     public void setup() throws IOException {
         this.createTestMetadata();
         this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
+        if (ii.getFirstSegment() == null) {
+            IISegment segment = IIManager.getInstance(getTestConfig()).buildSegment(ii, 0, System.currentTimeMillis());
+            ii.getSegments().add(segment);
+        }
         this.tableRecordInfo = new TableRecordInfo(ii.getFirstSegment());
     }
 

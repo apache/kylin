@@ -53,11 +53,6 @@ public class IIInstanceTest extends LocalFileMetadataTestCase {
 
         Assert.assertTrue(iiInstances.size() > 0);
 
-        IIInstance instance = iiInstances.get(0);
-
-        Dictionary dict = mgr.getDictionary(instance.getFirstSegment(), instance.getDescriptor().findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_SITE_ID"));
-
-        Assert.assertNotNull(dict);
     }
 
     @Test

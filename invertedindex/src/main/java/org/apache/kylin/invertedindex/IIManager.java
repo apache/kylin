@@ -32,13 +32,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
-import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.dict.DictionaryInfo;
-import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.DistinctColumnValuesProvider;
-import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -131,45 +125,7 @@ public class IIManager implements IRealizationProvider {
         }
         return result;
     }
-
-    public void buildInvertedIndexDictionary(IISegment iiSeg, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
-        logger.info("Start building ii dictionary");
-        DictionaryManager dictMgr = getDictionaryManager();
-        IIDesc iiDesc = iiSeg.getIIInstance().getDescriptor();
-        for (TblColRef column : iiDesc.listAllColumns()) {
-            logger.info("Dealing with column {}", column);
-            if (iiDesc.isMetricsCol(column)) {
-                continue;
-            }
-
-            DictionaryInfo dict = dictMgr.buildDictionary(iiDesc.getModel(), "true", column, factTableValueProvider);
-            iiSeg.putDictResPath(column, dict.getResourcePath());
-        }
-        updateII(iiSeg.getIIInstance());
-    }
-
-    /**
-     * return null if no dictionary for given column
-     */
-    public Dictionary<?> getDictionary(IISegment iiSeg, TblColRef col) {
-        DictionaryInfo info = null;
-        try {
-            DictionaryManager dictMgr = getDictionaryManager();
-            // logger.info("Using metadata url " + metadataUrl +
-            // " for DictionaryManager");
-            String dictResPath = iiSeg.getDictResPath(col);
-            if (dictResPath == null)
-                return null;
-
-            info = dictMgr.getDictionaryInfo(dictResPath);
-            if (info == null)
-                throw new IllegalStateException("No dictionary found by " + dictResPath + ", invalid II state; II segment" + iiSeg + ", col " + col);
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to get dictionary for II segment" + iiSeg + ", col" + col, e);
-        }
-
-        return info.getDictionaryObject();
-    }
+    
 
     public IIInstance createII(IIInstance ii) throws IOException {
 
@@ -298,10 +254,6 @@ public class IIManager implements IRealizationProvider {
             logger.error("Error during load ii instance " + path, e);
             return null;
         }
-    }
-
-    private DictionaryManager getDictionaryManager() {
-        return DictionaryManager.getInstance(config);
     }
 
     private ResourceStore getStore() {

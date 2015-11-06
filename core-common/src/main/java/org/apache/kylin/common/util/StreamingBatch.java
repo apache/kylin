@@ -31,11 +31,9 @@
  *
  * /
  */
-package org.apache.kylin.engine.streaming;
+package org.apache.kylin.common.util;
 
 import java.util.List;
-
-import org.apache.kylin.common.util.Pair;
 
 /**
  */

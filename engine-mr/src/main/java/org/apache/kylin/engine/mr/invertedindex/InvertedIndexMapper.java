@@ -18,13 +18,11 @@
 
 package org.apache.kylin.engine.mr.invertedindex;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Writable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.MRUtil;
@@ -33,20 +31,19 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+
+import java.io.IOException;
 
 /**
  * @author yangli9
  */
-public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, Object, LongWritable, ImmutableBytesWritable> {
+public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, Object, LongWritable, Writable> {
 
     private TableRecordInfo info;
-    private TableRecord rec;
 
     private LongWritable outputKey;
-    private ImmutableBytesWritable outputValue;
     private IMRInput.IMRTableInputFormat flatTableInputFormat;
 
     @Override
@@ -60,10 +57,8 @@ public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, Object, LongW
         IIInstance ii = mgr.getII(conf.get(BatchConstants.CFG_II_NAME));
         IISegment seg = ii.getSegment(conf.get(BatchConstants.CFG_II_SEGMENT_NAME), SegmentStatusEnum.NEW);
         this.info = new TableRecordInfo(seg);
-        this.rec = this.info.createTableRecord();
 
         outputKey = new LongWritable();
-        outputValue = new ImmutableBytesWritable(rec.getBytes());
 
         flatTableInputFormat = MRUtil.getBatchCubingInputSide(ii.getFirstSegment()).getFlatTableInputFormat();
     }
@@ -71,17 +66,12 @@ public class InvertedIndexMapper<KEYIN> extends KylinMapper<KEYIN, Object, LongW
     @Override
     public void map(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
 
-        String[] row = flatTableInputFormat.parseMapperInput(record);
-        rec.reset();
-        for (int i = 0; i < row.length; i++) {
-            Object fieldValue = row[i];
-            if (fieldValue != null)
-                rec.setValueString(i, fieldValue.toString());
-        }
+        Writable writableRecord = (Writable) record;
+        String[] row = flatTableInputFormat.parseMapperInput(writableRecord);
+        String timestampString = row[info.getTimestampColumn()];
 
-        outputKey.set(rec.getTimestamp());
-        // outputValue's backing bytes array is the same as rec
-
-        context.write(outputKey, outputValue);
+        outputKey.set(DateFormat.stringToMillis(timestampString));
+        //
+        context.write(outputKey, writableRecord);
     }
 }

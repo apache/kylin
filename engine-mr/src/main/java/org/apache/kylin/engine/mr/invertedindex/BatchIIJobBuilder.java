@@ -18,29 +18,15 @@
 
 package org.apache.kylin.engine.mr.invertedindex;
 
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMROutput;
-import org.apache.kylin.engine.mr.IMROutput.IMRBatchCubingOutputSide;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.MRUtil;
-import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
-import org.apache.kylin.engine.mr.steps.BaseCuboidJob;
-import org.apache.kylin.engine.mr.steps.NDCuboidJob;
 import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.IRealizationSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class BatchIIJobBuilder extends JobBuilderSupport {
     
@@ -64,54 +50,20 @@ public class BatchIIJobBuilder extends JobBuilderSupport {
         final String iiRootPath = getRealizationRootPath(jobId) + "/";
         // Phase 1: Create Flat Table
         inputSide.addStepPhase1_CreateFlatTable(result);
-
-        final String intermediateTableIdentity = seg.getJoinedFlatTableDesc().getTableName();
-        // Phase 2: Build Dictionary
-        result.addTask(createIIFactDistinctColumnsStep(seg, intermediateTableIdentity, getFactDistinctColumnsPath(jobId)));
-        result.addTask(createIIBuildDictionaryStep(seg, getFactDistinctColumnsPath(jobId)));
-
-        // Phase 3: Build Cube
-        result.addTask(createInvertedIndexStep((IISegment)seg, intermediateTableIdentity, iiRootPath));
+    
+        // Phase 2: Build Inverted Index
+        result.addTask(createInvertedIndexStep((IISegment)seg, iiRootPath));
         outputSide.addStepPhase3_BuildII(result, iiRootPath);
 
-        // Phase 4: Update Metadata & Cleanup
-        result.addTask(createUpdateInvertedIndexInfoAfterBuildStep(jobId));
+        // Phase 3: Update Metadata & Cleanup
+        result.addTask(createUpdateIIInfoAfterBuildStep(jobId));
         inputSide.addStepPhase4_Cleanup(result);
         outputSide.addStepPhase4_Cleanup(result);
 
         return result;
     }
 
-    private MapReduceExecutable createIIFactDistinctColumnsStep(IRealizationSegment seg, String factTableName, String output) {
-        MapReduceExecutable result = new MapReduceExecutable();
-        result.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
-        result.setMapReduceJobClass(IIDistinctColumnsJob.class);
-        StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, seg.getRealization().getDataModelDesc());
-        appendExecCmdParameters(cmd, "tablename", factTableName);
-        appendExecCmdParameters(cmd, "iiname", seg.getRealization().getName());
-        appendExecCmdParameters(cmd, "output", output);
-        appendExecCmdParameters(cmd, "jobname", "Kylin_Fact_Distinct_Columns_" + seg.getRealization().getName() + "_Step");
-
-        result.setMapReduceParams(cmd.toString());
-        return result;
-    }
-
-    private HadoopShellExecutable createIIBuildDictionaryStep(IRealizationSegment seg, String factDistinctColumnsPath) {
-        // base cuboid job
-        HadoopShellExecutable buildDictionaryStep = new HadoopShellExecutable();
-        buildDictionaryStep.setName(ExecutableConstants.STEP_NAME_BUILD_DICTIONARY);
-        StringBuilder cmd = new StringBuilder();
-        appendExecCmdParameters(cmd, "iiname", seg.getRealization().getName());
-        appendExecCmdParameters(cmd, "input", factDistinctColumnsPath);
-
-        buildDictionaryStep.setJobParams(cmd.toString());
-        buildDictionaryStep.setJobClass(CreateInvertedIndexDictionaryJob.class);
-        return buildDictionaryStep;
-    }
-
-    private MapReduceExecutable createInvertedIndexStep(IISegment seg, String intermediateHiveTable, String iiOutputTempPath) {
-        // base cuboid job
+    private MapReduceExecutable createInvertedIndexStep(IISegment seg, String iiOutputTempPath) {
         MapReduceExecutable buildIIStep = new MapReduceExecutable();
 
         StringBuilder cmd = new StringBuilder();
@@ -120,7 +72,6 @@ public class BatchIIJobBuilder extends JobBuilderSupport {
         buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_II);
 
         appendExecCmdParameters(cmd, "iiname", seg.getRealization().getName());
-        appendExecCmdParameters(cmd, "tablename", intermediateHiveTable);
         appendExecCmdParameters(cmd, "output", iiOutputTempPath);
         appendExecCmdParameters(cmd, "jobname", ExecutableConstants.STEP_NAME_BUILD_II);
 

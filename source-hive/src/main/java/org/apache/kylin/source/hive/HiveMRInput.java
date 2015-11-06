@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
@@ -78,6 +79,8 @@ public class HiveMRInput implements IMRInput {
             try {
                 HCatInputFormat.setInput(job, dbName, tableName);
                 job.setInputFormatClass(HCatInputFormat.class);
+
+                job.setMapOutputValueClass(org.apache.hive.hcatalog.data.DefaultHCatRecord.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
