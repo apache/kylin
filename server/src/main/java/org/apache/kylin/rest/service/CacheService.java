@@ -125,9 +125,11 @@ public class CacheService extends BasicService {
         try {
             switch (cacheType) {
                 case CUBE:
+                if (getCubeManager().getCube(cacheKey) != null) {
                     String storageUUID = getCubeManager().getCube(cacheKey).getUuid();
                     getCubeManager().removeCubeLocal(cacheKey);
                     super.cleanDataCache(storageUUID);
+                }
                     break;
                 case CUBE_DESC:
                     getCubeDescManager().removeLocalCubeDesc(cacheKey);
