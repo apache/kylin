@@ -236,6 +236,9 @@ public class CubeManager implements IRealizationProvider {
 
         // delete cube from project
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
+        
+        if (listener != null)
+            listener.afterCubeDelete(cube);
 
         return cube;
     }
@@ -248,14 +251,22 @@ public class CubeManager implements IRealizationProvider {
         CubeInstance cube = CubeInstance.create(cubeName, projectName, desc);
         cube.setOwner(owner);
 
-        updateCube(new CubeUpdate(cube));
+        updateCubeWithRetry(new CubeUpdate(cube), 0);
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cubeName, projectName, owner);
 
+        if (listener != null)
+            listener.afterCubeCreate(cube);
+        
         return cube;
     }
 
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
-        return updateCube(update, 0);
+        CubeInstance cube = updateCubeWithRetry(update, 0);
+
+        if (listener != null)
+            listener.afterCubeUpdate(cube);
+        
+        return cube;
     }
 
     private boolean validateReadySegments(CubeInstance cube) {
@@ -283,7 +294,7 @@ public class CubeManager implements IRealizationProvider {
         return true;
     }
 
-    private CubeInstance updateCube(CubeUpdate update, int retry) throws IOException {
+    private CubeInstance updateCubeWithRetry(CubeUpdate update, int retry) throws IOException {
         if (update == null || update.getCubeInstance() == null)
             throw new IllegalStateException();
 
@@ -348,7 +359,7 @@ public class CubeManager implements IRealizationProvider {
             cube = reloadCubeLocal(cube.getName());
             update.setCubeInstance(cube);
             retry++;
-            cube = updateCube(update, retry);
+            cube = updateCubeWithRetry(update, retry);
         }
 
         if (toRemoveResources.size() > 0) {
@@ -850,4 +861,19 @@ public class CubeManager implements IRealizationProvider {
         return getCube(name);
     }
 
+    // ============================================================================
+    
+    public interface CubeChangeListener {
+        void afterCubeCreate(CubeInstance cube);
+
+        void afterCubeUpdate(CubeInstance cube);
+
+        void afterCubeDelete(CubeInstance cube);
+    }
+    
+    private CubeChangeListener listener;
+    
+    public void setCubeChangeListener(CubeChangeListener listener) {
+        this.listener = listener;
+    }
 }
