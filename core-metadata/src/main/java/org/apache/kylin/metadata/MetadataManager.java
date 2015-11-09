@@ -103,11 +103,11 @@ public class MetadataManager {
 
     private KylinConfig config;
     // table name ==> SourceTable
-    private CaseInsensitiveStringCache<TableDesc> srcTableMap = new CaseInsensitiveStringCache<TableDesc>(Broadcaster.TYPE.TABLE);
+    private CaseInsensitiveStringCache<TableDesc> srcTableMap;
     // name => value
-    private CaseInsensitiveStringCache<Map<String, String>> srcTableExdMap = new CaseInsensitiveStringCache<Map<String, String>>(Broadcaster.TYPE.TABLE);
+    private CaseInsensitiveStringCache<Map<String, String>> srcTableExdMap;
     // name => DataModelDesc
-    private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap = new CaseInsensitiveStringCache<DataModelDesc>(Broadcaster.TYPE.DATA_MODEL);
+    private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap;
 
     private MetadataManager(KylinConfig config) throws IOException {
         init(config);
@@ -198,6 +198,10 @@ public class MetadataManager {
 
     private void init(KylinConfig config) throws IOException {
         this.config = config;
+        this.srcTableMap = new CaseInsensitiveStringCache<TableDesc>(config, Broadcaster.TYPE.TABLE);
+        this.srcTableExdMap = new CaseInsensitiveStringCache<Map<String, String>>(config, Broadcaster.TYPE.TABLE);
+        this.dataModelDescMap = new CaseInsensitiveStringCache<DataModelDesc>(config, Broadcaster.TYPE.DATA_MODEL);
+        
         reloadAllSourceTable();
         reloadAllSourceTableExd();
         reloadAllDataModel();

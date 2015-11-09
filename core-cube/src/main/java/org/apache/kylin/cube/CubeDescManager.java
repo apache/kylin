@@ -57,7 +57,7 @@ public class CubeDescManager {
 
     private KylinConfig config;
     // name ==> CubeDesc
-    private CaseInsensitiveStringCache<CubeDesc> cubeDescMap = new CaseInsensitiveStringCache<CubeDesc>(Broadcaster.TYPE.CUBE_DESC);
+    private CaseInsensitiveStringCache<CubeDesc> cubeDescMap;
 
     public static CubeDescManager getInstance(KylinConfig config) {
         CubeDescManager r = CACHE.get(config);
@@ -90,6 +90,7 @@ public class CubeDescManager {
     private CubeDescManager(KylinConfig config) throws IOException {
         logger.info("Initializing CubeDescManager with config " + config);
         this.config = config;
+        this.cubeDescMap = new CaseInsensitiveStringCache<CubeDesc>(config, Broadcaster.TYPE.CUBE_DESC);
         reloadAllCubeDesc();
     }
 

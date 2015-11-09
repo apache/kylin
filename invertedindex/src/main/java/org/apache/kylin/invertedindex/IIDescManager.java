@@ -54,7 +54,7 @@ public class IIDescManager {
 
     private KylinConfig config;
     // name ==> IIDesc
-    private CaseInsensitiveStringCache<IIDesc> iiDescMap = new CaseInsensitiveStringCache<IIDesc>(Broadcaster.TYPE.INVERTED_INDEX_DESC);
+    private CaseInsensitiveStringCache<IIDesc> iiDescMap;
 
     public static IIDescManager getInstance(KylinConfig config) {
         IIDescManager r = CACHE.get(config);
@@ -87,6 +87,7 @@ public class IIDescManager {
     private IIDescManager(KylinConfig config) throws IOException {
         logger.info("Initializing IIDescManager with config " + config);
         this.config = config;
+        this.iiDescMap = new CaseInsensitiveStringCache<IIDesc>(config, Broadcaster.TYPE.INVERTED_INDEX_DESC);
         reloadAllIIDesc();
     }
 
