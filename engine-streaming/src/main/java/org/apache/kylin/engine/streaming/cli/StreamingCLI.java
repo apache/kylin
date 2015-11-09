@@ -56,8 +56,6 @@ public class StreamingCLI {
 
     public static void main(String[] args) {
         try {
-            AbstractRestCache.setCacheUpdater(new RemoteCacheUpdater());
-
             Preconditions.checkArgument(args[0].equals("streaming"));
             Preconditions.checkArgument(args[1].equals("start"));
 

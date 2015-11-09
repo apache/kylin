@@ -37,12 +37,15 @@ public class QueryServiceTest extends ServiceTestBase {
     @Autowired
     QueryService queryService;
 
+    @Autowired
+    private CacheService cacheService;
+    
     @Test
     public void testBasics() throws JobException, IOException, SQLException {
         Assert.assertNotNull(queryService.getConfig());
-        Assert.assertNotNull(queryService.getKylinConfig());
+        Assert.assertNotNull(queryService.getConfig());
         Assert.assertNotNull(queryService.getMetadataManager());
-        Assert.assertNotNull(queryService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+        Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
         //        Assert.assertTrue(queryService.getQueries("ADMIN").size() == 0);
         //

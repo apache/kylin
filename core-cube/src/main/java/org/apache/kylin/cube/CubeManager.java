@@ -525,11 +525,7 @@ public class CubeManager implements IRealizationProvider {
      * @param cubeName
      */
     public CubeInstance reloadCubeLocal(String cubeName) {
-        try {
-            return reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return reloadCubeLocalAt(CubeInstance.concatResourcePath(cubeName));
     }
 
     public void removeCubeLocal(String cubeName) {
@@ -792,7 +788,7 @@ public class CubeManager implements IRealizationProvider {
         logger.debug("Loaded " + paths.size() + " Cube(s)");
     }
 
-    private synchronized CubeInstance reloadCubeLocalAt(String path) throws IOException {
+    private synchronized CubeInstance reloadCubeLocalAt(String path) {
         ResourceStore store = getStore();
 
         CubeInstance cubeInstance;

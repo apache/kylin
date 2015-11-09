@@ -34,12 +34,15 @@ public class JobServiceTest extends ServiceTestBase {
     @Autowired
     JobService jobService;
 
+    @Autowired
+    private CacheService cacheService;
+    
     @Test
     public void testBasics() throws JobException, IOException {
         Assert.assertNotNull(jobService.getConfig());
-        Assert.assertNotNull(jobService.getKylinConfig());
+        Assert.assertNotNull(jobService.getConfig());
         Assert.assertNotNull(jobService.getMetadataManager());
-        Assert.assertNotNull(jobService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+        Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
         Assert.assertNull(jobService.getJobInstance("job_not_exist"));
         Assert.assertNotNull(jobService.listAllJobs(null, null, null));
     }

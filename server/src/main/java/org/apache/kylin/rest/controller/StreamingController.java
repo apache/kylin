@@ -158,7 +158,7 @@ public class StreamingController extends BasicController {
     @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE })
     @ResponseBody
     public void deleteConfig(@PathVariable String configName) throws IOException {
-        StreamingConfig config = streamingService.getSreamingManager().getStreamingConfig(configName);
+        StreamingConfig config = streamingService.getStreamingManager().getStreamingConfig(configName);
         KafkaConfig kafkaConfig = kafkaConfigService.getKafkaConfig(configName);
         if (null == config) {
             throw new NotFoundException("StreamingConfig with name " + configName + " not found..");

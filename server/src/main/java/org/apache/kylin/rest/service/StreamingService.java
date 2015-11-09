@@ -41,9 +41,9 @@ public class StreamingService extends BasicService {
         List<StreamingConfig> streamingConfigs = new ArrayList();
         CubeInstance cubeInstance = (null != cubeName) ? getCubeManager().getCube(cubeName) : null;
         if (null == cubeInstance) {
-            streamingConfigs = getSreamingManager().listAllStreaming();
+            streamingConfigs = getStreamingManager().listAllStreaming();
         } else {
-            for(StreamingConfig config : getSreamingManager().listAllStreaming()){
+            for(StreamingConfig config : getStreamingManager().listAllStreaming()){
                 if(cubeInstance.getName().equals(config.getCubeName())){
                     streamingConfigs.add(config);
                 }
@@ -70,21 +70,21 @@ public class StreamingService extends BasicService {
     }
 
     public StreamingConfig createStreamingConfig(StreamingConfig config) throws IOException {
-        if (getSreamingManager().getStreamingConfig(config.getName()) != null) {
+        if (getStreamingManager().getStreamingConfig(config.getName()) != null) {
             throw new InternalErrorException("The streamingConfig named " + config.getName() + " already exists");
         }
-        StreamingConfig streamingConfig =  getSreamingManager().saveStreamingConfig(config);
+        StreamingConfig streamingConfig =  getStreamingManager().saveStreamingConfig(config);
         return streamingConfig;
     }
 
 //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public StreamingConfig updateStreamingConfig(StreamingConfig config) throws IOException {
-        return getSreamingManager().updateStreamingConfig(config);
+        return getStreamingManager().updateStreamingConfig(config);
     }
 
 //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public void dropStreamingConfig(StreamingConfig config) throws IOException {
-        getSreamingManager().removeStreamingConfig(config);
+        getStreamingManager().removeStreamingConfig(config);
     }
 
 }
