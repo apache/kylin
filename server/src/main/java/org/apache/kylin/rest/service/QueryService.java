@@ -68,6 +68,7 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.h2.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -81,6 +82,9 @@ public class QueryService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
+    @Autowired
+    private CacheService cacheService;
+    
     public static final String USER_QUERY_FAMILY = "q";
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
@@ -282,7 +286,7 @@ public class QueryService extends BasicService {
             return Collections.emptyList();
         }
         try {
-            DataSource dataSource = getOLAPDataSource(project);
+            DataSource dataSource = cacheService.getOLAPDataSource(project);
             conn = dataSource.getConnection();
             DatabaseMetaData metaData = conn.getMetaData();
 
@@ -342,7 +346,7 @@ public class QueryService extends BasicService {
         List<SelectedColumnMeta> columnMetas = new LinkedList<SelectedColumnMeta>();
 
         try {
-            conn = getOLAPDataSource(sqlRequest.getProject()).getConnection();
+            conn = cacheService.getOLAPDataSource(sqlRequest.getProject()).getConnection();
 
             if (sqlRequest instanceof PrepareSqlRequest) {
                 PreparedStatement preparedState = conn.prepareStatement(sql);
@@ -481,4 +485,28 @@ public class QueryService extends BasicService {
             return -1;
         }
     }
+
+    private static void close(ResultSet resultSet, Statement stat, Connection conn) {
+        OLAPContext.clearParameter();
+
+        if (resultSet != null)
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+        if (stat != null)
+            try {
+                stat.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+        if (conn != null)
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                logger.error("failed to close", e);
+            }
+    }
+
 }

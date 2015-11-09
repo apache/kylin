@@ -71,7 +71,7 @@ public class JobController extends BasicController implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
 
-        String timeZone = jobService.getKylinConfig().getTimeZone();
+        String timeZone = jobService.getConfig().getTimeZone();
         TimeZone tzone = TimeZone.getTimeZone(timeZone);
         TimeZone.setDefault(tzone);
 

@@ -69,8 +69,7 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
         IIManager.clearCache();
         RealizationRegistry.clearCache();
         ProjectManager.clearCache();
-        BasicService.removeAllOLAPDataSources();
-
+        CacheService.removeAllOLAPDataSources();
     }
 
     @After

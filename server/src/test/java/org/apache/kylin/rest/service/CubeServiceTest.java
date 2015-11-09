@@ -38,12 +38,15 @@ public class CubeServiceTest extends ServiceTestBase {
     @Autowired
     CubeService cubeService;
 
+    @Autowired
+    private CacheService cacheService;
+    
     @Test
     public void testBasics() throws JsonProcessingException, JobException, UnknownHostException {
         Assert.assertNotNull(cubeService.getConfig());
-        Assert.assertNotNull(cubeService.getKylinConfig());
+        Assert.assertNotNull(cubeService.getConfig());
         Assert.assertNotNull(cubeService.getMetadataManager());
-        Assert.assertNotNull(cubeService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
+        Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
         Assert.assertTrue(CubeService.getCubeDescNameFromCube("testCube").equals("testCube_desc"));
         Assert.assertTrue(CubeService.getCubeNameFromDesc("testCube_desc").equals("testCube"));
