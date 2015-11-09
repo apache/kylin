@@ -71,7 +71,9 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     public static void beforeClass() throws Exception {
         staticCreateTestMetadata();
         configA = KylinConfig.getInstanceFromEnv();
+        configA.setProperty("kylin.rest.servers", "localhost:7070");
         configB = KylinConfig.getKylinConfigFromInputStream(KylinConfig.getKylinPropertiesAsInputSteam());
+        configB.setProperty("kylin.rest.servers", "localhost:7070");
         configB.setMetadataUrl("../examples/test_metadata");
 
         server = new Server(7070);
@@ -209,7 +211,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testCubeCRUD() throws Exception {
-        final Broadcaster broadcaster = Broadcaster.getInstance();
+        final Broadcaster broadcaster = Broadcaster.getInstance(configA);
         broadcaster.getCounterAndClear();
 
         getStore().deleteResource("/cube/a_whole_new_cube.json");
@@ -306,7 +308,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     public void testMetaCRUD() throws Exception {
         final MetadataManager metadataManager = MetadataManager.getInstance(configA);
         final MetadataManager metadataManagerB = MetadataManager.getInstance(configB);
-        final Broadcaster broadcaster = Broadcaster.getInstance();
+        final Broadcaster broadcaster = Broadcaster.getInstance(configA);
         broadcaster.getCounterAndClear();
 
         TableDesc tableDesc = createTestTableDesc();

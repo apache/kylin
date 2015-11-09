@@ -76,12 +76,12 @@ public class HybridManager implements IRealizationProvider {
 
     private KylinConfig config;
 
-    private CaseInsensitiveStringCache<HybridInstance> hybridMap = new CaseInsensitiveStringCache<HybridInstance>(Broadcaster.TYPE.HYBRID);
+    private CaseInsensitiveStringCache<HybridInstance> hybridMap;
 
     private HybridManager(KylinConfig config) throws IOException {
         logger.info("Initializing HybridManager with config " + config);
         this.config = config;
-
+        this.hybridMap = new CaseInsensitiveStringCache<HybridInstance>(config, Broadcaster.TYPE.HYBRID);
         loadAllHybridInstance();
     }
 

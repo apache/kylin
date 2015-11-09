@@ -18,8 +18,7 @@
 
 package org.apache.kylin.common.restclient;
 
-import org.apache.kylin.common.cache.CacheUpdater;
-import org.apache.kylin.common.cache.RemoteCacheUpdater;
+import org.apache.kylin.common.KylinConfig;
 
 /**
  * @author xjiang
@@ -27,16 +26,16 @@ import org.apache.kylin.common.cache.RemoteCacheUpdater;
  */
 public abstract class AbstractRestCache<K, V> {
 
-    protected static CacheUpdater cacheUpdater = new RemoteCacheUpdater();
-
-    public static void setCacheUpdater(CacheUpdater cu) {
-        cacheUpdater = cu;
-    }
-
+    protected final KylinConfig config;
     protected final Broadcaster.TYPE syncType;
 
-    protected AbstractRestCache(Broadcaster.TYPE syncType) {
+    protected AbstractRestCache(KylinConfig config, Broadcaster.TYPE syncType) {
+        this.config = config;
         this.syncType = syncType;
+    }
+    
+    public Broadcaster getBroadcaster() {
+        return Broadcaster.getInstance(config);
     }
 
     public abstract void put(K key, V value);

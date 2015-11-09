@@ -34,11 +34,10 @@
 
 package org.apache.kylin.engine.streaming.cli;
 
-import com.google.common.base.Preconditions;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.cache.RemoteCacheUpdater;
-import org.apache.kylin.common.restclient.AbstractRestCache;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.streaming.BootstrapConfig;
 import org.apache.kylin.engine.streaming.OneOffStreamingBuilder;
@@ -48,7 +47,7 @@ import org.apache.kylin.engine.streaming.monitor.StreamingMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
 
 public class StreamingCLI {
 

@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.kylin.common.KylinConfig;
+
 /**
  * @author xjiang
  * 
@@ -33,12 +35,12 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     private final ConcurrentMap<K, V> innerCache;
 
-    public SingleValueCache(Broadcaster.TYPE syncType) {
-        this(syncType, new ConcurrentHashMap<K, V>());
+    public SingleValueCache(KylinConfig config, Broadcaster.TYPE syncType) {
+        this(config, syncType, new ConcurrentHashMap<K, V>());
     }
 
-    public SingleValueCache(Broadcaster.TYPE syncType, ConcurrentMap<K, V> innerCache) {
-        super(syncType);
+    public SingleValueCache(KylinConfig config, Broadcaster.TYPE syncType, ConcurrentMap<K, V> innerCache) {
+        super(config, syncType);
         this.innerCache = innerCache;
     }
 
@@ -48,9 +50,9 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
         innerCache.put(key, value);
 
         if (!exists) {
-            cacheUpdater.updateCache(key, value, Broadcaster.EVENT.CREATE, syncType, this);
+            getBroadcaster().queue(syncType.getType(), Broadcaster.EVENT.CREATE.getType(), key.toString());
         } else {
-            cacheUpdater.updateCache(key, value, Broadcaster.EVENT.UPDATE, syncType, this);
+            getBroadcaster().queue(syncType.getType(), Broadcaster.EVENT.UPDATE.getType(), key.toString());
         }
     }
 
@@ -64,7 +66,7 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
         innerCache.remove(key);
         
         if (exists) {
-            cacheUpdater.updateCache(key, null, Broadcaster.EVENT.DROP, syncType, this);
+            getBroadcaster().queue(syncType.getType(), Broadcaster.EVENT.DROP.getType(), key.toString());
         }
     }
 

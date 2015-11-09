@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -43,24 +44,52 @@ public class Broadcaster {
 
     private static final Logger logger = LoggerFactory.getLogger(Broadcaster.class);
 
+    // static cached instances
+    private static final ConcurrentHashMap<KylinConfig, Broadcaster> CACHE = new ConcurrentHashMap<KylinConfig, Broadcaster>();
+
+    public static Broadcaster getInstance(KylinConfig config) {
+        Broadcaster r = CACHE.get(config);
+        if (r != null) {
+            return r;
+        }
+
+        synchronized (Broadcaster.class) {
+            r = CACHE.get(config);
+            if (r != null) {
+                return r;
+            }
+
+            r = new Broadcaster(config);
+            CACHE.put(config, r);
+            if (CACHE.size() > 1) {
+                logger.warn("More than one cubemanager singleton exist");
+            }
+            return r;
+        }
+    }
+
+    public static void clearCache() {
+        CACHE.clear();
+    }
+
+    // ============================================================================
+
     private BlockingDeque<BroadcastEvent> broadcastEvents = new LinkedBlockingDeque<>();
 
     private AtomicLong counter = new AtomicLong();
 
-    static class BroadcasterHolder {
-        static final Broadcaster INSTANCE = new Broadcaster();
-    }
+    private Broadcaster(final KylinConfig config) {
+        final String[] nodes = config.getRestServers();
+        if (nodes == null || nodes.length < 1) {
+            logger.warn("There is no available rest server; check the 'kylin.rest.servers' config");
+            broadcastEvents = null; // disable the broadcaster
+            return;
+        }
+        logger.debug(nodes.length + " nodes in the cluster: " + Arrays.toString(nodes));
 
-    private Broadcaster() {
         Executors.newSingleThreadExecutor(new DaemonThreadFactory()).execute(new Runnable() {
             @Override
             public void run() {
-                final String[] nodes = KylinConfig.getInstanceFromEnv().getRestServers();
-                if (nodes == null || nodes.length < 1) {//TODO if the node count is greater than 1, it means it is a cluster
-                    logger.warn("There is no available rest server; check the 'kylin.rest.servers' config");
-                    return;
-                }
-                logger.debug(nodes.length + " nodes in the cluster: " + Arrays.toString(nodes));
                 final List<RestClient> restClients = Lists.newArrayList();
                 for (String node : nodes) {
                     restClients.add(new RestClient(node));
@@ -90,10 +119,6 @@ public class Broadcaster {
         });
     }
 
-    public static Broadcaster getInstance() {
-        return BroadcasterHolder.INSTANCE;
-    }
-
     /**
      * Broadcast the cubedesc event out
      * 
@@ -101,6 +126,9 @@ public class Broadcaster {
      *            event action
      */
     public void queue(String type, String action, String key) {
+        if (broadcastEvents == null)
+            return;
+
         try {
             counter.incrementAndGet();
             broadcastEvents.putFirst(new BroadcastEvent(type, action, key));
@@ -138,7 +166,7 @@ public class Broadcaster {
     }
 
     public enum TYPE {
-        ALL("all"), CUBE("cube"),STREAMING("streaming"),KAFKA("kafka"),CUBE_DESC("cube_desc"), PROJECT("project"), INVERTED_INDEX("inverted_index"), INVERTED_INDEX_DESC("ii_desc"), TABLE("table"), DATA_MODEL("data_model"), HYBRID("hybrid");
+        ALL("all"), CUBE("cube"), STREAMING("streaming"), KAFKA("kafka"), CUBE_DESC("cube_desc"), PROJECT("project"), INVERTED_INDEX("inverted_index"), INVERTED_INDEX_DESC("ii_desc"), TABLE("table"), DATA_MODEL("data_model"), HYBRID("hybrid");
         private String text;
 
         TYPE(String text) {

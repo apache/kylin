@@ -92,7 +92,7 @@ public class IIManager implements IRealizationProvider {
 
     private KylinConfig config;
     // ii name ==> IIInstance
-    private CaseInsensitiveStringCache<IIInstance> iiMap = new CaseInsensitiveStringCache<IIInstance>(Broadcaster.TYPE.INVERTED_INDEX);
+    private CaseInsensitiveStringCache<IIInstance> iiMap;
 
     // for generation hbase table name of a new segment
     private Multimap<String, String> usedStorageLocation = HashMultimap.create();
@@ -100,7 +100,7 @@ public class IIManager implements IRealizationProvider {
     private IIManager(KylinConfig config) throws IOException {
         logger.info("Initializing IIManager with config " + config);
         this.config = config;
-
+        this.iiMap = new CaseInsensitiveStringCache<IIInstance>(config, Broadcaster.TYPE.INVERTED_INDEX);
         loadAllIIInstance();
     }
 

@@ -20,12 +20,14 @@ package org.apache.kylin.common.restclient;
 
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import org.apache.kylin.common.KylinConfig;
+
 /**
  */
 public class CaseInsensitiveStringCache<V> extends SingleValueCache<String, V> {
 
-    public CaseInsensitiveStringCache(Broadcaster.TYPE syncType) {
-        super(syncType, new ConcurrentSkipListMap<String, V>(String.CASE_INSENSITIVE_ORDER));
+    public CaseInsensitiveStringCache(KylinConfig config, Broadcaster.TYPE syncType) {
+        super(config, syncType, new ConcurrentSkipListMap<String, V>(String.CASE_INSENSITIVE_ORDER));
     }
 
     @Override

@@ -79,7 +79,7 @@ public class StreamingManager {
     private KylinConfig config;
 
     // name ==> StreamingConfig
-    private CaseInsensitiveStringCache<StreamingConfig> streamingMap = new CaseInsensitiveStringCache<StreamingConfig>(Broadcaster.TYPE.STREAMING);
+    private CaseInsensitiveStringCache<StreamingConfig> streamingMap;
 
     public static void clearCache() {
         CACHE.clear();
@@ -87,6 +87,7 @@ public class StreamingManager {
 
     private StreamingManager(KylinConfig config) throws IOException {
         this.config = config;
+        this.streamingMap = new CaseInsensitiveStringCache<StreamingConfig>(config, Broadcaster.TYPE.STREAMING);
         reloadAllStreaming();
     }
 
