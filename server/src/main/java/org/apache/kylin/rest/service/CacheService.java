@@ -26,6 +26,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import net.sf.ehcache.CacheManager;
@@ -71,6 +72,28 @@ public class CacheService extends BasicService {
 
     @Autowired
     private CacheManager cacheManager;
+
+    @PostConstruct
+    public void initCubeChangeListener() throws IOException {
+        CubeManager cubeMgr = CubeManager.getInstance(getConfig());
+        cubeMgr.setCubeChangeListener(new CubeManager.CubeChangeListener() {
+
+            @Override
+            public void afterCubeCreate(CubeInstance cube) {
+                // no cache need change
+            }
+
+            @Override
+            public void afterCubeUpdate(CubeInstance cube) {
+                rebuildCubeCache(cube.getName());
+            }
+
+            @Override
+            public void afterCubeDelete(CubeInstance cube) {
+                removeCubeCache(cube.getName(), cube);
+            }
+        });
+    }
 
     // for test
     public void setCubeService(CubeService cubeService) {
@@ -151,14 +174,7 @@ public class CacheService extends BasicService {
         try {
             switch (cacheType) {
             case CUBE:
-                CubeInstance newCube = getCubeManager().reloadCubeLocal(cacheKey);
-                getHybridManager().reloadHybridInstanceByChild(RealizationType.CUBE, cacheKey);
-                getProjectManager().clearL2Cache();
-                //clean query related cache first
-                if (newCube != null) {
-                    cleanDataCache(newCube.getUuid());
-                }
-                cubeService.updateOnNewSegmentReady(cacheKey);
+                rebuildCubeCache(cacheKey);
                 break;
             case STREAMING:
                 getStreamingManager().reloadStreamingConfigLocal(cacheKey);
@@ -170,10 +186,8 @@ public class CacheService extends BasicService {
                 getCubeDescManager().reloadCubeDescLocal(cacheKey);
                 break;
             case PROJECT:
-                ProjectInstance projectInstance = getProjectManager().reloadProjectLocal(cacheKey);
-                if (projectInstance != null) {
-                    removeOLAPDataSource(projectInstance.getName());
-                }
+                getProjectManager().reloadProjectLocal(cacheKey);
+                removeOLAPDataSource(cacheKey);
                 break;
             case INVERTED_INDEX:
                 //II update does not need to update storage cache because it is dynamic already
@@ -217,16 +231,23 @@ public class CacheService extends BasicService {
         }
     }
 
+    private void rebuildCubeCache(String cubeName) {
+        CubeInstance cube = getCubeManager().reloadCubeLocal(cubeName);
+        getHybridManager().reloadHybridInstanceByChild(RealizationType.CUBE, cubeName);
+        getProjectManager().clearL2Cache();
+        //clean query related cache first
+        if (cube != null) {
+            cleanDataCache(cube.getUuid());
+        }
+        cubeService.updateOnNewSegmentReady(cubeName);
+    }
+
     public void removeCache(Broadcaster.TYPE cacheType, String cacheKey) {
         final String log = "remove cache type: " + cacheType + " name:" + cacheKey;
         try {
             switch (cacheType) {
             case CUBE:
-                CubeInstance cube = getCubeManager().getCube(cacheKey);
-                getCubeManager().removeCubeLocal(cacheKey);
-                if (cube != null) {
-                    cleanDataCache(cube.getUuid());
-                }
+                removeCubeCache(cacheKey, null);
                 break;
             case CUBE_DESC:
                 getCubeDescManager().removeLocalCubeDesc(cacheKey);
@@ -249,6 +270,19 @@ public class CacheService extends BasicService {
             }
         } catch (IOException e) {
             throw new RuntimeException("error " + log, e);
+        }
+    }
+
+    private void removeCubeCache(String cubeName, CubeInstance cube) {
+        // you may not get the cube instance if it's already removed from metadata
+        if (cube == null) {
+            cube = getCubeManager().getCube(cubeName);
+        }
+        
+        getCubeManager().removeCubeLocal(cubeName);
+        
+        if (cube != null) {
+            cleanDataCache(cube.getUuid());
         }
     }
 }

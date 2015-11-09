@@ -98,7 +98,7 @@ public class HybridManager implements IRealizationProvider {
         logger.debug("Loaded " + paths.size() + " Hybrid(s)");
     }
 
-    public void reloadHybridInstanceByChild(RealizationType type, String realizationName) throws IOException {
+    public void reloadHybridInstanceByChild(RealizationType type, String realizationName) {
         for (HybridInstance hybridInstance : hybridMap.values()) {
             boolean includes = false;
             for (IRealization realization : hybridInstance.getRealizations()) {
@@ -113,7 +113,7 @@ public class HybridManager implements IRealizationProvider {
         }
     }
 
-    private synchronized HybridInstance loadHybridInstance(String path) throws IOException {
+    private synchronized HybridInstance loadHybridInstance(String path) {
         ResourceStore store = getStore();
 
         HybridInstance hybridInstance = null;
