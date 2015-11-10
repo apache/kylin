@@ -22,10 +22,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
@@ -55,6 +58,8 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
+        
+        
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
         CubeDesc desc = cube.getDescriptor();
         System.out.println(JsonUtil.writeValueAsIndentString(desc));
