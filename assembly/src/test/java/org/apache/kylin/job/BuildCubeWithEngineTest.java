@@ -62,6 +62,7 @@ public class BuildCubeWithEngineTest {
     private CubeManager cubeManager;
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
+    private static boolean fastBuildMode = true;
 
     private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
 
@@ -84,6 +85,15 @@ public class BuildCubeWithEngineTest {
     public static void beforeClass() throws Exception {
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
+
+        String fastModeStr = System.getProperty("fastBuildMode");
+        if (fastModeStr != null && fastModeStr.equalsIgnoreCase("false")) {
+            fastBuildMode = false;
+            logger.info("Will not use fast build mode");
+        } else {
+            logger.info("Will use fast build mode");
+        }
+
         System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
         if (System.getProperty("hdp.version") == null) {
             throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
@@ -93,6 +103,7 @@ public class BuildCubeWithEngineTest {
 
     @Before
     public void before() throws Exception {
+
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         DeployUtil.initCliWorkDir();
@@ -128,12 +139,12 @@ public class BuildCubeWithEngineTest {
     }
 
     private void testInner() throws Exception {
-        String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2" };
+        String[] testCase = new String[] { "testInnerJoinCubeWithoutSlr", "testInnerJoinCubeWithSlr" };
         runTestAndAssertSucceed(testCase);
     }
 
     private void testLeft() throws Exception {
-        String[] testCase = new String[] { "testLeftJoinCube", "testLeftJoinCube2" };
+        String[] testCase = new String[] { "testLeftJoinCubeWithSlr", "testLeftJoinCubeWithoutSlr" };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -180,6 +191,9 @@ public class BuildCubeWithEngineTest {
                 final Method method = BuildCubeWithEngineTest.class.getDeclaredMethod(methodName);
                 method.setAccessible(true);
                 return (List<String>) method.invoke(BuildCubeWithEngineTest.this);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+                throw e;
             } finally {
                 countDownLatch.countDown();
             }
@@ -188,63 +202,71 @@ public class BuildCubeWithEngineTest {
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testInnerJoinCube2() throws Exception {
+    private List<String> testInnerJoinCubeWithSlr() throws Exception {
         clearSegment("test_kylin_cube_with_slr_empty");
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         long date1 = 0;
-        long date2 = f.parse("2013-01-01").getTime();
+        long date2 = f.parse("2015-01-01").getTime();
         long date3 = f.parse("2022-01-01").getTime();
         List<String> result = Lists.newArrayList();
-        result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
-        result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));
+
+        if (fastBuildMode) {
+            result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date3));
+        } else {
+            result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
+            result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));//empty segment
+        }
         return result;
     }
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testInnerJoinCube() throws Exception {
-        clearSegment("test_kylin_cube_without_slr_empty");
+    private List<String> testInnerJoinCubeWithoutSlr() throws Exception {
 
+        clearSegment("test_kylin_cube_without_slr_empty");
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-        // this cube's start date is 0, end date is 20501112000000
         long date1 = 0;
-        long date2 = f.parse("2050-01-11").getTime();
-
-        // this cube doesn't support incremental build, always do full build
-
+        long date2 = f.parse("2013-01-01").getTime();
+        long date3 = f.parse("2013-07-01").getTime();
+        long date4 = f.parse("2022-01-01").getTime();
         List<String> result = Lists.newArrayList();
-        result.add(buildSegment("test_kylin_cube_without_slr_empty", date1, date2));
+
+        if (fastBuildMode) {
+            result.add(buildSegment("test_kylin_cube_without_slr_empty", date1, date4));
+        } else {
+            result.add(buildSegment("test_kylin_cube_without_slr_empty", date1, date2));
+            result.add(buildSegment("test_kylin_cube_without_slr_empty", date2, date3));
+            result.add(buildSegment("test_kylin_cube_without_slr_empty", date3, date4));
+            result.add(mergeSegment("test_kylin_cube_without_slr_empty", date1, date3));//don't merge all segments
+        }
         return result;
+
     }
-    
+
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testLeftJoinCube2() throws Exception {
+    private List<String> testLeftJoinCubeWithoutSlr() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         List<String> result = Lists.newArrayList();
         final String cubeName = "test_kylin_cube_without_slr_left_join_empty";
-        // this cube's start date is 0, end date is 20120601000000
-        long dateStart = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
-        
-        long dateEnd = f.parse("2012-06-01").getTime();
-
         clearSegment(cubeName);
-        result.add(buildSegment(cubeName, dateStart, dateEnd));
 
-        // then submit an append job, start date is 20120601000000, end
-        // date is 20220101000000
-        dateStart = dateEnd;
-        dateEnd = f.parse("2022-01-01").getTime();
-        result.add(buildSegment(cubeName, dateStart, dateEnd));
+        long date1 = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
+        long date2 = f.parse("2012-06-01").getTime();
+        long date3 = f.parse("2022-01-01").getTime();
+        long date4 = f.parse("2023-01-01").getTime();
 
-        // build an empty segment which doesn't have data
-        dateStart = dateEnd;
-        dateEnd = f.parse("2023-01-01").getTime();
-        result.add(buildSegment(cubeName, dateStart, dateEnd));
+        if (fastBuildMode) {
+            result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date1, date4));
+        } else {
+            result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date1, date2));
+            result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date2, date3));
+            result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date3, date4));//empty segment
+            result.add(mergeSegment("test_kylin_cube_without_slr_left_join_empty", date1, date3));//don't merge all segments
+        }
 
         return result;
 
@@ -252,18 +274,26 @@ public class BuildCubeWithEngineTest {
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testLeftJoinCube() throws Exception {
+    private List<String> testLeftJoinCubeWithSlr() throws Exception {
         String cubeName = "test_kylin_cube_with_slr_left_join_empty";
         clearSegment(cubeName);
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
-        long dateStart = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
-        long dateEnd = f.parse("2050-11-12").getTime();
+        long date1 = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
+        long date2 = f.parse("2013-01-01").getTime();
+        long date3 = f.parse("2013-07-01").getTime();
+        long date4 = f.parse("2022-01-01").getTime();
 
-        // this cube's start date is 0, end date is 20501112000000
         List<String> result = Lists.newArrayList();
-        result.add(buildSegment(cubeName, dateStart, dateEnd));
+        if (fastBuildMode) {
+            result.add(buildSegment(cubeName, date1, date4));
+        } else {
+            result.add(buildSegment(cubeName, date1, date2));
+            result.add(buildSegment(cubeName, date2, date3));
+            result.add(buildSegment(cubeName, date3, date4));
+            result.add(mergeSegment(cubeName, date1, date3));//don't merge all segments
+        }
         return result;
 
     }
@@ -274,6 +304,14 @@ public class BuildCubeWithEngineTest {
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
         cubeManager.updateCube(cubeBuilder);
+    }
+
+    private String mergeSegment(String cubeName, long startDate, long endDate) throws Exception {
+        CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), startDate, endDate, true);
+        DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(segment, "TEST");
+        jobService.addJob(job);
+        waitForJob(job.getId());
+        return job.getId();
     }
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {

@@ -15,7 +15,7 @@
     },
     {
       "id": 1,
-      "name": "CATEGORY",
+      "name": "CATEGORY"
       "table": "DEFAULT.TEST_CATEGORY_GROUPINGS",
       "column": null,
       "derived": [
@@ -289,6 +289,6 @@
     ]
   },
   "notify_list": null,
-  "engine_type": 0,
-  "storage_type": 0
+  "engine_type": 2,
+  "storage_type": 2
 }
