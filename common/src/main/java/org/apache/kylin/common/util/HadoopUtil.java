@@ -65,10 +65,21 @@ public class HadoopUtil {
 
     public static URI makeURI(String filePath) {
         try {
-            return new URI(filePath);
+            return new URI(fixWindowsPath(filePath));
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create FileSystem from URI: " + filePath, e);
         }
+    }
+
+    public static String fixWindowsPath(String path) {
+        // fix windows path
+        if (path.startsWith("file://") && !path.startsWith("file:///") && path.contains(":\\")) {
+            path = path.replace("file://", "file:///");
+        }
+        if (path.startsWith("file:///")) {
+            path = path.replace('\\', '/');
+        }
+        return path;
     }
 
     public static String makeQualifiedPathInHadoopCluster(String path) {
@@ -93,10 +104,10 @@ public class HadoopUtil {
         Configuration conf = new Configuration();
         return healSickConfig(conf);
     }
-    
+
     public static Configuration newHBaseConfiguration(String url) {
         Configuration conf = HBaseConfiguration.create(getCurrentConfiguration());
-        
+
         // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
         if (!(StringUtils.isEmpty(url) || "hbase".equals(url)))
             throw new IllegalArgumentException("to use hbase storage, pls set 'kylin.storage.url=hbase' in kylin.properties");
@@ -106,7 +117,7 @@ public class HadoopUtil {
         if (StringUtils.isNotEmpty(hbaseClusterFs)) {
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
         }
-        
+
         // reduce rpc retry
         conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
         conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");

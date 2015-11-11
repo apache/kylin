@@ -172,6 +172,7 @@ public class FileTableReader implements TableReader {
         Text value;
 
         SeqRowReader(Configuration hconf, FileSystem fs, String path) throws IOException {
+            path = HadoopUtil.fixWindowsPath(path);
             reader = new Reader(hconf, SequenceFile.Reader.file(new Path(path)));
             key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), hconf);
             value = new Text();
@@ -196,6 +197,7 @@ public class FileTableReader implements TableReader {
         BufferedReader reader;
 
         CsvRowReader(FileSystem fs, String path) throws IOException {
+            path = HadoopUtil.fixWindowsPath(path);
             FSDataInputStream in = fs.open(new Path(path));
             reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
         }
