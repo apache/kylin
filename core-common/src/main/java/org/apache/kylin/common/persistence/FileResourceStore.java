@@ -30,10 +30,14 @@ import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
 public class FileResourceStore extends ResourceStore {
+
+    private static final Logger logger = LoggerFactory.getLogger(FileResourceStore.class);
 
     File root;
 
@@ -93,10 +97,14 @@ public class FileResourceStore extends ResourceStore {
     @Override
     protected InputStream getResourceImpl(String resPath) throws IOException {
         File f = file(resPath);
-        if (f.exists() && f.isFile())
-            return new FileInputStream(file(resPath));
-        else
+        if (f.exists() && f.isFile()) {
+            if (f.length() == 0) {
+                logger.warn("Zero length file: " + f.getAbsolutePath());
+            }
+            return new FileInputStream(f);
+        } else {
             return null;
+        }
     }
 
     @Override
