@@ -854,4 +854,14 @@ public class CubeDesc extends RootPersistentEntity {
     public LinkedHashSet<TblColRef> getMeasureDisplayColumns() {
         return measureDisplayColumns;
     }
+
+
+    public boolean hasMeasureUsingDictionary() {
+        for (MeasureDesc measureDesc : this.getMeasures()) {
+            if (measureDesc.getFunction().isTopN())
+                return true;
+        }
+
+        return false;
+    }
 }
