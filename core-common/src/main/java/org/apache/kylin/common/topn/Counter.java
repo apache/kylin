@@ -50,7 +50,7 @@ public class Counter<T> implements Externalizable {
     public T getItem() {
         return item;
     }
-
+    
     public double getCount() {
         return count;
     }

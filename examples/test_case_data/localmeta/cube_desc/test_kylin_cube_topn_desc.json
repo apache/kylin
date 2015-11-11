@@ -88,7 +88,7 @@
         "parameter": {
           "type": "column",
           "value": "PRICE",
-          "displaycolumn": "seller_id"
+          "displaycolumn": "SELLER_ID"
         },
         "returntype": "topn(100)"
       },

@@ -65,26 +65,14 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
 
         Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
 
-        for (DimensionDesc dim : cubeDesc.getDimensions()) {
-            // dictionary
-            for (TblColRef col : dim.getColumnRefs()) {
-                if (cubeDesc.getRowkey().isUseDictionary(col)) {
-                    Dictionary<?> dict = cubeSegment.getDictionary(col);
-                    if (dict == null) {
-                        logger.warn("Dictionary for " + col + " was not found.");
-                    }
+        // dictionary
+        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionary()) {
+            Dictionary<?> dict = cubeSegment.getDictionary(col);
+            if (dict == null) {
+                logger.warn("Dictionary for " + col + " was not found.");
+            }
 
-                    dictionaryMap.put(col, cubeSegment.getDictionary(col));
-                }
-            }
-        }
-        
-        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
-            if (measureDesc.getFunction().isTopN()) {
-                List<TblColRef> colRefs = measureDesc.getFunction().getParameter().getColRefs();
-                TblColRef col = colRefs.get(colRefs.size() - 1);
-                dictionaryMap.put(col, cubeSegment.getDictionary(col));
-            }
+            dictionaryMap.put(col, cubeSegment.getDictionary(col));
         }
         
         DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
