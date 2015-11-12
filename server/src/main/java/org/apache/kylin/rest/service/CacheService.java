@@ -118,7 +118,7 @@ public class CacheService extends BasicService {
         }
     }
 
-    protected void removeOLAPDataSource(String project) {
+    private static void removeOLAPDataSource(String project) {
         logger.info("removeOLAPDataSource is called for project " + project);
         if (StringUtils.isEmpty(project))
             throw new IllegalArgumentException("removeOLAPDataSource: project name not given");
@@ -186,8 +186,7 @@ public class CacheService extends BasicService {
                 getCubeDescManager().reloadCubeDescLocal(cacheKey);
                 break;
             case PROJECT:
-                getProjectManager().reloadProjectLocal(cacheKey);
-                removeOLAPDataSource(cacheKey);
+                reloadProjectCache(cacheKey);
                 break;
             case INVERTED_INDEX:
                 //II update does not need to update storage cache because it is dynamic already
@@ -234,7 +233,7 @@ public class CacheService extends BasicService {
     private void rebuildCubeCache(String cubeName) {
         CubeInstance cube = getCubeManager().reloadCubeLocal(cubeName);
         getHybridManager().reloadHybridInstanceByChild(RealizationType.CUBE, cubeName);
-        getProjectManager().clearL2Cache();
+        reloadProjectCache(getProjectManager().findProjects(RealizationType.CUBE, cubeName));
         //clean query related cache first
         if (cube != null) {
             cleanDataCache(cube.getUuid());
@@ -278,11 +277,29 @@ public class CacheService extends BasicService {
         if (cube == null) {
             cube = getCubeManager().getCube(cubeName);
         }
-        
+
         getCubeManager().removeCubeLocal(cubeName);
-        
+        getHybridManager().reloadHybridInstanceByChild(RealizationType.CUBE, cubeName);
+        reloadProjectCache(getProjectManager().findProjects(RealizationType.CUBE, cubeName));
+
         if (cube != null) {
             cleanDataCache(cube.getUuid());
         }
     }
+
+    private void reloadProjectCache(List<ProjectInstance> projects) {
+        for (ProjectInstance prj : projects) {
+            reloadProjectCache(prj.getName());
+        }
+    }
+
+    private void reloadProjectCache(String projectName) {
+        try {
+            getProjectManager().reloadProjectLocal(projectName);
+        } catch (IOException ex) {
+            logger.warn("Failed to reset project cache", ex);
+        }
+        removeOLAPDataSource(projectName);
+    }
+
 }

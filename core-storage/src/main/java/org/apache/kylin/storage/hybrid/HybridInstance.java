@@ -66,7 +66,6 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     private long dateRangeStart;
     private long dateRangeEnd;
     private boolean isReady = false;
-    private String projectName;
 
     private boolean initiated = false;
     private final static Logger logger = LoggerFactory.getLogger(HybridInstance.class);
@@ -224,16 +223,6 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     @Override
     public String getCanonicalName() {
         return getType() + "[name=" + name + "]";
-    }
-
-    @Override
-    public String getProjectName() {
-        return projectName;
-    }
-
-    @Override
-    public void setProjectName(String prjName) {
-        projectName = prjName;
     }
 
     public KylinConfig getConfig() {

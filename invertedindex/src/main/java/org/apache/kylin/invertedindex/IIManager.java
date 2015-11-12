@@ -134,7 +134,8 @@ public class IIManager implements IRealizationProvider {
 
         this.updateII(ii);
 
-        String projectName = (null == ii.getProjectName()) ? ProjectInstance.DEFAULT_PROJECT_NAME : ii.getProjectName();
+        // FIXME need to pass in project name
+        String projectName = ProjectInstance.DEFAULT_PROJECT_NAME;
         ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.INVERTED_INDEX, ii.getName(), projectName, ii.getOwner());
         return ii;
     }

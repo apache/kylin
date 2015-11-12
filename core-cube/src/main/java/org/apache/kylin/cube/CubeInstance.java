@@ -52,7 +52,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     private static final int COST_WEIGHT_DIMENSION = 10;
     private static final int COST_WEIGHT_INNER_JOIN = 100;
 
-    public static CubeInstance create(String cubeName, String projectName, CubeDesc cubeDesc) {
+    public static CubeInstance create(String cubeName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
 
         cubeInstance.setConfig(cubeDesc.getConfig());
@@ -62,7 +62,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         cubeInstance.setSegments(new ArrayList<CubeSegment>());
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         cubeInstance.updateRandomUuid();
-        cubeInstance.setProjectName(projectName);
 
         return cubeInstance;
     }
@@ -89,8 +88,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
-
-    private String projectName;
 
     // default constructor for jackson
     public CubeInstance() {
@@ -376,14 +373,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     @Override
     public List<TblColRef> getAllColumns() {
         return Lists.newArrayList(getDescriptor().listAllColumns());
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
     }
 
     @Override

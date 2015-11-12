@@ -65,10 +65,6 @@ public interface IRealization extends IStorageAware {
 
     public String getCanonicalName();
 
-    public String getProjectName();
-
-    public void setProjectName(String prjName);
-
     public long getDateRangeStart();
 
     public long getDateRangeEnd();

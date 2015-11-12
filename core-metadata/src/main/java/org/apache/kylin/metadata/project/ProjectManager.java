@@ -20,7 +20,6 @@ package org.apache.kylin.metadata.project;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,7 +35,6 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +103,6 @@ public class ProjectManager {
         for (String path : paths) {
             reloadProjectLocalAt(path);
         }
-        wireProjectAndRealizations(projectMap.values());
         logger.debug("Loaded " + projectMap.size() + " Project(s)");
     }
 
@@ -127,23 +124,6 @@ public class ProjectManager {
         clearL2Cache();
 
         return projectInstance;
-    }
-
-    private void wireProjectAndRealizations(Collection<ProjectInstance> projectInstances) {
-        if (projectInstances.isEmpty())
-            return;
-
-        RealizationRegistry registry = RealizationRegistry.getInstance(config);
-        for (ProjectInstance projectInstance : projectInstances) {
-            for (RealizationEntry realization : projectInstance.getRealizationEntries()) {
-                IRealization rel = registry.getRealization(realization.getType(), realization.getRealization());
-                if (rel != null) {
-                    rel.setProjectName(projectInstance.getName());
-                } else {
-                    logger.warn("Realization '" + realization + "' defined under project '" + projectInstance + "' is not found");
-                }
-            }
-        }
     }
 
     public List<ProjectInstance> listAllProjects() {

@@ -248,7 +248,7 @@ public class CubeManager implements IRealizationProvider {
         logger.info("Creating cube '" + projectName + "-->" + cubeName + "' from desc '" + desc.getName() + "'");
 
         // save cube resource
-        CubeInstance cube = CubeInstance.create(cubeName, projectName, desc);
+        CubeInstance cube = CubeInstance.create(cubeName, desc);
         cube.setOwner(owner);
 
         updateCubeWithRetry(new CubeUpdate(cube), 0);
