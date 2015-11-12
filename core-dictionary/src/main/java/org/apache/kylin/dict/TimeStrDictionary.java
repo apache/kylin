@@ -10,9 +10,11 @@ import org.apache.kylin.common.util.DateFormat;
 
 /**
  */
+@SuppressWarnings("serial")
 public class TimeStrDictionary extends Dictionary<String> {
 
-    private static final long MAX_ID = Integer.MAX_VALUE;
+    // Integer.MAX_VALUE - 1 to avoid cardinality (max_id - min_id + 1) overflow
+    private static final int MAX_ID = Integer.MAX_VALUE - 1;
     private static final int MAX_LENGTH_OF_POSITIVE_LONG = 19;
 
     @Override
@@ -22,7 +24,7 @@ public class TimeStrDictionary extends Dictionary<String> {
 
     @Override
     public int getMaxId() {
-        return Integer.MAX_VALUE;
+        return MAX_ID;
     }
 
     @Override

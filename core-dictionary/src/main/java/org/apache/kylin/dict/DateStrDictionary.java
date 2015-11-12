@@ -41,6 +41,7 @@ import org.apache.commons.lang.StringUtils;
  * 
  * @author yangli9
  */
+@SuppressWarnings("serial")
 public class DateStrDictionary extends Dictionary<String> {
 
     static final int ID_9999_12_31 = 3652426; // assume 0 based
