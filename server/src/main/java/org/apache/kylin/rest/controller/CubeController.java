@@ -343,7 +343,7 @@ public class CubeController extends BasicController {
             return cubeRequest;
         }
 
-        final String cubeName = desc.getName();
+        final String cubeName = cubeRequest.getCubeName();
         if (StringUtils.isEmpty(cubeName)) {
             return errorRequest(cubeRequest, "Missing cubeName");
         }
