@@ -254,7 +254,7 @@ public class CubeService extends BasicService {
         }
 
         try {
-            if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
+            if (!cube.getDescriptor().checkSignature()) {
                 logger.info("Releasing all segments due to cube desc conflict");
                 this.releaseAllSegments(cube);
             }
@@ -391,9 +391,8 @@ public class CubeService extends BasicService {
         if (!cubingJobs.isEmpty()) {
             throw new JobException("Enable is not allowed with a running job.");
         }
-        if (!cube.getDescriptor().calculateSignature().equals(cube.getDescriptor().getSignature())) {
-            logger.info("Releasing all segments due to cube desc conflict");
-            cube = this.releaseAllSegments(cube);
+        if (!cube.getDescriptor().checkSignature()) {
+            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor());
         }
 
         try {

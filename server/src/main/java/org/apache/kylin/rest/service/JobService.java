@@ -131,6 +131,7 @@ public class JobService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, boolean forceMergeEmptySeg, String submitter) throws IOException, JobException {
 
+        checkCubeDescSignature(cube);
         checkNoRunningJob(cube);
 
         DefaultChainedExecutable job;
@@ -167,6 +168,11 @@ public class JobService extends BasicService {
         accessService.inherit(jobInstance, cube);
 
         return jobInstance;
+    }
+
+    private void checkCubeDescSignature(CubeInstance cube) {
+        if (!cube.getDescriptor().checkSignature())
+            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor());
     }
 
     private void checkNoRunningJob(CubeInstance cube) throws JobException {
