@@ -7,15 +7,15 @@ permalink: /download/index.html
 __Latest Release(Source Code)__  
 The latest release of Apache Kylin can be downloaded from the ASF:
 
-* [Apache Kylin v1.1-incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-1.1-incubating/)
+* [Apache Kylin v1.1.1-incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-1.1.1-incubating/)
 * [Release Notes](http://kylin.incubator.apache.org/docs/release_notes.html)
-* Git Tag: [kylin-1.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.1-incubating)
-* Git Commit: [1955a2f9aea7b7f608f0496c00807715ea4246a5](https://github.com/apache/incubator-kylin/commit/1955a2f9aea7b7f608f0496c00807715ea4246a5)
+* Git Tag: [kylin-1.1.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.1.1-incubating)
+* Git Commit: [6a9499b4d0fabb54211a8a536c2e18d3fe8b4a5d](https://github.com/apache/incubator-kylin/commit/6a9499b4d0fabb54211a8a536c2e18d3fe8b4a5d)
 
 __Binary Package (for running on HBase 0.98/0.99)__
 For convenience, there’s binary package also available: 
 
-* [apache-kylin-1.1-incubating-bin.tar.gz](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.1-incubating/apache-kylin-1.1-incubating-bin.tar.gz)
+* [apache-kylin-1.1.1-incubating-bin.tar.gz](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.1.1-incubating/apache-kylin-1.1.1-incubating-bin.tar.gz)
 * [Installation Guide](http://kylin.incubator.apache.org/docs/install)
 
 __Binary Package (for running on HBase 1.1.3 or above)__
