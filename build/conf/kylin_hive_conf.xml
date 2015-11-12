@@ -61,4 +61,10 @@
         <value>256000000</value>
         <description>Size for the merged file</description>
     </property>
+
+    <property>
+        <name>hive.support.concurrency</name>
+        <value>false</value>
+        <description>Hive concurrency lock</description>
+    </property>
 </configuration>
