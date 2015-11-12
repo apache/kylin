@@ -6,15 +6,15 @@ title: 下载
 __最新发布(源代码)__  
 最新发布的Apache Kylin可以从ASF网站下载：:
 
-* [Apache Kylin v1.1-incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-1.1-incubating/)
+* [Apache Kylin v1.1.1-incubating](http://www.apache.org/dyn/closer.cgi/incubator/kylin/apache-kylin-1.1.1-incubating/)
 * [发布日志](http://kylin.incubator.apache.org/docs/release_notes.html)
-* Git 标签: [kylin-1.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.1-incubating)
-* Git Commit: [1955a2f9aea7b7f608f0496c00807715ea4246a5](https://github.com/apache/incubator-kylin/commit/1955a2f9aea7b7f608f0496c00807715ea4246a5)
+* Git 标签: [kylin-1.1.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.1.1-incubating)
+* Git Commit: [6a9499b4d0fabb54211a8a536c2e18d3fe8b4a5d](https://github.com/apache/incubator-kylin/commit/6a9499b4d0fabb54211a8a536c2e18d3fe8b4a5d)
 
 __二进制包 for HBase 0.98/0.99__
 为方便使用，我们提供预打包的二进制安装包：
 
-  * [apache-kylin-1.1-incubating-bin.tar.gz](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.1-incubating/apache-kylin-1.1-incubating-bin.tar.gz)
+  * [apache-kylin-1.1.1-incubating-bin.tar.gz](https://dist.apache.org/repos/dist/release/incubator/kylin/apache-kylin-1.1.1-incubating/apache-kylin-1.1.1-incubating-bin.tar.gz)
   * [安装帮助](http://kylin.incubator.apache.org/docs/install)
 
 __二进制包 for HBase 1.1.3及更高版本__
