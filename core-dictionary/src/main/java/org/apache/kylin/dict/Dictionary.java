@@ -40,6 +40,7 @@ import org.apache.kylin.common.util.BytesUtil;
  * 
  * @author yangli9
  */
+@SuppressWarnings("serial")
 abstract public class Dictionary<T> implements Writable, Serializable {
 
     public static final byte NULL = (byte) 0xff;
