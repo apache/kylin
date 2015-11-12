@@ -229,7 +229,7 @@ public class CubeDescManager {
      * @return
      * @throws IOException
      */
-        public CubeDesc updateCubeDesc(CubeDesc desc) throws IOException {
+    public CubeDesc updateCubeDesc(CubeDesc desc) throws IOException {
         // Validate CubeDesc
         if (desc.getUuid() == null || desc.getName() == null) {
             throw new IllegalArgumentException();

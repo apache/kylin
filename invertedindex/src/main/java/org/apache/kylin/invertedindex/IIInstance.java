@@ -81,8 +81,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization, IB
     @JsonProperty("create_time_utc")
     private long createTimeUTC;
 
-    private String projectName;
-
     private static final int COST_WEIGHT_LOOKUP_TABLE = 1;
     private static final int COST_WEIGHT_INNER_JOIN = 2;
 
@@ -312,14 +310,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization, IB
     @Override
     public List<MeasureDesc> getMeasures() {
         return getDescriptor().getMeasures();
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
     }
 
     @Override

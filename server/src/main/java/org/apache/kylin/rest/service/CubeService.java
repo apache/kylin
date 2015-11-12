@@ -397,7 +397,6 @@ public class CubeService extends BasicService {
         }
 
         try {
-
             CubeUpdate cubeBuilder = new CubeUpdate(cube);
             cubeBuilder.setStatus(RealizationStatusEnum.READY);
             return getCubeManager().updateCube(cubeBuilder);
