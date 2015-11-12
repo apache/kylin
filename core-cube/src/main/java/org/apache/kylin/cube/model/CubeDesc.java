@@ -403,6 +403,13 @@ public class CubeDesc extends RootPersistentEntity {
         return "CubeDesc [name=" + name + "]";
     }
 
+    public boolean checkSignature() {
+        if (StringUtils.isBlank(getSignature())) {
+            return true;
+        }
+        return calculateSignature().equals(getSignature());
+    }
+    
     public String calculateSignature() {
         MessageDigest md = null;
         try {
