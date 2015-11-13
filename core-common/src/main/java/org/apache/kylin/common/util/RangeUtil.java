@@ -63,15 +63,17 @@ public class RangeUtil {
      * @return
      */
     public static <C extends Comparable<?>> List<Range<C>> remove(Range<C> self, Range<C> other) {
+
         // mimic the following logic in guava 18:
         //        RangeSet<C> rangeSet = TreeRangeSet.create();
         //        rangeSet.add(self);
         //        rangeSet.remove(other);
         //        return Lists.newArrayList(rangeSet.asRanges());
 
-        if (!self.isConnected(other)) {
+        if (other == null || !self.isConnected(other)) {
             return Collections.singletonList(self);
         }
+        
         Range<C> share = self.intersection(other);
         if (share.isEmpty()) {
             return Collections.singletonList(self);

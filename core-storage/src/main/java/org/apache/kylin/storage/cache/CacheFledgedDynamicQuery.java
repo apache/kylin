@@ -2,7 +2,6 @@ package org.apache.kylin.storage.cache;
 
 import java.util.List;
 
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
 
 import org.apache.kylin.common.util.RangeUtil;
@@ -33,6 +32,8 @@ public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
 
     private final TblColRef partitionColRef;
 
+    private boolean noCacheUsed = true;
+
     private Range<Long> ts;
 
     public CacheFledgedDynamicQuery(ICachableStorageQuery underlyingStorage, TblColRef partitionColRef) {
@@ -52,70 +53,31 @@ public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
         }
 
+        ITupleIterator ret = null;
+
         //enable dynamic cache iff group by columns contains partition col
         //because cache extraction requires partition col value as selection key
-        boolean needUpdateCache = sqlDigest.groupbyColumns.contains(partitionColRef);
+        boolean enableDynamicCache = sqlDigest.groupbyColumns.contains(partitionColRef);
 
-        streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
-        StreamSQLResult cachedResult = null;
-        Cache cache = CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID());
-        Element element = cache.get(streamSQLDigest.hashCode());
-        if (element != null) {
-            this.queryCacheExists = true;
-            cachedResult = (StreamSQLResult) element.getObjectValue();
-        }
-
-        ITupleIterator ret = null;
-        if (cachedResult != null) {
-            Range<Long> reusePeriod = cachedResult.getReusableResults(ts);
-
-            logger.info("existing cache    : " + cachedResult);
-            logger.info("ts Range in query: " + RangeUtil.formatTsRange(ts));
-            logger.info("potential reusable range   : " + RangeUtil.formatTsRange(reusePeriod));
-
-            if (reusePeriod != null) {
-                List<Range<Long>> remainings = RangeUtil.remove(ts, reusePeriod);
-                if (remainings.size() == 1) {//if using cache causes two underlyingStorage searches, we'd rather not use the cache
-
-                    SimpleTupleIterator reusedTuples = new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
-                    List<ITupleIterator> iTupleIteratorList = Lists.newArrayList();
-                    iTupleIteratorList.add(reusedTuples);
-
-                    for (Range<Long> remaining : remainings) {//actually there will be only one loop
-                        logger.info("Appending ts " + RangeUtil.formatTsRange(remaining) + " as additional filter");
-
-                        ITupleIterator freshTuples = SQLDigestUtil.appendTsFilterToExecute(sqlDigest, partitionColRef, remaining, new Function<Void, ITupleIterator>() {
-                            @Override
-                            public ITupleIterator apply(Void input) {
-                                return underlyingStorage.search(context, sqlDigest, returnTupleInfo);
-                            }
-                        });
-                        iTupleIteratorList.add(freshTuples);
-                    }
-
-                    ret = new CompoundTupleIterator(iTupleIteratorList);
-                } else if (remainings.size() == 0) {
-                    logger.info("The ts range in new query was fully cached");
-                    needUpdateCache = false;
-                    ret = new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
-                } else {
-                    //if using cache causes more than one underlyingStorage searches
-                    //the incurred overhead might be more expensive than the cache benefit
-                    logger.info("Give up using cache to avoid complexity");
-                }
+        if (enableDynamicCache) {
+            StreamSQLResult cachedResult = getStreamSQLResult(new StreamSQLDigest(sqlDigest, partitionColRef));
+            if (cachedResult != null) {
+                ret = tryReuseCache(context, sqlDigest, returnTupleInfo, ret, cachedResult);
+            } else {
+                logger.info("no cache entry for this query");
             }
-        } else {
-            logger.info("no cache entry for this query");
         }
 
         if (ret == null) {
             ret = underlyingStorage.search(context, sqlDigest, returnTupleInfo);
+            noCacheUsed = true;
             logger.info("No Cache being used");
         } else {
+            noCacheUsed = false;
             logger.info("Cache being used");
         }
 
-        if (needUpdateCache) {
+        if (enableDynamicCache) {
             //use another nested ITupleIterator to deal with cache
             final TeeTupleIterator tee = new TeeTupleIterator(ret);
             tee.addCloseListener(this);
@@ -125,15 +87,65 @@ public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
         }
     }
 
+    /**
+     * if cache is not enough it will try to combine existing cache as well as fresh records
+     */
+    private ITupleIterator tryReuseCache(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo, ITupleIterator ret, StreamSQLResult cachedResult) {
+        Range<Long> reusePeriod = cachedResult.getReusableResults(ts);
+
+        logger.info("existing cache: " + cachedResult);
+        logger.info("ts Range in query: " + RangeUtil.formatTsRange(ts));
+        logger.info("potential reusable range: " + RangeUtil.formatTsRange(reusePeriod));
+
+        if (reusePeriod != null) {
+            List<Range<Long>> remainings = RangeUtil.remove(ts, reusePeriod);
+            if (remainings.size() == 1) {//if using cache causes two underlyingStorage searches, we'd rather not use the cache
+
+                SimpleTupleIterator reusedTuples = new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
+                List<ITupleIterator> iTupleIteratorList = Lists.newArrayList();
+                iTupleIteratorList.add(reusedTuples);
+
+                Range<Long> remaining = remainings.get(0);
+                logger.info("Appending ts " + RangeUtil.formatTsRange(remaining) + " as additional filter");
+
+                ITupleIterator freshTuples = SQLDigestUtil.appendTsFilterToExecute(sqlDigest, partitionColRef, remaining, new Function<Void, ITupleIterator>() {
+                    @Override
+                    public ITupleIterator apply(Void input) {
+                        return underlyingStorage.search(context, sqlDigest, returnTupleInfo);
+                    }
+                });
+                iTupleIteratorList.add(freshTuples);
+
+                return new CompoundTupleIterator(iTupleIteratorList);
+            } else if (remainings.size() == 0) {
+                logger.info("The ts range in new query was fully cached");
+                return new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
+            } else {
+                //if using cache causes more than one underlyingStorage searches
+                //the incurred overhead might be more expensive than the cache benefit
+                logger.info("Give up using cache to avoid complexity");
+                return null;
+            }
+        } else {
+            logger.info("cached results not reusable by current query");
+            return null;
+        }
+    }
+
     @Override
     public void notify(List<ITuple> duplicated, long createTime) {
+
+        //for streaming sql only check if needSaveCache at first entry of cache
+        if (noCacheUsed && !needSaveCache(createTime)) {
+            return;
+        }
 
         Range<Long> cacheExclude = this.underlyingStorage.getVolatilePeriod();
         if (cacheExclude != null) {
             List<Range<Long>> cachablePeriods = RangeUtil.remove(ts, cacheExclude);
             if (cachablePeriods.size() == 1) {
                 if (!ts.equals(cachablePeriods.get(0))) {
-                    logger.info("With respect to growing storage, the cacheable tsRange shrinks from " + RangeUtil.formatTsRange(ts) + " to " + RangeUtil.formatTsRange(cachablePeriods.get(0)));
+                    logger.info("tsRange shrinks from " + RangeUtil.formatTsRange(ts) + " to " + RangeUtil.formatTsRange(cachablePeriods.get(0)));
                 }
                 ts = cachablePeriods.get(0);
             } else {

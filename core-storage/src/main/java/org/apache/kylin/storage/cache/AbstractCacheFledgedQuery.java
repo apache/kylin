@@ -2,12 +2,14 @@ package org.apache.kylin.storage.cache;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.MemoryUnit;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
 import org.apache.kylin.metadata.tuple.TeeTupleItrListener;
 import org.apache.kylin.storage.ICachableStorageQuery;
@@ -23,7 +25,6 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
 
     protected static CacheManager CACHE_MANAGER;
 
-    protected boolean queryCacheExists;
     protected ICachableStorageQuery underlyingStorage;
     protected StreamSQLDigest streamSQLDigest;
 
@@ -51,6 +52,29 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
                 persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.NONE)));
 
         CACHE_MANAGER.addCache(storageCache);
+    }
+
+    protected StreamSQLResult getStreamSQLResult(StreamSQLDigest streamSQLDigest) {
+
+        Cache cache = CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID());
+        Element element = cache.get(streamSQLDigest.hashCode());//TODO: hash code cannot guarantee uniqueness
+        if (element != null) {
+            return (StreamSQLResult) element.getObjectValue();
+        }
+        return null;
+    }
+
+    protected boolean needSaveCache(long createTime) {
+        long storageQueryTime = System.currentTimeMillis() - createTime;
+        long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
+        //TODO: check scan count necessary?
+
+        if (storageQueryTime < durationThreshold) {
+            logger.info("Skip saving storage caching for storage cache because storage query time {} less than {}", storageQueryTime, durationThreshold);
+            return false;
+        }
+
+        return true;
     }
 
     private void makeCacheIfNecessary(String storageUUID) {

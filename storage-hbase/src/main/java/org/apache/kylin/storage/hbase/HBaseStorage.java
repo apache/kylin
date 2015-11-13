@@ -44,8 +44,6 @@ import com.google.common.base.Preconditions;
 //used by reflection
 public class HBaseStorage implements IStorage {
 
-    private final static boolean allowStorageLayerCache = true;
-
     private final static String v2CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery";
     private final static String v1CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery";
 
@@ -53,6 +51,10 @@ public class HBaseStorage implements IStorage {
 
     @Override
     public IStorageQuery createQuery(IRealization realization) {
+
+        boolean queryCacheGloballyEnabled = KylinConfig.getInstanceFromEnv().isQueryCacheEnabled();
+        boolean queryCacheQueryLevelEnabled = !BackdoorToggles.getDisableCache();
+
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
             ICachableStorageQuery ret;
             try {
@@ -61,7 +63,7 @@ public class HBaseStorage implements IStorage {
                 throw new RuntimeException("Failed to initialize storage query for " + defaultIIStorageQuery, e);
             }
 
-            if (allowStorageLayerCache) {
+            if (queryCacheGloballyEnabled && queryCacheQueryLevelEnabled) {
                 return wrapWithCache(ret, realization);
             } else {
                 return ret;
@@ -82,7 +84,7 @@ public class HBaseStorage implements IStorage {
                 throw new RuntimeException("Failed to initialize storage query for " + cubeStorageQuery, e);
             }
 
-            if (allowStorageLayerCache) {
+            if (queryCacheGloballyEnabled && queryCacheQueryLevelEnabled) {
                 return wrapWithCache(ret, realization);
             } else {
                 return ret;

@@ -2,7 +2,6 @@ package org.apache.kylin.storage.cache;
 
 import java.util.List;
 
-import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
 
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -29,60 +28,30 @@ public class CacheFledgedStaticQuery extends AbstractCacheFledgedQuery {
     @Override
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo) {
 
-        streamSQLDigest = new StreamSQLDigest(sqlDigest, null);
-        StreamSQLResult cachedResult = null;
-        Cache cache = CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID());
-        Element element = cache.get(streamSQLDigest.hashCode());
-        if (element != null) {
-            this.queryCacheExists = true;
-            cachedResult = (StreamSQLResult) element.getObjectValue();
-        }
-
+        StreamSQLResult cachedResult = getStreamSQLResult(new StreamSQLDigest(sqlDigest, null));
         ITupleIterator ret = null;
+
         if (cachedResult != null) {
-            ret = new SimpleTupleIterator(cachedResult.reuse(Ranges.<Long> all()));
+            logger.info("using existing cache");
+            return new SimpleTupleIterator(cachedResult.reuse(Ranges.<Long> all()));
         } else {
-            logger.info("no cache entry for this query");
-        }
-
-        if (ret == null) {
-            logger.info("decision: not using cache");
+            logger.info("no existing cache to use");
             ret = underlyingStorage.search(context, sqlDigest, returnTupleInfo);
-        } else {
-            logger.info("decision: use cache");
-        }
 
-        if (!queryCacheExists) {
             //use another nested ITupleIterator to deal with cache
             final TeeTupleIterator tee = new TeeTupleIterator(ret);
             tee.addCloseListener(this);
             return tee;
-        } else {
-            return ret;
         }
     }
 
     @Override
     public void notify(List<ITuple> duplicated, long createTime) {
-        boolean cacheIt = true;
-        //        long storageQueryTime = System.currentTimeMillis() - createTime;
-        //        long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
-        //        long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
-        //
-        //        if (storageQueryTime < durationThreshold) {
-        //            logger.info("Skip storage caching for storage cache because storage query time {} less than {}", storageQueryTime, durationThreshold);
-        //            cacheIt = false;
-        //        }
-        //
-        //        if (duplicated.size() < scancountThreshold) {
-        //            logger.info("Skip storage caching for storage cache because scan count {} less than {}", duplicated.size(), scancountThreshold);
-        //            cacheIt = false;
-        //        }
-
-        if (cacheIt) {
+        if (needSaveCache(createTime)) {
             StreamSQLResult newCacheEntry = new StreamSQLResult(duplicated, Ranges.<Long> all(), null);
             CACHE_MANAGER.getCache(this.underlyingStorage.getStorageUUID()).put(new Element(streamSQLDigest.hashCode(), newCacheEntry));
             logger.info("cache after the query: " + newCacheEntry);
         }
     }
+
 }

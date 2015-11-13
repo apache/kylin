@@ -28,7 +28,7 @@ public class StreamSQLDigest {
         filterSerialized = TupleFilterSerializer.serialize(sqlDigest.filter, decorator, StringCodeSystem.INSTANCE);
 
         int nonFilterHashCode = calculateNonFilterHashCode();
-        this.hashCode = 31 * nonFilterHashCode + (filterSerialized != null ? Arrays.hashCode(filterSerialized) : 0);
+        this.hashCode = 31 * nonFilterHashCode + Arrays.hashCode(filterSerialized);
     }
 
     @Override

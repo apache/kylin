@@ -32,6 +32,7 @@ import net.sf.ehcache.Element;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -166,55 +167,64 @@ public class QueryController extends BasicController {
     }
 
     private SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
-        String sql = sqlRequest.getSql();
-        String project = sqlRequest.getProject();
-        logger.info("Using project: " + project);
-        logger.info("The original query:  " + sql);
-
-        String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
-        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
-            throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
-        }
-
-        if (sql.toLowerCase().contains("select") == false) {
-            logger.debug("Directly return expection as not supported");
-            throw new InternalErrorException("Not Supported SQL.");
-        }
-
-        SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
         try {
-            if (null == sqlResponse) {
-                sqlResponse = queryService.query(sqlRequest);
+            BackdoorToggles.setToggles(sqlRequest.getBackdoorToggles());
+
+            String sql = sqlRequest.getSql();
+            String project = sqlRequest.getProject();
+            logger.info("Using project: " + project);
+            logger.info("The original query:  " + sql);
+
+            String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
+            if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
+                throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
             }
 
-            checkQueryAuth(sqlResponse);
-
-        } catch (Throwable e) { // calcite may throw AssertError
-            logger.error("Exception when execute sql", e);
-            String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
-
-            sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
-
-            // for exception queries, only cache ScanOutOfLimitException
-            if (e instanceof ScanOutOfLimitException) {
-                Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
-                exceptionCache.put(new Element(sqlRequest, sqlResponse));
+            if (!sql.toLowerCase().contains("select")) {
+                logger.debug("Directly return exception as not supported");
+                throw new InternalErrorException("Not Supported SQL.");
             }
+
+            SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
+            try {
+                if (null == sqlResponse) {
+                    sqlResponse = queryService.query(sqlRequest);
+                }
+
+                checkQueryAuth(sqlResponse);
+
+            } catch (Throwable e) { // calcite may throw AssertError
+                logger.error("Exception when execute sql", e);
+                String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
+
+                sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
+
+                // for exception queries, only cache ScanOutOfLimitException
+                if (e instanceof ScanOutOfLimitException) {
+                    Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                    exceptionCache.put(new Element(sqlRequest, sqlResponse));
+                }
+            }
+
+            queryService.logQuery(sqlRequest, sqlResponse);
+
+            if (sqlResponse.getIsException())
+                throw new InternalErrorException(sqlResponse.getExceptionMessage());
+
+            return sqlResponse;
+
+        } finally {
+            BackdoorToggles.cleanToggles();
         }
-
-        queryService.logQuery(sqlRequest, sqlResponse);
-        
-        if (sqlResponse.getIsException())
-            throw new InternalErrorException(sqlResponse.getExceptionMessage());
-        
-        return sqlResponse;
     }
 
     private SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
         SQLResponse response = null;
         Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
 
-        if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && null != exceptionCache.get(sqlRequest)) {
+        if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && //
+                !BackdoorToggles.getDisableCache() && //
+                exceptionCache.get(sqlRequest) != null) {
             Element element = exceptionCache.get(sqlRequest);
             response = (SQLResponse) element.getObjectValue();
             response.setHitCache(true);
