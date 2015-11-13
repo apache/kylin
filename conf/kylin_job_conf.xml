@@ -68,6 +68,23 @@ limitations under the License. See accompanying LICENSE file.
         <description>Block replication</description>
     </property>
 
+
+    <property>
+        <name>hive.merge.mapfiles</name>
+        <value>true</value>
+        <description>Enable hive file merge on mapper only job</description>
+    </property>
+    <property>
+        <name>hive.merge.mapredfiles</name>
+        <value>true</value>
+        <description>Enable hive file merge on map-reduce job</description>
+    </property>
+    <property>
+        <name>hive.merge.size.per.task</name>
+        <value>268435456</value>
+        <description>Size for the merged file: 256M</description>
+    </property>
+
     <property>
         <name>hive.support.concurrency</name>
         <value>false</value>
