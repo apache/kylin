@@ -203,8 +203,9 @@ public class QueryService extends BasicService {
         final Set<String> realizationNames = new HashSet<String>();
         final Set<Long> cuboidIds = new HashSet<Long>();
         float duration = response.getDuration() / (float) 1000;
+        boolean storageCacheUsed = false;
 
-        if (!response.isHitCache() && null != OLAPContext.getThreadLocalContexts()) {
+        if (!response.isHitExceptionCache() && null != OLAPContext.getThreadLocalContexts()) {
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 Cuboid cuboid = ctx.storageContext.getCuboid();
                 if (cuboid != null) {
@@ -215,6 +216,11 @@ public class QueryService extends BasicService {
                 if (ctx.realization != null) {
                     String realizationName = ctx.realization.getName();
                     realizationNames.add(realizationName);
+                }
+
+                if (ctx.storageContext.getReusedPeriod() != null) {
+                    response.setStorageCacheUsed(true);
+                    storageCacheUsed = true;
                 }
             }
         }
@@ -239,7 +245,8 @@ public class QueryService extends BasicService {
         stringBuilder.append("Result row count: ").append(resultRowCount).append(newLine);
         stringBuilder.append("Accept Partial: ").append(request.isAcceptPartial()).append(newLine);
         stringBuilder.append("Is Partial Result: ").append(response.isPartial()).append(newLine);
-        stringBuilder.append("Hit Cache: ").append(response.isHitCache()).append(newLine);
+        stringBuilder.append("Hit Exception Cache: ").append(response.isHitExceptionCache()).append(newLine);
+        stringBuilder.append("Storage cache used: ").append(storageCacheUsed).append(newLine);
         stringBuilder.append("Message: ").append(response.getExceptionMessage()).append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
 

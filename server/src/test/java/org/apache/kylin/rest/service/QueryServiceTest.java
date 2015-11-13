@@ -59,7 +59,7 @@ public class QueryServiceTest extends ServiceTestBase {
         request.setSql("select * from test_table");
         request.setAcceptPartial(true);
         SQLResponse response = new SQLResponse();
-        response.setHitCache(true);
+        response.setHitExceptionCache(true);
         queryService.logQuery(request, response);
     }
 }
