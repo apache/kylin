@@ -29,10 +29,11 @@ public class CacheFledgedStaticQuery extends AbstractCacheFledgedQuery {
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo) {
 
         StreamSQLResult cachedResult = getStreamSQLResult(new StreamSQLDigest(sqlDigest, null));
-        ITupleIterator ret = null;
+        ITupleIterator ret;
 
         if (cachedResult != null) {
             logger.info("using existing cache");
+            context.setReusedPeriod(Ranges.<Long> all());
             return new SimpleTupleIterator(cachedResult.reuse(Ranges.<Long> all()));
         } else {
             logger.info("no existing cache to use");

@@ -18,13 +18,11 @@
 
 package org.apache.kylin.storage;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.realization.SQLDigest;
+
+import com.google.common.collect.Range;
 
 /**
  * @author xjiang
@@ -32,7 +30,6 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 public class StorageContext {
 
     public static final int DEFAULT_THRESHOLD = 1000000;
-
 
     private String connUrl;
     private int threshold;
@@ -48,6 +45,8 @@ public class StorageContext {
     private AtomicLong totalScanCount;
     private Cuboid cuboid;
     private boolean partialResultReturned;
+
+    private Range<Long> reusedPeriod;
 
     public StorageContext() {
         this.threshold = DEFAULT_THRESHOLD;
@@ -160,4 +159,11 @@ public class StorageContext {
         return this.enableCoprocessor;
     }
 
+    public Range<Long> getReusedPeriod() {
+        return reusedPeriod;
+    }
+
+    public void setReusedPeriod(Range<Long> reusedPeriod) {
+        this.reusedPeriod = reusedPeriod;
+    }
 }

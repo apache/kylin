@@ -62,7 +62,7 @@ public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
         if (enableDynamicCache) {
             StreamSQLResult cachedResult = getStreamSQLResult(new StreamSQLDigest(sqlDigest, partitionColRef));
             if (cachedResult != null) {
-                ret = tryReuseCache(context, sqlDigest, returnTupleInfo, ret, cachedResult);
+                ret = tryReuseCache(context, sqlDigest, returnTupleInfo, cachedResult);
             } else {
                 logger.info("no cache entry for this query");
             }
@@ -70,10 +70,8 @@ public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
 
         if (ret == null) {
             ret = underlyingStorage.search(context, sqlDigest, returnTupleInfo);
-            noCacheUsed = true;
             logger.info("No Cache being used");
         } else {
-            noCacheUsed = false;
             logger.info("Cache being used");
         }
 
@@ -90,7 +88,7 @@ public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
     /**
      * if cache is not enough it will try to combine existing cache as well as fresh records
      */
-    private ITupleIterator tryReuseCache(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo, ITupleIterator ret, StreamSQLResult cachedResult) {
+    private ITupleIterator tryReuseCache(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo, StreamSQLResult cachedResult) {
         Range<Long> reusePeriod = cachedResult.getReusableResults(ts);
 
         logger.info("existing cache: " + cachedResult);
@@ -116,9 +114,11 @@ public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
                 });
                 iTupleIteratorList.add(freshTuples);
 
+                context.setReusedPeriod(reusePeriod);
                 return new CompoundTupleIterator(iTupleIteratorList);
             } else if (remainings.size() == 0) {
                 logger.info("The ts range in new query was fully cached");
+                context.setReusedPeriod(reusePeriod);
                 return new SimpleTupleIterator(cachedResult.reuse(reusePeriod));
             } else {
                 //if using cache causes more than one underlyingStorage searches

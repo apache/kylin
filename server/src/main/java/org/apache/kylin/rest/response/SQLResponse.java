@@ -52,7 +52,9 @@ public class SQLResponse implements Serializable {
 
     private long totalScanCount;
 
-    private boolean hitCache = false;
+    private boolean hitExceptionCache = false;
+    
+    private boolean storageCacheUsed = false;
 
     public SQLResponse() {
     }
@@ -133,12 +135,19 @@ public class SQLResponse implements Serializable {
         this.totalScanCount = totalScanCount;
     }
 
-    public boolean isHitCache() {
-        return hitCache;
+    public boolean isHitExceptionCache() {
+        return hitExceptionCache;
     }
 
-    public void setHitCache(boolean hitCache) {
-        this.hitCache = hitCache;
+    public void setHitExceptionCache(boolean hitExceptionCache) {
+        this.hitExceptionCache = hitExceptionCache;
     }
 
+    public boolean isStorageCacheUsed() {
+        return storageCacheUsed;
+    }
+
+    public void setStorageCacheUsed(boolean storageCacheUsed) {
+        this.storageCacheUsed = storageCacheUsed;
+    }
 }

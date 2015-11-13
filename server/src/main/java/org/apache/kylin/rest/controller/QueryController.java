@@ -227,7 +227,7 @@ public class QueryController extends BasicController {
                 exceptionCache.get(sqlRequest) != null) {
             Element element = exceptionCache.get(sqlRequest);
             response = (SQLResponse) element.getObjectValue();
-            response.setHitCache(true);
+            response.setHitExceptionCache(true);
         }
 
         return response;
