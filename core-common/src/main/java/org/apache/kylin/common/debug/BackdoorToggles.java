@@ -47,6 +47,10 @@ public class BackdoorToggles {
         return getString(DEBUG_TOGGLE_HBASE_CUBE_QUERY_PROTOCOL);
     }
 
+    public static boolean getDisableCache() {
+        return getBoolean(DEBUG_TOGGLE_DISABLE_QUERY_CACHE);
+    }
+
     public static boolean getDisableFuzzyKey() {
         return getBoolean(DEBUG_TOGGLE_DISABLE_FUZZY_KEY);
     }
@@ -83,6 +87,18 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_DISABLE_FUZZY_KEY = "DEBUG_TOGGLE_DISABLE_FUZZY_KEY";
+
+    /**
+     * set DEBUG_TOGGLE_DISABLE_QUERY_CACHE=true to prevent using cache for current query
+     *
+     *
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_DISABLE_QUERY_CACHE": "true"
+     }
+     */
+    public final static String DEBUG_TOGGLE_DISABLE_QUERY_CACHE = "DEBUG_TOGGLE_DISABLE_QUERY_CACHE";
 
     /**
      * set DEBUG_TOGGLE_HBASE_CUBE_QUERY_VERSION=v1/v2 to control which version CubeStorageQuery to use

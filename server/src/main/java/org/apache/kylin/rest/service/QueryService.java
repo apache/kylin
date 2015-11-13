@@ -48,7 +48,6 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -84,7 +83,7 @@ public class QueryService extends BasicService {
 
     @Autowired
     private CacheService cacheService;
-    
+
     public static final String USER_QUERY_FAMILY = "q";
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
@@ -267,14 +266,8 @@ public class QueryService extends BasicService {
         parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(sqlRequest.isAcceptPartial()));
         OLAPContext.setParameters(parameters);
 
-        try {
-            BackdoorToggles.setToggles(sqlRequest.getBackdoorToggles());
+        return execute(correctedSql, sqlRequest);
 
-            return execute(correctedSql, sqlRequest);
-
-        } finally {
-            BackdoorToggles.cleanToggles();
-        }
     }
 
     protected List<TableMeta> getMetadata(CubeManager cubeMgr, String project, boolean cubedOnly) throws SQLException {
