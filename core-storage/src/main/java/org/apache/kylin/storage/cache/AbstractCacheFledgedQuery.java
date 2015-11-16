@@ -5,7 +5,6 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.Configuration;
-import net.sf.ehcache.config.MemoryUnit;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
@@ -37,6 +36,14 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
         CACHE_MANAGER = cacheManager;
     }
 
+    /**
+     * This method is only useful non-spring injected test cases.
+     * When Kylin is normally ran as a spring app CACHE_MANAGER will be injected.
+     * and the configuration for cache lies in server/src/main/resources/ehcache.xml
+     * 
+     * the cache named "StorageCache" acts like a template for each realization to
+     * create its own cache.
+     */
     private static void initCacheManger() {
         Configuration conf = new Configuration();
         conf.setMaxBytesLocalHeap("128M");
@@ -48,7 +55,7 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
                 eternal(false).//
                 timeToIdleSeconds(86400).//
                 diskExpiryThreadIntervalSeconds(0).//
-                maxBytesLocalHeap(10, MemoryUnit.MEGABYTES).//
+                //maxBytesLocalHeap(10, MemoryUnit.MEGABYTES).//
                 persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.NONE)));
 
         CACHE_MANAGER.addCache(storageCache);
@@ -84,25 +91,20 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
         }
 
         if (CACHE_MANAGER.getCache(storageUUID) == null) {
-            logger.info("Cache for {} initting...", storageUUID);
+            logger.info("Cache for {} initializing...", storageUUID);
 
             //Create a Cache specifying its configuration.
             CacheConfiguration templateConf = CACHE_MANAGER.getCache(storageCacheTemplate).getCacheConfiguration();
-            PersistenceConfiguration pconf = templateConf.getPersistenceConfiguration();
-            if (pconf != null) {
-                logger.info("PersistenceConfiguration strategy: " + pconf.getStrategy());
-            } else {
-                logger.warn("PersistenceConfiguration is null");
-            }
 
-            Cache storageCache = new Cache(new CacheConfiguration(storageUUID, (int) templateConf.getMaxEntriesLocalHeap()).//
+            Cache storageCache = new Cache(new CacheConfiguration(storageUUID, 0).//
                     memoryStoreEvictionPolicy(templateConf.getMemoryStoreEvictionPolicy()).//
                     eternal(templateConf.isEternal()).//
                     timeToIdleSeconds(templateConf.getTimeToIdleSeconds()).//
-                    maxBytesLocalHeap(templateConf.getMaxBytesLocalHeap(), MemoryUnit.BYTES).persistence(pconf));
-            //TODO: deal with failed queries, and only cache too long query
+                    //maxBytesLocalHeap(templateConf.getMaxBytesLocalHeap(), MemoryUnit.BYTES).//using pooled size
+                    persistence(templateConf.getPersistenceConfiguration()));
 
             CACHE_MANAGER.addCache(storageCache);
+
         }
     }
 }

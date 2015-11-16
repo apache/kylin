@@ -3,7 +3,6 @@
            eternal="false"
            timeToIdleSeconds="86400"
            memoryStoreEvictionPolicy="LRU"
-           maxBytesLocalHeap="50M"
             >
         <persistence strategy="none"/>
     </cache>
@@ -11,7 +10,6 @@
            eternal="false"
            timeToIdleSeconds="86400"
            memoryStoreEvictionPolicy="LRU"
-           maxBytesLocalHeap="50M"
             >
         <persistence strategy="none"/>
     </cache>
@@ -19,7 +17,6 @@
            eternal="false"
            timeToLiveSeconds="10800"
            memoryStoreEvictionPolicy="LRU"
-           maxBytesLocalHeap="50M"
             >
         <persistence strategy="none"/>
     </cache>
