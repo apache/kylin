@@ -25,17 +25,22 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.TreeMultiset;
 
 /**
  * <p/>
@@ -118,28 +123,63 @@ public class BasicTest {
     @Test
     public void test0() throws Exception {
 
-        TreeMultiset<Long> xx = TreeMultiset.create();
-        xx.add(2L);
-        xx.add(1L);
-        xx.add(1L);
-        for (Long hi : xx) {
-            System.out.println(hi);
-        }
-        System.out.println(Long.MAX_VALUE);
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        List<Future<?>> futures = Lists.newArrayList();
 
-        IdentityHashMap<String, Void> a = new IdentityHashMap<>();
-        IdentityHashMap<String, Void> b = new IdentityHashMap<>();
-        String s1 = new String("s1");
-        String s2 = new String("s1");
-        Assert.assertEquals(s1, s2);
-        Assert.assertTrue(s1 != s2);
-        a.put(s1, null);
-        b.put(s2, null);
+        futures.add(executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                throw new RuntimeException("hi");
+            }
+        }));
+
+        futures.add(executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2000);
+                    System.out.println("finish 1");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }));
+
+        try {
+            for (Future<?> future : futures) {
+                future.get(1, TimeUnit.HOURS);
+            }
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            System.out.println(e.getMessage());
+        }
+
+        futures.clear();
+
+        futures.add(executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(3000);
+                    System.out.println("finish 2");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }));
+
+        try {
+            for (Future<?> future : futures) {
+                future.get(1, TimeUnit.HOURS);
+            }
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Test
     @Ignore("convenient trial tool for dev")
     public void test1() throws Exception {
+
         System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1433833611000L));
         System.out.println(org.apache.kylin.common.util.DateFormat.formatToTimeStr(1433250517000L));
         System.out.println(org.apache.kylin.common.util.DateFormat.stringToMillis("2015-06-01 00:00:00"));

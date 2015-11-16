@@ -66,6 +66,8 @@ import com.google.protobuf.HBaseZeroCopyByteString;
 
 public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
+    private static ExecutorService executorService = Executors.newCachedThreadPool();
+
     static class EndpointResultsAsGTScanner implements IGTScanner {
         private GTInfo info;
         private Iterator<byte[]> blocks;
@@ -155,7 +157,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         final ByteString scanRequestBytesString = HBaseZeroCopyByteString.wrap(scanRequestBytes);
         logger.info("Serialized scanRequestBytes's size is " + scanRequestBytes.length);
 
-        ExecutorService executorService = Executors.newFixedThreadPool(rawScans.size());
         final List<byte[]> rowBlocks = Collections.synchronizedList(Lists.<byte[]> newArrayList());
 
         logger.info("Total RawScan range count: " + rawScans.size());
@@ -217,7 +218,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             });
             futures.add(future);
         }
-        executorService.shutdown();
         try {
             for (Future<?> future : futures) {
                 future.get(1, TimeUnit.HOURS);
