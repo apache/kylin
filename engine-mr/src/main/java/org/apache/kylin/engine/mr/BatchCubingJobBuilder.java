@@ -44,13 +44,13 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         Preconditions.checkArgument(!newSegment.isEnableSharding(), "V1 job engine does not support building sharded cubes");
 
         this.inputSide = MRUtil.getBatchCubingInputSide(seg);
-        this.outputSide = MRUtil.getBatchCubingOutputSide((CubeSegment)seg);
+        this.outputSide = MRUtil.getBatchCubingOutputSide((CubeSegment) seg);
     }
 
     public CubingJob build() {
         logger.info("MR_V1 new job to BUILD segment " + seg);
 
-        final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
+        final CubingJob result = CubingJob.createBuildJob((CubeSegment) seg, submitter, config);
         final String jobId = result.getId();
         final String cuboidRootPath = getCuboidRootPath(jobId);
 
@@ -62,7 +62,7 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         result.addTask(createBuildDictionaryStep(jobId));
 
         // Phase 3: Build Cube
-        RowKeyDesc rowKeyDesc = ((CubeSegment)seg).getCubeDesc().getRowkey();
+        RowKeyDesc rowKeyDesc = ((CubeSegment) seg).getCubeDesc().getRowkey();
         final int groupRowkeyColumnsCount = rowKeyDesc.getNCuboidBuildLevels();
         final int totalRowkeyColumnsCount = rowKeyDesc.getRowKeyColumns().length;
         final String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
@@ -88,7 +88,7 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         MapReduceExecutable baseCuboidStep = new MapReduceExecutable();
 
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, ((CubeSegment)seg).getCubeDesc().getModel());
+        appendMapReduceParameters(cmd, ((CubeSegment) seg).getCubeDesc().getModel());
 
         baseCuboidStep.setName(ExecutableConstants.STEP_NAME_BUILD_BASE_CUBOID);
 
@@ -112,7 +112,7 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         ndCuboidStep.setName(ExecutableConstants.STEP_NAME_BUILD_N_D_CUBOID + " : " + dimNum + "-Dimension");
         StringBuilder cmd = new StringBuilder();
 
-        appendMapReduceParameters(cmd, ((CubeSegment)seg).getCubeDesc().getModel());
+        appendMapReduceParameters(cmd, ((CubeSegment) seg).getCubeDesc().getModel());
         appendExecCmdParameters(cmd, "cubename", seg.getRealization().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "input", cuboidOutputTempPath[totalRowkeyColumnCount - dimNum - 1]);
