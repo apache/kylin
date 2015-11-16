@@ -23,9 +23,11 @@ import net.sf.ehcache.CacheManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.apache.kylin.rest.util.QueryUtil;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +57,11 @@ public class QueryControllerTest extends ServiceTestBase {
         SQLRequest sqlRequest = new SQLRequest();
         sqlRequest.setSql("select * from not_exist_table");
         sqlRequest.setProject("default");
-        queryController.query(sqlRequest);
+        SQLResponse response1 = queryController.query(sqlRequest);
+        Assert.assertEquals(false, response1.getIsException());
+
+        SQLResponse response2 = queryController.query(sqlRequest);
+        Assert.assertEquals(false, response2.getIsException());
     }
 
     @Test

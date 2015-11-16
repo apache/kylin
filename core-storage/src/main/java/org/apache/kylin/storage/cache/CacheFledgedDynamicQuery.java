@@ -60,7 +60,8 @@ public class CacheFledgedDynamicQuery extends AbstractCacheFledgedQuery {
         boolean enableDynamicCache = sqlDigest.groupbyColumns.contains(partitionColRef);
 
         if (enableDynamicCache) {
-            StreamSQLResult cachedResult = getStreamSQLResult(new StreamSQLDigest(sqlDigest, partitionColRef));
+            streamSQLDigest = new StreamSQLDigest(sqlDigest, partitionColRef);
+            StreamSQLResult cachedResult = getStreamSQLResult(streamSQLDigest);
             if (cachedResult != null) {
                 ret = tryReuseCache(context, sqlDigest, returnTupleInfo, cachedResult);
             } else {
