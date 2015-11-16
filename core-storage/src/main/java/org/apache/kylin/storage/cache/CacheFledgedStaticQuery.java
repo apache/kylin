@@ -28,7 +28,8 @@ public class CacheFledgedStaticQuery extends AbstractCacheFledgedQuery {
     @Override
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest, final TupleInfo returnTupleInfo) {
 
-        StreamSQLResult cachedResult = getStreamSQLResult(new StreamSQLDigest(sqlDigest, null));
+        streamSQLDigest = new StreamSQLDigest(sqlDigest, null);
+        StreamSQLResult cachedResult = getStreamSQLResult(streamSQLDigest);
         ITupleIterator ret;
 
         if (cachedResult != null) {

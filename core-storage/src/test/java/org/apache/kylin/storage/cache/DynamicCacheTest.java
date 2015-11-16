@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.IdentityUtils;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -20,6 +21,7 @@ import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -29,6 +31,13 @@ import com.google.common.collect.Ranges;
 /**
  */
 public class DynamicCacheTest {
+
+    @BeforeClass
+    public static void setup() {
+        System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.query.cache.threshold.duration", "0");
+    }
+
 
     class TsOnlyTuple implements ITuple {
         private TblColRef partitionCol;
