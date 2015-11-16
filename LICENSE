@@ -227,3 +227,11 @@ For english-words.80 (scowl-2015.05.18).txt:
 This product bundles SCOWL, which is available under a
 MIT-like license.  For details, see
 https://raw.githubusercontent.com/kevina/wordlist/master/scowl/Copyright
+
+
+==============================================================================
+For addthis/stream-lib:
+==============================================================================
+This product copies some Top-K code from addthis/stream-lib, which is under
+Apache License Version 2. For details, see
+https://github.com/addthis/stream-lib/blob/master/LICENSE.txt
