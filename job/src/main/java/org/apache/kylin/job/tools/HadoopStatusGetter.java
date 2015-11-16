@@ -19,6 +19,7 @@
 package org.apache.kylin.job.tools;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
@@ -26,6 +27,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
@@ -84,6 +86,11 @@ public class HadoopStatusGetter {
                     int cut = s.indexOf("url=");
                     if (cut >= 0) {
                         redirect = s.substring(cut + 4);
+                        
+                        if (isValidURL(redirect) == false) {
+                            log.info("Get invalid redirect url, skip it: " + redirect);
+                            continue;
+                        }
                     }
                 }
 
@@ -112,4 +119,18 @@ public class HadoopStatusGetter {
         }
     }
 
+    private static boolean isValidURL(String value) {
+        if (StringUtils.isNotEmpty(value)) {
+            java.net.URL url;
+            try {
+                url = new java.net.URL(value);
+            } catch (MalformedURLException var5) {
+                return false;
+            }
+
+            return StringUtils.isNotEmpty(url.getProtocol()) && StringUtils.isNotEmpty(url.getHost());
+        }
+
+        return false;
+    }
 }
