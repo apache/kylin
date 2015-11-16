@@ -18,50 +18,25 @@
 
 package org.apache.kylin.query.relnode;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.enumerable.EnumerableCalc;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.avatica.util.TimeUnitRange;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptCost;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelTrait;
-import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexDynamicParam;
-import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexLocalRef;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexProgram;
-import org.apache.calcite.rex.RexProgramBuilder;
-import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.util.NlsString;
-import org.apache.kylin.metadata.filter.CaseTupleFilter;
-import org.apache.kylin.metadata.filter.ColumnTupleFilter;
-import org.apache.kylin.metadata.filter.CompareTupleFilter;
-import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.DynamicTupleFilter;
-import org.apache.kylin.metadata.filter.ExtractTupleFilter;
-import org.apache.kylin.metadata.filter.LogicalTupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import java.util.*;
 
 /**
  */
@@ -127,8 +102,12 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
                 if (op.getName().equalsIgnoreCase("extract_date")) {
                     filter = new ExtractTupleFilter(FilterOperatorEnum.EXTRACT);
                 } else {
-                    throw new UnsupportedOperationException(op.getName());
+                    filter = new FunctionTupleFilter(op);
                 }
+                break;
+            case LIKE:
+            case OTHER_FUNCTION:
+                filter = new FunctionTupleFilter(op);
                 break;
             default:
                 throw new UnsupportedOperationException(op.getName());
@@ -286,6 +265,8 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
     }
 
     private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
+        if (filter == null) return;
+
         if (filter instanceof ColumnTupleFilter) {
             collector.add(((ColumnTupleFilter) filter).getColumn());
         }
