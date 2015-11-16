@@ -19,12 +19,9 @@
 package org.apache.kylin.metadata.filter;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
+import org.apache.calcite.sql.SqlFunction;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -39,6 +36,7 @@ public class CompareTupleFilter extends TupleFilter {
     private String firstCondValue;
     private Map<String, String> dynamicVariables;
     private String nullString;
+    private FunctionTupleFilter functionTupleFilter;
 
     public CompareTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(2), op);
@@ -49,7 +47,7 @@ public class CompareTupleFilter extends TupleFilter {
                 || op == FilterOperatorEnum.GT || op == FilterOperatorEnum.GTE //
                 || op == FilterOperatorEnum.IN || op == FilterOperatorEnum.NOTIN //
                 || op == FilterOperatorEnum.ISNULL || op == FilterOperatorEnum.ISNOTNULL);
-        if (opGood == false)
+        if (!opGood)
             throw new IllegalArgumentException("Unsupported operator " + op);
     }
 
@@ -81,6 +79,8 @@ public class CompareTupleFilter extends TupleFilter {
         } else if (child instanceof DynamicTupleFilter) {
             DynamicTupleFilter dynamicFilter = (DynamicTupleFilter) child;
             this.dynamicVariables.put(dynamicFilter.getVariableName(), null);
+        } else if (child instanceof FunctionTupleFilter) {
+            this.functionTupleFilter = (FunctionTupleFilter)child;
         }
         //TODO
         //        else if (child instanceof ExtractTupleFilter) {
@@ -103,6 +103,10 @@ public class CompareTupleFilter extends TupleFilter {
 
     public TblColRef getColumn() {
         return column;
+    }
+
+    public FunctionTupleFilter getFunctionTupleFilter() {
+        return functionTupleFilter;
     }
 
     public Map<String, String> getVariables() {
@@ -137,7 +141,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "CompareFilter [" + column + " " + operator + " " + conditionValues + ", children=" + children + "]";
+        return "CompareFilter [" + (functionTupleFilter == null ? column : functionTupleFilter) + " " + operator + " " + conditionValues + ", children=" + children + "]";
     }
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
@@ -146,7 +150,7 @@ public class CompareTupleFilter extends TupleFilter {
         // extract tuple value
         String tupleValue = null;
         for (TupleFilter filter : this.children) {
-            if (isConstant(filter) == false) {
+            if (!isConstant(filter)) {
                 filter.evaluate(tuple);
                 tupleValue = filter.getValues().iterator().next();
             }
@@ -209,7 +213,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public boolean isEvaluable() {
-        return column != null && !conditionValues.isEmpty();
+        return (functionTupleFilter != null || column != null) && !conditionValues.isEmpty();
     }
 
     @Override
@@ -239,5 +243,4 @@ public class CompareTupleFilter extends TupleFilter {
         }
         this.nullString = BytesUtil.readAsciiString(buffer);
     }
-
 }
