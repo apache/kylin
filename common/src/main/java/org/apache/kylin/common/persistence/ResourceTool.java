@@ -19,7 +19,6 @@
 package org.apache.kylin.common.persistence;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 
 import org.apache.kylin.common.KylinConfig;
@@ -86,13 +85,12 @@ public class ResourceTool {
         // case of resource (not a folder)
         if (children == null) {
             if (matchExclude(path) == false) {
-                InputStream content = src.getResource(path);
-                long ts = src.getResourceTimestamp(path);
-                if (content != null) {
-                    dst.putResource(path, content, ts);
-                    content.close();
+                RawResource res = src.getResource(path);
+                if (res != null) {
+                    dst.putResource(path, res.inputStream, res.timestamp);
+                    res.inputStream.close();
                 } else {
-                    System.out.println("Null inputstream for " + path);
+                    System.out.println("Resource not exist for " + path);
                 }
             }
         }

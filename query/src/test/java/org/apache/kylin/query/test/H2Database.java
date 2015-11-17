@@ -21,7 +21,6 @@ package org.apache.kylin.query.test;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -29,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -76,18 +76,17 @@ public class H2Database {
             String normalPath = "/data/" + tableDesc.getIdentity() + ".csv";
 
             // If it's the fact table, there will be a facttable.csv.inner or
-            // facttable.csv.left in hbase
-            // otherwise just use lookup.csv
-            InputStream csvStream = metaMgr.getStore().getResource(normalPath + fileNameSuffix);
-            if (csvStream == null) {
-                csvStream = metaMgr.getStore().getResource(normalPath);
+            // facttable.csv.left in hbase, otherwise just use lookup.csv
+            RawResource res = metaMgr.getStore().getResource(normalPath + fileNameSuffix);
+            if (res == null) {
+                res = metaMgr.getStore().getResource(normalPath);
             } else {
                 logger.info("H2 decides to load " + (normalPath + fileNameSuffix) + " for table " + tableDesc.getIdentity());
             }
 
-            org.apache.commons.io.IOUtils.copy(csvStream, tempFileStream);
+            org.apache.commons.io.IOUtils.copy(res.inputStream, tempFileStream);
 
-            csvStream.close();
+            res.inputStream.close();
             tempFileStream.close();
 
         } catch (IOException e) {
