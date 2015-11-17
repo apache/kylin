@@ -10,12 +10,12 @@ import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.source.kafka.config.BrokerConfig;
+import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
-import org.apache.kylin.source.kafka.config.BrokerConfig;
-import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 
 /**
  * Load prepared data into kafka(for test use)
@@ -36,7 +36,7 @@ public class KafkaDataLoader {
         props.put("metadata.broker.list", brokerList);
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         props.put("request.required.acks", "1");
-        props.put("retry.backoff.ms",1000);
+        props.put("retry.backoff.ms", "1000");
 
         ProducerConfig config = new ProducerConfig(props);
 
