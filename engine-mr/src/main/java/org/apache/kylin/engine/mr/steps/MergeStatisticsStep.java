@@ -83,7 +83,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
             int averageSamplingPercentage = 0;
             for (String segmentId : this.getMergingSegmentIds()) {
                 String fileKey = CubeSegment.getStatisticsResourcePath(getCubeName(), segmentId);
-                InputStream is = rs.getResource(fileKey);
+                InputStream is = rs.getResource(fileKey).inputStream;
                 File tempFile = null;
                 FileOutputStream tempFileStream = null;
                 try {

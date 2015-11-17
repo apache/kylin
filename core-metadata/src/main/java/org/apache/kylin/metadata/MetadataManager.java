@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
@@ -226,11 +227,13 @@ public class MetadataManager {
         Map<String, String> attrs = Maps.newHashMap();
 
         ResourceStore store = getStore();
-        InputStream is = store.getResource(path);
-        if (is == null) {
+        RawResource res = store.getResource(path);
+        if (res == null) {
             logger.warn("Failed to get table exd info from " + path);
             return null;
         }
+        
+        InputStream is = res.inputStream;
 
         try {
             attrs.putAll(JsonUtil.readValue(is, HashMap.class));

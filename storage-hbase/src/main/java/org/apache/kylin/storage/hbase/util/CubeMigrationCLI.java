@@ -19,7 +19,6 @@
 package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,7 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.cube.CubeInstance;
@@ -305,10 +305,9 @@ public class CubeMigrationCLI {
         }
         case COPY_FILE_IN_META: {
             String item = (String) opt.params[0];
-            InputStream inputStream = srcStore.getResource(item);
-            long ts = srcStore.getResourceTimestamp(item);
-            dstStore.putResource(item, inputStream, ts);
-            inputStream.close();
+            RawResource res = srcStore.getResource(item);
+            dstStore.putResource(item, res.inputStream, res.timestamp);
+            res.inputStream.close();
             logger.info("Item " + item + " is copied");
             break;
         }

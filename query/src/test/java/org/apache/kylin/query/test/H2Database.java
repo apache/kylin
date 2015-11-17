@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class H2Database {
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
     private static final String[] ALL_TABLES = new String[] { "edw.test_cal_dt", "default.test_category_groupings", "default.test_kylin_fact", "edw.test_seller_type_dim", "edw.test_sites", "default.streaming_table" };
@@ -72,7 +73,7 @@ public class H2Database {
             tempFile = File.createTempFile("tmp_h2", ".csv");
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
             String normalPath = "/data/" + tableDesc.getIdentity() + ".csv";
-            InputStream csvStream = metaMgr.getStore().getResource(normalPath);
+            InputStream csvStream = metaMgr.getStore().getResource(normalPath).inputStream;
 
             org.apache.commons.io.IOUtils.copy(csvStream, tempFileStream);
 

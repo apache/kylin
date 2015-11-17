@@ -146,7 +146,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected boolean existsImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, null, null);
+        Result r = getByScan(resPath, false, false);
         return r != null;
     }
 
@@ -168,7 +168,7 @@ public class HBaseResourceStore extends ResourceStore {
             }
         } catch (IOException e) {
             for (RawResource rawResource : result) {
-                IOUtils.closeQuietly(rawResource.resource);
+                IOUtils.closeQuietly(rawResource.inputStream);
             }
             throw e;
         } finally {
@@ -202,17 +202,19 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected InputStream getResourceImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, B_FAMILY, B_COLUMN);
-        return getInputStream(resPath, r);
+    protected RawResource getResourceImpl(String resPath) throws IOException {
+        Result r = getByScan(resPath, true, true);
+        if (r == null)
+            return null;
+        else
+            return new RawResource(getInputStream(resPath, r), getTimestamp(r));
     }
 
     @Override
     protected long getResourceTimestampImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, B_FAMILY, B_COLUMN_TS);
-        return getTimestamp(r);
+        return getTimestamp(getByScan(resPath, false, true));
     }
-
+    
     @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -242,7 +244,7 @@ public class HBaseResourceStore extends ResourceStore {
             boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
             logger.info("Update row " + resPath + " from oldTs: " + oldTS + ", to newTs: " + newTS + ", operation result: " + ok);
             if (!ok) {
-                long real = getResourceTimestamp(resPath);
+                long real = getResourceTimestampImpl(resPath);
                 throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but it is " + real);
             }
 
@@ -271,15 +273,18 @@ public class HBaseResourceStore extends ResourceStore {
         return getAllInOneTableName() + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
     }
 
-    private Result getByScan(String path, byte[] family, byte[] column) throws IOException {
+    private Result getByScan(String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
         byte[] startRow = Bytes.toBytes(path);
         byte[] endRow = plusZero(startRow);
 
         Scan scan = new Scan(startRow, endRow);
-        if (family == null || column == null) {
+        if (!fetchContent && !fetchTimestamp) {
             scan.setFilter(new KeyOnlyFilter());
         } else {
-            scan.addColumn(family, column);
+            if (fetchContent)
+                scan.addColumn(B_FAMILY, B_COLUMN);
+            if (fetchTimestamp)
+                scan.addColumn(B_FAMILY, B_COLUMN_TS);
         }
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());

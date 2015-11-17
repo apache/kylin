@@ -165,7 +165,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
     public static Map<Long, Long> getCubeRowCountMapFromCuboidStatistics(CubeSegment cubeSegment, KylinConfig kylinConfig, Configuration conf) throws IOException {
         ResourceStore rs = ResourceStore.getStore(kylinConfig);
         String fileKey = cubeSegment.getStatisticsResourcePath();
-        InputStream is = rs.getResource(fileKey);
+        InputStream is = rs.getResource(fileKey).inputStream;
         File tempFile = null;
         FileOutputStream tempFileStream = null;
         try {
