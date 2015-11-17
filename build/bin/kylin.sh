@@ -107,11 +107,6 @@ then
     fi
     if [ $2 == "start" ]
     then
-        useSandbox=`sh ${dir}/get-properties.sh kylin.sandbox`
-        spring_profile="default"
-        if [ "$useSandbox" = "true" ]
-            then spring_profile="sandbox"
-        fi
 
         #retrive $hive_dependency and $hbase_dependency
         source ${dir}/find-hive-dependency.sh
@@ -126,11 +121,9 @@ then
 
         # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
         hbase ${KYLIN_EXTRA_START_OPTS} \
-        -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
-        -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
+        -Dlog4j.configuration=kylin-log4j.properties\
         -Dkylin.hive.dependency=${hive_dependency} \
         -Dkylin.hbase.dependency=${hbase_dependency} \
-        -Dspring.profiles.active=${spring_profile} \
         org.apache.kylin.engine.streaming.cli.StreamingCLI $@ > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/logs/$3_$4 &
         echo "streaming started name: $3 id: $4"
         exit 0
@@ -160,13 +153,6 @@ then
 elif [ $1 == "monitor" ]
 then
     echo "monitor job"
-    tomcat_root=${dir}/../tomcat
-    export tomcat_root
-    useSandbox=`sh ${dir}/get-properties.sh kylin.sandbox`
-    spring_profile="default"
-    if [ "$useSandbox" = "true" ]
-        then spring_profile="sandbox"
-    fi
 
     #retrive $hive_dependency and $hbase_dependency
     source ${dir}/find-hive-dependency.sh
@@ -177,17 +163,13 @@ then
     fi
 
     mkdir -p ${KYLIN_HOME}/ext
-    export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
     export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
 
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     hbase ${KYLIN_EXTRA_START_OPTS} \
-    -Djava.util.logging.config.file=${tomcat_root}/conf/logging.properties \
-    -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
-    -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
+    -Dlog4j.configuration=kylin-log4j.properties\
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dkylin.hbase.dependency=${hbase_dependency} \
-    -Dspring.profiles.active=${spring_profile} \
     org.apache.kylin.engine.streaming.cli.MonitorCLI $@ > ${KYLIN_HOME}/logs/monitor.log 2>&1
     exit 0
 
