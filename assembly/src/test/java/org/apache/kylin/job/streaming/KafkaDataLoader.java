@@ -36,6 +36,7 @@ public class KafkaDataLoader {
         props.put("metadata.broker.list", brokerList);
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         props.put("request.required.acks", "1");
+        props.put("retry.backoff.ms",1000);
 
         ProducerConfig config = new ProducerConfig(props);
 
