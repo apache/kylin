@@ -107,8 +107,7 @@ public class FactTableGenerator {
      */
     private void loadConfig() {
         try {
-            InputStream configStream = null;
-            configStream = store.getResource("/data/data_gen_config.json");
+            InputStream configStream = store.getResource("/data/data_gen_config.json").inputStream;
             this.genConf = GenConfig.loadConfig(configStream);
 
             if (configStream != null)
@@ -136,7 +135,7 @@ public class FactTableGenerator {
             }
 
             String path = "/data/" + lookupTableName + ".csv";
-            tableStream = store.getResource(path);
+            tableStream = store.getResource(path).inputStream;
             tableReader = new BufferedReader(new InputStreamReader(tableStream));
             tableReader.mark(0);
             int rowCount = 0;
@@ -158,7 +157,7 @@ public class FactTableGenerator {
             tableStream = null;
             tableReader = null;
 
-            tableStream = store.getResource(path);
+            tableStream = store.getResource(path).inputStream;
             tableReader = new BufferedReader(new InputStreamReader(tableStream));
 
             while ((curRow = tableReader.readLine()) != null) {

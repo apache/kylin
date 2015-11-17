@@ -24,11 +24,11 @@ import java.io.InputStream;
  */
 public class RawResource {
 
-    public final InputStream resource;
+    public final InputStream inputStream;
     public final long timestamp;
 
-    public RawResource(InputStream resource, long timestamp) {
-        this.resource = resource;
+    public RawResource(InputStream inputStream, long timestamp) {
+        this.inputStream = inputStream;
         this.timestamp = timestamp;
     }
 }

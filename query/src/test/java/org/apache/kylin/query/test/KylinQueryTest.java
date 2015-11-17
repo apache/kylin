@@ -43,7 +43,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("KylinQueryTest is contained by CombinationTest")
+//@Ignore("KylinQueryTest is contained by CombinationTest")
 public class KylinQueryTest extends KylinTestBase {
 
     @BeforeClass
@@ -140,7 +140,7 @@ public class KylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query62.sql";
+        String queryFileName = "src/test/resources/query/sql/sample.txt";
 
         File sqlFile = new File(queryFileName);
         runSQL(sqlFile, true, true);

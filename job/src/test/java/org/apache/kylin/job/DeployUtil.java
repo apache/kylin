@@ -183,7 +183,7 @@ public class DeployUtil {
         // duplicate a copy of this fact table, with a naming convention with fact.csv.inner or fact.csv.left
         // so that later test cases can select different data files
         ResourceStore store = ResourceStore.getStore(config());
-        InputStream in = store.getResource("/data/" + factTableName + ".csv");
+        InputStream in = store.getResource("/data/" + factTableName + ".csv").inputStream;
         String factTablePathWithJoinType = "/data/" + factTableName + ".csv." + joinType.toLowerCase();
         store.deleteResource(factTablePathWithJoinType);
         store.putResource(factTablePathWithJoinType, in, System.currentTimeMillis());
@@ -203,7 +203,7 @@ public class DeployUtil {
             File localBufferFile = new File(temp.getParent() + "/" + tablename + ".csv");
             localBufferFile.createNewFile();
 
-            InputStream hbaseDataStream = metaMgr.getStore().getResource("/data/" + tablename + ".csv");
+            InputStream hbaseDataStream = metaMgr.getStore().getResource("/data/" + tablename + ".csv").inputStream;
             FileOutputStream localFileStream = new FileOutputStream(localBufferFile);
             IOUtils.copy(hbaseDataStream, localFileStream);
 
