@@ -146,6 +146,10 @@ abstract public class ResourceStore {
         return getResourceImpl(norm(resPath));
     }
 
+    final public long getResourceTimestamp(String resPath) throws IOException {
+        return getResourceTimestampImpl(norm(resPath));
+    }
+    
     final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, Class<T> clazz, Serializer<T> serializer) throws IOException {
         final List<RawResource> allResources = getAllResources(rangeStart, rangeEnd);
         if (allResources.isEmpty()) {
@@ -170,7 +174,10 @@ abstract public class ResourceStore {
 
     /** returns null if not exists */
     abstract protected RawResource getResourceImpl(String resPath) throws IOException;
-
+    
+    /** returns 0 if not exists */
+    abstract protected long getResourceTimestampImpl(String resPath) throws IOException;
+    
     /**
      * overwrite a resource without write conflict check
      */

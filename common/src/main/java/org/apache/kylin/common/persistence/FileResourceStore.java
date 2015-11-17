@@ -100,6 +100,15 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
+    protected long getResourceTimestampImpl(String resPath) throws IOException {
+        File f = file(resPath);
+        if (f.exists() && f.isFile())
+            return f.lastModified();
+        else
+            return 0;
+    }
+    
+    @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
         File f = file(resPath);
         f.getParentFile().mkdirs();

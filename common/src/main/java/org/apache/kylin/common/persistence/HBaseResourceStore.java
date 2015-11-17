@@ -206,6 +206,11 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
+    protected long getResourceTimestampImpl(String resPath) throws IOException {
+        return getTimestamp(getByScan(resPath, false, true));
+    }
+    
+    @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         IOUtils.copy(content, bout);
@@ -233,7 +238,7 @@ public class HBaseResourceStore extends ResourceStore {
 
             boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
             if (!ok) {
-                long real = getTimestamp(getByScan(resPath, false, true));
+                long real = getResourceTimestampImpl(resPath);
                 throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + real + ", but it is " + oldTS);
             }
 
