@@ -47,9 +47,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
@@ -117,10 +119,6 @@ public class StreamingManager {
                 throw new IllegalStateException("Failed to init StreamingManager from " + config, e);
             }
         }
-    }
-
-    private boolean checkExistence(String name) {
-        return true;
     }
 
     private String formatStreamingConfigPath(String name) {
@@ -224,17 +222,21 @@ public class StreamingManager {
 
     public long getOffset(String streaming, int shard) {
         final String resPath = formatStreamingOutputPath(streaming, shard);
+        InputStream inputStream = null; 
         try {
-            final InputStream inputStream = getStore().getResource(resPath);
-            if (inputStream == null) {
+            final RawResource res = getStore().getResource(resPath);
+            if (res == null) {
                 return 0;
             } else {
+            	inputStream = res.inputStream;
                 final BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
                 return Long.parseLong(br.readLine());
             }
         } catch (Exception e) {
             logger.error("error get offset, path:" + resPath, e);
             throw new RuntimeException("error get offset, path:" + resPath, e);
+        } finally {
+        	IOUtils.closeQuietly(inputStream);
         }
     }
 
@@ -252,16 +254,20 @@ public class StreamingManager {
     public Map<Integer, Long> getOffset(String streaming, List<Integer> partitions) {
         Collections.sort(partitions);
         final String resPath = formatStreamingOutputPath(streaming, partitions);
+        InputStream inputStream = null;
         try {
-            final InputStream inputStream = getStore().getResource(resPath);
-            if (inputStream == null) {
-                return Collections.emptyMap();
-            }
+        	RawResource res = getStore().getResource(resPath);
+        	if (res == null)
+        		return Collections.emptyMap();
+        	
+        	inputStream = res.inputStream;
             final HashMap<Integer, Long> result = mapper.readValue(inputStream, mapType);
             return result;
         } catch (IOException e) {
             logger.error("error get offset, path:" + resPath, e);
             throw new RuntimeException("error get offset, path:" + resPath, e);
+        } finally {
+        	IOUtils.closeQuietly(inputStream);
         }
     }
 
