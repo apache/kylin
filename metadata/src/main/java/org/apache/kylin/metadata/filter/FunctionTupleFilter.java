@@ -47,7 +47,7 @@ public class FunctionTupleFilter extends TupleFilter {
     private boolean isValid = false;
 
     public FunctionTupleFilter(SqlOperator sqlOperator) {
-        super(Lists.<TupleFilter>newArrayList(), FilterOperatorEnum.FUNCTION);
+        super(Lists.<TupleFilter> newArrayList(), FilterOperatorEnum.FUNCTION);
         this.methodParams = Lists.newArrayList();
         this.sqlOperator = sqlOperator;
 
@@ -67,9 +67,9 @@ public class FunctionTupleFilter extends TupleFilter {
             return null;
 
         if (columnContainerFilter instanceof ColumnTupleFilter)
-            return ((ColumnTupleFilter)columnContainerFilter).getColumn();
+            return ((ColumnTupleFilter) columnContainerFilter).getColumn();
         else if (columnContainerFilter instanceof FunctionTupleFilter)
-            return ((FunctionTupleFilter)columnContainerFilter).getColumn();
+            return ((FunctionTupleFilter) columnContainerFilter).getColumn();
 
         throw new UnsupportedOperationException("Wrong type TupleFilter in FunctionTupleFilter.");
     }
@@ -79,7 +79,7 @@ public class FunctionTupleFilter extends TupleFilter {
             methodParams.set(colPosition, input);
         else if (columnContainerFilter instanceof FunctionTupleFilter)
             methodParams.set(colPosition, ((FunctionTupleFilter) columnContainerFilter).invokeFunction(input));
-        return method.invoke(null, (Object[])(methodParams.toArray()));
+        return method.invoke(null, (Object[]) (methodParams.toArray()));
     }
 
     public boolean isValid() {
@@ -87,7 +87,6 @@ public class FunctionTupleFilter extends TupleFilter {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void addChild(TupleFilter child) {
         if (child instanceof ColumnTupleFilter || child instanceof FunctionTupleFilter) {
             columnContainerFilter = child;
@@ -96,7 +95,7 @@ public class FunctionTupleFilter extends TupleFilter {
         } else if (child instanceof ConstantTupleFilter) {
             String constVal = child.getValues().iterator().next();
             try {
-                Class clazz = Primitives.wrap(method.getParameterTypes()[methodParams.size()]);
+                Class<?> clazz = Primitives.wrap(method.getParameterTypes()[methodParams.size()]);
                 if (!Primitives.isWrapperType(clazz))
                     methodParams.add(constVal);
                 else
@@ -125,7 +124,7 @@ public class FunctionTupleFilter extends TupleFilter {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(sqlOperator.getName());
         sb.append("(");

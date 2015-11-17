@@ -19,9 +19,12 @@
 package org.apache.kylin.metadata.filter;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
-import org.apache.calcite.sql.SqlFunction;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -31,12 +34,15 @@ import org.apache.kylin.metadata.tuple.ITuple;
  */
 public class CompareTupleFilter extends TupleFilter {
 
+    // operand 1 is either a column or a function
     private TblColRef column;
+    private FunctionTupleFilter function;
+    
+    // operand 2 is constants
     private Collection<String> conditionValues;
     private String firstCondValue;
     private Map<String, String> dynamicVariables;
     private String nullString;
-    private FunctionTupleFilter functionTupleFilter;
 
     public CompareTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(2), op);
@@ -80,7 +86,7 @@ public class CompareTupleFilter extends TupleFilter {
             DynamicTupleFilter dynamicFilter = (DynamicTupleFilter) child;
             this.dynamicVariables.put(dynamicFilter.getVariableName(), null);
         } else if (child instanceof FunctionTupleFilter) {
-            this.functionTupleFilter = (FunctionTupleFilter)child;
+            this.function = (FunctionTupleFilter)child;
         }
         //TODO
         //        else if (child instanceof ExtractTupleFilter) {
@@ -105,8 +111,8 @@ public class CompareTupleFilter extends TupleFilter {
         return column;
     }
 
-    public FunctionTupleFilter getFunctionTupleFilter() {
-        return functionTupleFilter;
+    public FunctionTupleFilter getFunction() {
+        return function;
     }
 
     public Map<String, String> getVariables() {
@@ -141,7 +147,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "CompareFilter [" + (functionTupleFilter == null ? column : functionTupleFilter) + " " + operator + " " + conditionValues + ", children=" + children + "]";
+        return "CompareFilter [" + (function == null ? column : function) + " " + operator + " " + conditionValues + ", children=" + children + "]";
     }
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
@@ -213,7 +219,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public boolean isEvaluable() {
-        return (functionTupleFilter != null || column != null) && !conditionValues.isEmpty();
+        return (function != null || column != null) && !conditionValues.isEmpty();
     }
 
     @Override

@@ -18,16 +18,20 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import com.google.common.primitives.Primitives;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.metadata.filter.*;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
+import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
+import org.apache.kylin.metadata.filter.FunctionTupleFilter;
+import org.apache.kylin.metadata.filter.ITupleFilterTranslator;
+import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
+import com.google.common.primitives.Primitives;
 
 /**
  * Created by dongli on 11/11/15.
@@ -71,17 +75,11 @@ public class CoprocessorTupleFilterTranslator implements ITupleFilterTranslator 
         try {
             for (int i = dict.getMinId(); i <= dict.getMaxId(); i++) {
                 String dictVal = dict.getValueFromId(i);
-                if ((Boolean)functionTupleFilter.invokeFunction(dictVal)) {
+                if ((Boolean) functionTupleFilter.invokeFunction(dictVal)) {
                     translated.addChild(new ConstantTupleFilter(dictVal));
                 }
             }
-        } catch (IllegalAccessException e) {
-            logger.debug(e.getMessage());
-            return null;
-        } catch (InvocationTargetException e) {
-            logger.debug(e.getMessage());
-            return null;
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             logger.debug(e.getMessage());
             return null;
         }
@@ -89,11 +87,11 @@ public class CoprocessorTupleFilterTranslator implements ITupleFilterTranslator 
     }
 
     @SuppressWarnings("unchecked")
-    private TupleFilter translateCompareTupleFilter(CompareTupleFilter compTupleFilter){
-        if (compTupleFilter.getFunctionTupleFilter() == null)
+    private TupleFilter translateCompareTupleFilter(CompareTupleFilter compTupleFilter) {
+        if (compTupleFilter.getFunction() == null)
             return null;
 
-        FunctionTupleFilter functionTupleFilter = compTupleFilter.getFunctionTupleFilter();
+        FunctionTupleFilter functionTupleFilter = compTupleFilter.getFunction();
         if (!functionTupleFilter.isValid())
             return null;
 
@@ -109,55 +107,46 @@ public class CoprocessorTupleFilterTranslator implements ITupleFilterTranslator 
             for (int i = dict.getMinId(); i <= dict.getMaxId(); i++) {
                 String dictVal = dict.getValueFromId(i);
                 Object computedVal = functionTupleFilter.invokeFunction(dictVal);
-                Class clazz = Primitives.wrap(computedVal.getClass());
+                Class<?> clazz = Primitives.wrap(computedVal.getClass());
                 Object targetVal = compTupleFilter.getFirstValue();
                 if (Primitives.isWrapperType(clazz))
                     targetVal = clazz.cast(clazz.getDeclaredMethod("valueOf", String.class).invoke(null, compTupleFilter.getFirstValue()));
 
-                int comp = ((Comparable)computedVal).compareTo(targetVal);
+                int comp = ((Comparable<Object>) computedVal).compareTo(targetVal);
                 boolean compResult = false;
                 switch (compTupleFilter.getOperator()) {
-                    case EQ:
-                        compResult = comp == 0;
-                        break;
-                    case NEQ:
-                        compResult = comp != 0;
-                        break;
-                    case LT:
-                        compResult = comp < 0;
-                        break;
-                    case LTE:
-                        compResult = comp <= 0;
-                        break;
-                    case GT:
-                        compResult = comp > 0;
-                        break;
-                    case GTE:
-                        compResult = comp >= 0;
-                        break;
-                    case IN:
-                        compResult = compTupleFilter.getValues().contains(computedVal.toString());
-                        break;
-                    case NOTIN:
-                        compResult = !compTupleFilter.getValues().contains(computedVal.toString());
-                        break;
-                    default:
-                        break;
+                case EQ:
+                    compResult = comp == 0;
+                    break;
+                case NEQ:
+                    compResult = comp != 0;
+                    break;
+                case LT:
+                    compResult = comp < 0;
+                    break;
+                case LTE:
+                    compResult = comp <= 0;
+                    break;
+                case GT:
+                    compResult = comp > 0;
+                    break;
+                case GTE:
+                    compResult = comp >= 0;
+                    break;
+                case IN:
+                    compResult = compTupleFilter.getValues().contains(computedVal.toString());
+                    break;
+                case NOTIN:
+                    compResult = !compTupleFilter.getValues().contains(computedVal.toString());
+                    break;
+                default:
+                    break;
                 }
                 if (compResult) {
                     translated.addChild(new ConstantTupleFilter(dictVal));
                 }
             }
-        } catch (IllegalAccessException e) {
-            logger.debug(e.getMessage());
-            return null;
-        } catch (InvocationTargetException e) {
-            logger.debug(e.getMessage());
-            return null;
-        } catch (IllegalArgumentException e) {
-            logger.debug(e.getMessage());
-            return null;
-        } catch (NoSuchMethodException e) {
+        } catch (Exception e) {
             logger.debug(e.getMessage());
             return null;
         }

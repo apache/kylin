@@ -18,12 +18,12 @@
 
 package org.apache.kylin.metadata.filter.util;
 
-import com.google.common.collect.ImmutableMap;
-import org.apache.calcite.avatica.util.DateTimeUtils;
+import java.lang.reflect.Method;
+
 import org.apache.calcite.linq4j.tree.Types;
 import org.apache.calcite.runtime.SqlFunctions;
 
-import java.lang.reflect.Method;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Created by dongli on 11/13/15.
@@ -50,7 +50,7 @@ public enum BuiltInMethod {
         MAP = builder.build();
     }
 
-    BuiltInMethod(Class clazz, String methodName, Class... argumentTypes) {
+    BuiltInMethod(Class<?> clazz, String methodName, Class<?>... argumentTypes) {
         this.method = Types.lookupMethod(clazz, methodName, argumentTypes);
     }
 }
