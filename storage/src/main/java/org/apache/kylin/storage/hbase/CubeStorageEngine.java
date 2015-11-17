@@ -267,7 +267,8 @@ public class CubeStorageEngine implements IStorageEngine {
     }
 
     private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
-        if (filter == null) return;
+        if (filter == null)
+            return;
 
         if (filter instanceof ColumnTupleFilter) {
             collectColumns(((ColumnTupleFilter) filter).getColumn(), collector);
