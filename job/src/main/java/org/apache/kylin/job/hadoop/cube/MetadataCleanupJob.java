@@ -28,7 +28,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
@@ -115,9 +114,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
                     if (snapshotNames != null)
                         for (String snapshot : snapshotNames) {
                             if (!activeResourceList.contains(snapshot)) {
-                                RawResource res = getStore().getResource(snapshot);
-                                res.inputStream.close();
-                                if (isOlderThanThreshold(res.timestamp))
+                                long ts = getStore().getResourceTimestamp(snapshot);
+                                if (isOlderThanThreshold(ts))
                                     toDeleteResource.add(snapshot);
                             }
                         }
@@ -137,9 +135,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
                         if (dictionaries != null)
                             for (String dict : dictionaries)
                                 if (!activeResourceList.contains(dict)) {
-                                    RawResource res = getStore().getResource(dict);
-                                    res.inputStream.close();
-                                    if (isOlderThanThreshold(res.timestamp))
+                                    long ts = getStore().getResourceTimestamp(dict);
+                                    if (isOlderThanThreshold(ts))
                                         toDeleteResource.add(dict);
                                 }
                     }
