@@ -26,7 +26,6 @@
 
 
 dir=$(dirname ${0})
-source ${dir}/check-env.sh
 
 if [ $1 == "backup" ]
 then

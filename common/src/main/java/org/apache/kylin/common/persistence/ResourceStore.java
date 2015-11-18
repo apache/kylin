@@ -52,6 +52,9 @@ abstract public class ResourceStore {
     public static final String TABLE_EXD_RESOURCE_ROOT = "/table_exd";
     public static final String TABLE_RESOURCE_ROOT = "/table";
     public static final String HYBRID_RESOURCE_ROOT = "/hybrid";
+    public static final String EXECUTE_PATH_ROOT = "/execute";
+    public static final String EXECUTE_OUTPUT_ROOT = "/execute_output";
+
 
     private static ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
