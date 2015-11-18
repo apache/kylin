@@ -21,6 +21,7 @@ package org.apache.kylin.common.util;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * @author ysong1
@@ -30,7 +31,11 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
     static {
         if (useSandbox()) {
             try {
-                ClassUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
+                File sandboxFolder = new File("../examples/test_case_data/sandbox/");
+                if (sandboxFolder.exists() == false) {
+                    throw new IOException("The sandbox folder doesn't exist: " + sandboxFolder.getAbsolutePath());
+                }
+                ClassUtil.addClasspath(sandboxFolder.getAbsolutePath());
             } catch (Exception e) {
                 e.printStackTrace();
             }

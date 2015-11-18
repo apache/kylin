@@ -43,8 +43,6 @@ public class ExecutableDao {
     private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(ExecutableOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
     private static final ConcurrentHashMap<KylinConfig, ExecutableDao> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableDao>();
-    public static final String JOB_PATH_ROOT = "/execute";
-    public static final String JOB_OUTPUT_ROOT = "/execute_output";
 
     private ResourceStore store;
 
@@ -71,11 +69,11 @@ public class ExecutableDao {
     }
 
     private String pathOfJob(String uuid) {
-        return JOB_PATH_ROOT + "/" + uuid;
+        return ResourceStore.EXECUTE_PATH_ROOT + "/" + uuid;
     }
 
     private String pathOfJobOutput(String uuid) {
-        return JOB_OUTPUT_ROOT + "/" + uuid;
+        return ResourceStore.EXECUTE_OUTPUT_ROOT + "/" + uuid;
     }
 
     private ExecutablePO readJobResource(String path) throws IOException {
@@ -96,7 +94,7 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs() throws PersistentException {
         try {
-            ArrayList<String> resources = store.listResources(JOB_OUTPUT_ROOT);
+            ArrayList<String> resources = store.listResources(ResourceStore.EXECUTE_OUTPUT_ROOT);
             if (resources == null || resources.isEmpty()) {
                 return Collections.emptyList();
             }
@@ -112,7 +110,7 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
-            final List<String> jobIds = store.listResources(JOB_PATH_ROOT);
+            final List<String> jobIds = store.listResources(ResourceStore.EXECUTE_PATH_ROOT);
             if (jobIds == null || jobIds.isEmpty()) {
                 return Collections.emptyList();
             }
@@ -128,7 +126,7 @@ public class ExecutableDao {
 
     public List<String> getJobIds() throws PersistentException {
         try {
-            ArrayList<String> resources = store.listResources(JOB_PATH_ROOT);
+            ArrayList<String> resources = store.listResources(ResourceStore.EXECUTE_PATH_ROOT);
             if (resources == null) {
                 return Collections.emptyList();
             }
