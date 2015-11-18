@@ -186,6 +186,7 @@ public class CubeControllerTest extends ServiceTestBase {
         // no signature change
         newCubeDesc.setDescription("hello cube");
         req.setCubeDescData(JsonUtil.writeValueAsIndentString(newCubeDesc));
+        req.setCubeName(newCubeDesc.getName());
         CubeRequest res = cubeController.updateCubeDesc(req);
         Assert.assertTrue(res.getSuccessful());
 
@@ -203,6 +204,7 @@ public class CubeControllerTest extends ServiceTestBase {
         }
         req = new CubeRequest();
         req.setCubeDescData(JsonUtil.writeValueAsIndentString(newCubeDesc));
+        req.setCubeName(newCubeDesc.getName());
         req.setModelDescData(JsonUtil.writeValueAsIndentString(newCubeDesc.getModel()));
         res = cubeController.updateCubeDesc(req);
         Assert.assertTrue(res.getSuccessful());
