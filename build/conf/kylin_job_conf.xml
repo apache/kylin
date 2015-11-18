@@ -48,12 +48,6 @@
         <value>2000</value>
         <description>No description</description>
     </property>
-    
-    <property>
-        <name>mapreduce.job.reduce.slowstart.completedmaps</name>
-        <value>0.05</value>
-        <description>Fraction of the number of maps in the job which should be complete before reduces are scheduled for the job.</description>
-    </property>
 
     <property>
         <name>dfs.replication</name>

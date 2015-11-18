@@ -81,9 +81,10 @@
         <value>false</value>
     </property>
 
+    <!--the default value on hdp is 0.05, however for test environments we need to be conservative on resource -->
     <property>
         <name>mapreduce.job.reduce.slowstart.completedmaps</name>
-        <value>0.05</value>
+        <value>1</value>
     </property>
 
     <property>
