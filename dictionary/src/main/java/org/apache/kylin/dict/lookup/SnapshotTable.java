@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -50,7 +51,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     @JsonProperty("useDictionary")
     private boolean useDictionary;
 
-    private ArrayList<int[]> rowIndices;
+    private List<int[]> rowIndices = Collections.emptyList();
     private Dictionary<String> dict;
 
     // default constructor for JSON serialization
