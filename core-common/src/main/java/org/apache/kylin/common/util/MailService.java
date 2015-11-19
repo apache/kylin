@@ -41,15 +41,11 @@ public class MailService {
 
     private static final Log logger = LogFactory.getLog(MailService.class);
 
-    public MailService() {
-        this(KylinConfig.getInstanceFromEnv());
-    }
-
     public MailService(KylinConfig config) {
         this("true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "false")), config.getProperty(KylinConfig.MAIL_HOST, ""), config.getProperty(KylinConfig.MAIL_USERNAME, ""), config.getProperty(KylinConfig.MAIL_PASSWORD, ""), config.getProperty(KylinConfig.MAIL_SENDER, ""));
     }
 
-    public MailService(boolean enabled, String host, String username, String password, String sender) {
+    private MailService(boolean enabled, String host, String username, String password, String sender) {
         this.enabled = enabled;
         this.host = host;
         this.username = username;

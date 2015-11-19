@@ -199,26 +199,29 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         try {
             List<String> users = Lists.newArrayList();
             users.addAll(getNotifyList());
-            final String adminDls = KylinConfig.getInstanceFromEnv().getAdminDls();
+            final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            final String adminDls = kylinConfig.getAdminDls();
             if (null != adminDls) {
                 for (String adminDl : adminDls.split(",")) {
                     users.add(adminDl);
                 }
             }
             if (users.isEmpty()) {
+                logger.warn("no need to send email, user list is empty");
                 return;
             }
             final Pair<String, String> email = formatNotifications(context, state);
             if (email == null) {
+                logger.warn("no need to send email, content is null");
                 return;
             }
             logger.info("prepare to send email to:" + users);
             logger.info("job name:" + getName());
             logger.info("submitter:" + getSubmitter());
             logger.info("notify list:" + users);
-            new MailService().sendMail(users, email.getLeft(), email.getRight());
+            new MailService(kylinConfig).sendMail(users, email.getLeft(), email.getRight());
         } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
+            logger.error("error send email", e);
         }
     }
 
