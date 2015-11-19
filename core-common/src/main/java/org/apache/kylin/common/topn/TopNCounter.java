@@ -34,7 +34,7 @@ import java.util.*;
  *
  * @param <T> type of data in the stream to be summarized
  */
-public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
+public class TopNCounter<T> implements Iterable<Counter<T>> {
 
     public static final int EXTRA_SPACE_RATE = 50;
 
@@ -61,7 +61,6 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
      * @param item stream element (<i>e</i>)
      * @return false if item was already in the stream summary, true otherwise
      */
-    @Override
     public boolean offer(T item) {
         return offer(item, 1.0);
     }
@@ -72,7 +71,6 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
      * @param item stream element (<i>e</i>)
      * @return false if item was already in the stream summary, true otherwise
      */
-    @Override
     public boolean offer(T item, double incrementCount) {
         return offerReturnAll(item, incrementCount).getFirst();
     }
@@ -153,7 +151,6 @@ public class TopNCounter<T> implements ITopK<T>, Iterable<Counter<T>> {
 
     }
 
-    @Override
     public List<T> peek(int k) {
         List<T> topK = new ArrayList<T>(k);
 
