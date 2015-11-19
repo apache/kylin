@@ -42,7 +42,6 @@ public class HBaseConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
 
-    private static final Map<String, Configuration> ConfigCache = new ConcurrentHashMap<String, Configuration>();
     private static final Map<String, HConnection> ConnPool = new ConcurrentHashMap<String, HConnection>();
 
     static {
@@ -62,11 +61,7 @@ public class HBaseConnection {
 
     public static HConnection get(String url) {
         // find configuration
-        Configuration conf = ConfigCache.get(url);
-        if (conf == null) {
-            conf = HadoopUtil.newHBaseConfiguration(url);
-            ConfigCache.put(url, conf);
-        }
+        Configuration conf = HadoopUtil.getCurrentHBaseConfiguration();
 
         HConnection connection = ConnPool.get(url);
         try {
