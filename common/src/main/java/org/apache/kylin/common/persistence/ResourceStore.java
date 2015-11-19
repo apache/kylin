@@ -61,8 +61,8 @@ abstract public class ResourceStore {
     public static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
 
     static {
-        knownImpl.add(HBaseResourceStore.class);
         knownImpl.add(FileResourceStore.class);
+        knownImpl.add(HBaseResourceStore.class);
     }
 
     public static ResourceStore getStore(KylinConfig kylinConfig) {
