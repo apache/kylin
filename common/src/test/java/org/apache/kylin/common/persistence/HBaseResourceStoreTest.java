@@ -45,17 +45,11 @@ public class HBaseResourceStoreTest extends HBaseMetadataTestCase {
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
-
-        HadoopUtil.setCurrentConfiguration(null);
-        HadoopUtil.setCurrentHBaseConfiguration(null);
     }
 
     @After
     public void after() throws Exception {
         this.cleanupTestMetadata();
-
-        HadoopUtil.setCurrentConfiguration(null);
-        HadoopUtil.setCurrentHBaseConfiguration(null);
     }
 
     @Test
