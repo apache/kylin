@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -88,16 +89,10 @@ public class HBaseResourceStore extends ResourceStore {
         int cut = metadataUrl.indexOf('@');
         tableNameBase = cut < 0 ? DEFAULT_TABLE_NAME : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        if (!(StringUtils.isEmpty(hbaseUrl) || "hbase".equals(hbaseUrl)))
+            throw new IllegalArgumentException("to use hbase storage, pls set 'kylin.metadata.url=kylin_metadata@hbase' in kylin.properties");
 
         createHTableIfNeeded(getAllInOneTableName());
-
-        //        tableNameMap = new LinkedHashMap<String, String>();
-        //        for (Entry<String, String> entry : TABLE_SUFFIX_MAP.entrySet()) {
-        //            String pathPrefix = entry.getKey();
-        //            String tableName = tableNameBase + entry.getValue();
-        //            tableNameMap.put(pathPrefix, tableName);
-        //            createHTableIfNeeded(tableName);
-        //        }
 
     }
 
