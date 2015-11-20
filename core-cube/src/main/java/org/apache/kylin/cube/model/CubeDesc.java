@@ -50,7 +50,6 @@ import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -130,7 +129,6 @@ public class CubeDesc extends RootPersistentEntity {
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<TblColRef>();
 
-    private LinkedHashSet<TblColRef> measureDisplayColumns = new LinkedHashSet<TblColRef>();
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
 
@@ -414,7 +412,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
         return calculateSignature().equals(getSignature());
     }
-    
+
     public String calculateSignature() {
         MessageDigest md = null;
         try {
@@ -646,37 +644,12 @@ public class CubeDesc extends RootPersistentEntity {
                 m.setDependentMeasureRef(m.getDependentMeasureRef().toUpperCase());
             }
 
-            FunctionDesc f = m.getFunction();
-            f.setExpression(f.getExpression().toUpperCase());
-            f.initReturnDataType();
-
-            ParameterDesc p = f.getParameter();
-            p.normalizeColumnValue();
-
-            ArrayList<TblColRef> colRefs = Lists.newArrayList();
-            if (p.isColumnType()) {
-                for (String cName : p.getValue().split("\\s*,\\s*")) {
-                    ColumnDesc sourceColumn = factTable.findColumnByName(cName);
-                    TblColRef colRef = new TblColRef(sourceColumn);
-                    colRefs.add(colRef);
-                    allColumns.add(colRef);
-                }
-            }
-
-            // for topN
-            if (StringUtils.isNotEmpty(p.getDisplayColumn())) {
-                ColumnDesc sourceColumn = factTable.findColumnByName(p.getDisplayColumn());
-                TblColRef colRef = new TblColRef(sourceColumn);
-                colRefs.add(colRef);
-                measureDisplayColumns.add(colRef);
-                allColumns.add(colRef);
-            }
-
-            if (colRefs.isEmpty() == false)
-                p.setColRefs(colRefs);
+            FunctionDesc func = m.getFunction();
+            func.init(factTable);
+            allColumns.addAll(func.getParameter().getColRefs());
 
             // verify holistic count distinct as a dependent measure
-            if (m.getFunction().isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
+            if (func.isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
                 throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
             }
         }
@@ -844,24 +817,10 @@ public class CubeDesc extends RootPersistentEntity {
             }
         }
 
-        for (TblColRef colRef : measureDisplayColumns) {
-            if (!result.contains(colRef))
-                result.add(colRef);
+        for (MeasureDesc measure : measures) {
+            result.addAll(measure.getColumnsNeedDictionary());
         }
         return result;
     }
 
-    public LinkedHashSet<TblColRef> getMeasureDisplayColumns() {
-        return measureDisplayColumns;
-    }
-
-
-    public boolean hasMeasureUsingDictionary() {
-        for (MeasureDesc measureDesc : this.getMeasures()) {
-            if (measureDesc.getFunction().isTopN())
-                return true;
-        }
-
-        return false;
-    }
 }

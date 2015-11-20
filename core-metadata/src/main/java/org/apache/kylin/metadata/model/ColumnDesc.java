@@ -30,6 +30,7 @@ import java.io.Serializable;
  * Column Metadata from Source. All name should be uppercase.
  * <p/>
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ColumnDesc implements Serializable {
 

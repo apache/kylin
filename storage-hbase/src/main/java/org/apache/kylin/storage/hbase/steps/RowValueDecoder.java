@@ -140,4 +140,16 @@ public class RowValueDecoder implements Cloneable {
         return false;
     }
 
+    public static MeasureDesc findTopN(Collection<RowValueDecoder> rowValueDecoders) {
+        for (RowValueDecoder decoder : rowValueDecoders) {
+            for (int i = decoder.projectionIndex.nextSetBit(0); i >= 0; i = decoder.projectionIndex.nextSetBit(i + 1)) {
+                MeasureDesc measure = decoder.measures[i];
+                FunctionDesc func = measure.getFunction();
+                if (func.isTopN())
+                    return measure;
+            }
+        }
+        return null;
+    }
+
 }

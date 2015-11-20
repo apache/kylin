@@ -188,13 +188,13 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             FunctionDesc func = measureDesc.getFunction();
             if (func.isTopN()) {
                 int[] flatTableIdx = flatTableDesc.getMeasureColumnIndexes()[measureIdx];
-                int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
-                TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
-                logger.info("Building dictionary for " + displayCol);
-                List<byte[]> valueList = readValueList(flatTable, nColumns, displayColIdx);
-                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(displayCol.getType(), new IterableDictionaryValueEnumerator(valueList));
+                int literalColIdx = flatTableIdx[flatTableIdx.length - 1];
+                TblColRef literalCol = func.getTopNLiteralColumn();
+                logger.info("Building dictionary for " + literalCol);
+                List<byte[]> valueList = readValueList(flatTable, nColumns, literalColIdx);
+                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(literalCol.getType(), new IterableDictionaryValueEnumerator(valueList));
 
-                result.put(displayCol, dict);
+                result.put(literalCol, dict);
             }
         }
 

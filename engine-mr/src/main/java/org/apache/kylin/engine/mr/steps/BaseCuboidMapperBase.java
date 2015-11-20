@@ -57,7 +57,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     private Text outputKey = new Text();
     private Text outputValue = new Text();
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-    private Map<Integer, Dictionary<String>> topNDisplayColDictMap;
+    private Map<Integer, Dictionary<String>> topNLiteralColDictMap;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -92,21 +92,21 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         keyBytesBuf = new byte[colCount][];
 
-        initTopNDisplayColDictionaryMap();
+        initTopNLiteralColDictionaryMap();
         initNullBytes();
     }
     
-    private void initTopNDisplayColDictionaryMap() {
-        topNDisplayColDictMap = Maps.newHashMap();
+    private void initTopNLiteralColDictionaryMap() {
+        topNLiteralColDictMap = Maps.newHashMap();
         for (int measureIdx = 0; measureIdx < measures.length; measureIdx++) {
             MeasureDesc measureDesc = cubeDesc.getMeasures().get(measureIdx);
             FunctionDesc func = measureDesc.getFunction();
             if (func.isTopN()) {
                 int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
-                int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
-                TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
-                Dictionary<String> dictionary = (Dictionary<String>)cubeSegment.getDictionary(displayCol);
-                topNDisplayColDictMap.put(displayColIdx, dictionary);
+                int literalColIdx = flatTableIdx[flatTableIdx.length - 1];
+                TblColRef literalCol = func.getTopNLiteralColumn();
+                Dictionary<String> dictionary = (Dictionary<String>)cubeSegment.getDictionary(literalCol);
+                topNLiteralColDictMap.put(literalColIdx, dictionary);
             }
         }
     }
@@ -174,13 +174,13 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         else if(func.isTopN()) {
             // encode the key column with dict, and get the counter column;
             int keyColIndex = flatTableIdx[flatTableIdx.length - 1];
-            Dictionary<String> displayColDict = topNDisplayColDictMap.get(keyColIndex);
-            int keyColEncoded = displayColDict.getIdFromValue(Bytes.toString(splitBuffers[keyColIndex].value));
+            Dictionary<String> literalColDict = topNLiteralColDictMap.get(keyColIndex);
+            int keyColEncoded = literalColDict.getIdFromValue(Bytes.toString(splitBuffers[keyColIndex].value));
             valueBuf.clear();
-            valueBuf.putInt(displayColDict.getSizeOfId());
+            valueBuf.putInt(literalColDict.getSizeOfId());
             valueBuf.putInt(keyColEncoded);
             if (flatTableIdx.length == 1) {
-                // only displayCol, use 1.0 as counter
+                // only literalCol, use 1.0 as counter
                 valueBuf.putDouble(1.0);
             } else {
                 // get the counter column value

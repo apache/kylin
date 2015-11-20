@@ -35,19 +35,19 @@ import java.util.Map;
  */
 public final class InMemCubeBuilderUtils {
     
-    public static final HashMap<Integer, Dictionary<String>> createTopNDisplayColDictionaryMap(CubeDesc cubeDesc, CubeJoinedFlatTableDesc intermediateTableDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
+    public static final HashMap<Integer, Dictionary<String>> createTopNLiteralColDictionaryMap(CubeDesc cubeDesc, CubeJoinedFlatTableDesc intermediateTableDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         HashMap<Integer, Dictionary<String>> result = Maps.newHashMap();
         for (int measureIdx = 0; measureIdx < cubeDesc.getMeasures().size(); measureIdx++) {
             MeasureDesc measureDesc = cubeDesc.getMeasures().get(measureIdx);
             FunctionDesc func = measureDesc.getFunction();
             if (func.isTopN()) {
                 int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
-                int displayColIdx = flatTableIdx[flatTableIdx.length - 1];
-                TblColRef displayCol = func.getParameter().getColRefs().get(flatTableIdx.length - 1);
+                int literalColIdx = flatTableIdx[flatTableIdx.length - 1];
+                TblColRef literalCol = func.getTopNLiteralColumn();
                 @SuppressWarnings("unchecked")
-                Dictionary<String> dictionary = (Dictionary<String>) dictionaryMap.get(displayCol);
+                Dictionary<String> dictionary = (Dictionary<String>) dictionaryMap.get(literalCol);
                 //Preconditions.checkNotNull(dictionary);//FIXME disable check since dictionary is null when building empty segment
-                result.put(displayColIdx, dictionary);
+                result.put(literalColIdx, dictionary);
             }
         }
         return result;

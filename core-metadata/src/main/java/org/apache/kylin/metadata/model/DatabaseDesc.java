@@ -27,6 +27,7 @@ import java.util.Set;
 /**
  * @author xjiang
  */
+@SuppressWarnings("serial")
 public class DatabaseDesc implements Serializable {
     private String name;
 

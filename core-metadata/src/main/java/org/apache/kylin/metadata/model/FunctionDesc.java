@@ -18,11 +18,13 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -36,9 +38,9 @@ public class FunctionDesc {
     public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
     public static final String FUNC_TOP_N = "TOP_N";
 
-    public static final String PARAMTER_TYPE_CONSTANT = "constant";
+    public static final String PARAMETER_TYPE_CONSTANT = "constant";
     public static final String PARAMETER_TYPE_COLUMN = "column";
-    
+
     @JsonProperty("expression")
     private String expression;
     @JsonProperty("parameter")
@@ -48,6 +50,26 @@ public class FunctionDesc {
 
     private DataType returnDataType;
     private boolean isDimensionAsMetric = false;
+
+    public void init(TableDesc factTable) {
+        expression = expression.toUpperCase();
+        returnDataType = DataType.getInstance(returnType);
+
+        for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
+            p.setValue(p.getValue().toUpperCase());
+        }
+
+        ArrayList<TblColRef> colRefs = Lists.newArrayList();
+        for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
+            if (p.isColumnType()) {
+                ColumnDesc sourceColumn = factTable.findColumnByName(p.getValue());
+                TblColRef colRef = new TblColRef(sourceColumn);
+                colRefs.add(colRef);
+            }
+        }
+
+        parameter.setColRefs(colRefs);
+    }
 
     public String getRewriteFieldName() {
         if (isSum()) {
@@ -161,11 +183,6 @@ public class FunctionDesc {
 
     public void setReturnType(String returnType) {
         this.returnType = returnType;
-        this.initReturnDataType();
-    }
-
-    // Jackson does not provide object post-processing currently
-    public void initReturnDataType() {
         this.returnDataType = DataType.getInstance(returnType);
     }
 
@@ -225,13 +242,32 @@ public class FunctionDesc {
         return "FunctionDesc [expression=" + expression + ", parameter=" + parameter + ", returnType=" + returnType + "]";
     }
 
-    public boolean isCompatible(FunctionDesc another) {
-        if (another == null) {
+    // cols[0] is numeric (e.g. GMV), cols[1] is literal (e.g. SELLER)
+    public TblColRef getTopNNumericColumn() {
+        if (isTopN() == false)
+            throw new IllegalStateException();
+
+        return parameter.getColRefs().get(0);
+    }
+
+    // cols[0] is numeric (e.g. GMV), cols[1] is literal (e.g. SELLER)
+    public TblColRef getTopNLiteralColumn() {
+        if (isTopN() == false)
+            throw new IllegalStateException();
+
+        return parameter.getColRefs().get(1);
+    }
+
+    public boolean isTopNCompatibleSum(FunctionDesc sum) {
+        if (isTopN() == false)
+            throw new IllegalStateException();
+
+        if (sum == null) {
             return false;
         }
 
-        if (this.isTopN() && another.isSum()) {
-            if (this.getParameter().getColRefs().get(0).equals(another.getParameter().getColRefs().get(0)))
+        if (this.isTopN() && sum.isSum()) {
+            if (this.getParameter().getColRefs().get(0).equals(sum.getParameter().getColRefs().get(0)))
                 return true;
         }
 

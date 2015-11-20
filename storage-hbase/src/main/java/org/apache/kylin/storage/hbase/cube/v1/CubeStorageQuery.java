@@ -87,32 +87,20 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     private final CubeInstance cubeInstance;
     private final CubeDesc cubeDesc;
     private final String uuid;
-    private Collection<TblColRef> topNColumns;
 
     public CubeStorageQuery(CubeInstance cube) {
         this.cubeInstance = cube;
         this.cubeDesc = cube.getDescriptor();
         this.uuid = cube.getUuid();
-        this.topNColumns = Lists.newArrayList();
-        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
-            if (measureDesc.getFunction().isTopN()) {
-                List<TblColRef> colRefs = measureDesc.getFunction().getParameter().getColRefs();
-                topNColumns.add(colRefs.get(colRefs.size() - 1));
-            }
-        }
     }
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
 
-        // check whether this is a TopN query;
-        checkAndRewriteTopN(context, sqlDigest, returnTupleInfo);
+        // check whether this is a TopN query
+        checkAndRewriteTopN(sqlDigest);
 
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
-        TblColRef topNCol = extractTopNCol(groups);
-        if (topNCol != null)
-            groups.remove(topNCol);
-
         TupleFilter filter = sqlDigest.filter;
 
         // build dimension & metrics
@@ -156,15 +144,15 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         // check involved measures, build value decoder for each each family:column
         List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, context);
 
-        //memory hungry distinct count are pushed down to coprocessor, no need to set threshold any more
-        //setThreshold(dimensionsD, valueDecoders, context); // set cautious threshold to prevent out of memory
+        // memory hungry distinct count are pushed down to coprocessor, no need to set threshold any more
+        // setThreshold(dimensionsD, valueDecoders, context); // set cautious threshold to prevent out of memory
         setCoprocessor(groupsCopD, valueDecoders, context); // enable coprocessor if beneficial
         setLimit(filter, context);
 
         HConnection conn = HBaseConnection.get(context.getConnUrl());
 
-        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, topNCol, valueDecoders, context, returnTupleInfo);
-        //Notice we're passing filterD down to storage instead of flatFilter
+        // notice we're passing filterD down to storage instead of flatFilter
+        return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, valueDecoders, context, returnTupleInfo);
     }
 
     @Override
@@ -193,11 +181,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         for (TblColRef column : sqlDigest.allColumns) {
             // skip measure columns
             if (sqlDigest.metricColumns.contains(column)) {
-                continue;
-            }
-
-            // skip topN display col
-            if (topNColumns.contains(column)) {
                 continue;
             }
 
@@ -767,48 +750,33 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         ObserverEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
     }
 
-    private void checkAndRewriteTopN(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
-        Collection<TblColRef> groups = sqlDigest.groupbyColumns;
-        TblColRef topNDisplayCol = extractTopNCol(groups);
-        boolean hasTopN = topNDisplayCol != null;
-
-        if (hasTopN == false)
+    private void checkAndRewriteTopN(SQLDigest sqlDigest) {
+        FunctionDesc topnFunc = null;
+        TblColRef topnLiteralCol = null;
+        for (MeasureDesc measure : cubeDesc.getMeasures()) {
+            FunctionDesc func = measure.getFunction();
+            if (func.isTopN() && sqlDigest.groupbyColumns.contains(func.getTopNLiteralColumn())) {
+                topnFunc = func;
+                topnLiteralCol = func.getTopNLiteralColumn();
+            }
+        }
+        
+        // if TopN is not involved
+        if (topnFunc == null)
             return;
 
         if (sqlDigest.aggregations.size() != 1) {
             throw new IllegalStateException("When query with topN, only one metrics is allowed.");
         }
 
-        FunctionDesc functionDesc = sqlDigest.aggregations.iterator().next();
-        if (functionDesc.isSum() == false) {
+        FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
+        if (origFunc.isSum() == false) {
             throw new IllegalStateException("When query with topN, only SUM function is allowed.");
         }
 
-        FunctionDesc rewriteFunction = null;
-        // replace the SUM to the TopN function
-        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
-            if (measureDesc.getFunction().isCompatible(functionDesc) && topNDisplayCol.getName().equalsIgnoreCase(measureDesc.getFunction().getParameter().getDisplayColumn())) {
-                rewriteFunction = measureDesc.getFunction();
-                break;
-            }
-        }
-
-        if (rewriteFunction == null) {
-            throw new IllegalStateException("Didn't find topN measure for " + functionDesc);
-        }
-
-        sqlDigest.aggregations = Lists.newArrayList(rewriteFunction);
-        logger.info("Rewrite function " + functionDesc + " to " + rewriteFunction);
+        sqlDigest.aggregations = Lists.newArrayList(topnFunc);
+        sqlDigest.groupbyColumns.remove(topnLiteralCol);
+        sqlDigest.metricColumns.add(topnLiteralCol);
+        logger.info("Rewrite function " + origFunc + " to " + topnFunc);
     }
-
-    private TblColRef extractTopNCol(Collection<TblColRef> colRefs) {
-        for (TblColRef colRef : colRefs) {
-            if (topNColumns.contains(colRef)) {
-                return colRef;
-            }
-        }
-
-        return null;
-    }
-
 }

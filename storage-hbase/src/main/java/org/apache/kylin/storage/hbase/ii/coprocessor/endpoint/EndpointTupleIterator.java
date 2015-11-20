@@ -29,7 +29,6 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.google.protobuf.ByteString;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hadoop.hbase.client.HConnection;

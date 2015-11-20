@@ -18,8 +18,13 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.lang.StringUtils;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.common.KylinConfig;
@@ -43,17 +48,11 @@ import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.measure.MeasureCodec;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.common.collect.Lists;
 
 /**
  * @author ysong1, honma
@@ -76,28 +75,15 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private RowKeySplitter rowKeySplitter;
     private RowKeyEncoderProvider rowKeyEncoderProvider;
 
-    private HashMap<TblColRef, Boolean> dictsNeedMerging = new HashMap<TblColRef, Boolean>();
-    private List<MeasureDesc> measuresDescs;
+    private HashMap<TblColRef, Boolean> dimensionsNeedDict = new HashMap<TblColRef, Boolean>();
+
+    // for re-encode measures that use dictionary
+    private List<Integer> topNMeasureIdx;
+    private List<MeasureDesc> measureDescs;
     private MeasureCodec codec;
     private Object[] measureObjs;
-    private Integer[] measureIdxUsingDict;
     private ByteBuffer valueBuf;
     private Text outputValue;
-
-    private Boolean checkNeedMerging(TblColRef col) throws IOException {
-        Boolean ret = dictsNeedMerging.get(col);
-        if (ret != null)
-            return ret;
-        else {
-            ret = cubeDesc.getRowkey().isUseDictionary(col);
-            if (ret) {
-                String dictTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col).getTable();
-                ret = cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
-            }
-            dictsNeedMerging.put(col, ret);
-            return ret;
-        }
-    }
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -124,20 +110,16 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
         rowKeyEncoderProvider = new RowKeyEncoderProvider(mergedCubeSegment);
 
-        if (cubeDesc.hasMeasureUsingDictionary()) {
-            measuresDescs = cubeDesc.getMeasures();
-            codec = new MeasureCodec(measuresDescs);
-            measureObjs = new Object[measuresDescs.size()];
-            List<Integer> measuresUsingDict = Lists.newArrayList();
-            for (int i = 0; i < measuresDescs.size(); i++) {
-                if (measuresDescs.get(i).getFunction().isTopN()) {
-                    // so far only TopN uses dic
-                    measuresUsingDict.add(i);
-                }
+        measureDescs = cubeDesc.getMeasures();
+        codec = new MeasureCodec(measureDescs);
+        measureObjs = new Object[measureDescs.size()];
+        valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+        outputValue = new Text();
+        topNMeasureIdx = Lists.newArrayList();
+        for (int i = 0; i < measureDescs.size(); i++) {
+            if (measureDescs.get(i).getFunction().isTopN()) {
+                topNMeasureIdx.add(i);
             }
-            measureIdxUsingDict = measuresUsingDict.toArray(new Integer[measuresUsingDict.size()]);
-            valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-            outputValue = new Text();
         }
     }
 
@@ -231,60 +213,70 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         rowkeyEncoder.encode(new ByteArray(newKeyBodyBuf, 0, bufOffset), newKeyBuf);
         outputKey.set(newKeyBuf.array(), 0, fullKeySize);
 
-        // encode measure if it uses dictionary 
-        if (cubeDesc.hasMeasureUsingDictionary()) {
+        // re-encode measures if dictionary is used
+        if (topNMeasureIdx.size() > 0) {
             codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), measureObjs);
             reEncodeMeasure(measureObjs);
             valueBuf.clear();
             codec.encode(measureObjs, valueBuf);
             outputValue.set(valueBuf.array(), 0, valueBuf.position());
             value = outputValue;
-        } 
-            
+        }
+
         context.write(outputKey, value);
     }
 
+    private Boolean checkNeedMerging(TblColRef col) throws IOException {
+        Boolean ret = dimensionsNeedDict.get(col);
+        if (ret != null)
+            return ret;
+        else {
+            ret = cubeDesc.getRowkey().isUseDictionary(col);
+            if (ret) {
+                String dictTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col).getTable();
+                ret = cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
+            }
+            dimensionsNeedDict.put(col, ret);
+            return ret;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private void reEncodeMeasure(Object[] measureObjs) throws IOException, InterruptedException {
         int bufOffset = 0;
-        for (int idx : measureIdxUsingDict) {
+        for (int idx : topNMeasureIdx) {
             // only TopN measure uses dic
             TopNCounter<ByteArray> topNCounters = (TopNCounter<ByteArray>) measureObjs[idx];
 
-            MeasureDesc measureDesc = measuresDescs.get(idx);
-            String displayCol = measureDesc.getFunction().getParameter().getDisplayColumn().toUpperCase();
-            if (StringUtils.isNotEmpty(displayCol)) {
-                ColumnDesc sourceColumn = cubeDesc.getFactTableDesc().findColumnByName(displayCol);
-                TblColRef colRef = new TblColRef(sourceColumn);
-                DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-                Dictionary<?> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(colRef));
-                Dictionary<?> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(colRef));
+            MeasureDesc measureDesc = measureDescs.get(idx);
+            TblColRef colRef = measureDesc.getFunction().getTopNLiteralColumn();
+            DictionaryManager dictMgr = DictionaryManager.getInstance(config);
+            Dictionary<?> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(colRef));
+            Dictionary<?> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(colRef));
 
-                int topNSize = topNCounters.size();
-                while (sourceDict.getSizeOfValue() * topNSize > newKeyBodyBuf.length - bufOffset || //
-                        mergedDict.getSizeOfValue() * topNSize > newKeyBodyBuf.length - bufOffset || //
-                        mergedDict.getSizeOfId() * topNSize > newKeyBodyBuf.length - bufOffset) {
-                    byte[] oldBuf = newKeyBodyBuf;
-                    newKeyBodyBuf = new byte[2 * newKeyBodyBuf.length];
-                    System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
+            int topNSize = topNCounters.size();
+            while (sourceDict.getSizeOfValue() * topNSize > newKeyBodyBuf.length - bufOffset || //
+                    mergedDict.getSizeOfValue() * topNSize > newKeyBodyBuf.length - bufOffset || //
+                    mergedDict.getSizeOfId() * topNSize > newKeyBodyBuf.length - bufOffset) {
+                byte[] oldBuf = newKeyBodyBuf;
+                newKeyBodyBuf = new byte[2 * newKeyBodyBuf.length];
+                System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
+            }
+
+            for (Counter<ByteArray> c : topNCounters) {
+                int idInSourceDict = BytesUtil.readUnsigned(c.getItem().array(), c.getItem().offset(), c.getItem().length());
+                int idInMergedDict;
+                int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBodyBuf, bufOffset);
+                if (size < 0) {
+                    idInMergedDict = mergedDict.nullId();
+                } else {
+                    idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBodyBuf, bufOffset, size);
                 }
 
-                for (Counter<ByteArray> c : topNCounters) {
-                    int idInSourceDict = BytesUtil.readUnsigned(c.getItem().array(), c.getItem().offset(), c.getItem().length());
-                    int idInMergedDict;
-                    int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBodyBuf, bufOffset);
-                    if (size < 0) {
-                        idInMergedDict = mergedDict.nullId();
-                    } else {
-                        idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBodyBuf, bufOffset, size);
-                    }
-
-                    BytesUtil.writeUnsigned(idInMergedDict, newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());
-                    c.getItem().set(newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());
-                    bufOffset += mergedDict.getSizeOfId();
-                }
+                BytesUtil.writeUnsigned(idInMergedDict, newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());
+                c.getItem().set(newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());
+                bufOffset += mergedDict.getSizeOfId();
             }
         }
-
     }
-    
 }
