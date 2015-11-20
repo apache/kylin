@@ -156,7 +156,11 @@
         "expression": "COUNT_DISTINCT",
         "parameter": {
           "type": "column",
-          "value": "LSTG_FORMAT_NAME,SELLER_ID"
+          "value": "LSTG_FORMAT_NAME",
+          "next_parameter": {
+            "type": "column",
+            "value": "SELLER_ID"
+          }
         },
         "returntype": "hllc(10)"
       },
@@ -170,7 +174,10 @@
         "parameter": {
           "type": "column",
           "value": "PRICE",
-          "displaycolumn": "SELLER_ID"
+          "next_parameter": {
+            "type": "column",
+            "value": "SELLER_ID"
+          }
         },
         "returntype": "topn(100)"
       },

@@ -18,6 +18,9 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,6 +39,15 @@ public class MeasureDesc {
     private FunctionDesc function;
     @JsonProperty("dependent_measure_ref")
     private String dependentMeasureRef;
+
+    public List<TblColRef> getColumnsNeedDictionary() {
+        // measure could store literal values using dictionary encoding to save space, like TopN
+        if (function.isTopN()) {
+            return Collections.singletonList(function.getTopNLiteralColumn());
+        } else {
+            return Collections.emptyList();
+        }
+    }
 
     public int getId() {
         return id;

@@ -19,10 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -33,15 +30,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ParameterDesc {
 
-    public static final String COLUMN_TYPE = "column";
-
     @JsonProperty("type")
     private String type;
     @JsonProperty("value")
     private String value;
     
-    @JsonProperty("displaycolumn")
-    private String displayColumn;
+    @JsonProperty("next_parameter")
+    private ParameterDesc nextParameter;
 
     private List<TblColRef> colRefs;
 
@@ -65,14 +60,6 @@ public class ParameterDesc {
         this.value = value;
     }
 
-    public String getDisplayColumn() {
-        return displayColumn;
-    }
-
-    public void setDisplayColumn(String displayColumn) {
-        this.displayColumn = displayColumn;
-    }
-
     public List<TblColRef> getColRefs() {
         return colRefs;
     }
@@ -80,19 +67,17 @@ public class ParameterDesc {
     public void setColRefs(List<TblColRef> colRefs) {
         this.colRefs = colRefs;
     }
-
-    public boolean isColumnType() {
-        return COLUMN_TYPE.equals(type);
+    
+    public ParameterDesc getNextParameter() {
+        return nextParameter;
     }
 
-    public void normalizeColumnValue() {
-        if (isColumnType()) {
-            String values[] = value.split("\\s*,\\s*");
-            for (int i = 0; i < values.length; i++)
-                values[i] = values[i].toUpperCase();
-            Arrays.sort(values);
-            value = StringUtils.join(values, ",");
-        }
+    public void setNextParameter(ParameterDesc nextParameter) {
+        this.nextParameter = nextParameter;
+    }
+
+    public boolean isColumnType() {
+        return FunctionDesc.PARAMETER_TYPE_COLUMN.equals(type);
     }
 
     @Override
@@ -102,7 +87,7 @@ public class ParameterDesc {
 
         ParameterDesc that = (ParameterDesc) o;
 
-        if (displayColumn != null ? !displayColumn.equals(that.displayColumn) : that.displayColumn != null) return false;
+        if (nextParameter != null ? !nextParameter.equals(that.nextParameter) : that.nextParameter != null) return false;
         if (type != null ? !type.equals(that.type) : that.type != null) return false;
         if (value != null ? !value.equals(that.value) : that.value != null) return false;
 
@@ -113,13 +98,13 @@ public class ParameterDesc {
     public int hashCode() {
         int result = type != null ? type.hashCode() : 0;
         result = 31 * result + (value != null ? value.hashCode() : 0);
-        result = 31 * result + (displayColumn != null ? displayColumn.hashCode() : 0);
+        result = 31 * result + (nextParameter != null ? nextParameter.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "ParameterDesc [type=" + type + ", value=" + value + ", displayColumn=" + displayColumn + "]";
+        return "ParameterDesc [type=" + type + ", value=" + value + ", nextParam=" + nextParameter + "]";
     }
 
 }

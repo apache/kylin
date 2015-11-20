@@ -210,7 +210,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 if (!column.isInnerColumn()) {
                     parameter = new ParameterDesc();
                     parameter.setValue(column.getName());
-                    parameter.setType("column");
+                    parameter.setType(FunctionDesc.PARAMETER_TYPE_COLUMN);
                     parameter.setColRefs(Arrays.asList(column));
                 }
             }

@@ -47,18 +47,18 @@ public class InMemCubeBuilderInputConverter {
     private final MeasureCodec measureCodec;
     private final int measureCount;
     private final ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-    private final Map<Integer, Dictionary<String>> topNDisplayColDictMap;
+    private final Map<Integer, Dictionary<String>> topNLiteralColDictMap;
     private final GTInfo gtInfo;
     
 
-    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, Map<Integer, Dictionary<String>> topNDisplayColDictMap, GTInfo gtInfo) {
+    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, Map<Integer, Dictionary<String>> topNLiteralColDictMap, GTInfo gtInfo) {
         this.cubeDesc = cubeDesc;
         this.gtInfo = gtInfo;
         this.intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
         this.measureCount = cubeDesc.getMeasures().size();
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
         this.measureCodec = new MeasureCodec(cubeDesc.getMeasures());
-        this.topNDisplayColDictMap = Preconditions.checkNotNull(topNDisplayColDictMap, "topNDisplayColDictMap cannot be null");
+        this.topNLiteralColDictMap = Preconditions.checkNotNull(topNLiteralColDictMap, "topNLiteralColDictMap cannot be null");
     }
     
     public final GTRecord convert(List<String> row) {
@@ -102,13 +102,13 @@ public class InMemCubeBuilderInputConverter {
             } else if (function.isTopN()) {
                 // encode the key column with dict, and get the counter column;
                 int keyColIndex = flatTableIdx[flatTableIdx.length - 1];
-                Dictionary<String> displayColDict = topNDisplayColDictMap.get(keyColIndex);
-                int keyColEncoded = displayColDict.getIdFromValue(row.get(keyColIndex));
+                Dictionary<String> literalColDict = topNLiteralColDictMap.get(keyColIndex);
+                int keyColEncoded = literalColDict.getIdFromValue(row.get(keyColIndex));
                 valueBuf.clear();
-                valueBuf.putInt(displayColDict.getSizeOfId());
+                valueBuf.putInt(literalColDict.getSizeOfId());
                 valueBuf.putInt(keyColEncoded);
                 if (flatTableIdx.length == 1) {
-                    // only displayCol, use 1.0 as counter
+                    // only literalCol, use 1.0 as counter
                     valueBuf.putDouble(1.0);
                 } else {
                     // get the counter column value

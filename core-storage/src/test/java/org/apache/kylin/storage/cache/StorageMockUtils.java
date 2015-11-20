@@ -117,7 +117,6 @@ public class StorageMockUtils {
         return compareFilter;
     }
 
-    @SuppressWarnings("unused")
     public static TupleFilter buildAndFilter(List<TblColRef> columns) {
         CompareTupleFilter compareFilter1 = buildFilter1(columns.get(0));
         CompareTupleFilter compareFilter2 = buildFilter2(columns.get(1));
@@ -127,7 +126,6 @@ public class StorageMockUtils {
         return andFilter;
     }
 
-    @SuppressWarnings("unused")
     public static TupleFilter buildOrFilter(List<TblColRef> columns) {
         CompareTupleFilter compareFilter1 = buildFilter1(columns.get(0));
         CompareTupleFilter compareFilter2 = buildFilter2(columns.get(1));

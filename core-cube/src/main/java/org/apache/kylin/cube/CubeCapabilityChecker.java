@@ -132,15 +132,15 @@ public class CubeCapabilityChecker {
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
             if (measure.getFunction().isTopN()) {
                 List<TblColRef> cols = measure.getFunction().getParameter().getColRefs();
-                TblColRef displayCol = cols.get(cols.size() - 1);
-                if (digest.groupbyColumns.contains(displayCol)) {
-                    dimensionColumnsCopy.remove(displayCol);
+                TblColRef literalCol = cols.get(cols.size() - 1);
+                if (digest.groupbyColumns.contains(literalCol)) {
+                    dimensionColumnsCopy.remove(literalCol);
                     if (isMatchedWithDimensions(dimensionColumnsCopy, cube)) {
-                        if (measure.getFunction().isCompatible(onlyFunction)) {
+                        if (measure.getFunction().isTopNCompatibleSum(onlyFunction)) {
                             return true;
                         }
                     }
-                    dimensionColumnsCopy.add(displayCol);
+                    dimensionColumnsCopy.add(literalCol);
                 }
             }
         }

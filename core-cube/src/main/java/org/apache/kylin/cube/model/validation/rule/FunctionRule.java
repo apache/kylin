@@ -91,7 +91,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
 
             if (StringUtils.equalsIgnoreCase(FunctionDesc.PARAMETER_TYPE_COLUMN, type)) {
                 validateColumnParameter(context, cube, value);
-            } else if (StringUtils.equals(FunctionDesc.PARAMTER_TYPE_CONSTANT, type)) {
+            } else if (StringUtils.equals(FunctionDesc.PARAMETER_TYPE_CONSTANT, type)) {
                 validateCostantParameter(context, cube, value);
             }
             validateReturnType(context, cube, func);
