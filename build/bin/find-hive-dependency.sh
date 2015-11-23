@@ -55,7 +55,7 @@ else
     hcatalog_home=${HCAT_HOME}
 fi
 
-hcatalog=`find ${hcatalog_home} -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
+hcatalog=`find -L ${hcatalog_home} -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
 
 if [ -z "$hcatalog" ]
 then
@@ -64,7 +64,7 @@ then
 fi
 
 
-hive_lib=`find "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
+hive_lib=`find -L "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
 hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}
 echo "hive dependency: $hive_dependency"
 export hive_dependency
