@@ -184,7 +184,7 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     private long getTimestamp(Result r) {
-        if (r == null) {
+        if (r == null || r.getValue(B_FAMILY, B_COLUMN_TS) == null) {
             return 0;
         } else {
             return Bytes.toLong(r.getValue(B_FAMILY, B_COLUMN_TS));
