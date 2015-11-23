@@ -69,8 +69,6 @@ public class HBaseResourceStore extends ResourceStore {
         TABLE_SUFFIX_MAP.put(CUBE_RESOURCE_ROOT + "/", "_cube");
         TABLE_SUFFIX_MAP.put(DICT_RESOURCE_ROOT + "/", "_dict");
         TABLE_SUFFIX_MAP.put("/invertedindex/", "_invertedindex");
-        TABLE_SUFFIX_MAP.put(JOB_PATH_ROOT + "/", "_job");
-        TABLE_SUFFIX_MAP.put(JOB_OUTPUT_PATH_ROOT + "/", "_job_output");
         TABLE_SUFFIX_MAP.put(PROJECT_RESOURCE_ROOT + "/", "_proj");
         TABLE_SUFFIX_MAP.put(SNAPSHOT_RESOURCE_ROOT + "/", "_table_snapshot");
         TABLE_SUFFIX_MAP.put("", ""); // DEFAULT CASE

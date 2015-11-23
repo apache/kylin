@@ -46,15 +46,15 @@ abstract public class ResourceStore {
     public static final String II_DESC_RESOURCE_ROOT = "/invertedindex_desc";
     public static final String DATA_MODEL_DESC_RESOURCE_ROOT = "/model_desc";
     public static final String DICT_RESOURCE_ROOT = "/dict";
-    public static final String JOB_PATH_ROOT = "/job";
-    public static final String JOB_OUTPUT_PATH_ROOT = "/job_output";
     public static final String PROJECT_RESOURCE_ROOT = "/project";
     public static final String SNAPSHOT_RESOURCE_ROOT = "/table_snapshot";
     public static final String TABLE_EXD_RESOURCE_ROOT = "/table_exd";
     public static final String TABLE_RESOURCE_ROOT = "/table";
     public static final String HYBRID_RESOURCE_ROOT = "/hybrid";
+    public static final String EXECUTE_RESOURCE_ROOT = "/execute";
+    public static final String EXECUTE_OUTPUT_RESOURCE_ROOT = "/execute_output";
     public static final String STREAMING_RESOURCE_ROOT = "/streaming";
-    public static final String KAfKA_RESOURCE_ROOT = "/kafka";
+    public static final String KAFKA_RESOURCE_ROOT = "/kafka";
     public static final String STREAMING_OUTPUT_RESOURCE_ROOT = "/streaming_output";
     public static final String CUBE_STATISTICS_ROOT = "/cube_statistics";
 

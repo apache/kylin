@@ -31,6 +31,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.job.constant.JobStatusEnum;
+import org.apache.kylin.job.dao.ExecutableDao;
+import org.apache.kylin.job.dao.ExecutableOutputPO;
+import org.apache.kylin.job.dao.ExecutablePO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +55,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     private KylinConfig config = null;
 
     public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000l; // 2 days
+    public static final long TIME_THREADSHOLD_FOR_JOB = 30 * 24 * 3600 * 1000l; // 30 days
 
     /*
      * (non-Javadoc)
@@ -141,9 +146,26 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
                             }
                 }
         }
+        
+        // delete old and completed jobs
+        ExecutableDao executableDao = ExecutableDao.getInstance(KylinConfig.getInstanceFromEnv());
+        List<ExecutablePO> allExecutable = executableDao.getJobs();
+        for (ExecutablePO executable : allExecutable) {
+            long lastModified = executable.getLastModified();
+            ExecutableOutputPO output = executableDao.getJobOutput(executable.getUuid());
+            if (System.currentTimeMillis() - lastModified > TIME_THREADSHOLD_FOR_JOB && (output.getStatus().equals(JobStatusEnum.FINISHED.toString()) || output.getStatus().equals(JobStatusEnum.DISCARDED.toString()))) {
+                toDeleteResource.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid());
+                toDeleteResource.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid());
+
+                for (ExecutablePO task : executable.getTasks()) {
+                    toDeleteResource.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + task.getUuid());
+                    toDeleteResource.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid());
+                }
+            }
+        }
 
         if (toDeleteResource.size() > 0) {
-            logger.info("The following resources have no reference, will be cleaned from metadata store: \n");
+            logger.info("The following resources have no reference or is too old, will be cleaned from metadata store: \n");
 
             for (String s : toDeleteResource) {
                 logger.info(s);

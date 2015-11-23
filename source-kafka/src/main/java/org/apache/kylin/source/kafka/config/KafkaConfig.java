@@ -89,7 +89,7 @@ public class KafkaConfig extends RootPersistentEntity {
     }
 
     public static String getKafkaResourcePath(String streamingName) {
-        return ResourceStore.KAfKA_RESOURCE_ROOT + "/" + streamingName + MetadataConstants.FILE_SURFIX;
+        return ResourceStore.KAFKA_RESOURCE_ROOT + "/" + streamingName + MetadataConstants.FILE_SURFIX;
     }
 
     public List<KafkaClusterConfig> getKafkaClusterConfigs() {
