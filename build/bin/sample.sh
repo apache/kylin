@@ -1,7 +1,7 @@
 #!/bin/bash
 dir=$(dirname ${0})
 source ${dir}/check-env.sh
-job_jar=`find ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
+job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
 echo "Going to create sample tables in hive..."
 cd ${KYLIN_HOME}/sample_cube/data
 hive -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }

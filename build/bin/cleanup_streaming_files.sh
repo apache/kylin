@@ -8,7 +8,7 @@ fi
 
 cd $KYLIN_HOME/logs
 
-for pidfile in `find . -name "$1_1*"`
+for pidfile in `find -L . -name "$1_1*"`
 do
     pidfile=`echo "$pidfile" | cut -c 3-`
     echo "pidfile:$pidfile"
