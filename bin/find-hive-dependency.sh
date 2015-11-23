@@ -40,7 +40,7 @@ done
 # in some versions of hive hcatalog is not in hive's classpath, find it separately
 if [ -z "$HCAT_HOME" ]
 then
-    echo "HCAT_HOME not found, try to find hcatalog path from hive home"
+    echo "HCAT_HOME not found, try to find hcatalog path from hadoop home"
     hadoop_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
     if [ -d "${hadoop_home}/hive-hcatalog" ]; then
       hcatalog_home=${hadoop_home}/hive-hcatalog
@@ -53,7 +53,7 @@ else
     hcatalog_home=${HCAT_HOME}
 fi
 
-hcatalog=`find ${hcatalog_home} -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
+hcatalog=`find -L ${hcatalog_home} -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
 
 if [ -z "$hcatalog" ]
 then
@@ -62,7 +62,7 @@ then
 fi
 
 
-hive_lib=`find "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
+hive_lib=`find -L "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
 hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}
 echo "hive dependency: $hive_dependency"
 export hive_dependency
