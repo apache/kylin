@@ -140,7 +140,7 @@ public class KafkaConfigManager {
     }
 
     private String formatStreamingConfigPath(String name) {
-        return ResourceStore.KAfKA_RESOURCE_ROOT + "/" + name + ".json";
+        return ResourceStore.KAFKA_RESOURCE_ROOT + "/" + name + ".json";
     }
 
     public boolean createKafkaConfig(String name, KafkaConfig config) {
@@ -217,11 +217,11 @@ public class KafkaConfigManager {
 
     private void reloadAllKafkaConfig() throws IOException {
         ResourceStore store = getStore();
-        logger.info("Reloading Kafka Metadata from folder " + store.getReadableResourcePath(ResourceStore.KAfKA_RESOURCE_ROOT));
+        logger.info("Reloading Kafka Metadata from folder " + store.getReadableResourcePath(ResourceStore.KAFKA_RESOURCE_ROOT));
 
         kafkaMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.KAfKA_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.KAFKA_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             KafkaConfig kafkaConfig;
             try {
