@@ -2,9 +2,9 @@ package org.apache.kylin.gridtable;
 
 import java.nio.ByteBuffer;
 
+import org.apache.kylin.aggregation.DataTypeSerializer;
+import org.apache.kylin.aggregation.MeasureAggregator;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 /**

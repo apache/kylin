@@ -23,20 +23,21 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import org.apache.kylin.aggregation.basic.StringSerializer;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.apache.kylin.metadata.measure.LongMutable;
-import org.apache.kylin.metadata.measure.serializer.StringSerializer;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 public class SimpleInvertedIndexTest {

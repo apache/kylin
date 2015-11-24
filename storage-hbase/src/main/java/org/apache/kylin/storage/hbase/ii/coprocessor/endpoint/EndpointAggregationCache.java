@@ -21,7 +21,7 @@ package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.aggregation.MeasureAggregator;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggregationCache;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
 

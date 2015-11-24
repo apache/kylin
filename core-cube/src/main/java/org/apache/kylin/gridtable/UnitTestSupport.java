@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.gridtable.GTInfo.Builder;
-import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.model.DataType;
 
 public class UnitTestSupport {

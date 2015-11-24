@@ -23,11 +23,11 @@ import java.util.BitSet;
 import java.util.Collection;
 
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.kylin.aggregation.MeasureCodec;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.DoubleMutable;
+import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.metadata.measure.DoubleMutable;
-import org.apache.kylin.metadata.measure.LongMutable;
-import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
