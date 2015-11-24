@@ -39,6 +39,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.Log4jConfigurer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -252,12 +253,15 @@ public class KylinConfig implements Serializable {
      * $KYLIN_CONF/kylin.properties 2. Check the $KYLIN_HOME/conf/kylin.properties
      */
     private static KylinConfig loadKylinConfig() {
+        Log4jConfigurer.initLogger();
+
         InputStream is = getKylinPropertiesAsInputSteam();
         if (is == null) {
             throw new IllegalArgumentException("Failed to load kylin config");
         }
         KylinConfig config = new KylinConfig();
         config.reloadKylinConfig(is);
+
         return config;
     }
 
