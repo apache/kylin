@@ -19,26 +19,22 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -92,14 +88,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             TblColRef col = columnList.get((int) key.get());
 
             HashSet<ByteArray> set = new HashSet<ByteArray>();
-            
-            Text textValue = null;
-            Iterator<Text> valueItr = values.iterator();
-            while (valueItr.hasNext()) {
-                textValue = valueItr.next();
+            int count = 0;
+            for (Text textValue : values) {
                 ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
                 set.add(value);
-                if (set.size() >= 5000000) { // output when count reach 5 Million 
+                count++;
+                if (count % 10000 == 0 && MemoryBudgetController.getSystemAvailMB() < 100) {
                     outputDistinctValues(col, set, context);
                     set.clear();
                 }
