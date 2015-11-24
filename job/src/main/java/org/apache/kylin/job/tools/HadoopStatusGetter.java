@@ -80,16 +80,25 @@ public class HadoopStatusGetter {
                 client.executeMethod(get);
 
                 String redirect = null;
-                Header h = get.getResponseHeader("Refresh");
+                Header h = get.getResponseHeader("Location");
                 if (h != null) {
-                    String s = h.getValue();
-                    int cut = s.indexOf("url=");
-                    if (cut >= 0) {
-                        redirect = s.substring(cut + 4);
-                        
-                        if (isValidURL(redirect) == false) {
-                            log.info("Get invalid redirect url, skip it: " + redirect);
-                            continue;
+                    redirect = h.getValue();
+                    if (isValidURL(redirect) == false) {
+                        log.info("Get invalid redirect url, skip it: " + redirect);
+                        continue;
+                    }
+                } else {
+                    h = get.getResponseHeader("Refresh");
+                    if (h != null) {
+                        String s = h.getValue();
+                        int cut = s.indexOf("url=");
+                        if (cut >= 0) {
+                            redirect = s.substring(cut + 4);
+
+                            if (isValidURL(redirect) == false) {
+                                log.info("Get invalid redirect url, skip it: " + redirect);
+                                continue;
+                            }
                         }
                     }
                 }
