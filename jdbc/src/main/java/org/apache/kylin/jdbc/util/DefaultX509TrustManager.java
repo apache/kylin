@@ -30,6 +30,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author xduo
@@ -38,7 +39,7 @@ import org.slf4j.Logger;
 public class DefaultX509TrustManager implements X509TrustManager {
 
     /** Log object for this class. */
-    private static Logger logger = DefaultLoggerFactory.getLogger(DefaultX509TrustManager.class);
+    private static Logger logger = LoggerFactory.getLogger(DefaultX509TrustManager.class);
     private X509TrustManager standardTrustManager = null;
 
     /**

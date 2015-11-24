@@ -32,12 +32,13 @@ import org.apache.commons.httpclient.params.HttpConnectionParams;
 import org.apache.commons.httpclient.protocol.ControllerThreadSocketFactory;
 import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFactory {
     /** Log object for this class. */
-    private static Logger logger = DefaultLoggerFactory.getLogger(DefaultSslProtocolSocketFactory.class);
+    private static Logger logger = LoggerFactory.getLogger(DefaultSslProtocolSocketFactory.class);
     private SSLContext sslcontext = null;
 
     /**
