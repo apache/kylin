@@ -36,12 +36,12 @@ import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.Meta.CursorFactory;
 import org.apache.calcite.avatica.Meta.Signature;
 import org.apache.calcite.avatica.UnregisteredDriver;
-import org.apache.kylin.jdbc.util.DefaultLoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KylinConnection extends AvaticaConnection {
 
-    private static final Logger logger = DefaultLoggerFactory.getLogger(KylinConnection.class);
+    private static final Logger logger = LoggerFactory.getLogger(KylinConnection.class);
 
     private final String baseUrl;
     private final String project;
