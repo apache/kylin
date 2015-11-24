@@ -91,6 +91,16 @@ public class CubeController extends BasicController {
         return cubeService.getCubes(cubeName, projectName, (null == limit) ? 20 : limit, offset);
     }
 
+    @RequestMapping(value = "/get_cube", method = { RequestMethod.GET })
+    @ResponseBody
+    public CubeInstance getCube(@RequestParam(value = "cubeName", required = true) String cubeName) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+        return cube;
+    }
+
     /**
      * Get hive SQL of the cube
      *
