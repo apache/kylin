@@ -85,6 +85,7 @@ public class HadoopStatusGetter {
                     redirect = h.getValue();
                     if (isValidURL(redirect) == false) {
                         log.info("Get invalid redirect url, skip it: " + redirect);
+                        Thread.sleep(1000l);
                         continue;
                     }
                 } else {
@@ -97,6 +98,7 @@ public class HadoopStatusGetter {
 
                             if (isValidURL(redirect) == false) {
                                 log.info("Get invalid redirect url, skip it: " + redirect);
+                                Thread.sleep(1000l);
                                 continue;
                             }
                         }
@@ -110,6 +112,8 @@ public class HadoopStatusGetter {
                     url = redirect;
                     log.debug("Job " + mrJobId + " check redirect url " + url + ".\n");
                 }
+            } catch (InterruptedException e) {
+                log.error(e.getMessage());
             } finally {
                 get.releaseConnection();
             }
