@@ -18,15 +18,16 @@
 package org.apache.kylin.cube.inmemcubing;
 
 import com.google.common.base.Preconditions;
+
+import org.apache.kylin.aggregation.MeasureCodec;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.metadata.measure.LongMutable;
-import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 

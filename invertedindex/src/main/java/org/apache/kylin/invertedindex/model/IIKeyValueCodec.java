@@ -32,7 +32,7 @@ import org.apache.kylin.invertedindex.index.ColumnValueContainer;
 import org.apache.kylin.invertedindex.index.CompressedValueContainer;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
-import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
+import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 
 import com.google.common.base.Preconditions;

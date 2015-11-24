@@ -27,8 +27,8 @@ import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.measure.DoubleMutable;
-import org.apache.kylin.metadata.measure.LongMutable;
+import org.apache.kylin.common.util.DoubleMutable;
+import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 

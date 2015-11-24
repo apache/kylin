@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
+import org.apache.kylin.aggregation.DataTypeSerializer;
 
 /**
  */
