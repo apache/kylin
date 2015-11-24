@@ -53,16 +53,16 @@ import org.apache.kylin.jdbc.json.SQLResponseStub;
 import org.apache.kylin.jdbc.json.StatementParameter;
 import org.apache.kylin.jdbc.json.TableMetaStub;
 import org.apache.kylin.jdbc.json.TableMetaStub.ColumnMetaStub;
-import org.apache.kylin.jdbc.util.DefaultLoggerFactory;
 import org.apache.kylin.jdbc.util.DefaultSslProtocolSocketFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class KylinClient implements IRemoteClient {
 
-    private static final Logger logger = DefaultLoggerFactory.getLogger(KylinClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(KylinClient.class);
 
     private final KylinConnection conn;
     private final Properties connProps;
