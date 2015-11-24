@@ -79,16 +79,27 @@ public class HadoopStatusGetter {
                 client.executeMethod(get);
 
                 String redirect = null;
-                Header h = get.getResponseHeader("Refresh");
+                Header h = get.getResponseHeader("Location");
                 if (h != null) {
-                    String s = h.getValue();
-                    int cut = s.indexOf("url=");
-                    if (cut >= 0) {
-                        redirect = s.substring(cut + 4);
+                    redirect = h.getValue();
+                    if (isValidURL(redirect) == false) {
+                        logger.info("Get invalid redirect url, skip it: " + redirect);
+                        Thread.sleep(1000l);
+                        continue;
+                    }
+                } else {
+                    h = get.getResponseHeader("Refresh");
+                    if (h != null) {
+                        String s = h.getValue();
+                        int cut = s.indexOf("url=");
+                        if (cut >= 0) {
+                            redirect = s.substring(cut + 4);
 
-                        if (isValidURL(redirect) == false) {
-                            logger.info("Get invalid redirect url, skip it: " + redirect);
-                            continue;
+                            if (isValidURL(redirect) == false) {
+                                logger.info("Get invalid redirect url, skip it: " + redirect);
+                                Thread.sleep(1000l);
+                                continue;
+                            }
                         }
                     }
                 }
@@ -100,6 +111,8 @@ public class HadoopStatusGetter {
                     url = redirect;
                     logger.debug("Job " + mrJobId + " check redirect url " + url + ".\n");
                 }
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage());
             } finally {
                 get.releaseConnection();
             }
@@ -132,4 +145,5 @@ public class HadoopStatusGetter {
 
         return false;
     }
+    
 }
