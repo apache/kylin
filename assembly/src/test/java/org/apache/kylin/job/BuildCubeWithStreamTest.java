@@ -100,30 +100,7 @@ public class BuildCubeWithStreamTest {
 
     @AfterClass
     public static void afterClass() throws Exception {
-        backup();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
-    }
-
-    private static int cleanupOldStorage() throws Exception {
-        String[] args = { "--delete", "true" };
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        return exitCode;
-    }
-
-    private static void backup() throws Exception {
-        int exitCode = cleanupOldStorage();
-        if (exitCode == 0) {
-            String exportHTables = System.getProperty("kylinExportHTables");
-            if (Boolean.parseBoolean(exportHTables) == true) {
-                exportHBaseData();
-            }
-        }
-    }
-
-    private static void exportHBaseData() throws IOException {
-        ExportHBaseData export = new ExportHBaseData();
-        export.exportTables();
-        export.tearDown();
     }
 
     @Test
