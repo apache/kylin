@@ -36,16 +36,16 @@ import org.apache.kylin.jdbc.json.SQLResponseStub;
 import org.apache.kylin.jdbc.json.StatementParameter;
 import org.apache.kylin.jdbc.json.TableMetaStub;
 import org.apache.kylin.jdbc.json.TableMetaStub.ColumnMetaStub;
+import org.apache.kylin.jdbc.util.DefaultLoggerFactory;
 import org.apache.kylin.jdbc.util.DefaultSslProtocolSocketFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class KylinClient implements IRemoteClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(KylinClient.class);
+    private static final Logger logger = DefaultLoggerFactory.getLogger(KylinClient.class);
 
     private final KylinConnection conn;
     private final Properties connProps;
@@ -62,6 +62,102 @@ public class KylinClient implements IRemoteClient {
         if (isSSL()) {
             Protocol.registerProtocol("https", new Protocol("https", (ProtocolSocketFactory) new DefaultSslProtocolSocketFactory(), 443));
         }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static Class convertType(int sqlType) {
+        Class result = Object.class;
+
+        switch (sqlType) {
+        case Types.CHAR:
+        case Types.VARCHAR:
+        case Types.LONGVARCHAR:
+            result = String.class;
+            break;
+        case Types.NUMERIC:
+        case Types.DECIMAL:
+            result = BigDecimal.class;
+            break;
+        case Types.BIT:
+            result = Boolean.class;
+            break;
+        case Types.TINYINT:
+            result = Byte.class;
+            break;
+        case Types.SMALLINT:
+            result = Short.class;
+            break;
+        case Types.INTEGER:
+            result = Integer.class;
+            break;
+        case Types.BIGINT:
+            result = Long.class;
+            break;
+        case Types.REAL:
+        case Types.FLOAT:
+        case Types.DOUBLE:
+            result = Double.class;
+            break;
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.LONGVARBINARY:
+            result = Byte[].class;
+            break;
+        case Types.DATE:
+            result = Date.class;
+            break;
+        case Types.TIME:
+            result = Time.class;
+            break;
+        case Types.TIMESTAMP:
+            result = Timestamp.class;
+            break;
+        }
+
+        return result;
+    }
+
+    public static Object wrapObject(String value, int sqlType) {
+        if (null == value) {
+            return null;
+        }
+
+        switch (sqlType) {
+        case Types.CHAR:
+        case Types.VARCHAR:
+        case Types.LONGVARCHAR:
+            return value;
+        case Types.NUMERIC:
+        case Types.DECIMAL:
+            return new BigDecimal(value);
+        case Types.BIT:
+            return Boolean.parseBoolean(value);
+        case Types.TINYINT:
+            return Byte.valueOf(value);
+        case Types.SMALLINT:
+            return Short.valueOf(value);
+        case Types.INTEGER:
+            return Integer.parseInt(value);
+        case Types.BIGINT:
+            return Long.parseLong(value);
+        case Types.FLOAT:
+            return Float.parseFloat(value);
+        case Types.REAL:
+        case Types.DOUBLE:
+            return Double.parseDouble(value);
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.LONGVARBINARY:
+            return value.getBytes();
+        case Types.DATE:
+            return Date.valueOf(value);
+        case Types.TIME:
+            return Time.valueOf(value);
+        case Types.TIMESTAMP:
+            return Timestamp.valueOf(value);
+        }
+
+        return value;
     }
 
     private boolean isSSL() {
@@ -269,102 +365,6 @@ public class KylinClient implements IRemoteClient {
 
     private IOException asIOException(HttpMethodBase method) throws IOException {
         return new IOException(method + " failed, error code " + method.getStatusCode() + " and response: " + method.getResponseBodyAsString());
-    }
-
-    @SuppressWarnings("rawtypes")
-    public static Class convertType(int sqlType) {
-        Class result = Object.class;
-
-        switch (sqlType) {
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.LONGVARCHAR:
-            result = String.class;
-            break;
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            result = BigDecimal.class;
-            break;
-        case Types.BIT:
-            result = Boolean.class;
-            break;
-        case Types.TINYINT:
-            result = Byte.class;
-            break;
-        case Types.SMALLINT:
-            result = Short.class;
-            break;
-        case Types.INTEGER:
-            result = Integer.class;
-            break;
-        case Types.BIGINT:
-            result = Long.class;
-            break;
-        case Types.REAL:
-        case Types.FLOAT:
-        case Types.DOUBLE:
-            result = Double.class;
-            break;
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-            result = Byte[].class;
-            break;
-        case Types.DATE:
-            result = Date.class;
-            break;
-        case Types.TIME:
-            result = Time.class;
-            break;
-        case Types.TIMESTAMP:
-            result = Timestamp.class;
-            break;
-        }
-
-        return result;
-    }
-
-    public static Object wrapObject(String value, int sqlType) {
-        if (null == value) {
-            return null;
-        }
-
-        switch (sqlType) {
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.LONGVARCHAR:
-            return value;
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            return new BigDecimal(value);
-        case Types.BIT:
-            return Boolean.parseBoolean(value);
-        case Types.TINYINT:
-            return Byte.valueOf(value);
-        case Types.SMALLINT:
-            return Short.valueOf(value);
-        case Types.INTEGER:
-            return Integer.parseInt(value);
-        case Types.BIGINT:
-            return Long.parseLong(value);
-        case Types.FLOAT:
-            return Float.parseFloat(value);
-        case Types.REAL:
-        case Types.DOUBLE:
-            return Double.parseDouble(value);
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-            return value.getBytes();
-        case Types.DATE:
-            return Date.valueOf(value);
-        case Types.TIME:
-            return Time.valueOf(value);
-        case Types.TIMESTAMP:
-            return Timestamp.valueOf(value);
-        }
-
-        return value;
     }
 
     @Override
