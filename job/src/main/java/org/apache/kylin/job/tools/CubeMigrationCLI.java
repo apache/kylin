@@ -76,7 +76,7 @@ public class CubeMigrationCLI {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        if (args.length != 6) {
+        if (args.length != 7) {
             usage();
             System.exit(1);
         }
@@ -123,7 +123,7 @@ public class CubeMigrationCLI {
         renameFoldersInHdfs(cube);
         changeHtableHost(cube);
         addCubeIntoProject(cubeName, projectName);
-        if (Boolean.valueOf(copyAcl).booleanValue() == true) {
+        if (Boolean.parseBoolean(copyAcl) == true) {
             copyACL(cube);
         }
 
