@@ -256,6 +256,50 @@ public class CubeController extends BasicController {
         }
     }
 
+    @RequestMapping(value = "/{cubeName}/clone", method = { RequestMethod.PUT })
+    @ResponseBody
+    public CubeInstance cloneCube(@PathVariable String cubeName,@RequestBody CubeRequest cubeRequest) {
+        String targetCubeName = cubeRequest.getCubeName();
+        String targetModelName = cubeRequest.getModelDescData();
+        String project = cubeRequest.getProject();
+
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+
+        CubeDesc cubeDesc = cube.getDescriptor();
+
+        String modelName = cubeDesc.getModelName();
+        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+
+        DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
+
+        modelDesc.setName(targetModelName);
+        modelDesc.setLastModified(0);
+        modelDesc.setUuid(UUID.randomUUID().toString());
+        try {
+            metaManager.createDataModelDesc(modelDesc);
+        } catch (IOException e) {
+            throw new InternalErrorException("failed to clone DataModelDesc",e);
+        }
+
+        cubeDesc.setName(targetCubeName);
+        cubeDesc.setLastModified(0);
+        cubeDesc.setUuid(UUID.randomUUID().toString());
+        cubeDesc.setModelName(targetModelName);
+        CubeInstance newCube = null;
+        try {
+            newCube = cubeService.createCubeAndDesc(targetCubeName,project,cubeDesc);
+        } catch (IOException e) {
+            throw new InternalErrorException("failed to clone DataModelDesc",e);
+        }
+
+        return newCube;
+
+    }
+
+
     @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance enableCube(@PathVariable String cubeName) {

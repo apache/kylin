@@ -354,6 +354,21 @@ KylinApp
 
     };
 
+    $scope.cloneCube = function(cube){
+      $scope.loadDetail(cube).then(function () {
+        $modal.open({
+          templateUrl: 'cubeClone.html',
+          controller: cubeCloneCtrl,
+          windowClass:"clone-cube-window",
+          resolve: {
+            cube: function () {
+              return cube;
+            }
+          }
+        });
+      });
+    }
+
     $scope.cubeEdit = function (cube) {
       $location.path("cubes/edit/" + cube.name);
     }
@@ -375,6 +390,58 @@ KylinApp
       });
     }
   });
+
+var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, MetaModel, SweetAlert,ProjectModel, loadingRequest) {
+  $scope.projectModel = ProjectModel;
+
+  $scope.targetObj={
+    cubeName:cube.descriptor+"_clone",
+    modelName:cube.model.name+"_clone"
+  }
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.cloneCube = function(){
+
+    $scope.cubeRequest = {
+      cubeName:$scope.targetObj.cubeName,
+      modelDescData:$scope.targetObj.modelName,
+      project:$scope.projectModel.selectedProject
+    }
+
+    SweetAlert.swal({
+      title: '',
+      text: 'Are you sure to clone the cube? ',
+      type: '',
+      showCancelButton: true,
+      confirmButtonColor: '#DD6B55',
+      confirmButtonText: "Yes",
+      closeOnConfirm: true
+    }, function (isConfirm) {
+      if (isConfirm) {
+
+        loadingRequest.show();
+        CubeService.clone({cubeId: cube.name}, $scope.cubeRequest, function (result) {
+          loadingRequest.hide();
+          SweetAlert.swal('Success!', 'Clone cube successfully', 'success');
+          location.reload();
+        }, function (e) {
+          loadingRequest.hide();
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+          }
+        });
+      }
+    });
+  }
+
+}
 
 var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, MetaModel, buildType, SweetAlert, loadingRequest) {
   $scope.cube = cube;
