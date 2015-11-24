@@ -20,7 +20,6 @@ package org.apache.kylin.storage.hbase.steps;
 
 import java.io.File;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
@@ -31,12 +30,10 @@ import org.apache.kylin.common.util.ClassUtil;
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
 
     static {
-        if (useSandbox()) {
-            try {
-                ClassUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try {
+            ClassUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -51,13 +48,7 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
     }
 
     public static void staticCreateTestMetadata() throws Exception {
-        if (useSandbox()) {
-            staticCreateTestMetadata(SANDBOX_TEST_DATA);
-        } else {
-            staticCreateTestMetadata(MINICLUSTER_TEST_DATA);
-            HBaseMiniclusterHelper.startupMinicluster();
-        }
-
+        staticCreateTestMetadata(SANDBOX_TEST_DATA);
     }
 
     public static void staticCreateTestMetadata(String kylinConfigFolder) {
@@ -67,15 +58,6 @@ public class HBaseMetadataTestCase extends AbstractKylinTestCase {
         if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
             System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
 
-    }
-
-    public static boolean useSandbox() {
-        String useSandbox = System.getProperty("useSandbox");
-        if (StringUtils.isEmpty(useSandbox)) {
-            return true;
-        }
-
-        return Boolean.parseBoolean(useSandbox);
     }
 
 }
