@@ -18,24 +18,20 @@
 
 package org.apache.kylin.storage.hbase.util;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.base.Preconditions;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.*;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -54,10 +50,14 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p/>
@@ -81,20 +81,20 @@ public class CubeMigrationCLI {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        if (args.length != 6) {
+        if (args.length != 7) {
             usage();
             System.exit(1);
         }
 
-        moveCube(args[0], args[1], args[2], args[3], args[4], args[5]);
+        moveCube(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
     }
 
     private static void usage() {
-        System.out.println("Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName overwriteIfExists realExecute");
-        System.out.println(" srcKylinConfigUri: The KylinConfig of the cube’s source \n" + "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" + "cubeName: the name of cube to be migrated. \n" + "projectName: The target project in the target environment.(Make sure it exist) \n" + "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" + "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
-    }
+        System.out.println("Usage: CubeMigrationCLI srcKylinConfigUri dstKylinConfigUri cubeName projectName copyAclOrNot overwriteIfExists  realExecute");
+        System.out.println(" srcKylinConfigUri: The KylinConfig of the cube’s source \n" + "dstKylinConfigUri: The KylinConfig of the cube’s new home \n" + "cubeName: the name of cube to be migrated. \n" + "projectName: The target project in the target environment.(Make sure it exist) \n" + "copyAclOrNot: true or false: whether copy cube ACL to target environment. \n" + "overwriteIfExists: overwrite cube if it already exists in the target environment. \n" + "realExecute: if false, just print the operations to take, if true, do the real migration. \n");
+  }
 
-    public static void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
+    public static void moveCube(KylinConfig srcCfg, KylinConfig dstCfg, String cubeName, String projectName, String copyAcl, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
 
         srcConfig = srcCfg;
         srcStore = ResourceStore.getStore(srcConfig);
@@ -127,6 +127,9 @@ public class CubeMigrationCLI {
         renameFoldersInHdfs(cube);
         changeHtableHost(cube);
         addCubeIntoProject(cubeName, projectName, cube.getModelName());
+        if (Boolean.parseBoolean(copyAcl) == true) {
+            copyACL(cube);
+        }
 
         if (realExecute.equalsIgnoreCase("true")) {
             doOpts();
@@ -135,8 +138,8 @@ public class CubeMigrationCLI {
         }
     }
 
-    public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
-        moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName, projectName, overwriteIfExists, realExecute);
+    public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
+        moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName, projectName, copyAcl, overwriteIfExists, realExecute);
     }
 
     private static String checkAndGetHbaseUrl() {
@@ -182,6 +185,10 @@ public class CubeMigrationCLI {
         for (CubeSegment segment : cube.getSegments()) {
             operations.add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
         }
+    }
+
+    private static void copyACL(CubeInstance cube) {
+        operations.add(new Opt(OptType.COPY_ACL, new Object[] { cube.getUuid() }));
     }
 
     private static void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists) throws IOException {
@@ -233,7 +240,7 @@ public class CubeMigrationCLI {
     }
 
     private static enum OptType {
-        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST
+        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST, COPY_ACL
     }
 
     private static class Opt {
@@ -384,6 +391,28 @@ public class CubeMigrationCLI {
                 project.getModels().add(modelName);
             dstStore.putResource(projectResPath, project, projectSerializer);
             logger.info("Project instance for " + projectName + " is corrected");
+            break;
+        }
+        case COPY_ACL: {
+            String cubeId = (String) opt.params[0];
+            HTableInterface srcAclHtable = null;
+            HTableInterface destAclHtable = null;
+            try {
+                srcAclHtable = HBaseConnection.get(srcConfig.getMetadataUrl()).getTable(srcConfig.getMetadataUrlPrefix() + "_acl");
+                destAclHtable = HBaseConnection.get(dstConfig.getMetadataUrl()).getTable(dstConfig.getMetadataUrlPrefix() + "_acl");
+
+                Result result = srcAclHtable.get(new Get(Bytes.toBytes(cubeId)));
+
+                for (Cell cell : result.listCells()) {
+                    Put put = new Put(Bytes.toBytes(cubeId));
+                    put.add(CellUtil.cloneFamily(cell), CellUtil.cloneQualifier(cell), CellUtil.cloneValue(cell));
+                    destAclHtable.put(put);
+                }
+                destAclHtable.flushCommits();
+            } finally {
+                IOUtils.closeQuietly(srcAclHtable);
+                IOUtils.closeQuietly(destAclHtable);
+            }
             break;
         }
         }
