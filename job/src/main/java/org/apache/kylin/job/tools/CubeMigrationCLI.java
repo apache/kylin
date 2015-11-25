@@ -18,11 +18,6 @@
 
 package org.apache.kylin.job.tools;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -51,7 +46,10 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jdo.identity.ObjectIdentity;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by honma on 9/3/14.
@@ -126,6 +124,7 @@ public class CubeMigrationCLI {
         if (Boolean.parseBoolean(copyAcl) == true) {
             copyACL(cube);
         }
+        purgeAndDisable(cubeName); // this should be the last action
 
         if (realExecute.equalsIgnoreCase("true")) {
             doOpts();
@@ -178,7 +177,7 @@ public class CubeMigrationCLI {
             operations.add(new Opt(OptType.CHANGE_HTABLE_HOST, new Object[] { segment.getStorageLocationIdentifier() }));
         }
     }
-    
+
     private static void copyACL(CubeInstance cube) {
         operations.add(new Opt(OptType.COPY_ACL, new Object[] { cube.getUuid() }));
     }
@@ -209,6 +208,11 @@ public class CubeMigrationCLI {
         operations.add(new Opt(OptType.ADD_INTO_PROJECT, new Object[] { cubeName, projectName }));
     }
 
+
+    private static void purgeAndDisable(String cubeName) throws IOException {
+        operations.add(new Opt(OptType.PURGE_AND_DISABLE, new Object[] { cubeName }));
+    }
+
     private static void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, List<String> dictAndSnapshot) throws IOException {
 
         CubeDesc cubeDesc = cube.getDescriptor();
@@ -227,7 +231,7 @@ public class CubeMigrationCLI {
     }
 
     private static enum OptType {
-        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST, COPY_ACL
+        COPY_FILE_IN_META, COPY_DICT_OR_SNAPSHOT, RENAME_FOLDER_IN_HDFS, ADD_INTO_PROJECT, CHANGE_HTABLE_HOST, COPY_ACL, PURGE_AND_DISABLE
     }
 
     private static class Opt {
@@ -418,6 +422,16 @@ public class CubeMigrationCLI {
             }
             break;
         }
+        case PURGE_AND_DISABLE:{
+            String cubeName = (String) opt.params[0];
+            String cubeResPath = CubeInstance.concatResourcePath(cubeName);
+            Serializer<CubeInstance> cubeSerializer = new JsonSerializer<CubeInstance>(CubeInstance.class);
+            CubeInstance cube = srcStore.getResource(cubeResPath, CubeInstance.class, cubeSerializer);
+            cube.getSegments().clear();
+            cube.setStatus(RealizationStatusEnum.DISABLED);
+            srcStore.putResource(cubeResPath, cube, cubeSerializer);
+            logger.info("Cube " + cubeName + " is purged and disabled in " + srcConfig.getMetadataUrl());
+        }
         }
     }
 
@@ -456,6 +470,23 @@ public class CubeMigrationCLI {
         }
         case ADD_INTO_PROJECT: {
             logger.info("Undo for ADD_INTO_PROJECT is ignored");
+            break;
+        }
+        case COPY_ACL: {
+            String cubeId = (String) opt.params[0];
+            HTableInterface destAclHtable = null;
+            try {
+                destAclHtable = HBaseConnection.get(dstConfig.getMetadataUrl()).getTable(dstConfig.getMetadataUrlPrefix() + "_acl");
+
+                destAclHtable.delete(new Delete(Bytes.toBytes(cubeId)));
+                destAclHtable.flushCommits();
+            } finally {
+                IOUtils.closeQuietly(destAclHtable);
+            }
+            break;
+        }
+        case PURGE_AND_DISABLE: {
+            logger.info("Undo for PURGE_AND_DISABLE is not supported");
             break;
         }
         }
