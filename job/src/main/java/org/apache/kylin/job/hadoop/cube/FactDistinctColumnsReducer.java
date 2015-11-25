@@ -29,6 +29,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinReducer;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -38,9 +39,7 @@ import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author yangli9
@@ -69,15 +68,34 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
         TblColRef col = columnList.get(key.get());
 
         HashSet<ByteArray> set = new HashSet<ByteArray>();
+        int count = 0;
         for (Text textValue : values) {
             ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
             set.add(value);
+            count++;
+            if (count % 10000 == 0 && MemoryBudgetController.getSystemAvailMB() < 100) {
+                outputDistinctValues(col, set, context);
+                set.clear();
+            }
         }
 
-        Configuration conf = context.getConfiguration();
-        FileSystem fs = FileSystem.get(conf);
-        String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
-        FSDataOutputStream out = fs.create(new Path(outputPath, col.getName()));
+        if (set.isEmpty() == false) {
+            outputDistinctValues(col, set, context);
+        }
+
+    }
+
+    private void outputDistinctValues(TblColRef col, Set<ByteArray> set, Context context) throws IOException {
+        final Configuration conf = context.getConfiguration();
+        final FileSystem fs = FileSystem.get(conf);
+        final String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
+        final Path outputFile = new Path(outputPath, col.getName());
+        FSDataOutputStream out;
+        if (fs.exists(outputFile)) {
+            out = fs.append(outputFile);
+        } else {
+            out = fs.create(outputFile);
+        }
 
         try {
             for (ByteArray value : set) {
@@ -87,7 +105,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
         } finally {
             out.close();
         }
-
     }
 
 }
