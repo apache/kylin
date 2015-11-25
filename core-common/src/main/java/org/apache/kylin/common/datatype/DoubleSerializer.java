@@ -16,14 +16,11 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.aggregation.basic;
+package org.apache.kylin.common.datatype;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.aggregation.DataTypeSerializer;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.DoubleMutable;
-import org.apache.kylin.metadata.model.DataType;
 
 /**
  */

@@ -26,8 +26,8 @@ import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
 
+import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
 import org.junit.Test;
 

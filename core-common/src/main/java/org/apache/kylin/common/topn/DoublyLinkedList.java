@@ -18,8 +18,6 @@
 
 package org.apache.kylin.common.topn;
 
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
 
 /**
  * Modified from DoublyLinkedList.java in https://github.com/addthis/stream-lib

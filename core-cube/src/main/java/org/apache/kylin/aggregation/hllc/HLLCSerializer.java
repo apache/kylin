@@ -21,9 +21,9 @@ package org.apache.kylin.aggregation.hllc;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.aggregation.DataTypeSerializer;
+import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.common.datatype.DataTypeSerializer;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.metadata.model.DataType;
 
 /**
  * @author yangli9

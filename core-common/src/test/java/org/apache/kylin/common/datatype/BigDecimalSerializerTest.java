@@ -1,12 +1,10 @@
-package org.apache.kylin.aggregation.basic;
+package org.apache.kylin.common.datatype;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.aggregation.basic.BigDecimalSerializer;
-import org.apache.kylin.metadata.model.DataType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -18,7 +16,7 @@ public class BigDecimalSerializerTest {
 
     @BeforeClass
     public static void beforeClass() {
-        bigDecimalSerializer = new BigDecimalSerializer(DataType.getInstance("decimal"));
+        bigDecimalSerializer = new BigDecimalSerializer(DataType.getType("decimal"));
     }
 
     @Test

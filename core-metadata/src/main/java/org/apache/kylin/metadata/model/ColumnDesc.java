@@ -18,13 +18,14 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.io.Serializable;
 
 /**
  * Column Metadata from Source. All name should be uppercase.
@@ -72,7 +73,7 @@ public class ColumnDesc implements Serializable {
     public void setDatatype(String datatype) {
         //logger.info("setting datatype to " + datatype);
         this.datatype = datatype;
-        type = DataType.getInstance(datatype);
+        type = DataType.getType(datatype);
     }
 
     public String getId() {
@@ -132,7 +133,7 @@ public class ColumnDesc implements Serializable {
         if (id != null)
             zeroBasedIndex = Integer.parseInt(id) - 1;
 
-        DataType normalized = DataType.getInstance(datatype);
+        DataType normalized = DataType.getType(datatype);
         if (normalized == null) {
             this.setDatatype(null);
         } else {

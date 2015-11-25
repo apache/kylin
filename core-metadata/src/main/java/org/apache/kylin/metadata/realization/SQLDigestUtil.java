@@ -1,12 +1,12 @@
 package org.apache.kylin.metadata.realization;
 
+import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Function;
@@ -52,9 +52,9 @@ public class SQLDigestUtil {
     //ts column type differentiate
     private static String formatTimeStr(DataType type, long ts) {
         String ret;
-        if (type == DataType.getInstance("date")) {
+        if (type == DataType.getType("date")) {
             ret = DateFormat.formatToDateStr(ts);
-        } else if (type == DataType.getInstance("long")) {
+        } else if (type == DataType.getType("long")) {
             ret = String.valueOf(ts);
         } else {
             throw new IllegalArgumentException("Illegal type for partition column " + type);

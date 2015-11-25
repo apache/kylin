@@ -16,39 +16,20 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.aggregation.basic;
+package org.apache.kylin.aggregation.topn;
 
-import org.apache.kylin.aggregation.MeasureAggregator;
-import org.apache.kylin.common.datatype.LongMutable;
+import org.apache.kylin.aggregation.AggregationType;
+import org.apache.kylin.aggregation.IAggregationFactory;
+import org.apache.kylin.metadata.model.FunctionDesc;
 
-/**
- */
-@SuppressWarnings("serial")
-public class LongMinAggregator extends MeasureAggregator<LongMutable> {
-
-    LongMutable min = null;
+public class TopNAggregationFactory implements IAggregationFactory {
 
     @Override
-    public void reset() {
-        min = null;
-    }
-
-    @Override
-    public void aggregate(LongMutable value) {
-        if (min == null)
-            min = new LongMutable(value.get());
-        else if (min.get() > value.get())
-            min.set(value.get());
-    }
-
-    @Override
-    public LongMutable getState() {
-        return min;
-    }
-
-    @Override
-    public int getMemBytesEstimate() {
-        return guessLongMemBytes();
+    public AggregationType createAggregationType(String funcName, String dataType) {
+        if (FunctionDesc.FUNC_TOP_N.equalsIgnoreCase(funcName) == false)
+            throw new IllegalArgumentException();
+        
+        return new TopNAggregation(dataType);
     }
 
 }

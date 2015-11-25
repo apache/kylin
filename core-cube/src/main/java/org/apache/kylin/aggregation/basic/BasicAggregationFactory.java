@@ -18,37 +18,14 @@
 
 package org.apache.kylin.aggregation.basic;
 
-import org.apache.kylin.aggregation.MeasureAggregator;
-import org.apache.kylin.common.datatype.LongMutable;
+import org.apache.kylin.aggregation.AggregationType;
+import org.apache.kylin.aggregation.IAggregationFactory;
 
-/**
- */
-@SuppressWarnings("serial")
-public class LongMinAggregator extends MeasureAggregator<LongMutable> {
-
-    LongMutable min = null;
+public class BasicAggregationFactory implements IAggregationFactory {
 
     @Override
-    public void reset() {
-        min = null;
-    }
-
-    @Override
-    public void aggregate(LongMutable value) {
-        if (min == null)
-            min = new LongMutable(value.get());
-        else if (min.get() > value.get())
-            min.set(value.get());
-    }
-
-    @Override
-    public LongMutable getState() {
-        return min;
-    }
-
-    @Override
-    public int getMemBytesEstimate() {
-        return guessLongMemBytes();
+    public AggregationType createAggregationType(String funcName, String dataType) {
+        return new BasicAggregation(funcName, dataType);
     }
 
 }

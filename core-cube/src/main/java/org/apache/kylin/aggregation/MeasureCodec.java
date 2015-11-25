@@ -21,6 +21,7 @@ package org.apache.kylin.aggregation;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 
+import org.apache.kylin.common.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**

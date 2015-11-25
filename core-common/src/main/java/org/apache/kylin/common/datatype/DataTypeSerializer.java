@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.aggregation;
+package org.apache.kylin.common.datatype;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -24,15 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.kylin.aggregation.basic.BigDecimalSerializer;
-import org.apache.kylin.aggregation.basic.DateTimeSerializer;
-import org.apache.kylin.aggregation.basic.DoubleSerializer;
-import org.apache.kylin.aggregation.basic.LongSerializer;
-import org.apache.kylin.aggregation.basic.StringSerializer;
-import org.apache.kylin.aggregation.hllc.HLLCSerializer;
-import org.apache.kylin.aggregation.topn.TopNCounterSerializer;
 import org.apache.kylin.common.util.BytesSerializer;
-import org.apache.kylin.metadata.model.DataType;
 
 import com.google.common.collect.Maps;
 
@@ -40,7 +32,6 @@ import com.google.common.collect.Maps;
  * @author yangli9
  * 
  * Note: the implementations MUST be thread-safe.
- * 
  */
 abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
@@ -60,25 +51,24 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
         impl.put("datetime", DateTimeSerializer.class);
         impl.put("timestamp", DateTimeSerializer.class);
         implementations = Collections.unmodifiableMap(impl);
-
+    }
+    
+    public static boolean hasRegistered(String dataTypeName) {
+        return implementations.containsKey(dataTypeName);
+    }
+    
+    public static void register(String dataTypeName, Class<? extends DataTypeSerializer<?>> impl) {
+        implementations.put(dataTypeName, impl);
     }
 
     public static DataTypeSerializer<?> create(String dataType) {
-        return create(DataType.getInstance(dataType));
+        return create(DataType.getType(dataType));
     }
 
     public static DataTypeSerializer<?> create(DataType type) {
-        if (type.isHLLC()) {
-            return new HLLCSerializer(type);
-        }
-
-        if (type.isTopN()) {
-            return new TopNCounterSerializer(type);
-        }
-
         Class<?> clz = implementations.get(type.getName());
         if (clz == null)
-            throw new RuntimeException("No MeasureSerializer for type " + type);
+            throw new RuntimeException("No DataTypeSerializer for type " + type);
 
         try {
             return (DataTypeSerializer<?>) clz.getConstructor(DataType.class).newInstance(type);

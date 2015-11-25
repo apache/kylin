@@ -17,28 +17,27 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import org.apache.kylin.aggregation.basic.StringSerializer;
+import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.common.datatype.LongMutable;
+import org.apache.kylin.common.datatype.StringSerializer;
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 public class SimpleInvertedIndexTest {
 
@@ -167,7 +166,7 @@ public class SimpleInvertedIndexTest {
     public static ConstantTupleFilter constFilter(int id) {
         byte[] space = new byte[10];
         ByteBuffer buf = ByteBuffer.wrap(space);
-        StringSerializer stringSerializer = new StringSerializer(DataType.getInstance("string"));
+        StringSerializer stringSerializer = new StringSerializer(DataType.getType("string"));
         stringSerializer.serialize("" + id, buf);
         ByteArray data = new ByteArray(buf.array(), buf.arrayOffset(), buf.position());
         return new ConstantTupleFilter(data);

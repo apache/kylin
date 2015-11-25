@@ -20,8 +20,8 @@ package org.apache.kylin.cube.inmemcubing;
 import com.google.common.base.Preconditions;
 
 import org.apache.kylin.aggregation.MeasureCodec;
+import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;

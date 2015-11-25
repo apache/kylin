@@ -20,12 +20,12 @@ package org.apache.kylin.invertedindex.index;
 
 import java.util.List;
 
+import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -71,10 +71,10 @@ public class TableRecordInfo {
             isMetric[i] = desc.isMetricsCol(i);
             dataTypes[i] = tblColRef.getDatatype();
             if (isMetric[i]) {
-                lengths[i] = FixedLenMeasureCodec.get(DataType.getInstance(tblColRef.getColumnDesc().getDatatype())).getLength();
+                lengths[i] = FixedLenMeasureCodec.get(DataType.getType(tblColRef.getColumnDesc().getDatatype())).getLength();
             } else {
                 if (Array.isEmpty(dictionaryMap)) {
-                    final DataType dataType = DataType.getInstance(tblColRef.getColumnDesc().getDatatype());
+                    final DataType dataType = DataType.getType(tblColRef.getColumnDesc().getDatatype());
                     if (dataType.isNumberFamily()) {
                         lengths[i] = 16;
                     } else if (dataType.isStringFamily()) {

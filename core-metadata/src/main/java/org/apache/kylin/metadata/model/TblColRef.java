@@ -18,9 +18,10 @@
 
 package org.apache.kylin.metadata.model;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.io.Serializable;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.datatype.DataType;
 
 /**
  */

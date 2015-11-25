@@ -21,6 +21,8 @@ package org.apache.kylin.metadata.model;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.kylin.common.datatype.DataType;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -53,7 +55,7 @@ public class FunctionDesc {
 
     public void init(TableDesc factTable) {
         expression = expression.toUpperCase();
-        returnDataType = DataType.getInstance(returnType);
+        returnDataType = DataType.getType(returnType);
 
         for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
             p.setValue(p.getValue().toUpperCase());
@@ -69,6 +71,11 @@ public class FunctionDesc {
         }
 
         parameter.setColRefs(colRefs);
+        
+        // make sure sum/max/min returns the exact type as its input
+        if (isSum() || isMax() || isMin() && (colRefs.size() > 0)) {
+            setReturnType(colRefs.get(0).getDatatype());
+        }
     }
 
     public String getRewriteFieldName() {
@@ -183,7 +190,7 @@ public class FunctionDesc {
 
     public void setReturnType(String returnType) {
         this.returnType = returnType;
-        this.returnDataType = DataType.getInstance(returnType);
+        this.returnDataType = DataType.getType(returnType);
     }
 
     public TblColRef selectTblColRef(Collection<TblColRef> metricColumns, String factTableName) {
