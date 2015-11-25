@@ -359,8 +359,8 @@ public class CubeController extends BasicController {
         }
 
         MetadataManager metadataManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        // KYLIN-958: disallow data model structure change
         DataModelDesc modelDesc = null;
+        DataModelDesc oldModelDesc = null;
         if (StringUtils.isNotEmpty(cubeRequest.getModelDescData())) {
             modelDesc = deserializeDataModelDesc(cubeRequest);
             if (modelDesc == null) {
@@ -373,13 +373,9 @@ public class CubeController extends BasicController {
                 return errorRequest(cubeRequest, "CubeDesc.model_name " + desc.getModelName() + " not consistent with model " + modeName);
             }
 
-            DataModelDesc oldModelDesc = metadataManager.getDataModelDesc(modeName);
+            oldModelDesc = metadataManager.getDataModelDesc(modeName);
             if (oldModelDesc == null) {
                 return errorRequest(cubeRequest, "Data model " + modeName + " not found");
-            }
-
-            if (!modelDesc.compatibleWith(oldModelDesc)) {
-                return errorRequest(cubeRequest, "Update data model is not allowed! Please create a new cube if needed");
             }
 
         }
@@ -390,27 +386,42 @@ public class CubeController extends BasicController {
             return errorRequest(cubeRequest, error);
         }
 
+        boolean updateModelSuccess = false, updateCubeSuccess = false;
         try {
-            if (modelDesc != null)
+            if (modelDesc != null) {
                 metadataManager.updateDataModelDesc(modelDesc);
-            
+                updateModelSuccess = true;
+            }
+
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
 
+
+            if (desc.getError().isEmpty()) {
+                cubeRequest.setSuccessful(true);
+                updateCubeSuccess = true;
+            } else {
+                logger.warn("Cube " + desc.getName() + " fail to create because " + desc.getError());
+                errorRequest(cubeRequest, omitMessage(desc.getError()));
+            }
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+        } finally {
+            if (updateModelSuccess == true && updateCubeSuccess == false ) {
+                // recover data model
+                try {
+                    metadataManager.updateDataModelDesc(oldModelDesc);
+                } catch (IOException e) {
+                    logger.error("Failed to recover data model desc:" + e.getLocalizedMessage(), e);
+                    throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+                }
+            }
         }
 
-        if (desc.getError().isEmpty()) {
-            cubeRequest.setSuccessful(true);
-        } else {
-            logger.warn("Cube " + desc.getName() + " fail to create because " + desc.getError());
-            errorRequest(cubeRequest, omitMessage(desc.getError()));
-        }
         String descData = JsonUtil.writeValueAsIndentString(desc);
         cubeRequest.setCubeDescData(descData);
 
