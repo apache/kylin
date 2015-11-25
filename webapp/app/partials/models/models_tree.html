@@ -37,11 +37,11 @@
           <!--<i> New </i> <span class="caret"></span>-->
         </a>
         <ul class="dropdown-menu">
-          <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
-            <a href="cubes/add" ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-cube"></i>New Cube</a>
-          </li>
           <li ng-if="userService.hasRole('ROLE_ADMIN')">
             <a href="models/add"  ng-if="userService.hasRole('ROLE_MODELER')"><i class="fa fa-star"></i> New Model</a>
+          </li>
+          <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+            <a href="cubes/add" ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-cube"></i>New Cube</a>
           </li>
 
         </ul>
