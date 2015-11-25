@@ -17,15 +17,15 @@ public class Log4jConfigurer {
     public static void initLogger() {
         if (!INITIALIZED && !isConfigured()) {
             org.apache.log4j.BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(DEFAULT_PATTERN_LAYOUT)));
-            INITIALIZED = true;
         }
+        INITIALIZED = true;
     }
 
     private static boolean isConfigured() {
         if (LogManager.getRootLogger().getAllAppenders().hasMoreElements()) {
             return true;
         } else {
-            Enumeration loggers = LogManager.getCurrentLoggers();
+            Enumeration<?> loggers = LogManager.getCurrentLoggers();
             while (loggers.hasMoreElements()) {
                 Logger logger = (Logger) loggers.nextElement();
                 if (logger.getAllAppenders().hasMoreElements())
