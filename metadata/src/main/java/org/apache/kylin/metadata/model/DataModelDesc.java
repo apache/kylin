@@ -220,44 +220,6 @@ public class DataModelDesc extends RootPersistentEntity {
         }
     }
 
-    /**
-     * Check whether two data model are compatible or not. Compatible means
-     * having the same structure. Tow models could be compatible even they
-     * have different UUID or last modified time.
-     * @param that model to compare with
-     * @return true if compatible, false otherwise.
-     */
-    public boolean compatibleWith(DataModelDesc that) {
-        if (this == that)
-            return true;
-
-        if (that == null)
-            return false;
-
-        try {
-            String thisRepr = excludeHeaderInfo(this);
-            String thatRepr = excludeHeaderInfo(that);
-            return StringUtils.equals(thisRepr, thatRepr);
-
-        } catch (IOException e) {
-            logger.error("Failed to serialize DataModelDesc to string", e);
-            return false;
-        }
-    }
-
-    private String excludeHeaderInfo(DataModelDesc modelDesc) throws IOException {
-        // make a copy
-        String repr = JsonUtil.writeValueAsString(modelDesc);
-        DataModelDesc copy = JsonUtil.readValue(repr, DataModelDesc.class);
-
-        copy.setUuid(null);
-        copy.setLastModified(0);
-        copy.setCapacity(RealizationCapacity.MEDIUM);
-        copy.setFilterCondition(null);
-        copy.setPartitionDesc(null);
-        return JsonUtil.writeValueAsString(copy);
-    }
-
     @Override
     public String toString() {
         return "DataModelDesc [name=" + name + "]";
