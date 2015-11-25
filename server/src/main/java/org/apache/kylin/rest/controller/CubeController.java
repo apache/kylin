@@ -98,9 +98,9 @@ public class CubeController extends BasicController {
         return cubeService.getCubes(cubeName, projectName, modelName, limit, offset);
     }
 
-    @RequestMapping(value = "/get_cube", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
     @ResponseBody
-    public CubeInstance getCube(@RequestParam(value = "cubeName", required = true) String cubeName) {
+    public CubeInstance getCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
             throw new InternalErrorException("Cannot find cube " + cubeName);
