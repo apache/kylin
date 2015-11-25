@@ -1,22 +1,21 @@
 package org.apache.kylin.aggregation.topn;
 
-import org.apache.kylin.aggregation.topn.TopNCounterSerializer;
+import java.nio.ByteBuffer;
+
+import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.model.DataType;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.nio.ByteBuffer;
 
 /**
  * 
  */
 public class TopNCounterSerializerTest {
 
-    private static TopNCounterSerializer serializer = new TopNCounterSerializer(DataType.getInstance("topn(10)"));
+    private static TopNCounterSerializer serializer = new TopNCounterSerializer(DataType.getType("topn(10)"));
 
     @Test
     public void testSerialization() {

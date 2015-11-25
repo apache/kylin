@@ -37,6 +37,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.cube.CubeInstance;
@@ -45,7 +46,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;

@@ -19,7 +19,7 @@
 package org.apache.kylin.aggregation.basic;
 
 import org.apache.kylin.aggregation.MeasureAggregator;
-import org.apache.kylin.common.util.DoubleMutable;
+import org.apache.kylin.common.datatype.DoubleMutable;
 
 /**
  */

@@ -11,7 +11,6 @@ import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings("rawtypes")

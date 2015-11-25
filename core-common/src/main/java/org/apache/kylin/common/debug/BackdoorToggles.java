@@ -20,14 +20,9 @@ package org.apache.kylin.common.debug;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  */
 public class BackdoorToggles {
-
-    private static final Logger logger = LoggerFactory.getLogger(BackdoorToggles.class);
 
     private static final ThreadLocal<Map<String, String>> _backdoorToggles = new ThreadLocal<Map<String, String>>();
 

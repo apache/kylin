@@ -6,9 +6,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.kylin.aggregation.DataTypeSerializer;
 import org.apache.kylin.aggregation.MeasureAggregator;
-import org.apache.kylin.aggregation.basic.StringSerializer;
+import org.apache.kylin.common.datatype.DataTypeSerializer;
+import org.apache.kylin.common.datatype.StringSerializer;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;

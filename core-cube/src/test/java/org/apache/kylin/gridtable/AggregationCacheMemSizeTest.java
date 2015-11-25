@@ -28,10 +28,10 @@ import org.apache.kylin.aggregation.basic.BigDecimalSumAggregator;
 import org.apache.kylin.aggregation.basic.DoubleSumAggregator;
 import org.apache.kylin.aggregation.basic.LongSumAggregator;
 import org.apache.kylin.aggregation.hllc.HLLCAggregator;
+import org.apache.kylin.common.datatype.DoubleMutable;
+import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.DoubleMutable;
-import org.apache.kylin.common.util.LongMutable;
 import org.junit.Test;
 
 public class AggregationCacheMemSizeTest {

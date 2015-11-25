@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
+import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.gridtable.GTInfo.Builder;
-import org.apache.kylin.metadata.model.DataType;
 
 public class UnitTestSupport {
 
@@ -48,11 +48,11 @@ public class UnitTestSupport {
         Builder builder = GTInfo.builder();
         builder.setCodeSystem(new GTSampleCodeSystem());
         builder.setColumns( //
-                DataType.getInstance("varchar(10)"), //
-                DataType.getInstance("varchar(10)"), //
-                DataType.getInstance("varchar(10)"), //
-                DataType.getInstance("bigint"), //
-                DataType.getInstance("decimal") //
+                DataType.getType("varchar(10)"), //
+                DataType.getType("varchar(10)"), //
+                DataType.getType("varchar(10)"), //
+                DataType.getType("bigint"), //
+                DataType.getType("decimal") //
         );
         builder.setPrimaryKey(setOf(0));
         builder.setColumnPreferIndex(setOf(0));

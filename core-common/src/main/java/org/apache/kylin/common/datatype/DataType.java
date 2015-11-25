@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.metadata.model;
+package org.apache.kylin.common.datatype;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -28,30 +28,29 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.kylin.aggregation.DataTypeSerializer;
-
 /**
  */
 @SuppressWarnings("serial")
 public class DataType implements Serializable {
 
+    // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp
     public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|binary" //
             + "|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" //
-            + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc|topn" //
-            + "|" + TblColRef.InnerDataTypeEnum.LITERAL.getDataType() //
-            + "|" + TblColRef.InnerDataTypeEnum.DERIVED.getDataType();
+            + "|date|time|datetime|timestamp|byte|int|short|long|string";
 
-    private static final Pattern TYPE_PATTERN = Pattern.compile(
-    // standard sql types, ref:
-    // http://www.w3schools.com/sql/sql_datatypes_general.asp
-            "(" + VALID_TYPES_STRING + ")" + "\\s*" //
-                    + "(?:" + "[(]" + "([\\d\\s,]+)" + "[)]" + ")?", Pattern.CASE_INSENSITIVE);
+    private static final String TYPE_PATTEN_TAIL = "\\s*" //
+            + "(?:" + "[(]" + "([\\d\\s,]+)" + "[)]" + ")?";
 
+    private static final Pattern TYPE_PATTERN = Pattern.compile( //
+            "(" + VALID_TYPES_STRING + ")" + TYPE_PATTEN_TAIL, Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern CUSTOM_TYPE_PATTERN = Pattern.compile( //
+            "(" + ".*?" + ")" + TYPE_PATTEN_TAIL, Pattern.CASE_INSENSITIVE);
+    
     public static final Set<String> INTEGER_FAMILY = new HashSet<String>();
     public static final Set<String> NUMBER_FAMILY = new HashSet<String>();
     public static final Set<String> DATETIME_FAMILY = new HashSet<String>();
     public static final Set<String> STRING_FAMILY = new HashSet<String>();
-    private static final Set<Integer> HLLC_PRECISIONS = new HashSet<Integer>();
     private static final Map<String, String> LEGACY_TYPE_MAP = new HashMap<String, String>();
     static {
         INTEGER_FAMILY.add("tinyint");
@@ -84,20 +83,25 @@ public class DataType implements Serializable {
         LEGACY_TYPE_MAP.put("hllc14", "hllc(14)");
         LEGACY_TYPE_MAP.put("hllc15", "hllc(15)");
         LEGACY_TYPE_MAP.put("hllc16", "hllc(16)");
-
-        for (int i = 10; i <= 16; i++)
-            HLLC_PRECISIONS.add(i);
     }
 
     private static final ConcurrentMap<DataType, DataType> CACHE = new ConcurrentHashMap<DataType, DataType>();
 
-    public static final DataType ANY = DataType.getInstance("any");
+    public static final DataType ANY = DataType.getType("any");
 
-    public static DataType getInstance(String type) {
+    public static DataType getType(String type) {
+        return getTypeInner(type, false);
+    }
+    
+    public static DataType getCustomType(String type) {
+        return getTypeInner(type, true);
+    }
+    
+    private static DataType getTypeInner(String type, boolean isCustom) {
         if (type == null)
             return null;
 
-        DataType dataType = new DataType(type);
+        DataType dataType = new DataType(type, isCustom);
         DataType cached = CACHE.get(dataType);
         if (cached == null) {
             CACHE.put(dataType, dataType);
@@ -112,17 +116,14 @@ public class DataType implements Serializable {
     private int precision;
     private int scale;
 
-    DataType(String datatype) {
-        parseDataType(datatype);
-    }
-
-    private void parseDataType(String datatype) {
+    DataType(String datatype, boolean isCustom) {
         datatype = datatype.trim().toLowerCase();
         datatype = replaceLegacy(datatype);
 
-        Matcher m = TYPE_PATTERN.matcher(datatype);
+        Pattern pattern = isCustom ? CUSTOM_TYPE_PATTERN : TYPE_PATTERN;
+        Matcher m = pattern.matcher(datatype);
         if (m.matches() == false)
-            throw new IllegalArgumentException("bad data type -- " + datatype + ", does not match " + TYPE_PATTERN);
+            throw new IllegalArgumentException("bad data type -- " + datatype + ", does not match " + pattern);
 
         name = replaceLegacy(m.group(1));
         precision = -1;
@@ -158,9 +159,6 @@ public class DataType implements Serializable {
             precision = 19;
             scale = 4;
         }
-
-        if (isHLLC() && HLLC_PRECISIONS.contains(precision) == false)
-            throw new IllegalArgumentException("HLLC precision must be one of " + HLLC_PRECISIONS);
     }
 
     private String replaceLegacy(String str) {
@@ -234,10 +232,6 @@ public class DataType implements Serializable {
 
     public boolean isHLLC() {
         return name.equals("hllc");
-    }
-    
-    public boolean isTopN() {
-        return name.equals("topn");
     }
 
     public String getName() {

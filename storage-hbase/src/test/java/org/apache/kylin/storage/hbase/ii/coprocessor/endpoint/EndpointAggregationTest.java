@@ -21,8 +21,8 @@ package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 import com.google.common.collect.Lists;
 
 import org.apache.kylin.aggregation.MeasureAggregator;
+import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;

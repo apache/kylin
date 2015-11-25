@@ -18,9 +18,9 @@
 
 package org.apache.kylin.invertedindex.measure;
 
-import org.apache.kylin.metadata.model.DataType;
-
 import java.nio.ByteBuffer;
+
+import org.apache.kylin.common.datatype.DataType;
 
 abstract public class FixedLenMeasureCodec<T> {
 

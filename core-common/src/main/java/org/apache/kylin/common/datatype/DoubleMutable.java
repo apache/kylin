@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.util;
+package org.apache.kylin.common.datatype;
 
 import java.io.Serializable;
 

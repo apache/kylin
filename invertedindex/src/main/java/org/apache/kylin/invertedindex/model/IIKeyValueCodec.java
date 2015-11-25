@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
@@ -33,7 +34,6 @@ import org.apache.kylin.invertedindex.index.CompressedValueContainer;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
-import org.apache.kylin.metadata.model.DataType;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -111,11 +111,11 @@ public class IIKeyValueCodec implements KeyValueCodec {
         final boolean emptyDictionary = Array.isEmpty(dictionaries);
         for (int i = 0; i < nColumns; ++i) {
             if (isMetric[i]) {
-                final FixedLenMeasureCodec<?> fixedLenMeasureCodec = FixedLenMeasureCodec.get(DataType.getInstance(dataTypes[i]));
+                final FixedLenMeasureCodec<?> fixedLenMeasureCodec = FixedLenMeasureCodec.get(DataType.getType(dataTypes[i]));
                 lengths[i] = fixedLenMeasureCodec.getLength();
             } else {
                 if (emptyDictionary) {
-                    final DataType dataType = DataType.getInstance(dataTypes[i]);
+                    final DataType dataType = DataType.getType(dataTypes[i]);
                     if (dataType.isNumberFamily()) {
                         lengths[i] = 16;
                     } else if (dataType.isStringFamily()) {

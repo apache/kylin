@@ -19,7 +19,7 @@
 package org.apache.kylin.aggregation.hllc;
 
 import org.apache.kylin.aggregation.MeasureAggregator;
-import org.apache.kylin.common.util.LongMutable;
+import org.apache.kylin.common.datatype.LongMutable;
 
 /**
  * Long Distinct Count

@@ -20,9 +20,9 @@ package org.apache.kylin.invertedindex.measure;
 
 import java.nio.ByteBuffer;
 
+import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.LongMutable;
-import org.apache.kylin.metadata.model.DataType;
 
 public class FixedPointLongCodec extends FixedLenMeasureCodec<LongMutable> {
 

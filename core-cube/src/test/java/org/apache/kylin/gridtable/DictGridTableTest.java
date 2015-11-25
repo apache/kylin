@@ -17,7 +17,7 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -27,9 +27,10 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.common.util.LongMutable;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
 import org.apache.kylin.dict.Dictionary;
@@ -46,7 +47,6 @@ import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.Before;
@@ -408,11 +408,11 @@ public class DictGridTableTest {
         Builder builder = GTInfo.builder();
         builder.setCodeSystem(newDictCodeSystem());
         builder.setColumns( //
-                DataType.getInstance("timestamp"), //
-                DataType.getInstance("integer"), //
-                DataType.getInstance("varchar(10)"), //
-                DataType.getInstance("bigint"), //
-                DataType.getInstance("decimal") //
+                DataType.getType("timestamp"), //
+                DataType.getType("integer"), //
+                DataType.getType("varchar(10)"), //
+                DataType.getType("bigint"), //
+                DataType.getType("decimal") //
         );
         builder.setPrimaryKey(setOf(0, 1));
         builder.setColumnPreferIndex(setOf(0));
