@@ -3,6 +3,7 @@ package org.apache.kylin.dict;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 
 /**

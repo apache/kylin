@@ -18,6 +18,7 @@
 
 package org.apache.kylin.dict;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**

@@ -6,13 +6,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-
 import org.apache.hadoop.io.Text;
-import org.apache.kylin.aggregation.MeasureCodec;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSplitter;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -22,11 +20,16 @@ import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.metadata.model.*;
+import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureIngester;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +52,8 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     protected String intermediateTableRowDelimiter;
     protected byte byteRowDelimiter;
     protected int counter;
+    protected MeasureIngester<?>[] aggrIngesters;
+    protected Map<TblColRef, Dictionary<String>> dictionaryMap;
     protected Object[] measures;
     protected byte[][] keyBytesBuf;
     protected BytesSplitter bytesSplitter;
@@ -58,7 +63,6 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     private Text outputKey = new Text();
     private Text outputValue = new Text();
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-    private Map<Integer, Dictionary<String>> topNLiteralColDictMap;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -93,25 +97,12 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         keyBytesBuf = new byte[colCount][];
 
-        initTopNLiteralColDictionaryMap();
+        aggrIngesters = MeasureIngester.create(cubeDesc.getMeasures());
+        dictionaryMap = cubeSegment.buildDictionaryMap();
+        
         initNullBytes();
     }
-
-    private void initTopNLiteralColDictionaryMap() {
-        topNLiteralColDictMap = Maps.newHashMap();
-        for (int measureIdx = 0; measureIdx < measures.length; measureIdx++) {
-            MeasureDesc measureDesc = cubeDesc.getMeasures().get(measureIdx);
-            FunctionDesc func = measureDesc.getFunction();
-            if (func.isTopN()) {
-                int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
-                int literalColIdx = flatTableIdx[flatTableIdx.length - 1];
-                TblColRef literalCol = func.getTopNLiteralColumn();
-                Dictionary<String> dictionary = (Dictionary<String>) cubeSegment.getDictionary(literalCol);
-                topNLiteralColDictMap.put(literalColIdx, dictionary);
-            }
-        }
-    }
-
+    
     private void initNullBytes() {
         nullBytes = Lists.newArrayList();
         nullBytes.add(HIVE_NULL);
@@ -146,72 +137,46 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     private void buildValue(SplittedBytes[] splitBuffers) {
 
         for (int i = 0; i < measures.length; i++) {
-            byte[] valueBytes = getValueBytes(splitBuffers, i);
-            measures[i] = measureCodec.getSerializer(i).valueOf(valueBytes);
+            measures[i] = buildValueOf(i, splitBuffers);
         }
 
         valueBuf.clear();
         measureCodec.encode(measures, valueBuf);
     }
 
-    private byte[] getValueBytes(SplittedBytes[] splitBuffers, int measureIdx) {
-        MeasureDesc desc = cubeDesc.getMeasures().get(measureIdx);
-        FunctionDesc func = desc.getFunction();
-        ParameterDesc paramDesc = func.getParameter();
-        int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
+    private Object buildValueOf(int idxOfMeasure, SplittedBytes[] splitBuffers) {
+        MeasureDesc measure = cubeDesc.getMeasures().get(idxOfMeasure);
+        FunctionDesc function = measure.getFunction();
+        int[] colIdxOnFlatTable = intermediateTableDesc.getMeasureColumnIndexes()[idxOfMeasure];
+        
+        int paramCount = function.getParameterCount();
+        String[] inputToMeasure = new String[paramCount];
 
-        byte[] result = null;
-
-        // constant
-        if (flatTableIdx == null) {
-            result = Bytes.toBytes(paramDesc.getValue());
-        }
-        // count and count distinct
-        else if (func.isCount() || func.isHolisticCountDistinct()) {
-            // note for holistic count distinct, this value will be ignored
-            result = ONE;
-        }
-        // topN, need encode the key column
-        else if (func.isTopN()) {
-            // encode the key column with dict, and get the counter column;
-            int keyColIndex = flatTableIdx[flatTableIdx.length - 1];
-            Dictionary<String> literalColDict = topNLiteralColDictMap.get(keyColIndex);
-            int keyColEncoded = literalColDict.getIdFromValue(Bytes.toString(splitBuffers[keyColIndex].value));
-            valueBuf.clear();
-            valueBuf.putInt(literalColDict.getSizeOfId());
-            valueBuf.putInt(keyColEncoded);
-            if (flatTableIdx.length == 1) {
-                // only literalCol, use 1.0 as counter
-                valueBuf.putDouble(1.0);
+        // pick up parameter values
+        ParameterDesc param = function.getParameter();
+        int colParamIdx = 0; // index among parameters of column type
+        for (int i = 0; i < paramCount; i++, param = param.getNextParameter()) {
+            String value;
+            if (function.isCount() || function.isHolisticCountDistinct()) {
+                // note for holistic count distinct, this value will be ignored
+                value = "1";
+            } else if (param.isColumnType()) {
+                value = getCell(colIdxOnFlatTable[colParamIdx++], splitBuffers);
             } else {
-                // get the counter column value
-                valueBuf.putDouble(Double.valueOf(Bytes.toString(splitBuffers[flatTableIdx[0]].value)));
+                value = param.getValue();
             }
-
-            result = valueBuf.array();
-
+            inputToMeasure[i] = value;
         }
-        // normal case, concat column values
-        else {
-            // for multiple columns, their values are joined
-            for (int i = 0; i < flatTableIdx.length; i++) {
-                SplittedBytes split = splitBuffers[flatTableIdx[i]];
-                if (result == null) {
-                    result = Arrays.copyOf(split.value, split.length);
-                } else {
-                    byte[] newResult = new byte[result.length + split.length];
-                    System.arraycopy(result, 0, newResult, 0, result.length);
-                    System.arraycopy(split.value, 0, newResult, result.length, split.length);
-                    result = newResult;
-                }
-            }
-        }
+        
+        return aggrIngesters[idxOfMeasure].valueOf(inputToMeasure, measure, dictionaryMap);
+    }
 
-        if (isNull(result)) {
-            result = null;
-        }
-
-        return result;
+    private String getCell(int i, SplittedBytes[] splitBuffers) {
+        byte[] bytes = Arrays.copyOf(splitBuffers[i].value, splitBuffers[i].length);
+        if (isNull(bytes))
+            return null;
+        else
+            return Bytes.toString(bytes);
     }
 
     protected void outputKV(Context context) throws IOException, InterruptedException {

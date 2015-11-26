@@ -18,5 +18,6 @@
 
 package org.apache.kylin.cube.gridtable;
 
+@SuppressWarnings("serial")
 public class NotEnoughGTInfoException extends Exception {
 }

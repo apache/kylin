@@ -39,12 +39,11 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.kylin.aggregation.MeasureAggregators;
-import org.apache.kylin.aggregation.MeasureCodec;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -57,12 +56,13 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.*;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.*;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
 import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
 import org.apache.kylin.engine.spark.util.IteratorUtils;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.measure.MeasureAggregators;
+import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -162,7 +162,7 @@ public class SparkCubing extends AbstractApplication {
             tblColRefMap.put(rowKeyColumnIndex, col);
         }
 
-        Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
+        Map<TblColRef, Dictionary<String>> dictionaryMap = Maps.newHashMap();
         for (Map.Entry<Integer, TblColRef> entry : tblColRefMap.entrySet()) {
             final String column = columns[entry.getKey()];
             final TblColRef tblColRef = entry.getValue();
@@ -308,12 +308,12 @@ public class SparkCubing extends AbstractApplication {
         for (TblColRef tblColRef : baseCuboidColumn) {
             columnLengthMap.put(tblColRef, cubeSegment.getColumnLength(tblColRef));
         }
-        final Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
+        final Map<TblColRef, Dictionary<String>> dictionaryMap = Maps.newHashMap();
         for (DimensionDesc dim : cubeDesc.getDimensions()) {
             // dictionary
             for (TblColRef col : dim.getColumnRefs()) {
                 if (cubeDesc.getRowkey().isUseDictionary(col)) {
-                    Dictionary<?> dict = cubeSegment.getDictionary(col);
+                    Dictionary<String> dict = cubeSegment.getDictionary(col);
                     if (dict == null) {
                         System.err.println("Dictionary for " + col + " was not found.");
                     }

@@ -53,7 +53,7 @@ import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.cube.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.cube.util.CubingUtils;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.StreamingBatch;
 import org.apache.kylin.engine.streaming.StreamingBatchBuilder;
 import org.apache.kylin.common.util.StreamingMessage;
@@ -79,7 +79,7 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
     }
 
     @Override
-    public void build(StreamingBatch streamingBatch, Map<TblColRef, Dictionary<?>> dictionaryMap, ICuboidWriter cuboidWriter) {
+    public void build(StreamingBatch streamingBatch, Map<TblColRef, Dictionary<String>> dictionaryMap, ICuboidWriter cuboidWriter) {
         try {
 
             CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -130,10 +130,10 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
     }
 
     @Override
-    public Map<TblColRef, Dictionary<?>> buildDictionary(StreamingBatch streamingBatch, IBuildable buildable) {
+    public Map<TblColRef, Dictionary<String>> buildDictionary(StreamingBatch streamingBatch, IBuildable buildable) {
         final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
-        final Map<TblColRef, Dictionary<?>> dictionaryMap;
+        final Map<TblColRef, Dictionary<String>> dictionaryMap;
         try {
             dictionaryMap = CubingUtils.buildDictionary(cubeInstance,
                     Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
@@ -143,7 +143,7 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
                             return input.getData();
                         }
                     }));
-            Map<TblColRef, Dictionary<?>> realDictMap = CubingUtils.writeDictionary((CubeSegment) buildable,
+            Map<TblColRef, Dictionary<String>> realDictMap = CubingUtils.writeDictionary((CubeSegment) buildable,
                     dictionaryMap,
                     streamingBatch.getTimeRange().getFirst(),
                     streamingBatch.getTimeRange().getSecond());

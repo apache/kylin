@@ -5,10 +5,10 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
 import org.apache.kylin.cube.util.KryoUtils;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 public class GTInfo {

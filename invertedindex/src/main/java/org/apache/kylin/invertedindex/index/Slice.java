@@ -21,9 +21,10 @@ package org.apache.kylin.invertedindex.index;
 import java.util.Iterator;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 
 import com.google.common.base.Objects;
+
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**

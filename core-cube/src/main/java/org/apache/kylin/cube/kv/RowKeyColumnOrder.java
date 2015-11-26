@@ -21,7 +21,7 @@ package org.apache.kylin.cube.kv;
 import java.util.Collection;
 import java.util.Comparator;
 
-import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 
 /**
  * @author yangli9

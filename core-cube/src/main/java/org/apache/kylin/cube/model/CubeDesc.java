@@ -42,6 +42,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -765,7 +766,8 @@ public class CubeDesc extends RootPersistentEntity {
         }
 
         for (MeasureDesc measure : measures) {
-            result.addAll(measure.getColumnsNeedDictionary());
+            MeasureType aggrType = MeasureType.create(measure.getFunction());
+            result.addAll(aggrType.getColumnsNeedDictionary(measure));
         }
         return result;
     }

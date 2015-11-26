@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.Dictionary;
 
 /**
  */

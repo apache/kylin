@@ -20,12 +20,12 @@ package org.apache.kylin.invertedindex.index;
 
 import java.util.List;
 
-import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.Array;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**

@@ -21,7 +21,7 @@ package org.apache.kylin.metadata.model;
 import java.io.Serializable;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;

@@ -33,10 +33,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.AfterClass;
@@ -58,7 +58,7 @@ public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
 
     private static CubeInstance cube;
     private static String flatTable;
-    private static Map<TblColRef, Dictionary<?>> dictionaryMap;
+    private static Map<TblColRef, Dictionary<String>> dictionaryMap;
 
     @BeforeClass
     public static void before() throws IOException {
