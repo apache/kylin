@@ -2,8 +2,8 @@ package org.apache.kylin.gridtable;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.aggregation.MeasureAggregator;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.measure.MeasureAggregator;
 
 public interface IGTCodeSystem {
 

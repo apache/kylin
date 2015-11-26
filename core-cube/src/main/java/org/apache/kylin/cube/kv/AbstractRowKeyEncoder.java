@@ -21,10 +21,10 @@ package org.apache.kylin.cube.kv;
 import java.util.Map;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;

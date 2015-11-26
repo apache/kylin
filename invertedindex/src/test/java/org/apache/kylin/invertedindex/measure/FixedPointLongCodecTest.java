@@ -1,6 +1,6 @@
 package org.apache.kylin.invertedindex.measure;
 
-import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.Test;
 
 /**

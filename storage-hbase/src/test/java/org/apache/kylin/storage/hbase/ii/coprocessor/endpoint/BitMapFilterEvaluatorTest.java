@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
@@ -36,6 +36,7 @@ import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.BitMapFilterEvalua
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 public class BitMapFilterEvaluatorTest {

@@ -3,8 +3,6 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.aggregation.MeasureAggregators;
-import org.apache.kylin.aggregation.MeasureCodec;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -16,6 +14,8 @@ import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.measure.MeasureAggregators;
+import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;

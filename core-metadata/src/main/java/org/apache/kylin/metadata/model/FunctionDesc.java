@@ -21,7 +21,7 @@ package org.apache.kylin.metadata.model;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.kylin.common.datatype.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -171,6 +171,14 @@ public class FunctionDesc {
         this.parameter = parameter;
     }
 
+    public int getParameterCount() {
+        int count = 0;
+        for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
+            count++;
+        }
+        return count;
+    }
+    
     public DataType getSQLType() {
         if (isCountDistinct() || isTopN())
             return DataType.ANY;

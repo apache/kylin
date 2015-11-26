@@ -1,23 +1,21 @@
 package org.apache.kylin.cube.gridtable;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.kylin.aggregation.MeasureAggregator;
-import org.apache.kylin.common.datatype.DataTypeSerializer;
-import org.apache.kylin.common.datatype.StringSerializer;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.DefaultGTComparator;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.gridtable.IGTComparator;
+import org.apache.kylin.measure.MeasureAggregator;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 /**
  * defines how column values will be encoded to/ decoded from GTRecord 
@@ -111,9 +109,6 @@ public class CubeCodeSystem implements IGTCodeSystem {
         if (serializer instanceof DictionarySerializer) {
             ((DictionarySerializer) serializer).serializeWithRounding(value, roundingFlag, buf);
         } else {
-            if ((value instanceof String) && (!(serializer instanceof StringSerializer || serializer instanceof FixLenSerializer))) {
-                value = serializer.valueOf((String) value);
-            }
             serializer.serialize(value, buf);
         }
     }
@@ -176,11 +171,6 @@ public class CubeCodeSystem implements IGTCodeSystem {
         }
 
         @Override
-        public Object valueOf(byte[] value) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public void serialize(Object value, ByteBuffer out) {
             throw new UnsupportedOperationException();
         }
@@ -230,10 +220,6 @@ public class CubeCodeSystem implements IGTCodeSystem {
             return dictionary.getSizeOfId();
         }
 
-        @Override
-        public Object valueOf(byte[] value) {
-            throw new UnsupportedOperationException();
-        }
     }
 
     static class FixLenSerializer extends DataTypeSerializer {
@@ -304,16 +290,6 @@ public class CubeCodeSystem implements IGTCodeSystem {
         @Override
         public int getStorageBytesEstimate() {
             return fixLen;
-        }
-
-        @Override
-        public Object valueOf(byte[] value) {
-            try {
-                return new String(value, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                // does not happen
-                throw new RuntimeException(e);
-            }
         }
 
     }

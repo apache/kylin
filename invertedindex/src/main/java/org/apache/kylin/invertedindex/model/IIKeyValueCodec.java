@@ -23,17 +23,17 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.DictionarySerializer;
 import org.apache.kylin.invertedindex.index.ColumnValueContainer;
 import org.apache.kylin.invertedindex.index.CompressedValueContainer;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.datatype.DataType;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

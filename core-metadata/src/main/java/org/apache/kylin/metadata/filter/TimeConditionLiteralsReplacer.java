@@ -5,8 +5,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Maps;

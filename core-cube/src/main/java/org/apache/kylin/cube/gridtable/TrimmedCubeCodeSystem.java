@@ -23,12 +23,12 @@ package org.apache.kylin.cube.gridtable;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.kylin.aggregation.MeasureAggregator;
-import org.apache.kylin.common.datatype.DataTypeSerializer;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.gridtable.IGTComparator;
+import org.apache.kylin.measure.MeasureAggregator;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class TrimmedCubeCodeSystem implements IGTCodeSystem {

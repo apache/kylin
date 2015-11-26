@@ -28,8 +28,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;

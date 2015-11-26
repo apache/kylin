@@ -33,13 +33,13 @@ import java.util.concurrent.Future;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.gridtable.GTRecord;
@@ -66,7 +66,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
     private static CubeInstance cube;
     private static String flatTable;
-    private static Map<TblColRef, Dictionary<?>> dictionaryMap;
+    private static Map<TblColRef, Dictionary<String>> dictionaryMap;
 
     @BeforeClass
     public static void before() throws IOException {
@@ -166,8 +166,8 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         queue.put(new ArrayList<String>(0));
     }
 
-    static Map<TblColRef, Dictionary<?>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {
-        Map<TblColRef, Dictionary<?>> result = Maps.newHashMap();
+    static Map<TblColRef, Dictionary<String>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
         CubeDesc desc = cube.getDescriptor();
         CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(desc, null);
         int nColumns = flatTableDesc.getColumnList().size();
@@ -178,7 +178,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             if (desc.getRowkey().isUseDictionary(col)) {
                 logger.info("Building dictionary for " + col);
                 List<byte[]> valueList = readValueList(flatTable, nColumns, flatTableDesc.getRowKeyColumnIndexes()[c]);
-                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(col.getType(), new IterableDictionaryValueEnumerator(valueList));
+                Dictionary<String> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(col.getType(), new IterableDictionaryValueEnumerator(valueList));
                 result.put(col, dict);
             }
         }
@@ -192,7 +192,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
                 TblColRef literalCol = func.getTopNLiteralColumn();
                 logger.info("Building dictionary for " + literalCol);
                 List<byte[]> valueList = readValueList(flatTable, nColumns, literalColIdx);
-                Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(literalCol.getType(), new IterableDictionaryValueEnumerator(valueList));
+                Dictionary<String> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(literalCol.getType(), new IterableDictionaryValueEnumerator(valueList));
 
                 result.put(literalCol, dict);
             }

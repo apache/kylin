@@ -44,13 +44,13 @@ import javax.annotation.Nullable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
@@ -148,7 +148,7 @@ public class CubingUtils {
         return result;
     }
 
-    public static Map<TblColRef, Dictionary<?>> buildDictionary(final CubeInstance cubeInstance, Iterable<List<String>> recordList) throws IOException {
+    public static Map<TblColRef, Dictionary<String>> buildDictionary(final CubeInstance cubeInstance, Iterable<List<String>> recordList) throws IOException {
         final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor().listDimensionColumnsExcludingDerived();
         final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
         int index = 0;
@@ -156,7 +156,7 @@ public class CubingUtils {
             tblColRefMap.put(index++, column);
         }
 
-        HashMap<TblColRef, Dictionary<?>> result = Maps.newHashMap();
+        HashMap<TblColRef, Dictionary<String>> result = Maps.newHashMap();
 
         HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
         for (List<String> row : recordList) {
@@ -175,18 +175,19 @@ public class CubingUtils {
                     return input == null ? null : input.getBytes();
                 }
             });
-            final Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(tblColRef.getType(), new IterableDictionaryValueEnumerator(bytes));
+            final Dictionary<String> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(tblColRef.getType(), new IterableDictionaryValueEnumerator(bytes));
             result.put(tblColRef, dict);
         }
         return result;
     }
 
-    public static Map<TblColRef, Dictionary<?>> writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<?>> dictionaryMap, long startOffset, long endOffset) {
-        Map<TblColRef, Dictionary<?>> realDictMap = Maps.newHashMap();
+    @SuppressWarnings("unchecked")
+    public static Map<TblColRef, Dictionary<String>> writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<String>> dictionaryMap, long startOffset, long endOffset) {
+        Map<TblColRef, Dictionary<String>> realDictMap = Maps.newHashMap();
 
-        for (Map.Entry<TblColRef, Dictionary<?>> entry : dictionaryMap.entrySet()) {
+        for (Map.Entry<TblColRef, Dictionary<String>> entry : dictionaryMap.entrySet()) {
             final TblColRef tblColRef = entry.getKey();
-            final Dictionary<?> dictionary = entry.getValue();
+            final Dictionary<String> dictionary = entry.getValue();
             ReadableTable.TableSignature signature = new ReadableTable.TableSignature();
             signature.setLastModifiedTime(System.currentTimeMillis());
             signature.setPath(String.format("streaming_%s_%s", startOffset, endOffset));
@@ -197,7 +198,7 @@ public class CubingUtils {
             try {
                 DictionaryInfo realDict = dictionaryManager.trySaveNewDict(dictionary, dictInfo);
                 cubeSegment.putDictResPath(tblColRef, realDict.getResourcePath());
-                realDictMap.put(tblColRef, realDict.getDictionaryObject());
+                realDictMap.put(tblColRef, (Dictionary<String>) realDict.getDictionaryObject());
             } catch (IOException e) {
                 logger.error("error save dictionary for column:" + tblColRef, e);
                 throw new RuntimeException("error save dictionary for column:" + tblColRef, e);

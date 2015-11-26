@@ -19,8 +19,8 @@ package org.apache.kylin.invertedindex.measure;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.metadata.datatype.DataType;
 
 /**
  */

@@ -28,9 +28,9 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.kylin.common.datatype.DoubleMutable;
 import org.apache.kylin.common.topn.Counter;
 import org.apache.kylin.common.topn.TopNCounter;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.Pair;
@@ -38,8 +38,6 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTAggregateScanner;
 import org.apache.kylin.gridtable.GTBuilder;
 import org.apache.kylin.gridtable.GTInfo;
@@ -47,6 +45,7 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -66,7 +65,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private final CuboidScheduler cuboidScheduler;
     private final long baseCuboidId;
     private final int totalCuboidCount;
-    private final CubeJoinedFlatTableDesc intermediateTableDesc;
     private final String[] metricsAggrFuncs;
     private final MeasureDesc[] measureDescs;
     private final int measureCount;
@@ -81,12 +79,11 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private Object[] totalSumForSanityCheck;
     private ICuboidCollector resultCollector;
 
-    public InMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
+    public InMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         super(cubeDesc, dictionaryMap);
         this.cuboidScheduler = new CuboidScheduler(cubeDesc);
         this.baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         this.totalCuboidCount = cuboidScheduler.getCuboidCount();
-        this.intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
 
         this.measureCount = cubeDesc.getMeasures().size();
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
@@ -100,8 +97,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         this.metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
     }
 
-    
-
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
 
@@ -113,7 +108,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
     }
-
 
     @Override
     public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
@@ -447,7 +441,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         return updateCuboidResult(cuboidId, newGridTable, count, timeSpent, 0);
     }
 
-    //@SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "rawtypes", "unchecked" })
     private void sanityCheck(long parentId, long cuboidId, Object[] totalSum) {
         // double sum introduces error and causes result not exactly equal
         for (int i = 0; i < totalSum.length; i++) {
@@ -508,9 +502,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             this.info = info;
             this.input = input;
             this.record = new GTRecord(info);
-            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, 
-                    InMemCubeBuilderUtils.createTopNLiteralColDictionaryMap(cubeDesc, intermediateTableDesc, dictionaryMap), 
-                    info);
+            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, dictionaryMap, info);
         }
 
         @Override

@@ -1,7 +1,7 @@
 package org.apache.kylin.metadata.realization;
 
-import org.apache.kylin.common.datatype.DataType;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;

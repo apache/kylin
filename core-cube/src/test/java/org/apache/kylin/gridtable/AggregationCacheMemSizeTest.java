@@ -23,15 +23,15 @@ import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.kylin.aggregation.MeasureAggregator;
-import org.apache.kylin.aggregation.basic.BigDecimalSumAggregator;
-import org.apache.kylin.aggregation.basic.DoubleSumAggregator;
-import org.apache.kylin.aggregation.basic.LongSumAggregator;
-import org.apache.kylin.aggregation.hllc.HLLCAggregator;
-import org.apache.kylin.common.datatype.DoubleMutable;
-import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.measure.MeasureAggregator;
+import org.apache.kylin.measure.basic.BigDecimalSumAggregator;
+import org.apache.kylin.measure.basic.DoubleSumAggregator;
+import org.apache.kylin.measure.basic.LongSumAggregator;
+import org.apache.kylin.measure.hllc.HLLCAggregator;
+import org.apache.kylin.metadata.datatype.DoubleMutable;
+import org.apache.kylin.metadata.datatype.LongMutable;
 import org.junit.Test;
 
 public class AggregationCacheMemSizeTest {

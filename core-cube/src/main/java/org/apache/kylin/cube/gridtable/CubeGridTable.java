@@ -3,11 +3,11 @@ package org.apache.kylin.cube.gridtable;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -16,24 +16,25 @@ import com.google.common.collect.Maps;
 @SuppressWarnings("rawtypes")
 public class CubeGridTable {
 
-    public static Map<TblColRef, Dictionary<?>> getDimensionToDictionaryMap(CubeSegment cubeSeg, long cuboidId) {
+    public static Map<TblColRef, Dictionary<String>> getDimensionToDictionaryMap(CubeSegment cubeSeg, long cuboidId) {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         CubeManager cubeMgr = CubeManager.getInstance(cubeSeg.getCubeInstance().getConfig());
 
         // build a dictionary map
-        Map<TblColRef, Dictionary<?>> dictionaryMap = Maps.newHashMap();
+        Map<TblColRef, Dictionary<String>> dictionaryMap = Maps.newHashMap();
         List<TblColRef> dimCols = Cuboid.findById(cubeDesc, cuboidId).getColumns();
         for (TblColRef col : dimCols) {
-            Dictionary<?> dictionary = cubeMgr.getDictionary(cubeSeg, col);
+            Dictionary<String> dictionary = cubeMgr.getDictionary(cubeSeg, col);
             if (dictionary != null) {
                 dictionaryMap.put(col, dictionary);
             }
         }
+        
         return dictionaryMap;
     }
 
     public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) throws NotEnoughGTInfoException {
-        Map<TblColRef, Dictionary<?>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
+        Map<TblColRef, Dictionary<String>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
         Cuboid cuboid = Cuboid.findById(cubeSeg.getCubeDesc(), cuboidId);
         for (TblColRef dim : cuboid.getColumns()) {
             if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(dim)) {
@@ -47,7 +48,7 @@ public class CubeGridTable {
         return newGTInfo(cubeSeg.getCubeDesc(), cuboidId, dictionaryMap);
     }
 
-    public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary<?>> dictionaryMap) {
+    public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
         CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(cuboid);
 

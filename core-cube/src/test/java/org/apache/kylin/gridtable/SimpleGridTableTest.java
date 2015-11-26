@@ -26,9 +26,9 @@ import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
+import org.apache.kylin.metadata.datatype.LongMutable;
 import org.junit.Test;
 
 public class SimpleGridTableTest {

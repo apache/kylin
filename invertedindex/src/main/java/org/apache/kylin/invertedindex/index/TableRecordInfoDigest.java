@@ -21,11 +21,11 @@ package org.apache.kylin.invertedindex.index;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.apache.kylin.common.datatype.DataType;
-import org.apache.kylin.common.datatype.LongMutable;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.datatype.LongMutable;
 
 import com.google.common.base.Objects;
 

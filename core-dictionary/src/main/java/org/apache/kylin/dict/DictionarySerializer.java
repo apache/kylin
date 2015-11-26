@@ -10,6 +10,7 @@ import java.io.OutputStream;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Dictionary;
 
 /**
  */

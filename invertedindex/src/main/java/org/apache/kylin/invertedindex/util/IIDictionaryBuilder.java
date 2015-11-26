@@ -40,7 +40,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.invertedindex.model.IIDesc;

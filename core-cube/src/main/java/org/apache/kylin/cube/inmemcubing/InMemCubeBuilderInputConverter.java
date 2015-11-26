@@ -17,49 +17,39 @@
 */
 package org.apache.kylin.cube.inmemcubing;
 
-import com.google.common.base.Preconditions;
-
-import org.apache.kylin.aggregation.MeasureCodec;
-import org.apache.kylin.common.datatype.LongMutable;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dict.Dictionary;
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.gridtable.GTInfo;
+import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.measure.MeasureIngester;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  */
 public class InMemCubeBuilderInputConverter {
 
-    private static final LongMutable ONE = new LongMutable(1l);
-    
-    private final CubeDesc cubeDesc;
     private final CubeJoinedFlatTableDesc intermediateTableDesc;
     private final MeasureDesc[] measureDescs;
-    private final MeasureCodec measureCodec;
+    private final MeasureIngester<?>[] measureIngesters;
     private final int measureCount;
-    private final ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-    private final Map<Integer, Dictionary<String>> topNLiteralColDictMap;
+    private final Map<TblColRef, Dictionary<String>> dictionaryMap;
     private final GTInfo gtInfo;
     
 
-    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, Map<Integer, Dictionary<String>> topNLiteralColDictMap, GTInfo gtInfo) {
-        this.cubeDesc = cubeDesc;
+    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap, GTInfo gtInfo) {
         this.gtInfo = gtInfo;
         this.intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
         this.measureCount = cubeDesc.getMeasures().size();
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
-        this.measureCodec = new MeasureCodec(cubeDesc.getMeasures());
-        this.topNLiteralColDictMap = Preconditions.checkNotNull(topNLiteralColDictMap, "topNLiteralColDictMap cannot be null");
+        this.measureIngesters = MeasureIngester.create(cubeDesc.getMeasures());
+        this.dictionaryMap = dictionaryMap;
     }
     
     public final GTRecord convert(List<String> row) {
@@ -89,59 +79,38 @@ public class InMemCubeBuilderInputConverter {
     }
 
     private Object[] buildValue(List<String> row) {
-
         Object[] values = new Object[measureCount];
         for (int i = 0; i < measureCount; i++) {
-            MeasureDesc measureDesc = measureDescs[i];
-            int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[i];
-            FunctionDesc function = cubeDesc.getMeasures().get(i).getFunction();
-            if (flatTableIdx == null) {
-                values[i] = measureCodec.getSerializer(i).valueOf(measureDesc.getFunction().getParameter().getValue());
-            } else if (function.isCount() || function.isHolisticCountDistinct()) {
-                // note for holistic count distinct, this value will be ignored
-                values[i] = ONE;
-            } else if (function.isTopN()) {
-                // encode the key column with dict, and get the counter column;
-                int keyColIndex = flatTableIdx[flatTableIdx.length - 1];
-                Dictionary<String> literalColDict = topNLiteralColDictMap.get(keyColIndex);
-                int keyColEncoded = literalColDict.getIdFromValue(row.get(keyColIndex));
-                valueBuf.clear();
-                valueBuf.putInt(literalColDict.getSizeOfId());
-                valueBuf.putInt(keyColEncoded);
-                if (flatTableIdx.length == 1) {
-                    // only literalCol, use 1.0 as counter
-                    valueBuf.putDouble(1.0);
-                } else {
-                    // get the counter column value
-                    valueBuf.putDouble(Double.valueOf(row.get(flatTableIdx[0])));
-                }
-
-                values[i] = measureCodec.getSerializer(i).valueOf(valueBuf.array());
-
-            } else if (flatTableIdx.length == 1) {
-                values[i] = measureCodec.getSerializer(i).valueOf(toBytes(row.get(flatTableIdx[0])));
-            } else {
-
-                byte[] result = null;
-                for (int x = 0; x < flatTableIdx.length; x++) {
-                    byte[] split = toBytes(row.get(flatTableIdx[x]));
-                    if (result == null) {
-                        result = Arrays.copyOf(split, split.length);
-                    } else {
-                        byte[] newResult = new byte[result.length + split.length];
-                        System.arraycopy(result, 0, newResult, 0, result.length);
-                        System.arraycopy(split, 0, newResult, result.length, split.length);
-                        result = newResult;
-                    }
-                }
-                values[i] = measureCodec.getSerializer(i).valueOf(result);
-            }
+            values[i] = buildValueOf(i, row);
         }
         return values;
     }
+    
+    private Object buildValueOf(int idxOfMeasure, List<String> row) {
+        MeasureDesc measure = measureDescs[idxOfMeasure];
+        FunctionDesc function = measure.getFunction();
+        int[] colIdxOnFlatTable = intermediateTableDesc.getMeasureColumnIndexes()[idxOfMeasure];
+        
+        int paramCount = function.getParameterCount();
+        String[] inputToMeasure = new String[paramCount];
 
-    private byte[] toBytes(String v) {
-        return v == null ? null : Bytes.toBytes(v);
+        // pick up parameter values
+        ParameterDesc param = function.getParameter();
+        int paramColIdx = 0; // index among parameters of column type
+        for (int i = 0; i < paramCount; i++, param = param.getNextParameter()) {
+            String value;
+            if (function.isCount() || function.isHolisticCountDistinct()) {
+                // note for holistic count distinct, this value will be ignored
+                value = "1";
+            } else if (param.isColumnType()) {
+                value = row.get(colIdxOnFlatTable[paramColIdx++]);
+            } else {
+                value = param.getValue();
+            }
+            inputToMeasure[i] = value;
+        }
+        
+        return measureIngesters[idxOfMeasure].valueOf(inputToMeasure, measure, dictionaryMap);
     }
 
 }

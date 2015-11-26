@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GridTable;
@@ -39,12 +39,12 @@ abstract public class AbstractInMemCubeBuilder {
     private static Logger logger = LoggerFactory.getLogger(AbstractInMemCubeBuilder.class);
 
     final protected CubeDesc cubeDesc;
-    final protected Map<TblColRef, Dictionary<?>> dictionaryMap;
+    final protected Map<TblColRef, Dictionary<String>> dictionaryMap;
 
     protected int taskThreadCount = 4;
     protected int reserveMemoryMB = 200;
 
-    public AbstractInMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
+    public AbstractInMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (cubeDesc == null)
             throw new NullPointerException();
         if (dictionaryMap == null)

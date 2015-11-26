@@ -36,9 +36,9 @@ package org.apache.kylin.engine.streaming;
 import java.util.Map;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.StreamingBatch;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -50,9 +50,9 @@ public interface StreamingBatchBuilder {
 
     Map<Long, HyperLogLogPlusCounter> sampling(StreamingBatch streamingBatch);
 
-    Map<TblColRef, Dictionary<?>> buildDictionary(StreamingBatch streamingBatch, IBuildable buildable);
+    Map<TblColRef, Dictionary<String>> buildDictionary(StreamingBatch streamingBatch, IBuildable buildable);
 
-    void build(StreamingBatch streamingBatch, Map<TblColRef, Dictionary<?>> dictionaryMap, ICuboidWriter cuboidWriter);
+    void build(StreamingBatch streamingBatch, Map<TblColRef, Dictionary<String>> dictionaryMap, ICuboidWriter cuboidWriter);
 
     void commit(IBuildable buildable);
 }
