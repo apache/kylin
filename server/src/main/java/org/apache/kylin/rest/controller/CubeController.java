@@ -414,6 +414,7 @@ public class CubeController extends BasicController {
             if (updateModelSuccess == true && updateCubeSuccess == false ) {
                 // recover data model
                 try {
+                    oldModelDesc.setLastModified(modelDesc.getLastModified());
                     metadataManager.updateDataModelDesc(oldModelDesc);
                 } catch (IOException e) {
                     logger.error("Failed to recover data model desc:" + e.getLocalizedMessage(), e);

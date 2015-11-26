@@ -59,8 +59,10 @@ public class CacheService extends BasicService {
                 cleanProjectCacheByRealization(RealizationType.CUBE, cacheKey);
                 break;
             case CUBE_DESC:
-                String modelName = getCubeDescManager().getCubeDesc(cacheKey).getModelName();
-                getMetadataManager().reloadDataModelDesc(modelName);
+                if (getCubeDescManager().getCubeDesc(cacheKey) != null) {
+                    String modelName = getCubeDescManager().getCubeDesc(cacheKey).getModelName();
+                    getMetadataManager().reloadDataModelDesc(modelName);
+                }
                 getCubeDescManager().reloadCubeDesc(cacheKey);
                 IIDescManager.clearCache();
                 CubeDescManager.clearCache();
@@ -143,4 +145,5 @@ public class CacheService extends BasicService {
             throw new RuntimeException("error " + log, e);
         }
     }
+    
 }
