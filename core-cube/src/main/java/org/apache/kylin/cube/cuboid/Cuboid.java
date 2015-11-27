@@ -19,29 +19,37 @@
 package org.apache.kylin.cube.cuboid;
 
 import java.util.ArrayList;
-import java.util.BitSet;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
+import org.apache.kylin.cube.model.AggregationGroup;
+import org.apache.kylin.cube.model.AggregationGroup.HierarchyMask;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
-import org.apache.kylin.cube.model.HierarchyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
-import org.apache.kylin.cube.model.RowKeyDesc;
-import org.apache.kylin.cube.model.RowKeyDesc.AggrGroupMask;
-import org.apache.kylin.cube.model.RowKeyDesc.HierarchyMask;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Lists;
 
 public class Cuboid implements Comparable<Cuboid> {
 
     private final static Map<String, Map<Long, Cuboid>> CUBOID_CACHE = new ConcurrentHashMap<String, Map<Long, Cuboid>>();
+
+    //smaller is better
+    public final static Comparator<Long> cuboidSelectComparator = new Comparator<Long>() {
+        @Override
+        public int compare(Long o1, Long o2) {
+            return ComparisonChain.start().compare(Long.bitCount(o1), Long.bitCount(o2)).compare(o1, o2).result();
+        }
+    };
 
     public static Cuboid findById(CubeDesc cube, byte[] cuboidID) {
         return findById(cube, Bytes.toLong(cuboidID));
@@ -64,29 +72,34 @@ public class Cuboid implements Comparable<Cuboid> {
     }
 
     public static boolean isValid(CubeDesc cube, long cuboidID) {
-        RowKeyDesc rowkey = cube.getRowkey();
+        for (AggregationGroup agg : cube.getAggregationGroups()) {
+            if (isValid(agg, cuboidID)) {
+                return true;
+            }
+        }
 
+        return false;
+    }
+
+    private static boolean isValid(AggregationGroup agg, long cuboidID) {
         if (cuboidID < 0) {
             throw new IllegalArgumentException("Cuboid " + cuboidID + " should be greater than 0");
         }
-
-        if (checkBaseCuboid(rowkey, cuboidID)) {
-            return true;
+        if ((cuboidID & ~agg.getPartialCubeFullMask()) != 0) {
+            return false; //a cuboid's parent within agg is at most partialCubeFullMask
         }
 
-        if (checkMandatoryColumns(rowkey, cuboidID) == false) {
-            return false;
-        }
+        return checkMandatoryColumns(agg, cuboidID) && checkHierarchy(agg, cuboidID) && checkJoint(agg, cuboidID);
+    }
 
-        if (checkAggregationGroup(rowkey, cuboidID) == false) {
-            return false;
+    public static List<AggregationGroup> getValidAggGroupForCuboid(CubeDesc cubeDesc, long cuboidID) {
+        List<AggregationGroup> ret = Lists.newArrayList();
+        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+            if (isValid(agg, cuboidID)) {
+                ret.add(agg);
+            }
         }
-
-        if (checkHierarchy(rowkey, cuboidID) == false) {
-            return false;
-        }
-
-        return true;
+        return ret;
     }
 
     public static long getBaseCuboidId(CubeDesc cube) {
@@ -97,168 +110,111 @@ public class Cuboid implements Comparable<Cuboid> {
         return findById(cube, getBaseCuboidId(cube));
     }
 
-    private static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
-        // add mandantory
-        RowKeyDesc rowkey = cubeDesc.getRowkey();
-        long mandatoryColumnMask = rowkey.getMandatoryColumnMask();
-        if (cuboidID < mandatoryColumnMask) {
-            cuboidID = cuboidID | mandatoryColumnMask;
+    public static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
+        List<Long> candidates = Lists.newArrayList();
+        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+            Long candidate = translateToValidCuboid(agg, cuboidID);
+            if (candidate != null) {
+                candidates.add(candidate);
+            }
         }
+
+        if (candidates.size() == 0) {
+            throw new IllegalStateException("Cannot find parent for :" + cuboidID);
+        }
+
+        return Collections.min(candidates, cuboidSelectComparator);
+    }
+
+    private static Long translateToValidCuboid(AggregationGroup agg, long cuboidID) {
+        if ((cuboidID & ~agg.getPartialCubeFullMask()) > 0) {
+            //the partial cube might not contain all required dims
+            return null;
+        }
+
+        // add mandantory
+        cuboidID = cuboidID | agg.getMandatoryColumnMask();
 
         // add hierarchy
-        for (DimensionDesc dimension : cubeDesc.getDimensions()) {
-            HierarchyDesc[] hierarchies = dimension.getHierarchy();
-            boolean found = false;
-            long result = 0;
-            if (hierarchies != null && hierarchies.length > 0) {
-                for (int i = hierarchies.length - 1; i >= 0; i--) {
-                    TblColRef hColumn = hierarchies[i].getColumnRef();
-                    Integer index = rowkey.getColumnBitIndex(hColumn);
-                    long bit = 1L << index;
-
-                    if ((rowkey.getTailMask() & bit) > 0)
-                        continue; // ignore levels in tail, they don't participate
-
-                    if ((bit & cuboidID) > 0) {
-                        found = true;
-                    }
-
-                    if (found == true) {
-                        result = result | bit;
-                    }
-                }
-                cuboidID = cuboidID | result;
+        for (HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
+            long fullMask = hierarchyMask.fullMask;
+            long intersect = cuboidID & fullMask;
+            if (intersect != 0 && intersect != fullMask) {
+                long lsb = Long.lowestOneBit(intersect);
+                long fillMask = fullMask & ~(lsb - 1);
+                cuboidID |= fillMask;
             }
         }
 
-        // find the left-most aggregation group
-        long cuboidWithoutMandatory = cuboidID & ~rowkey.getMandatoryColumnMask();
-        long leftover;
-        for (AggrGroupMask mask : rowkey.getAggrGroupMasks()) {
-            if ((cuboidWithoutMandatory & mask.uniqueMask) > 0) {
-                leftover = cuboidWithoutMandatory & ~mask.groupMask;
-
-                if (leftover == 0) {
-                    return cuboidID;
-                }
-
-                if (leftover != 0) {
-                    cuboidID = cuboidID | mask.leftoverMask;
-                    return cuboidID;
-                }
+        // add joint dims
+        for (Long joint : agg.getJoints()) {
+            if (((cuboidID | joint) != cuboidID) && ((cuboidID & ~joint) != cuboidID)) {
+                cuboidID = cuboidID | joint;
             }
         }
 
-        // doesn't have column in aggregation groups
-        leftover = cuboidWithoutMandatory & rowkey.getTailMask();
-        if (leftover == 0) {
-            // doesn't have column in tail group
-            if (cuboidWithoutMandatory != 0) {
-                return cuboidID;
-            } else {
-                // no column (except mandatory), add one column
-                long toAddCol = (1 << (BitSet.valueOf(new long[] { rowkey.getTailMask() }).cardinality()));
-                // check if the toAddCol belongs to any hierarchy
-                List<HierarchyMask> hierarchyMaskList = rowkey.getHierarchyMasks();
-                if (hierarchyMaskList != null && hierarchyMaskList.size() > 0) {
-                    for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
-                        long result = toAddCol & hierarchyMasks.fullMask;
-                        if (result > 0) {
-                            // replace it with the root col in hierarchy
-                            toAddCol = hierarchyMasks.allMasks[0];
-                            break;
+        if ((cuboidID & ~agg.getMandatoryColumnMask()) != 0) {
+            return cuboidID;
+        } else {
+            // no column, add one column
+            long nonJointDims = removeBits((agg.getPartialCubeFullMask() ^ agg.getMandatoryColumnMask()), agg.getJoints());
+            if (nonJointDims != 0) {
+                long nonJointNonHierarchy = removeBits(nonJointDims, Collections2.transform(agg.getHierarchyMasks(), new Function<HierarchyMask, Long>() {
+                    @Override
+                    public Long apply(HierarchyMask input) {
+                        return input.fullMask;
+                    }
+                }));
+                if (nonJointNonHierarchy != 0) {
+                    //there exists dim that does not belong to any joint or any hierarchy, that's perfect
+                    return cuboidID | Long.lowestOneBit(nonJointNonHierarchy);
+                } else {
+                    //choose from a hierarchy that does not intersect with any joint dim, only check level 1 
+                    long allJointDims = agg.getJointDimsMask();
+                    int index = 0;
+                    for (HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
+                        long dim = hierarchyMask.allMasks[index];
+                        if ((nonJointDims & allJointDims) == 0) {
+                            return cuboidID | dim;
                         }
                     }
                 }
-                cuboidID = cuboidID | toAddCol;
-                return cuboidID;
             }
-        }
 
-        // has column in tail group
-        cuboidID = cuboidID | rowkey.getTailMask();
-        return cuboidID;
-
-    }
-
-    /** Breadth-First-Search
-     * @deprecated due to poor performance
-     * @param cube
-     * @param cuboidID
-     * @return
-     */
-    private static long translateToValidCuboidDeprecated(CubeDesc cube, long cuboidID) {
-        if (Cuboid.isValid(cube, cuboidID)) {
-            return cuboidID;
-        }
-
-        HashSet<Long> dedupped = new HashSet<Long>();
-        Queue<Long> queue = new LinkedList<Long>();
-        List<Long> parents = Cuboid.getAllPossibleParents(cube, cuboidID);
-
-        // check each parent
-        addToQueue(queue, parents, dedupped);
-        while (queue.size() > 0) {
-            long parent = pollFromQueue(queue, dedupped);
-            if (Cuboid.isValid(cube, parent)) {
-                return parent;
-            } else {
-                addToQueue(queue, Cuboid.getAllPossibleParents(cube, parent), dedupped);
-            }
-        }
-        return -1;
-    }
-
-    private static List<Long> getAllPossibleParents(CubeDesc cube, long cuboidID) {
-        List<Long> allPossibleParents = new ArrayList<Long>();
-
-        for (int i = 0; i < cube.getRowkey().getRowKeyColumns().length; i++) {
-            long mask = 1L << i;
-            long parentId = cuboidID | mask;
-            if (parentId != cuboidID) {
-                allPossibleParents.add(parentId);
-            }
-        }
-
-        return allPossibleParents;
-    }
-
-    private static void addToQueue(Queue<Long> queue, List<Long> parents, HashSet<Long> dedupped) {
-        Collections.sort(parents);
-        for (Long p : parents) {
-            if (!dedupped.contains(p)) {
-                dedupped.add(p);
-                queue.offer(p);
-            }
+            return cuboidID | Collections.min(agg.getJoints(), cuboidSelectComparator);
         }
     }
 
-    private static long pollFromQueue(Queue<Long> queue, HashSet<Long> dedupped) {
-        long element = queue.poll();
-        dedupped.remove(element);
-        return element;
-    }
-
-    private static boolean checkBaseCuboid(RowKeyDesc rowkey, long cuboidID) {
-        long baseCuboidId = rowkey.getFullMask();
-        if (cuboidID > baseCuboidId) {
-            throw new IllegalArgumentException("Cubiod " + cuboidID + " is out of scope 0-" + baseCuboidId);
+    private static long removeBits(long original, Collection<Long> toRemove) {
+        long ret = original;
+        for (Long joint : toRemove) {
+            ret = ret & ~joint;
         }
-        return baseCuboidId == cuboidID;
+        return ret;
     }
 
-    private static boolean checkMandatoryColumns(RowKeyDesc rowkey, long cuboidID) {
-        long mandatoryColumnMask = rowkey.getMandatoryColumnMask();
-
-        // note the all-zero cuboid (except for mandatory) is not valid
-        if (cuboidID <= mandatoryColumnMask)
+    private static boolean checkMandatoryColumns(AggregationGroup agg, long cuboidID) {
+        long mandatoryColumnMask = agg.getMandatoryColumnMask();
+        if ((cuboidID & mandatoryColumnMask) != mandatoryColumnMask) {
             return false;
-
-        return (cuboidID & mandatoryColumnMask) == mandatoryColumnMask;
+        } else {
+            return ((cuboidID & ~mandatoryColumnMask) != 0);//cuboid with only mandatory columns is not valid
+        }
     }
 
-    private static boolean checkHierarchy(RowKeyDesc rowkey, long cuboidID) {
-        List<HierarchyMask> hierarchyMaskList = rowkey.getHierarchyMasks();
+    private static boolean checkJoint(AggregationGroup agg, long cuboidID) {
+        for (long joint : agg.getJoints()) {
+            long common = cuboidID & joint;
+            if (common == 0 || common == joint) {
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean checkHierarchy(AggregationGroup agg, long cuboidID) {
+        List<HierarchyMask> hierarchyMaskList = agg.getHierarchyMasks();
         // if no hierarchy defined in metadata
         if (hierarchyMaskList == null || hierarchyMaskList.size() == 0) {
             return true;
@@ -279,23 +235,9 @@ public class Cuboid implements Comparable<Cuboid> {
         return true;
     }
 
-    private static boolean checkAggregationGroup(RowKeyDesc rowkey, long cuboidID) {
-        long cuboidWithoutMandatory = cuboidID & ~rowkey.getMandatoryColumnMask();
-        long leftover;
-        for (AggrGroupMask mask : rowkey.getAggrGroupMasks()) {
-            if ((cuboidWithoutMandatory & mask.uniqueMask) != 0) {
-                leftover = cuboidWithoutMandatory & ~mask.groupMask;
-                return leftover == 0 || leftover == mask.leftoverMask;
-            }
-        }
-
-        leftover = cuboidWithoutMandatory & rowkey.getTailMask();
-        return leftover == 0 || leftover == rowkey.getTailMask();
-    }
-
     // ============================================================================
 
-    private CubeDesc cube;
+    private CubeDesc cubeDesc;
     private final long inputID;
     private final long id;
     private final byte[] idBytes;
@@ -305,8 +247,8 @@ public class Cuboid implements Comparable<Cuboid> {
     private volatile CuboidToGridTableMapping cuboidToGridTableMapping = null;
 
     // will translate the cuboidID if it is not valid
-    private Cuboid(CubeDesc cube, long originalID, long validID) {
-        this.cube = cube;
+    private Cuboid(CubeDesc cubeDesc, long originalID, long validID) {
+        this.cubeDesc = cubeDesc;
         this.inputID = originalID;
         this.id = validID;
         this.idBytes = Bytes.toBytes(id);
@@ -316,7 +258,7 @@ public class Cuboid implements Comparable<Cuboid> {
 
     private List<TblColRef> translateIdToColumns(long cuboidID) {
         List<TblColRef> dimesnions = new ArrayList<TblColRef>();
-        RowKeyColDesc[] allColumns = cube.getRowkey().getRowKeyColumns();
+        RowKeyColDesc[] allColumns = cubeDesc.getRowkey().getRowKeyColumns();
         for (int i = 0; i < allColumns.length; i++) {
             // NOTE: the order of column in list!!!
             long bitmask = 1L << allColumns[i].getBitIndex();
@@ -335,23 +277,30 @@ public class Cuboid implements Comparable<Cuboid> {
 
     // higher level in hierarchy can be ignored when counting aggregation columns
     private long eliminateHierarchyAggregation(long id) {
-        List<HierarchyMask> hierarchyMaskList = cube.getRowkey().getHierarchyMasks();
-        if (hierarchyMaskList != null && hierarchyMaskList.size() > 0) {
-            for (HierarchyMask hierMask : hierarchyMaskList) {
-                long[] allMasks = hierMask.allMasks;
-                for (int i = allMasks.length - 1; i > 0; i--) {
-                    long bit = allMasks[i] ^ allMasks[i - 1];
-                    if ((inputID & bit) != 0) {
-                        id &= ~allMasks[i - 1];
+        long finalId = id;
+
+        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+            long temp = id;
+            List<HierarchyMask> hierarchyMaskList = agg.getHierarchyMasks();
+            if (hierarchyMaskList != null && hierarchyMaskList.size() > 0) {
+                for (HierarchyMask hierMask : hierarchyMaskList) {
+                    long[] allMasks = hierMask.allMasks;
+                    for (int i = allMasks.length - 1; i > 0; i--) {
+                        long bit = allMasks[i] ^ allMasks[i - 1];
+                        if ((inputID & bit) != 0) {
+                            temp &= ~allMasks[i - 1];
+                            if (temp < finalId)
+                                finalId = temp;
+                        }
                     }
                 }
             }
         }
-        return id;
+        return finalId;
     }
 
-    public CubeDesc getCube() {
-        return cube;
+    public CubeDesc getCubeDesc() {
+        return cubeDesc;
     }
 
     public List<TblColRef> getColumns() {
@@ -373,10 +322,6 @@ public class Cuboid implements Comparable<Cuboid> {
 
     public long getInputID() {
         return inputID;
-    }
-
-    public boolean useAncestor() {
-        return inputID != id;
     }
 
     public boolean requirePostAggregation() {

@@ -140,7 +140,7 @@ public class HBaseMROutput2 implements IMROutput2 {
 
             List<RowValueDecoder> valueDecoderList = Lists.newArrayList();
             List<MeasureDesc> measuresDescs = Lists.newArrayList();
-            for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHBaseMapping().getColumnFamily()) {
+            for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHbaseMapping().getColumnFamily()) {
                 for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
                     valueDecoderList.add(new RowValueDecoder(colDesc));
                     for (MeasureDesc measure : colDesc.getMeasures()) {
@@ -238,7 +238,7 @@ public class HBaseMROutput2 implements IMROutput2 {
         @Override
         public void doReducerOutput(ByteArrayWritable key, Object[] value, Reducer.Context context) throws IOException, InterruptedException {
             if (keyValueCreators.size() == 0) {
-                for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHBaseMapping().getColumnFamily()) {
+                for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHbaseMapping().getColumnFamily()) {
                     for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
                         keyValueCreators.add(new KeyValueCreator(seg.getCubeDesc(), colDesc));
                     }

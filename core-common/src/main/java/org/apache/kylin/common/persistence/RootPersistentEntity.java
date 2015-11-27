@@ -90,6 +90,8 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
     }
+    
+    
 
     public void updateRandomUuid() {
         setUuid(UUID.randomUUID().toString());

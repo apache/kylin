@@ -56,10 +56,10 @@ public class DictionaryManagerTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_desc");
         TblColRef col = cubeDesc.findColumnRef("DEFAULT.TEST_CATEGORY_GROUPINGS", "META_CATEG_NAME");
 
-        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null);
+        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().isUseDictionary(col), col, null);
         System.out.println(JsonUtil.writeValueAsIndentString(info1));
 
-        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null);
+        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().isUseDictionary(col), col, null);
         System.out.println(JsonUtil.writeValueAsIndentString(info2));
 
         assertTrue(info1.getUuid() == info2.getUuid());

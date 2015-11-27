@@ -54,11 +54,11 @@ public final class InMemCubeBuilderUtils {
     }
 
     public static final Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(final long cuboidId, final int measureCount) {
-        BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
+        int cardinality = Long.bitCount(cuboidId);
         BitSet dimension = new BitSet();
-        dimension.set(0, bitSet.cardinality());
+        dimension.set(0, cardinality);
         BitSet metrics = new BitSet();
-        metrics.set(bitSet.cardinality(), bitSet.cardinality() + measureCount);
+        metrics.set(cardinality, cardinality + measureCount);
         return Pair.newPair(new ImmutableBitSet(dimension), new ImmutableBitSet(metrics));
     }
     

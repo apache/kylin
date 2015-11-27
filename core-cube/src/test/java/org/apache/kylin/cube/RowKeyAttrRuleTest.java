@@ -20,39 +20,42 @@ package org.apache.kylin.cube;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.cube.model.validation.rule.RowKeyAttrRule;
-import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author jianliu
- * 
- */
 public class RowKeyAttrRuleTest {
 
-    private CubeDesc cube;
-    private ValidateContext vContext = new ValidateContext();
-
-    /**
-     * @throws java.lang.Exception
-     */
-    @Before
-    public void setUp() throws Exception {
-        CubeDesc desc2 = JsonUtil.readValue(getClass().getClassLoader().getResourceAsStream("data/TEST3_desc.json"), CubeDesc.class);
-        this.cube = desc2;
-
+    @Test
+    public void testGoodDesc() throws IOException {
+        for (File f : new File("../examples/test_case_data/localmeta/cube_desc/").listFiles()) {
+            CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
+            ValidateContext vContext = new ValidateContext();
+            IValidatorRule<CubeDesc> rule = new RowKeyAttrRule();
+            rule.validate(desc, vContext);
+            vContext.print(System.out);
+            assertTrue(vContext.getResults().length == 0);
+        }
     }
 
     @Test
-    public void testOneMandatoryColumn() {
+    public void testBadDesc() throws IOException {
+        ValidateContext vContext = new ValidateContext();
+        CubeDesc desc = JsonUtil.readValue(new FileInputStream("../examples/test_case_data/localmeta/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
+        desc.getRowkey().getRowKeyColumns()[1].setEncoding("non-supported-encoding");
+        desc.getRowkey().getRowKeyColumns()[2].setColumn("");
         IValidatorRule<CubeDesc> rule = new RowKeyAttrRule();
-        rule.validate(cube, vContext);
+        rule.validate(desc, vContext);
         vContext.print(System.out);
-        assertTrue("Failed to validate rowkey", vContext.getResults().length == 1);
-        assertTrue("Failed to validate mandatory error", vContext.getResults()[0].getMessage().startsWith("Rowkey column"));
+        assertTrue(vContext.getResults().length == 2);
+        assertTrue("Rowkey column cal_dt encoding not dict nor fixed_length".equals(vContext.getResults()[0].getMessage()));
+        assertTrue("Rowkey column empty".equalsIgnoreCase(vContext.getResults()[1].getMessage()));
     }
 }

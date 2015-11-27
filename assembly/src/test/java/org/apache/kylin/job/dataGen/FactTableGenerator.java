@@ -297,10 +297,9 @@ public class FactTableGenerator {
             JoinDesc jDesc = dim.getJoin();
             if (jDesc == null) {
                 // column on fact table used directly as a dimension
-                for (String aColumn : dim.getColumn()) {
-                    if (!factTableCol2LookupCol.containsKey(aColumn))
-                        usedCols.add(aColumn);
-                }
+                String aColumn = dim.getColumn();
+                if (!factTableCol2LookupCol.containsKey(aColumn))
+                    usedCols.add(aColumn);
             }
         }
 

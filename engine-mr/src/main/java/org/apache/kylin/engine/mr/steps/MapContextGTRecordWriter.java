@@ -88,7 +88,7 @@ public class MapContextGTRecordWriter implements ICuboidWriter {
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, Cuboid.findById(cubeDesc, cuboidId));
         keyBuf = rowKeyEncoder.createBuf();
 
-        dimensions = BitSet.valueOf(new long[] { cuboidId }).cardinality();
+        dimensions = Long.bitCount(cuboidId);
         measureColumnsIndex = new int[measureCount];
         for (int i = 0; i < measureCount; i++) {
             measureColumnsIndex[i] = dimensions + i;

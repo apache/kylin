@@ -194,7 +194,7 @@ public class CubeService extends BasicService {
         }
 
         try {
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
+            int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc,false);
             logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
         } catch (Exception e) {
             getCubeDescManager().removeCubeDesc(createdDesc);
@@ -260,7 +260,7 @@ public class CubeService extends BasicService {
             }
 
             CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
+            int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc,false);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
 
             ProjectManager projectManager = getProjectManager();

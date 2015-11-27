@@ -19,7 +19,6 @@
 package org.apache.kylin.cube.cuboid;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
@@ -116,12 +115,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     @Test
     public void testIsValid2() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
-        try {
-            assertEquals(false, Cuboid.isValid(cube, toLong("111111111")));
-            fail();
-        } catch (IllegalArgumentException ex) {
-            // expected
-        }
+        assertEquals(false, Cuboid.isValid(cube, toLong("111111111")));
 
         // base
         assertEquals(false, Cuboid.isValid(cube, 0));
@@ -148,7 +142,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         Cuboid cuboid;
 
         cuboid = Cuboid.findById(cube, 0);
-        assertEquals(toLong("100100000"), cuboid.getId());
+        assertEquals(toLong("101000000"), cuboid.getId());
 
         cuboid = Cuboid.findById(cube, 1);
         assertEquals(toLong("100000111"), cuboid.getId());

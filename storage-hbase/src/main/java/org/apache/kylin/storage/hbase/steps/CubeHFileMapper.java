@@ -66,7 +66,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
         inputMeasures = new Object[cubeDesc.getMeasures().size()];
         keyValueCreators = Lists.newArrayList();
 
-        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
+        for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
                 keyValueCreators.add(new KeyValueCreator(cubeDesc, colDesc));
             }

@@ -66,7 +66,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         String signature = desc.calculateSignature();
         desc.getModel().getPartitionDesc().setPartitionDateColumn("test_column");
-        assertTrue(!signature.equals(desc.calculateSignature()));
+        assertTrue(signature.equals(desc.calculateSignature()));
     }
 
     @Test

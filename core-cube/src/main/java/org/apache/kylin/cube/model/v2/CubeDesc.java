@@ -6,17 +6,17 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.cube.model;
+package org.apache.kylin.cube.model.v2;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,14 +24,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.ArrayUtils;
@@ -58,8 +57,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -69,7 +66,7 @@ import com.google.common.collect.Maps;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeDesc extends RootPersistentEntity {
 
-    public enum DeriveType {
+    public static enum DeriveType {
         LOOKUP, PK_FK
     }
 
@@ -112,8 +109,6 @@ public class CubeDesc extends RootPersistentEntity {
     private RowKeyDesc rowkey;
     @JsonProperty("hbase_mapping")
     private HBaseMappingDesc hbaseMapping;
-    @JsonProperty("aggregation_gropus")
-    private List<AggregationGroup> aggregationGroups;
     @JsonProperty("signature")
     private String signature;
     @JsonProperty("notify_list")
@@ -174,14 +169,16 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     /**
-     * @return all functions from each measure.
+     * Find FunctionDesc by Full Expression.
+     *
+     * @return
      */
-    public List<FunctionDesc> listAllFunctions() {
-        List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
+    public FunctionDesc findFunctionOnCube(FunctionDesc manualFunc) {
         for (MeasureDesc m : measures) {
-            functions.add(m.getFunction());
+            if (m.getFunction().equals(manualFunc))
+                return m.getFunction();
         }
-        return functions;
+        return null;
     }
 
     public TblColRef findColumnRef(String table, String column) {
@@ -192,12 +189,42 @@ public class CubeDesc extends RootPersistentEntity {
             return cols.get(column);
     }
 
+    public DimensionDesc findDimensionByColumn(TblColRef col) {
+        for (DimensionDesc dim : dimensions) {
+            if (ArrayUtils.contains(dim.getColumnRefs(), col))
+                return dim;
+        }
+        return null;
+    }
+
     public DimensionDesc findDimensionByTable(String lookupTableName) {
         lookupTableName = lookupTableName.toUpperCase();
         for (DimensionDesc dim : dimensions)
             if (dim.getTable() != null && dim.getTable().equals(lookupTableName))
                 return dim;
         return null;
+    }
+
+    public DimensionDesc findDimensionByName(String dimName) {
+        dimName = dimName.toUpperCase();
+        for (DimensionDesc dim : dimensions) {
+            if (dimName.equals(dim.getName()))
+                return dim;
+        }
+        return null;
+    }
+
+    /**
+     * Get all functions from each measure.
+     *
+     * @return
+     */
+    public List<FunctionDesc> listAllFunctions() {
+        List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
+        for (MeasureDesc m : measures) {
+            functions.add(m.getFunction());
+        }
+        return functions;
     }
 
     public boolean isDerived(TblColRef col) {
@@ -240,6 +267,14 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     // ============================================================================
+
+    public HBaseMappingDesc getHBaseMapping() {
+        return hbaseMapping;
+    }
+
+    public void setHBaseMapping(HBaseMappingDesc hbaseMapping) {
+        this.hbaseMapping = hbaseMapping;
+    }
 
     public KylinConfig getConfig() {
         return config;
@@ -317,14 +352,6 @@ public class CubeDesc extends RootPersistentEntity {
         this.rowkey = rowkey;
     }
 
-    public List<AggregationGroup> getAggregationGroups() {
-        return aggregationGroups;
-    }
-
-    public void setAggregationGroups(List<AggregationGroup> aggregationGroups) {
-        this.aggregationGroups = aggregationGroups;
-    }
-
     public String getSignature() {
         return signature;
     }
@@ -360,21 +387,10 @@ public class CubeDesc extends RootPersistentEntity {
 
         if (!name.equals(cubeDesc.name))
             return false;
-
         if (!getFactTable().equals(cubeDesc.getFactTable()))
             return false;
 
         return true;
-    }
-
-    public int getBuildLevel() {
-        return Collections.max(Collections2.transform(aggregationGroups, new Function<AggregationGroup, Integer>() {
-            @Nullable
-            @Override
-            public Integer apply(AggregationGroup input) {
-                return input.getBuildLevel();
-            }
-        }));
     }
 
     @Override
@@ -394,28 +410,18 @@ public class CubeDesc extends RootPersistentEntity {
         if (StringUtils.isBlank(getSignature())) {
             return true;
         }
-
-        String calculated = calculateSignature();
-        String saved = getSignature();
-        return calculated.equals(saved);
+        return calculateSignature().equals(getSignature());
     }
 
     public String calculateSignature() {
-        MessageDigest md;
+        MessageDigest md = null;
         try {
             md = MessageDigest.getInstance("MD5");
             StringBuilder sigString = new StringBuilder();
-            sigString.append(this.name).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.modelName)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.dimensions)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.measures)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.rowkey)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.aggregationGroups)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.hbaseMapping));
+            sigString.append(this.name).append("|").append(this.getFactTable()).append("|").append(JsonUtil.writeValueAsString(this.model.getPartitionDesc())).append("|").append(JsonUtil.writeValueAsString(this.dimensions)).append("|").append(JsonUtil.writeValueAsString(this.measures)).append("|").append(JsonUtil.writeValueAsString(this.rowkey)).append("|").append(JsonUtil.writeValueAsString(this.hbaseMapping));
 
-            byte[] signature = md.digest(sigString.toString().toLowerCase().getBytes());
-            String ret = new String(Base64.encodeBase64(signature));
-            return ret;
+            byte[] signature = md.digest(sigString.toString().getBytes());
+            return new String(Base64.encodeBase64(signature));
         } catch (NoSuchAlgorithmException | JsonProcessingException e) {
             throw new RuntimeException("Failed to calculate signature");
         }
@@ -447,14 +453,11 @@ public class CubeDesc extends RootPersistentEntity {
             dim.init(this, tables);
         }
 
+        sortDimAndMeasure();
         initDimensionColumns();
         initMeasureColumns();
 
         rowkey.init(this);
-        for (AggregationGroup agg : this.aggregationGroups) {
-            agg.init(this, rowkey);
-        }
-
         if (hbaseMapping != null) {
             hbaseMapping.init(this);
         }
@@ -474,32 +477,35 @@ public class CubeDesc extends RootPersistentEntity {
 
             // init dimension columns
             ArrayList<TblColRef> dimCols = Lists.newArrayList();
-            String colStrs = dim.getColumn();
+            String[] colStrs = dim.getColumn();
 
             // when column is omitted, special case
-            if ((colStrs == null && dim.isDerived()) || ("{FK}".equalsIgnoreCase(colStrs))) {
+            if (colStrs == null && dim.isDerived() || ArrayUtils.contains(colStrs, "{FK}")) {
                 for (TblColRef col : join.getForeignKeyColumns()) {
                     dimCols.add(initDimensionColRef(col));
                 }
             }
             // normal case
             else {
-                if (StringUtils.isEmpty(colStrs))
+                if (colStrs == null || colStrs.length == 0)
                     throw new IllegalStateException("Dimension column must not be blank " + dim);
 
-                dimCols.add(initDimensionColRef(dim, colStrs));
+                for (String colStr : colStrs) {
+                    dimCols.add(initDimensionColRef(dim, colStr));
+                }
 
-                //                // fill back column ref in hierarchy
-                //                if (dim.isHierarchy()) {
-                //                    for (int i = 0; i < dimCols.size(); i++)
-                //                        dim.getHierarchy()[i].setColumnRef(dimCols.get(i));
-                //                }
+                // fill back column ref in hierarchy
+                if (dim.isHierarchy()) {
+                    for (int i = 0; i < dimCols.size(); i++)
+                        dim.getHierarchy()[i].setColumnRef(dimCols.get(i));
+                }
             }
 
-            TblColRef[] dimColArray = dimCols.toArray(new TblColRef[dimCols.size()]);
+            TblColRef[] dimColArray = (TblColRef[]) dimCols.toArray(new TblColRef[dimCols.size()]);
             dim.setColumnRefs(dimColArray);
 
             // init derived columns
+            TblColRef[] hostCols = dimColArray;
             if (dim.isDerived()) {
                 String[] derived = dim.getDerived();
                 String[][] split = splitDerivedColumnAndExtra(derived);
@@ -509,7 +515,7 @@ public class CubeDesc extends RootPersistentEntity {
                 for (int i = 0; i < derivedNames.length; i++) {
                     derivedCols[i] = initDimensionColRef(dim, derivedNames[i]);
                 }
-                initDerivedMap(dimColArray, DeriveType.LOOKUP, dim, derivedCols, derivedExtra);
+                initDerivedMap(hostCols, DeriveType.LOOKUP, dim, derivedCols, derivedExtra);
             }
 
             // PK-FK derive the other side
@@ -520,10 +526,10 @@ public class CubeDesc extends RootPersistentEntity {
                 allColumns.addAll(Arrays.asList(fk));
                 allColumns.addAll(Arrays.asList(pk));
                 for (int i = 0; i < fk.length; i++) {
-                    int find = ArrayUtils.indexOf(dimColArray, fk[i]);
+                    int find = ArrayUtils.indexOf(hostCols, fk[i]);
                     if (find >= 0) {
                         TblColRef derivedCol = initDimensionColRef(pk[i]);
-                        initDerivedMap(dimColArray[find], DeriveType.PK_FK, dim, derivedCol);
+                        initDerivedMap(hostCols[find], DeriveType.PK_FK, dim, derivedCol);
                     }
                 }
                 /** disable this code as we don't need fk be derived from pk
@@ -660,7 +666,7 @@ public class CubeDesc extends RootPersistentEntity {
         for (int i = 0; i < measures.size(); i++)
             measureIndexLookup.put(measures.get(i).getName(), i);
 
-        for (HBaseColumnFamilyDesc cf : getHbaseMapping().getColumnFamily()) {
+        for (HBaseColumnFamilyDesc cf : getHBaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc c : cf.getColumns()) {
                 String[] colMeasureRefs = c.getMeasureRefs();
                 MeasureDesc[] measureDescs = new MeasureDesc[colMeasureRefs.length];
@@ -673,6 +679,53 @@ public class CubeDesc extends RootPersistentEntity {
                 c.setMeasureIndex(measureIndex);
                 c.setColumnFamilyName(cf.getName());
             }
+        }
+    }
+
+    private void sortDimAndMeasure() {
+        sortDimensionsByID();
+        sortMeasuresByID();
+        for (DimensionDesc dim : dimensions) {
+            sortHierarchiesByLevel(dim.getHierarchy());
+        }
+    }
+
+    private void sortDimensionsByID() {
+        Collections.sort(dimensions, new Comparator<DimensionDesc>() {
+            @Override
+            public int compare(DimensionDesc d1, DimensionDesc d2) {
+                Integer id1 = d1.getId();
+                Integer id2 = d2.getId();
+                return id1.compareTo(id2);
+            }
+        });
+    }
+
+    private void sortMeasuresByID() {
+        if (measures == null) {
+            measures = Lists.newArrayList();
+        }
+
+//        Collections.sort(measures, new Comparator<MeasureDesc>() {
+//            @Override
+//            public int compare(MeasureDesc m1, MeasureDesc m2) {
+//                Integer id1 = m1.getId();
+//                Integer id2 = m2.getId();
+//                return id1.compareTo(id2);
+//            }
+//        });
+    }
+
+    private void sortHierarchiesByLevel(HierarchyDesc[] hierarchies) {
+        if (hierarchies != null) {
+            Arrays.sort(hierarchies, new Comparator<HierarchyDesc>() {
+                @Override
+                public int compare(HierarchyDesc h1, HierarchyDesc h2) {
+                    Integer level1 = Integer.parseInt(h1.getLevel());
+                    Integer level2 = Integer.parseInt(h2.getLevel());
+                    return level1.compareTo(level2);
+                }
+            });
         }
     }
 
@@ -742,7 +795,7 @@ public class CubeDesc extends RootPersistentEntity {
         return storageType;
     }
 
-    public void setStorageType(int storageType) {
+    void setStorageType(int storageType) {
         this.storageType = storageType;
     }
 
@@ -750,7 +803,7 @@ public class CubeDesc extends RootPersistentEntity {
         return engineType;
     }
 
-    public void setEngineType(int engineType) {
+    void setEngineType(int engineType) {
         this.engineType = engineType;
     }
 

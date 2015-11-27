@@ -60,11 +60,9 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.setCubeService(cubeService);
         cubeController.setJobService(jobService);
         cubeController.setStreamingService(streamingService);
-        
-        
+
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
-        
 
     }
 
@@ -89,10 +87,11 @@ public class CubeControllerTest extends ServiceTestBase {
         newCube.setModelName(cube.getModelName());
         newCube.setModel(cube.getModel());
         newCube.setDimensions(cube.getDimensions());
-        newCube.setHBaseMapping(cube.getHBaseMapping());
+        newCube.setHbaseMapping(cube.getHbaseMapping());
         newCube.setMeasures(cube.getMeasures());
         newCube.setConfig(cube.getConfig());
         newCube.setRowkey(cube.getRowkey());
+        newCube.setAggregationGroups(cube.getAggregationGroups());
 
         newCube.getModel().setLastModified(0);
 

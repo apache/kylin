@@ -31,8 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class MeasureDesc {
 
-    @JsonProperty("id")
-    private int id;
+   
     @JsonProperty("name")
     private String name;
     @JsonProperty("function")
@@ -49,13 +48,7 @@ public class MeasureDesc {
         }
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
+   
 
     public String getName() {
         return name;
@@ -100,11 +93,6 @@ public class MeasureDesc {
             return true;
 
         return dependentMeasureRef.equalsIgnoreCase(that.getDependentMeasureRef());
-    }
-
-    @Override
-    public int hashCode() {
-        return id;
     }
 
     @Override

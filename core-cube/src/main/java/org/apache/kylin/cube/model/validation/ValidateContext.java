@@ -25,9 +25,6 @@ import java.util.List;
 
 /**
  * Context. Supply all dependent objects for validator
- * 
- * @author jianliu
- * 
  */
 public class ValidateContext {
     private List<Result> results = new ArrayList<ValidateContext.Result>();
@@ -84,7 +81,7 @@ public class ValidateContext {
      */
     public void print(PrintStream out) {
         if (results.isEmpty()) {
-            out.print("The element is perfect.");
+            out.println("The element is perfect.");
         }
         Iterator<Result> it = results.iterator();
         while (it.hasNext()) {

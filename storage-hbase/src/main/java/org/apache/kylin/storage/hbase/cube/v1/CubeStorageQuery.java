@@ -141,7 +141,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         List<HBaseKeyRange> scans = buildScanRanges(flattenToOrAndFilter(filterD), dimensionsD);
 
         // check involved measures, build value decoder for each each family:column
-        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHBaseMapping(), metrics, context);
+        List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHbaseMapping(), metrics, context);
 
         // memory hungry distinct count are pushed down to coprocessor, no need to set threshold any more
         // setThreshold(dimensionsD, valueDecoders, context); // set cautious threshold to prevent out of memory
