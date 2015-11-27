@@ -3,24 +3,59 @@
   "name": "default",
   "realizations": [
     {
-      "name": "test_kylin_with_slr_model_desc",
+      "name": "test_kylin_cube_with_slr_empty",
       "type": "CUBE",
       "realization": "test_kylin_cube_with_slr_empty"
     },
     {
-      "name": "test_kylin_without_slr_model_desc",
+      "name": "test_kylin_cube_without_slr_empty",
       "type": "CUBE",
       "realization": "test_kylin_cube_without_slr_empty"
     },
     {
-      "name": "test_kylin_with_slr_left_join_model_desc",
+      "name": "test_kylin_cube_with_slr_left_join_empty",
       "type": "CUBE",
       "realization": "test_kylin_cube_with_slr_left_join_empty"
     },
     {
-      "name": "test_kylin_without_slr_left_join_model_desc",
+      "name": "test_kylin_cube_without_slr_left_join_empty",
       "type": "CUBE",
       "realization": "test_kylin_cube_without_slr_left_join_empty"
+    },
+    {
+      "name": "test_kylin_cube_with_slr_1_new_segment",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_slr_1_new_segment"
+    },
+    {
+      "name": "test_kylin_cube_with_slr_left_join_ready",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_slr_left_join_ready"
+    },
+    {
+      "name": "test_kylin_cube_with_slr_ready",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_slr_ready"
+    },
+    {
+      "name": "test_kylin_cube_with_slr_ready_2_segments",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_slr_ready_2_segments"
+    },
+    {
+      "name": "test_kylin_cube_without_slr_left_join_ready",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_without_slr_left_join_ready"
+    },
+    {
+      "name": "test_kylin_cube_without_slr_left_join_ready_2_segments",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_without_slr_left_join_ready_2_segments"
+    },
+    {
+      "name": "test_kylin_cube_without_slr_ready",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_without_slr_ready"
     },
     {
       "name": "test_kylin_ii_left_join",

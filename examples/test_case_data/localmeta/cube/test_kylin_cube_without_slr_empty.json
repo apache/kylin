@@ -6,5 +6,6 @@
   "version" : null,
   "descriptor" : "test_kylin_cube_without_slr_desc",
   "segments" : [ ],
+  "status" : "DISABLED",
   "create_time" : null
 }
