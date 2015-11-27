@@ -74,6 +74,11 @@ public class HLLCMeasureType extends MeasureType {
                     hllc.add(v == null ? "__nUlL__" : v);
                 return hllc;
             }
+
+            @Override
+            public HyperLogLogPlusCounter reEncodeDictionary(HyperLogLogPlusCounter value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDict, Map<TblColRef, Dictionary<String>> newDict) {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 
@@ -87,12 +92,6 @@ public class HLLCMeasureType extends MeasureType {
 
     @Override
     public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Object reEncodeDictionary(Object value, List<Dictionary<?>> oldDicts, List<Dictionary<?>> newDicts) {
         // TODO Auto-generated method stub
         return null;
     }

@@ -31,6 +31,7 @@ public class DoubleIngester extends MeasureIngester<DoubleMutable> {
     // avoid repeated object creation
     private DoubleMutable current = new DoubleMutable();
 
+    @Override
     public DoubleMutable valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (values.length > 1)
             throw new IllegalArgumentException();
@@ -41,5 +42,10 @@ public class DoubleIngester extends MeasureIngester<DoubleMutable> {
         else
             l.set(Double.parseDouble(values[0]));
         return l;
+    }
+
+    @Override
+    public DoubleMutable reEncodeDictionary(DoubleMutable value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDict, Map<TblColRef, Dictionary<String>> newDict) {
+        throw new UnsupportedOperationException();
     }
 }

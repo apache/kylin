@@ -18,9 +18,11 @@
 
 package org.apache.kylin.measure.topn;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.topn.Counter;
 import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
@@ -88,6 +90,37 @@ public class TopNMeasureType extends MeasureType {
                 topNCounter.offer(key, counter);
                 return topNCounter;
             }
+            
+            @SuppressWarnings("unchecked")
+            @Override
+            public TopNCounter reEncodeDictionary(TopNCounter value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
+                TopNCounter<ByteArray> topNCounter = (TopNCounter<ByteArray>) value;
+
+                TblColRef colRef = measureDesc.getFunction().getTopNLiteralColumn();
+                Dictionary<String> sourceDict = oldDicts.get(colRef);
+                Dictionary<String> mergedDict = newDicts.get(colRef);
+
+                int topNSize = topNCounter.size();
+                byte[] newIdBuf = new byte[topNSize * mergedDict.getSizeOfId()];
+                byte[] literal = new byte[sourceDict.getSizeOfValue()];
+
+                int bufOffset = 0;
+                for (Counter<ByteArray> c : topNCounter) {
+                    int oldId = BytesUtil.readUnsigned(c.getItem().array(), c.getItem().offset(), c.getItem().length());
+                    int newId;
+                    int size = sourceDict.getValueBytesFromId(oldId, literal, 0);
+                    if (size < 0) {
+                        newId = mergedDict.nullId();
+                    } else {
+                        newId = mergedDict.getIdFromValueBytes(literal, 0, size);
+                    }
+
+                    BytesUtil.writeUnsigned(newId, newIdBuf, bufOffset, mergedDict.getSizeOfId());
+                    c.getItem().set(newIdBuf, bufOffset, mergedDict.getSizeOfId());
+                    bufOffset += mergedDict.getSizeOfId();
+                }
+                return value;
+            }
         };
     }
 
@@ -98,14 +131,8 @@ public class TopNMeasureType extends MeasureType {
 
     @Override
     public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Object reEncodeDictionary(Object value, List<Dictionary<?>> oldDicts, List<Dictionary<?>> newDicts) {
-        // TODO Auto-generated method stub
-        return null;
+        TblColRef literalCol = measureDesc.getFunction().getParameter().getColRefs().get(1);
+        return Collections.singletonList(literalCol);
     }
 
 }

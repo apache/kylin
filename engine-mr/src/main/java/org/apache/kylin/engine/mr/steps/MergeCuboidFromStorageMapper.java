@@ -22,10 +22,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.topn.Counter;
-import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Dictionary;
@@ -48,6 +47,8 @@ import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureIngester;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -60,6 +61,7 @@ import com.google.common.collect.Lists;
 /**
  * @author shaoshi
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, ByteArrayWritable, ByteArrayWritable> {
 
     private static final Logger logger = LoggerFactory.getLogger(MergeCuboidFromStorageMapper.class);
@@ -87,7 +89,9 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
     private MeasureCodec codec;
     private ByteArrayWritable outputValue = new ByteArrayWritable();
 
-    private List<Integer> topNMeasureIdx;
+    private List<Pair<Integer, MeasureIngester>> dictMeasures;
+    private Map<TblColRef, Dictionary<String>> oldDicts;
+    private Map<TblColRef, Dictionary<String>> newDicts;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -115,11 +119,17 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
         measureDescs = cubeDesc.getMeasures();
         codec = new MeasureCodec(measureDescs);
 
-        topNMeasureIdx = Lists.newArrayList();
+        dictMeasures = Lists.newArrayList();
         for (int i = 0; i < measureDescs.size(); i++) {
-            if (measureDescs.get(i).getFunction().isTopN()) {
-                topNMeasureIdx.add(i);
+            MeasureDesc measureDesc = measureDescs.get(i);
+            MeasureType measureType = MeasureType.create(measureDesc.getFunction());
+            if (measureType.getColumnsNeedDictionary(measureDesc).isEmpty() == false) {
+                dictMeasures.add(new Pair<Integer, MeasureIngester>(i, measureType.newIngester()));
             }
+        }
+        if (dictMeasures.size() > 0) {
+            oldDicts = sourceCubeSegment.buildDictionaryMap();
+            newDicts = mergedCubeSegment.buildDictionaryMap();
         }
     }
 
@@ -193,7 +203,9 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
         outputKey.set(newKeyBuf.array(), 0, fullKeySize);
 
         // re-encode measures if dictionary is used
-        reEncodeMeasure(value);
+        if (dictMeasures.size() > 0) {
+            reEncodeMeasure(value);
+        }
 
         valueBuf.clear();
         codec.encode(value, valueBuf);
@@ -217,45 +229,11 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void reEncodeMeasure(Object[] measureObjs) throws IOException, InterruptedException {
-        // currently only topN uses dictionary in measure obj
-        if (topNMeasureIdx.isEmpty())
-            return;
-
-        int bufOffset = 0;
-        for (int idx : topNMeasureIdx) {
-            TopNCounter<ByteArray> topNCounters = (TopNCounter<ByteArray>) measureObjs[idx];
-
-            MeasureDesc measureDesc = measureDescs.get(idx);
-            TblColRef colRef = measureDesc.getFunction().getTopNLiteralColumn();
-            DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-            Dictionary<?> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(colRef));
-            Dictionary<?> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(colRef));
-
-            int topNSize = topNCounters.size();
-            while (sourceDict.getSizeOfValue() * topNSize > newKeyBodyBuf.length - bufOffset || //
-                    mergedDict.getSizeOfValue() * topNSize > newKeyBodyBuf.length - bufOffset || //
-                    mergedDict.getSizeOfId() * topNSize > newKeyBodyBuf.length - bufOffset) {
-                byte[] oldBuf = newKeyBodyBuf;
-                newKeyBodyBuf = new byte[2 * newKeyBodyBuf.length];
-                System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
-            }
-
-            for (Counter<ByteArray> c : topNCounters) {
-                int idInSourceDict = BytesUtil.readUnsigned(c.getItem().array(), c.getItem().offset(), c.getItem().length());
-                int idInMergedDict;
-                int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBodyBuf, bufOffset);
-                if (size < 0) {
-                    idInMergedDict = mergedDict.nullId();
-                } else {
-                    idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBodyBuf, bufOffset, size);
-                }
-
-                BytesUtil.writeUnsigned(idInMergedDict, newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());
-                c.getItem().set(newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());
-                bufOffset += mergedDict.getSizeOfId();
-            }
+        for (Pair<Integer, MeasureIngester> pair : dictMeasures) {
+            int i = pair.getFirst();
+            MeasureIngester ingester = pair.getSecond();
+            measureObjs[i] = ingester.reEncodeDictionary(measureObjs[i], measureDescs.get(i), oldDicts, newDicts);
         }
     }
 }
