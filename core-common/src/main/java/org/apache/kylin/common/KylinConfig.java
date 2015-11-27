@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
@@ -726,8 +727,16 @@ public class KylinConfig implements Serializable {
 
     public String getConfigAsString() throws IOException {
         final StringWriter stringWriter = new StringWriter();
-        properties.list(new PrintWriter(stringWriter));
+        list(new PrintWriter(stringWriter));
         return stringWriter.toString();
+    }
+
+    private void list(PrintWriter out) {
+        for (Enumeration e = properties.keys() ; e.hasMoreElements() ;) {
+            String key = (String)e.nextElement();
+            String val = (String)properties.get(key);
+            out.println(key + "=" + val);
+        }
     }
 
     public String getSparkHome() {
