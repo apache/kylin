@@ -77,8 +77,7 @@ public class CubeSamplingTest {
     }
 
     private void addCuboidBitSet(long cuboidId, List<Integer[]> allCuboidsBitSet) {
-        BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
-        Integer[] indice = new Integer[bitSet.cardinality()];
+        Integer[] indice = new Integer[Long.bitCount(cuboidId)];
 
         long mask = Long.highestOneBit(baseCuboidId);
         int position = 0;

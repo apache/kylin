@@ -18,11 +18,15 @@
 
 package org.apache.kylin.cube.model;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * @author yangli9
@@ -31,37 +35,74 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyColDesc {
 
+    public enum ColEncodingType {
+        DICT, FIXED_LEN
+    }
+
+    public class ColEncoding {
+        public ColEncodingType type;
+        public Object param;
+
+        public ColEncoding(ColEncodingType type, Object param) {
+            this.type = type;
+            this.param = param;
+        }
+    }
+
     @JsonProperty("column")
     private String column;
-    @JsonProperty("length")
-    private int length;
-    @JsonProperty("dictionary")
-    private String dictionary;
-    @JsonProperty("mandatory")
-    private boolean mandatory = false;
+    @JsonProperty("encoding")
+    private String encoding;
 
     // computed
+    private ColEncoding colEncoding;
     private int bitIndex;
     private TblColRef colRef;
 
-    public String getDictionary() {
-        return dictionary;
+    public void init() {
+
+        //dict or fix length?
+        Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
+        if (this.encoding.equalsIgnoreCase("dict")) {
+            this.colEncoding = new ColEncoding(ColEncodingType.DICT, null);
+        } else if (this.encoding.startsWith("fixed_length")) {
+            int length = RowConstants.ROWKEY_COL_DEFAULT_LENGTH;
+            if (this.encoding.indexOf(":") > 0) {
+                length = Integer.parseInt(this.encoding.substring(this.encoding.indexOf(":") + 1));
+            }
+            this.colEncoding = new ColEncoding(ColEncodingType.FIXED_LEN, length);
+        } else {
+            throw new IllegalArgumentException("Not supported row key col encoding:" + this.encoding);
+        }
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 
     public String getColumn() {
         return column;
     }
 
-    void setColumn(String column) {
+    public void setColumn(String column) {
         this.column = column;
     }
 
-    public int getLength() {
-        return length;
+    public boolean isUsingDictionary() {
+        return this.colEncoding.type == ColEncodingType.DICT;
+
     }
 
-    public boolean isMandatory() {
-        return mandatory;
+    public int getLength() {
+        if (this.colEncoding.type == ColEncodingType.FIXED_LEN) {
+            return (Integer) this.colEncoding.param;
+        } else {
+            return 0;
+        }
     }
 
     public int getBitIndex() {
@@ -80,13 +121,9 @@ public class RowKeyColDesc {
         this.colRef = colRef;
     }
 
-    public void setDictionary(String dictionary) {
-        this.dictionary = dictionary;
-    }
-
     @Override
     public String toString() {
-        return "RowKeyColDesc [column=" + column + ", length=" + length + ", dictionary=" + dictionary + ", mandatory=" + mandatory + "]";
+        return Objects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();
     }
 
 }

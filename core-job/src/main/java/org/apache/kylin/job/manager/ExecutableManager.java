@@ -299,6 +299,7 @@ public class ExecutableManager {
 
     private static AbstractExecutable parseTo(ExecutablePO executablePO) {
         if (executablePO == null) {
+            logger.warn("executablePO is null");
             return null;
         }
         String type = executablePO.getType();
@@ -318,8 +319,7 @@ public class ExecutableManager {
             }
             return result;
         } catch (ReflectiveOperationException e) {
-            logger.error("cannot parse this job:" + executablePO.getId(), e);
-            return null;
+            throw new IllegalStateException("cannot parse this job:" + executablePO.getId(), e);
         }
     }
 

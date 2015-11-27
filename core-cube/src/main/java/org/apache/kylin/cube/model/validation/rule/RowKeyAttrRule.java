@@ -18,7 +18,6 @@
 
 package org.apache.kylin.cube.model.validation.rule;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
@@ -28,19 +27,9 @@ import org.apache.kylin.cube.model.validation.ValidateContext;
 
 /**
  * Validate that only one of "length" and "dictionary" appears on rowkey_column
- * 
- * @author jianliu
- * 
  */
 public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.kylin.metadata.validation.IValidatorRule#validate(java.lang.Object
-     * , org.apache.kylin.metadata.validation.ValidateContext)
-     */
     @Override
     public void validate(CubeDesc cube, ValidateContext context) {
         RowKeyDesc row = cube.getRowkey();
@@ -50,25 +39,21 @@ public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
         }
 
         RowKeyColDesc[] rcd = row.getRowKeyColumns();
-        if (rcd == null) {
+        if (rcd == null || rcd.length == 0) {
             context.addResult(ResultLevel.ERROR, "Rowkey columns do not exist");
-            return;
-        }
-        if (rcd.length == 0) {
-            context.addResult(ResultLevel.ERROR, "Rowkey columns is empty");
             return;
         }
 
         for (int i = 0; i < rcd.length; i++) {
             RowKeyColDesc rd = rcd[i];
-            if (rd.getLength() != 0 && (!StringUtils.isEmpty(rd.getDictionary()) && !rd.getDictionary().equals("false"))) {
-                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn() + " must not have both 'length' and 'dictionary' attribute");
+            if (rd.getColumn() == null || rd.getColumn().length() == 0) {
+                context.addResult(ResultLevel.ERROR, "Rowkey column empty");
+                continue;
             }
-            if (rd.getLength() == 0 && (StringUtils.isEmpty(rd.getDictionary()) || rd.getDictionary().equals("false"))) {
-                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn() + " must not have both 'length' and 'dictionary' empty");
+            if (!rd.getEncoding().equalsIgnoreCase("dict") && !rd.getEncoding().toLowerCase().startsWith("fixed_length")) {
+                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn() + " encoding not dict nor fixed_length");
             }
         }
 
     }
-
 }

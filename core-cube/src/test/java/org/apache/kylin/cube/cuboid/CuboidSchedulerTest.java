@@ -18,14 +18,12 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
@@ -79,37 +77,16 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         return getCubeDescManager().getCubeDesc("test_kylin_cube_with_slr_desc");
     }
 
+    private CubeDesc getTestKylinCubeWithSellerLeft() {
+        return getCubeDescManager().getCubeDesc("test_kylin_cube_with_slr_left_join_desc");
+    }
+
     private CubeDesc getTestKylinCubeWithoutSellerLeftJoin() {
         return getCubeDescManager().getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
     }
 
-    @Test
-    public void testFindSmallerSibling1() {
-        CubeDesc cube = getTestKylinCubeWithoutSeller();
-        CuboidScheduler scheduler = new CuboidScheduler(cube);
-
-        Collection<Long> siblings;
-
-        siblings = scheduler.findSmallerSibling(255);
-        assertEquals("[]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(133);
-        assertEquals("[131]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(127);
-        assertEquals("[]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(134);
-        assertEquals("[131, 133]", sortToString(siblings));
-
-        siblings = scheduler.findSmallerSibling(130);
-        assertEquals("[129]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(5);
-        assertEquals("[]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(135);
-        assertEquals("[]", siblings.toString());
+    private CubeDesc getStreamingCubeDesc() {
+        return getCubeDescManager().getCubeDesc("test_streaming_table_cube_desc");
     }
 
     private void testSpanningAndGetParent(CuboidScheduler scheduler, CubeDesc cube, long[] cuboidIds) {
@@ -121,32 +98,6 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
                 assertTrue(Cuboid.isValid(cube, child));
             }
         }
-    }
-
-    @Test
-    public void testFindSmallerSibling2() {
-        CubeDesc cube = getTestKylinCubeWithSeller();
-        CuboidScheduler scheduler = new CuboidScheduler(cube);
-
-        Collection<Long> siblings;
-
-        siblings = scheduler.findSmallerSibling(511);
-        assertEquals("[]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(toLong("110111111"));
-        assertEquals("[383]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(toLong("101110111"));
-        assertEquals("[319]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(toLong("111111000"));
-        assertEquals("[]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(toLong("111111000"));
-        assertEquals("[]", siblings.toString());
-
-        siblings = scheduler.findSmallerSibling(toLong("110000000"));
-        assertEquals("[288, 320]", sortToString(siblings));
     }
 
     @Test
@@ -183,7 +134,12 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         CuboidScheduler scheduler = new CuboidScheduler(cube);
 
         long quiz = toLong("01100111");
-        testSpanningAndGetParent(scheduler, cube, new long[] { quiz });
+        try {
+            testSpanningAndGetParent(scheduler, cube, new long[] { quiz });
+            fail();
+        } catch (IllegalStateException ex) {
+            //expected
+        }
 
         // generate 7d
         System.out.println("Spanning for 7D Cuboids");
@@ -210,16 +166,6 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testGetSpanningCuboid() {
-        CubeDesc cube = getTestKylinCubeWithoutSeller();
-        CuboidScheduler scheduler = new CuboidScheduler(cube);
-
-        Collection<Long> spnanningCuboids = scheduler.getSpanningCuboid(248);
-
-        assertEquals("[]", spnanningCuboids.toString());
-    }
-
-    @Test
     public void testGetCardinality() {
         CubeDesc cube = getTestKylinCubeWithSeller();
         CuboidScheduler scheduler = new CuboidScheduler(cube);
@@ -233,43 +179,98 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testCuboidGeneration1() {
+
         CubeDesc cube = getTestKylinCubeWithoutSeller();
-        CuboidCLI.simulateCuboidGeneration(cube);
+        CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
     public void testCuboidGeneration2() {
         CubeDesc cube = getTestKylinCubeWithSeller();
-        CuboidCLI.simulateCuboidGeneration(cube);
+        CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
     public void testCuboidGeneration3() {
         CubeDesc cube = getTestKylinCubeWithoutSellerLeftJoin();
-        CuboidCLI.simulateCuboidGeneration(cube);
+        CuboidCLI.simulateCuboidGeneration(cube, true);
+    }
+
+    @Test
+    public void testCuboidGeneration4() {
+        CubeDesc cube = getTestKylinCubeWithSellerLeft();
+        CuboidCLI.simulateCuboidGeneration(cube, true);
+    }
+
+    @Test
+    public void testCuboidGeneration5() {
+        CubeDesc cube = getStreamingCubeDesc();
+        CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
     @Test
     public void testCuboidCounts1() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
+        CuboidScheduler cuboidScheduler = new CuboidScheduler(cube);
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
         printCount(counts);
-        assertArrayEquals(new int[] { 1, 4, 6, 6, 4, 4, 2, 0 }, counts);
+        int sum = 0;
+        for (Integer x : counts) {
+            sum += x;
+        }
+        assertEquals(cuboidScheduler.getCuboidCount(), sum);
     }
 
     @Test
     public void testCuboidCounts2() {
-        CubeDesc cube = getTestKylinCubeWithSeller();
-        CuboidCLI.calculateAllLevelCount(cube);
+        CubeDesc cube = getTestKylinCubeWithoutSellerLeftJoin();
+        CuboidScheduler cuboidScheduler = new CuboidScheduler(cube);
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
         printCount(counts);
-        assertArrayEquals(new int[] { 1, 4, 7, 8, 7, 4 }, counts);
+        int sum = 0;
+        for (Integer x : counts) {
+            sum += x;
+        }
+        assertEquals(cuboidScheduler.getCuboidCount(), sum);
     }
 
-    private String sortToString(Collection<Long> longs) {
-        ArrayList<Long> copy = new ArrayList<Long>(longs);
-        Collections.sort(copy);
-        return copy.toString();
+    @Test
+    public void testCuboidCounts3() {
+        CubeDesc cube = getTestKylinCubeWithSeller();
+        CuboidScheduler cuboidScheduler = new CuboidScheduler(cube);
+        int[] counts = CuboidCLI.calculateAllLevelCount(cube);
+        printCount(counts);
+        int sum = 0;
+        for (Integer x : counts) {
+            sum += x;
+        }
+        assertEquals(cuboidScheduler.getCuboidCount(), sum);
+    }
+
+    @Test
+    public void testCuboidCounts4() {
+        CubeDesc cube = getTestKylinCubeWithSellerLeft();
+        CuboidScheduler cuboidScheduler = new CuboidScheduler(cube);
+        int[] counts = CuboidCLI.calculateAllLevelCount(cube);
+        printCount(counts);
+        int sum = 0;
+        for (Integer x : counts) {
+            sum += x;
+        }
+        assertEquals(cuboidScheduler.getCuboidCount(), sum);
+    }
+
+    @Test
+    public void testCuboidCounts5() {
+        CubeDesc cube = getStreamingCubeDesc();
+        CuboidScheduler cuboidScheduler = new CuboidScheduler(cube);
+        int[] counts = CuboidCLI.calculateAllLevelCount(cube);
+        printCount(counts);
+        int sum = 0;
+        for (Integer x : counts) {
+            sum += x;
+        }
+        assertEquals(cuboidScheduler.getCuboidCount(), sum);
     }
 
     public CubeDescManager getCubeDescManager() {

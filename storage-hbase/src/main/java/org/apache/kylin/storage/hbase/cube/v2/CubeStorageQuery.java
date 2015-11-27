@@ -101,7 +101,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             try {
                 scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation);
             } catch (NotEnoughGTInfoException e) {
-                logger.info("Cannot construct Segment {}'s GTInfo, this may due to empty segment or broken metadata");
+                logger.info("Cannot construct Segment {}'s GTInfo, this may due to empty segment or broken metadata", cubeSeg);
                 continue;
             }
             scanners.add(scanner);

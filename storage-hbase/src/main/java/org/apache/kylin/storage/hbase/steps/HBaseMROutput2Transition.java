@@ -274,7 +274,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             if (rowValueDecoders == null) {
                 List<RowValueDecoder> valueDecoderList = Lists.newArrayList();
                 List<MeasureDesc> measuresDescs = Lists.newArrayList();
-                for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHBaseMapping().getColumnFamily()) {
+                for (HBaseColumnFamilyDesc cfDesc : seg.getCubeDesc().getHbaseMapping().getColumnFamily()) {
                     for (HBaseColumnDesc colDesc : cfDesc.getColumns()) {
                         valueDecoderList.add(new RowValueDecoder(colDesc));
                         for (MeasureDesc measure : colDesc.getMeasures()) {

@@ -223,11 +223,11 @@ public class DictionaryManager {
         }
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, String dict, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
+    public DictionaryInfo buildDictionary(DataModelDesc model, boolean usingDict, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
 
         logger.info("building dictionary for " + col);
 
-        TblColRef srcCol = decideSourceData(model, dict, col);
+        TblColRef srcCol = decideSourceData(model, usingDict, col);
         String srcTable = srcCol.getTable();
         String srcColName = srcCol.getName();
         int srcColIdx = srcCol.getColumnDesc().getZeroBasedIndex();
@@ -259,9 +259,9 @@ public class DictionaryManager {
     /**
      * Decide a dictionary's source data, leverage PK-FK relationship.
      */
-    public TblColRef decideSourceData(DataModelDesc model, String dict, TblColRef col) throws IOException {
+    public TblColRef decideSourceData(DataModelDesc model, boolean usingDict, TblColRef col) throws IOException {
         // Note FK on fact table is supported by scan the related PK on lookup table
-        if ("true".equals(dict) || "string".equals(dict) || "number".equals(dict) || "any".equals(dict)) {
+        if (usingDict) {
             // FK on fact table and join type is inner, use PK from lookup instead
             if (model.isFactTable(col.getTable())) {
                 TblColRef pkCol = model.findPKByFK(col, "inner");
@@ -270,7 +270,7 @@ public class DictionaryManager {
             }
             return col;
         } else
-            throw new IllegalArgumentException("Unknown dictionary value: " + dict);
+            throw new IllegalArgumentException("Not using Dictionary ");
     }
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {

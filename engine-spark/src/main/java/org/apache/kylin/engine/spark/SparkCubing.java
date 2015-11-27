@@ -229,8 +229,7 @@ public class SparkCubing extends AbstractApplication {
         final ByteArray[] row_hashcodes = new ByteArray[nRowKey];
 
         for (Long cuboidId : allCuboidIds) {
-            BitSet bitSet = BitSet.valueOf(new long[]{cuboidId});
-            Integer[] cuboidBitSet = new Integer[bitSet.cardinality()];
+            Integer[] cuboidBitSet = new Integer[Long.bitCount(cuboidId)];
 
             long mask = Long.highestOneBit(baseCuboidId);
             int position = 0;
@@ -480,7 +479,7 @@ public class SparkCubing extends AbstractApplication {
         final Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
         FileSystem fs = FileSystem.get(hbaseConf);
         FsPermission permission = new FsPermission((short) 0777);
-        for (HBaseColumnFamilyDesc cf : cubeDesc.getHBaseMapping().getColumnFamily()) {
+        for (HBaseColumnFamilyDesc cf : cubeDesc.getHbaseMapping().getColumnFamily()) {
             String cfName = cf.getName();
             Path columnFamilyPath = new Path(hfileLocation, cfName);
 

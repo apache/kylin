@@ -69,7 +69,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
             CubeDesc cubeDesc = cube.getDescriptor();
             FsPermission permission = new FsPermission((short) 0777);
-            for (HBaseColumnFamilyDesc cf : cubeDesc.getHBaseMapping().getColumnFamily()) {
+            for (HBaseColumnFamilyDesc cf : cubeDesc.getHbaseMapping().getColumnFamily()) {
                 String cfName = cf.getName();
                 Path columnFamilyPath = new Path(input, cfName);
 

@@ -18,137 +18,63 @@
 
 package org.apache.kylin.cube.model;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyDesc {
 
-    public static class HierarchyMask {
-        public long fullMask;
-        public long[] allMasks;
-    }
-
-    public static class AggrGroupMask {
-        public AggrGroupMask(int size) {
-            groupOneBitMasks = new long[size];
-        }
-
-        public long groupMask;
-        public long groupOneBitMasks[];
-        public long uniqueMask;
-        public long leftoverMask;
-    }
-
     @JsonProperty("rowkey_columns")
     private RowKeyColDesc[] rowkeyColumns;
-    @JsonProperty("aggregation_groups")
-    private String[][] aggregationGroups;
 
     // computed content
+    private long fullMask;
     private CubeDesc cubeDesc;
     private Map<TblColRef, RowKeyColDesc> columnMap;
-
-    private long fullMask;
-    private long mandatoryColumnMask;
-    private AggrGroupMask[] aggrGroupMasks;
-    private long aggrGroupFullMask;
-    private long tailMask;
-
-    private List<HierarchyMask> hierarchyMasks;
 
     public RowKeyColDesc[] getRowKeyColumns() {
         return rowkeyColumns;
     }
 
-    // search a specific row key col
-    public int getRowKeyIndexByColumnName(String columnName) {
-        if (this.rowkeyColumns == null)
-            return -1;
+    //    public int getNCuboidBuildLevels() {
+    //        // N aggregation columns requires N levels of cuboid build
+    //        // - N columns requires N-1 levels build
+    //        // - zero tail cuboid needs one more additional level
+    //        Set<String> aggDims = new HashSet<String>();
+    //        for (String[] aggrGroup : aggregationGroups) {
+    //            for (String dim : aggrGroup) {
+    //                aggDims.add(dim);
+    //            }
+    //        }
+    //        return aggDims.size();
+    //    }
 
-        for (int i = 0; i < this.rowkeyColumns.length; ++i) {
-            RowKeyColDesc desc = this.rowkeyColumns[i];
-            if (desc.getColumn().equalsIgnoreCase(columnName)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public int getNCuboidBuildLevels() {
-        // N aggregation columns requires N levels of cuboid build
-        // - N columns requires N-1 levels build
-        // - zero tail cuboid needs one more additional level
-        Set<String> aggDims = new HashSet<String>();
-        for (String[] aggrGroup : aggregationGroups) {
-            for (String dim : aggrGroup) {
-                aggDims.add(dim);
-            }
-        }
-        return aggDims.size();
-    }
-
-    public String[][] getAggregationGroups() {
-        return aggregationGroups;
-    }
-
-    public CubeDesc getCubeRef() {
-        return cubeDesc;
-    }
-
-    public void setCubeRef(CubeDesc cubeRef) {
+    public void setCubeDesc(CubeDesc cubeRef) {
         this.cubeDesc = cubeRef;
-    }
-
-    public long getFullMask() {
-        return fullMask;
-    }
-
-    public long getMandatoryColumnMask() {
-        return mandatoryColumnMask;
-    }
-
-    public long getAggrGroupFullMask() {
-        return aggrGroupFullMask;
-    }
-
-    public AggrGroupMask[] getAggrGroupMasks() {
-        return aggrGroupMasks;
-    }
-
-    public List<HierarchyMask> getHierarchyMasks() {
-        return hierarchyMasks;
-    }
-
-    public long getTailMask() {
-        return tailMask;
     }
 
     public int getColumnBitIndex(TblColRef col) {
         return getColDesc(col).getBitIndex();
     }
 
+    /**
+     * caller of this method must make sure that col is NOT using dictionary
+     * otherwise this will always return 0 for dict columns
+     * @param col
+     * @return
+     */
     public int getColumnLength(TblColRef col) {
         return getColDesc(col).getLength();
-    }
-
-    public String getDictionary(TblColRef col) {
-        return getColDesc(col).getDictionary();
     }
 
     private RowKeyColDesc getColDesc(TblColRef col) {
@@ -158,40 +84,33 @@ public class RowKeyDesc {
         return desc;
     }
 
-    public boolean isUseDictionary(int index) {
-        String useDictionary = rowkeyColumns[index].getDictionary();
-        return useDictionary(useDictionary);
-    }
-
     public boolean isUseDictionary(TblColRef col) {
-        String useDictionary = getDictionary(col);
-        return useDictionary(useDictionary);
+        return getColDesc(col).isUsingDictionary();
     }
 
-    private boolean useDictionary(String useDictionary) {
-        return !StringUtils.isBlank(useDictionary) && !"false".equals(useDictionary);
-    }
+    public void init(CubeDesc cubeDesc) {
 
-    public void init(CubeDesc cube) {
-        setCubeRef(cube);
-        Map<String, TblColRef> colNameAbbr = cube.buildColumnNameAbbreviation();
+        setCubeDesc(cubeDesc);
+        Map<String, TblColRef> colNameAbbr = cubeDesc.buildColumnNameAbbreviation();
 
         buildRowKey(colNameAbbr);
-        buildAggregationGroups(colNameAbbr);
-        buildHierarchyMasks();
+    }
+
+    public void setRowkeyColumns(RowKeyColDesc[] rowkeyColumns) {
+        this.rowkeyColumns = rowkeyColumns;
     }
 
     @Override
     public String toString() {
-        return "RowKeyDesc [rowkeyColumns=" + Arrays.toString(rowkeyColumns) + ", aggregationGroups=" + Arrays.toString(aggregationGroups) + "]";
+        return Objects.toStringHelper(this).add("RowKeyColumns", Arrays.toString(rowkeyColumns)).toString();
     }
 
     private void buildRowKey(Map<String, TblColRef> colNameAbbr) {
         columnMap = new HashMap<TblColRef, RowKeyColDesc>();
-        mandatoryColumnMask = 0;
 
         for (int i = 0; i < rowkeyColumns.length; i++) {
             RowKeyColDesc rowKeyColDesc = rowkeyColumns[i];
+            rowKeyColDesc.init();
             String column = rowKeyColDesc.getColumn();
             rowKeyColDesc.setColumn(column.toUpperCase());
             rowKeyColDesc.setBitIndex(rowkeyColumns.length - i - 1);
@@ -201,95 +120,17 @@ public class RowKeyDesc {
             }
 
             columnMap.put(rowKeyColDesc.getColRef(), rowKeyColDesc);
-
-            if (rowKeyColDesc.isMandatory()) {
-                mandatoryColumnMask |= 1L << rowKeyColDesc.getBitIndex();
-            }
-        }
-    }
-
-    private void buildAggregationGroups(Map<String, TblColRef> colNameAbbr) {
-        if (aggregationGroups == null) {
-            aggregationGroups = new String[0][];
         }
 
-        for (int i = 0; i < aggregationGroups.length; i++) {
-            StringUtil.toUpperCaseArray(aggregationGroups[i], this.aggregationGroups[i]);
-        }
-
+        this.fullMask = 0L;
         for (int i = 0; i < this.rowkeyColumns.length; i++) {
             int index = rowkeyColumns[i].getBitIndex();
             this.fullMask |= 1L << index;
         }
-
-        this.aggrGroupMasks = new AggrGroupMask[aggregationGroups.length];
-        for (int i = 0; i < this.aggregationGroups.length; i++) {
-            String[] aggGrp = this.aggregationGroups[i];
-            AggrGroupMask mask = new AggrGroupMask(aggGrp.length);
-
-            for (int j = 0; j < aggGrp.length; j++) {
-                TblColRef aggCol = colNameAbbr.get(aggGrp[j].toUpperCase());
-                if (aggCol == null) {
-                    throw new IllegalArgumentException("Can't find aggregation column " + aggGrp[j] + " in  cube " + this.cubeDesc.getName());
-                }
-                Integer index = getColumnBitIndex(aggCol);
-                mask.groupMask |= 1L << index;
-                mask.groupOneBitMasks[j] = 1L << index;
-                this.aggrGroupFullMask |= 1L << index;
-            }
-            this.aggrGroupMasks[i] = mask;
-        }
-
-        this.tailMask = fullMask ^ mandatoryColumnMask ^ aggrGroupFullMask;
-
-        // unique mask = (bits in this group) - (bits in following groups)
-        // leftover mask = (tail bits) + (bits in following groups) - (bits in
-        // this group)
-        for (int i = 0; i < aggrGroupMasks.length; i++) {
-            AggrGroupMask mask = aggrGroupMasks[i];
-
-            mask.uniqueMask = mask.groupMask;
-            for (int j = i + 1; j < aggrGroupMasks.length; j++) {
-                mask.uniqueMask &= ~aggrGroupMasks[j].groupMask;
-            }
-
-            mask.leftoverMask = tailMask;
-            for (int j = i + 1; j < aggrGroupMasks.length; j++) {
-                mask.leftoverMask |= aggrGroupMasks[j].groupMask;
-            }
-            mask.leftoverMask &= ~mask.groupMask;
-        }
     }
 
-    private void buildHierarchyMasks() {
-        this.hierarchyMasks = new ArrayList<HierarchyMask>();
-
-        for (DimensionDesc dimension : this.cubeDesc.getDimensions()) {
-            HierarchyDesc[] hierarchies = dimension.getHierarchy();
-            if (hierarchies == null || hierarchies.length == 0)
-                continue;
-
-            HierarchyMask mask = new HierarchyMask();
-            ArrayList<Long> allMaskList = new ArrayList<Long>();
-            for (int i = 0; i < hierarchies.length; i++) {
-                TblColRef hColumn = hierarchies[i].getColumnRef();
-                Integer index = getColumnBitIndex(hColumn);
-                long bit = 1L << index;
-
-                if ((tailMask & bit) > 0)
-                    continue; // ignore levels in tail, they don't participate
-                              // aggregation group combination anyway
-
-                mask.fullMask |= bit;
-                allMaskList.add(mask.fullMask);
-            }
-
-            mask.allMasks = new long[allMaskList.size()];
-            for (int i = 0; i < allMaskList.size(); i++)
-                mask.allMasks[i] = allMaskList.get(i);
-
-            this.hierarchyMasks.add(mask);
-        }
+    public long getFullMask() {
+        return this.fullMask;
     }
 
 }

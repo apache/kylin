@@ -55,7 +55,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
     @Test
     public void testDecode() throws Exception {
         CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
-        HBaseColumnDesc hbaseCol = cubeDesc.getHBaseMapping().getColumnFamily()[0].getColumns()[0];
+        HBaseColumnDesc hbaseCol = cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0];
 
         MeasureCodec codec = new MeasureCodec(hbaseCol.getMeasures());
         BigDecimal sum = new BigDecimal("333.1234567");
@@ -86,7 +86,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
     @Test(expected = IllegalArgumentException.class)
     public void testError() throws Exception {
         CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
-        HBaseColumnDesc hbaseCol = cubeDesc.getHBaseMapping().getColumnFamily()[0].getColumns()[0];
+        HBaseColumnDesc hbaseCol = cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0];
 
         MeasureCodec codec = new MeasureCodec(hbaseCol.getMeasures());
         BigDecimal sum = new BigDecimal("11111111111111111111333.1234567");

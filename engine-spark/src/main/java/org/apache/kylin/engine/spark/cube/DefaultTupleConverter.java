@@ -18,7 +18,6 @@
 package org.apache.kylin.engine.spark.cube;
 
 import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.Map;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -70,7 +69,7 @@ public final class DefaultTupleConverter implements TupleConverter {
         Cuboid cuboid = Cuboid.findById(segment.getCubeDesc(), cuboidId);
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(cuboid);
 
-        final int dimensions = BitSet.valueOf(new long[] { cuboidId }).cardinality();
+        final int dimensions = Long.bitCount(cuboidId);
         int[] measureColumnsIndex = getMeasureColumnsIndex();
         for (int i = 0; i < measureCount; i++) {
             measureColumnsIndex[i] = dimensions + i;

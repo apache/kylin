@@ -209,7 +209,7 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
         else {
             ret = cubeDesc.getRowkey().isUseDictionary(col);
             if (ret) {
-                String dictTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col).getTable();
+                String dictTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().isUseDictionary(col), col).getTable();
                 ret = cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
             }
             dimensionsNeedDict.put(col, ret);

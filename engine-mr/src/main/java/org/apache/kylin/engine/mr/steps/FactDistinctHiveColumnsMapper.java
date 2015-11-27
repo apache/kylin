@@ -91,8 +91,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
 
     private void addCuboidBitSet(long cuboidId, List<Integer[]> allCuboidsBitSet, List<Long> allCuboids) {
         allCuboids.add(cuboidId);
-        BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
-        Integer[] indice = new Integer[bitSet.cardinality()];
+        Integer[] indice = new Integer[Long.bitCount(cuboidId)];
 
         long mask = Long.highestOneBit(baseCuboidId);
         int position = 0;

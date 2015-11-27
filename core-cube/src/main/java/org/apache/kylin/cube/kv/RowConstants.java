@@ -20,6 +20,8 @@ package org.apache.kylin.cube.kv;
 
 public class RowConstants {
 
+    public static final int ROWKEY_COL_DEFAULT_LENGTH = 256;
+
     // row key fixed length place holder
     public static final byte ROWKEY_PLACE_HOLDER_BYTE = 9;
     // row key lower bound

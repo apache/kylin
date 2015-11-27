@@ -47,7 +47,7 @@ public class CubeHTableUtil {
                 tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
             }
 
-            for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHBaseMapping().getColumnFamily()) {
+            for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
                 HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
                 cf.setMaxVersions(1);
 

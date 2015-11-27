@@ -61,7 +61,7 @@ public class CuboidToGridTableMapping {
 
         // column blocks of metrics
         ArrayList<BitSet> metricsColBlocks = Lists.newArrayList();
-        for (HBaseColumnFamilyDesc familyDesc : cuboid.getCube().getHbaseMapping().getColumnFamily()) {
+        for (HBaseColumnFamilyDesc familyDesc : cuboid.getCubeDesc().getHbaseMapping().getColumnFamily()) {
             for (int i = 0; i < familyDesc.getColumns().length; i++) {
                 metricsColBlocks.add(new BitSet());
             }
@@ -69,7 +69,7 @@ public class CuboidToGridTableMapping {
         
         // metrics
         metrics2gt = LinkedListMultimap.create();
-        for (MeasureDesc measure :cuboid.getCube().getMeasures()) {
+        for (MeasureDesc measure :cuboid.getCubeDesc().getMeasures()) {
             // Count distinct & holistic count distinct are equals() but different.
             // Ensure the holistic version if exists is always the first.
             FunctionDesc func = measure.getFunction();
@@ -85,7 +85,7 @@ public class CuboidToGridTableMapping {
             
             // map to column block
             int cbIdx = 0;
-            for (HBaseColumnFamilyDesc familyDesc : cuboid.getCube().getHbaseMapping().getColumnFamily()) {
+            for (HBaseColumnFamilyDesc familyDesc : cuboid.getCubeDesc().getHbaseMapping().getColumnFamily()) {
                 for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
                     if (hbaseColDesc.containsMeasure(measure.getName())) {
                         metricsColBlocks.get(cbIdx).set(gtColIdx);
@@ -102,7 +102,7 @@ public class CuboidToGridTableMapping {
         }
         
         nMetrics = gtColIdx - nDimensions;
-        assert nMetrics == cuboid.getCube().getMeasures().size();
+        assert nMetrics == cuboid.getCubeDesc().getMeasures().size();
     }
 
     public int getColumnCount() {
@@ -156,7 +156,7 @@ public class CuboidToGridTableMapping {
 
     public Map<Integer, Integer> getDependentMetricsMap() {
         Map<Integer, Integer> result = Maps.newHashMap();
-        List<MeasureDesc> measures = cuboid.getCube().getMeasures();
+        List<MeasureDesc> measures = cuboid.getCubeDesc().getMeasures();
         for (MeasureDesc child : measures) {
             if (child.getDependentMeasureRef() != null) {
                 boolean ok = false;

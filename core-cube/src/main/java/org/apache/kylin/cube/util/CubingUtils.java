@@ -34,7 +34,6 @@
 package org.apache.kylin.cube.util;
 
 import java.io.IOException;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -42,14 +41,6 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
@@ -59,11 +50,24 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dict.*;
+import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.dict.DictionaryGenerator;
+import org.apache.kylin.dict.DictionaryInfo;
+import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 /**
  */
@@ -82,8 +86,7 @@ public class CubingUtils {
             @Nullable
             @Override
             public Integer[] apply(@Nullable Long cuboidId) {
-                BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
-                Integer[] result = new Integer[bitSet.cardinality()];
+                Integer[] result = new Integer[Long.bitCount(cuboidId)];
 
                 long mask = Long.highestOneBit(baseCuboidId);
                 int position = 0;
@@ -100,8 +103,7 @@ public class CubingUtils {
         final Map<Long, HyperLogLogPlusCounter> result = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
         for (Long cuboidId : allCuboidIds) {
             result.put(cuboidId, new HyperLogLogPlusCounter(14));
-            BitSet bitSet = BitSet.valueOf(new long[] { cuboidId });
-            Integer[] cuboidBitSet = new Integer[bitSet.cardinality()];
+            Integer[] cuboidBitSet = new Integer[Long.bitCount(cuboidId)];
 
             long mask = Long.highestOneBit(baseCuboidId);
             int position = 0;

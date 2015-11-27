@@ -21,36 +21,168 @@ package org.apache.kylin.cube.cuboid;
 /** 
  */
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.RowKeyDesc;
-import org.apache.kylin.cube.model.RowKeyDesc.AggrGroupMask;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class CuboidScheduler {
 
-    private final CubeDesc cubeDef;
-    private final int size;
+    private final CubeDesc cubeDesc;
     private final long max;
     private final Map<Long, List<Long>> cache;
 
-    public CuboidScheduler(CubeDesc cube) {
-        this.cubeDef = cube;
-        this.size = cube.getRowkey().getRowKeyColumns().length;
+    public CuboidScheduler(CubeDesc cubeDesc) {
+        this.cubeDesc = cubeDesc;
+        int size = this.cubeDesc.getRowkey().getRowKeyColumns().length;
         this.max = (long) Math.pow(2, size) - 1;
         this.cache = new ConcurrentHashMap<Long, List<Long>>();
     }
 
+    public long getParent(long child) {
+        List<Long> candidates = Lists.newArrayList();
+        long baseCuboidID = Cuboid.getBaseCuboidId(cubeDesc);
+        if (child == baseCuboidID || !Cuboid.isValid(cubeDesc, child)) {
+            throw new IllegalStateException();
+        }
+        for (AggregationGroup agg : Cuboid.getValidAggGroupForCuboid(cubeDesc, child)) {
+            boolean thisAggContributed = false;
+            if (agg.getPartialCubeFullMask() == child) {
+                //                candidates.add(baseCuboidID);
+                //                continue;
+                return baseCuboidID;
+
+            }
+
+            //+1 dim
+
+            //add one normal dim (only try the lowest dim)
+            long normalDimsMask = (agg.getNormalDimsMask() & ~child);
+            if (normalDimsMask != 0) {
+                candidates.add(child | Long.lowestOneBit(normalDimsMask));
+                thisAggContributed = true;
+            }
+
+            for (AggregationGroup.HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
+                if ((child & hierarchyMask.fullMask) == 0) {
+                    candidates.add(child | hierarchyMask.dims[0]);
+                    thisAggContributed = true;
+                } else {
+                    for (int i = hierarchyMask.allMasks.length - 1; i >= 0; i--) {
+                        if ((child & hierarchyMask.allMasks[i]) == hierarchyMask.allMasks[i]) {
+                            if (i == hierarchyMask.allMasks.length - 1) {
+                                continue;//match the full hierarchy
+                            }
+                            if ((agg.getJointDimsMask() & hierarchyMask.dims[i + 1]) == 0) {
+                                if ((child & hierarchyMask.dims[i + 1]) == 0) {
+                                    //only when the hierarchy dim is not among joints
+                                    candidates.add(child | hierarchyMask.dims[i + 1]);
+                                    thisAggContributed = true;
+                                }
+                            }
+                            break;//if hierarchyMask 111 is matched, won't check 110 or 100
+                        }
+                    }
+                }
+            }
+
+            if (thisAggContributed) {
+                //next section is going to append more than 2 dim to child
+                //thisAggContributed means there's already 1 dim added to child
+                //which can safely prune the 2+ dim candidates.
+                continue;
+            }
+
+            //2+ dim candidates
+            for (long joint : agg.getJoints()) {
+                if ((child & joint) == 0) {
+                    candidates.add(child | joint);
+                }
+            }
+        }
+
+        if (candidates.size() == 0) {
+            throw new IllegalStateException();
+        }
+
+        return Collections.min(candidates, Cuboid.cuboidSelectComparator);
+    }
+
+    private boolean containsNonMandatoryColumn(AggregationGroup agg, long cuboid) {
+        return (cuboid & ~agg.getMandatoryColumnMask()) != 0;
+    }
+
+    public Set<Long> getPotentialChildren(long parent) {
+
+        if (parent != Cuboid.getBaseCuboid(cubeDesc).getId() && !Cuboid.isValid(cubeDesc, parent)) {
+            throw new IllegalStateException();
+        }
+
+        HashSet<Long> set = Sets.newHashSet();
+        if (Long.bitCount(parent) == 1) {
+            //do not aggregate apex cuboid
+            return set;
+        }
+
+        if (parent == Cuboid.getBaseCuboidId(cubeDesc)) {
+            //base cuboid is responsible for spawning each agg group's root
+            for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+                long partialCubeFullMask = agg.getPartialCubeFullMask();
+                if (partialCubeFullMask != parent && containsNonMandatoryColumn(agg, partialCubeFullMask)) {
+                    set.add(partialCubeFullMask);
+                }
+            }
+        }
+
+        for (AggregationGroup agg : Cuboid.getValidAggGroupForCuboid(cubeDesc, parent)) {
+
+            //normal dim section
+            for (long normalDimMask : agg.getNormalDims()) {
+                long common = parent & normalDimMask;
+                long temp = parent ^ normalDimMask;
+                if (common != 0 && containsNonMandatoryColumn(agg, temp)) {
+                    set.add(temp);
+                }
+            }
+
+            for (AggregationGroup.HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
+                for (int i = hierarchyMask.allMasks.length - 1; i >= 0; i--) {
+                    if ((parent & hierarchyMask.allMasks[i]) == hierarchyMask.allMasks[i]) {
+                        if ((agg.getJointDimsMask() & hierarchyMask.dims[i]) == 0) {
+                            if (containsNonMandatoryColumn(agg, parent ^ hierarchyMask.dims[i])) {
+                                //only when the hierarchy dim is not among joints
+                                set.add(parent ^ hierarchyMask.dims[i]);
+                            }
+                        }
+                        break;//if hierarchyMask 111 is matched, won't check 110 or 100
+                    }
+                }
+            }
+
+            //joint dim section
+            for (long joint : agg.getJoints()) {
+                if ((parent & joint) == joint) {
+                    if (containsNonMandatoryColumn(agg, parent ^ joint)) {
+                        set.add(parent ^ joint);
+                    }
+                }
+            }
+
+        }
+
+        return set;
+    }
+
     public int getCuboidCount() {
-        return getCuboidCount(Cuboid.getBaseCuboidId(cubeDef));
+        return getCuboidCount(Cuboid.getBaseCuboidId(cubeDesc));
     }
 
     private int getCuboidCount(long cuboidId) {
@@ -71,130 +203,16 @@ public class CuboidScheduler {
             return result;
         }
 
-        // smaller sibling's children
-        Collection<Long> allPrevOffspring = new HashSet<Long>();
-        for (Long sibling : findSmallerSibling(cuboid)) {
-            Collection<Long> prevOffsprings = generateChildren(sibling);
-            allPrevOffspring.addAll(prevOffsprings);
-        }
-
-        // my children is my generation excluding smaller sibling's generation
-        result = new ArrayList<Long>();
-        for (Long offspring : generateChildren(cuboid)) {
-            if (!allPrevOffspring.contains(offspring)) {
-                result.add(offspring);
+        result = Lists.newArrayList();
+        Set<Long> potentials = getPotentialChildren(cuboid);
+        for (Long potential : potentials) {
+            if (getParent(potential) == cuboid) {
+                result.add(potential);
             }
         }
 
         cache.put(cuboid, result);
         return result;
-    }
-
-    private Collection<Long> generateChildren(long cuboid) {
-        Collection<Long> result = new HashSet<Long>();
-
-        // generate zero tail cuboid -- the one with all 1 in the first
-        // aggregation group and all 0 for the rest bits
-        generateZeroTailBase(cuboid, result);
-
-        RowKeyDesc rowkey = cubeDef.getRowkey();
-        long cuboidWithoutMandatory = cuboid & ~rowkey.getMandatoryColumnMask();
-        for (AggrGroupMask mask : rowkey.getAggrGroupMasks()) {
-            if (belongTo(cuboidWithoutMandatory, mask) == false)
-                continue;
-
-            long[] groupOneBitMasks = mask.groupOneBitMasks;
-            for (int i = 0; i < groupOneBitMasks.length; i++) {
-                long oneBit = groupOneBitMasks[i];
-                if ((cuboid & oneBit) == 0)
-                    continue;
-
-                long child = cuboid ^ oneBit;
-                if (Cuboid.isValid(cubeDef, child)) {
-                    result.add(child);
-                }
-            }
-
-            if ((cuboidWithoutMandatory & mask.uniqueMask) > 0)
-                break;
-        }
-
-        return result;
-    }
-
-    private void generateZeroTailBase(long cuboid, Collection<Long> result) {
-        RowKeyDesc rowkey = cubeDef.getRowkey();
-
-        long cuboidWithoutMandatory = cuboid & ~rowkey.getMandatoryColumnMask();
-
-        for (AggrGroupMask mask : rowkey.getAggrGroupMasks()) {
-            if ((cuboidWithoutMandatory & mask.groupMask) == mask.groupMask && (cuboidWithoutMandatory & mask.leftoverMask) == mask.leftoverMask) {
-                long zeroTail = rowkey.getMandatoryColumnMask() | mask.groupMask;
-                if (zeroTail > 0 && zeroTail != cuboid) {
-                    result.add(zeroTail);
-                }
-            }
-            if ((cuboidWithoutMandatory & mask.uniqueMask) > 0)
-                break;
-        }
-    }
-
-    public Collection<Long> findSmallerSibling(long cuboid) {
-        if (!Cuboid.isValid(cubeDef, cuboid)) {
-            return Collections.emptyList();
-        }
-
-        RowKeyDesc rowkey = cubeDef.getRowkey();
-
-        // do combination in all related groups
-        long groupAllBitMask = 0;
-        for (AggrGroupMask mask : rowkey.getAggrGroupMasks()) {
-            if ((mask.groupMask & cuboid) > 0) {
-                groupAllBitMask |= mask.groupMask;
-            }
-        }
-
-        long groupBitValue = cuboid & groupAllBitMask;
-        long leftBitValue = cuboid & ~groupAllBitMask;
-        long[] groupOneBits = bits(groupAllBitMask);
-
-        Collection<Long> siblings = new HashSet<Long>();
-        combination(cuboid, siblings, groupOneBits, 0, leftBitValue, Long.bitCount(groupBitValue));
-        return siblings;
-    }
-
-    private long[] bits(long groupAllBitMask) {
-        int size = Long.bitCount(groupAllBitMask);
-        long[] r = new long[size];
-        long l = groupAllBitMask;
-        int i = 0;
-        while (l != 0) {
-            long bit = Long.highestOneBit(l);
-            r[i++] = bit;
-            l ^= bit;
-        }
-        return r;
-    }
-
-    private void combination(long cuboid, Collection<Long> siblings, long[] bitMasks, int offset, long bitValue, int k) {
-        if (k == 0) {
-            if (Cuboid.isValid(cubeDef, bitValue)) {
-                siblings.add(bitValue);
-            }
-        } else {
-            for (int i = offset; i < bitMasks.length; i++) {
-                long newBitValue = bitValue | bitMasks[i];
-                if (newBitValue < cuboid) {
-                    combination(cuboid, siblings, bitMasks, i + 1, newBitValue, k - 1);
-                }
-            }
-        }
-    }
-
-    private boolean belongTo(long cuboidWithoutMandatory, AggrGroupMask mask) {
-        long groupBits = cuboidWithoutMandatory & mask.groupMask;
-        long leftoverBits = cuboidWithoutMandatory & mask.leftoverMask;
-        return groupBits > 0 && (leftoverBits == 0 || leftoverBits == mask.leftoverMask);
     }
 
     public int getCardinality(long cuboid) {
@@ -206,7 +224,7 @@ public class CuboidScheduler {
     }
 
     public List<Long> getAllCuboidIds() {
-        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDef);
+        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         List<Long> result = Lists.newArrayList();
         getSubCuboidIds(baseCuboidId, result);
         return result;
