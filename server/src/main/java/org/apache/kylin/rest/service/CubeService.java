@@ -289,27 +289,14 @@ public class CubeService extends BasicService {
     }
 
     public boolean isCubeDescEditable(CubeDesc cd) {
-        String cubeName = getCubeNameFromDesc(cd.getName());
-        CubeInstance cube = getCubeManager().getCube(cubeName);
-        if (cube == null) {
-            return true;
-        }
-        if (cube.getSegments().size() != 0) {
-            return false;
+        List<CubeInstance> cubes = getCubeManager().getCubesByDesc(cd.getName());
+        for (CubeInstance cube : cubes) {
+            if (cube.getSegments().size() != 0) {
+                logger.debug("cube '" + cube.getName() + " has " + cube.getSegments().size() + " segments, couldn't edit cube desc.");
+                return false;
+            }
         }
         return true;
-    }
-
-    public static String getCubeDescNameFromCube(String cubeName) {
-        return cubeName + DESC_SUFFIX;
-    }
-
-    public static String getCubeNameFromDesc(String descName) {
-        if (descName.toLowerCase().endsWith(DESC_SUFFIX)) {
-            return descName.substring(0, descName.toLowerCase().indexOf(DESC_SUFFIX));
-        } else {
-            return descName;
-        }
     }
 
     /**

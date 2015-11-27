@@ -328,7 +328,7 @@ public class CubeController extends BasicController {
             cubeRequest.setMessage("CubeDesc is null.");
             return cubeRequest;
         }
-        String name = CubeService.getCubeNameFromDesc(desc.getName());
+        String name = cubeRequest.getCubeName();
         if (StringUtils.isEmpty(name)) {
             logger.info("Cube name should not be empty.");
             throw new BadRequestException("Cube name should not be empty.");
@@ -429,12 +429,6 @@ public class CubeController extends BasicController {
             String error = "Purge the related cube before editing its desc. Desc name: " + desc.getName();
             updateRequest(cubeRequest, false, error);
             return cubeRequest;
-        }
-
-        //cube renaming:
-        if (!cubeRequest.getCubeName().equalsIgnoreCase(CubeService.getCubeNameFromDesc(desc.getName()))) {
-            deleteCube(cubeRequest.getCubeName());
-            saveCubeDesc(cubeRequest);
         }
 
         try {
