@@ -83,7 +83,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
 
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
 
-        bytesSplitter = new BytesSplitter(200, 4096);
+        bytesSplitter = new BytesSplitter(200, 16384);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
 
         measureCodec = new MeasureCodec(cubeDesc.getMeasures());
@@ -95,7 +95,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         initTopNLiteralColDictionaryMap();
         initNullBytes();
     }
-    
+
     private void initTopNLiteralColDictionaryMap() {
         topNLiteralColDictMap = Maps.newHashMap();
         for (int measureIdx = 0; measureIdx < measures.length; measureIdx++) {
@@ -105,7 +105,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
                 int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
                 int literalColIdx = flatTableIdx[flatTableIdx.length - 1];
                 TblColRef literalCol = func.getTopNLiteralColumn();
-                Dictionary<String> dictionary = (Dictionary<String>)cubeSegment.getDictionary(literalCol);
+                Dictionary<String> dictionary = (Dictionary<String>) cubeSegment.getDictionary(literalCol);
                 topNLiteralColDictMap.put(literalColIdx, dictionary);
             }
         }
@@ -164,14 +164,14 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         // constant
         if (flatTableIdx == null) {
             result = Bytes.toBytes(paramDesc.getValue());
-        } 
+        }
         // count and count distinct
         else if (func.isCount() || func.isHolisticCountDistinct()) {
             // note for holistic count distinct, this value will be ignored
             result = ONE;
         }
         // topN, need encode the key column
-        else if(func.isTopN()) {
+        else if (func.isTopN()) {
             // encode the key column with dict, and get the counter column;
             int keyColIndex = flatTableIdx[flatTableIdx.length - 1];
             Dictionary<String> literalColDict = topNLiteralColDictMap.get(keyColIndex);
@@ -186,27 +186,25 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
                 // get the counter column value
                 valueBuf.putDouble(Double.valueOf(Bytes.toString(splitBuffers[flatTableIdx[0]].value)));
             }
-            
+
             result = valueBuf.array();
-            
-        } 
+
+        }
         // normal case, concat column values
         else {
-                // for multiple columns, their values are joined
-                for (int i = 0; i < flatTableIdx.length; i++) {
-                    SplittedBytes split = splitBuffers[flatTableIdx[i]];
-                    if (result == null) {
-                        result = Arrays.copyOf(split.value, split.length);
-                    } else {
-                        byte[] newResult = new byte[result.length + split.length];
-                        System.arraycopy(result, 0, newResult, 0, result.length);
-                        System.arraycopy(split.value, 0, newResult, result.length, split.length);
-                        result = newResult;
-                    }
+            // for multiple columns, their values are joined
+            for (int i = 0; i < flatTableIdx.length; i++) {
+                SplittedBytes split = splitBuffers[flatTableIdx[i]];
+                if (result == null) {
+                    result = Arrays.copyOf(split.value, split.length);
+                } else {
+                    byte[] newResult = new byte[result.length + split.length];
+                    System.arraycopy(result, 0, newResult, 0, result.length);
+                    System.arraycopy(split.value, 0, newResult, result.length, split.length);
+                    result = newResult;
                 }
             }
-
-        
+        }
 
         if (isNull(result)) {
             result = null;
