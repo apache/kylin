@@ -20,7 +20,6 @@ package org.apache.kylin.measure.basic;
 
 import java.util.List;
 
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -122,12 +121,6 @@ public class BasicMeasureType extends MeasureType {
     
     @Override
     public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Object reEncodeDictionary(Object value, List<Dictionary<?>> oldDicts, List<Dictionary<?>> newDicts) {
         // TODO Auto-generated method stub
         return null;
     }

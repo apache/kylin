@@ -31,6 +31,7 @@ public class LongIngester extends MeasureIngester<LongMutable> {
     // avoid repeated object creation
     private LongMutable current = new LongMutable();
 
+    @Override
     public LongMutable valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (values.length > 1)
             throw new IllegalArgumentException();
@@ -41,5 +42,10 @@ public class LongIngester extends MeasureIngester<LongMutable> {
         else
             l.set(Long.parseLong(values[0]));
         return l;
+    }
+
+    @Override
+    public LongMutable reEncodeDictionary(LongMutable value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDict, Map<TblColRef, Dictionary<String>> newDict) {
+        throw new UnsupportedOperationException();
     }
 }

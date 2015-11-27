@@ -21,7 +21,6 @@ package org.apache.kylin.measure;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.basic.BasicMeasureFactory;
 import org.apache.kylin.measure.hllc.HLLCAggregationFactory;
 import org.apache.kylin.measure.topn.TopNMeasureFactory;
@@ -86,8 +85,6 @@ abstract public class MeasureType {
  
     abstract public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc);
     
-    abstract public Object reEncodeDictionary(Object value, List<Dictionary<?>> oldDicts, List<Dictionary<?>> newDicts);
-
     /* ============================================================================
      * Cube Selection
      * ---------------------------------------------------------------------------- */
