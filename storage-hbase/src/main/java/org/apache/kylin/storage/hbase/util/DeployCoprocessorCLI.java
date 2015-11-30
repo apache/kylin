@@ -282,10 +282,9 @@ public class DeployCoprocessorCLI {
                 }
 
                 String jarPath = valueMatcher.group(1).trim();
-                //String clsName = valueMatcher.group(2).trim();
-                //if (CubeObserverClass.equals(clsName)) {
-                result.add(jarPath);
-                //}
+                if (StringUtils.isNotEmpty(jarPath)) {
+                    result.add(jarPath);
+                }
             }
         }
 
