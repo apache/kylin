@@ -67,4 +67,13 @@
         <value>false</value>
         <description>Hive concurrency lock</description>
     </property>
+
+    <property>
+        <name>mapreduce.job.split.metainfo.maxsize</name>
+        <value>-1</value>
+        <description>The maximum permissible size of the split metainfo file.
+            The JobTracker won't attempt to read split metainfo files bigger than
+            the configured value. No limits if set to -1.
+        </description>
+    </property>
 </configuration>
