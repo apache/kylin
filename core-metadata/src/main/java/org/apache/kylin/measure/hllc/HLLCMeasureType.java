@@ -18,7 +18,6 @@
 
 package org.apache.kylin.measure.hllc;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
@@ -88,12 +87,6 @@ public class HLLCMeasureType extends MeasureType {
             return new HLLCAggregator(dataType.getPrecision());
         else
             return new LDCAggregator();
-    }
-
-    @Override
-    public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }

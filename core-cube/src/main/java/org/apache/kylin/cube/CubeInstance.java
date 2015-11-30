@@ -32,6 +32,8 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -339,12 +341,20 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     @Override
-    public boolean isCapable(SQLDigest digest) {
-        return CubeCapabilityChecker.check(this, digest, true);
+    public CapabilityResult isCapable(SQLDigest digest) {
+        CapabilityResult result = CubeCapabilityChecker.check(this, digest);
+        if (result.capable) {
+            result.cost = getCost(digest);
+            for (CapabilityInfluence i : result.influences) {
+                result.cost *= (i.suggestCostMultiplier() == 0) ? 1.0 : i.suggestCostMultiplier();
+            }
+        } else {
+            result.cost = -1;
+        }
+        return result;
     }
 
-    @Override
-    public int getCost(SQLDigest digest) {
+    private int getCost(SQLDigest digest) {
         int calculatedCost = cost;
 
         calculatedCost += getAllDimensions().size() * COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
@@ -357,11 +367,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
             }
         }
         
-        if (CubeCapabilityChecker.isMatchedWithTopN(this, digest)) {
-            // this is topN query
-            calculatedCost = calculatedCost / 3;
-        }
-
         return calculatedCost;
     }
 

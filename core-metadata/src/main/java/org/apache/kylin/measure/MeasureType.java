@@ -18,6 +18,7 @@
 
 package org.apache.kylin.measure;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,8 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
 import com.google.common.collect.Maps;
 
@@ -83,11 +86,17 @@ abstract public class MeasureType {
     
     abstract public MeasureAggregator<?> newAggregator();
  
-    abstract public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc);
-    
+    public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
+        return null;
+    }
+
     /* ============================================================================
      * Cube Selection
      * ---------------------------------------------------------------------------- */
+    
+    public CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc measureDesc) {
+        return null;
+    }
     
     /* ============================================================================
      * Query

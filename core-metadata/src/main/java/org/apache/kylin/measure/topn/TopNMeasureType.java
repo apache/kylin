@@ -18,6 +18,7 @@
 
 package org.apache.kylin.measure.topn;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +34,11 @@ import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.hllc.HLLCSerializer;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
+import org.apache.kylin.metadata.realization.SQLDigest;
 
 public class TopNMeasureType extends MeasureType {
 
@@ -43,9 +47,9 @@ public class TopNMeasureType extends MeasureType {
     public TopNMeasureType(DataType dataType) {
         if ("topn".equals(dataType.getName()) == false)
             throw new IllegalArgumentException();
-        
+
         this.dataType = dataType;
-        
+
         if (this.dataType.getPrecision() < 1 || this.dataType.getPrecision() > 1000)
             throw new IllegalArgumentException("TopN precision must be between 1 and 1000");
     }
@@ -59,11 +63,11 @@ public class TopNMeasureType extends MeasureType {
     public Class<? extends DataTypeSerializer<?>> getAggregationDataSeralizer() {
         return HLLCSerializer.class;
     }
-    
+
     @Override
     public void validate(MeasureDesc measureDesc) throws IllegalArgumentException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @SuppressWarnings("rawtypes")
@@ -74,10 +78,10 @@ public class TopNMeasureType extends MeasureType {
             public TopNCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 if (values.length != 2)
                     throw new IllegalArgumentException();
-                
+
                 double counter = values[0] == null ? 0 : Double.parseDouble(values[0]);
                 String literal = values[1];
-                
+
                 // encode literal using dictionary
                 TblColRef literalCol = measureDesc.getFunction().getTopNLiteralColumn();
                 Dictionary<String> dictionary = dictionaryMap.get(literalCol);
@@ -90,7 +94,7 @@ public class TopNMeasureType extends MeasureType {
                 topNCounter.offer(key, counter);
                 return topNCounter;
             }
-            
+
             @SuppressWarnings("unchecked")
             @Override
             public TopNCounter reEncodeDictionary(TopNCounter value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
@@ -133,6 +137,34 @@ public class TopNMeasureType extends MeasureType {
     public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
         TblColRef literalCol = measureDesc.getFunction().getParameter().getColRefs().get(1);
         return Collections.singletonList(literalCol);
+    }
+
+    @Override
+    public CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc topN) {
+        // TopN measure can (and only can) provide one numeric measure and one literal dimension
+        // e.g. select seller, sum(gmv) from ... group by seller order by 2 desc limit 100
+
+        // check digest requires only one measure
+        if (digest.aggregations.size() != 1)
+            return null;
+
+        // the measure function must be SUM
+        FunctionDesc onlyFunction = digest.aggregations.iterator().next();
+        if (onlyFunction.isSum() == false)
+            return null;
+
+        TblColRef literalCol = topN.getFunction().getTopNLiteralColumn();
+        if (unmatchedDimensions.contains(literalCol) && topN.getFunction().isTopNCompatibleSum(onlyFunction)) {
+            unmatchedDimensions.remove(literalCol);
+            unmatchedAggregations.remove(onlyFunction);
+            return new CapabilityInfluence() {
+                @Override
+                public double suggestCostMultiplier() {
+                    return 0.3; // make sure TopN get ahead of other matched realizations
+                }
+            };
+        } else
+            return null;
     }
 
 }

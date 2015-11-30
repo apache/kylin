@@ -16,25 +16,28 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.query.routing.RoutingRules;
+package org.apache.kylin.query.routing.rules;
 
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.RoutingRule;
 
 /**
  */
 public class RemoveUncapableRealizationsRule extends RoutingRule {
     @Override
-    public void apply(List<IRealization> realizations, OLAPContext olapContext) {
-        for (Iterator<IRealization> iterator = realizations.iterator(); iterator.hasNext();) {
-            IRealization realization = iterator.next();
-            if (!realization.isCapable(olapContext.getSQLDigest())) {
+    public void apply(List<Candidate> candidates) {
+        for (Iterator<Candidate> iterator = candidates.iterator(); iterator.hasNext();) {
+            Candidate candidate = iterator.next();
+
+            CapabilityResult capability = candidate.getRealization().isCapable(candidate.getSqlDigest());
+            if (capability.capable)
+                candidate.setCapability(capability);
+            else
                 iterator.remove();
-            }
         }
     }
 

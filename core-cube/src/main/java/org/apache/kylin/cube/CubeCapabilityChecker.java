@@ -18,158 +18,104 @@
 
 package org.apache.kylin.cube;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.google.common.collect.Sets;
 
 /**
  */
 public class CubeCapabilityChecker {
     private static final Logger logger = LoggerFactory.getLogger(CubeCapabilityChecker.class);
 
-    public static boolean check(CubeInstance cube, SQLDigest digest, boolean allowWeakMatch) {
+    public static CapabilityResult check(CubeInstance cube, SQLDigest digest) {
+        CapabilityResult result = new CapabilityResult();
+        result.capable = false;
 
         // retrieve members from olapContext
-        Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(digest);
-        Collection<FunctionDesc> functions = digest.aggregations;
-        Collection<TblColRef> metricsColumns = digest.metricColumns;
+        Collection<TblColRef> dimensionColumns = getDimensionColumns(digest);
+        Collection<FunctionDesc> aggrFunctions = digest.aggregations;
         Collection<JoinDesc> joins = digest.joinDescs;
-        boolean hasTopN = hasTopNMeasure(cube.getDescriptor());
 
         // match dimensions & aggregations & joins
 
-        boolean isOnline = cube.isReady();
+        Collection<TblColRef> unmatchedDimensions = unmatchedDimensions(dimensionColumns, cube);
+        Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, cube);
+        boolean isJoinMatch = isJoinMatch(joins, cube);
 
-        boolean matchDimensions = isMatchedWithDimensions(dimensionColumns, cube);
-        boolean matchAggregation = isMatchedWithAggregations(functions, cube);
-        boolean matchJoin = isMatchedWithJoins(joins, cube);
-
-        // Some cubes are not "perfectly" match, but still save them in case of usage
-        if (allowWeakMatch && isOnline && matchDimensions && !matchAggregation && matchJoin) {
-            // sometimes metrics are indeed dimensions
-            // e.g. select min(cal_dt) from ..., where cal_dt is actually a dimension
-            if (isWeaklyMatchedWithAggregations(functions, metricsColumns, cube)) {
-                logger.info("Weakly matched cube found " + cube.getName());
-                return true;
-            }
+        if (!isJoinMatch) {
+            logger.info("Exclude cube " + cube.getName() + " because unmatched joins");
+            return result;
         }
 
-        // for topn, the group column can come from measure
-        if (hasTopN & matchJoin && !matchDimensions && functions.size() == 1) {
-            boolean matchedTopN = isMatchedWithTopN(dimensionColumns, cube, digest);
-            matchDimensions = matchedTopN;
-            matchAggregation = matchedTopN;
+        // try custom measure types
+        if (!unmatchedDimensions.isEmpty() || !unmatchedAggregations.isEmpty()) {
+            tryCustomMeasureTypes(unmatchedDimensions, unmatchedAggregations, digest, cube, result);
+        }
+        
+        // try dimension-as-measure
+        if (!unmatchedAggregations.isEmpty()) {
+            tryDimensionAsMeasures(unmatchedAggregations, digest, cube, result);
+        }
+        
+        if (!unmatchedDimensions.isEmpty()) {
+            logger.info("Exclude cube " + cube.getName() + " because unmatched dimensions");
+            return result;
+        }
+        
+        if (!unmatchedAggregations.isEmpty()) {
+            logger.info("Exclude cube " + cube.getName() + " because unmatched aggregations");
+            return result;
         }
 
-        if (!isOnline || !matchDimensions || !matchAggregation || !matchJoin) {
-            logger.info("Exclude cube " + cube.getName() + " because " + " isOnlne=" + isOnline + ",matchDimensions=" + matchDimensions + ",matchAggregation=" + matchAggregation + ",matchJoin=" + matchJoin);
-            return false;
-        }
-
-        return true;
+        // cost will be minded by caller
+        result.capable = true;
+        return result;
     }
 
-    /**
-     * Check whether the cube can match the sql digest with TopN measure
-     * @param cube
-     * @param digest
-     * @return
-     */
-    public static boolean isMatchedWithTopN(CubeInstance cube, SQLDigest digest) {
+    private static Collection<TblColRef> getDimensionColumns(SQLDigest sqlDigest) {
+        Collection<TblColRef> groupByColumns = sqlDigest.groupbyColumns;
+        Collection<TblColRef> filterColumns = sqlDigest.filterColumns;
 
-        boolean hasTopN = hasTopNMeasure(cube.getDescriptor());
-        
-        if (hasTopN == false) {
-            return false;
-        }
-        
-        Collection<TblColRef> dimensionColumns = CubeDimensionDeriver.getDimensionColumns(digest);
-        
-        boolean matchDimensions = isMatchedWithDimensions(dimensionColumns, cube);
-
-        if (matchDimensions == true) {
-            return false;
-        }
-
-        Collection<FunctionDesc> functions = digest.aggregations;
-        if (functions == null || functions.size() != 1) {
-            // topN only allow one measure
-            return false;
-        }
-
-        return isMatchedWithTopN(dimensionColumns, cube, digest);
+        Collection<TblColRef> dimensionColumns = new HashSet<TblColRef>();
+        dimensionColumns.addAll(groupByColumns);
+        dimensionColumns.addAll(filterColumns);
+        return dimensionColumns;
     }
 
-    /**
-     * This is the method for internal, consumer need do the check as the public method did
-     * @param dimensionColumns
-     * @param cube
-     * @param digest
-     * @return
-     */
-    private static boolean isMatchedWithTopN(Collection<TblColRef> dimensionColumns, CubeInstance cube, SQLDigest digest) {
-        
+    private static Set<TblColRef> unmatchedDimensions(Collection<TblColRef> dimensionColumns, CubeInstance cube) {
+        HashSet<TblColRef> result = Sets.newHashSet(dimensionColumns);
         CubeDesc cubeDesc = cube.getDescriptor();
-        Collection<FunctionDesc> functions = digest.aggregations;
-        
-        FunctionDesc onlyFunction = functions.iterator().next();
-        if (onlyFunction.isSum() == false) {
-            // topN only support SUM expression
-            return false;
-        }
-
-        Collection<TblColRef> dimensionColumnsCopy = new ArrayList<TblColRef>(dimensionColumns);
-        for (MeasureDesc measure : cubeDesc.getMeasures()) {
-            if (measure.getFunction().isTopN()) {
-                List<TblColRef> cols = measure.getFunction().getParameter().getColRefs();
-                TblColRef literalCol = cols.get(cols.size() - 1);
-                if (digest.groupbyColumns.contains(literalCol)) {
-                    dimensionColumnsCopy.remove(literalCol);
-                    if (isMatchedWithDimensions(dimensionColumnsCopy, cube)) {
-                        if (measure.getFunction().isTopNCompatibleSum(onlyFunction)) {
-                            return true;
-                        }
-                    }
-                    dimensionColumnsCopy.add(literalCol);
-                }
-            }
-        }
-
-        return false;
+        result.removeAll(cubeDesc.listDimensionColumnsIncludingDerived());
+        return result;
     }
 
-    private static boolean hasTopNMeasure(CubeDesc cubeDesc) {
-        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
-            if (measureDesc.getFunction().isTopN())
-                return true;
-        }
-
-        return false;
-    }
-
-    private static boolean isMatchedWithDimensions(Collection<TblColRef> dimensionColumns, CubeInstance cube) {
+    private static Set<FunctionDesc> unmatchedAggregations(Collection<FunctionDesc> aggregations, CubeInstance cube) {
+        HashSet<FunctionDesc> result = Sets.newHashSet(aggregations);
         CubeDesc cubeDesc = cube.getDescriptor();
-        boolean matchAgg = cubeDesc.listDimensionColumnsIncludingDerived().containsAll(dimensionColumns);
-        return matchAgg;
+        result.removeAll(cubeDesc.listAllFunctions());
+        return result;
     }
 
-    private static boolean isMatchedWithAggregations(Collection<FunctionDesc> aggregations, CubeInstance cube) {
-        CubeDesc cubeDesc = cube.getDescriptor();
-        boolean matchAgg = cubeDesc.listAllFunctions().containsAll(aggregations);
-        return matchAgg;
-    }
-
-    private static boolean isMatchedWithJoins(Collection<JoinDesc> joins, CubeInstance cube) {
+    private static boolean isJoinMatch(Collection<JoinDesc> joins, CubeInstance cube) {
         CubeDesc cubeDesc = cube.getDescriptor();
 
         List<JoinDesc> cubeJoins = new ArrayList<JoinDesc>(cubeDesc.getDimensions().size());
@@ -204,30 +150,55 @@ public class CubeCapabilityChecker {
         return true;
     }
 
-    private static boolean isWeaklyMatchedWithAggregations(Collection<FunctionDesc> aggregations, Collection<TblColRef> metricColumns, CubeInstance cube) {
+    private static void tryDimensionAsMeasures(Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result) {
         CubeDesc cubeDesc = cube.getDescriptor();
         Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
 
-        boolean matched = true;
-        for (FunctionDesc functionDesc : aggregations) {
-            if (cubeFuncs.contains(functionDesc))
+        Iterator<FunctionDesc> it = unmatchedAggregations.iterator();
+        while (it.hasNext()) {
+            FunctionDesc functionDesc = it.next();
+            
+            if (cubeFuncs.contains(functionDesc)) {
+                it.remove();
                 continue;
+            }
 
             // only inverted-index cube does not have count, and let calcite handle in this case
-            if (functionDesc.isCount())
+            if (functionDesc.isCount()) {
+                it.remove();
                 continue;
+            }
 
-            if (functionDesc.isCountDistinct()) // calcite can not handle distinct count
-                matched = false;
+            // calcite can not handle distinct count
+            if (functionDesc.isCountDistinct()) {
+                continue;
+            }
 
-            TblColRef col = null;
-            if (functionDesc.getParameter().getColRefs().size() > 0)
-                col = functionDesc.getParameter().getColRefs().get(0);
-
-            if (col == null || !cubeDesc.listDimensionColumnsIncludingDerived().contains(col)) {
-                matched = false;
+            // calcite can do aggregation from columns on-the-fly
+            List<TblColRef> neededCols = functionDesc.getParameter().getColRefs();
+            if (neededCols.size() > 0 && cubeDesc.listDimensionColumnsIncludingDerived().containsAll(neededCols)) {
+                result.influences.add(new CapabilityResult.DimensionAsMeasure(functionDesc));
+                it.remove();
+                continue;
             }
         }
-        return matched;
     }
+
+    // custom measure types can cover unmatched dimensions or measures
+    private static void tryCustomMeasureTypes(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result) {
+        CubeDesc cubeDesc = cube.getDescriptor();
+        for (MeasureDesc measure : cubeDesc.getMeasures()) {
+            if (unmatchedDimensions.isEmpty() && unmatchedAggregations.isEmpty())
+                break;
+            
+            MeasureType measureType = MeasureType.create(measure.getFunction());
+            if (measureType instanceof BasicMeasureType)
+                continue;
+            
+            CapabilityInfluence inf = measureType.influenceCapabilityCheck(unmatchedDimensions, unmatchedAggregations, digest, measure);
+            if (inf != null)
+                result.influences.add(inf);
+        }
+    }
+
 }

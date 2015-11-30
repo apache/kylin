@@ -29,6 +29,7 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -152,24 +153,23 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     }
 
     @Override
-    public boolean isCapable(SQLDigest digest) {
+    public CapabilityResult isCapable(SQLDigest digest) {
+        CapabilityResult result = new CapabilityResult();
+        result.cost = Integer.MAX_VALUE;
+        
         for (IRealization realization : getRealizations()) {
-            if (realization.isCapable(digest))
-                return true;
+            CapabilityResult child = realization.isCapable(digest);
+            if (child.capable) {
+                result.capable = true;
+                result.cost = Math.min(result.cost, child.cost);
+                result.influences.addAll(child.influences);
+            }
         }
-        return false;
-    }
-
-    @Override
-    public int getCost(SQLDigest digest) {
-        cost = Integer.MAX_VALUE;
-        for (IRealization realization : this.getRealizations()) {
-            if (realization.isCapable(digest))
-                cost = Math.min(cost, realization.getCost(digest));
-        }
-
-        // Make hybrid always win its children
-        return cost - 1;
+        
+        if (result.cost > 0)
+            result.cost--; // let hybrid win its children
+        
+        return result;
     }
 
     @Override
