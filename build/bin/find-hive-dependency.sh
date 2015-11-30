@@ -40,10 +40,10 @@ done
 # in some versions of hive hcatalog is not in hive's classpath, find it separately
 if [ -z "$HCAT_HOME" ]
 then
-    echo "HCAT_HOME not found, try to find hcatalog path from hive home"
-    hive_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
-    if [ -d "${hive_home}/hive-hcatalog" ]; then
-      hcatalog_home=${hive_home}/hive-hcatalog
+    echo "HCAT_HOME not found, try to find hcatalog path from hadoop home"
+    hadoop_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
+    if [ -d "${hadoop_home}/hive-hcatalog" ]; then
+      hcatalog_home=${hadoop_home}/hive-hcatalog
     elif [ -d "${hadoop_home}/hive/hcatalog" ]; then
       hcatalog_home=${hadoop_home}/hive/hcatalog
     else 

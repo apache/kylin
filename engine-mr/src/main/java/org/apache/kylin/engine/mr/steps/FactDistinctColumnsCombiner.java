@@ -18,21 +18,15 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-import java.util.HashSet;
-
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.engine.mr.KylinReducer;
+
+import java.io.IOException;
 
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsCombiner extends KylinReducer<LongWritable, Text, LongWritable, Text> {
-
-    private Text outputValue = new Text();
+public class FactDistinctColumnsCombiner extends KylinReducer<Text, Text, Text, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -40,24 +34,11 @@ public class FactDistinctColumnsCombiner extends KylinReducer<LongWritable, Text
     }
 
     @Override
-    public void reduce(LongWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
-        if (key.get() >= 0) {
-            HashSet<ByteArray> set = new HashSet<ByteArray>();
-            for (Text textValue : values) {
-                ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
-                set.add(value);
-            }
-
-            for (ByteArray value : set) {
-                outputValue.set(value.array(), value.offset(), value.length());
-                context.write(key, outputValue);
-            }
-        } else {
-            // for hll, each key only has one output, no need to do local combine;
-            outputValue.set(values.iterator().next().getBytes());
-            context.write(key, outputValue);
-        }
+        // for hll, each key only has one output, no need to do local combine;
+        // for normal col, values are empty text
+        context.write(key, values.iterator().next());
     }
 
 }

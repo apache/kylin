@@ -21,18 +21,17 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 import java.util.*;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -48,9 +47,9 @@ import com.google.common.collect.Maps;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text, NullWritable, Text> {
+public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWritable, Text> {
 
-    private List<TblColRef> columnList = new ArrayList<TblColRef>();
+    private List<TblColRef> columnList = new ArrayList();
     private boolean collectStatistics = false;
     private String statisticsOutput = null;
     private List<Long> baseCuboidRowCountInMappers;
@@ -58,7 +57,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
     private long totalRowsBeforeMerge = 0;
-    private int SAMPING_PERCENTAGE = 5;
+    private int SAMPING_PERCENTAGE = 100;
+    private List<ByteArray> colValues;
+    private long currentColIndex = -1;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -77,35 +78,29 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         if (collectStatistics) {
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
-            SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
+            SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "100"));
         }
+
+        colValues = Lists.newArrayList();
     }
 
     @Override
-    public void reduce(LongWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
-        if (key.get() >= 0) {
-            TblColRef col = columnList.get((int) key.get());
-
-            HashSet<ByteArray> set = new HashSet<ByteArray>();
-            int count = 0;
-            for (Text textValue : values) {
-                ByteArray value = new ByteArray(Bytes.copy(textValue.getBytes(), 0, textValue.getLength()));
-                set.add(value);
-                count++;
-                if (count % 10000 == 0 && MemoryBudgetController.getSystemAvailMB() < 100) {
-                    outputDistinctValues(col, set, context);
-                    set.clear();
+        long colIndex = Bytes.toLong(key.getBytes(), 0, Bytes.SIZEOF_LONG);
+        if (colIndex >= 0) {
+            if (colIndex != currentColIndex || colValues.size() == 1000000) { //spill every 1 million
+                if (colValues.size() > 0) {
+                    System.out.println("spill values to disk...");
+                    outputDistinctValues(columnList.get((int) currentColIndex), colValues, context);
+                    colValues.clear();
                 }
+                currentColIndex = colIndex;
             }
-            
-            if (set.isEmpty() == false) {
-                outputDistinctValues(col, set, context);
-            }
-            
+            colValues.add(new ByteArray(Bytes.copy(key.getBytes(), Bytes.SIZEOF_LONG, key.getLength() - Bytes.SIZEOF_LONG)));
         } else {
             // for hll
-            long cuboidId = 0 - key.get();
+            long cuboidId = 0 - colIndex;
 
             for (Text value : values) {
                 HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
@@ -128,31 +123,40 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
     }
     
-    private void outputDistinctValues(TblColRef col, Set<ByteArray> set, Context context) throws IOException {
+    private void outputDistinctValues(TblColRef col, Collection<ByteArray> values, Context context) throws IOException {
         final Configuration conf = context.getConfiguration();
         final FileSystem fs = FileSystem.get(conf);
         final String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
         final Path outputFile = new Path(outputPath, col.getName());
-        FSDataOutputStream out;
-        if (fs.exists(outputFile)) {
-            out = fs.append(outputFile);
-        } else {
-            out = fs.create(outputFile);
-        }
 
+        FSDataOutputStream out = null;
         try {
-            for (ByteArray value : set) {
+            if (fs.exists(outputFile)) {
+                out = fs.append(outputFile);
+                System.out.println("append file " + outputFile);
+            } else {
+                out = fs.create(outputFile);
+                System.out.println("create file " + outputFile);
+            }
+
+            for (ByteArray value: values) {
                 out.write(value.array(), value.offset(), value.length());
                 out.write('\n');
             }
         } finally {
-            out.close();
+            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(fs);
         }
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
 
+        if (colValues.size() > 0) {
+            outputDistinctValues(columnList.get((int)currentColIndex), colValues, context);
+            colValues.clear();
+        }
+        
         //output the hll info;
         if (collectStatistics) {
             writeMapperAndCuboidStatistics(context); // for human check
@@ -168,7 +172,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         try {
             String msg;
 
-            List<Long> allCuboids = new ArrayList<Long>();
+            List<Long> allCuboids = Lists.newArrayList();
             allCuboids.addAll(cuboidHLLMap.keySet());
             Collections.sort(allCuboids);
 
@@ -204,7 +208,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             }
 
         } finally {
-            out.close();
+            IOUtils.closeQuietly(out);
         }
     }
 
