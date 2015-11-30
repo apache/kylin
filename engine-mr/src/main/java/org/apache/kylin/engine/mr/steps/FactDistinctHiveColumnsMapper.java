@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
@@ -55,12 +56,13 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private int rowCount = 0;
     private int SAMPING_PERCENTAGE = 5;
     private ByteArray[] row_hashcodes = null;
+    private ByteBuffer keyBuffer;
+    private static final Text EMPTY_TEXT = new Text();
 
     @Override
     protected void setup(Context context) throws IOException {
         super.setup(context);
-
-        
+        keyBuffer = ByteBuffer.allocate(4096);
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
             SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
@@ -114,13 +116,19 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         String[] row = flatTableInputFormat.parseMapperInput(record);
         try {
             for (int i = 0; i < factDictCols.size(); i++) {
-                outputKey.set((long) factDictCols.get(i));
+//                outputKey.set(Bytes.toBytes((long)factDictCols.get(i)));
                 String fieldValue = row[dictionaryColumnIndex[i]];
                 if (fieldValue == null)
                     continue;
-                byte[] bytes = Bytes.toBytes(fieldValue);
-                outputValue.set(bytes, 0, bytes.length);
-                context.write(outputKey, outputValue);
+//                outputValue.set(bytes, 0, bytes.length);
+
+                keyBuffer.clear();
+                keyBuffer.putLong((long)factDictCols.get(i));
+                keyBuffer.put(Bytes.toBytes(fieldValue));
+                outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
+                context.write(outputKey, EMPTY_TEXT);
+                
+//                context.write(outputKey, outputValue);
             }
         } catch (Exception ex) {
             handleErrorRecord(row, ex);
@@ -166,7 +174,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             HyperLogLogPlusCounter hll;
             for (int i = 0; i < cuboidIds.length; i++) {
                 hll = allCuboidsHLL[i];
-                outputKey.set(0 - cuboidIds[i]);
+                outputKey.set(Bytes.toBytes(0 - cuboidIds[i]));
                 hllBuf.clear();
                 hll.writeRegisters(hllBuf);
                 outputValue.set(hllBuf.array(), 0, hllBuf.position());

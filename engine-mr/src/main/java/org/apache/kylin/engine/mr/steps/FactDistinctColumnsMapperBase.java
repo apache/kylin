@@ -1,7 +1,6 @@
 package org.apache.kylin.engine.mr.steps;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
@@ -26,7 +25,7 @@ import java.util.List;
 
 /**
  */
-public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, LongWritable, Text> {
+public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, Text, Text> {
 
     protected String cubeName;
     protected CubeInstance cube;
@@ -37,7 +36,7 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     protected ArrayList<Integer> factDictCols;
     protected IMRTableInputFormat flatTableInputFormat;
 
-    protected LongWritable outputKey = new LongWritable();
+    protected Text outputKey = new Text();
     protected Text outputValue = new Text();
     protected int errorRecordCounter = 0;
 

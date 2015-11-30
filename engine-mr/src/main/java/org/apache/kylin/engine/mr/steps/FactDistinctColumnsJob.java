@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -108,7 +107,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
         job.setMapperClass(FactDistinctHiveColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);
-        job.setMapOutputKeyClass(LongWritable.class);
+        job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
     }
 

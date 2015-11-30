@@ -18,13 +18,7 @@
 
 package org.apache.kylin.engine.mr.common;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -34,20 +28,27 @@ import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowConstants;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 public class CuboidStatsUtil {
 
-   public static void writeCuboidStatistics(Configuration conf, Path outputPath, Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage) throws IOException {
+    public static void writeCuboidStatistics(Configuration conf, Path outputPath, Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage) throws IOException {
         Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
-        SequenceFile.Writer writer = SequenceFile.createWriter(conf, SequenceFile.Writer.file(seqFilePath), SequenceFile.Writer.keyClass(LongWritable.class), SequenceFile.Writer.valueClass(BytesWritable.class));
 
         List<Long> allCuboids = new ArrayList<Long>();
         allCuboids.addAll(cuboidHLLMap.keySet());
         Collections.sort(allCuboids);
 
-        // persist the sample percentage with key 0
-        writer.append(new LongWritable(0l), new BytesWritable(Bytes.toBytes(samplingPercentage)));
         ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+        SequenceFile.Writer writer = SequenceFile.createWriter(conf, SequenceFile.Writer.file(seqFilePath), SequenceFile.Writer.keyClass(LongWritable.class), SequenceFile.Writer.valueClass(BytesWritable.class));
         try {
+            // persist the sample percentage with key 0
+            writer.append(new LongWritable(0l), new BytesWritable(Bytes.toBytes(samplingPercentage)));
             for (long i : allCuboids) {
                 valueBuf.clear();
                 cuboidHLLMap.get(i).writeRegisters(valueBuf);
@@ -55,7 +56,7 @@ public class CuboidStatsUtil {
                 writer.append(new LongWritable(i), new BytesWritable(valueBuf.array(), valueBuf.limit()));
             }
         } finally {
-            writer.close();
+            IOUtils.closeQuietly(writer);
         }
     }
 }
