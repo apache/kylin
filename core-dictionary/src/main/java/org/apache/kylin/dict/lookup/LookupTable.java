@@ -36,7 +36,7 @@ import com.google.common.collect.Sets;
 /**
  * An in-memory lookup table, in which each cell is an object of type T. The
  * table is indexed by specified PK for fast lookup.
- * 
+ *
  * @author yangli9
  */
 abstract public class LookupTable<T extends Comparable<T>> {
@@ -73,7 +73,7 @@ abstract public class LookupTable<T extends Comparable<T>> {
     @SuppressWarnings("unchecked")
     private void initRow(String[] cols, int[] keyIndex) {
         T[] value = convertRow(cols);
-        T[] keyCols = (T[]) java.lang.reflect.Array.newInstance(value[0].getClass(), keyIndex.length);
+        T[] keyCols = (T[]) java.lang.reflect.Array.newInstance(getType(), keyIndex.length);
         for (int i = 0; i < keyCols.length; i++)
             keyCols[i] = value[keyIndex[i]];
 
@@ -161,6 +161,8 @@ abstract public class LookupTable<T extends Comparable<T>> {
     }
 
     abstract protected String toString(T cell);
+
+    abstract public Class<?> getType();
 
     public void dump() {
         for (Array<T> key : data.keySet()) {
