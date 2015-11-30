@@ -83,7 +83,7 @@
         "column": "DAY_START",
         "length": 0,
         "dictionary": "true",
-        "mandatory": true
+        "mandatory": false
       },
       {
         "column": "HOUR_START",
@@ -112,6 +112,7 @@
     ],
     "aggregation_groups": [
       [
+        "DAY_START",
         "HOUR_START",
         "MINUTE_START",
         "SITE",
