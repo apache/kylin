@@ -43,4 +43,7 @@ public class LookupStringTable extends LookupTable<String> {
         return cell;
     }
 
+    public Class<?> getType() {
+        return String.class;
+    }
 }

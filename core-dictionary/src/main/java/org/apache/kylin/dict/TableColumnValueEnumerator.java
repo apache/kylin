@@ -53,7 +53,7 @@ public class TableColumnValueEnumerator implements IDictionaryValueEnumerator {
                 colStrValue = split[colIndex];
             }
 
-            colValue = Bytes.toBytes(colStrValue);
+            colValue = colStrValue == null ? null : Bytes.toBytes(colStrValue);
             return true;
 
         } else {

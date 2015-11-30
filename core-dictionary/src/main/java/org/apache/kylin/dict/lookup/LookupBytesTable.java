@@ -49,4 +49,8 @@ public class LookupBytesTable extends LookupTable<ByteArray> {
         return cell.toString();
     }
 
+    public Class<?> getType() {
+        return ByteArray.class;
+    }
+
 }
