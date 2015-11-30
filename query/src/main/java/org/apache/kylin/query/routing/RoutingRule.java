@@ -23,10 +23,8 @@ import java.util.List;
 
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.query.relnode.OLAPContext;
-import org.apache.kylin.query.routing.RoutingRules.AdjustForWeaklyMatchedRealization;
-import org.apache.kylin.query.routing.RoutingRules.RealizationSortRule;
-import org.apache.kylin.query.routing.RoutingRules.RemoveUncapableRealizationsRule;
+import org.apache.kylin.query.routing.rules.RealizationSortRule;
+import org.apache.kylin.query.routing.rules.RemoveUncapableRealizationsRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,23 +42,23 @@ public abstract class RoutingRule {
     static {
         rules.add(new RemoveUncapableRealizationsRule());
         rules.add(new RealizationSortRule());
-        rules.add(new AdjustForWeaklyMatchedRealization());//this rule might modify olapcontext content, better put it at last
     }
 
-    public static void applyRules(List<IRealization> realizations, OLAPContext olapContext) {
+    public static void applyRules(List<Candidate> candidates) {
         for (RoutingRule rule : rules) {
-            logger.info("Realizations order before: " + getPrintableText(realizations));
+            logger.info("Realizations order before: " + getPrintableText(candidates));
             logger.info("Applying rule : " + rule);
-            rule.apply(realizations, olapContext);
-            logger.info("Realizations order after: " + getPrintableText(realizations));
+            rule.apply(candidates);
+            logger.info("Realizations order after: " + getPrintableText(candidates));
             logger.info("===================================================");
         }
     }
 
-    public static String getPrintableText(List<IRealization> realizations) {
+    public static String getPrintableText(List<Candidate> candidates) {
         StringBuffer sb = new StringBuffer();
         sb.append("[");
-        for (IRealization r : realizations) {
+        for (Candidate candidate : candidates) {
+            IRealization r = candidate.realization;
             sb.append(r.getName());
             sb.append(",");
         }
@@ -108,6 +106,6 @@ public abstract class RoutingRule {
         return this.getClass().toString();
     }
 
-    public abstract void apply(List<IRealization> realizations, OLAPContext olapContext);
+    public abstract void apply(List<Candidate> candidates);
 
 }

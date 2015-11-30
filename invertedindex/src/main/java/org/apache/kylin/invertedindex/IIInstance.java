@@ -26,7 +26,14 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.invertedindex.model.IIDesc;
-import org.apache.kylin.metadata.model.*;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.IStorageAware;
+import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -270,15 +277,21 @@ public class IIInstance extends RootPersistentEntity implements IRealization, IB
     }
 
     @Override
-    public boolean isCapable(SQLDigest digest) {
-        if (!digest.factTable.equalsIgnoreCase(this.getFactTable()))
-            return false;
-
-        return IICapabilityChecker.check(this, digest);
+    public CapabilityResult isCapable(SQLDigest digest) {
+        CapabilityResult result = new CapabilityResult();
+        
+        if (!digest.factTable.equalsIgnoreCase(this.getFactTable())) {
+            result.capable = false;
+        } else {
+            result.capable = IICapabilityChecker.check(this, digest);
+            if (result.capable)
+                result.cost = getCost(digest);
+        }
+        
+        return result;
     }
 
-    @Override
-    public int getCost(SQLDigest digest) {
+    private int getCost(SQLDigest digest) {
 
         int calculatedCost = cost;
         for (LookupDesc lookupDesc : this.getDescriptor().getModel().getLookups()) {

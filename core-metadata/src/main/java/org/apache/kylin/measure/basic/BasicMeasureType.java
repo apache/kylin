@@ -18,8 +18,6 @@
 
 package org.apache.kylin.measure.basic;
 
-import java.util.List;
-
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -30,7 +28,6 @@ import org.apache.kylin.metadata.datatype.DoubleSerializer;
 import org.apache.kylin.metadata.datatype.LongSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 
 public class BasicMeasureType extends MeasureType {
     
@@ -119,10 +116,4 @@ public class BasicMeasureType extends MeasureType {
         return FunctionDesc.FUNC_MIN.equalsIgnoreCase(funcName);
     }
     
-    @Override
-    public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

@@ -23,10 +23,9 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.query.routing.RoutingRules.RealizationPriorityRule;
+import org.apache.kylin.query.routing.Candidate;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -45,7 +44,7 @@ public class ITIIQueryTest extends ITKylinQueryTest {
         priorities.put(RealizationType.INVERTED_INDEX, 0);
         priorities.put(RealizationType.CUBE, 1);
         priorities.put(RealizationType.HYBRID, 1);
-        RealizationPriorityRule.setPriorities(priorities);
+        Candidate.setPriorities(priorities);
 
     }
 
@@ -57,7 +56,7 @@ public class ITIIQueryTest extends ITKylinQueryTest {
         priorities.put(RealizationType.INVERTED_INDEX, 1);
         priorities.put(RealizationType.CUBE, 0);
         priorities.put(RealizationType.HYBRID, 0);
-        RealizationPriorityRule.setPriorities(priorities);
+        Candidate.setPriorities(priorities);
     }
 
     @Parameterized.Parameters
