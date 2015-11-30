@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.DateFormat;
@@ -30,6 +31,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -83,27 +85,23 @@ public class CubeSegmentScanner implements IGTScanner {
         GTInfo trimmedInfo = GTInfo.deserialize(trimmedInfoBytes);
 
         for (GTScanRange range : scanRanges) {
-            scanRequests.add(new GTScanRequest(trimmedInfo, range.replaceGTInfo(trimmedInfo),
-                    gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate));
+            scanRequests.add(new GTScanRequest(trimmedInfo, range.replaceGTInfo(trimmedInfo), gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate));
         }
 
         scanner = new Scanner();
     }
 
     private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(TblColRef tblColRef, int index) {
-
-        String partitionColType = tblColRef.getColumnDesc().getDatatype();
-
         ByteArray start;
         if (cubeSeg.getDateRangeStart() != Long.MIN_VALUE) {
-            start = translateTsToString(cubeSeg.getDateRangeStart(), partitionColType, index);
+            start = translateTsToString(cubeSeg.getDateRangeStart(), index, 1);
         } else {
             start = new ByteArray();
         }
 
         ByteArray end;
         if (cubeSeg.getDateRangeEnd() != Long.MAX_VALUE) {
-            end = translateTsToString(cubeSeg.getDateRangeEnd(), partitionColType, index);
+            end = translateTsToString(cubeSeg.getDateRangeEnd(), index, -1);
         } else {
             end = new ByteArray();
         }
@@ -111,19 +109,25 @@ public class CubeSegmentScanner implements IGTScanner {
 
     }
 
-    private ByteArray translateTsToString(long ts, String partitionColType, int index) {
+    private ByteArray translateTsToString(long ts, int index, int roundingFlag) {
         String value;
-        if ("date".equalsIgnoreCase(partitionColType)) {
+        DataType partitionColType = info.getColumnType(index);
+        if (partitionColType.isDate()) {
             value = DateFormat.formatToDateStr(ts);
-        } else if ("timestamp".equalsIgnoreCase(partitionColType)) {
+        } else if (partitionColType.isDatetime()) {
             //TODO: if partition col is not dict encoded, value's format may differ from expected. Though by default it is not the case
             value = DateFormat.formatToTimeWithoutMilliStr(ts);
+        } else if (partitionColType.isStringFamily()) {
+            String partitionDateFormat = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateFormat();
+            if (StringUtils.isEmpty(partitionDateFormat))
+                partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
+            value = DateFormat.formatToDateStr(ts, partitionDateFormat);
         } else {
             throw new RuntimeException("Type " + partitionColType + " is not valid partition column type");
         }
 
         ByteBuffer buffer = ByteBuffer.allocate(info.getMaxColumnLength());
-        info.getCodeSystem().encodeColumnValue(index, value, buffer);
+        info.getCodeSystem().encodeColumnValue(index, value, roundingFlag, buffer);
 
         return ByteArray.copyOf(buffer.array(), 0, buffer.position());
     }
