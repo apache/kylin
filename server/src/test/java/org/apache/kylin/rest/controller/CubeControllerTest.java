@@ -106,6 +106,7 @@ public class CubeControllerTest extends ServiceTestBase {
 
         CubeRequest cubeRequest = new CubeRequest();
         cubeRequest.setCubeDescData(cubeDescWriter.toString());
+        cubeRequest.setCubeName(newCube.getName());
         cubeRequest = cubeController.saveCubeDesc(cubeRequest);
 
         List<String> notifyList = Lists.newArrayList();

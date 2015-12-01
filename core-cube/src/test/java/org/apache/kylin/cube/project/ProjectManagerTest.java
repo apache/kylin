@@ -151,7 +151,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         assertTrue(prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
         assertTrue(prjMgr.listAllRealizations("default").contains(cube));
 
-        cubeMgr.dropCube(cube.getName(), true);
+        cubeMgr.dropCube(cube.getName(), false);
 
         assertTrue(!prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
         assertTrue(!prjMgr.listAllRealizations("default").contains(cube));
