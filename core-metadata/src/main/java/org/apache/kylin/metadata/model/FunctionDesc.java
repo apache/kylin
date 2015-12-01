@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.model;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -51,6 +52,7 @@ public class FunctionDesc {
     private String returnType;
 
     private DataType returnDataType;
+    private MeasureType measureType;
     private boolean isDimensionAsMetric = false;
 
     public void init(TableDesc factTable) {
@@ -77,6 +79,23 @@ public class FunctionDesc {
             setReturnType(colRefs.get(0).getDatatype());
         }
     }
+    
+    public MeasureType getMeasureType() {
+        if (isDimensionAsMetric)
+            return null;
+        
+        if (measureType == null) {
+            measureType = MeasureType.create(getExpression(), getReturnType());
+        }
+        return measureType;
+    }
+
+    public boolean needRewrite() {
+        if (isDimensionAsMetric)
+            return false;
+        
+        return getMeasureType().needRewrite();
+    }
 
     public String getRewriteFieldName() {
         if (isSum()) {
@@ -88,14 +107,19 @@ public class FunctionDesc {
         }
     }
 
-    public boolean needRewrite() {
-        return !isSum() && !isDimensionAsMetric() && !isTopN();
+    public DataType getRewriteFieldType() {
+        if (isCountDistinct() || isTopN())
+            return DataType.ANY;
+        else if (isSum() || isMax() || isMin())
+            return parameter.getColRefs().get(0).getType();
+        else
+            return returnDataType;
     }
 
     public ColumnDesc newFakeRewriteColumn(TableDesc sourceTable) {
         ColumnDesc fakeCol = new ColumnDesc();
         fakeCol.setName(getRewriteFieldName());
-        fakeCol.setDatatype(getSQLType().toString());
+        fakeCol.setDatatype(getRewriteFieldType().toString());
         if (isCount())
             fakeCol.setNullable(false);
         fakeCol.init(sourceTable);
@@ -179,15 +203,6 @@ public class FunctionDesc {
         return count;
     }
     
-    public DataType getSQLType() {
-        if (isCountDistinct() || isTopN())
-            return DataType.ANY;
-        else if (isSum() || isMax() || isMin())
-            return parameter.getColRefs().get(0).getType();
-        else
-            return returnDataType;
-    }
-
     public String getReturnType() {
         return returnType;
     }

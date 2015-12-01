@@ -115,5 +115,16 @@ public class BasicMeasureType extends MeasureType {
     private boolean isMin() {
         return FunctionDesc.FUNC_MIN.equalsIgnoreCase(funcName);
     }
+
+    @Override
+    public boolean needRewrite() {
+        return !isSum();
+    }
+
+    @Override
+    public Class<?> getRewriteAggregationFunctionClass() {
+        // TODO Auto-generated method stub
+        return null;
+    }
     
 }

@@ -28,7 +28,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 abstract public class MeasureIngester<V> {
     
     public static MeasureIngester<?> create(MeasureDesc measure) {
-        return MeasureType.create(measure.getFunction()).newIngester();
+        return measure.getFunction().getMeasureType().newIngester();
     }
     
     public static MeasureIngester<?>[] create(Collection<MeasureDesc> measures) {
@@ -42,5 +42,7 @@ abstract public class MeasureIngester<V> {
 
     abstract public V valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap);
     
-    abstract public V reEncodeDictionary(V value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts);
+    public V reEncodeDictionary(V value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
+        throw new UnsupportedOperationException();
+    }
 }

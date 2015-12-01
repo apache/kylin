@@ -167,4 +167,14 @@ public class TopNMeasureType extends MeasureType {
             return null;
     }
 
+    @Override
+    public boolean needRewrite() {
+        return false;
+    }
+
+    @Override
+    public Class<?> getRewriteAggregationFunctionClass() {
+        return null;
+    }
+
 }

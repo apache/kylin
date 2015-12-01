@@ -73,11 +73,6 @@ public class HLLCMeasureType extends MeasureType {
                     hllc.add(v == null ? "__nUlL__" : v);
                 return hllc;
             }
-
-            @Override
-            public HyperLogLogPlusCounter reEncodeDictionary(HyperLogLogPlusCounter value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDict, Map<TblColRef, Dictionary<String>> newDict) {
-                throw new UnsupportedOperationException();
-            }
         };
     }
 
@@ -87,6 +82,17 @@ public class HLLCMeasureType extends MeasureType {
             return new HLLCAggregator(dataType.getPrecision());
         else
             return new LDCAggregator();
+    }
+
+    @Override
+    public boolean needRewrite() {
+        return true;
+    }
+
+    @Override
+    public Class<?> getRewriteAggregationFunctionClass() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
