@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.query.sqlfunc;
+package org.apache.kylin.measure.hllc;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -77,6 +77,7 @@ public class HLLDistinctCountAggFunc {
         return counter == null ? 0L : counter.getCountEstimate();
     }
 
+    @SuppressWarnings("serial")
     private static class FixedValueHLLCMockup extends HyperLogLogPlusCounter {
 
         private Long value = null;

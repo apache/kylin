@@ -191,7 +191,7 @@ public class CubeCapabilityChecker {
             if (unmatchedDimensions.isEmpty() && unmatchedAggregations.isEmpty())
                 break;
             
-            MeasureType measureType = MeasureType.create(measure.getFunction());
+            MeasureType measureType = measure.getFunction().getMeasureType();
             if (measureType instanceof BasicMeasureType)
                 continue;
             

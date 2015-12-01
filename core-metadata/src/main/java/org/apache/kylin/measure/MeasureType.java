@@ -45,10 +45,6 @@ abstract public class MeasureType {
         factoryRegistry.put(FunctionDesc.FUNC_TOP_N, new TopNMeasureFactory());
     }
     
-    public static MeasureType create(FunctionDesc function) {
-        return create(function.getExpression(), function.getReturnType());
-    }
-
     public static MeasureType create(String funcName, String dataType) {
         funcName = funcName.toUpperCase();
         dataType = dataType.toLowerCase();
@@ -101,6 +97,12 @@ abstract public class MeasureType {
     /* ============================================================================
      * Query
      * ---------------------------------------------------------------------------- */
+    
+    // TODO support user defined calcite aggr function
+    
+    abstract public boolean needRewrite();
+    
+    abstract public Class<?> getRewriteAggregationFunctionClass();
     
     /* ============================================================================
      * Storage

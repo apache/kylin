@@ -59,7 +59,6 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.query.sqlfunc.HLLDistinctCountAggFunc;
 
 import com.google.common.base.Preconditions;
 
@@ -301,10 +300,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         // rebuild function
         RelDataType fieldType = aggCall.getType();
         SqlAggFunction newAgg = aggCall.getAggregation();
-        if (func.isCountDistinct()) {
-            newAgg = createHyperLogLogAggFunction(fieldType);
-        } else if (func.isCount()) {
+        if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;
+        } else if (func.getMeasureType().getRewriteAggregationFunctionClass() != null) {
+            newAgg = createCustomAggFunction(fieldType, func.getMeasureType().getRewriteAggregationFunctionClass());
         }
 
         // rebuild aggregate call
@@ -312,10 +311,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         return newAggCall;
     }
 
-    private SqlAggFunction createHyperLogLogAggFunction(RelDataType returnType) {
+    private SqlAggFunction createCustomAggFunction(RelDataType returnType, Class<?> customAggFuncClz) {
         RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
-        SqlIdentifier sqlIdentifier = new SqlIdentifier("HLL_COUNT", new SqlParserPos(1, 1));
-        AggregateFunction aggFunction = AggregateFunctionImpl.create(HLLDistinctCountAggFunc.class);
+        SqlIdentifier sqlIdentifier = new SqlIdentifier(customAggFuncClz.getSimpleName(), new SqlParserPos(1, 1));
+        AggregateFunction aggFunction = AggregateFunctionImpl.create(customAggFuncClz);
         List<RelDataType> argTypes = new ArrayList<RelDataType>();
         List<SqlTypeFamily> typeFamilies = new ArrayList<SqlTypeFamily>();
         for (FunctionParameter o : aggFunction.getParameters()) {

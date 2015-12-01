@@ -38,9 +38,4 @@ public class BigDecimalIngester extends MeasureIngester<BigDecimal> {
         else
             return new BigDecimal(values[0]);
     }
-
-    @Override
-    public BigDecimal reEncodeDictionary(BigDecimal value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDict, Map<TblColRef, Dictionary<String>> newDict) {
-        throw new UnsupportedOperationException();
-    }
 }
