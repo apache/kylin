@@ -492,6 +492,10 @@ public class KylinConfig {
         return Boolean.parseBoolean(this.getOptional("kylin.query.cache.enabled", "true"));
     }
 
+    public long getQueryMemBudget() {
+        return Long.parseLong(this.getOptional("kylin.query.mem.budget", String.valueOf(3L * 1024 * 1024 * 1024)));
+    }
+
     public int getHBaseKeyValueSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
     }
