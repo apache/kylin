@@ -14,10 +14,10 @@ These are the mailing lists that have been established for this project. For eac
 
 | Name  | Subscribe | Unsubscribe | Post | Archive |
 |------ |-----------|-------------|------|---------|
-| User Mailing List | [Subscribe](mailto:user-subscribe@kylin.incubator.apache.org) | [Unsubscribe](mailto:user-unsubscribe@kylin.incubator.apache.org) | [Post](mailto:user@kylin.incubator.apache.org) | [mail-archives.apache.org](http://mail-archives.apache.org/mod_mbox/kylin-user/) |
-| Developers Mailing List | [Subscribe](mailto:dev-subscribe@kylin.incubator.apache.org) | [Unsubscribe](mailto:dev-unsubscribe@kylin.incubator.apache.org) | [Post](mailto:dev@kylin.incubator.apache.org) | [mail-archives.apache.org](http://mail-archives.apache.org/mod_mbox/kylin-dev/) |
-| Issues Mailing List | [Subscribe](mailto:issues-subscribe@kylin.incubator.apache.org) | [Unsubscribe](mailto:issues-unsubscribe@kylin.incubator.apache.org) | N/A | [mail-archives.apache.org](http://mail-archives.apache.org/mod_mbox/kylin-issues/) |
-| Commits Mailing List | [Subscribe](mailto:commits-subscribe@kylin.incubator.apache.org) | [Unsubscribe](mailto:commits-unsubscribe@kylin.incubator.apache.org) | N/A | [mail-archives.apache.org](http://mail-archives.apache.org/mod_mbox/kylin-commits/) |
+| User Mailing List | [Subscribe](mailto:user-subscribe@kylin.apache.org) | [Unsubscribe](mailto:user-unsubscribe@kylin.apache.org) | [Post](mailto:user@kylin.apache.org) | [mail-archives.apache.org](http://mail-archives.apache.org/mod_mbox/kylin-user/) |
+| Developers Mailing List | [Subscribe](mailto:dev-subscribe@kylin.apache.org) | [Unsubscribe](mailto:dev-unsubscribe@kylin.apache.org) | [Post](mailto:dev@kylin.apache.org) | [mail-archives.apache.org](http://mail-archives.apache.org/mod_mbox/kylin-dev/) |
+| Issues Mailing List | [Subscribe](mailto:issues-subscribe@kylin.apache.org) | [Unsubscribe](mailto:issues-unsubscribe@kylin.apache.org) | N/A | [mail-archives.apache.org](http://mail-archives.apache.org/mod_mbox/kylin-issues/) |
+| Commits Mailing List | [Subscribe](mailto:commits-subscribe@kylin.apache.org) | [Unsubscribe](mailto:commits-unsubscribe@kylin.apache.org) | N/A | [mail-archives.apache.org](http://mail-archives.apache.org/mod_mbox/kylin-commits/) |
 
 ### Mailing List Archives
 For convenience, there's a forum style mailing list archives which not part of offical Apache archives:
@@ -38,7 +38,7 @@ A successful project requires many people to play many roles. Some members write
 {% endfor %}
 
 ### Contributors
-Contributors has commited code could be found [here](https://github.com/apache/incubator-kylin/graphs/contributors).
+Contributors has commited code could be found [here](https://github.com/apache/kylin/graphs/contributors).
 __Other contributors__
 
 | Name  | Github    |   |

@@ -21,4 +21,4 @@
 # To release to website, use following script to generate real docs:
 # >jekyll build -config _config.yml _config_prod.yml
 # 
-url: "http://kylin.incubator.apache.org" # the base hostname & protocol for your site
+url: "http://kylin.apache.org" # the base hostname & protocol for your site

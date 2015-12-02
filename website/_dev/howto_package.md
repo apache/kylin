@@ -7,7 +7,7 @@ permalink: /development/howto_package.html
 
 ### Generate Binary Package
 {% highlight bash %}
-git clone https://github.com/apache/incubator-kylin kylin
+git clone https://github.com/apache/kylin kylin
 cd kylin
 ./script/package.sh
 {% endhighlight %}
