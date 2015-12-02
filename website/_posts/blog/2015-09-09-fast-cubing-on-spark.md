@@ -28,7 +28,7 @@ The hadoop conf should also be in the SPARK_HOME/conf
 
 Spark as a computation framework has provided much richer operators than map-reduce. And some of them are quite suitable for the cubing algorithm, for instance **aggregate**.
 
-As the [Fast cubing algorithm](http://kylin.incubator.apache.org/blog/2015/08/15/fast-cubing/ "Fast Cubing Algorithm in Apache Kylin"), it contains several steps:
+As the [Fast cubing algorithm](http://kylin.apache.org/blog/2015/08/15/fast-cubing/ "Fast Cubing Algorithm in Apache Kylin"), it contains several steps:
 
 1. build dictionary
 2. calculate region split for hbase

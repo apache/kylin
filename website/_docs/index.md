@@ -23,7 +23,7 @@ Advanced Topics
 
 1.[How to use kylin remote jdbc driver](howto/howto_jdbc.html)
 
-2.[SQL Reference](http://calcite.incubator.apache.org/)
+2.[SQL Reference](http://calcite.apache.org/)
 
 ---
 

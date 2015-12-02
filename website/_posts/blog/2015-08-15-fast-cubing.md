@@ -6,7 +6,7 @@ author: Shaofeng Shi
 categories: blog
 ---
 
-This article is the first post of a series document that introducing the fast cubing algorithm in Apache Kylin; The new algorithm will be released in the future release; Now it is under internal testing and pilot; All the source code has been published in Kylin's Git repository <https://github.com/apache/incubator-kylin/> on 0.8 branch. 
+This article is the first post of a series document that introducing the fast cubing algorithm in Apache Kylin; The new algorithm will be released in the future release; Now it is under internal testing and pilot; All the source code has been published in Kylin's Git repository <https://github.com/apache/kylin/> on 0.8 branch. 
 
 
 ## By Layer Cubing Algorithm
@@ -116,4 +116,4 @@ Here let's do a summary on the fast cubing algorithm;
 
 ## Other Enhancements in Fast Cubing
 
-Together with the fast cubing algorithm, we also introduced several other enhancements in the cube build flow, like estimating the region splits by sampling, directly outputting HFile, and merging Cube over HBase Table, etc; I'd like to elaborate in the next articles, please keep posted here; If you have interest on Apache Kylin, welcome to visit our home page <http://kylin.incubator.apache.org/> and subscribe our development mailing list at <dev-subscribe@kylin.incubator.apache.org>
+Together with the fast cubing algorithm, we also introduced several other enhancements in the cube build flow, like estimating the region splits by sampling, directly outputting HFile, and merging Cube over HBase Table, etc; I'd like to elaborate in the next articles, please keep posted here; If you have interest on Apache Kylin, welcome to visit our home page <http://kylin.apache.org/> and subscribe our development mailing list at <dev-subscribe@kylin.apache.org>

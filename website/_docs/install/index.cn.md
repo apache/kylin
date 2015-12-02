@@ -30,7 +30,7 @@ Except for some prerequisite software installations, the core of Kylin installat
 
 ### Install Kylin
 
-1. Download latest Kylin binaries at [http://kylin.incubator.apache.org/download](http://kylin.incubator.apache.org/download)
+1. Download latest Kylin binaries at [http://kylin.apache.org/download](http://kylin.apache.org/download)
 2. Export KYLIN_HOME pointing to the extracted Kylin folder
 3. Make sure the user has the privilege to run hadoop, hive and hbase cmd in shell. If you are not so sure, you can run **bin/check-env.sh**, it will print out the detail information if you have some environment issues.
 4. To start Kylin, simply run **bin/kylin.sh start**
