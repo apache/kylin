@@ -166,9 +166,11 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
 
     var modelName = $scope.modelsManager.selectedModel.name.toUpperCase();
     var models = $scope.modelsManager.modelNameList;
-    if ($scope.modelMode=="addNewModel"&&models.indexOf(modelName) != -1 || models.indexOf(modelName.toLowerCase()) !=-1) {
-      SweetAlert.swal('', "Model named [" + modelName + "] already exist!", 'warning');
-      return false;
+    if ($scope.modelMode=="addNewModel") {
+      if(models.indexOf(modelName) != -1 || models.indexOf(modelName.toLowerCase()) !=-1){
+        SweetAlert.swal('', "Model named [" + modelName + "] already exist!", 'warning');
+        return false;
+      }
     }
     return true;
   }
