@@ -82,5 +82,13 @@
       "type": "HYBRID",
       "realization": "test_kylin_hybrid_inner_join"
     }
+  ], 
+  "tables" : [
+    "DEFAULT.TEST_KYLIN_FACT",
+    "EDW.TEST_CAL_DT",
+    "DEFAULT.TEST_CATEGORY_GROUPINGS",
+    "EDW.TEST_SITES",
+    "EDW.TEST_SELLER_TYPE_DIM",
+    "DEFAULT.STREAMING_TABLE"
   ]
 }
