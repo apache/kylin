@@ -301,11 +301,11 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
     public Iterator<Counter<T>> iterator() {
         return new TopNCounterIterator();
     }
-
+    
     /**
      * Iterator from the tail (smallest) to head (biggest);
      */
-    private class TopNCounterIterator implements Iterator {
+    private class TopNCounterIterator implements Iterator<Counter<T>> {
 
         private ListNode2<Counter<T>> currentBNode;
 

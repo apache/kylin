@@ -8,13 +8,14 @@ import java.util.Set;
 
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.tuple.Tuple;
-import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,10 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     protected Iterator<GTRecord> curRecordIterator;
     protected CubeTupleConverter curTupleConverter;
     protected Tuple next;
+    
+    private List<IAdvMeasureFiller> advMeasureFillers;
+    private int advMeasureRowsRemaining;
+    private int advMeasureRowIndex;
 
     private int scanCount;
     private int scanCountDelta;
@@ -53,7 +58,19 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     public boolean hasNext() {
         if (next != null)
             return true;
+        
+        // consume any left rows from advanced measure filler
+        if (advMeasureRowsRemaining > 0) {
+            for (IAdvMeasureFiller filler : advMeasureFillers) {
+                filler.fillTuplle(tuple, advMeasureRowIndex);
+            }
+            advMeasureRowIndex++;
+            advMeasureRowsRemaining--;
+            next = tuple;
+            return true;
+        }
 
+        // get the next GTRecord
         if (curScanner == null) {
             if (scannerIterator.hasNext()) {
                 curScanner = scannerIterator.next();
@@ -63,18 +80,39 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
                 return false;
             }
         }
-
-        if (curRecordIterator.hasNext()) {
-            curTupleConverter.translateResult(curRecordIterator.next(), tuple);
-            next = tuple;
-            return true;
-        } else {
+        if (curRecordIterator.hasNext() == false) {
             close(curScanner);
             curScanner = null;
             curRecordIterator = null;
             curTupleConverter = null;
             return hasNext();
         }
+
+        // now we have a GTRecord
+        GTRecord curRecord = curRecordIterator.next();
+        
+        // translate into tuple
+        List<IAdvMeasureFiller> advMeasureFillers = curTupleConverter.translateResult(curRecord, tuple);
+
+        // the simple case
+        if (advMeasureFillers == null) {
+            next = tuple;
+            return true;
+        }
+        
+        // advanced measure filling, like TopN, will produce multiple tuples out of one record
+        advMeasureRowsRemaining = -1;
+        for (IAdvMeasureFiller filler : advMeasureFillers) {
+            if (advMeasureRowsRemaining < 0)
+                advMeasureRowsRemaining = filler.getNumOfRows();
+            if (advMeasureRowsRemaining != filler.getNumOfRows())
+                throw new IllegalStateException();
+        }
+        if (advMeasureRowsRemaining < 0)
+            throw new IllegalStateException();
+        
+        advMeasureRowIndex = 0;
+        return hasNext();
     }
 
     @Override
@@ -119,7 +157,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             logger.error("Exception when close CubeScanner", e);
         }
     }
-    
+
     public int getScanCount() {
         return scanCount;
     }

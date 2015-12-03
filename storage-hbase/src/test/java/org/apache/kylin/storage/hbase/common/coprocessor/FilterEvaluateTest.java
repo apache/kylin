@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.Tuple;
 import org.junit.Test;
 
 /**

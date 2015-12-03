@@ -10,9 +10,9 @@ import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.SimpleTupleIterator;
 import org.apache.kylin.metadata.tuple.TeeTupleIterator;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

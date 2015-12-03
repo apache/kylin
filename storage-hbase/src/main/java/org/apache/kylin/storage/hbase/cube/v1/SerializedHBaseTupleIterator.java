@@ -33,11 +33,11 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 import org.apache.kylin.storage.translate.HBaseKeyRange;
-import org.apache.kylin.storage.tuple.TupleInfo;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

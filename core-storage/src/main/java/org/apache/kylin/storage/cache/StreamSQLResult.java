@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
-import org.apache.kylin.storage.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.Tuple;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterators;

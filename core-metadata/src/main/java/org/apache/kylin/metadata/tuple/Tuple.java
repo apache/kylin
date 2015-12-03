@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.storage.tuple;
+package org.apache.kylin.metadata.tuple;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -30,7 +30,6 @@ import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
 
 /**
  * @author xjiang

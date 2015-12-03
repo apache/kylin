@@ -75,7 +75,7 @@ public class FunctionDesc {
         parameter.setColRefs(colRefs);
         
         // make sure sum/max/min returns the exact type as its input
-        if (isSum() || isMax() || isMin() && (colRefs.size() > 0)) {
+        if ((isSum() || isMax() || isMin()) && colRefs.size() > 0) {
             setReturnType(colRefs.get(0).getDatatype());
         }
     }

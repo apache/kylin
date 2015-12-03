@@ -73,7 +73,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         AGGR_FUNC_MAP.put("$SUM0", "SUM");
         AGGR_FUNC_MAP.put("COUNT", "COUNT");
         AGGR_FUNC_MAP.put("COUNT_DISTINCT", "COUNT_DISTINCT");
-        AGGR_FUNC_MAP.put("HLL_COUNT", "COUNT_DISTINCT");
         AGGR_FUNC_MAP.put("MAX", "MAX");
         AGGR_FUNC_MAP.put("MIN", "MIN");
     }
@@ -302,8 +301,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         SqlAggFunction newAgg = aggCall.getAggregation();
         if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;
-        } else if (func.getMeasureType().getRewriteAggregationFunctionClass() != null) {
-            newAgg = createCustomAggFunction(fieldType, func.getMeasureType().getRewriteAggregationFunctionClass());
+        } else if (func.getMeasureType().getRewriteCalciteAggrFunctionClass() != null) {
+            newAgg = createCustomAggFunction(fieldType, func.getMeasureType().getRewriteCalciteAggrFunctionClass());
         }
 
         // rebuild aggregate call

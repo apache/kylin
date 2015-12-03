@@ -767,7 +767,7 @@ public class CubeDesc extends RootPersistentEntity {
 
         for (MeasureDesc measure : measures) {
             MeasureType aggrType = measure.getFunction().getMeasureType();
-            result.addAll(aggrType.getColumnsNeedDictionary(measure));
+            result.addAll(aggrType.getColumnsNeedDictionary(measure.getFunction()));
         }
         return result;
     }
