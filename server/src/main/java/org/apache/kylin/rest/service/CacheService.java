@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.MetadataManager;
@@ -59,13 +60,13 @@ public class CacheService extends BasicService {
                 cleanProjectCacheByRealization(RealizationType.CUBE, cacheKey);
                 break;
             case CUBE_DESC:
-                if (getCubeDescManager().getCubeDesc(cacheKey) != null) {
-                    String modelName = getCubeDescManager().getCubeDesc(cacheKey).getModelName();
+                CubeDesc oldDesc = getCubeDescManager().getCubeDesc(cacheKey);
+                if (oldDesc != null) {
+                    // existing cubedesc, reload model before reload cubedesc
+                    String modelName = oldDesc.getModelName();
                     getMetadataManager().reloadDataModelDesc(modelName);
-                }
+                } 
                 getCubeDescManager().reloadCubeDesc(cacheKey);
-                IIDescManager.clearCache();
-                CubeDescManager.clearCache();
                 break;
             case PROJECT:
                 getProjectManager().reloadProject(cacheKey);
@@ -84,7 +85,13 @@ public class CacheService extends BasicService {
                 CubeDescManager.clearCache();
                 break;
             case DATA_MODEL:
-                // To avoid in an inconsistent state, model desc will be refreshed together with cube desc
+                // To avoid in an inconsistent state, model desc will be reload together with cube desc if it is not a new one.
+                if (getMetadataManager().getDataModelDesc(cacheKey) == null) {
+                    // new data model
+                    getMetadataManager().reloadDataModelDesc(cacheKey);
+                }
+                IIDescManager.clearCache();
+                CubeDescManager.clearCache();
                 break;
             case ALL:
                 MetadataManager.clearCache();
@@ -145,5 +152,8 @@ public class CacheService extends BasicService {
             throw new RuntimeException("error " + log, e);
         }
     }
-    
+
+    public void setCubeService(CubeService cubeService) {
+        this.cubeService = cubeService;
+    }
 }
