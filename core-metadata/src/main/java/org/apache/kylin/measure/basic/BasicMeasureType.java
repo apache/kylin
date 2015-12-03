@@ -122,7 +122,7 @@ public class BasicMeasureType extends MeasureType {
     }
 
     @Override
-    public Class<?> getRewriteAggregationFunctionClass() {
+    public Class<?> getRewriteCalciteAggrFunctionClass() {
         // TODO Auto-generated method stub
         return null;
     }

@@ -3,9 +3,9 @@ package org.apache.kylin.storage.hbase.cube.v2;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.tuple.Tuple;
-import org.apache.kylin.storage.tuple.TupleInfo;
 
 import java.util.Iterator;
 import java.util.List;

@@ -19,9 +19,11 @@
 package org.apache.kylin.measure;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.basic.BasicMeasureFactory;
 import org.apache.kylin.measure.hllc.HLLCAggregationFactory;
 import org.apache.kylin.measure.topn.TopNMeasureFactory;
@@ -32,6 +34,8 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 
 import com.google.common.collect.Maps;
 
@@ -82,8 +86,8 @@ abstract public class MeasureType {
     
     abstract public MeasureAggregator<?> newAggregator();
  
-    public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
-        return null;
+    public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
+        return Collections.emptyList();
     }
 
     /* ============================================================================
@@ -102,10 +106,33 @@ abstract public class MeasureType {
     
     abstract public boolean needRewrite();
     
-    abstract public Class<?> getRewriteAggregationFunctionClass();
+    abstract public Class<?> getRewriteCalciteAggrFunctionClass();
     
     /* ============================================================================
      * Storage
      * ---------------------------------------------------------------------------- */
     
+    public void beforeStorageQuery(MeasureDesc measureDesc, SQLDigest sqlDigest) {
+    }
+    
+    public boolean needAdvancedTupleFilling() {
+        return false;
+    }
+
+    public void fillTupleSimply(Tuple tuple, int indexInTuple, Object measureValue) {
+        tuple.setMeasureValue(indexInTuple, measureValue);
+    }
+    
+    public IAdvMeasureFiller getAdvancedTupleFiller(FunctionDesc function, TupleInfo returnTupleInfo, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+        throw new UnsupportedOperationException();
+    }
+    
+    public static interface IAdvMeasureFiller {
+        
+        void reload(Object measureValue);
+        
+        int getNumOfRows();
+        
+        void fillTuplle(Tuple tuple, int row);
+    }
 }

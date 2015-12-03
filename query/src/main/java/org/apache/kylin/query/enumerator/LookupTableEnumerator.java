@@ -30,10 +30,10 @@ import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.storage.hybrid.HybridInstance;
-import org.apache.kylin.storage.tuple.Tuple;
 
 /**
  */

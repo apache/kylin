@@ -15,6 +15,7 @@ import org.apache.kylin.cube.gridtable.NotEnoughGTInfoException;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
@@ -26,10 +27,10 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.translate.DerivedFilterTranslator;
-import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
         // check whether this is a TopN query
-        checkAndRewriteTopN(sqlDigest);
+        notifyBeforeStorageQuery(sqlDigest);
 
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
         TupleFilter filter = sqlDigest.filter;
@@ -396,33 +397,10 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         return false;
     }
 
-    private void checkAndRewriteTopN(SQLDigest sqlDigest) {
-        FunctionDesc topnFunc = null;
-        TblColRef topnLiteralCol = null;
+    private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
-            FunctionDesc func = measure.getFunction();
-            if (func.isTopN() && sqlDigest.groupbyColumns.contains(func.getTopNLiteralColumn())) {
-                topnFunc = func;
-                topnLiteralCol = func.getTopNLiteralColumn();
-            }
+            MeasureType measureType = measure.getFunction().getMeasureType();
+            measureType.beforeStorageQuery(measure, sqlDigest);
         }
-
-        // if TopN is not involved
-        if (topnFunc == null)
-            return;
-
-        if (sqlDigest.aggregations.size() != 1) {
-            throw new IllegalStateException("When query with topN, only one metrics is allowed.");
-        }
-
-        FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
-        if (origFunc.isSum() == false) {
-            throw new IllegalStateException("When query with topN, only SUM function is allowed.");
-        }
-
-        sqlDigest.aggregations = Lists.newArrayList(topnFunc);
-        sqlDigest.groupbyColumns.remove(topnLiteralCol);
-        sqlDigest.metricColumns.add(topnLiteralCol);
-        logger.info("Rewrite function " + origFunc + " to " + topnFunc);
     }
 }

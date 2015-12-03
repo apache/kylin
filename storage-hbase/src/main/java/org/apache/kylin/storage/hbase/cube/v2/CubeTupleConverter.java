@@ -37,12 +37,15 @@ import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.tuple.Tuple;
-import org.apache.kylin.storage.tuple.TupleInfo;
+import org.apache.kylin.metadata.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * convert GTRecord to tuple
@@ -56,7 +59,12 @@ public class CubeTupleConverter {
 
     final int[] gtColIdx;
     final int[] tupleIdx;
-    final Object[] tmpValues;
+    final Object[] gtValues;
+    final MeasureType[] measureTypes;
+    
+    final List<IAdvMeasureFiller> advMeasureFillers;
+    final List<Integer> advMeasureIndexInGTValues;
+    
     final int nSelectedDims;
     final TblColRef topNCol;
     int topNColTupleIdx;
@@ -77,8 +85,14 @@ public class CubeTupleConverter {
         nSelectedDims = selectedDimensions.size();
         gtColIdx = new int[selectedDimensions.size() + selectedMetrics.size()];
         tupleIdx = new int[selectedDimensions.size() + selectedMetrics.size()];
-        tmpValues = new Object[selectedDimensions.size() + selectedMetrics.size()];
+        gtValues = new Object[selectedDimensions.size() + selectedMetrics.size()];
 
+        // measure types don't have this many, but aligned length make programming easier
+        measureTypes = new MeasureType[selectedDimensions.size() + selectedMetrics.size()];
+        
+        advMeasureFillers = Lists.newArrayListWithCapacity(1);
+        advMeasureIndexInGTValues = Lists.newArrayListWithCapacity(1);
+        
         int iii = 0;
 
         // pre-calculate dimension index mapping to tuple
@@ -92,6 +106,7 @@ public class CubeTupleConverter {
         for (FunctionDesc metric : selectedMetrics) {
             int i = mapping.getIndexOf(metric);
             gtColIdx[iii] = i;
+            
             if (metric.needRewrite()) {
                 String rewriteFieldName = metric.getRewriteFieldName();
                 tupleIdx[iii] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
@@ -101,6 +116,16 @@ public class CubeTupleConverter {
                 TblColRef col = metric.getParameter().getColRefs().get(0);
                 tupleIdx[iii] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
             }
+            
+            MeasureType measureType = metric.getMeasureType();
+            if (measureType.needAdvancedTupleFilling()) {
+                Map<TblColRef, Dictionary<String>> dictionaryMap = buildDictionaryMap(measureType.getColumnsNeedDictionary(metric));
+                advMeasureFillers.add(measureType.getAdvancedTupleFiller(metric, returnTupleInfo, dictionaryMap));
+                advMeasureIndexInGTValues.add(iii);
+            } else {
+                measureTypes[iii] = measureType;
+            }
+                
             iii++;
         }
 
@@ -125,29 +150,49 @@ public class CubeTupleConverter {
         }
     }
 
-    public void translateResult(GTRecord record, Tuple tuple) {
+    // load only needed dictionaries
+    private Map<TblColRef, Dictionary<String>> buildDictionaryMap(List<TblColRef> columnsNeedDictionary) {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
+        for (TblColRef col : columnsNeedDictionary) {
+            result.put(col, cubeSeg.getDictionary(col));
+        }
+        return result;
+    }
 
-        record.getValues(gtColIdx, tmpValues);
+    public List<IAdvMeasureFiller> translateResult(GTRecord record, Tuple tuple) {
+
+        record.getValues(gtColIdx, gtValues);
 
         // dimensions
         for (int i = 0; i < nSelectedDims; i++) {
             int ti = tupleIdx[i];
             if (ti >= 0) {
-                tuple.setDimensionValue(ti, toString(tmpValues[i]));
+                tuple.setDimensionValue(ti, toString(gtValues[i]));
             }
         }
 
         // measures
         for (int i = nSelectedDims; i < gtColIdx.length; i++) {
             int ti = tupleIdx[i];
-            if (ti >= 0) {
-                tuple.setMeasureValue(ti, tmpValues[i]);
+            if (ti >= 0 && measureTypes[i] != null) {
+                measureTypes[i].fillTupleSimply(tuple, ti, gtValues[i]);
             }
         }
 
         // derived
         for (IDerivedColumnFiller filler : derivedColFillers) {
-            filler.fillDerivedColumns(tmpValues, tuple);
+            filler.fillDerivedColumns(gtValues, tuple);
+        }
+        
+        // advanced measure filling, due to possible row split, will complete at caller side
+        if (advMeasureFillers.isEmpty()) {
+            return null;
+        } else {
+            for (int i = 0; i < advMeasureFillers.size(); i++) {
+                Object measureValue = gtValues[advMeasureIndexInGTValues.get(i)];
+                advMeasureFillers.get(i).reload(measureValue);
+            }
+            return advMeasureFillers;
         }
     }
 
@@ -157,15 +202,16 @@ public class CubeTupleConverter {
         assert (topNCounterObj instanceof TopNCounter);
         return new TopNCounterTupleIterator(tuple, (TopNCounter) topNCounterObj);
     }
+    
     private interface IDerivedColumnFiller {
-        public void fillDerivedColumns(Object[] tmpValues, Tuple tuple);
+        public void fillDerivedColumns(Object[] gtValues, Tuple tuple);
     }
 
     private IDerivedColumnFiller newDerivedColumnFiller(TblColRef[] hostCols, final DeriveInfo deriveInfo) {
         boolean allHostsPresent = true;
         final int[] hostTmpIdx = new int[hostCols.length];
         for (int i = 0; i < hostCols.length; i++) {
-            hostTmpIdx[i] = indexOnTheTmpValues(hostCols[i]);
+            hostTmpIdx[i] = indexOnTheGTValues(hostCols[i]);
             allHostsPresent = allHostsPresent && hostTmpIdx[i] >= 0;
         }
 
@@ -197,9 +243,9 @@ public class CubeTupleConverter {
                 }
 
                 @Override
-                public void fillDerivedColumns(Object[] tmpValues, Tuple tuple) {
+                public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
                     for (int i = 0; i < hostTmpIdx.length; i++) {
-                        lookupKey.data[i] = CubeTupleConverter.toString(tmpValues[hostTmpIdx[i]]);
+                        lookupKey.data[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
                     }
 
                     String[] lookupRow = lookupTable.getRow(lookupKey);
@@ -223,9 +269,9 @@ public class CubeTupleConverter {
         case PK_FK:
             return new IDerivedColumnFiller() {
                 @Override
-                public void fillDerivedColumns(Object[] tmpValues, Tuple tuple) {
+                public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
                     // composite keys are split, so only copy [0] is enough, see CubeDesc.initDimensionColumns()
-                    tuple.setDimensionValue(derivedTupleIdx[0], CubeTupleConverter.toString(tmpValues[hostTmpIdx[0]]));
+                    tuple.setDimensionValue(derivedTupleIdx[0], CubeTupleConverter.toString(gtValues[hostTmpIdx[0]]));
                 }
             };
         default:
@@ -233,7 +279,7 @@ public class CubeTupleConverter {
         }
     }
 
-    private int indexOnTheTmpValues(TblColRef col) {
+    private int indexOnTheGTValues(TblColRef col) {
         List<TblColRef> cuboidDims = cuboid.getColumns();
         int cuboidIdx = cuboidDims.indexOf(col);
         for (int i = 0; i < gtColIdx.length; i++) {

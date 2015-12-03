@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -36,9 +37,9 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.tuple.TupleInfo;
 
 /**
  */

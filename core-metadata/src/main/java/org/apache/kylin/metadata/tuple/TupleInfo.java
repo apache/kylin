@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.storage.tuple;
+package org.apache.kylin.metadata.tuple;
 
 import java.util.ArrayList;
 import java.util.HashMap;

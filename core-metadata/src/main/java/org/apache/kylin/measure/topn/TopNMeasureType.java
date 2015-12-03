@@ -20,6 +20,7 @@ package org.apache.kylin.measure.topn;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -39,8 +40,16 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.TupleInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 public class TopNMeasureType extends MeasureType {
+
+    private static final Logger logger = LoggerFactory.getLogger(TopNMeasureType.class);
 
     private final DataType dataType;
 
@@ -134,8 +143,8 @@ public class TopNMeasureType extends MeasureType {
     }
 
     @Override
-    public List<TblColRef> getColumnsNeedDictionary(MeasureDesc measureDesc) {
-        TblColRef literalCol = measureDesc.getFunction().getParameter().getColRefs().get(1);
+    public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
+        TblColRef literalCol = functionDesc.getParameter().getColRefs().get(1);
         return Collections.singletonList(literalCol);
     }
 
@@ -173,8 +182,88 @@ public class TopNMeasureType extends MeasureType {
     }
 
     @Override
-    public Class<?> getRewriteAggregationFunctionClass() {
+    public Class<?> getRewriteCalciteAggrFunctionClass() {
         return null;
     }
 
+    @Override
+    public void beforeStorageQuery(MeasureDesc measureDesc, SQLDigest sqlDigest) {
+        FunctionDesc topnFunc = measureDesc.getFunction();
+        TblColRef topnLiteralCol = topnFunc.getTopNLiteralColumn();
+
+        if (sqlDigest.groupbyColumns.contains(topnLiteralCol) == false)
+            return;
+
+        if (sqlDigest.aggregations.size() != 1) {
+            throw new IllegalStateException("When query with topN, only one metrics is allowed.");
+        }
+
+        FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
+        if (origFunc.isSum() == false) {
+            throw new IllegalStateException("When query with topN, only SUM function is allowed.");
+        }
+
+        sqlDigest.aggregations = Lists.newArrayList(topnFunc);
+        sqlDigest.groupbyColumns.remove(topnLiteralCol);
+        sqlDigest.metricColumns.add(topnLiteralCol);
+        logger.info("Rewrite function " + origFunc + " to " + topnFunc);
+    }
+
+    @Override
+    public boolean needAdvancedTupleFilling() {
+        return true;
+    }
+    
+    @Override
+    public void fillTupleSimply(Tuple tuple, int indexInTuple, Object measureValue) {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public IAdvMeasureFiller getAdvancedTupleFiller(FunctionDesc function, TupleInfo tupleInfo, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+        final TblColRef literalCol = getTopNLiteralColumn(function);
+        final TblColRef numericCol = getTopNNumericColumn(function);
+        final Dictionary<String> topNColDict = dictionaryMap.get(literalCol);
+        final int literalTupleIdx = tupleInfo.hasColumn(literalCol) ? tupleInfo.getColumnIndex(literalCol) : -1;
+        // for TopN, the aggr must be SUM, so the number fill into the column position (without rewrite)
+        final int numericTupleIdx = tupleInfo.hasColumn(numericCol) ? tupleInfo.getColumnIndex(numericCol) : -1;
+        
+        return new IAdvMeasureFiller() {
+            private TopNCounter<ByteArray> topNCounter;
+            private Iterator<Counter<ByteArray>> topNCounterIterator;
+            private int expectRow = 0;
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public void reload(Object measureValue) {
+                this.topNCounter = (TopNCounter<ByteArray>) measureValue;
+                this.topNCounterIterator = topNCounter.iterator();
+            }
+
+            @Override
+            public int getNumOfRows() {
+                return topNCounter.size();
+            }
+
+            @Override
+            public void fillTuplle(Tuple tuple, int row) {
+                if (expectRow++ != row)
+                    throw new IllegalStateException();
+                
+                Counter<ByteArray> counter = topNCounterIterator.next();
+                int key = BytesUtil.readUnsigned(counter.getItem().array(), 0, counter.getItem().array().length);
+                String colValue = topNColDict.getValueFromId(key);
+                tuple.setDimensionValue(literalTupleIdx, colValue);
+                tuple.setMeasureValue(numericTupleIdx, counter.getCount());
+            }
+        };
+    }
+
+    private TblColRef getTopNNumericColumn(FunctionDesc functionDesc) {
+        return functionDesc.getParameter().getColRefs().get(0);
+    }
+
+    private TblColRef getTopNLiteralColumn(FunctionDesc functionDesc) {
+        return functionDesc.getParameter().getColRefs().get(1);
+    }
 }

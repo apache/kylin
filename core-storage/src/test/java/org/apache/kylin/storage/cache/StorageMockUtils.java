@@ -13,7 +13,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.tuple.TupleInfo;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 
 import com.google.common.collect.ImmutableList;
 
