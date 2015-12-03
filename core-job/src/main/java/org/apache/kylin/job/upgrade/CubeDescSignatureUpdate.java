@@ -18,28 +18,31 @@
 
 package org.apache.kylin.job.upgrade;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.project.ProjectManager;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Created by dongli on 11/17/15.
  */
 public class CubeDescSignatureUpdate {
+    private static final Log logger = LogFactory.getLog(CubeDescSignatureUpdate.class);
     private KylinConfig config = null;
     private ResourceStore store;
     private String[] cubeNames;
     private List<String> updatedResources = Lists.newArrayList();
     private List<String> errorMsgs = Lists.newArrayList();
-
-    private static final Log logger = LogFactory.getLog(CubeDescSignatureUpdate.class);
 
     public CubeDescSignatureUpdate(String[] cubes) {
         config = KylinConfig.getInstanceFromEnv();
@@ -47,28 +50,8 @@ public class CubeDescSignatureUpdate {
         cubeNames = cubes;
     }
 
-    public void update() {
-        logger.info("Reloading Cube Metadata from store: " + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
-        CubeDescManager cubeDescManager = CubeDescManager.getInstance(config);
-        List<CubeDesc> cubeDescs;
-        if (ArrayUtils.isEmpty(cubeNames)) {
-            cubeDescs = cubeDescManager.listAllDesc();
-        } else {
-            String[] names = cubeNames[0].split(",");
-            if (ArrayUtils.isEmpty(names))
-                return;
-            cubeDescs = Lists.newArrayListWithCapacity(names.length);
-            for (String name : names) {
-                cubeDescs.add(cubeDescManager.getCubeDesc(name));
-            }
-        }
-        for (CubeDesc cubeDesc : cubeDescs) {
-            updateCubeDesc(cubeDesc);
-        }
-    }
-
     public static void main(String args[]) {
-        if (args != null && args.length != 0 && args.length != 1) {
+        if (args != null && args.length > 1) {
             System.out.println("Usage: java CubeDescSignatureUpdate [Cubes]; e.g, cube1,cube2 ");
             return;
         }
@@ -100,11 +83,40 @@ public class CubeDescSignatureUpdate {
         logger.info("=================================================================");
     }
 
+    public void update() {
+        logger.info("Reloading Cube Metadata from store: " + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
+        CubeDescManager cubeDescManager = CubeDescManager.getInstance(config);
+        List<CubeDesc> cubeDescs;
+        if (ArrayUtils.isEmpty(cubeNames)) {
+            cubeDescs = cubeDescManager.listAllDesc();
+        } else {
+            String[] names = cubeNames[0].split(",");
+            if (ArrayUtils.isEmpty(names))
+                return;
+            cubeDescs = Lists.newArrayListWithCapacity(names.length);
+            for (String name : names) {
+                cubeDescs.add(cubeDescManager.getCubeDesc(name));
+            }
+        }
+        for (CubeDesc cubeDesc : cubeDescs) {
+            updateCubeDesc(cubeDesc);
+        }
+
+        verify();
+    }
+
+    private void verify() {
+        MetadataManager.getInstance(config).reload();
+        CubeDescManager.clearCache();
+        CubeDescManager.getInstance(config);
+        CubeManager.getInstance(config);
+        ProjectManager.getInstance(config);
+    }
+
     private void updateCubeDesc(CubeDesc cubeDesc) {
         try {
             String calculatedSign = cubeDesc.calculateSignature();
-            if (!cubeDesc.getSignature().equals(calculatedSign))
-            {
+            if (!cubeDesc.getSignature().equals(calculatedSign)) {
                 cubeDesc.setSignature(calculatedSign);
                 store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
                 updatedResources.add(cubeDesc.getResourcePath());
