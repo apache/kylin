@@ -102,8 +102,11 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
-        return new EnumerableLimit(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
-                sole(inputs), localOffset, localFetch);
+        EnumerableRel input = sole(inputs);
+        if (input instanceof OLAPRel) {
+            ((OLAPRel) input).replaceTraitSet(EnumerableConvention.INSTANCE);
+        }
+        return EnumerableLimit.create(input, localOffset, localFetch);
     }
 
     @Override
