@@ -322,4 +322,12 @@ public class DataModelDesc extends RootPersistentEntity {
     public String[] getMetrics() {
         return metrics;
     }
+
+    public void setDimensions(List<DimensionDesc> dimensions) {
+        this.dimensions = dimensions;
+    }
+
+    public void setMetrics(String[] metrics) {
+        this.metrics = metrics;
+    }
 }
