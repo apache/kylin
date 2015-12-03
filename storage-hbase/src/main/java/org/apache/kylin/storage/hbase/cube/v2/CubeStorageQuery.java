@@ -41,8 +41,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeStorageQuery.class);
 
-    private static final long MEM_BUDGET_PER_QUERY = 3L * 1024 * 1024 * 1024; // 3G
-
     private final CubeInstance cubeInstance;
     private final CubeDesc cubeDesc;
 
@@ -362,8 +360,13 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             rowSizeEst += func.getReturnDataType().getStorageBytesEstimate();
         }
 
-        long rowEst = MEM_BUDGET_PER_QUERY / rowSizeEst;
-        context.setThreshold((int) rowEst);
+        long rowEst = this.cubeInstance.getConfig().getQueryMemBudget() / rowSizeEst;
+        if (rowEst > 0) {
+            logger.info("Memory budget is set to: " + rowEst);
+            context.setThreshold((int) rowEst);
+        } else {
+            logger.info("Memory budget is not set.");
+        }
     }
 
     private void setLimit(TupleFilter filter, StorageContext context) {

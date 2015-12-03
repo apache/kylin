@@ -495,6 +495,10 @@ public class KylinConfig implements Serializable {
         return Long.parseLong(this.getOptional("kylin.query.cache.threshold.scancount", String.valueOf(10 * 1024)));
     }
 
+    public long getQueryMemBudget() {
+        return Long.parseLong(this.getOptional("kylin.query.mem.budget", String.valueOf(3L * 1024 * 1024 * 1024)));
+    }
+
     public boolean isQuerySecureEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.query.security.enabled", "false"));
     }
