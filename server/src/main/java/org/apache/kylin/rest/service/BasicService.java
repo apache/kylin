@@ -140,16 +140,6 @@ public abstract class BasicService {
         logger.debug("clean query cache...");
     }
 
-    public final KylinConfig getKylinConfig() {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-
-        if (kylinConfig == null) {
-            throw new IllegalArgumentException("Failed to load kylin config instance");
-        }
-
-        return kylinConfig;
-    }
-
     public final MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(getConfig());
     }
