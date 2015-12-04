@@ -36,7 +36,7 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
 
     public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
     public static final String DATATYPE_HLLC = "hllc";
-    
+
     public static class Factory extends MeasureTypeFactory<HyperLogLogPlusCounter> {
 
         @Override
@@ -59,7 +59,7 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
             return HLLCSerializer.class;
         }
     }
-    
+
     // ============================================================================
 
     private final DataType dataType;
@@ -77,11 +77,14 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
         if (FUNC_COUNT_DISTINCT.equals(funcName) == false)
             throw new IllegalArgumentException();
 
-        if (DATATYPE_HLLC.equals(dataType.getName()) == false)
-            throw new IllegalArgumentException();
+        // data type could be null at query layer, because only function and parameters are known at that stage
+        if (dataType != null) {
+            if (DATATYPE_HLLC.equals(dataType.getName()) == false)
+                throw new IllegalArgumentException();
 
-        if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
-            throw new IllegalArgumentException();
+            if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
+                throw new IllegalArgumentException();
+        }
     }
 
     @Override

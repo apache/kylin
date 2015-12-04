@@ -53,7 +53,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     public static final String FUNC_TOP_N = "TOP_N";
     public static final String DATATYPE_TOPN = "topn";
-    
+
     public static class Factory extends MeasureTypeFactory<TopNCounter<ByteArray>> {
 
         @Override
@@ -76,7 +76,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             return TopNCounterSerializer.class;
         }
     }
-    
+
     // ============================================================================
 
     private final DataType dataType;
@@ -93,12 +93,15 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     private void validate(String funcName, DataType dataType) {
         if (FUNC_TOP_N.equals(funcName) == false)
             throw new IllegalArgumentException();
-        
-        if (DATATYPE_TOPN.equals(dataType.getName()) == false)
-            throw new IllegalArgumentException();
 
-        if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
-            throw new IllegalArgumentException();
+        // data type could be null at query layer, because only function and parameters are known at that stage
+        if (dataType != null) {
+            if (DATATYPE_TOPN.equals(dataType.getName()) == false)
+                throw new IllegalArgumentException();
+
+            if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
+                throw new IllegalArgumentException();
+        }
     }
 
     @Override
