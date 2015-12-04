@@ -206,11 +206,15 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     if (!modelsManager.selectedModel.dimensions.length) {
       errors.push("No dimensions defined.");
     }
+    var isDimensionDefined = false;
     angular.forEach(modelsManager.selectedModel.dimensions, function (_dimension) {
-      if (!_dimension.columns || !_dimension.columns.length) {
-        errors.push("No dimension columns defined for Table[" + _dimension.table + "]");
+      if(_dimension.columns && _dimension.columns.length){
+        isDimensionDefined = true;
       }
     });
+    if(!isDimensionDefined){
+      errors.push("No dimensions defined.");
+    }
     var errorInfo = "";
     angular.forEach(errors, function (item) {
       errorInfo += "\n" + item;
