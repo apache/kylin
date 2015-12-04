@@ -18,6 +18,7 @@
 
 package org.apache.kylin.measure.basic;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -66,11 +67,25 @@ public class BasicMeasureType extends MeasureType {
     }
 
     private void validate(String funcName, DataType dataType) throws IllegalArgumentException {
-        if ((funcName.equals(FunctionDesc.FUNC_SUM) //
-                || funcName.equals(FunctionDesc.FUNC_COUNT) //
-                || funcName.equals(FunctionDesc.FUNC_MAX) //
-                || funcName.equals(FunctionDesc.FUNC_MIN)) == false)
-            throw new IllegalArgumentException();
+        DataType rtype = dataType;
+
+        if (funcName.equals(FunctionDesc.FUNC_SUM)) {
+            if (rtype.isNumberFamily() == false) {
+                throw new IllegalArgumentException("Return type for function " + funcName + " must be one of " + DataType.NUMBER_FAMILY);
+            }
+        } else if (funcName.equals(FunctionDesc.FUNC_COUNT)) {
+            if (rtype.isIntegerFamily() == false) {
+                throw new IllegalArgumentException("Return type for function " + funcName + " must be one of " + DataType.INTEGER_FAMILY);
+            }
+        } else if (funcName.equals(FunctionDesc.FUNC_MAX) || funcName.equals(FunctionDesc.FUNC_MIN)) {
+            if (rtype.isNumberFamily() == false) {
+                throw new IllegalArgumentException("Return type for function " + funcName + " must be one of " + DataType.NUMBER_FAMILY);
+            }
+        } else {
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            if (config.isQueryIgnoreUnknownFunction() == false)
+                throw new IllegalArgumentException("Unrecognized function: [" + funcName + "]");
+        }
     }
     
     @Override
@@ -135,7 +150,6 @@ public class BasicMeasureType extends MeasureType {
 
     @Override
     public Class<?> getRewriteCalciteAggrFunctionClass() {
-        // TODO Auto-generated method stub
         return null;
     }
 
