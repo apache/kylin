@@ -118,10 +118,6 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
             if (rtype.isNumberFamily() == false) {
                 context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of " + DataType.NUMBER_FAMILY);
             }
-        } else if (funcDesc.isTopN()) {
-            if (rtype.isTopN() == false) {
-                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of topn");
-            }
         } else {
             if (StringUtils.equalsIgnoreCase(KylinConfig.getInstanceFromEnv().getProperty(KEY_IGNORE_UNKNOWN_FUNC, "false"), "false")) {
                 context.addResult(ResultLevel.ERROR, "Unrecognized function: [" + func + "]");
