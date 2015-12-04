@@ -41,6 +41,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -648,10 +649,7 @@ public class CubeDesc extends RootPersistentEntity {
             func.init(factTable);
             allColumns.addAll(func.getParameter().getColRefs());
 
-            // verify holistic count distinct as a dependent measure
-            if (func.isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
-                throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
-            }
+            func.getMeasureType().validate(func);
         }
     }
 
@@ -729,9 +727,9 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    public boolean hasHolisticCountDistinctMeasures() {
+    public boolean hasMemoryHungryMeasures() {
         for (MeasureDesc measure : measures) {
-            if (measure.getFunction().isHolisticCountDistinct()) {
+            if (measure.getFunction().getMeasureType().isMemoryHungry()) {
                 return true;
             }
         }
@@ -818,7 +816,8 @@ public class CubeDesc extends RootPersistentEntity {
         }
 
         for (MeasureDesc measure : measures) {
-            result.addAll(measure.getColumnsNeedDictionary());
+            MeasureType<?> aggrType = measure.getFunction().getMeasureType();
+            result.addAll(aggrType.getColumnsNeedDictionary(measure.getFunction()));
         }
         return result;
     }

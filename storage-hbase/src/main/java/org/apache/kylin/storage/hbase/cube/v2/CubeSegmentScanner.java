@@ -30,8 +30,8 @@ import org.apache.kylin.gridtable.GTScanRangePlanner;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
