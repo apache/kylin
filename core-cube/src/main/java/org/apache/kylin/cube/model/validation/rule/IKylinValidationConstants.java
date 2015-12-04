@@ -24,6 +24,5 @@ public interface IKylinValidationConstants extends MetadataConstants {
 
     public static final int DEFAULT_MAX_AGR_GROUP_SIZE = 12;
     public static final String KEY_MAX_AGR_GROUP_SIZE = "rule_max.arggregation.group.size";
-    public static final String KEY_IGNORE_UNKNOWN_FUNC = "rule_ignore_unknown_func";
 
 }

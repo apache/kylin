@@ -29,7 +29,10 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.Properties;
+import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -308,7 +311,7 @@ public class KylinConfig implements Serializable {
     public String getHBaseClusterFs() {
         return getOptional(KYLIN_HBASE_CLUSTER_FS, "");
     }
-    
+
     public String[] getMeasureTypeFactories() {
         return getOptionalStringArray("kylin.measure.type.factories", new String[0]);
     }
@@ -512,6 +515,10 @@ public class KylinConfig implements Serializable {
 
     public boolean isQueryCacheEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.query.cache.enabled", "true"));
+    }
+
+    public boolean isQueryIgnoreUnknownFunction() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.ignore_unknown_function", "false"));
     }
 
     public int getHBaseKeyValueSize() {
@@ -743,9 +750,9 @@ public class KylinConfig implements Serializable {
     }
 
     private void list(PrintWriter out) {
-        for (Enumeration e = properties.keys() ; e.hasMoreElements() ;) {
-            String key = (String)e.nextElement();
-            String val = (String)properties.get(key);
+        for (Enumeration<?> e = properties.keys(); e.hasMoreElements();) {
+            String key = (String) e.nextElement();
+            String val = (String) properties.get(key);
             out.println(key + "=" + val);
         }
     }
