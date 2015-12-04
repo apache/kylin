@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 
 /**
  */
@@ -58,7 +59,8 @@ public class DataType implements Serializable {
                 "boolean", "byte", "binary", //
                 "int", "short", "long", "integer", "tinyint", "smallint", "bigint", //
                 "float", "real", "double", "decimal", "numeric", //
-                "date", "time", "datetime", "timestamp");
+                "date", "time", "datetime", "timestamp", //
+                InnerDataTypeEnum.LITERAL.getDataType(), InnerDataTypeEnum.DERIVED.getDataType());
     }
 
     public static final Set<String> INTEGER_FAMILY = new HashSet<String>();

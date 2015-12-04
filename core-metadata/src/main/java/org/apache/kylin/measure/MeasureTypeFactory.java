@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
@@ -43,7 +42,7 @@ abstract public class MeasureTypeFactory<T> {
     
     // ============================================================================
     
-    private static Map<Pair<String, String>, MeasureTypeFactory<?>> factories = Maps.newHashMap();
+    private static Map<String, MeasureTypeFactory<?>> factories = Maps.newHashMap();
     private static MeasureTypeFactory<?> defaultFactory = new BasicMeasureType.Factory();
     
     public static synchronized void init(KylinConfig config) {
@@ -69,7 +68,7 @@ abstract public class MeasureTypeFactory<T> {
             
             DataType.register(dataTypeName);
             DataTypeSerializer.register(dataTypeName, serializer);
-            factories.put(Pair.newPair(funcName, dataTypeName), factory);
+            factories.put(funcName, factory);
         }
     }
     
@@ -80,7 +79,7 @@ abstract public class MeasureTypeFactory<T> {
     public static MeasureType<?> create(String funcName, DataType dataType) {
         funcName = funcName.toUpperCase();
         
-        MeasureTypeFactory<?> factory = factories.get(Pair.newPair(funcName, dataType.getName()));
+        MeasureTypeFactory<?> factory = factories.get(funcName);
         if (factory == null)
             factory = defaultFactory;
         
