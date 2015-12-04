@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.upgrade;
+package org.apache.kylin.cube.upgrade;
 
 import java.util.List;
 
