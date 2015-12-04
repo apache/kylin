@@ -25,4 +25,9 @@ __Companies & Organizations__
     * DreamSoft is using Apache Kylin as Big Data Analytics Engine for their customers coming from Retail, Manufacturing, Finance and others.
 * [Exponential](http://www.exponential.com)
 	* Using Kylin as a component in it's data platform LAMBDA to power inventory, campaign, behavior and demand analysis for advertising. It has been great at handling the size and speed constraints of old gen systems. With the first version already in production, we are looking forward to pushing more data into kylin and achieve near real time updates. 
+* [Baidu Map](http://map.baidu.com/)  (_NASDAQ: BIDU_)
+	* Apache Kylin is used for analysis Baidu Map's huge amounts of data about users, channels and etc, it performs quite fast with its own pre-calculation and index technologies along with the cubes.
+* [NetEase](http://www.163.com/)  (_NASDAQ: NTES_)
+	* Apache has been introduced as an OLAP engine for the data platform at NetEase, powering data analysis for various products & business with great performance.
+
     
