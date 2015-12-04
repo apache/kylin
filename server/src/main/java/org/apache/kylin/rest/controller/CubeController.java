@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -260,7 +261,6 @@ public class CubeController extends BasicController {
     @ResponseBody
     public CubeInstance cloneCube(@PathVariable String cubeName,@RequestBody CubeRequest cubeRequest) {
         String targetCubeName = cubeRequest.getCubeName();
-        String targetModelName = cubeRequest.getModelDescData();
         String project = cubeRequest.getProject();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -275,11 +275,13 @@ public class CubeController extends BasicController {
 
         DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
 
-        modelDesc.setName(targetModelName);
+        //model name same as cube
+        modelDesc.setName(targetCubeName);
         modelDesc.setLastModified(0);
         modelDesc.setUuid(UUID.randomUUID().toString());
+        DataModelDesc newModel = null;
         try {
-            metaManager.createDataModelDesc(modelDesc);
+            newModel = metaManager.createDataModelDesc(modelDesc);
         } catch (IOException e) {
             throw new InternalErrorException("failed to clone DataModelDesc",e);
         }
@@ -287,11 +289,16 @@ public class CubeController extends BasicController {
         cubeDesc.setName(targetCubeName);
         cubeDesc.setLastModified(0);
         cubeDesc.setUuid(UUID.randomUUID().toString());
-        cubeDesc.setModelName(targetModelName);
+        cubeDesc.setModelName(targetCubeName);
         CubeInstance newCube = null;
         try {
             newCube = cubeService.createCubeAndDesc(targetCubeName,project,cubeDesc);
         } catch (IOException e) {
+            try {
+                metaManager.dropModel(newModel);
+            } catch (IOException e1) {
+                throw new InternalErrorException("New model already created and failed to rollback",e);
+            }
             throw new InternalErrorException("failed to clone DataModelDesc",e);
         }
 

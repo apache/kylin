@@ -40,6 +40,7 @@ import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -340,6 +341,26 @@ public class MetadataManager {
 
         return saveDataModelDesc(desc);
     }
+
+    // sync on update
+    public DataModelDesc dropModel(DataModelDesc desc) throws IOException {
+        logger.info("Dropping model '" + desc.getName() + "'");
+        ResourceStore store = getStore();
+        if (desc != null)
+            store.deleteResource(desc.getResourcePath());
+        // clean model cache
+        this.afterModelDropped(desc);
+        return desc;
+    }
+
+    private void afterModelDropped(DataModelDesc desc) {
+        removeModelCache(desc);
+    }
+
+    private void removeModelCache(DataModelDesc desc) {
+        dataModelDescMap.remove(desc.getName());
+    }
+
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
         dataModelDesc.init(this.getAllTablesMap());

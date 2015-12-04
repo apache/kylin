@@ -395,8 +395,7 @@ var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   $scope.projectModel = ProjectModel;
 
   $scope.targetObj={
-    cubeName:cube.descriptor+"_clone",
-    modelName:cube.model.name+"_clone"
+    cubeName:cube.descriptor+"_clone"
   }
 
   $scope.cancel = function () {
@@ -407,7 +406,6 @@ var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
     $scope.cubeRequest = {
       cubeName:$scope.targetObj.cubeName,
-      modelDescData:$scope.targetObj.modelName,
       project:$scope.projectModel.selectedProject
     }
 
