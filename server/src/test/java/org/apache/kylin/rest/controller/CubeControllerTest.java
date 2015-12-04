@@ -28,6 +28,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.rest.request.CubeRequest;
+import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ServiceTestBase;
@@ -52,6 +53,8 @@ public class CubeControllerTest extends ServiceTestBase {
     CubeService cubeService;
     @Autowired
     JobService jobService;
+    @Autowired
+    private AccessService accessService;
 
     @Before
     public void setUp() throws Exception {
@@ -59,6 +62,7 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController = new CubeController();
         cubeController.setCubeService(cubeService);
         cubeController.setJobService(jobService);
+        cubeController.setAccessService(accessService);
 
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
