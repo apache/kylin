@@ -33,6 +33,7 @@ import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobListRequest;
+import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.rest.service.ServiceTestBase;
@@ -51,6 +52,8 @@ public class JobControllerTest extends ServiceTestBase {
     private CubeController cubeController;
     @Autowired
     JobService jobService;
+    @Autowired
+    private AccessService accessService;
 
     @Autowired
     CubeService cubeService;
@@ -69,6 +72,7 @@ public class JobControllerTest extends ServiceTestBase {
         cubeController = new CubeController();
         cubeController.setJobService(jobService);
         cubeController.setCubeService(cubeService);
+        cubeController.setAccessService(accessService);
         KylinConfig testConfig = getTestConfig();
         cubeManager = CubeManager.getInstance(testConfig);
         cubeDescManager = CubeDescManager.getInstance(testConfig);
