@@ -30,6 +30,7 @@ import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregator;
+import org.apache.kylin.measure.hllc.HLLCMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -78,7 +79,7 @@ public class EndpointAggregators {
         } else {
             int index = tableInfo.findFactTableColumn(functionDesc.getParameter().getValue());
             Preconditions.checkState(index >= 0, "Column " + functionDesc.getParameter().getValue() + " is not found in II");
-            if (functionDesc.isCountDistinct()) {
+            if (HLLCMeasureType.isCountDistinct(functionDesc)) {
                 return new MetricInfo(MetricType.DistinctCount, index, functionDesc.getReturnDataType().getPrecision());
             } else {
                 return new MetricInfo(MetricType.Normal, index);
@@ -144,10 +145,10 @@ public class EndpointAggregators {
         MeasureAggregator[] aggrs = new MeasureAggregator[funcNames.length];
         for (int i = 0; i < aggrs.length; i++) {
             if (metricInfos[i].type == MetricType.DistinctCount) {
-                aggrs[i] = MeasureAggregator.create(funcNames[i], dataTypes[i]);
+                aggrs[i] = MeasureAggregator.create(funcNames[i], DataType.getType(dataTypes[i]));
             } else {
                 //all other fixed length measures can be aggregated as long
-                aggrs[i] = MeasureAggregator.create(funcNames[i], "long");
+                aggrs[i] = MeasureAggregator.create(funcNames[i], DataType.getType("long"));
             }
         }
         return aggrs;

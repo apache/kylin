@@ -17,43 +17,15 @@
 */
 package org.apache.kylin.cube.inmemcubing;
 
-import com.google.common.collect.Maps;
+import java.util.BitSet;
 
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
-
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  */
 public final class InMemCubeBuilderUtils {
     
-    public static final HashMap<Integer, Dictionary<String>> createTopNLiteralColDictionaryMap(CubeDesc cubeDesc, CubeJoinedFlatTableDesc intermediateTableDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
-        HashMap<Integer, Dictionary<String>> result = Maps.newHashMap();
-        for (int measureIdx = 0; measureIdx < cubeDesc.getMeasures().size(); measureIdx++) {
-            MeasureDesc measureDesc = cubeDesc.getMeasures().get(measureIdx);
-            FunctionDesc func = measureDesc.getFunction();
-            if (func.isTopN()) {
-                int[] flatTableIdx = intermediateTableDesc.getMeasureColumnIndexes()[measureIdx];
-                int literalColIdx = flatTableIdx[flatTableIdx.length - 1];
-                TblColRef literalCol = func.getTopNLiteralColumn();
-                @SuppressWarnings("unchecked")
-                Dictionary<String> dictionary = (Dictionary<String>) dictionaryMap.get(literalCol);
-                //Preconditions.checkNotNull(dictionary);//FIXME disable check since dictionary is null when building empty segment
-                result.put(literalColIdx, dictionary);
-            }
-        }
-        return result;
-    }
-
     public static final Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(final long cuboidId, final int measureCount) {
         int cardinality = Long.bitCount(cuboidId);
         BitSet dimension = new BitSet();

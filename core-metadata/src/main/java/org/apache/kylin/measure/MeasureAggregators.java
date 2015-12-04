@@ -45,7 +45,7 @@ public class MeasureAggregators implements Serializable {
         Map<String, Integer> measureIndexMap = new HashMap<String, Integer>();
         for (int i = 0; i < descLength; i++) {
             FunctionDesc func = measureDescs[i].getFunction();
-            aggs[i] = MeasureAggregator.create(func.getExpression(), func.getReturnType());
+            aggs[i] = func.getMeasureType().newAggregator();
             measureIndexMap.put(measureDescs[i].getName(), i);
         }
         // fill back dependent aggregator

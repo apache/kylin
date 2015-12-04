@@ -248,7 +248,7 @@ public class TopNCounterTest {
             List<Pair<String, Double>> allRecords = Lists.newArrayList();
 
             for (Counter<String> counter : tops)
-                allRecords.add(new Pair(counter.getItem(), counter.getCount()));
+                allRecords.add(Pair.newPair(counter.getItem(), counter.getCount()));
             timeSpent += (System.currentTimeMillis() - startTime);
             return allRecords;
         }
@@ -284,7 +284,7 @@ public class TopNCounterTest {
             List<Pair<String, Double>> allRecords = Lists.newArrayList();
 
             for (Map.Entry<String, Double> entry : hashMap.entrySet()) {
-                allRecords.add(new Pair(entry.getKey(), entry.getValue()));
+                allRecords.add(Pair.newPair(entry.getKey(), entry.getValue()));
             }
 
             Collections.sort(allRecords, new Comparator<Pair<String, Double>>() {

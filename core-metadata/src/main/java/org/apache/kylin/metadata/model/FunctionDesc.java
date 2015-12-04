@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.MeasureTypeFactory;
+import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -38,8 +40,6 @@ public class FunctionDesc {
     public static final String FUNC_MIN = "MIN";
     public static final String FUNC_MAX = "MAX";
     public static final String FUNC_COUNT = "COUNT";
-    public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
-    public static final String FUNC_TOP_N = "TOP_N";
 
     public static final String PARAMETER_TYPE_CONSTANT = "constant";
     public static final String PARAMETER_TYPE_COLUMN = "column";
@@ -52,7 +52,7 @@ public class FunctionDesc {
     private String returnType;
 
     private DataType returnDataType;
-    private MeasureType measureType;
+    private MeasureType<?> measureType;
     private boolean isDimensionAsMetric = false;
 
     public void init(TableDesc factTable) {
@@ -80,12 +80,12 @@ public class FunctionDesc {
         }
     }
     
-    public MeasureType getMeasureType() {
+    public MeasureType<?> getMeasureType() {
         if (isDimensionAsMetric)
             return null;
         
         if (measureType == null) {
-            measureType = MeasureType.create(getExpression(), getReturnType());
+            measureType = MeasureTypeFactory.create(getExpression(), getReturnDataType());
         }
         return measureType;
     }
@@ -108,12 +108,12 @@ public class FunctionDesc {
     }
 
     public DataType getRewriteFieldType() {
-        if (isCountDistinct() || isTopN())
-            return DataType.ANY;
-        else if (isSum() || isMax() || isMin())
+        if (isSum() || isMax() || isMin())
             return parameter.getColRefs().get(0).getType();
-        else
+        else if (getMeasureType() instanceof BasicMeasureType)
             return returnDataType;
+        else
+            return DataType.ANY;
     }
 
     public ColumnDesc newFakeRewriteColumn(TableDesc sourceTable) {
@@ -140,22 +140,6 @@ public class FunctionDesc {
 
     public boolean isCount() {
         return FUNC_COUNT.equalsIgnoreCase(expression);
-    }
-
-    public boolean isCountDistinct() {
-        return FUNC_COUNT_DISTINCT.equalsIgnoreCase(expression);
-    }
-
-    public boolean isTopN() {
-        return FUNC_TOP_N.equalsIgnoreCase(expression);
-    }
-
-    public boolean isHolisticCountDistinct() {
-        if (isCountDistinct() && returnDataType != null && returnDataType.isBigInt()) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -272,35 +256,4 @@ public class FunctionDesc {
         return "FunctionDesc [expression=" + expression + ", parameter=" + parameter + ", returnType=" + returnType + "]";
     }
 
-    // cols[0] is numeric (e.g. GMV), cols[1] is literal (e.g. SELLER)
-    public TblColRef getTopNNumericColumn() {
-        if (isTopN() == false)
-            throw new IllegalStateException();
-
-        return parameter.getColRefs().get(0);
-    }
-
-    // cols[0] is numeric (e.g. GMV), cols[1] is literal (e.g. SELLER)
-    public TblColRef getTopNLiteralColumn() {
-        if (isTopN() == false)
-            throw new IllegalStateException();
-
-        return parameter.getColRefs().get(1);
-    }
-
-    public boolean isTopNCompatibleSum(FunctionDesc sum) {
-        if (isTopN() == false)
-            throw new IllegalStateException();
-
-        if (sum == null) {
-            return false;
-        }
-
-        if (this.isTopN() && sum.isSum()) {
-            if (this.getParameter().getColRefs().get(0).equals(sum.getParameter().getColRefs().get(0)))
-                return true;
-        }
-
-        return false;
-    }
 }

@@ -241,7 +241,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             if (parsedPair == null) {
                 parsedKey = new ByteArrayWritable();
                 parsedValue = new Object[seg.getCubeDesc().getMeasures().size()];
-                parsedPair = new Pair<ByteArrayWritable, Object[]>(parsedKey, parsedValue);
+                parsedPair = Pair.newPair(parsedKey, parsedValue);
             }
             
             // merge by cuboid files

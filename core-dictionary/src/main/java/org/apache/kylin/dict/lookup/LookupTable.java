@@ -125,7 +125,7 @@ abstract public class LookupTable<T extends Comparable<T>> {
         if (returnBegin == null && returnEnd == null)
             return null;
         else
-            return new Pair<T, T>(returnBegin, returnEnd);
+            return Pair.newPair(returnBegin, returnEnd);
     }
 
     public Set<T> mapValues(String col, Set<T> values, String returnCol) {

@@ -42,6 +42,7 @@ import org.apache.kylin.common.util.RangeUtil;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.TableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
+import org.apache.kylin.measure.hllc.HLLCMeasureType;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -205,7 +206,7 @@ public class EndpointTupleIterator implements ITupleIterator {
                 boolean updated = false;
                 for (TblColRef column : columns) {
                     if (column.isSameAs(factTableName, functionDesc.getParameter().getValue())) {
-                        if (functionDesc.isCountDistinct()) {
+                        if (HLLCMeasureType.isCountDistinct(functionDesc)) {
                             //TODO: default precision might need be configurable
                             String iiDefaultHLLC = "hllc10";
                             functionDesc.setReturnType(iiDefaultHLLC);

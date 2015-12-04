@@ -75,7 +75,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             if (scannerIterator.hasNext()) {
                 curScanner = scannerIterator.next();
                 curRecordIterator = curScanner.iterator();
-                curTupleConverter = new CubeTupleConverter(curScanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo, null);
+                curTupleConverter = new CubeTupleConverter(curScanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
             } else {
                 return false;
             }

@@ -186,15 +186,22 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         for (int measureIdx = 0; measureIdx < cube.getDescriptor().getMeasures().size(); measureIdx++) {
             MeasureDesc measureDesc = cube.getDescriptor().getMeasures().get(measureIdx);
             FunctionDesc func = measureDesc.getFunction();
-            if (func.isTopN()) {
-                int[] flatTableIdx = flatTableDesc.getMeasureColumnIndexes()[measureIdx];
-                int literalColIdx = flatTableIdx[flatTableIdx.length - 1];
-                TblColRef literalCol = func.getTopNLiteralColumn();
-                logger.info("Building dictionary for " + literalCol);
-                List<byte[]> valueList = readValueList(flatTable, nColumns, literalColIdx);
-                Dictionary<String> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(literalCol.getType(), new IterableDictionaryValueEnumerator(valueList));
+            List<TblColRef> dictCols = func.getMeasureType().getColumnsNeedDictionary(func);
+            if (dictCols.isEmpty())
+                continue;
 
-                result.put(literalCol, dict);
+            int[] flatTableIdx = flatTableDesc.getMeasureColumnIndexes()[measureIdx];
+            List<TblColRef> paramCols = func.getParameter().getColRefs();
+            for (int i = 0; i < paramCols.size(); i++) {
+                TblColRef col = paramCols.get(i);
+                if (dictCols.contains(col)) {
+                    int colIdxOnFlat = flatTableIdx[i];
+                    logger.info("Building dictionary for " + col);
+                    List<byte[]> valueList = readValueList(flatTable, nColumns, colIdxOnFlat);
+                    Dictionary<String> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(col.getType(), new IterableDictionaryValueEnumerator(valueList));
+
+                    result.put(col, dict);
+                }
             }
         }
 

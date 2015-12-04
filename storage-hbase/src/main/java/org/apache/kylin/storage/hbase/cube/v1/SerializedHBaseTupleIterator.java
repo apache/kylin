@@ -29,7 +29,6 @@ import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
@@ -70,7 +69,8 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
         Map<CubeSegment, List<HBaseKeyRange>> rangesMap = makeRangesMap(segmentKeyRanges);
 
         for (Map.Entry<CubeSegment, List<HBaseKeyRange>> entry : rangesMap.entrySet()) {
-            this.segmentIteratorList.add(newCubeSegmentTupleIterator(entry.getKey(), entry.getValue(), conn, dimensions, filter, groupBy, rowValueDecoders, context, returnTupleInfo));
+            CubeSegmentTupleIterator it = new CubeSegmentTupleIterator(entry.getKey(), entry.getValue(), conn, dimensions, filter, groupBy, rowValueDecoders, context, returnTupleInfo);
+            this.segmentIteratorList.add(it);
         }
 
         this.segmentIteratorIterator = this.segmentIteratorList.iterator();
@@ -78,16 +78,6 @@ public class SerializedHBaseTupleIterator implements ITupleIterator {
             this.segmentIterator = this.segmentIteratorIterator.next();
         } else {
             this.segmentIterator = ITupleIterator.EMPTY_TUPLE_ITERATOR;
-        }
-    }
-
-    private CubeSegmentTupleIterator newCubeSegmentTupleIterator(CubeSegment seg, List<HBaseKeyRange> keyRange, HConnection conn, Set<TblColRef> dimensions, TupleFilter filter, Set<TblColRef> groupBy, List<RowValueDecoder> rowValueDecoders, StorageContext context2, TupleInfo returnTupleInfo) {
-        MeasureDesc topN = RowValueDecoder.findTopN(rowValueDecoders);
-        if (topN != null) {
-            TblColRef topNCol = topN.getFunction().getTopNLiteralColumn();
-            return new CubeSegmentTopNTupleIterator(seg, keyRange, conn, dimensions, filter, groupBy, topNCol, rowValueDecoders, context, returnTupleInfo);
-        } else {
-            return new CubeSegmentTupleIterator(seg, keyRange, conn, dimensions, filter, groupBy, rowValueDecoders, context, returnTupleInfo);
         }
     }
 

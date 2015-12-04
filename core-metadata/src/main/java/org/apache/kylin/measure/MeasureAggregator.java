@@ -20,13 +20,15 @@ package org.apache.kylin.measure;
 
 import java.io.Serializable;
 
+import org.apache.kylin.metadata.datatype.DataType;
+
 /**
  */
 @SuppressWarnings("serial")
 abstract public class MeasureAggregator<V> implements Serializable {
 
-    public static MeasureAggregator<?> create(String funcName, String dataType) {
-        return MeasureType.create(funcName, dataType).newAggregator();
+    public static MeasureAggregator<?> create(String funcName, DataType dataType) {
+        return MeasureTypeFactory.create(funcName, dataType).newAggregator();
     }
 
     public static int guessBigDecimalMemBytes() {

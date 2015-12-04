@@ -21,46 +21,58 @@ package org.apache.kylin.measure.basic;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
-import org.apache.kylin.metadata.datatype.BigDecimalSerializer;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-import org.apache.kylin.metadata.datatype.DoubleSerializer;
-import org.apache.kylin.metadata.datatype.LongSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
 
+@SuppressWarnings("rawtypes")
 public class BasicMeasureType extends MeasureType {
     
+    public static class Factory extends MeasureTypeFactory {
+
+        @Override
+        public MeasureType createMeasureType(String funcName, DataType dataType) {
+            return new BasicMeasureType(funcName, dataType);
+        }
+
+        @Override
+        public String getAggrFunctionName() {
+            return null;
+        }
+
+        @Override
+        public String getAggrDataTypeName() {
+            return null;
+        }
+
+        @Override
+        public Class getAggrDataTypeSerializer() {
+            return null;
+        }
+    }
+
     private final String funcName;
     private final DataType dataType;
 
     public BasicMeasureType(String funcName, DataType dataType) {
+        validate(funcName, dataType);
         this.funcName = funcName;
         this.dataType = dataType;
     }
 
     @Override
-    public DataType getAggregationDataType() {
-        return dataType;
+    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+        validate(functionDesc.getExpression(), functionDesc.getReturnDataType());
     }
 
-    public Class<? extends DataTypeSerializer<?>> getAggregationDataSeralizer() {
-        if (dataType.isIntegerFamily())
-            return LongSerializer.class;
-        else if (dataType.isDecimal())
-            return BigDecimalSerializer.class;
-        else if (dataType.isNumberFamily())
-            return DoubleSerializer.class;
-        else
-            throw new IllegalArgumentException("No serializer for aggregation type " + dataType);
+    private void validate(String funcName, DataType dataType) throws IllegalArgumentException {
+        if ((funcName.equals(FunctionDesc.FUNC_SUM) //
+                || funcName.equals(FunctionDesc.FUNC_COUNT) //
+                || funcName.equals(FunctionDesc.FUNC_MAX) //
+                || funcName.equals(FunctionDesc.FUNC_MIN)) == false)
+            throw new IllegalArgumentException();
     }
     
-    @Override
-    public void validate(MeasureDesc measureDesc) throws IllegalArgumentException {
-        // TODO Auto-generated method stub
-        
-    }
-
     @Override
     public MeasureIngester<?> newIngester() {
         if (dataType.isIntegerFamily())
@@ -72,7 +84,7 @@ public class BasicMeasureType extends MeasureType {
         else
             throw new IllegalArgumentException("No ingester for aggregation type " + dataType);
     }
-    
+
     @Override
     public MeasureAggregator<?> newAggregator() {
         if (isSum() || isCount()) {
@@ -99,21 +111,21 @@ public class BasicMeasureType extends MeasureType {
         }
         throw new IllegalArgumentException("No aggregator for func '" + funcName + "' and return type '" + dataType + "'");
     }
-    
+
     private boolean isSum() {
-        return FunctionDesc.FUNC_SUM.equalsIgnoreCase(funcName);
+        return FunctionDesc.FUNC_SUM.equals(funcName);
     }
 
     private boolean isCount() {
-        return FunctionDesc.FUNC_COUNT.equalsIgnoreCase(funcName);
+        return FunctionDesc.FUNC_COUNT.equals(funcName);
     }
-    
+
     private boolean isMax() {
-        return FunctionDesc.FUNC_MAX.equalsIgnoreCase(funcName);
+        return FunctionDesc.FUNC_MAX.equals(funcName);
     }
-    
+
     private boolean isMin() {
-        return FunctionDesc.FUNC_MIN.equalsIgnoreCase(funcName);
+        return FunctionDesc.FUNC_MIN.equals(funcName);
     }
 
     @Override
@@ -126,5 +138,5 @@ public class BasicMeasureType extends MeasureType {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
 }

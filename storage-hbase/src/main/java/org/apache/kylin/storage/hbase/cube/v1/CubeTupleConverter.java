@@ -2,18 +2,12 @@ package org.apache.kylin.storage.hbase.cube.v1;
 
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.hbase.client.Result;
-import org.apache.kylin.common.topn.Counter;
-import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.Array;
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -40,19 +34,14 @@ public class CubeTupleConverter {
     final int[] dimensionTupleIdx;
     final int[][] metricsMeasureIdx;
     final int[][] metricsTupleIdx;
-    final TblColRef topNCol;
-    int topNColTupleIdx;
-    int topNMeasureTupleIdx;
-    Dictionary<String> topNColDict;
 
-    public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, List<RowValueDecoder> rowValueDecoders, TupleInfo tupleInfo, TblColRef topNCol) {
+    public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, List<RowValueDecoder> rowValueDecoders, TupleInfo tupleInfo) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
         this.tupleInfo = tupleInfo;
         this.rowKeyDecoder = new RowKeyDecoder(this.cubeSeg);
         this.rowValueDecoders = rowValueDecoders;
         this.derivedColFillers = Lists.newArrayList();
-        this.topNCol = topNCol;
         
         List<TblColRef> dimCols = cuboid.getColumns();
 
@@ -92,13 +81,6 @@ public class CubeTupleConverter {
             }
         }
 
-        if (this.topNCol != null) {
-            this.topNColTupleIdx = tupleInfo.hasColumn(this.topNCol) ? tupleInfo.getColumnIndex(this.topNCol) : -1;
-            this.topNMeasureTupleIdx = metricsTupleIdx[0][0];
-            
-            this.topNColDict = (Dictionary<String>)cubeSeg.getDictionary(this.topNCol);
-        }
-        
         // prepare derived columns and filler
         Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cuboid.getCubeDesc().getHostToDerivedInfo(dimCols, null);
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
@@ -112,46 +94,6 @@ public class CubeTupleConverter {
         }
     }
 
-    public Iterator<Tuple> translateTopNResult(Result hbaseRow, Tuple tuple) {
-        translateResult(hbaseRow, tuple);
-        Object topNCounterObj = tuple.getAllValues()[topNMeasureTupleIdx];
-        assert (topNCounterObj instanceof TopNCounter);
-        return new TopNCounterTupleIterator(tuple, (TopNCounter) topNCounterObj);
-    }
-
-    private class TopNCounterTupleIterator implements Iterator {
-
-        private Tuple tuple;
-        private Iterator<Counter> topNCounterIterator;
-        private Counter<ByteArray> counter;
-        
-        private TopNCounterTupleIterator(Tuple tuple, TopNCounter topNCounter) {
-            this.tuple = tuple;
-            this.topNCounterIterator = topNCounter.iterator();
-        }
-        
-        @Override
-        public boolean hasNext() {
-            return topNCounterIterator.hasNext();
-        }
-
-        @Override
-        public Tuple next() {
-            counter = topNCounterIterator.next();
-            int key = BytesUtil.readUnsigned(counter.getItem().array(), 0, counter.getItem().array().length);
-            String colValue = topNColDict.getValueFromId(key);
-            tuple.setDimensionValue(topNColTupleIdx, colValue);
-            tuple.setMeasureValue(topNMeasureTupleIdx, counter.getCount());
-            
-            return tuple;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-    }
-    
     public void translateResult(Result hbaseRow, Tuple tuple) {
         try {
             byte[] rowkey = hbaseRow.getRow();

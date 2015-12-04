@@ -399,7 +399,7 @@ public class CubeManager implements IRealizationProvider {
         CubeUpdate cubeBuilder = new CubeUpdate(cube).setToAddSegs(appendSegment, mergeSegment);
         updateCube(cubeBuilder);
 
-        return new Pair<CubeSegment, CubeSegment>(appendSegment, mergeSegment);
+        return Pair.newPair(appendSegment, mergeSegment);
     }
 
     public CubeSegment appendSegments(CubeInstance cube, long endDate) throws IOException {
@@ -491,7 +491,7 @@ public class CubeManager implements IRealizationProvider {
                 }
             }
         }
-        return new Pair<Long, Long>(start, end);
+        return Pair.newPair(start, end);
     }
 
     private boolean hasOverlap(long startDate, long endDate, long anotherStartDate, long anotherEndDate) {

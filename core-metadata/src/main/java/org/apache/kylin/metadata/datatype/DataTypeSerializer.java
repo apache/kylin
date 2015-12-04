@@ -19,13 +19,9 @@
 package org.apache.kylin.metadata.datatype;
 
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kylin.common.util.BytesSerializer;
-import org.apache.kylin.measure.hllc.HLLCSerializer;
-import org.apache.kylin.measure.topn.TopNCounterSerializer;
 
 import com.google.common.collect.Maps;
 
@@ -36,28 +32,20 @@ import com.google.common.collect.Maps;
  */
 abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
-    final static Map<String, Class<?>> implementations;
+    final static Map<String, Class<?>> implementations = Maps.newHashMap();
     static {
-        HashMap<String, Class<?>> impl = Maps.newHashMap();
-        impl.put("varchar", StringSerializer.class);
-        impl.put("decimal", BigDecimalSerializer.class);
-        impl.put("double", DoubleSerializer.class);
-        impl.put("float", DoubleSerializer.class);
-        impl.put("bigint", LongSerializer.class);
-        impl.put("long", LongSerializer.class);
-        impl.put("integer", LongSerializer.class);
-        impl.put("int", LongSerializer.class);
-        impl.put("smallint", LongSerializer.class);
-        impl.put("date", DateTimeSerializer.class);
-        impl.put("datetime", DateTimeSerializer.class);
-        impl.put("timestamp", DateTimeSerializer.class);
-        impl.put("topn", TopNCounterSerializer.class);
-        impl.put("hllc", HLLCSerializer.class);
-        implementations = Collections.unmodifiableMap(impl);
-    }
-    
-    public static boolean hasRegistered(String dataTypeName) {
-        return implementations.containsKey(dataTypeName);
+        implementations.put("varchar", StringSerializer.class);
+        implementations.put("decimal", BigDecimalSerializer.class);
+        implementations.put("double", DoubleSerializer.class);
+        implementations.put("float", DoubleSerializer.class);
+        implementations.put("bigint", LongSerializer.class);
+        implementations.put("long", LongSerializer.class);
+        implementations.put("integer", LongSerializer.class);
+        implementations.put("int", LongSerializer.class);
+        implementations.put("smallint", LongSerializer.class);
+        implementations.put("date", DateTimeSerializer.class);
+        implementations.put("datetime", DateTimeSerializer.class);
+        implementations.put("timestamp", DateTimeSerializer.class);
     }
     
     public static void register(String dataTypeName, Class<? extends DataTypeSerializer<?>> impl) {

@@ -642,11 +642,6 @@ public class CubeDesc extends RootPersistentEntity {
             FunctionDesc func = m.getFunction();
             func.init(factTable);
             allColumns.addAll(func.getParameter().getColRefs());
-
-            // verify holistic count distinct as a dependent measure
-            if (func.isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
-                throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
-            }
         }
     }
 
@@ -677,9 +672,9 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    public boolean hasHolisticCountDistinctMeasures() {
+    public boolean hasMemoryHungryMeasures() {
         for (MeasureDesc measure : measures) {
-            if (measure.getFunction().isHolisticCountDistinct()) {
+            if (measure.getFunction().getMeasureType().isMemoryHungry()) {
                 return true;
             }
         }
@@ -766,7 +761,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
 
         for (MeasureDesc measure : measures) {
-            MeasureType aggrType = measure.getFunction().getMeasureType();
+            MeasureType<?> aggrType = measure.getFunction().getMeasureType();
             result.addAll(aggrType.getColumnsNeedDictionary(measure.getFunction()));
         }
         return result;

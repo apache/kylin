@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.datatype;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,21 +29,37 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  */
 @SuppressWarnings("serial")
 public class DataType implements Serializable {
 
-    // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp
-    public static final String VALID_TYPES_STRING = "any|char|varchar|boolean|binary" //
-            + "|integer|tinyint|smallint|bigint|decimal|numeric|float|real|double" //
-            + "|date|time|datetime|timestamp|byte|int|short|long|string|hllc|topn";
+    private static final LinkedHashSet<String> VALID_TYPES = new LinkedHashSet<String>();
 
+    private static Pattern TYPE_PATTERN = null;
     private static final String TYPE_PATTEN_TAIL = "\\s*" //
             + "(?:" + "[(]" + "([\\d\\s,]+)" + "[)]" + ")?";
 
-    private static final Pattern TYPE_PATTERN = Pattern.compile( //
-            "(" + VALID_TYPES_STRING + ")" + TYPE_PATTEN_TAIL, Pattern.CASE_INSENSITIVE);
+    public static synchronized void register(String... typeNames) {
+        for (String typeName : typeNames) {
+            VALID_TYPES.add(typeName);
+        }
+
+        TYPE_PATTERN = Pattern.compile( //
+                "(" + StringUtils.join(VALID_TYPES, "|") + ")" //
+                        + TYPE_PATTEN_TAIL, Pattern.CASE_INSENSITIVE);
+    }
+
+    // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp
+    static {
+        register("any", "char", "varchar", "string", //
+                "boolean", "byte", "binary", //
+                "int", "short", "long", "integer", "tinyint", "smallint", "bigint", //
+                "float", "real", "double", "decimal", "numeric", //
+                "date", "time", "datetime", "timestamp");
+    }
 
     public static final Set<String> INTEGER_FAMILY = new HashSet<String>();
     public static final Set<String> NUMBER_FAMILY = new HashSet<String>();
@@ -217,10 +234,6 @@ public class DataType implements Serializable {
 
     public boolean isDecimal() {
         return name.equals("decimal");
-    }
-
-    public boolean isHLLC() {
-        return name.equals("hllc");
     }
 
     public String getName() {

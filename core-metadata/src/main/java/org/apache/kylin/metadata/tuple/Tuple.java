@@ -24,8 +24,6 @@ import java.util.List;
 
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
@@ -61,15 +59,7 @@ public class Tuple implements ITuple {
     public ITuple makeCopy() {
         Tuple ret = new Tuple(this.info);
         for (int i = 0; i < this.values.length; ++i) {
-            if (this.values[i] == null) {
-                ret.values[i] = null;
-            } else if (this.values[i] instanceof HyperLogLogPlusCounter) {
-                ret.values[i] = new HyperLogLogPlusCounter((HyperLogLogPlusCounter) this.values[i]);
-            } else if (this.values[i] instanceof TopNCounter) {
-                ret.values[i] = null;
-            } else {
-                ret.values[i] = this.values[i];
-            }
+            ret.values[i] = this.values[i];
         }
         return ret;
     }

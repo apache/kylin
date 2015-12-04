@@ -34,6 +34,7 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
 import org.apache.kylin.cube.model.validation.ValidateContext;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
@@ -53,17 +54,13 @@ public class CubeDescManager {
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, CubeDescManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeDescManager>();
 
-    // ============================================================================
-
-    private KylinConfig config;
-    // name ==> CubeDesc
-    private CaseInsensitiveStringCache<CubeDesc> cubeDescMap;
-
     public static CubeDescManager getInstance(KylinConfig config) {
         CubeDescManager r = CACHE.get(config);
         if (r != null) {
             return r;
         }
+        
+        MeasureTypeFactory.init(config);
 
         synchronized (CubeDescManager.class) {
             r = CACHE.get(config);
@@ -86,6 +83,12 @@ public class CubeDescManager {
     public static void clearCache() {
         CACHE.clear();
     }
+
+    // ============================================================================
+
+    private KylinConfig config;
+    // name ==> CubeDesc
+    private CaseInsensitiveStringCache<CubeDesc> cubeDescMap;
 
     private CubeDescManager(KylinConfig config) throws IOException {
         logger.info("Initializing CubeDescManager with config " + config);

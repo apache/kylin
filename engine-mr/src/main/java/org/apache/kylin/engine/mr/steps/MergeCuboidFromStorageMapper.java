@@ -124,7 +124,7 @@ public class MergeCuboidFromStorageMapper extends KylinMapper<Object, Object, By
             MeasureDesc measureDesc = measureDescs.get(i);
             MeasureType measureType = measureDesc.getFunction().getMeasureType();
             if (measureType.getColumnsNeedDictionary(measureDesc.getFunction()).isEmpty() == false) {
-                dictMeasures.add(new Pair<Integer, MeasureIngester>(i, measureType.newIngester()));
+                dictMeasures.add(Pair.newPair(i, measureType.newIngester()));
             }
         }
         if (dictMeasures.size() > 0) {
