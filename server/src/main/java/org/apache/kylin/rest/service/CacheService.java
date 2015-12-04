@@ -90,8 +90,6 @@ public class CacheService extends BasicService {
                     // new data model
                     getMetadataManager().reloadDataModelDesc(cacheKey);
                 }
-                IIDescManager.clearCache();
-                CubeDescManager.clearCache();
                 break;
             case ALL:
                 MetadataManager.clearCache();
