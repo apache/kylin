@@ -47,6 +47,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     return temp;
   };
 
+  //get columns from model
   $scope.getDimColumnsByTable = function (tableName) {
     if (!tableName) {
       return [];
@@ -55,6 +56,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     var tableDim = _.find($scope.metaModel.model.dimensions, function (dimension) {
       return dimension.table == tableName
     });
+    if(!tableDim){
+      return [];
+    }
     var tableDimColumns = tableDim.columns;
     var avaColObject = _.filter(tableColumns, function (col) {
       return tableDimColumns.indexOf(col.name) != -1;
