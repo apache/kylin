@@ -5,11 +5,11 @@ categories: docs
 permalink: /cn/docs/index.html
 ---
 
-欢迎来到 Apache Kylin
+欢迎来到 Apache Kylin™
 ------------  
 > Extreme OLAP Engine for Big Data
 
-Apache Kylin一个开源的分布式分析引擎，提供Hadoop之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc.开发并贡献至开源社区。
+Apache Kylin™是一个开源的分布式分析引擎，提供Hadoop之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc.开发并贡献至开源社区。
 
 安装 
 ------------  
