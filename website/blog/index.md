@@ -7,7 +7,7 @@ title: Blog
 <section id="first" class="main">
     <header style="padding:2em 0 4em 0;">
       <div class="container" >
-        <h4 class="section-title"><span> Kylin Technical Blog </span></h4>
+        <h4 class="section-title"><span>Apache Kylin™ Technical Blog </span></h4>
          <!-- second-->
           <div id="content-container" class="animated fadeIn">
             <div>

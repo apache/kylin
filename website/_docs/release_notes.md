@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  Release Notes
+title:  Apache Kylin™ Release Notes
 categories: gettingstarted
 permalink: /docs/release_notes.html
 version: v1.1
