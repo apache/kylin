@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.upgrade.V2;
+package org.apache.kylin.cube.upgrade.V3;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -36,18 +36,18 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.SelectRule;
-import org.apache.kylin.cube.model.v2.CubeDesc;
-import org.apache.kylin.cube.model.v2.DimensionDesc;
-import org.apache.kylin.cube.model.v2.HBaseMappingDesc;
-import org.apache.kylin.cube.model.v2.RowKeyColDesc;
-import org.apache.kylin.cube.model.v2.RowKeyDesc;
+import org.apache.kylin.cube.model.v3.CubeDesc;
+import org.apache.kylin.cube.model.v3.DimensionDesc;
+import org.apache.kylin.cube.model.v3.HBaseMappingDesc;
+import org.apache.kylin.cube.model.v3.RowKeyColDesc;
+import org.apache.kylin.cube.model.v3.RowKeyDesc;
 
 import com.google.common.collect.Lists;
 
-public class CubeDescUpgraderV2 {
+public class CubeDescUpgraderV3 {
 
     @SuppressWarnings("unused")
-    private static final Log logger = LogFactory.getLog(CubeDescUpgraderV2.class);
+    private static final Log logger = LogFactory.getLog(CubeDescUpgraderV3.class);
     private static final Serializer<CubeDesc> oldCubeDescSerializer = new JsonSerializer<CubeDesc>(CubeDesc.class);
 
     private String resourcePath;
@@ -57,7 +57,7 @@ public class CubeDescUpgraderV2 {
     private String[][] oldAggGroup = null;
     private Set<String> allRowKeyCols = newIgnoreCaseSet(null);
 
-    public CubeDescUpgraderV2(String resourcePath) {
+    public CubeDescUpgraderV3(String resourcePath) {
         this.resourcePath = resourcePath;
     }
 

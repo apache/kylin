@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.model.v2;
+package org.apache.kylin.cube.model.v3;
 
 import java.util.ArrayList;
 import java.util.Arrays;

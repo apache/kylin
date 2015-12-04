@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.upgrade.V2;
+package org.apache.kylin.cube.upgrade.V3;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,11 +41,14 @@ import com.google.common.collect.Lists;
  * that upgrades metadata store from v1(prior kylin 0.7) to v2.
  * the major difference is that we split cube desc to cube desc + model desc
  * 
- * this CubeMetadataUpgradeV2 upgrades metadata store from v2(prior kylin 2.1) to v3
+ * In 2.0 there is a CubeMetadataUpgradeV2 which is responsible for upgrading the metadata store
+ * from 1.x to 2.0. The major actions in that is updating cube desc signature and upgrade model desc.
+ * 
+ * this CubeMetadataUpgradeV3 upgrades metadata store from v2(prior kylin 2.1) to v3
  * the major different is a brand new definition of partial cubes to allow users to select 
- * cuboids more flexibly 
+ * cuboids more flexibly. https://issues.apache.org/jira/browse/KYLIN-242
  */
-public class CubeMetadataUpgradeV2 {
+public class CubeMetadataUpgradeV3 {
 
     private KylinConfig config = null;
     private ResourceStore store;
@@ -53,9 +56,9 @@ public class CubeMetadataUpgradeV2 {
     private List<String> updatedResources = Lists.newArrayList();
     private List<String> errorMsgs = Lists.newArrayList();
 
-    private static final Log logger = LogFactory.getLog(CubeMetadataUpgradeV2.class);
+    private static final Log logger = LogFactory.getLog(CubeMetadataUpgradeV3.class);
 
-    public CubeMetadataUpgradeV2(String newMetadataUrl) {
+    public CubeMetadataUpgradeV3(String newMetadataUrl) {
         KylinConfig.destoryInstance();
         System.setProperty(KylinConfig.KYLIN_CONF, newMetadataUrl);
         KylinConfig.getInstanceFromEnv().setMetadataUrl(newMetadataUrl);
@@ -101,7 +104,7 @@ public class CubeMetadataUpgradeV2 {
         for (String path : paths) {
 
             try {
-                CubeDescUpgraderV2 upgrade = new CubeDescUpgraderV2(path);
+                CubeDescUpgraderV3 upgrade = new CubeDescUpgraderV3(path);
                 CubeDesc ndesc = upgrade.upgrade();
                 ndesc.setSignature(ndesc.calculateSignature());
 
@@ -133,9 +136,9 @@ public class CubeMetadataUpgradeV2 {
             verify = true;
         }
 
-        CubeMetadataUpgradeV2 instance = null;
+        CubeMetadataUpgradeV3 instance = null;
         if (verify) {
-            instance = new CubeMetadataUpgradeV2(exportFolder);
+            instance = new CubeMetadataUpgradeV3(exportFolder);
             instance.verify();
         } else {
             File oldMetaFolder = new File(exportFolder);
@@ -157,7 +160,7 @@ public class CubeMetadataUpgradeV2 {
                 e.printStackTrace();
             }
 
-            instance = new CubeMetadataUpgradeV2(newMetadataUrl);
+            instance = new CubeMetadataUpgradeV3(newMetadataUrl);
             instance.upgrade();
             logger.info("=================================================================");
             logger.info("Run CubeMetadataUpgrade completed;");
