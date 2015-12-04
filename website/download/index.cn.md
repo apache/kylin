@@ -4,7 +4,7 @@ title: 下载
 ---
 
 __最新发布(源代码)__  
-最新发布的Apache Kylin可以从ASF网站下载：:
+最新发布的Apache Kylin™可以从ASF网站下载：:
 
 * [Apache Kylin v1.1.1-incubating](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.1.1-incubating/)
 * [发布日志](http://kylin.apache.org/docs/release_notes.html)

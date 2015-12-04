@@ -39,7 +39,7 @@
   githubId: julianhyde
   org: Hortonworks
   role: Mentor
-- name: Luke Han (韩卿) 
+- name: Luke Han (韩卿) (Chair)
   apacheId: lukehan
   githubId: lukehan
   org: eBay
@@ -74,12 +74,12 @@
   apacheId: xduo
   githubId: xduo
   org: Alipay
-  role: PMC
+  role: Emeritus PMC
 - name: Ankur Bansal
   apacheId: abansal
   githubId: abansal
   org: eBay
-  role: PMC
+  role: Emeritus PMC
 - name: Xu Jiang (蒋旭)
   apacheId: jiangxu
   githubId: jiangxuchina
@@ -94,12 +94,30 @@
   apacheId: 
   githubId: gaodayue
   org: Meituan
-  role: committer
+  role: PMC
 - name: Hua Huang (黄桦)
   apacheId: 
   githubId: superhua
   org: MiningLAMP
+  role: PMC 
+- name: Dong Li (李栋)
+  apacheId: 
+  githubId: 
+  org: eBay
+  role: committer   
+- name: Xiaoyu Wang (王晓雨)
+  apacheId: 
+  githubId: 
+  org: JD.com
   role: committer 
-
-
+- name: Dong Li (李栋)
+  apacheId: 
+  githubId: lidongsjtu
+  org: eBay
+  role: committer 
+- name: Yerui Sun (孙叶锐)
+  apacheId: sunyerui
+  githubId: 
+  org: Meituan
+  role: PMC
 
