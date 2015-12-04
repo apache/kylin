@@ -325,7 +325,7 @@ public class GridTableHBaseBenchmark {
             int logicRows = nRows / nColumns;
             for (int i = 0; i < nColumns; i++) {
                 if (rand.nextDouble() < hitRatio) {
-                    hitsForColumnScan.add(new Pair<Integer, Integer>(i * logicRows, (i + 1) * logicRows));
+                    hitsForColumnScan.add(Pair.newPair(i * logicRows, (i + 1) * logicRows));
                 }
             }
 

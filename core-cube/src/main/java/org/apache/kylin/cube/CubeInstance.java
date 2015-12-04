@@ -421,9 +421,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         if (!this.getDescriptor().getModel().getPartitionDesc().isPartitioned())
             return false;
 
-        if (this.getDescriptor().hasHolisticCountDistinctMeasures())
-            return false;
-
         return this.getDescriptor().getAutoMergeTimeRanges() != null && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
     }
 

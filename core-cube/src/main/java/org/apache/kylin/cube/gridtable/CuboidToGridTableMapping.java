@@ -15,8 +15,6 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -32,7 +30,7 @@ public class CuboidToGridTableMapping {
     private ImmutableBitSet gtPrimaryKey;
 
     private int nMetrics;
-    private ListMultimap<FunctionDesc, Integer> metrics2gt; // because count distinct may have a holistic version
+    private Map<FunctionDesc, Integer> metrics2gt; // because count distinct may have a holistic version
 
     public CuboidToGridTableMapping(Cuboid cuboid) {
         this.cuboid = cuboid;
@@ -68,19 +66,12 @@ public class CuboidToGridTableMapping {
         }
         
         // metrics
-        metrics2gt = LinkedListMultimap.create();
+        metrics2gt = Maps.newHashMap();
         for (MeasureDesc measure :cuboid.getCubeDesc().getMeasures()) {
             // Count distinct & holistic count distinct are equals() but different.
             // Ensure the holistic version if exists is always the first.
             FunctionDesc func = measure.getFunction();
-            if (func.isHolisticCountDistinct()) {
-                List<Integer> existing = metrics2gt.removeAll(func);
-                metrics2gt.put(func, gtColIdx);
-                metrics2gt.putAll(func, existing);
-            } else {
-                metrics2gt.put(func, gtColIdx);
-            }
-            
+            metrics2gt.put(func, gtColIdx);
             gtDataTypes.add(func.getReturnDataType());
             
             // map to column block
@@ -135,19 +126,8 @@ public class CuboidToGridTableMapping {
     }
 
     public int getIndexOf(FunctionDesc metric) {
-        List<Integer> list = metrics2gt.get(metric);
-        // normal case
-        if (list.size() == 1) {
-            return list.get(0);
-        }
-        // count distinct & its holistic version
-        else if (list.size() == 2) {
-            assert metric.isCountDistinct();
-            return metric.isHolisticCountDistinct() ? list.get(0) : list.get(1);
-        }
-        // unexpected
-        else
-            return -1;
+        Integer r = metrics2gt.get(metric);
+        return r == null ? -1 : r.intValue();
     }
 
     public List<TblColRef> getCuboidDimensionsInGTOrder() {

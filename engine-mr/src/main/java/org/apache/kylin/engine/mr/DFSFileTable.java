@@ -94,6 +94,6 @@ public class DFSFileTable implements ReadableTable {
             lastModified = Math.max(lastModified, file.getModificationTime());
         }
 
-        return new Pair<Long, Long>(size, lastModified);
+        return Pair.newPair(size, lastModified);
     }
 }

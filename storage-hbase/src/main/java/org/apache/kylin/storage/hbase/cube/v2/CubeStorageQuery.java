@@ -52,7 +52,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
-        // check whether this is a TopN query
+        // allow custom measures hack
         notifyBeforeStorageQuery(sqlDigest);
 
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
@@ -86,10 +86,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         boolean isExactAggregation = isExactAggregation(cuboid, groups, filterDimsD, singleValuesD, derivedPostAggregation);
         context.setExactAggregation(isExactAggregation);
 
-        if (isExactAggregation) {
-            metrics = replaceHolisticCountDistinct(metrics);
-        }
-
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
         TupleFilter filterD = translateDerived(filter, groupsD);
 
@@ -111,22 +107,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         if (scanners.isEmpty())
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
 
-        return newSequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo, context);
-    }
-
-    private ITupleIterator newSequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid, Set<TblColRef> dimensionsD, Set<FunctionDesc> metrics, TupleInfo returnTupleInfo, StorageContext context) {
-        TblColRef topNCol = null;
-        for (FunctionDesc func : metrics) {
-            if (func.isTopN()) {
-                topNCol = func.getTopNLiteralColumn();
-                break;
-            }
-        }
-
-        if (topNCol != null)
-            return new SequentialCubeTopNTupleIterator(scanners, cuboid, dimensionsD, topNCol, metrics, returnTupleInfo, context);
-        else
-            return new SequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo, context);
+        return new SequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo, context);
     }
 
     private void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
@@ -248,27 +229,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         return exact;
     }
 
-    private Set<FunctionDesc> replaceHolisticCountDistinct(Set<FunctionDesc> metrics) {
-        // for count distinct, try use its holistic version if possible
-        Set<FunctionDesc> result = new LinkedHashSet<FunctionDesc>();
-        for (FunctionDesc metric : metrics) {
-            if (metric.isCountDistinct() == false) {
-                result.add(metric);
-                continue;
-            }
-
-            FunctionDesc holisticVersion = null;
-            for (MeasureDesc measure : cubeDesc.getMeasures()) {
-                FunctionDesc measureFunc = measure.getFunction();
-                if (measureFunc.equals(metric) && measureFunc.isHolisticCountDistinct()) {
-                    holisticVersion = measureFunc;
-                }
-            }
-            result.add(holisticVersion == null ? metric : holisticVersion);
-        }
-        return result;
-    }
-
     @SuppressWarnings("unchecked")
     private TupleFilter translateDerived(TupleFilter filter, Set<TblColRef> collector) {
         if (filter == null)
@@ -343,15 +303,13 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     }
 
     private void setThreshold(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics, StorageContext context) {
-        boolean hasMemHungryCountDistinct = false;
+        boolean hasMemHungryMeasure = false;
         for (FunctionDesc func : metrics) {
-            if (func.isCountDistinct() && !func.isHolisticCountDistinct()) {
-                hasMemHungryCountDistinct = true;
-            }
+            hasMemHungryMeasure |= func.getMeasureType().isMemoryHungry();
         }
 
-        // need to limit the memory usage for memory hungry count distinct
-        if (hasMemHungryCountDistinct == false) {
+        // need to limit the memory usage for memory hungry measures
+        if (hasMemHungryMeasure == false) {
             return;
         }
 
@@ -380,6 +338,13 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         }
     }
 
+    private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
+        for (MeasureDesc measure : cubeDesc.getMeasures()) {
+            MeasureType<?> measureType = measure.getFunction().getMeasureType();
+            measureType.beforeStorageQuery(measure, sqlDigest);
+        }
+    }
+    
     // ============================================================================
 
     @Override
@@ -397,10 +362,4 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         return false;
     }
 
-    private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
-        for (MeasureDesc measure : cubeDesc.getMeasures()) {
-            MeasureType measureType = measure.getFunction().getMeasureType();
-            measureType.beforeStorageQuery(measure, sqlDigest);
-        }
-    }
 }

@@ -169,11 +169,6 @@ public class CubeCapabilityChecker {
                 continue;
             }
 
-            // calcite can not handle distinct count
-            if (functionDesc.isCountDistinct()) {
-                continue;
-            }
-
             // calcite can do aggregation from columns on-the-fly
             List<TblColRef> neededCols = functionDesc.getParameter().getColRefs();
             if (neededCols.size() > 0 && cubeDesc.listDimensionColumnsIncludingDerived().containsAll(neededCols)) {

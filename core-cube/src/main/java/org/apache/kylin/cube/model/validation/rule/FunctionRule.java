@@ -114,10 +114,6 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
             if (rtype.isIntegerFamily() == false) {
                 context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of " + DataType.INTEGER_FAMILY);
             }
-        } else if (funcDesc.isCountDistinct()) {
-            if (rtype.isHLLC() == false && funcDesc.isHolisticCountDistinct() == false) {
-                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be hllc(10), hllc(12) etc.");
-            }
         } else if (funcDesc.isMax() || funcDesc.isMin() || funcDesc.isSum()) {
             if (rtype.isNumberFamily() == false) {
                 context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of " + DataType.NUMBER_FAMILY);

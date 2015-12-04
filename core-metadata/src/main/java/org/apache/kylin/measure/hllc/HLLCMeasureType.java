@@ -25,43 +25,72 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-public class HLLCMeasureType extends MeasureType {
+public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
+
+    public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
+    public static final String DATATYPE_HLLC = "hllc";
+    
+    public static class Factory extends MeasureTypeFactory<HyperLogLogPlusCounter> {
+
+        @Override
+        public MeasureType<HyperLogLogPlusCounter> createMeasureType(String funcName, DataType dataType) {
+            return new HLLCMeasureType(funcName, dataType);
+        }
+
+        @Override
+        public String getAggrFunctionName() {
+            return FUNC_COUNT_DISTINCT;
+        }
+
+        @Override
+        public String getAggrDataTypeName() {
+            return DATATYPE_HLLC;
+        }
+
+        @Override
+        public Class<? extends DataTypeSerializer<HyperLogLogPlusCounter>> getAggrDataTypeSerializer() {
+            return HLLCSerializer.class;
+        }
+    }
+    
+    // ============================================================================
 
     private final DataType dataType;
 
-    public HLLCMeasureType(DataType dataType) {
-        if ("hllc".equals(dataType.getName()) == false)
-            throw new IllegalArgumentException();
-        
+    public HLLCMeasureType(String funcName, DataType dataType) {
+        validate(funcName, dataType);
         this.dataType = dataType;
+    }
 
-        if (this.dataType.getPrecision() < 10 || this.dataType.getPrecision() > 16)
-            throw new IllegalArgumentException("HLLC precision must be between 10 and 16");
+    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+        validate(functionDesc.getExpression(), functionDesc.getReturnDataType());
+    }
+
+    private void validate(String funcName, DataType dataType) {
+        if (FUNC_COUNT_DISTINCT.equals(funcName) == false)
+            throw new IllegalArgumentException();
+
+        if (DATATYPE_HLLC.equals(dataType.getName()) == false)
+            throw new IllegalArgumentException();
+
+        if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
+            throw new IllegalArgumentException();
     }
 
     @Override
-    public DataType getAggregationDataType() {
-        return dataType;
+    public boolean isMemoryHungry() {
+        return true;
     }
 
     @Override
-    public Class<? extends DataTypeSerializer<?>> getAggregationDataSeralizer() {
-        return HLLCSerializer.class;
-    }
-
-    @Override
-    public void validate(MeasureDesc measureDesc) throws IllegalArgumentException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public MeasureIngester<?> newIngester() {
+    public MeasureIngester<HyperLogLogPlusCounter> newIngester() {
         return new MeasureIngester<HyperLogLogPlusCounter>() {
             HyperLogLogPlusCounter current = new HyperLogLogPlusCounter(dataType.getPrecision());
 
@@ -77,11 +106,8 @@ public class HLLCMeasureType extends MeasureType {
     }
 
     @Override
-    public MeasureAggregator<?> newAggregator() {
-        if (dataType.isHLLC())
-            return new HLLCAggregator(dataType.getPrecision());
-        else
-            return new LDCAggregator();
+    public MeasureAggregator<HyperLogLogPlusCounter> newAggregator() {
+        return new HLLCAggregator(dataType.getPrecision());
     }
 
     @Override
@@ -93,6 +119,10 @@ public class HLLCMeasureType extends MeasureType {
     public Class<?> getRewriteCalciteAggrFunctionClass() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public static boolean isCountDistinct(FunctionDesc func) {
+        return FUNC_COUNT_DISTINCT.equalsIgnoreCase(func.getExpression());
     }
 
 }

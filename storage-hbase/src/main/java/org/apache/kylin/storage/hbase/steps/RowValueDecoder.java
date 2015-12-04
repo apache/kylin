@@ -122,34 +122,21 @@ public class RowValueDecoder implements Cloneable {
         }
     }
 
-    public boolean hasMemHungryCountDistinct() {
+    public boolean hasMemHungryMeasures() {
         for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
             FunctionDesc func = measures[i].getFunction();
-            if (func.isCountDistinct() && !func.isHolisticCountDistinct()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean hasMemHungryCountDistinct(Collection<RowValueDecoder> rowValueDecoders) {
-        for (RowValueDecoder decoder : rowValueDecoders) {
-            if (decoder.hasMemHungryCountDistinct())
+            if (func.getMeasureType().isMemoryHungry())
                 return true;
         }
         return false;
     }
 
-    public static MeasureDesc findTopN(Collection<RowValueDecoder> rowValueDecoders) {
+    public static boolean hasMemHungryMeasures(Collection<RowValueDecoder> rowValueDecoders) {
         for (RowValueDecoder decoder : rowValueDecoders) {
-            for (int i = decoder.projectionIndex.nextSetBit(0); i >= 0; i = decoder.projectionIndex.nextSetBit(i + 1)) {
-                MeasureDesc measure = decoder.measures[i];
-                FunctionDesc func = measure.getFunction();
-                if (func.isTopN())
-                    return measure;
-            }
+            if (decoder.hasMemHungryMeasures())
+                return true;
         }
-        return null;
+        return false;
     }
 
 }

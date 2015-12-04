@@ -28,6 +28,7 @@ import java.io.Serializable;
  */
 public class Pair<T1, T2> implements Serializable {
     private static final long serialVersionUID = -3986244606585552569L;
+    
     protected T1 first = null;
     protected T2 second = null;
 
@@ -96,7 +97,7 @@ public class Pair<T1, T2> implements Serializable {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public boolean equals(Object other) {
         return other instanceof Pair && equals(first, ((Pair) other).first) && equals(second, ((Pair) other).second);
     }

@@ -60,7 +60,7 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
         MeasureAggregator<?>[] result = new MeasureAggregator[aggrFunctions.length];
         for (int i = 0; i < result.length; i++) {
             int col = columns.trueBitAt(i);
-            result[i] = MeasureAggregator.create(aggrFunctions[i], info.getColumnType(col).toString());
+            result[i] = MeasureAggregator.create(aggrFunctions[i], info.getColumnType(col));
         }
         return result;
     }

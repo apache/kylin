@@ -108,7 +108,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
 
         incrementCounter(counterNode, incrementCount);
 
-        return new Pair<Boolean, T>(isNewItem, droppedItem);
+        return Pair.newPair(isNewItem, droppedItem);
     }
 
     protected void incrementCounter(ListNode2<Counter<T>> counterNode, double incrementCount) {

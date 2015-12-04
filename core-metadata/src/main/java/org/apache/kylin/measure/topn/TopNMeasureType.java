@@ -32,7 +32,7 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
-import org.apache.kylin.measure.hllc.HLLCSerializer;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -47,44 +47,70 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class TopNMeasureType extends MeasureType {
+public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     private static final Logger logger = LoggerFactory.getLogger(TopNMeasureType.class);
 
+    public static final String FUNC_TOP_N = "TOP_N";
+    public static final String DATATYPE_TOPN = "topn";
+    
+    public static class Factory extends MeasureTypeFactory<TopNCounter<ByteArray>> {
+
+        @Override
+        public MeasureType<TopNCounter<ByteArray>> createMeasureType(String funcName, DataType dataType) {
+            return new TopNMeasureType(funcName, dataType);
+        }
+
+        @Override
+        public String getAggrFunctionName() {
+            return FUNC_TOP_N;
+        }
+
+        @Override
+        public String getAggrDataTypeName() {
+            return DATATYPE_TOPN;
+        }
+
+        @Override
+        public Class<? extends DataTypeSerializer<TopNCounter<ByteArray>>> getAggrDataTypeSerializer() {
+            return TopNCounterSerializer.class;
+        }
+    }
+    
+    // ============================================================================
+
     private final DataType dataType;
 
-    public TopNMeasureType(DataType dataType) {
-        if ("topn".equals(dataType.getName()) == false)
+    public TopNMeasureType(String funcName, DataType dataType) {
+        validate(funcName, dataType);
+        this.dataType = dataType;
+    }
+
+    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+        validate(functionDesc.getExpression(), functionDesc.getReturnDataType());
+    }
+
+    private void validate(String funcName, DataType dataType) {
+        if (FUNC_TOP_N.equals(funcName) == false)
+            throw new IllegalArgumentException();
+        
+        if (DATATYPE_TOPN.equals(dataType.getName()) == false)
             throw new IllegalArgumentException();
 
-        this.dataType = dataType;
-
-        if (this.dataType.getPrecision() < 1 || this.dataType.getPrecision() > 1000)
-            throw new IllegalArgumentException("TopN precision must be between 1 and 1000");
+        if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
+            throw new IllegalArgumentException();
     }
 
     @Override
-    public DataType getAggregationDataType() {
-        return dataType;
+    public boolean isMemoryHungry() {
+        return true;
     }
 
     @Override
-    public Class<? extends DataTypeSerializer<?>> getAggregationDataSeralizer() {
-        return HLLCSerializer.class;
-    }
-
-    @Override
-    public void validate(MeasureDesc measureDesc) throws IllegalArgumentException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public MeasureIngester<?> newIngester() {
-        return new MeasureIngester<TopNCounter>() {
+    public MeasureIngester<TopNCounter<ByteArray>> newIngester() {
+        return new MeasureIngester<TopNCounter<ByteArray>>() {
             @Override
-            public TopNCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+            public TopNCounter<ByteArray> valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 if (values.length != 2)
                     throw new IllegalArgumentException();
 
@@ -92,7 +118,7 @@ public class TopNMeasureType extends MeasureType {
                 String literal = values[1];
 
                 // encode literal using dictionary
-                TblColRef literalCol = measureDesc.getFunction().getTopNLiteralColumn();
+                TblColRef literalCol = getTopNLiteralColumn(measureDesc.getFunction());
                 Dictionary<String> dictionary = dictionaryMap.get(literalCol);
                 int keyEncodedValue = dictionary.getIdFromValue(literal);
 
@@ -104,12 +130,11 @@ public class TopNMeasureType extends MeasureType {
                 return topNCounter;
             }
 
-            @SuppressWarnings("unchecked")
             @Override
-            public TopNCounter reEncodeDictionary(TopNCounter value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
-                TopNCounter<ByteArray> topNCounter = (TopNCounter<ByteArray>) value;
+            public TopNCounter<ByteArray> reEncodeDictionary(TopNCounter<ByteArray> value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
+                TopNCounter<ByteArray> topNCounter = value;
 
-                TblColRef colRef = measureDesc.getFunction().getTopNLiteralColumn();
+                TblColRef colRef = getTopNLiteralColumn(measureDesc.getFunction());
                 Dictionary<String> sourceDict = oldDicts.get(colRef);
                 Dictionary<String> mergedDict = newDicts.get(colRef);
 
@@ -138,7 +163,7 @@ public class TopNMeasureType extends MeasureType {
     }
 
     @Override
-    public MeasureAggregator<?> newAggregator() {
+    public MeasureAggregator<TopNCounter<ByteArray>> newAggregator() {
         return new TopNAggregator();
     }
 
@@ -159,11 +184,11 @@ public class TopNMeasureType extends MeasureType {
 
         // the measure function must be SUM
         FunctionDesc onlyFunction = digest.aggregations.iterator().next();
-        if (onlyFunction.isSum() == false)
+        if (isTopNCompatibleSum(topN.getFunction(), onlyFunction) == false)
             return null;
 
-        TblColRef literalCol = topN.getFunction().getTopNLiteralColumn();
-        if (unmatchedDimensions.contains(literalCol) && topN.getFunction().isTopNCompatibleSum(onlyFunction)) {
+        TblColRef literalCol = getTopNLiteralColumn(topN.getFunction());
+        if (unmatchedDimensions.contains(literalCol)) {
             unmatchedDimensions.remove(literalCol);
             unmatchedAggregations.remove(onlyFunction);
             return new CapabilityInfluence() {
@@ -174,6 +199,21 @@ public class TopNMeasureType extends MeasureType {
             };
         } else
             return null;
+    }
+
+    private boolean isTopNCompatibleSum(FunctionDesc topN, FunctionDesc sum) {
+        if (sum == null)
+            return false;
+
+        if (!isTopN(topN) || !sum.isSum())
+            return false;
+
+        if (sum.getParameter().getColRefs().isEmpty())
+            return false;
+
+        TblColRef sumCol = sum.getParameter().getColRefs().get(0);
+        TblColRef topnNumCol = getTopNNumericColumn(topN);
+        return sumCol.equals(topnNumCol);
     }
 
     @Override
@@ -189,7 +229,7 @@ public class TopNMeasureType extends MeasureType {
     @Override
     public void beforeStorageQuery(MeasureDesc measureDesc, SQLDigest sqlDigest) {
         FunctionDesc topnFunc = measureDesc.getFunction();
-        TblColRef topnLiteralCol = topnFunc.getTopNLiteralColumn();
+        TblColRef topnLiteralCol = getTopNLiteralColumn(topnFunc);
 
         if (sqlDigest.groupbyColumns.contains(topnLiteralCol) == false)
             return;
@@ -213,12 +253,12 @@ public class TopNMeasureType extends MeasureType {
     public boolean needAdvancedTupleFilling() {
         return true;
     }
-    
+
     @Override
     public void fillTupleSimply(Tuple tuple, int indexInTuple, Object measureValue) {
         throw new UnsupportedOperationException();
     }
-    
+
     @Override
     public IAdvMeasureFiller getAdvancedTupleFiller(FunctionDesc function, TupleInfo tupleInfo, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         final TblColRef literalCol = getTopNLiteralColumn(function);
@@ -227,7 +267,7 @@ public class TopNMeasureType extends MeasureType {
         final int literalTupleIdx = tupleInfo.hasColumn(literalCol) ? tupleInfo.getColumnIndex(literalCol) : -1;
         // for TopN, the aggr must be SUM, so the number fill into the column position (without rewrite)
         final int numericTupleIdx = tupleInfo.hasColumn(numericCol) ? tupleInfo.getColumnIndex(numericCol) : -1;
-        
+
         return new IAdvMeasureFiller() {
             private TopNCounter<ByteArray> topNCounter;
             private Iterator<Counter<ByteArray>> topNCounterIterator;
@@ -249,7 +289,7 @@ public class TopNMeasureType extends MeasureType {
             public void fillTuplle(Tuple tuple, int row) {
                 if (expectRow++ != row)
                     throw new IllegalStateException();
-                
+
                 Counter<ByteArray> counter = topNCounterIterator.next();
                 int key = BytesUtil.readUnsigned(counter.getItem().array(), 0, counter.getItem().array().length);
                 String colValue = topNColDict.getValueFromId(key);
@@ -265,5 +305,9 @@ public class TopNMeasureType extends MeasureType {
 
     private TblColRef getTopNLiteralColumn(FunctionDesc functionDesc) {
         return functionDesc.getParameter().getColRefs().get(1);
+    }
+
+    private boolean isTopN(FunctionDesc functionDesc) {
+        return FUNC_TOP_N.equalsIgnoreCase(functionDesc.getExpression());
     }
 }

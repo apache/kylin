@@ -32,6 +32,9 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.MeasureTypeFactory;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorConstants;
 import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
@@ -122,6 +125,8 @@ public class ObserverAggregators {
     final int nHCols;
     final ByteBuffer[] hColValues;
     final int nTotalMeasures;
+    
+    MeasureType measureTypes[];
 
     public ObserverAggregators(HCol[] _hcols) {
         this.hcols = sort(_hcols);
@@ -150,11 +155,18 @@ public class ObserverAggregators {
     }
 
     public MeasureAggregator[] createBuffer() {
+        if (measureTypes == null) {
+            measureTypes = new MeasureType[nTotalMeasures];
+            int i = 0;
+            for (HCol col : hcols) {
+                for (int j = 0; j < col.nMeasures; j++)
+                    measureTypes[i++] = MeasureTypeFactory.create(col.funcNames[j], DataType.getType(col.dataTypes[j]));
+            }
+        }
+        
         MeasureAggregator[] aggrs = new MeasureAggregator[nTotalMeasures];
-        int i = 0;
-        for (HCol col : hcols) {
-            for (int j = 0; j < col.nMeasures; j++)
-                aggrs[i++] = MeasureAggregator.create(col.funcNames[j], col.dataTypes[j]);
+        for (int i = 0; i < nTotalMeasures; i++) {
+            aggrs[i] = measureTypes[i].newAggregator();
         }
         return aggrs;
     }

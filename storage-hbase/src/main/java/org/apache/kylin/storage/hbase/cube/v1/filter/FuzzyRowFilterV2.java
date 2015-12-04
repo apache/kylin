@@ -80,7 +80,7 @@ public class FuzzyRowFilterV2 extends FilterBase {
         for (int i = 0; i < fuzzyKeysData.size(); i++) {
             p = fuzzyKeysData.get(i);
             if (p.getFirst().length != p.getSecond().length) {
-                Pair<String, String> readable = new Pair<String, String>(Bytes.toStringBinary(p.getFirst()), Bytes.toStringBinary(p.getSecond()));
+                Pair<String, String> readable = Pair.newPair(Bytes.toStringBinary(p.getFirst()), Bytes.toStringBinary(p.getSecond()));
                 throw new IllegalArgumentException("Fuzzy pair lengths do not match: " + readable);
             }
             // update mask ( 0 -> -1 (0xff), 1 -> 0)
@@ -225,7 +225,7 @@ public class FuzzyRowFilterV2 extends FilterBase {
         void updateWith(Cell currentCell, Pair<byte[], byte[]> fuzzyData) {
             byte[] nextRowKeyCandidate = getNextForFuzzyRule(isReversed(), currentCell.getRowArray(), currentCell.getRowOffset(), currentCell.getRowLength(), fuzzyData.getFirst(), fuzzyData.getSecond());
             if (nextRowKeyCandidate != null) {
-                nextRows.add(new Pair<byte[], Pair<byte[], byte[]>>(nextRowKeyCandidate, fuzzyData));
+                nextRows.add(Pair.newPair(nextRowKeyCandidate, fuzzyData));
             }
         }
 
@@ -263,7 +263,7 @@ public class FuzzyRowFilterV2 extends FilterBase {
             FilterProtosExt.BytesBytesPair current = proto.getFuzzyKeysData(i);
             byte[] keyBytes = current.getFirst().toByteArray();
             byte[] keyMeta = current.getSecond().toByteArray();
-            fuzzyKeysData.add(new Pair<byte[], byte[]>(keyBytes, keyMeta));
+            fuzzyKeysData.add(Pair.newPair(keyBytes, keyMeta));
         }
         return new FuzzyRowFilterV2(fuzzyKeysData);
     }

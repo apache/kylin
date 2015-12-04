@@ -166,7 +166,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
         List<Map<TblColRef, String>> fuzzyValues = FuzzyValueCombination.calculate(fuzzyValueSet, FUZZY_VALUE_CAP);
         for (Map<TblColRef, String> fuzzyValue : fuzzyValues) {
-            result.add(new Pair<byte[], byte[]>(fuzzyKeyEncoder.encode(fuzzyValue), fuzzyMaskEncoder.encode(fuzzyValue)));
+            result.add(Pair.newPair(fuzzyKeyEncoder.encode(fuzzyValue), fuzzyMaskEncoder.encode(fuzzyValue)));
         }
         return result;
     }

@@ -167,7 +167,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
             }
             buf.putInt(i);
 
-            Pair<byte[], byte[]> pair = new Pair<byte[], byte[]>(fuzzyKey, mask);
+            Pair<byte[], byte[]> pair = Pair.newPair(fuzzyKey, mask);
             list.add(pair);
         }
 
@@ -200,7 +200,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
             }
             buf.putInt(i * 2);
 
-            Pair<byte[], byte[]> pair = new Pair<byte[], byte[]>(fuzzyKey, mask);
+            Pair<byte[], byte[]> pair = Pair.newPair(fuzzyKey, mask);
             list.add(pair);
         }
 
@@ -309,8 +309,8 @@ public class TestFuzzyRowFilterV2EndToEnd {
 
         byte[] mask2 = new byte[] { 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 };
 
-        Pair<byte[], byte[]> pair1 = new Pair<byte[], byte[]>(fuzzyKey1, mask1);
-        Pair<byte[], byte[]> pair2 = new Pair<byte[], byte[]>(fuzzyKey2, mask2);
+        Pair<byte[], byte[]> pair1 = Pair.newPair(fuzzyKey1, mask1);
+        Pair<byte[], byte[]> pair2 = Pair.newPair(fuzzyKey2, mask2);
 
         FuzzyRowFilterV2 fuzzyRowFilter1 = new FuzzyRowFilterV2(Lists.newArrayList(pair1));
         FuzzyRowFilterV2 fuzzyRowFilter2 = new FuzzyRowFilterV2(Lists.newArrayList(pair2));

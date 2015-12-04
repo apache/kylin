@@ -104,7 +104,7 @@ public class CliCommandExecutor {
             sshOutput = ssh.execCommand(command, remoteTimeoutSeconds, logAppender);
             int exitCode = sshOutput.getExitCode();
             String output = sshOutput.getText();
-            return new Pair<Integer, String>(exitCode, output);
+            return Pair.newPair(exitCode, output);
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
@@ -140,7 +140,7 @@ public class CliCommandExecutor {
 
         try {
             int exitCode = proc.waitFor();
-            return new Pair<Integer, String>(exitCode, result.toString());
+            return Pair.newPair(exitCode, result.toString());
         } catch (InterruptedException e) {
             throw new IOException(e);
         }

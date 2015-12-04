@@ -157,8 +157,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         int colParamIdx = 0; // index among parameters of column type
         for (int i = 0; i < paramCount; i++, param = param.getNextParameter()) {
             String value;
-            if (function.isCount() || function.isHolisticCountDistinct()) {
-                // note for holistic count distinct, this value will be ignored
+            if (function.isCount()) {
                 value = "1";
             } else if (param.isColumnType()) {
                 value = getCell(colIdxOnFlatTable[colParamIdx++], splitBuffers);

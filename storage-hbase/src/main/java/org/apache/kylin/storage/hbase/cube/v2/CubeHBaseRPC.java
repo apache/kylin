@@ -134,7 +134,7 @@ public abstract class CubeHBaseRPC {
             fuzzyKeyEncoder.encode(gtRecordFuzzyKey, gtRecordFuzzyKey.getInfo().getPrimaryKey(), hbaseFuzzyKey);
             fuzzyMaskEncoder.encode(gtRecordFuzzyKey, gtRecordFuzzyKey.getInfo().getPrimaryKey(), hbaseFuzzyMask);
 
-            ret.add(new Pair<byte[], byte[]>(hbaseFuzzyKey, hbaseFuzzyMask));
+            ret.add(Pair.newPair(hbaseFuzzyKey, hbaseFuzzyMask));
         }
 
         return ret;
@@ -153,7 +153,7 @@ public abstract class CubeHBaseRPC {
             for (HBaseColumnDesc hbaseColDesc : familyDesc.getColumns()) {
                 if (selectedColBlocks.get(colBlkIndex)) {
                     byte[] byteQualifier = Bytes.toBytes(hbaseColDesc.getQualifier());
-                    result.add(new Pair<byte[], byte[]>(byteFamily, byteQualifier));
+                    result.add(Pair.newPair(byteFamily, byteQualifier));
                 }
                 colBlkIndex++;
             }

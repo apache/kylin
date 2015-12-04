@@ -63,6 +63,7 @@ import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -324,11 +325,11 @@ public class SparkCubing extends AbstractApplication {
         }
 
         for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
-            if (measureDesc.getFunction().isTopN()) {
-                List<TblColRef> colRefs = measureDesc.getFunction().getParameter().getColRefs();
-                TblColRef col = colRefs.get(colRefs.size() - 1);
-                dictionaryMap.put(col, cubeSegment.getDictionary(col));
-            }
+			FunctionDesc func = measureDesc.getFunction();
+			List<TblColRef> colRefs = func.getMeasureType().getColumnsNeedDictionary(func);
+			for (TblColRef col : colRefs) {
+				dictionaryMap.put(col, cubeSegment.getDictionary(col));
+			}
         }
 
 

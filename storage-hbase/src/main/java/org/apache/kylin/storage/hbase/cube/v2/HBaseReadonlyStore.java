@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;

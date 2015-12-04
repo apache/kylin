@@ -48,6 +48,7 @@ import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
@@ -95,9 +96,8 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
-
-        // check whether this is a TopN query
-        checkAndRewriteTopN(sqlDigest);
+        // allow custom measures hack
+        notifyBeforeStorageQuery(sqlDigest);
 
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
         TupleFilter filter = sqlDigest.filter;
@@ -378,12 +378,8 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             for (HBaseColumnDesc hbCol : hbCols) {
                 bestHBCol = hbCol;
                 bestIndex = hbCol.findMeasure(aggrFunc);
-                MeasureDesc measure = hbCol.getMeasures()[bestIndex];
-                // criteria for holistic measure: Exact Aggregation && Exact Cuboid
-                if (measure.getFunction().isHolisticCountDistinct() && context.isExactAggregation()) {
-                    logger.info("Holistic count distinct chosen for " + aggrFunc);
-                    break;
-                }
+                // we used to prefer specific measure over another (holistic distinct count), now it's gone
+                break;
             }
 
             RowValueDecoder codec = codecMap.get(bestHBCol);
@@ -716,7 +712,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     }
 
     private void setThreshold(Collection<TblColRef> dimensions, List<RowValueDecoder> valueDecoders, StorageContext context) {
-        if (RowValueDecoder.hasMemHungryCountDistinct(valueDecoders) == false) {
+        if (RowValueDecoder.hasMemHungryMeasures(valueDecoders) == false) {
             return;
         }
 
@@ -754,33 +750,11 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         ObserverEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
     }
 
-    private void checkAndRewriteTopN(SQLDigest sqlDigest) {
-        FunctionDesc topnFunc = null;
-        TblColRef topnLiteralCol = null;
+    private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
-            FunctionDesc func = measure.getFunction();
-            if (func.isTopN() && sqlDigest.groupbyColumns.contains(func.getTopNLiteralColumn())) {
-                topnFunc = func;
-                topnLiteralCol = func.getTopNLiteralColumn();
-            }
+            MeasureType<?> measureType = measure.getFunction().getMeasureType();
+            measureType.beforeStorageQuery(measure, sqlDigest);
         }
-
-        // if TopN is not involved
-        if (topnFunc == null)
-            return;
-
-        if (sqlDigest.aggregations.size() != 1) {
-            throw new IllegalStateException("When query with topN, only one metrics is allowed.");
-        }
-
-        FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
-        if (origFunc.isSum() == false) {
-            throw new IllegalStateException("When query with topN, only SUM function is allowed.");
-        }
-
-        sqlDigest.aggregations = Lists.newArrayList(topnFunc);
-        sqlDigest.groupbyColumns.remove(topnLiteralCol);
-        sqlDigest.metricColumns.add(topnLiteralCol);
-        logger.info("Rewrite function " + origFunc + " to " + topnFunc);
     }
+    
 }

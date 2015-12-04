@@ -99,7 +99,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             assert cuboid.equals(range.getCuboid());
         }
 
-        this.tupleConverter = new CubeTupleConverter(cubeSeg, cuboid, rowValueDecoders, returnTupleInfo, null);
+        this.tupleConverter = new CubeTupleConverter(cubeSeg, cuboid, rowValueDecoders, returnTupleInfo);
         this.oneTuple = new Tuple(returnTupleInfo);
         this.rangeIterator = keyRanges.iterator();
 

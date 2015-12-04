@@ -24,11 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.measure.basic.BasicMeasureFactory;
-import org.apache.kylin.measure.hllc.HLLCAggregationFactory;
-import org.apache.kylin.measure.topn.TopNMeasureFactory;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -37,54 +32,27 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 
-import com.google.common.collect.Maps;
-
-abstract public class MeasureType {
-    
-    private static final Map<String, IMeasureFactory> factoryRegistry = Maps.newConcurrentMap();
-    private static final IMeasureFactory defaultFactory = new BasicMeasureFactory();
-    
-    static {
-        factoryRegistry.put(FunctionDesc.FUNC_COUNT_DISTINCT, new HLLCAggregationFactory());
-        factoryRegistry.put(FunctionDesc.FUNC_TOP_N, new TopNMeasureFactory());
-    }
-    
-    public static MeasureType create(String funcName, String dataType) {
-        funcName = funcName.toUpperCase();
-        dataType = dataType.toLowerCase();
-        
-        IMeasureFactory factory = factoryRegistry.get(funcName);
-        if (factory == null)
-            factory = defaultFactory;
-        
-        MeasureType result = factory.createMeasureType(funcName, dataType);
-        
-        // register serializer for aggr data type
-        DataType aggregationDataType = result.getAggregationDataType();
-        if (DataTypeSerializer.hasRegistered(aggregationDataType.getName()) == false) {
-            DataTypeSerializer.register(aggregationDataType.getName(), result.getAggregationDataSeralizer());
-        }
-        
-        return result;
-    }
+abstract public class MeasureType<T> {
     
     /* ============================================================================
      * Define
      * ---------------------------------------------------------------------------- */
     
-    abstract public DataType getAggregationDataType();
+    public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
+        return;
+    }
     
-    abstract public Class<? extends DataTypeSerializer<?>> getAggregationDataSeralizer();
-    
-    abstract public void validate(MeasureDesc measureDesc) throws IllegalArgumentException;
+    public boolean isMemoryHungry() {
+        return false;
+    }
     
     /* ============================================================================
      * Build
      * ---------------------------------------------------------------------------- */
     
-    abstract public MeasureIngester<?> newIngester();
+    abstract public MeasureIngester<T> newIngester();
     
-    abstract public MeasureAggregator<?> newAggregator();
+    abstract public MeasureAggregator<T> newAggregator();
  
     public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
         return Collections.emptyList();

@@ -152,7 +152,7 @@ public class HBaseMROutput2 implements IMROutput2 {
 
             this.parsedKey = new ByteArrayWritable();
             this.parsedValue = new Object[measuresDescs.size()];
-            this.parsedPair = new Pair<ByteArrayWritable, Object[]>(parsedKey, parsedValue);
+            this.parsedPair = Pair.newPair(parsedKey, parsedValue);
         }
 
         @Override

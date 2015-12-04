@@ -2,9 +2,6 @@ package org.apache.kylin.metadata.tuple;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 
 /**
@@ -12,8 +9,6 @@ import com.google.common.collect.Lists;
  * ITupleIterator's results
  */
 public class TeeTupleIterator implements ITupleIterator {
-
-    private static final Logger logger = LoggerFactory.getLogger(TeeTupleIterator.class);
 
     private ITupleIterator underlying;
     private List<ITuple> duplicatedData;
