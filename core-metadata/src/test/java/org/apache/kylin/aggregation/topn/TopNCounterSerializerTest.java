@@ -15,6 +15,10 @@ import org.junit.Test;
  */
 public class TopNCounterSerializerTest {
 
+    static {
+        DataType.register("topn");
+    }
+
     private static TopNCounterSerializer serializer = new TopNCounterSerializer(DataType.getType("topn(10)"));
 
     @Test
@@ -27,7 +31,7 @@ public class TopNCounterSerializerTest {
 
         ByteBuffer out = ByteBuffer.allocate(1024);
         serializer.serialize(vs, out);
-        
+
         byte[] copyBytes = new byte[out.position()];
         System.arraycopy(out.array(), 0, copyBytes, 0, out.position());
 
@@ -37,7 +41,7 @@ public class TopNCounterSerializerTest {
         Assert.assertEquals(vs.toString(), vsNew.toString());
 
     }
-    
+
     @Test
     public void testValueOf() {
         // FIXME need a good unit test for valueOf()

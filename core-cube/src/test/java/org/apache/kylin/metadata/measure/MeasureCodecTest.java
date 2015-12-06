@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -36,6 +37,10 @@ import org.junit.Test;
  * 
  */
 public class MeasureCodecTest {
+    
+    static {
+        MeasureTypeFactory.init(null);
+    }
 
     @Test
     public void basicTest() {

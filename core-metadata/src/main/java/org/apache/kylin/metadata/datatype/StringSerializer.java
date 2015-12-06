@@ -45,4 +45,8 @@ public class StringSerializer extends DataTypeSerializer<String> {
         return maxLength;
     }
 
+    @Override
+    public String valueOf(String str) {
+        return str;
+    }
 }

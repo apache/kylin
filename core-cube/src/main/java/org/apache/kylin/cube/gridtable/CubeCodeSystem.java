@@ -109,6 +109,9 @@ public class CubeCodeSystem implements IGTCodeSystem {
         if (serializer instanceof DictionarySerializer) {
             ((DictionarySerializer) serializer).serializeWithRounding(value, roundingFlag, buf);
         } else {
+            if (value instanceof String) {
+                value = serializer.valueOf((String) value);
+            }
             serializer.serialize(value, buf);
         }
     }
@@ -292,6 +295,10 @@ public class CubeCodeSystem implements IGTCodeSystem {
             return fixLen;
         }
 
+        @Override
+        public Object valueOf(String str) {
+            return str;
+        }
     }
 
 }

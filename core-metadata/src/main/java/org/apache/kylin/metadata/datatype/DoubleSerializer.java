@@ -66,4 +66,8 @@ public class DoubleSerializer extends DataTypeSerializer<DoubleMutable> {
         return 8;
     }
 
+    @Override
+    public DoubleMutable valueOf(String str) {
+        return new DoubleMutable(Double.parseDouble(str));
+    }
 }

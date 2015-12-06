@@ -35,54 +35,58 @@ import com.google.common.collect.Maps;
 abstract public class MeasureTypeFactory<T> {
 
     abstract public MeasureType<T> createMeasureType(String funcName, DataType dataType);
-    
+
     abstract public String getAggrFunctionName();
+
     abstract public String getAggrDataTypeName();
+
     abstract public Class<? extends DataTypeSerializer<T>> getAggrDataTypeSerializer();
-    
+
     // ============================================================================
-    
+
     private static Map<String, MeasureTypeFactory<?>> factories = Maps.newHashMap();
     private static MeasureTypeFactory<?> defaultFactory = new BasicMeasureType.Factory();
-    
+
     public static synchronized void init(KylinConfig config) {
         if (factories.isEmpty() == false)
             return;
-        
+
         List<MeasureTypeFactory<?>> factoryInsts = Lists.newArrayList();
-        
+
         // two built-in advanced measure types
         factoryInsts.add(new HLLCMeasureType.Factory());
         factoryInsts.add(new TopNMeasureType.Factory());
-        
+
         // more custom measure types
-        for (String factoryClz : config.getMeasureTypeFactories()) {
-            factoryInsts.add((MeasureTypeFactory<?>) ClassUtil.newInstance(factoryClz));
+        if (config != null) { // test case may pass in null
+            for (String factoryClz : config.getMeasureTypeFactories()) {
+                factoryInsts.add((MeasureTypeFactory<?>) ClassUtil.newInstance(factoryClz));
+            }
         }
-        
+
         // register factories & data type serializers
         for (MeasureTypeFactory<?> factory : factoryInsts) {
             String funcName = factory.getAggrFunctionName().toUpperCase();
             String dataTypeName = factory.getAggrDataTypeName().toLowerCase();
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
-            
+
             DataType.register(dataTypeName);
             DataTypeSerializer.register(dataTypeName, serializer);
             factories.put(funcName, factory);
         }
     }
-    
+
     public static MeasureType<?> create(String funcName, String dataType) {
         return create(funcName, DataType.getType(dataType));
     }
-    
+
     public static MeasureType<?> create(String funcName, DataType dataType) {
         funcName = funcName.toUpperCase();
-        
+
         MeasureTypeFactory<?> factory = factories.get(funcName);
         if (factory == null)
             factory = defaultFactory;
-        
+
         return factory.createMeasureType(funcName, dataType);
     }
 }

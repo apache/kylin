@@ -74,4 +74,8 @@ public class LongSerializer extends DataTypeSerializer<LongMutable> {
         return 5;
     }
 
+    @Override
+    public LongMutable valueOf(String str) {
+        return new LongMutable(Long.parseLong(str));
+    }
 }

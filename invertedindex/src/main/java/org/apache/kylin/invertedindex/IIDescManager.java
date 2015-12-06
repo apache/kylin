@@ -31,6 +31,7 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
@@ -61,6 +62,8 @@ public class IIDescManager {
         if (r != null) {
             return r;
         }
+
+        MeasureTypeFactory.init(config);
 
         synchronized (IIDescManager.class) {
             r = CACHE.get(config);
