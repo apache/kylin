@@ -2,6 +2,8 @@ package org.apache.kylin.metadata.datatype;
 
 import java.nio.ByteBuffer;
 
+import org.apache.kylin.common.util.DateFormat;
+
 public class DateTimeSerializer extends DataTypeSerializer<LongMutable> {
 
     // be thread-safe and avoid repeated obj creation
@@ -46,4 +48,9 @@ public class DateTimeSerializer extends DataTypeSerializer<LongMutable> {
         return 8;
     }
 
+    @Override
+    public LongMutable valueOf(String str) {
+        return new LongMutable(DateFormat.stringToMillis(str));
+    }
+    
 }

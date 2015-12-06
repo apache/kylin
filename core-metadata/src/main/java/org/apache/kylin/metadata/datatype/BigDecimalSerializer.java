@@ -97,4 +97,9 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
         return 8;
     }
 
+    @Override
+    public BigDecimal valueOf(String str) {
+        return new BigDecimal(str);
+    }
+    
 }
