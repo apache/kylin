@@ -82,26 +82,23 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     private final DataType dataType;
 
     public TopNMeasureType(String funcName, DataType dataType) {
-        validate(funcName, dataType);
+        // note at query parsing phase, the data type may be null, because only function and parameters are known
         this.dataType = dataType;
     }
 
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
-        validate(functionDesc.getExpression(), functionDesc.getReturnDataType());
+        validate(functionDesc.getExpression(), functionDesc.getReturnDataType(), true);
     }
 
-    private void validate(String funcName, DataType dataType) {
+    private void validate(String funcName, DataType dataType, boolean checkDataType) {
         if (FUNC_TOP_N.equals(funcName) == false)
             throw new IllegalArgumentException();
 
-        // data type could be null at query layer, because only function and parameters are known at that stage
-        if (dataType != null) {
-            if (DATATYPE_TOPN.equals(dataType.getName()) == false)
-                throw new IllegalArgumentException();
+        if (DATATYPE_TOPN.equals(dataType.getName()) == false)
+            throw new IllegalArgumentException();
 
-            if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
-                throw new IllegalArgumentException();
-        }
+        if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
+            throw new IllegalArgumentException();
     }
 
     @Override
@@ -191,17 +188,19 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             return null;
 
         TblColRef literalCol = getTopNLiteralColumn(topN.getFunction());
-        if (unmatchedDimensions.contains(literalCol)) {
-            unmatchedDimensions.remove(literalCol);
-            unmatchedAggregations.remove(onlyFunction);
-            return new CapabilityInfluence() {
-                @Override
-                public double suggestCostMultiplier() {
-                    return 0.3; // make sure TopN get ahead of other matched realizations
-                }
-            };
-        } else
+        if (unmatchedDimensions.contains(literalCol) == false)
             return null;
+        if (digest.groupbyColumns.contains(literalCol) == false)
+            return null;
+
+        unmatchedDimensions.remove(literalCol);
+        unmatchedAggregations.remove(onlyFunction);
+        return new CapabilityInfluence() {
+            @Override
+            public double suggestCostMultiplier() {
+                return 0.3; // make sure TopN get ahead of other matched realizations
+            }
+        };
     }
 
     private boolean isTopNCompatibleSum(FunctionDesc topN, FunctionDesc sum) {

@@ -56,19 +56,15 @@ public class BasicMeasureType extends MeasureType {
     private final DataType dataType;
 
     public BasicMeasureType(String funcName, DataType dataType) {
-        validate(funcName, dataType);
+        // note at query parsing phase, the data type may be null, because only function and parameters are known
         this.funcName = funcName;
         this.dataType = dataType;
     }
 
     @Override
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
-        validate(functionDesc.getExpression(), functionDesc.getReturnDataType());
-    }
-
-    private void validate(String funcName, DataType dataType) throws IllegalArgumentException {
         DataType rtype = dataType;
-
+        
         if (funcName.equals(FunctionDesc.FUNC_SUM)) {
             if (rtype.isNumberFamily() == false) {
                 throw new IllegalArgumentException("Return type for function " + funcName + " must be one of " + DataType.NUMBER_FAMILY);

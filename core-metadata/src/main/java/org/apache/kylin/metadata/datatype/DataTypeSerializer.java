@@ -77,7 +77,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
     /** get an estimate of size in bytes of the serialized data */
     abstract public int getStorageBytesEstimate();
     
-    /** an optional convenient method that converts a string to this data type */
+    /** an optional convenient method that converts a string to this data type (for dimensions) */
     public T valueOf(String str) {
         throw new UnsupportedOperationException();
     }
