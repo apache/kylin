@@ -110,6 +110,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
             ((DictionarySerializer) serializer).serializeWithRounding(value, roundingFlag, buf);
         } else {
             if (value instanceof String) {
+                // for dimensions mostly, measures are converted by MeasureIngestor before reaching this point
                 value = serializer.valueOf((String) value);
             }
             serializer.serialize(value, buf);
