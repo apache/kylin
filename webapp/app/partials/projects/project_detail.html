@@ -32,7 +32,7 @@
 
             <div class="col-xs-10">
                 <div class="space-8"></div>
-                <table ng-if="project.cubes.length > 0" class="table table-striped table-hover" >
+                <table ng-if="project.realizations.length > 0" class="table table-striped table-hover" >
                     <thead>
                         <tr>
                             <th>Cube Name</th>
@@ -40,14 +40,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="cube in project.cubes" >
-                            <td>{{cube}}</td>
-                            <td><a href='/cubes/{{project.name}}/{{cube}}?showDetail=true' style="color: #428BCA">Detail</a></td>
+                        <tr ng-repeat="item in project.realizations" ng-if="item.type=='CUBE'">
+                            <td>{{item.realization}}</td>
+                            <td><a href='models' style="color: #428BCA">Detail</a></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div no-result ng-if="project.cubes.length == 0"></div>
+            <div no-result ng-if="project.realizations.length == 0"></div>
             <div class="col-xs-1"></div>
         </div>
     </div>
