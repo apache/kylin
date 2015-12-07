@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.upgrade;
+package org.apache.kylin.cube.upgrade;
 
 import java.util.List;
 
@@ -42,6 +42,7 @@ public class CubeDescSignatureUpdate {
     private ResourceStore store;
     private String[] cubeNames;
     private List<String> updatedResources = Lists.newArrayList();
+
     private List<String> errorMsgs = Lists.newArrayList();
 
     public CubeDescSignatureUpdate(String[] cubes) {
@@ -81,6 +82,10 @@ public class CubeDescSignatureUpdate {
         }
 
         logger.info("=================================================================");
+    }
+
+    public List<String> getErrorMsgs() {
+        return errorMsgs;
     }
 
     public void update() {

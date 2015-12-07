@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.job.upgrade.v2;
+package org.apache.kylin.cube.upgrade.v2;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,6 +32,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.upgrade.CubeDescSignatureUpdate;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DimensionDesc;
@@ -43,19 +44,22 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * Created by dongli on 11/30/15.
- *
- * In v1.x, DataModelDesc doesn't include Dimensions and Measures, this tool is to fill them from CubeDesc.
- */
-public class DataModelDescUpgradeV2 {
-    private static final Log logger = LogFactory.getLog(DataModelDescUpgradeV2.class);
+  * back in 1.x branch there was a CubeMetadataUpgrade which is actually CubeMetadataUpgradeV1,
+  * that upgrades metadata store from v1(prior kylin 0.7) to v2.
+  * the major difference is that we split cube desc to cube desc + model desc
+  * 
+  * In 2.0 there is a CubeMetadataUpgradeV2 which is responsible for upgrading the metadata store
+  * from 1.x to 2.0. The major actions in that is updating cube desc signature and upgrade model desc.
+  */
+public class CubeMetadataUpgradeV2 {
+    private static final Log logger = LogFactory.getLog(CubeMetadataUpgradeV2.class);
     private KylinConfig config = null;
     private ResourceStore store;
     private String[] models;
     private List<String> updatedResources = Lists.newArrayList();
     private List<String> errorMsgs = Lists.newArrayList();
 
-    public DataModelDescUpgradeV2(String[] models) {
+    public CubeMetadataUpgradeV2(String[] models) {
         this.config = KylinConfig.getInstanceFromEnv();
         this.store = ResourceStore.getStore(config);
         this.models = models;
@@ -63,15 +67,16 @@ public class DataModelDescUpgradeV2 {
 
     public static void main(String args[]) throws Exception {
         if (args != null && args.length > 1) {
-            System.out.println("Usage: java DataModelDescUpradeV2 [Models]; e.g, model1,model2 ");
+            System.out.println("Usage: java CubeMetadataUpgradeV2 [Models]; e.g, model1,model2 ");
             return;
         }
 
-        DataModelDescUpgradeV2 metadataUpgrade = new DataModelDescUpgradeV2(args);
-        metadataUpgrade.upgrade();
+        CubeMetadataUpgradeV2 metadataUpgrade = new CubeMetadataUpgradeV2(args);
+        metadataUpgrade.upgradeModelMetadata();
+        metadataUpgrade.verify();
 
         logger.info("=================================================================");
-        logger.info("Run DataModelDescUpradeV2 completed;");
+        logger.info("Run CubeMetadataUpgradeV2 completed;");
 
         if (!metadataUpgrade.updatedResources.isEmpty()) {
             logger.info("Following resources are updated successfully:");
@@ -94,17 +99,16 @@ public class DataModelDescUpgradeV2 {
         logger.info("=================================================================");
     }
 
-    public void upgrade() {
+    public void upgradeModelMetadata() {
         logger.info("Reloading Cube Metadata from store: " + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
         CubeDescManager cubeDescManager = CubeDescManager.getInstance(config);
         List<CubeDesc> cubeDescs = cubeDescManager.listAllDesc();
         for (CubeDesc cubeDesc : cubeDescs) {
             if (ArrayUtils.isEmpty(models) || ArrayUtils.contains(models, cubeDesc.getModelName())) {
+                upgradeCubeDescSignature(cubeDesc);
                 upgradeDataModelDesc(cubeDesc);
             }
         }
-
-        verify();
     }
 
     private void verify() {
@@ -113,6 +117,18 @@ public class DataModelDescUpgradeV2 {
         CubeDescManager.getInstance(config);
         CubeManager.getInstance(config);
         ProjectManager.getInstance(config);
+    }
+
+    private void upgradeCubeDescSignature(CubeDesc cubeDesc) {
+        CubeDescSignatureUpdate cubeDescSignatureUpdate = new CubeDescSignatureUpdate(new String[] {cubeDesc.getName()});
+        cubeDescSignatureUpdate.update();
+
+        if (CollectionUtils.isEmpty(cubeDescSignatureUpdate.getErrorMsgs())) {
+            logger.info("CubeDesc Signature updating succeeded: " + cubeDesc.getName());
+        } else {
+            logger.info("CubeDesc Signature updating failed: " + cubeDesc.getName());
+            this.errorMsgs.addAll(cubeDescSignatureUpdate.getErrorMsgs());
+        }
     }
 
     private void upgradeDataModelDesc(CubeDesc cubeDesc) {

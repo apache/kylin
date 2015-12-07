@@ -18,31 +18,12 @@
 #
 
 dir=$(dirname ${0})
-cd ${dir}/../..
+source ${dir}/check-env.sh
 
-if [ -z "$version" ]
-then
-    echo 'version not set'
-    version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\['`
-fi
-echo "version ${version}"
-export version
+echo "======Deploy coprocessor======="
+$KYLIN_HOME/bin/kylin.sh org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-2.0-incubating-SNAPSHOT.jar
 
-sh build/script/prepare_libs.sh || { exit 1; }
+echo "=====Upgrade Cube metadata====="
+$KYLIN_HOME/bin/kylin.sh org.apache.kylin.cube.upgrade.v2.CubeMetadataUpgradeV2
 
-cp server/target/kylin-server-${version}.war build/tomcat/webapps/kylin.war
-chmod 644 build/tomcat/webapps/kylin.war
-
-echo "add js css to war"
-if [ ! -d "webapp/dist" ]
-then
-    echo "error generate js files"
-    exit 1
-fi
-
-cd webapp/dist
-for f in * .[^.]*
-do
-    echo "Adding $f to war"
-    jar -uf ../../build/tomcat/webapps/kylin.war $f
-done
+echo "==============End=============="
