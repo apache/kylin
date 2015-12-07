@@ -175,7 +175,7 @@
       "encoding" : "dict"
     } ]
   },
-  "signature" : "7CBEDk9hVUL/LDpPnMQeSA==",
+  "signature" : null,
   "last_modified" : 1448959801311,
   "model_name" : "test_kylin_left_join_model_desc",
   "null_string" : null,

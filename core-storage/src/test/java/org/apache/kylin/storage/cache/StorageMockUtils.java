@@ -67,6 +67,7 @@ public class StorageMockUtils {
         p1.setValue("PRICE");
         p1.setColRefs(ImmutableList.of(priceCol));
         f1.setParameter(p1);
+        f1.setReturnType("decimal(19,4)");
         functions.add(f1);
 
         FunctionDesc f2 = new FunctionDesc();
@@ -76,6 +77,7 @@ public class StorageMockUtils {
         p2.setValue("SELLER_ID");
         p2.setColRefs(ImmutableList.of(sellerCol));
         f2.setParameter(p2);
+        f2.setReturnType("hllc(10)");
         functions.add(f2);
 
         return functions;

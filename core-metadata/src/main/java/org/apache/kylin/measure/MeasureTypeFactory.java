@@ -21,8 +21,6 @@ package org.apache.kylin.measure;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
@@ -43,11 +41,15 @@ abstract public class MeasureTypeFactory<T> {
     abstract public Class<? extends DataTypeSerializer<T>> getAggrDataTypeSerializer();
 
     // ============================================================================
+    
+    static {
+        init();
+    }
 
     private static Map<String, MeasureTypeFactory<?>> factories = Maps.newHashMap();
     private static MeasureTypeFactory<?> defaultFactory = new BasicMeasureType.Factory();
 
-    public static synchronized void init(KylinConfig config) {
+    public static synchronized void init() {
         if (factories.isEmpty() == false)
             return;
 
@@ -57,13 +59,13 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new HLLCMeasureType.Factory());
         factoryInsts.add(new TopNMeasureType.Factory());
 
-        // more custom measure types
-        if (config != null) { // test case may pass in null
-            for (String factoryClz : config.getMeasureTypeFactories()) {
-                factoryInsts.add((MeasureTypeFactory<?>) ClassUtil.newInstance(factoryClz));
-            }
-        }
-
+        /*
+         * Maybe do classpath search for more custom measure types?
+         * More MeasureType cannot be configured via kylin.properties alone,
+         * because used in coprocessor, the new classes must be on classpath
+         * and be packaged into coprocessor jar.
+         */
+        
         // register factories & data type serializers
         for (MeasureTypeFactory<?> factory : factoryInsts) {
             String funcName = factory.getAggrFunctionName().toUpperCase();

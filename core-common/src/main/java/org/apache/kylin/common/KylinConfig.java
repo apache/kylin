@@ -312,10 +312,6 @@ public class KylinConfig implements Serializable {
         return getOptional(KYLIN_HBASE_CLUSTER_FS, "");
     }
 
-    public String[] getMeasureTypeFactories() {
-        return getOptionalStringArray("kylin.measure.type.factories", new String[0]);
-    }
-
     public String getKylinJobLogDir() {
         return getOptional(KYLIN_JOB_LOG_DIR, "/tmp/kylin/logs");
     }
