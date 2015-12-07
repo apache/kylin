@@ -113,7 +113,7 @@ public class CubeDesc extends RootPersistentEntity {
     private RowKeyDesc rowkey;
     @JsonProperty("hbase_mapping")
     private HBaseMappingDesc hbaseMapping;
-    @JsonProperty("aggregation_gropus")
+    @JsonProperty("aggregation_groups")
     private List<AggregationGroup> aggregationGroups;
     @JsonProperty("signature")
     private String signature;
