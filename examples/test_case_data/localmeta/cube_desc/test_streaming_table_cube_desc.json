@@ -96,7 +96,7 @@
       } ]
     } ]
   },
-  "aggregation_gropus" : [ {
+  "aggregation_groups" : [ {
     "includes" : [ "DAY_START", "HOUR_START", "ITM", "MINUTE_START", "SITE" ],
     "select_rule" : {
       "hierarchy_dims" : [ [ "DAY_START", "HOUR_START", "MINUTE_START" ] ],
