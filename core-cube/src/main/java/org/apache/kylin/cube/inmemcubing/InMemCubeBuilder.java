@@ -60,7 +60,7 @@ import com.google.common.collect.Lists;
 public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(InMemCubeBuilder.class);
-    static final double BASE_CUBOID_CACHE_OVERSIZE_FACTOR = 0.1;
+    static final double BASE_CUBOID_CACHE_OVERSIZE_FACTOR = 0.15;
 
     private final CuboidScheduler cuboidScheduler;
     private final long baseCuboidId;

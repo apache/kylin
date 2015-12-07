@@ -33,7 +33,9 @@ public class StaticCacheTest {
     @BeforeClass
     public static void setup() {
         System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
-        KylinConfig.getInstanceFromEnv().setProperty("kylin.query.cache.threshold.duration", "0");
+        
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setProperty("kylin.query.cache.threshold.duration", "0");
     }
 
     @Test

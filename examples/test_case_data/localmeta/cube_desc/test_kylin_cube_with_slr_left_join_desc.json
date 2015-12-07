@@ -139,7 +139,7 @@
       "encoding" : "dict"
     } ]
   },
-  "signature" : "5xR1gz6TWkYL3hJub3f/6g==",
+  "signature" : null,
   "last_modified" : 1448959801301,
   "model_name" : "test_kylin_left_join_model_desc",
   "null_string" : null,

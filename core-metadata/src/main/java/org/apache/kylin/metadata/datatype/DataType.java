@@ -30,12 +30,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 
 /**
  */
 @SuppressWarnings("serial")
 public class DataType implements Serializable {
+    
+    static {
+        MeasureTypeFactory.init();
+    }
 
     private static final LinkedHashSet<String> VALID_TYPES = new LinkedHashSet<String>();
 

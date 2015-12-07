@@ -34,7 +34,6 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
 import org.apache.kylin.cube.model.validation.ValidateContext;
-import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
@@ -60,8 +59,6 @@ public class CubeDescManager {
             return r;
         }
         
-        MeasureTypeFactory.init(config);
-
         synchronized (CubeDescManager.class) {
             r = CACHE.get(config);
             if (r != null) {

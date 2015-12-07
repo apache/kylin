@@ -83,7 +83,7 @@
       "encoding" : "dict"
     } ]
   },
-  "signature" : "7PZ41CemuGY4Usx+T5omaQ==",
+  "signature" : null,
   "last_modified" : 1448959801314,
   "model_name" : "test_streaming_table_model_desc",
   "null_string" : null,
