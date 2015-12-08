@@ -139,9 +139,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
 
         StreamingService.getConfig({cubeName:$scope.cubeMetaFrame.name}, function (kfkConfigs) {
-
           if(!!kfkConfigs[0]){
             $scope.cubeState.isStreaming = true;
+          }
+          else{
+            return;
           }
           $scope.streamingMeta = kfkConfigs[0];
           StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
