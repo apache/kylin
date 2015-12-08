@@ -187,7 +187,7 @@ public class StreamingManager {
     public StreamingConfig updateStreamingConfig(StreamingConfig desc) throws IOException {
         // Validate CubeDesc
         if (desc.getUuid() == null || desc.getName() == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("SteamingConfig Illegal.");
         }
         String name = desc.getName();
         if (!streamingMap.containsKey(name)) {

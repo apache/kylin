@@ -298,6 +298,18 @@ public class CubeService extends BasicService {
         }
         return true;
     }
+    public static String getCubeDescNameFromCube(String cubeName) {
+        return cubeName + DESC_SUFFIX;
+    }
+
+    public static String getCubeNameFromDesc(String descName) {
+        if (descName.toLowerCase().endsWith(DESC_SUFFIX)) {
+            return descName.substring(0, descName.toLowerCase().indexOf(DESC_SUFFIX));
+        } else {
+            return descName;
+        }
+    }
+
 
     /**
      * Stop all jobs belonging to this cube and clean out all segments

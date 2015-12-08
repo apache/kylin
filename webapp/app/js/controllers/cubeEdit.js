@@ -123,6 +123,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   //fetch cube info and model info in edit model
   // ~ init
   if ($scope.isEdit = !!$routeParams.cubeName) {
+
+    $scope.streamingMeta = StreamingModel.createStreamingConfig();
+    $scope.kafkaMeta = StreamingModel.createKafkaConfig();
+
     CubeDescService.query({cube_name: $routeParams.cubeName}, function (detail) {
       if (detail.length > 0) {
         $scope.cubeMetaFrame = detail[0];
@@ -139,9 +143,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
 
         StreamingService.getConfig({cubeName:$scope.cubeMetaFrame.name}, function (kfkConfigs) {
-
           if(!!kfkConfigs[0]){
             $scope.cubeState.isStreaming = true;
+          }
+          else{
+            return;
           }
           $scope.streamingMeta = kfkConfigs[0];
           StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
