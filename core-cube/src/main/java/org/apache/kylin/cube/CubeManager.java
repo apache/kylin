@@ -237,7 +237,7 @@ public class CubeManager implements IRealizationProvider {
 
         // delete cube from project
         ProjectManager.getInstance(config).removeRealizationsFromProjects(RealizationType.CUBE, cubeName);
-        
+
         if (listener != null)
             listener.afterCubeDelete(cube);
 
@@ -257,7 +257,7 @@ public class CubeManager implements IRealizationProvider {
 
         if (listener != null)
             listener.afterCubeCreate(cube);
-        
+
         return cube;
     }
 
@@ -266,7 +266,7 @@ public class CubeManager implements IRealizationProvider {
 
         if (listener != null)
             listener.afterCubeUpdate(cube);
-        
+
         return cube;
     }
 
@@ -863,7 +863,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     // ============================================================================
-    
+
     public interface CubeChangeListener {
         void afterCubeCreate(CubeInstance cube);
 
@@ -871,9 +871,9 @@ public class CubeManager implements IRealizationProvider {
 
         void afterCubeDelete(CubeInstance cube);
     }
-    
+
     private CubeChangeListener listener;
-    
+
     public void setCubeChangeListener(CubeChangeListener listener) {
         this.listener = listener;
     }
