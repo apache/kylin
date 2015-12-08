@@ -30,24 +30,58 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+/**
+ * Factory for MeasureType.
+ * 
+ * The factory registers itself by claiming the aggregation function and data type it supports,
+ * to match a measure descriptor in cube definition.
+ * 
+ * E.g. HyperLogLog measure type claims "COUNT_DISCINT" as function and "hllc" as data type to
+ * match measure descriptor:
+ * <pre>
+  {
+    "name" : "SELLER_CNT_HLL",
+    "function" : {
+      "expression" : "COUNT_DISTINCT",        <----  function name
+      "parameter" : {
+        "type" : "column",
+        "value" : "SELLER_ID",
+        "next_parameter" : null
+      },
+      "returntype" : "hllc(10)"               <----  data type
+    }
+  }
+</pre>
+ * 
+ * @param <T> the Java type of aggregation data object, e.g. HyperLogLogPlusCounter
+ */
 abstract public class MeasureTypeFactory<T> {
 
+    /**
+     * Create a measure type with specified aggregation function and data type.
+     * 
+     * @param funcName should always match this factory's claim <code>getAggrFunctionName()</code>
+     * @param dataType should always match this factory's claim <code>getAggrDataTypeName()</code>
+     */
     abstract public MeasureType<T> createMeasureType(String funcName, DataType dataType);
 
+    /** Return the aggregation function this factory supports, like "COUNT_DISTINCT" */
     abstract public String getAggrFunctionName();
 
+    /** Return the aggregation data type name this factory supports, like "hllc" */
     abstract public String getAggrDataTypeName();
 
+    /** Return the Serializer for aggregation data object. Note a Serializer implementation must be thread-safe! */
     abstract public Class<? extends DataTypeSerializer<T>> getAggrDataTypeSerializer();
 
     // ============================================================================
-    
-    static {
-        init();
-    }
 
     private static Map<String, MeasureTypeFactory<?>> factories = Maps.newHashMap();
     private static MeasureTypeFactory<?> defaultFactory = new BasicMeasureType.Factory();
+
+    static {
+        init();
+    }
 
     public static synchronized void init() {
         if (factories.isEmpty() == false)
@@ -63,9 +97,10 @@ abstract public class MeasureTypeFactory<T> {
          * Maybe do classpath search for more custom measure types?
          * More MeasureType cannot be configured via kylin.properties alone,
          * because used in coprocessor, the new classes must be on classpath
-         * and be packaged into coprocessor jar.
+         * and be packaged into coprocessor jar. This inevitably involves
+         * rebuild Kylin from code and redeploy.
          */
-        
+
         // register factories & data type serializers
         for (MeasureTypeFactory<?> factory : factoryInsts) {
             String funcName = factory.getAggrFunctionName().toUpperCase();

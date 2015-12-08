@@ -341,7 +341,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
             MeasureType<?> measureType = measure.getFunction().getMeasureType();
-            measureType.beforeStorageQuery(measure, sqlDigest);
+            measureType.adjustSqlDigest(measure, sqlDigest);
         }
     }
     

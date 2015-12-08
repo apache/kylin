@@ -50,22 +50,19 @@ public class CubeCapabilityChecker {
         CapabilityResult result = new CapabilityResult();
         result.capable = false;
 
-        // retrieve members from olapContext
-        Collection<TblColRef> dimensionColumns = getDimensionColumns(digest);
-        Collection<FunctionDesc> aggrFunctions = digest.aggregations;
-        Collection<JoinDesc> joins = digest.joinDescs;
-
-        // match dimensions & aggregations & joins
-
-        Collection<TblColRef> unmatchedDimensions = unmatchedDimensions(dimensionColumns, cube);
-        Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, cube);
-        boolean isJoinMatch = isJoinMatch(joins, cube);
-
+        // match joins
+        boolean isJoinMatch = isJoinMatch(digest.joinDescs, cube);
         if (!isJoinMatch) {
             logger.info("Exclude cube " + cube.getName() + " because unmatched joins");
             return result;
         }
 
+        // dimensions & measures
+        Collection<TblColRef> dimensionColumns = getDimensionColumns(digest);
+        Collection<FunctionDesc> aggrFunctions = digest.aggregations;
+        Collection<TblColRef> unmatchedDimensions = unmatchedDimensions(dimensionColumns, cube);
+        Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, cube);
+        
         // try custom measure types
         if (!unmatchedDimensions.isEmpty() || !unmatchedAggregations.isEmpty()) {
             tryCustomMeasureTypes(unmatchedDimensions, unmatchedAggregations, digest, cube, result);
@@ -163,7 +160,7 @@ public class CubeCapabilityChecker {
                 continue;
             }
 
-            // only inverted-index cube does not have count, and let calcite handle in this case
+            // let calcite handle count
             if (functionDesc.isCount()) {
                 it.remove();
                 continue;

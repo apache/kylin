@@ -20,38 +20,70 @@ package org.apache.kylin.invertedindex;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.kylin.invertedindex.model.IIDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 /**
  */
 public class IICapabilityChecker {
     private static final Logger logger = LoggerFactory.getLogger(IICapabilityChecker.class);
 
-    public static boolean check(IIInstance ii, SQLDigest digest) {
+    public static CapabilityResult check(IIInstance ii, SQLDigest digest) {
+        CapabilityResult result = new CapabilityResult();
+        result.capable = false;
 
-        // retrieve members from olapContext
-        Collection<JoinDesc> joins = digest.joinDescs;
-
-        // match dimensions & aggregations & joins
-
-        boolean isOnline = ii.isReady();
-
-        boolean matchJoin = isMatchedWithJoins(joins, ii);
-
-        if (!isOnline || !matchJoin) {
-            logger.info("Exclude ii " + ii.getName() + " because " + " isOnlne=" + isOnline + ",matchJoin=" + matchJoin);
-            return false;
+        // match fact table
+        if (!digest.factTable.equalsIgnoreCase(ii.getFactTable())) {
+            logger.info("Exclude II " + ii.getName() + " because fact table unmatch");
+            return result;
+        }
+        
+        // match joins
+        boolean matchJoin = isMatchedWithJoins(digest.joinDescs, ii);
+        if (!matchJoin) {
+            logger.info("Exclude II " + ii.getName() + " because unmatched joins");
+            return result;
         }
 
-        return true;
+        // dimensions & measures
+        Collection<TblColRef> dimensionColumns = getDimensionColumns(digest);
+        Collection<FunctionDesc> aggrFunctions = digest.aggregations;
+        Collection<TblColRef> unmatchedDimensions = unmatchedDimensions(dimensionColumns, ii);
+        Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, ii);
+        
+        // try dimension-as-measure
+        if (!unmatchedAggregations.isEmpty()) {
+            tryDimensionAsMeasures(unmatchedAggregations, digest, ii, result);
+        }
+        
+        if (!unmatchedDimensions.isEmpty()) {
+            logger.info("Exclude ii " + ii.getName() + " because unmatched dimensions");
+            return result;
+        }
+        
+        if (!unmatchedAggregations.isEmpty()) {
+            logger.info("Exclude ii " + ii.getName() + " because unmatched aggregations");
+            return result;
+        }
+
+        // cost will be minded by caller
+        result.capable = true;
+        return result;
     }
 
     private static boolean isMatchedWithJoins(Collection<JoinDesc> joins, IIInstance iiInstance) {
@@ -94,6 +126,57 @@ public class IICapabilityChecker {
             }
         }
         return true;
+    }
+
+    private static Collection<TblColRef> getDimensionColumns(SQLDigest sqlDigest) {
+        Collection<TblColRef> groupByColumns = sqlDigest.groupbyColumns;
+        Collection<TblColRef> filterColumns = sqlDigest.filterColumns;
+
+        Collection<TblColRef> dimensionColumns = new HashSet<TblColRef>();
+        dimensionColumns.addAll(groupByColumns);
+        dimensionColumns.addAll(filterColumns);
+        return dimensionColumns;
+    }
+
+    private static Set<TblColRef> unmatchedDimensions(Collection<TblColRef> dimensionColumns, IIInstance ii) {
+        HashSet<TblColRef> result = Sets.newHashSet(dimensionColumns);
+        result.removeAll(ii.getDescriptor().listAllDimensions());
+        return result;
+    }
+
+    private static Set<FunctionDesc> unmatchedAggregations(Collection<FunctionDesc> aggregations, IIInstance ii) {
+        HashSet<FunctionDesc> result = Sets.newHashSet(aggregations);
+        result.removeAll(ii.getDescriptor().listAllFunctions());
+        return result;
+    }
+
+    private static void tryDimensionAsMeasures(Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, IIInstance ii, CapabilityResult result) {
+        IIDesc iiDesc = ii.getDescriptor();
+        Collection<FunctionDesc> iiFuncs = iiDesc.listAllFunctions();
+
+        Iterator<FunctionDesc> it = unmatchedAggregations.iterator();
+        while (it.hasNext()) {
+            FunctionDesc functionDesc = it.next();
+            
+            if (iiFuncs.contains(functionDesc)) {
+                it.remove();
+                continue;
+            }
+
+            // let calcite handle count
+            if (functionDesc.isCount()) {
+                it.remove();
+                continue;
+            }
+
+            // calcite can do aggregation from columns on-the-fly
+            List<TblColRef> neededCols = functionDesc.getParameter().getColRefs();
+            if (neededCols.size() > 0 && iiDesc.listAllDimensions().containsAll(neededCols)) {
+                result.influences.add(new CapabilityResult.DimensionAsMeasure(functionDesc));
+                it.remove();
+                continue;
+            }
+        }
     }
 
 }

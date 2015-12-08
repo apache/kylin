@@ -38,10 +38,6 @@ import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 @SuppressWarnings("serial")
 public class DataType implements Serializable {
     
-    static {
-        MeasureTypeFactory.init();
-    }
-
     private static final LinkedHashSet<String> VALID_TYPES = new LinkedHashSet<String>();
 
     private static Pattern TYPE_PATTERN = null;
@@ -109,6 +105,10 @@ public class DataType implements Serializable {
     private static final ConcurrentMap<DataType, DataType> CACHE = new ConcurrentHashMap<DataType, DataType>();
 
     public static final DataType ANY = DataType.getType("any");
+
+    static {
+        MeasureTypeFactory.init();
+    }
 
     public static DataType getType(String type) {
         if (type == null)

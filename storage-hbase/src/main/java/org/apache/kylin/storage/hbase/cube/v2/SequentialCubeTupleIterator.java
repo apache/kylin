@@ -92,7 +92,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         GTRecord curRecord = curRecordIterator.next();
         
         // translate into tuple
-        List<IAdvMeasureFiller> advMeasureFillers = curTupleConverter.translateResult(curRecord, tuple);
+        advMeasureFillers = curTupleConverter.translateResult(curRecord, tuple);
 
         // the simple case
         if (advMeasureFillers == null) {
