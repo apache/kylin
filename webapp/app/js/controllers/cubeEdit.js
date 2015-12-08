@@ -289,6 +289,18 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     if ($scope.metaModel.model && ($scope.metaModel.model.partition_desc.partition_date_start || $scope.metaModel.model.partition_desc.partition_date_start == 0)) {
       $scope.metaModel.model.partition_desc.partition_date_start += new Date().getTimezoneOffset() * 60000;
     }
+
+    //update model last modified
+    $scope.statusRefresh();
+  }
+
+  $scope.statusRefresh = function(){
+    ModelService.get({model_name: $scope.cubeMetaFrame.model_name}, function (model) {
+      if (model) {
+        //MetaModel.setMetaModel(model);
+        $scope.metaModel.model.last_modified = model.last_modified;
+      }
+    });
   }
 
   $scope.updateMandatory = function (rowkey_column) {
