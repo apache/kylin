@@ -101,19 +101,14 @@
   org: MiningLAMP
   role: PMC 
 - name: Dong Li (李栋)
-  apacheId: 
-  githubId: 
+  apacheId: lidong 
+  githubId: lidongsjtu
   org: eBay
   role: committer   
 - name: Xiaoyu Wang (王晓雨)
-  apacheId: 
+  apacheId: wangxiaoyu
   githubId: 
   org: JD.com
-  role: committer 
-- name: Dong Li (李栋)
-  apacheId: 
-  githubId: lidongsjtu
-  org: eBay
   role: committer 
 - name: Yerui Sun (孙叶锐)
   apacheId: sunyerui
