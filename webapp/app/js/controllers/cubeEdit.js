@@ -123,6 +123,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   //fetch cube info and model info in edit model
   // ~ init
   if ($scope.isEdit = !!$routeParams.cubeName) {
+    $scope.streamingMeta = StreamingModel.createStreamingConfig();
+    $scope.kafkaMeta = StreamingModel.createKafkaConfig();
     CubeDescService.query({cube_name: $routeParams.cubeName}, function (detail) {
       if (detail.length > 0) {
         $scope.cubeMetaFrame = detail[0];
