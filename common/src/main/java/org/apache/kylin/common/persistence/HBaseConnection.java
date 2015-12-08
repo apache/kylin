@@ -58,6 +58,10 @@ public class HBaseConnection {
             }
         });
     }
+    
+    public static void clearCache() {
+        ConnPool.clear();
+    }
 
     public static HConnection get(String url) {
         // find configuration

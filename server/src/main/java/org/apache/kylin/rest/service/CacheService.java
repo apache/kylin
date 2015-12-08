@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
@@ -101,6 +102,7 @@ public class CacheService extends BasicService {
                 RealizationRegistry.clearCache();
                 ProjectManager.clearCache();
                 BasicService.resetOLAPDataSources();
+                HBaseConnection.clearCache();
                 break;
             default:
                 throw new RuntimeException("invalid cacheType:" + cacheType);
