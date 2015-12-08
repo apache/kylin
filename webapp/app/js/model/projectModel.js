@@ -72,9 +72,9 @@ KylinApp.service('ProjectModel', function () {
   }
 
   this.updateProject = function (_new, _old) {
-    for (var i = 0; i < projects.length; i++) {
-      if (projects[i].name === _old) {
-        projects[i].name = _new;
+    for (var i = 0; i < this.projects.length; i++) {
+      if (this.projects[i].name === _old) {
+        this.projects[i].name = _new;
         break;
       }
     }
