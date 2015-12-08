@@ -33,8 +33,8 @@ public class CapabilityResult {
     public int cost;
     
     /**
-     * For info purpose, marker objects to indicate all special features
-     * (dimension-as-measure, topN etc.) that have decided the capability.
+     * Marker objects to indicate all special features
+     * (dimension-as-measure, topN etc.) that have influenced the capability check.
      */
     public List<CapabilityInfluence> influences = Lists.newArrayListWithCapacity(1);
 

@@ -229,7 +229,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     }
 
     @Override
-    public void beforeStorageQuery(MeasureDesc measureDesc, SQLDigest sqlDigest) {
+    public void adjustSqlDigest(MeasureDesc measureDesc, SQLDigest sqlDigest) {
         FunctionDesc topnFunc = measureDesc.getFunction();
         TblColRef topnLiteralCol = getTopNLiteralColumn(topnFunc);
 
@@ -280,6 +280,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             public void reload(Object measureValue) {
                 this.topNCounter = (TopNCounter<ByteArray>) measureValue;
                 this.topNCounterIterator = topNCounter.iterator();
+                this.expectRow = 0;
             }
 
             @Override

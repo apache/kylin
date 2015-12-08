@@ -278,16 +278,12 @@ public class IIInstance extends RootPersistentEntity implements IRealization, IB
 
     @Override
     public CapabilityResult isCapable(SQLDigest digest) {
-        CapabilityResult result = new CapabilityResult();
-        
-        if (!digest.factTable.equalsIgnoreCase(this.getFactTable())) {
-            result.capable = false;
+        CapabilityResult result = IICapabilityChecker.check(this, digest);
+        if (result.capable) {
+            result.cost = getCost(digest);
         } else {
-            result.capable = IICapabilityChecker.check(this, digest);
-            if (result.capable)
-                result.cost = getCost(digest);
+            result.cost = -1;
         }
-        
         return result;
     }
 
