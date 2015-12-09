@@ -302,7 +302,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;
         } else if (func.getMeasureType().getRewriteCalciteAggrFunctionClass() != null) {
-            newAgg = createCustomAggFunction(fieldType, func.getMeasureType().getRewriteCalciteAggrFunctionClass());
+            newAgg = createCustomAggFunction(func.getExpression(), fieldType, func.getMeasureType().getRewriteCalciteAggrFunctionClass());
         }
 
         // rebuild aggregate call
@@ -310,9 +310,9 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         return newAggCall;
     }
 
-    private SqlAggFunction createCustomAggFunction(RelDataType returnType, Class<?> customAggFuncClz) {
+    private SqlAggFunction createCustomAggFunction(String funcName, RelDataType returnType, Class<?> customAggFuncClz) {
         RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
-        SqlIdentifier sqlIdentifier = new SqlIdentifier(customAggFuncClz.getSimpleName(), new SqlParserPos(1, 1));
+        SqlIdentifier sqlIdentifier = new SqlIdentifier(funcName, new SqlParserPos(1, 1));
         AggregateFunction aggFunction = AggregateFunctionImpl.create(customAggFuncClz);
         List<RelDataType> argTypes = new ArrayList<RelDataType>();
         List<SqlTypeFamily> typeFamilies = new ArrayList<SqlTypeFamily>();
