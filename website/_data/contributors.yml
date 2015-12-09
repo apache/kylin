@@ -91,28 +91,28 @@
   org: eBay
   role: PMC
 - name: Dayue Gao (高大月)
-  apacheId: 
+  apacheId: gaodayue
   githubId: gaodayue
   org: Meituan
   role: PMC
 - name: Hua Huang (黄桦)
-  apacheId: 
+  apacheId: hhuang
   githubId: superhua
   org: MiningLAMP
-  role: PMC 
+  role: PMC
 - name: Dong Li (李栋)
-  apacheId: lidong 
+  apacheId: lidong
   githubId: lidongsjtu
   org: eBay
-  role: committer   
+  role: committer
 - name: Xiaoyu Wang (王晓雨)
   apacheId: wangxiaoyu
-  githubId: 
+  githubId: xiaowangyu
   org: JD.com
-  role: committer 
+  role: committer
 - name: Yerui Sun (孙叶锐)
   apacheId: sunyerui
-  githubId: 
+  githubId: sunyerui
   org: Meituan
   role: PMC
 
