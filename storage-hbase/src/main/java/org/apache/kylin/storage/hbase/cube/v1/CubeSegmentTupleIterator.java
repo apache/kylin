@@ -221,7 +221,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         scan.setCacheBlocks(true);
 
         // cache less when there are memory hungry measures
-        if (RowValueDecoder.hasMemHungryMeasures(rowValueDecoders)) {
+        if (RowValueDecoder.hasMemHungryCountDistinct(rowValueDecoders)) {
             scan.setCaching(scan.getCaching() / 10);
         }
     }
