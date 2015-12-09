@@ -65,6 +65,10 @@ public class HBaseConnection {
             }
         });
     }
+    
+    public static void clearConnCache() {
+        ConnPool.clear();
+    }
 
     private static final ThreadLocal<Configuration> hbaseConfig = new ThreadLocal<>();
 

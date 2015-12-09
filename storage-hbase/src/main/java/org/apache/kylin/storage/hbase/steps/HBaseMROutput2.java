@@ -163,7 +163,7 @@ public class HBaseMROutput2 implements IMROutput2 {
             List<Scan> scans = new ArrayList<Scan>();
             for (String htable : new HBaseMRSteps(seg).getMergingHTables()) {
                 Scan scan = new Scan();
-                scan.setCaching(500); // 1 is the default in Scan, which will be bad for MapReduce jobs
+                scan.setCaching(512); // 1 is the default in Scan, which will be bad for MapReduce jobs
                 scan.setCacheBlocks(false); // don't set to true for MR jobs
                 scan.setAttribute(Scan.SCAN_ATTRIBUTES_TABLE_NAME, Bytes.toBytes(htable));
                 scans.add(scan);
