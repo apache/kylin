@@ -511,6 +511,14 @@ public class KylinConfig implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
     }
 
+    public int getHBaseScanCacheRows() {
+        return Integer.parseInt(this.getOptional("kylin.hbase.scan.cache_rows", "1024"));
+    }
+
+    public int getHBaseScanMaxResultSize() {
+        return Integer.parseInt(this.getOptional("kylin.hbase.scan.max_result_size", "" + (5 * 1024 * 1024))); // 5 MB
+    }
+
     public boolean isCubingInMem() {
         return Boolean.parseBoolean(this.getOptional(KYLIN_JOB_CUBING_IN_MEM, "false"));
     }
