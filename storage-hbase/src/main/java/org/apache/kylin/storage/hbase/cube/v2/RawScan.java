@@ -29,13 +29,18 @@ public class RawScan {
     public byte[] endKey;
     public List<Pair<byte[], byte[]>> hbaseColumns;//only contain interested columns
     public List<Pair<byte[], byte[]>> fuzzyKey;
+    public int hbaseCaching;
+    public int hbaseMaxResultSize;
 
-    public RawScan(byte[] startKey, byte[] endKey, List<Pair<byte[], byte[]>> hbaseColumns, List<Pair<byte[], byte[]>> fuzzyKey) {
+    public RawScan(byte[] startKey, byte[] endKey, List<Pair<byte[], byte[]>> hbaseColumns, //
+            List<Pair<byte[], byte[]>> fuzzyKey, int hbaseCaching, int hbaseMaxResultSize) {
 
         this.startKey = startKey;
         this.endKey = endKey;
         this.hbaseColumns = hbaseColumns;
         this.fuzzyKey = fuzzyKey;
+        this.hbaseCaching = hbaseCaching;
+        this.hbaseMaxResultSize = hbaseMaxResultSize;
     }
 
     public String getStartKeyAsString() {

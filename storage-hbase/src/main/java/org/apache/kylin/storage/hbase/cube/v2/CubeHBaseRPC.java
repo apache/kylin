@@ -11,6 +11,7 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
@@ -39,8 +40,6 @@ public abstract class CubeHBaseRPC {
 
     public static final Logger logger = LoggerFactory.getLogger(CubeHBaseRPC.class);
 
-    public static final int SCAN_CACHE = 1024;
-
     final protected CubeSegment cubeSeg;
     final protected Cuboid cuboid;
     final protected GTInfo fullGTInfo;
@@ -60,7 +59,8 @@ public abstract class CubeHBaseRPC {
 
     public static Scan buildScan(RawScan rawScan) {
         Scan scan = new Scan();
-        scan.setCaching(SCAN_CACHE);
+        scan.setCaching(rawScan.hbaseCaching);
+        scan.setMaxResultSize(rawScan.hbaseMaxResultSize);
         scan.setCacheBlocks(true);
         scan.setAttribute(Scan.SCAN_ATTRIBUTES_METRICS_ENABLE, Bytes.toBytes(Boolean.TRUE));
 
@@ -110,11 +110,22 @@ public abstract class CubeHBaseRPC {
         Preconditions.checkState(startKeys.size() == endKeys.size());
         List<Pair<byte[], byte[]>> hbaseFuzzyKeys = translateFuzzyKeys(fuzzyKeys);
 
+        KylinConfig config = cubeSeg.getCubeDesc().getConfig();
+        int hbaseCaching = config.getHBaseScanCacheRows();
+        int hbaseMaxResultSize = config.getHBaseScanMaxResultSize();
+        if (isMemoryHungry(selectedColBlocks))
+            hbaseCaching /= 10;
+        
         for (short i = 0; i < startKeys.size(); ++i) {
-            ret.add(new RawScan(startKeys.get(i), endKeys.get(i), selectedColumns, hbaseFuzzyKeys));
+            ret.add(new RawScan(startKeys.get(i), endKeys.get(i), selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize));
         }
         return ret;
 
+    }
+
+    private boolean isMemoryHungry(ImmutableBitSet selectedColBlocks) {
+        ImmutableBitSet selectColumns = fullGTInfo.selectColumns(selectedColBlocks);
+        return fullGTInfo.getMaxColumnLength(selectColumns) > 1024;
     }
 
     /**
@@ -219,8 +230,8 @@ public abstract class CubeHBaseRPC {
 
     private static List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> convertToHBasePair(List<org.apache.kylin.common.util.Pair<byte[], byte[]>> pairList) {
         List<org.apache.hadoop.hbase.util.Pair<byte[], byte[]>> result = Lists.newArrayList();
-        for (org.apache.kylin.common.util.Pair pair : pairList) {
-            org.apache.hadoop.hbase.util.Pair element = new org.apache.hadoop.hbase.util.Pair(pair.getFirst(), pair.getSecond());
+        for (org.apache.kylin.common.util.Pair<byte[], byte[]> pair : pairList) {
+            org.apache.hadoop.hbase.util.Pair<byte[], byte[]> element = new org.apache.hadoop.hbase.util.Pair<byte[], byte[]>(pair.getFirst(), pair.getSecond());
             result.add(element);
         }
 
