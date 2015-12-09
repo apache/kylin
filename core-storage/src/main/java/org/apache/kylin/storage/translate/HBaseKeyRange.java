@@ -115,7 +115,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
             TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (column.equals(partitionDateColumnRef)) {
-                initPartitionRange(dimRange);
+                initPartitionRange(dimRange, cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateFormat());
             }
         }
 
@@ -130,12 +130,12 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
         this.fuzzyKeys = buildFuzzyKeys(fuzzyValues);
     }
 
-    private void initPartitionRange(ColumnValueRange dimRange) {
+    private void initPartitionRange(ColumnValueRange dimRange, String partitionDateFormat) {
         if (null != dimRange.getBeginValue()) {
-            this.partitionColumnStartDate = DateFormat.stringToMillis(dimRange.getBeginValue());
+            this.partitionColumnStartDate = DateFormat.stringToMillis(dimRange.getBeginValue(), partitionDateFormat);
         }
         if (null != dimRange.getEndValue()) {
-            this.partitionColumnEndDate = DateFormat.stringToMillis(dimRange.getEndValue());
+            this.partitionColumnEndDate = DateFormat.stringToMillis(dimRange.getEndValue(), partitionDateFormat);
         }
     }
 
