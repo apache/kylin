@@ -38,6 +38,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -144,7 +145,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         List<RowValueDecoder> valueDecoders = translateAggregation(cubeDesc.getHbaseMapping(), metrics, context);
 
         // memory hungry distinct count are pushed down to coprocessor, no need to set threshold any more
-        // setThreshold(dimensionsD, valueDecoders, context); // set cautious threshold to prevent out of memory
+        setThreshold(dimensionsD, valueDecoders, context); // set cautious threshold to prevent out of memory
         setCoprocessor(groupsCopD, valueDecoders, context); // enable coprocessor if beneficial
         setLimit(filter, context);
 
@@ -484,7 +485,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
             Collection<ColumnValueRange> andRanges = translateToAndDimRanges(andFilter.getChildren(), cubeSegment);
 
-            result.add(andRanges);
+            if (andRanges != null) {
+                result.add(andRanges);
+            }
         }
 
         return preprocessConstantConditions(result);
@@ -687,8 +690,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             short cuboidShardNum = segment.getCuboidShardNum(scan.getCuboid().getId());
             short cuboidShardBase = segment.getCuboidBaseShard(scan.getCuboid().getId());
             for (short i = 0; i < cuboidShardNum; ++i) {
-                byte[] newStartKey = duplicateKeyAndChangeShard(i, startKey);
-                byte[] newStopKey = duplicateKeyAndChangeShard(i, stopKey);
+                short newShard = ShardingHash.normalize(cuboidShardBase, i, segment.getTotalShards());
+                byte[] newStartKey = duplicateKeyAndChangeShard(newShard, startKey);
+                byte[] newStopKey = duplicateKeyAndChangeShard(newShard, stopKey);
                 HBaseKeyRange newRange = new HBaseKeyRange(segment, scan.getCuboid(), newStartKey, newStopKey, //
                         scan.getFuzzyKeys(), scan.getFlatOrAndFilter(), scan.getPartitionColumnStartDate(), scan.getPartitionColumnEndDate());
                 ret.add(newRange);
@@ -756,5 +760,5 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             measureType.adjustSqlDigest(measure, sqlDigest);
         }
     }
-    
+
 }

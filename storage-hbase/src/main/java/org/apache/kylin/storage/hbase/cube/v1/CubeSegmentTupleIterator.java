@@ -40,6 +40,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
@@ -83,6 +84,10 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     protected Tuple next;
     protected final Cuboid cuboid;
 
+    private List<MeasureType.IAdvMeasureFiller> advMeasureFillers;
+    private int advMeasureRowsRemaining;
+    private int advMeasureRowIndex;
+
     public CubeSegmentTupleIterator(CubeSegment cubeSeg, List<HBaseKeyRange> keyRanges, HConnection conn, //
             Set<TblColRef> dimensions, TupleFilter filter, Set<TblColRef> groupBy, //
             List<RowValueDecoder> rowValueDecoders, StorageContext context, TupleInfo returnTupleInfo) {
@@ -115,6 +120,17 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         if (next != null)
             return true;
 
+        // consume any left rows from advanced measure filler
+        if (advMeasureRowsRemaining > 0) {
+            for (MeasureType.IAdvMeasureFiller filler : advMeasureFillers) {
+                filler.fillTuplle(oneTuple, advMeasureRowIndex);
+            }
+            advMeasureRowIndex++;
+            advMeasureRowsRemaining--;
+            next = oneTuple;
+            return true;
+        }
+
         if (resultIterator == null) {
             if (rangeIterator.hasNext() == false)
                 return false;
@@ -132,9 +148,30 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         scanCount++;
         if (++scanCountDelta >= 1000)
             flushScanCountDelta();
-        tupleConverter.translateResult(result, oneTuple);
-        next = oneTuple;
-        return true;
+
+        // translate into tuple
+        advMeasureFillers = tupleConverter.translateResult(result, oneTuple);
+
+        // the simple case
+        if (advMeasureFillers == null) {
+            next = oneTuple;
+            return true;
+        }
+
+        // advanced measure filling, like TopN, will produce multiple tuples out of one record
+        advMeasureRowsRemaining = -1;
+        for (MeasureType.IAdvMeasureFiller filler : advMeasureFillers) {
+            if (advMeasureRowsRemaining < 0)
+                advMeasureRowsRemaining = filler.getNumOfRows();
+            if (advMeasureRowsRemaining != filler.getNumOfRows())
+                throw new IllegalStateException();
+        }
+        if (advMeasureRowsRemaining < 0)
+            throw new IllegalStateException();
+
+        advMeasureRowIndex = 0;
+        return hasNext();
+
     }
 
     @Override

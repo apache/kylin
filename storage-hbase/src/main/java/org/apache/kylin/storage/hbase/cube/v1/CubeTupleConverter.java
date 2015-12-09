@@ -8,12 +8,15 @@ import java.util.Map.Entry;
 
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowKeyDecoder;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -22,6 +25,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class CubeTupleConverter {
 
@@ -30,10 +34,15 @@ public class CubeTupleConverter {
     final TupleInfo tupleInfo;
     final RowKeyDecoder rowKeyDecoder;
     final List<RowValueDecoder> rowValueDecoders;
-    final List<IDerivedColumnFiller> derivedColFillers; 
+    final List<IDerivedColumnFiller> derivedColFillers;
     final int[] dimensionTupleIdx;
     final int[][] metricsMeasureIdx;
     final int[][] metricsTupleIdx;
+
+    final List<MeasureType<?>> measureTypes;
+
+    final List<MeasureType.IAdvMeasureFiller> advMeasureFillers;
+    final List<Pair<Integer, Integer>> advMeasureIndexInRV;//first=> which rowValueDecoders,second => metric index
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, List<RowValueDecoder> rowValueDecoders, TupleInfo tupleInfo) {
         this.cubeSeg = cubeSeg;
@@ -42,16 +51,20 @@ public class CubeTupleConverter {
         this.rowKeyDecoder = new RowKeyDecoder(this.cubeSeg);
         this.rowValueDecoders = rowValueDecoders;
         this.derivedColFillers = Lists.newArrayList();
-        
+
         List<TblColRef> dimCols = cuboid.getColumns();
+
+        measureTypes = Lists.newArrayList();
+        advMeasureFillers = Lists.newArrayListWithCapacity(1);
+        advMeasureIndexInRV = Lists.newArrayListWithCapacity(1);
 
         // pre-calculate dimension index mapping to tuple
         dimensionTupleIdx = new int[dimCols.size()];
         for (int i = 0; i < dimCols.size(); i++) {
             TblColRef col = dimCols.get(i);
             dimensionTupleIdx[i] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
+            measureTypes.add(null);
         }
-        
 
         // pre-calculate metrics index mapping to tuple
         metricsMeasureIdx = new int[rowValueDecoders.size()][];
@@ -64,7 +77,7 @@ public class CubeTupleConverter {
             metricsTupleIdx[i] = new int[selectedMeasures.cardinality()];
             for (int j = 0, mi = selectedMeasures.nextSetBit(0); j < metricsMeasureIdx[i].length; j++, mi = selectedMeasures.nextSetBit(mi + 1)) {
                 FunctionDesc aggrFunc = measures[mi].getFunction();
-                
+
                 int tupleIdx;
                 // a rewrite metrics is identified by its rewrite field name
                 if (aggrFunc.needRewrite()) {
@@ -78,6 +91,16 @@ public class CubeTupleConverter {
                 }
                 metricsMeasureIdx[i][j] = mi;
                 metricsTupleIdx[i][j] = tupleIdx;
+
+                MeasureType<?> measureType = aggrFunc.getMeasureType();
+                if (measureType.needAdvancedTupleFilling()) {
+                    Map<TblColRef, Dictionary<String>> dictionaryMap = buildDictionaryMap(measureType.getColumnsNeedDictionary(aggrFunc));
+                    advMeasureFillers.add(measureType.getAdvancedTupleFiller(aggrFunc, tupleInfo, dictionaryMap));
+                    advMeasureIndexInRV.add(Pair.newPair(i, mi));
+                    measureTypes.add(null);
+                } else {
+                    measureTypes.add(measureType);
+                }
             }
         }
 
@@ -94,7 +117,16 @@ public class CubeTupleConverter {
         }
     }
 
-    public void translateResult(Result hbaseRow, Tuple tuple) {
+    // load only needed dictionaries
+    private Map<TblColRef, Dictionary<String>> buildDictionaryMap(List<TblColRef> columnsNeedDictionary) {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
+        for (TblColRef col : columnsNeedDictionary) {
+            result.put(col, cubeSeg.getDictionary(col));
+        }
+        return result;
+    }
+
+    public List<MeasureType.IAdvMeasureFiller> translateResult(Result hbaseRow, Tuple tuple) {
         try {
             byte[] rowkey = hbaseRow.getRow();
             rowKeyDecoder.decode(rowkey);
@@ -125,8 +157,22 @@ public class CubeTupleConverter {
             int[] measureIdx = metricsMeasureIdx[i];
             int[] tupleIdx = metricsTupleIdx[i];
             for (int j = 0; j < measureIdx.length; j++) {
-                tuple.setMeasureValue(tupleIdx[j], measureValues[measureIdx[j]]);
+                if (measureTypes.get(dimensionValues.size() + j) != null) {
+                    tuple.setMeasureValue(tupleIdx[j], measureValues[measureIdx[j]]);
+                }
             }
+        }
+
+        // advanced measure filling, due to possible row split, will complete at caller side
+        if (advMeasureFillers.isEmpty()) {
+            return null;
+        } else {
+            for (int i = 0; i < advMeasureFillers.size(); i++) {
+                Pair<Integer, Integer> metricLocation = advMeasureIndexInRV.get(i);
+                Object measureValue = rowValueDecoders.get(metricLocation.getFirst()).getValues()[metricLocation.getSecond()];
+                advMeasureFillers.get(i).reload(measureValue);
+            }
+            return advMeasureFillers;
         }
     }
 
