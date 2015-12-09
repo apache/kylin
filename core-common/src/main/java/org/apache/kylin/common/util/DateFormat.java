@@ -85,9 +85,15 @@ public class DateFormat {
     }
 
     public static long stringToMillis(String str) {
+        return stringToMillis(str, DEFAULT_DATE_PATTERN);
+    }
+
+    public static long stringToMillis(String str, String partitionDateFormat) {
         if (isAllDigits(str)) {
             return Long.parseLong(str);
-        } else if (str.length() == 10) {
+        } else if (str.length() == 8 && partitionDateFormat.length() == 8) {
+            return stringToDate(str, partitionDateFormat).getTime();
+        } else if (str.length() == 10 && partitionDateFormat.length() == 10) {
             return stringToDate(str, DEFAULT_DATE_PATTERN).getTime();
         } else if (str.length() == 19) {
             return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).getTime();
