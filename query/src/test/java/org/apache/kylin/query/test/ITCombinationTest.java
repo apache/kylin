@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -41,6 +42,7 @@ public class ITCombinationTest extends ITKylinQueryTest {
     @AfterClass
     public static void tearDown() {
         clean();
+        HBaseStorage.overwriteStorageQuery = null;
     }
 
     /**
@@ -51,10 +53,10 @@ public class ITCombinationTest extends ITKylinQueryTest {
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
         //       return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
-        return Arrays.asList(new Object[][] { { "inner", "on" }, { "left", "on" } });
+        return Arrays.asList(new Object[][] { { "inner", "on", "v2" }, { "left", "on", "v1" }, { "left", "on", "v2" } });
     }
 
-    public ITCombinationTest(String joinType, String coprocessorToggle) throws Exception {
+    public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine) throws Exception {
 
         ITKylinQueryTest.clean();
 
@@ -67,6 +69,10 @@ public class ITCombinationTest extends ITKylinQueryTest {
             ObserverEnabler.forceCoprocessorOff();
         } else if (coprocessorToggle.equals("unset")) {
             // unset
+        }
+
+        if ("v1".equalsIgnoreCase(queryEngine)) {
+            HBaseStorage.overwriteStorageQuery = HBaseStorage.v1CubeStorageQuery;
         }
     }
 }

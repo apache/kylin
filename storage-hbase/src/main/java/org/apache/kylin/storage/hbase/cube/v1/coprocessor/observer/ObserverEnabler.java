@@ -38,8 +38,8 @@ import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
-import org.apache.kylin.storage.hbase.common.coprocessor.FilterDecorator;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
+import org.apache.kylin.storage.hbase.common.coprocessor.FilterDecorator;
 import org.apache.kylin.storage.hbase.cube.v1.RegionScannerAdapter;
 import org.apache.kylin.storage.hbase.cube.v1.ResultScannerAdapter;
 import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
@@ -62,7 +62,7 @@ public class ObserverEnabler {
     public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid, TupleFilter tupleFiler, //
             Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context, HTableInterface table, Scan scan) throws IOException {
 
-        if (context.isCoprocessorEnabled() == false) {
+        if (true) {
             return table.getScanner(scan);
         }
 
@@ -119,10 +119,10 @@ public class ObserverEnabler {
             return r;
         }
 
-        //        if (RowValueDecoder.hasMemHungryCountDistinct(rowValueDecoders)) {
-        //            logger.info("Coprocessor is disabled because there is memory hungry count distinct");
-        //            return false;
-        //        }
+        if (RowValueDecoder.hasMemHungryMeasures(rowValueDecoders)) {
+            logger.info("Coprocessor is disabled because there is memory hungry count distinct");
+            return false;
+        }
 
         if (context.isExactAggregation()) {
             logger.info("Coprocessor is disabled because exactAggregation is true");

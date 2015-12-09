@@ -340,6 +340,39 @@ public class KylinTestBase {
         }
     }
 
+    protected void execAndCompResultSize(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
+        printInfo("---------- test folder: " + queryFolder);
+        Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
+
+        List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
+        for (File sqlFile : sqlFiles) {
+            String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
+            if (exclusiveSet.contains(queryName)) {
+                continue;
+            }
+            String sql = getTextFromFile(sqlFile);
+
+            // execute Kylin
+            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
+
+            // execute H2
+            printInfo("Query Result from H2 - " + queryName);
+            H2Connection h2Conn = new H2Connection(h2Connection, null);
+            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
+            ITable h2Table = executeQuery(h2Conn, queryName, sql, needSort);
+
+            // compare the result
+            Assert.assertEquals(h2Table.getRowCount(), kylinTable.getRowCount());
+
+            compQueryCount++;
+            if (kylinTable.getRowCount() == 0) {
+                zeroResultQueries.add(sql);
+            }
+        }
+    }
+
     protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
         printInfo("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);

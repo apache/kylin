@@ -89,7 +89,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
         TupleFilter filterD = translateDerived(filter, groupsD);
 
+        //actually even if the threshold is set, it will not be used in this query engine
         setThreshold(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
+        
         setLimit(filter, context);
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();

@@ -31,8 +31,8 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
-import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
+import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.junit.AfterClass;
@@ -95,7 +95,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/temp/query01.sql";
+        String queryFileName = "src/test/resources/query/sql_tableau/query20.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
@@ -107,7 +107,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleExecuteQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql/query58.sql";
+        String queryFileName = "src/test/resources/query/sql_tableau/query20.sql";
 
         File sqlFile = new File(queryFileName);
         String sql = getTextFromFile(sqlFile);
@@ -168,7 +168,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testTableauQuery() throws Exception {
-        batchExecuteQuery("src/test/resources/query/sql_tableau");
+        execAndCompResultSize("src/test/resources/query/sql_tableau", null, true);
     }
 
     @Test
