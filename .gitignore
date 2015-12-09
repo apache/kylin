@@ -85,3 +85,5 @@ webapp/app/components/*
 
 ebay*
 build/commit_SHA1
+dist/
+tomcat/
