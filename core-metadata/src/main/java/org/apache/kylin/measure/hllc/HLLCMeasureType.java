@@ -117,8 +117,7 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
 
     @Override
     public Class<?> getRewriteCalciteAggrFunctionClass() {
-        // TODO Auto-generated method stub
-        return null;
+        return HLLDistinctCountAggFunc.class;
     }
 
     public static boolean isCountDistinct(FunctionDesc func) {
