@@ -87,6 +87,14 @@ public class GTInfo {
         return max;
     }
 
+    public ImmutableBitSet selectColumns(ImmutableBitSet selectedColBlocks) {
+        ImmutableBitSet result = ImmutableBitSet.EMPTY;
+        for (int i = 0; i < selectedColBlocks.trueBitCount(); i++) {
+            result = result.or(colBlocks[selectedColBlocks.trueBitAt(i)]);
+        }
+        return result;
+    }
+    
     public ImmutableBitSet selectColumnBlocks(ImmutableBitSet columns) {
         if (columns == null)
             columns = colAll;

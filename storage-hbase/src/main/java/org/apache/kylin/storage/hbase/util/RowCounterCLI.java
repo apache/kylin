@@ -45,7 +45,7 @@ public class RowCounterCLI {
         Configuration conf = HBaseConfiguration.create();
 
         Scan scan = new Scan();
-        scan.setCaching(1024);
+        scan.setCaching(512);
         scan.setCacheBlocks(true);
         scan.setStartRow(startKey);
         scan.setStopRow(endKey);
