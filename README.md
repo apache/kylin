@@ -16,7 +16,7 @@ Get Help
 The fastest way to get response from our developers is to send email to our mail list <dev@kylin.apache.org>,   
 and remember to subscribe our mail list via <dev-subscribe@kylin.apache.org>
 
-Licnese
+License
 ============
 Please refer to [LICENSE](https://github.com/apache/kylin/blob/master/LICENSE) file.
 
