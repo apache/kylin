@@ -6,23 +6,30 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 package org.apache.kylin.query.routing;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
+import org.apache.kylin.metadata.realization.CapabilityResult.DimensionAsMeasure;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,22 +46,54 @@ public class QueryRouter {
     public static IRealization selectRealization(OLAPContext olapContext) throws NoRealizationFoundException {
 
         ProjectManager prjMgr = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
+        logger.info("The project manager's reference is " + prjMgr);
         String factTableName = olapContext.firstTableScan.getTableName();
         String projectName = olapContext.olapSchema.getProjectName();
-        List<IRealization> realizations = Lists.newArrayList(prjMgr.getRealizationsByTable(projectName, factTableName));
-        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : " + StringUtils.join(realizations, ","));
+        Set<IRealization> realizations = prjMgr.getRealizationsByTable(projectName, factTableName);
+        SQLDigest sqlDigest = olapContext.getSQLDigest();
 
-        //rule based realization selection, rules might reorder realizations or remove specific realization
-        RoutingRule.applyRules(realizations, olapContext);
-
-        if (realizations.size() == 0) {
-            throw new NoRealizationFoundException("Can't find any realization. Please confirm with providers. SQL digest: " + olapContext.getSQLDigest().toString());
+        List<Candidate> candidates = Lists.newArrayListWithCapacity(realizations.size());
+        for (IRealization real : realizations) {
+            if (real.isReady())
+                candidates.add(new Candidate(real, sqlDigest));
         }
 
-        logger.info("The realizations remaining: ");
-        logger.info(RoutingRule.getPrintableText(realizations));
-        logger.info("The realization being chosen: " + realizations.get(0).getName());
+        logger.info("Find candidates by table " + factTableName + " and project=" + projectName + " : " + StringUtils.join(candidates, ","));
 
-        return realizations.get(0);
+        // rule based realization selection, rules might reorder realizations or remove specific realization
+        RoutingRule.applyRules(candidates);
+
+        if (candidates.size() == 0) {
+            throw new NoRealizationFoundException("Can't find any realization. Please confirm with providers. SQL digest: " + sqlDigest.toString());
+        }
+
+        Candidate chosen = candidates.get(0);
+        adjustForDimensionAsMeasure(chosen, olapContext);
+
+        logger.info("The realizations remaining: ");
+        logger.info(RoutingRule.getPrintableText(candidates));
+        logger.info("The realization being chosen: " + chosen.realization.getName());
+
+        return chosen.realization;
     }
+
+    private static void adjustForDimensionAsMeasure(Candidate chosen, OLAPContext olapContext) {
+        CapabilityResult capability = chosen.getCapability();
+        for (CapabilityInfluence inf : capability.influences) {
+            // convert the metric to dimension
+            if (inf instanceof DimensionAsMeasure) {
+                FunctionDesc functionDesc = ((DimensionAsMeasure) inf).getMeasureFunction();
+                functionDesc.setDimensionAsMetric(true);
+                olapContext.rewriteFields.remove(functionDesc.getRewriteFieldName());
+                for (TblColRef col : functionDesc.getParameter().getColRefs()) {
+                    if (col != null) {
+                        olapContext.metricsColumns.remove(col);
+                        olapContext.groupByColumns.add(col);
+                    }
+                }
+                logger.info("Adjust DimensionAsMeasure for " + functionDesc);
+            }
+        }
+    }
+
 }

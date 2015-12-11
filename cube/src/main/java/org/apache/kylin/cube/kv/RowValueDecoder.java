@@ -25,11 +25,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
@@ -80,14 +78,19 @@ public class RowValueDecoder implements Cloneable {
         for (int i = 0; i < mapredObjs.length; i++) {
             Object o = mapredObjs[i];
 
+            //            if (o instanceof LongWritable)
+            //                o = ((LongWritable) o).get();
+            //            else if (o instanceof IntWritable)
+            //                o = ((IntWritable) o).get();
+            //            else if (o instanceof DoubleWritable)
+            //                o = ((DoubleWritable) o).get();
+            //            else if (o instanceof FloatWritable)
+            //                o = ((FloatWritable) o).get();
+
             if (o instanceof LongWritable)
                 o = ((LongWritable) o).get();
-            else if (o instanceof IntWritable)
-                o = ((IntWritable) o).get();
             else if (o instanceof DoubleWritable)
                 o = ((DoubleWritable) o).get();
-            else if (o instanceof FloatWritable)
-                o = ((FloatWritable) o).get();
 
             results[i] = o;
         }
@@ -117,22 +120,20 @@ public class RowValueDecoder implements Cloneable {
         return measures;
     }
 
-    public boolean hasMemHungryCountDistinct() {
+    public boolean hasMemHungryMeasures() {
         for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
             FunctionDesc func = measures[i].getFunction();
-            if (func.isCountDistinct() && !func.isHolisticCountDistinct()) {
+            if (func.getMeasureType().isMemoryHungry())
                 return true;
-            }
         }
         return false;
     }
 
-    public static boolean hasMemHungryCountDistinct(Collection<RowValueDecoder> rowValueDecoders) {
+    public static boolean hasMemHungryMeasures(Collection<RowValueDecoder> rowValueDecoders) {
         for (RowValueDecoder decoder : rowValueDecoders) {
-            if (decoder.hasMemHungryCountDistinct())
+            if (decoder.hasMemHungryMeasures())
                 return true;
         }
         return false;
     }
-
 }

@@ -117,7 +117,7 @@ public class ObserverEnabler {
             return r;
         }
 
-        if (RowValueDecoder.hasMemHungryCountDistinct(rowValueDecoders)) {
+        if (RowValueDecoder.hasMemHungryMeasures(rowValueDecoders)) {
             logger.info("Coprocessor is disabled because there is memory hungry count distinct");
             return false;
         }

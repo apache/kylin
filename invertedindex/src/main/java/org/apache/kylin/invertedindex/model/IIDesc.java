@@ -207,6 +207,10 @@ public class IIDesc extends RootPersistentEntity {
         p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
         f1.setParameter(p1);
         f1.setReturnType(returnType);
+        if (f1.isSum() && f1.getReturnDataType().isIntegerFamily()) {
+            f1.setReturnType("bigint");
+        }
+        
         measureDesc.setFunction(f1);
         return measureDesc;
     }

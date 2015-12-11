@@ -25,14 +25,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
@@ -94,7 +92,11 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
             } else if (StringUtils.equals(FunctionDesc.PARAMTER_TYPE_CONSTANT, type)) {
                 validateCostantParameter(context, cube, value);
             }
-            validateReturnType(context, cube, func);
+            try {
+                func.getMeasureType().validate(func);
+            } catch (IllegalArgumentException ex) {
+                context.addResult(ResultLevel.ERROR, ex.getMessage());
+            }
 
             if (func.isCount())
                 countFuncs.add(func);
@@ -103,31 +105,6 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
         if (countFuncs.size() != 1) {
             context.addResult(ResultLevel.ERROR, "Must define one and only one count(1) function, but there are " + countFuncs.size() + " -- " + countFuncs);
         }
-    }
-
-    private void validateReturnType(ValidateContext context, CubeDesc cube, FunctionDesc funcDesc) {
-
-        String func = funcDesc.getExpression();
-        DataType rtype = funcDesc.getReturnDataType();
-
-        if (funcDesc.isCount()) {
-            if (rtype.isIntegerFamily() == false) {
-                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of " + DataType.INTEGER_FAMILY);
-            }
-        } else if (funcDesc.isCountDistinct()) {
-            if (rtype.isHLLC() == false && funcDesc.isHolisticCountDistinct() == false) {
-                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be hllc(10), hllc(12) etc.");
-            }
-        } else if (funcDesc.isMax() || funcDesc.isMin() || funcDesc.isSum()) {
-            if (rtype.isNumberFamily() == false) {
-                context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of " + DataType.NUMBER_FAMILY);
-            }
-        } else {
-            if (StringUtils.equalsIgnoreCase(KylinConfig.getInstanceFromEnv().getProperty(KEY_IGNORE_UNKNOWN_FUNC, "false"), "false")) {
-                context.addResult(ResultLevel.ERROR, "Unrecognized function: [" + func + "]");
-            }
-        }
-
     }
 
     /**

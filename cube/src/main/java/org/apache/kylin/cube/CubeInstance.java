@@ -28,6 +28,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -321,12 +322,20 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
     }
 
     @Override
-    public boolean isCapable(SQLDigest digest) {
-        return CubeCapabilityChecker.check(this, digest, true);
+    public CapabilityResult isCapable(SQLDigest digest) {
+        CapabilityResult result = CubeCapabilityChecker.check(this, digest);
+        if (result.capable) {
+            result.cost = getCost(digest);
+            for (CapabilityResult.CapabilityInfluence i : result.influences) {
+                result.cost *= (i.suggestCostMultiplier() == 0) ? 1.0 : i.suggestCostMultiplier();
+            }
+        } else {
+            result.cost = -1;
+        }
+        return result;
     }
 
-    @Override
-    public int getCost(SQLDigest digest) {
+    private int getCost(SQLDigest digest) {
         return cost;
     }
 
@@ -351,9 +360,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     public boolean needAutoMerge() {
         if (!this.getDescriptor().getModel().getPartitionDesc().isPartitioned())
-            return false;
-
-        if (this.getDescriptor().hasHolisticCountDistinctMeasures())
             return false;
 
         return this.getDescriptor().getAutoMergeTimeRanges() != null && this.getDescriptor().getAutoMergeTimeRanges().length > 0;

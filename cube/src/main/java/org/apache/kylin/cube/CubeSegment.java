@@ -24,8 +24,9 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.ISegment;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -261,9 +262,18 @@ public class CubeSegment implements Comparable<CubeSegment>, ISegment {
     }
 
     @Override
-    public Dictionary<?> getDictionary(TblColRef col) {
+    public Dictionary<String> getDictionary(TblColRef col) {
         return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, col);
     }
+
+    public Map<TblColRef, Dictionary<String>> buildDictionaryMap() {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
+        for (TblColRef col : getCubeDesc().getAllColumnsNeedDictionary()) {
+            result.put(col, (Dictionary<String>) getDictionary(col));
+        }
+        return result;
+    }
+
 
     public void validate() {
         if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned() && dateRangeStart >= dateRangeEnd)

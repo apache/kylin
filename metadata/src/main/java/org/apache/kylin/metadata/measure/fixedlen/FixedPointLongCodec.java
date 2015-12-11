@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 
 public class FixedPointLongCodec extends FixedLenMeasureCodec<LongWritable> {
 

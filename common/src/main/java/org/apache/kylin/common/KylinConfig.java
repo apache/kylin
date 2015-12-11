@@ -45,7 +45,7 @@ import com.google.common.collect.Sets;
  * @author yangli9
  */
 public class KylinConfig {
-    
+
     /*
      * NO NEED TO DEFINE PUBLIC CONSTANTS FOR KEY NAMES!
      * 
@@ -272,7 +272,7 @@ public class KylinConfig {
     // ============================================================================
 
     public boolean isHiveReroutingEnabled() {
-	return Boolean.parseBoolean(getOptional("kylin.route.hive.enabled", "false")); 
+        return Boolean.parseBoolean(getOptional("kylin.route.hive.enabled", "false"));
     }
 
     public String getHiveRerouteUrl() {
@@ -336,7 +336,7 @@ public class KylinConfig {
         }
         return getFileName(kylinHome + File.separator + "lib", JOB_JAR_NAME_PATTERN);
     }
-    
+
     public String getKylinJobMRLibDir() {
         return getOptional("kylin.job.mr.lib.dir", "");
     }
@@ -499,7 +499,7 @@ public class KylinConfig {
     public int getHBaseKeyValueSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
     }
-    
+
     public int getHBaseScanCacheRows() {
         return Integer.parseInt(this.getOptional("kylin.hbase.scan.cache_rows", "1024"));
     }
@@ -507,7 +507,11 @@ public class KylinConfig {
     public int getHBaseScanMaxResultSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.scan.max_result_size", "" + (5 * 1024 * 1024))); // 5 MB
     }
-    
+
+    public boolean isQueryIgnoreUnknownFunction() {
+        return Boolean.parseBoolean(this.getOptional("kylin.query.ignore_unknown_function", "false"));
+    }
+
     public String getHbaseDefaultCompressionCodec() {
         return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC, "");
 
@@ -704,26 +708,26 @@ public class KylinConfig {
     public int getHBaseRegionCountMax() {
         return Integer.parseInt(getOptional(HBASE_REGION_COUNT_MAX, "500"));
     }
-    
+
     public int getHBaseRegionCut(String capacity) {
         String cut;
         switch (capacity) {
-            case "SMALL":
-                cut = getProperty(HBASE_REGION_CUT_SMALL, "10");
-                break;
-            case "MEDIUM":
-                cut = getProperty(HBASE_REGION_CUT_MEDIUM, "20");
-                break;
-            case "LARGE":
-                cut = getProperty(HBASE_REGION_CUT_LARGE, "100");
-                break;
-            default:
-                throw new IllegalArgumentException("Capacity not recognized: " + capacity);
+        case "SMALL":
+            cut = getProperty(HBASE_REGION_CUT_SMALL, "10");
+            break;
+        case "MEDIUM":
+            cut = getProperty(HBASE_REGION_CUT_MEDIUM, "20");
+            break;
+        case "LARGE":
+            cut = getProperty(HBASE_REGION_CUT_LARGE, "100");
+            break;
+        default:
+            throw new IllegalArgumentException("Capacity not recognized: " + capacity);
         }
 
         return Integer.valueOf(cut);
     }
-    
+
     public String getProperty(String key, String defaultValue) {
         return kylinConfig.getString(key, defaultValue);
     }

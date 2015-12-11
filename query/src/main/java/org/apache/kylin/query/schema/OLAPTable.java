@@ -175,7 +175,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
                 metFields.add(fieldName);
                 ColumnDesc fakeCountCol = new ColumnDesc();
                 fakeCountCol.setName(fieldName);
-                fakeCountCol.setDatatype(func.getSQLType().toString());
+                fakeCountCol.setDatatype(func.getRewriteFieldType().toString());
                 if (func.isCount())
                     fakeCountCol.setNullable(false);
                 fakeCountCol.init(sourceTable);
@@ -188,11 +188,11 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         HashSet<ColumnDesc> updateColumns = Sets.newHashSet();
         for (MeasureDesc m : mgr.listEffectiveMeasures(olapSchema.getProjectName(), sourceTable.getIdentity(), false)) {
             if (m.getFunction().isSum()) {
-                FunctionDesc functionDesc = m.getFunction();
-                if (functionDesc.getReturnDataType() != functionDesc.getSQLType() && //
-                        functionDesc.getReturnDataType().isBigInt() && //
-                        functionDesc.getSQLType().isIntegerFamily()) {
-                    updateColumns.add(functionDesc.getParameter().getColRefs().get(0).getColumnDesc());
+                FunctionDesc func = m.getFunction();
+                if (//func.getReturnDataType() != func.getRewriteFieldType() && //
+                func.getReturnDataType().isBigInt() && //
+                        func.getRewriteFieldType().isIntegerFamily()) {
+                    updateColumns.add(func.getParameter().getColRefs().get(0).getColumnDesc());
                 }
             }
         }

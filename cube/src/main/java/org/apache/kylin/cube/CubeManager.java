@@ -36,11 +36,11 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.lookup.HiveTable;
@@ -176,7 +176,7 @@ public class CubeManager implements IRealizationProvider {
     /**
      * return null if no dictionary for given column
      */
-    public Dictionary<?> getDictionary(CubeSegment cubeSeg, TblColRef col) {
+    public Dictionary<String> getDictionary(CubeSegment cubeSeg, TblColRef col) {
         DictionaryInfo info = null;
         try {
             DictionaryManager dictMgr = getDictionaryManager();
@@ -193,7 +193,7 @@ public class CubeManager implements IRealizationProvider {
             throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg + ", col" + col, e);
         }
 
-        return info.getDictionaryObject();
+        return (Dictionary<String>) info.getDictionaryObject();
     }
 
     public SnapshotTable buildSnapshotTable(CubeSegment cubeSeg, String lookupTable) throws IOException {

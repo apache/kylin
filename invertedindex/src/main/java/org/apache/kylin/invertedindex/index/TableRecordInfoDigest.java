@@ -24,7 +24,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
-import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 
 /**
  * Created by honma on 11/10/14.

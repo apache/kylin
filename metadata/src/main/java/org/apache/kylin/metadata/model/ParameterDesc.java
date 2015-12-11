@@ -41,6 +41,8 @@ public class ParameterDesc {
     private String type;
     @JsonProperty("value")
     private String value;
+    @JsonProperty("next_parameter")
+    private ParameterDesc nextParameter;
 
     private List<TblColRef> colRefs;
 
@@ -72,54 +74,49 @@ public class ParameterDesc {
         this.colRefs = colRefs;
     }
 
+    public ParameterDesc getNextParameter() {
+        return nextParameter;
+    }
+
+    public void setNextParameter(ParameterDesc nextParameter) {
+        this.nextParameter = nextParameter;
+    }
+
     public boolean isColumnType() {
         return COLUMN_TYPE.equals(type);
     }
 
-    public void normalizeColumnValue() {
-        if (isColumnType()) {
-            String values[] = value.split("\\s*,\\s*");
-            for (int i = 0; i < values.length; i++)
-                values[i] = values[i].toUpperCase();
-            Arrays.sort(values);
-            value = StringUtils.join(",", values);
-        }
-    }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(Object o) {
+        if (this == o)
             return true;
-        if (obj == null)
+        if (o == null || getClass() != o.getClass())
             return false;
-        if (getClass() != obj.getClass())
+
+        ParameterDesc that = (ParameterDesc) o;
+
+        if (nextParameter != null ? !nextParameter.equals(that.nextParameter) : that.nextParameter != null)
             return false;
-        ParameterDesc other = (ParameterDesc) obj;
-        if (type == null) {
-            if (other.type != null)
-                return false;
-        } else if (!type.equals(other.type))
+        if (type != null ? !type.equals(that.type) : that.type != null)
             return false;
-        if (value == null) {
-            if (other.value != null)
-                return false;
-        } else if (!value.equals(other.value))
+        if (value != null ? !value.equals(that.value) : that.value != null)
             return false;
+
         return true;
     }
 
     @Override
+    public int hashCode() {
+        int result = type != null ? type.hashCode() : 0;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (nextParameter != null ? nextParameter.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
-        return "ParameterDesc [type=" + type + ", value=" + value + "]";
+        return "ParameterDesc [type=" + type + ", value=" + value + ", nextParam=" + nextParameter + "]";
     }
 
 }

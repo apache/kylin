@@ -24,7 +24,7 @@ import java.util.Set;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.ISegment;
 import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer.Decorator;

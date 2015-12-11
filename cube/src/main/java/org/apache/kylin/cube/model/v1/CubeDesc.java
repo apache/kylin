@@ -718,7 +718,6 @@ public class CubeDesc extends RootPersistentEntity {
             f.initReturnDataType();
 
             ParameterDesc p = f.getParameter();
-            p.normalizeColumnValue();
 
             if (p.isColumnType()) {
                 ArrayList<TblColRef> colRefs = Lists.newArrayList();
@@ -801,14 +800,6 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    public boolean hasHolisticCountDistinctMeasures() {
-        for (MeasureDesc measure : measures) {
-            if (measure.getFunction().isHolisticCountDistinct()) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     /**
      * Add error info and thrown exception out

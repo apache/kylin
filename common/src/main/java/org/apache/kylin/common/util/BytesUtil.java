@@ -230,6 +230,8 @@ public class BytesUtil {
         return bytes == null ? null : Bytes.toString(bytes);
     }
 
+    
+    
     public static void writeAsciiString(String str, ByteBuffer out) {
         if (str == null) {
             BytesUtil.writeVInt(-1, out);
@@ -320,6 +322,20 @@ public class BytesUtil {
         return array;
     }
 
+
+    public static int peekByteArrayLength(ByteBuffer in) {
+        int start = in.position();
+        int arrayLen = readVInt(in);
+        int sizeLen = in.position() - start;
+        in.position(start);
+
+        if (arrayLen < 0)
+            return sizeLen;
+        else
+            return sizeLen + arrayLen;
+    }
+
+    
     public static void writeBooleanArray(boolean[] array, ByteBuffer out) {
         if (array == null) {
             writeVInt(-1, out);

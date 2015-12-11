@@ -71,10 +71,6 @@ public class MeasureDesc {
         this.dependentMeasureRef = dependentMeasureRef;
     }
 
-    public boolean isHolisticCountDistinct() {
-        return function.isHolisticCountDistinct();
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o)

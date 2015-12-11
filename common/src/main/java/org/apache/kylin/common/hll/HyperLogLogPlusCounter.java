@@ -6,19 +6,20 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 package org.apache.kylin.common.hll;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -30,13 +31,14 @@ import com.google.common.hash.Hashing;
 
 /**
  * About compression, test on HLLC data shows
- * 
+ *
  * - LZF compression ratio is around 65%-80%, fast
  * - GZIP compression ratio is around 41%-46%, very slow
- * 
+ *
  * @author yangli9
  */
-public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter> {
+@SuppressWarnings("serial")
+public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLogLogPlusCounter> {
 
     private final int p;
     private final int m;
@@ -108,10 +110,6 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
         return new HLLCSnapshot(this).getCountEstimate();
     }
 
-    public int getMemBytes() {
-        return 12 + m;
-    }
-
     public double getErrorRate() {
         return 1.04 / Math.sqrt(m);
     }
@@ -123,6 +121,11 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                 size++;
         }
         return size;
+    }
+
+    @Override
+    public String toString() {
+        return "" + getCountEstimate();
     }
 
     // ============================================================================
@@ -176,7 +179,7 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
 
         // decide output scheme -- map (3*size bytes) or array (2^p bytes)
         byte scheme;
-        if ((indexLen + 1) * size < m)
+        if (5 + (indexLen + 1) * size < m) // 5 is max len of vint
             scheme = 0; // map
         else
             scheme = 1; // array
@@ -186,15 +189,14 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
             BytesUtil.writeVInt(size, out);
             for (int i = 0; i < m; i++) {
                 if (registers[i] > 0) {
-                    BytesUtil.writeUnsigned(i, indexLen, out);
+                    writeUnsigned(i, indexLen, out);
                     out.put(registers[i]);
                 }
             }
-        } else { // array scheme
-            for (int i = 0; i < m; i++) {
-                out.put(registers[i]);
-            }
-        }
+        } else if (scheme == 1) { // array scheme
+            out.put(registers);
+        } else
+            throw new IllegalStateException();
     }
 
     public void readRegisters(ByteBuffer in) throws IOException {
@@ -207,12 +209,34 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
                 throw new IllegalArgumentException("register size (" + size + ") cannot be larger than m (" + m + ")");
             int indexLen = getRegisterIndexSize();
             for (int i = 0; i < size; i++) {
-                int key = BytesUtil.readUnsigned(in, indexLen);
+                int key = readUnsigned(in, indexLen);
                 registers[key] = in.get();
             }
-        } else { // array scheme
+        } else if (scheme == 1) { // array scheme
             in.get(registers);
+        } else
+            throw new IllegalStateException();
+    }
+
+    public int peekLength(ByteBuffer in) {
+        int mark = in.position();
+        int len;
+
+        byte scheme = in.get();
+        if (scheme == 0) { // map scheme
+            int size = BytesUtil.readVInt(in);
+            int indexLen = getRegisterIndexSize();
+            len = in.position() - mark + (indexLen + 1) * size;
+        } else {
+            len = in.position() - mark + m;
         }
+
+        in.position(mark);
+        return len;
+    }
+
+    public int maxLength() {
+        return 1 + m;
     }
 
     public void writeRegistersArray(final ByteBuffer out) {
@@ -287,5 +311,30 @@ public class HyperLogLogPlusCounter implements Comparable<HyperLogLogPlusCounter
             long size = Math.round(Math.pow(2, p));
             System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%" + ",\t99.7% err<" + er3 + "%");
         }
+    }
+
+    /**
+     *
+     * @param num
+     * @param size
+     * @param out
+     */
+    public static void writeUnsigned(int num, int size, ByteBuffer out) {
+        for (int i = 0; i < size; i++) {
+            out.put((byte) num);
+            num >>>= 8;
+        }
+    }
+
+    public static int readUnsigned(ByteBuffer in, int size) {
+        int integer = 0;
+        int mask = 0xff;
+        int shift = 0;
+        for (int i = 0; i < size; i++) {
+            integer |= (in.get() << shift) & mask;
+            mask = mask << 8;
+            shift += 8;
+        }
+        return integer;
     }
 }

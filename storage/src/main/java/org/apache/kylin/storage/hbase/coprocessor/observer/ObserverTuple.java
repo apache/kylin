@@ -21,7 +21,7 @@ package org.apache.kylin.storage.hbase.coprocessor.observer;
 import java.util.List;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorRowType;

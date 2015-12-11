@@ -59,7 +59,6 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.query.sqlfunc.HLLDistinctCountAggFunc;
 
 import com.google.common.base.Preconditions;
 
@@ -74,7 +73,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         AGGR_FUNC_MAP.put("$SUM0", "SUM");
         AGGR_FUNC_MAP.put("COUNT", "COUNT");
         AGGR_FUNC_MAP.put("COUNT_DISTINCT", "COUNT_DISTINCT");
-        AGGR_FUNC_MAP.put("HLL_COUNT", "COUNT_DISTINCT");
         AGGR_FUNC_MAP.put("MAX", "MAX");
         AGGR_FUNC_MAP.put("MIN", "MIN");
     }
@@ -301,10 +299,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         // rebuild function
         RelDataType fieldType = aggCall.getType();
         SqlAggFunction newAgg = aggCall.getAggregation();
-        if (func.isCountDistinct()) {
-            newAgg = createHyperLogLogAggFunction(fieldType);
-        } else if (func.isCount()) {
+        if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;
+        } else if (func.getMeasureType().getRewriteCalciteAggrFunctionClass() != null) {
+            newAgg = createCustomAggFunction(func.getExpression(), fieldType, func.getMeasureType().getRewriteCalciteAggrFunctionClass());
         }
 
         // rebuild aggregate call
@@ -312,10 +310,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         return newAggCall;
     }
 
-    private SqlAggFunction createHyperLogLogAggFunction(RelDataType returnType) {
+    private SqlAggFunction createCustomAggFunction(String funcName, RelDataType returnType, Class<?> customAggFuncClz) {
         RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
-        SqlIdentifier sqlIdentifier = new SqlIdentifier("HLL_COUNT", new SqlParserPos(1, 1));
-        AggregateFunction aggFunction = AggregateFunctionImpl.create(HLLDistinctCountAggFunc.class);
+        SqlIdentifier sqlIdentifier = new SqlIdentifier(funcName, new SqlParserPos(1, 1));
+        AggregateFunction aggFunction = AggregateFunctionImpl.create(customAggFuncClz);
         List<RelDataType> argTypes = new ArrayList<RelDataType>();
         List<SqlTypeFamily> typeFamilies = new ArrayList<SqlTypeFamily>();
         for (FunctionParameter o : aggFunction.getParameters()) {

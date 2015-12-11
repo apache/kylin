@@ -24,8 +24,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
@@ -36,6 +39,8 @@ import org.apache.kylin.job.constant.BatchConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.annotation.Nullable;
 
 public class NDCuboidMapperTest extends LocalFileMetadataTestCase {
     MapReduceDriver<Text, Text, Text, Text, Text, Text> mapReduceDriver;
@@ -81,7 +86,17 @@ public class NDCuboidMapperTest extends LocalFileMetadataTestCase {
         byte[] resultValue = { 14, 7, 23, -16, 56, 92, 114, -80, 118, 14, 7, 23, -16, 56, 92, 114, -80, 118, 14, 7, 23, -16, 56, 92, 114, -80, 118, 1, 1 };
         Pair<Text, Text> output1 = new Pair<Text, Text>(new Text(resultKey), new Text(resultValue));
 
-        assertTrue(result.contains(output1));
+
+        //As we will truncate decimal(KYLIN-766), value will no longer equals to resultValue
+        Collection<Text> keys = Collections2.transform(result, new Function<Pair<Text, Text>, Text>() {
+            @Nullable
+            @Override
+            public Text apply(Pair<Text, Text> input) {
+                return input.getFirst();
+            }
+        });
+        assertTrue(keys.contains(output1.getFirst()));
+        assertTrue(!result.contains(output1));
 
         long[] keySet = new long[result.size()];
 

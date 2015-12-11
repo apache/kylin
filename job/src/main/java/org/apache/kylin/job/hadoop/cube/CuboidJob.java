@@ -161,9 +161,8 @@ public class CuboidJob extends AbstractHadoopJob {
         // number of reduce tasks
         int numReduceTasks = (int) Math.round(totalReduceInputMB / perReduceInputMB * reduceCountRatio);
 
-        // adjust reducer number for cube which has DISTINCT_COUNT measures for
-        // better performance
-        if (cubeDesc.hasHolisticCountDistinctMeasures()) {
+        // adjust reducer number for cube which has DISTINCT_COUNT measures for better performance
+        if (cubeDesc.hasMemoryHungryMeasures()) {
             numReduceTasks = numReduceTasks * 4;
         }
 

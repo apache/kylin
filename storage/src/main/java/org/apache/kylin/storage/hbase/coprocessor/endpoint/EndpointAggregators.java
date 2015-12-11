@@ -29,9 +29,10 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.invertedindex.index.RawTableRecord;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
-import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.measure.MeasureAggregator;
+import org.apache.kylin.measure.hllc.HLLCMeasureType;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.storage.hbase.coprocessor.CoprocessorConstants;
 
@@ -91,7 +92,7 @@ public class EndpointAggregators {
                     throw new IllegalStateException("Column " + functionDesc.getParameter().getValue() + " is not found in II");
                 }
 
-                if (functionDesc.isCountDistinct()) {
+                if (HLLCMeasureType.isCountDistinct(functionDesc)) {
                     metricInfos[i] = new MetricInfo(MetricType.DistinctCount, index, functionDesc.getReturnDataType().getPrecision());
                 } else {
                     metricInfos[i] = new MetricInfo(MetricType.Normal, index);
@@ -143,10 +144,10 @@ public class EndpointAggregators {
         MeasureAggregator[] aggrs = new MeasureAggregator[funcNames.length];
         for (int i = 0; i < aggrs.length; i++) {
             if (metricInfos[i].type == MetricType.DistinctCount) {
-                aggrs[i] = MeasureAggregator.create(funcNames[i], dataTypes[i]);
+                aggrs[i] = MeasureAggregator.create(funcNames[i], DataType.getInstance(dataTypes[i]));
             } else {
                 //all other fixed length measures can be aggregated as long
-                aggrs[i] = MeasureAggregator.create(funcNames[i], "long");
+                aggrs[i] = MeasureAggregator.create(funcNames[i], DataType.getInstance("long"));
             }
         }
         return aggrs;

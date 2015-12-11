@@ -20,6 +20,11 @@ package org.apache.kylin.metadata.model;
 
 import java.util.Collection;
 
+import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.MeasureTypeFactory;
+import org.apache.kylin.measure.basic.BasicMeasureType;
+import org.apache.kylin.metadata.datatype.DataType;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -48,6 +53,7 @@ public class FunctionDesc {
     private String returnType;
 
     private DataType returnDataType;
+    private MeasureType<?> measureType;
     private boolean isDimensionAsMetric = false;
 
     public String getRewriteFieldName() {
@@ -61,8 +67,21 @@ public class FunctionDesc {
         }
     }
 
+    public MeasureType<?> getMeasureType() {
+        if (isDimensionAsMetric)
+            return null;
+
+        if (measureType == null) {
+            measureType = MeasureTypeFactory.create(getExpression(), getReturnDataType());
+        }
+        return measureType;
+    }
+
     public boolean needRewrite() {
-        return !isSum() && !isHolisticCountDistinct() && !isDimensionAsMetric();
+        if (isDimensionAsMetric)
+            return false;
+
+        return getMeasureType().needRewrite();
     }
 
     public boolean isMin() {
@@ -79,18 +98,6 @@ public class FunctionDesc {
 
     public boolean isCount() {
         return FUNC_COUNT.equalsIgnoreCase(expression);
-    }
-
-    public boolean isCountDistinct() {
-        return FUNC_COUNT_DISTINCT.equalsIgnoreCase(expression);
-    }
-
-    public boolean isHolisticCountDistinct() {
-        if (isCountDistinct() && returnDataType != null && returnDataType.isBigInt()) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -130,21 +137,31 @@ public class FunctionDesc {
         this.parameter = parameter;
     }
 
-    public DataType getSQLType() {
-        if (isCountDistinct())
-            return DataType.ANY;
-        else if (isSum() || isMax() || isMin())
+    public DataType getRewriteFieldType() {
+        if (isSum() || isMax() || isMin())
             return parameter.getColRefs().get(0).getType();
-        else
+        else if (getMeasureType() instanceof BasicMeasureType)
             return returnDataType;
+        else
+            return DataType.ANY;
     }
 
     public String getReturnType() {
+
         return returnType;
     }
 
     public DataType getReturnDataType() {
         return returnDataType;
+    }
+
+
+    public int getParameterCount() {
+        int count = 0;
+        for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
+            count++;
+        }
+        return count;
     }
 
     public void setReturnType(String returnType) {

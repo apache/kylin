@@ -18,12 +18,13 @@
 
 package org.apache.kylin.metadata.measure.fixedlen;
 
-import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.measure.hllc.HLLCMeasureType;
+import org.apache.kylin.metadata.datatype.DataType;
 
 abstract public class FixedLenMeasureCodec<T> {
 
     public static FixedLenMeasureCodec<?> get(DataType type) {
-        if (type.isHLLC()) {
+        if (HLLCMeasureType.DATATYPE_HLLC.equals(type.getName())) {
             return new FixedHLLCodec(type);
         } else {
             return new FixedPointLongCodec(type);

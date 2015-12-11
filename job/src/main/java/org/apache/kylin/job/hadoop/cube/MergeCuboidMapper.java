@@ -19,17 +19,22 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -38,10 +43,14 @@ import org.apache.kylin.cube.common.RowKeySplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
+import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureIngester;
+import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -60,6 +69,17 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private CubeSegment sourceCubeSegment;// Must be unique during a mapper's
     // life cycle
 
+
+    // for re-encode measures that use dictionary
+    private List<Pair<Integer, MeasureIngester>> dictMeasures;
+    private Map<TblColRef, Dictionary<String>> oldDicts;
+    private Map<TblColRef, Dictionary<String>> newDicts;
+    private List<MeasureDesc> measureDescs;
+    private MeasureCodec codec;
+    private Object[] measureObjs;
+    private ByteBuffer valueBuf;
+    private Text outputValue;
+    
     private Text outputKey = new Text();
 
     private byte[] newKeyBuf;
@@ -133,6 +153,26 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         System.out.println(sourceCubeSegment);
 
         this.rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
+
+
+        measureDescs = cubeDesc.getMeasures();
+        codec = new MeasureCodec(measureDescs);
+        measureObjs = new Object[measureDescs.size()];
+        valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+        outputValue = new Text();
+
+        dictMeasures = Lists.newArrayList();
+        for (int i = 0; i < measureDescs.size(); i++) {
+            MeasureDesc measureDesc = measureDescs.get(i);
+            MeasureType measureType = measureDesc.getFunction().getMeasureType();
+            if (measureType.getColumnsNeedDictionary(measureDesc.getFunction()).isEmpty() == false) {
+                dictMeasures.add(Pair.newPair(i, measureType.newIngester()));
+            }
+        }
+        if (dictMeasures.size() > 0) {
+            oldDicts = sourceCubeSegment.buildDictionaryMap();
+            newDicts = mergedCubeSegment.buildDictionaryMap();
+        }
     }
 
     @Override
@@ -187,6 +227,21 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         byte[] newKey = Arrays.copyOf(newKeyBuf, bufOffset);
         outputKey.set(newKey, 0, newKey.length);
 
+
+        // re-encode measures if dictionary is used
+        if (dictMeasures.size() > 0) {
+            codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), measureObjs);
+            for (Pair<Integer, MeasureIngester> pair : dictMeasures) {
+                int i = pair.getFirst();
+                MeasureIngester ingester = pair.getSecond();
+                measureObjs[i] = ingester.reEncodeDictionary(measureObjs[i], measureDescs.get(i), oldDicts, newDicts);
+            }
+            valueBuf.clear();
+            codec.encode(measureObjs, valueBuf);
+            outputValue.set(valueBuf.array(), 0, valueBuf.position());
+            value = outputValue;
+        }
+        
         context.write(outputKey, value);
     }
 }

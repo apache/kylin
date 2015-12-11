@@ -169,7 +169,12 @@
         "expression": "COUNT_DISTINCT",
         "parameter": {
           "type": "column",
-          "value": "LSTG_FORMAT_NAME,SELLER_ID"
+          "value": "LSTG_FORMAT_NAME",
+          "next_parameter": {
+            "type": "column",
+            "value": "SELLER_ID",
+            "next_parameter": null
+          }
         },
         "returntype": "hllc(10)"
       },

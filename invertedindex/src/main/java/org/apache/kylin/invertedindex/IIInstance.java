@@ -29,6 +29,7 @@ import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -265,15 +266,16 @@ public class IIInstance extends RootPersistentEntity implements IRealization {
     }
 
     @Override
-    public boolean isCapable(SQLDigest digest) {
-        //TODO: currently II is nearly omnipotent
-        if (!digest.factTable.equalsIgnoreCase(this.getFactTable()))
-            return false;
-
-        return true;
+    public CapabilityResult isCapable(SQLDigest digest) {
+        CapabilityResult result = IICapabilityChecker.check(this, digest);
+        if (result.capable) {
+            result.cost = getCost(digest);
+        } else {
+            result.cost = -1;
+        }
+        return result;
     }
 
-    @Override
     public int getCost(SQLDigest digest) {
         return 0;
     }

@@ -33,7 +33,7 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPTable;
 import org.apache.kylin.storage.hybrid.HybridInstance;
-import org.apache.kylin.storage.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
