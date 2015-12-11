@@ -95,6 +95,12 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
+    protected List<RawResource> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis) throws IOException {
+        //just ignore time filter
+        return getAllResources(rangeStart, rangeEnd);
+    }
+
+    @Override
     protected RawResource getResourceImpl(String resPath) throws IOException {
         File f = file(resPath);
         if (f.exists() && f.isFile()) {

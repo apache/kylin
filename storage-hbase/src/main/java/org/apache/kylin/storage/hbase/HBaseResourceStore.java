@@ -40,7 +40,10 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -173,6 +176,53 @@ public class HBaseResourceStore extends ResourceStore {
             IOUtils.closeQuietly(table);
         }
         return result;
+    }
+
+    @Override
+    protected List<RawResource> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis) throws IOException {
+        byte[] startRow = Bytes.toBytes(rangeStart);
+        byte[] endRow = plusZero(Bytes.toBytes(rangeEnd));
+
+        Scan scan = new Scan(startRow, endRow);
+        scan.addColumn(B_FAMILY, B_COLUMN_TS);
+        scan.addColumn(B_FAMILY, B_COLUMN);
+        scan.setFilter(generateTimeFilterList(timeStartInMillis, timeEndInMillis));
+
+        HTableInterface table = getConnection().getTable(getAllInOneTableName());
+        List<RawResource> result = Lists.newArrayList();
+        try {
+            ResultScanner scanner = table.getScanner(scan);
+            for (Result r : scanner) {
+                result.add(new RawResource(getInputStream(Bytes.toString(r.getRow()), r), getTimestamp(r)));
+            }
+        } catch (IOException e) {
+            for (RawResource rawResource : result) {
+                IOUtils.closeQuietly(rawResource.inputStream);
+            }
+            throw e;
+        } finally {
+            IOUtils.closeQuietly(table);
+        }
+        return result;
+    }
+
+    private FilterList generateTimeFilterList(long timeStartInMillis, long timeEndInMillis) {
+        FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
+        SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(
+                B_FAMILY,
+                B_COLUMN_TS,
+                CompareFilter.CompareOp.GREATER,
+                Bytes.toBytes(timeStartInMillis)
+        );
+        filterList.addFilter(timeStartFilter);
+        SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(
+                B_FAMILY,
+                B_COLUMN_TS,
+                CompareFilter.CompareOp.LESS_OR_EQUAL,
+                Bytes.toBytes(timeEndInMillis)
+        );
+        filterList.addFilter(timeEndFilter);
+        return filterList;
     }
 
     private InputStream getInputStream(String resPath, Result r) throws IOException {

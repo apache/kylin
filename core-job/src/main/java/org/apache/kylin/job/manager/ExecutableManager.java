@@ -148,10 +148,42 @@ public class ExecutableManager {
         }
     }
 
+    public Map<String, Output> getAllOutputs(long timeStartInMillis, long timeEndInMillis) {
+        try {
+            final List<ExecutableOutputPO> jobOutputs = executableDao.getJobOutputs(timeStartInMillis, timeEndInMillis);
+            HashMap<String, Output> result = Maps.newHashMap();
+            for (ExecutableOutputPO jobOutput : jobOutputs) {
+                result.put(jobOutput.getId(), parseOutput(jobOutput));
+            }
+            return result;
+        } catch (PersistentException e) {
+            logger.error("fail to get all job output:", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public List<AbstractExecutable> getAllExecutables() {
         try {
             List<AbstractExecutable> ret = Lists.newArrayList();
             for (ExecutablePO po : executableDao.getJobs()) {
+                try {
+                    AbstractExecutable ae = parseTo(po);
+                    ret.add(ae);
+                } catch (IllegalArgumentException e) {
+                    logger.error("error parsing one executabePO: ", e);
+                }
+            }
+            return ret;
+        } catch (PersistentException e) {
+            logger.error("error get All Jobs", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<AbstractExecutable> getAllExecutables(long timeStartInMillis, long timeEndInMillis) {
+        try {
+            List<AbstractExecutable> ret = Lists.newArrayList();
+            for (ExecutablePO po : executableDao.getJobs(timeStartInMillis, timeEndInMillis)) {
                 try {
                     AbstractExecutable ae = parseTo(po);
                     ret.add(ae);

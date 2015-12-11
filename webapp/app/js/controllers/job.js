@@ -27,6 +27,7 @@ KylinApp
         $scope.cubeName = null;
         //$scope.projects = [];
         $scope.action = {};
+        $scope.timeFilter = jobConfig.timeFilter[1];
 
         $scope.status = [];
         $scope.toggleSelection = function toggleSelection(current) {
@@ -61,7 +62,8 @@ KylinApp
                 projectName: $scope.state.projectName,
                 status: statusIds,
                 offset: offset,
-                limit: limit
+                limit: limit,
+                timeFilter: $scope.timeFilter.value
             };
             $scope.state.loading = true;
 

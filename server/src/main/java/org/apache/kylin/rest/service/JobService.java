@@ -19,11 +19,7 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.cube.CubeInstance;
@@ -38,6 +34,7 @@ import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
+import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -69,6 +66,32 @@ public class JobService extends BasicService {
     @Autowired
     private AccessService accessService;
 
+    public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue, final JobTimeFilterEnum timeFilter) throws IOException, JobException {
+        Integer limit = (null == limitValue) ? 30 : limitValue;
+        Integer offset = (null == offsetValue) ? 0 : offsetValue;
+        List<JobInstance> jobs = listAllJobs(cubeName, projectName, statusList, timeFilter);
+        Collections.sort(jobs);
+
+        if (jobs.size() <= offset) {
+            return Collections.emptyList();
+        }
+
+        if ((jobs.size() - offset) < limit) {
+            return jobs.subList(offset, jobs.size());
+        }
+
+        return jobs.subList(offset, offset + limit);
+    }
+
+    public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+        Calendar calendar= Calendar.getInstance();
+        calendar.setTime(new Date());
+        long currentTimeMillis = calendar.getTimeInMillis();
+        long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
+        return listCubeJobInstance(cubeName, projectName, statusList, timeStartInMillis, currentTimeMillis);
+    }
+
+    @Deprecated
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue) throws IOException, JobException {
         Integer limit = (null == limitValue) ? 30 : limitValue;
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
@@ -90,6 +113,25 @@ public class JobService extends BasicService {
         return listCubeJobInstance(cubeName, projectName, statusList);
     }
 
+    private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList, final long timeStartInMillis, final long timeEndInMillis) {
+        Set<ExecutableState> states;
+        if (statusList == null || statusList.isEmpty()) {
+            states = EnumSet.allOf(ExecutableState.class);
+        } else {
+            states = Sets.newHashSet();
+            for (JobStatusEnum status : statusList) {
+                states.add(parseToExecutableState(status));
+            }
+        }
+        final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs(timeStartInMillis, timeEndInMillis);
+        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, timeStartInMillis, timeEndInMillis, allOutputs)).transform(new Function<CubingJob, JobInstance>() {
+            @Override
+            public JobInstance apply(CubingJob cubingJob) {
+                return parseToJobInstance(cubingJob, allOutputs);
+            }
+        }));
+    }
+
     private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList) {
         Set<ExecutableState> states;
         if (statusList == null || statusList.isEmpty()) {
@@ -107,6 +149,27 @@ public class JobService extends BasicService {
                 return parseToJobInstance(cubingJob, allOutputs);
             }
         }));
+    }
+
+    private long getTimeStartInMillis(Calendar calendar, JobTimeFilterEnum timeFilter) {
+        switch (timeFilter) {
+            case LAST_ONE_DAY:
+                calendar.add(Calendar.DAY_OF_MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_WEEK:
+                calendar.add(Calendar.WEEK_OF_MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_MONTH:
+                calendar.add(Calendar.MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_YEAR:
+                calendar.add(Calendar.YEAR, -1);
+                return calendar.getTimeInMillis();
+            case ALL:
+                return  0;
+            default:
+                throw new RuntimeException("illegal timeFilter for job history:" + timeFilter);
+        }
     }
 
     private ExecutableState parseToExecutableState(JobStatusEnum status) {

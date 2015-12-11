@@ -31,6 +31,7 @@ public class JobListRequest {
     private String projectName;
     private Integer offset;
     private Integer limit;
+    private Integer timeFilter;
 
     public JobListRequest() {
     }
@@ -75,4 +76,11 @@ public class JobListRequest {
         this.limit = limit;
     }
 
+    public Integer getTimeFilter() {
+        return timeFilter;
+    }
+
+    public void setTimeFilter(Integer timeFilter) {
+        this.timeFilter = timeFilter;
+    }
 }

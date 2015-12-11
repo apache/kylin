@@ -49,6 +49,12 @@
                 <div class="col-xs-10">
                     <!--STATUS-->
                     <div class="pull-right">
+                      <!--Job History Time Filter-->
+                      <label>Jobs in:
+                        <select data-ng-model="timeFilter"
+                                data-ng-options="s.name for s in jobConfig.timeFilter">
+                        </select>
+                      </label>
                       <label ng-repeat="s in jobConfig.allStatus" class="checkbox-inline" >
                         <input  type="checkbox"
                                 value="{{s.name}}"

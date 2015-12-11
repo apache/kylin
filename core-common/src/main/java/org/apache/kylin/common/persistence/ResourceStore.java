@@ -181,7 +181,29 @@ abstract public class ResourceStore {
         }
     }
 
+    final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis, Class<T> clazz, Serializer<T> serializer) throws IOException {
+        final List<RawResource> allResources = getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis);
+        if (allResources.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<T> result = Lists.newArrayList();
+        try {
+            for (RawResource rawResource : allResources) {
+                final T element = serializer.deserialize(new DataInputStream(rawResource.inputStream));
+                element.setLastModified(rawResource.timestamp);
+                result.add(element);
+            }
+            return result;
+        } finally {
+            for (RawResource rawResource : allResources) {
+                IOUtils.closeQuietly(rawResource.inputStream);
+            }
+        }
+    }
+
     abstract protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException;
+
+    abstract protected List<RawResource> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis) throws IOException;
 
     /** returns null if not exists */
     abstract protected RawResource getResourceImpl(String resPath) throws IOException;
