@@ -108,6 +108,22 @@ public class ExecutableDao {
         }
     }
 
+    public List<ExecutableOutputPO> getJobOutputs(long timeStartInMillis, long timeEndInMillis) throws PersistentException {
+        try {
+            ArrayList<String> resources = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
+            if (resources == null || resources.isEmpty()) {
+                return Collections.emptyList();
+            }
+            Collections.sort(resources);
+            String rangeStart = resources.get(0);
+            String rangeEnd = resources.get(resources.size() - 1);
+            return store.getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+        } catch (IOException e) {
+            logger.error("error get all Jobs:", e);
+            throw new PersistentException(e);
+        }
+    }
+
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
             final List<String> jobIds = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
@@ -118,6 +134,22 @@ public class ExecutableDao {
             String rangeStart = jobIds.get(0);
             String rangeEnd = jobIds.get(jobIds.size() - 1);
             return store.getAllResources(rangeStart, rangeEnd, ExecutablePO.class, JOB_SERIALIZER);
+        } catch (IOException e) {
+            logger.error("error get all Jobs:", e);
+            throw new PersistentException(e);
+        }
+    }
+
+    public List<ExecutablePO> getJobs(long timeStartInMillis, long timeEndInMillis) throws PersistentException {
+        try {
+            final List<String> jobIds = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
+            if (jobIds == null || jobIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+            Collections.sort(jobIds);
+            String rangeStart = jobIds.get(0);
+            String rangeEnd = jobIds.get(jobIds.size() - 1);
+            return store.getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis, ExecutablePO.class, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
