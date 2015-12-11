@@ -22,7 +22,7 @@ import java.util.Arrays;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.ISegment;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;

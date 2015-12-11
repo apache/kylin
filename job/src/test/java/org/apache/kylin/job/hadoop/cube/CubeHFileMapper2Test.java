@@ -34,7 +34,7 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureCodec;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

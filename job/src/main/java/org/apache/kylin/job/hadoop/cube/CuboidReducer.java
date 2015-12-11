@@ -30,8 +30,8 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.metadata.measure.MeasureAggregators;
-import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureAggregators;
+import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +81,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         aggs.reset();
 
         for (Text value : values) {
-            codec.decode(value, input);
+            codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), input);
             aggs.aggregate(input);
         }
         aggs.collectStates(result);

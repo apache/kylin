@@ -26,10 +26,9 @@ import java.util.*;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.*;
 import org.apache.kylin.dict.lookup.ReadableTable;
-import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +52,8 @@ public class DictionaryGenerator {
         }
     }
 
-    public static Dictionary<?> buildDictionaryFromValueEnumerator(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator) throws IOException{
-        Dictionary dict = null;
+    public static org.apache.kylin.common.util.Dictionary<?> buildDictionaryFromValueEnumerator(DictionaryInfo info, IDictionaryValueEnumerator valueEnumerator) throws IOException{
+        org.apache.kylin.common.util.Dictionary dict = null;
         int baseId = 0; // always 0 for now
         final int nSamples = 5;
         ArrayList samples = Lists.newArrayListWithCapacity(nSamples);
@@ -84,11 +83,11 @@ public class DictionaryGenerator {
         return dict;
     }
 
-    public static Dictionary mergeDictionaries(DictionaryInfo targetInfo, List<DictionaryInfo> sourceDicts) throws IOException {
+    public static org.apache.kylin.common.util.Dictionary mergeDictionaries(DictionaryInfo targetInfo, List<DictionaryInfo> sourceDicts) throws IOException {
         return buildDictionaryFromValueEnumerator(targetInfo, new MultipleDictionaryValueEnumerator(sourceDicts));
     }
 
-    public static Dictionary<?> buildDictionary(DictionaryInfo info, ReadableTable inpTable) throws IOException {
+    public static org.apache.kylin.common.util.Dictionary<?> buildDictionary(DictionaryInfo info, ReadableTable inpTable) throws IOException {
 
         // currently all data types are casted to string to build dictionary
         // String dataType = info.getDataType();
@@ -105,7 +104,7 @@ public class DictionaryGenerator {
         }
     }
 
-    private static Dictionary buildDateStrDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
+    private static org.apache.kylin.common.util.Dictionary buildDateStrDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         final int BAD_THRESHOLD = 2;
         String matchPattern = null;
         byte[] value;
@@ -141,7 +140,7 @@ public class DictionaryGenerator {
         throw new IllegalStateException("Unrecognized datetime value");
     }
 
-    private static Dictionary buildStringDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
+    private static org.apache.kylin.common.util.Dictionary buildStringDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
         byte[] value;
         while (valueEnumerator.moveNext()) {
@@ -156,7 +155,7 @@ public class DictionaryGenerator {
         return builder.build(baseId);
     }
 
-    private static Dictionary buildNumberDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
+    private static org.apache.kylin.common.util.Dictionary buildNumberDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
         NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
         byte[] value;
         while (valueEnumerator.moveNext()) {

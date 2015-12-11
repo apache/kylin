@@ -20,6 +20,7 @@ package org.apache.kylin.dict;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.lookup.ReadableTable.TableSignature;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;

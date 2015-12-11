@@ -34,7 +34,7 @@ import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.HierarchyDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.cube.model.RowKeyDesc;
-import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
@@ -140,7 +140,7 @@ public class CubeSizeEstimationCLI {
         int space = 0;
         for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
             DataType returnType = measureDesc.getFunction().getReturnDataType();
-            space += returnType.getSpaceEstimate();
+            space += returnType.getStorageBytesEstimate();
         }
         return space;
     }

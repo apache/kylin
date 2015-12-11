@@ -21,7 +21,7 @@ package org.apache.kylin.query.test;
 import java.util.Map;
 
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.query.routing.RoutingRules.RealizationPriorityRule;
+import org.apache.kylin.query.routing.Candidate;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,10 +35,10 @@ public class IIQueryTest extends KylinQueryTest {
         KylinQueryTest.setUp();//invoke super class
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
-        priorities.put(RealizationType.INVERTED_INDEX, 1);
-        priorities.put(RealizationType.CUBE, 2);
-        priorities.put(RealizationType.HYBRID, 2);
-        RealizationPriorityRule.setPriorities(priorities);
+        priorities.put(RealizationType.INVERTED_INDEX, 0);
+        priorities.put(RealizationType.CUBE, 1);
+        priorities.put(RealizationType.HYBRID, 1);
+        Candidate.setPriorities(priorities);
 
     }
 
@@ -47,10 +47,10 @@ public class IIQueryTest extends KylinQueryTest {
         KylinQueryTest.tearDown();//invoke super class
 
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
-        priorities.put(RealizationType.INVERTED_INDEX, 2);
-        priorities.put(RealizationType.CUBE, 1);
-        priorities.put(RealizationType.HYBRID, 1);
-        RealizationPriorityRule.setPriorities(priorities);
+        priorities.put(RealizationType.INVERTED_INDEX, 1);
+        priorities.put(RealizationType.CUBE, 0);
+        priorities.put(RealizationType.HYBRID, 0);
+        Candidate.setPriorities(priorities);
     }
 
     @Test

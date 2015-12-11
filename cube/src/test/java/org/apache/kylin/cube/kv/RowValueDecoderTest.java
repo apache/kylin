@@ -30,8 +30,8 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
@@ -63,7 +63,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         LongWritable count = new LongWritable(2);
         LongWritable item_count = new LongWritable(99999);
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-        codec.encode(new Object[] { sum, min, max, count,item_count }, buf);
+        codec.encode(new Object[] { sum, min, max, count, item_count }, buf);
 
         buf.flip();
         byte[] valueBytes = new byte[buf.limit()];
@@ -81,7 +81,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         Object[] measureValues = rowValueDecoder.getValues();
 
         assertEquals("[PRICE, MIN_PRICE_, MAX_PRICE_, COUNT__, ITEM_COUNT]", measureNames.toString());
-        assertEquals("[333.1234567, 333.1111111, 333.1999999, 2, 99999]", Arrays.toString(measureValues));
+        assertEquals("[333.1235, 333.1111, 333.2000, 2, 99999]", Arrays.toString(measureValues));
     }
 
 }

@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -42,6 +42,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -51,19 +52,21 @@ import org.apache.kylin.cube.kv.RowKeyDecoder;
 import org.apache.kylin.cube.kv.RowValueDecoder;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
+import org.apache.kylin.metadata.tuple.Tuple;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.coprocessor.observer.ObserverEnabler;
-import org.apache.kylin.storage.tuple.Tuple;
-import org.apache.kylin.storage.tuple.Tuple.IDerivedColumnFiller;
-import org.apache.kylin.storage.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * @author xjiang
@@ -78,7 +81,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     private final Collection<TblColRef> dimensions;
     private final TupleFilter filter;
     private final Collection<TblColRef> groupBy;
-    private final Collection<RowValueDecoder> rowValueDecoders;
+    private final List<RowValueDecoder> rowValueDecoders;
     private final StorageContext context;
     private final String tableName;
     private final HTableInterface table;
@@ -88,12 +91,21 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     private Scan scan;
     private ResultScanner scanner;
     private Iterator<Result> resultIterator;
+    private CubeTupleConverter cubeTupleConverter;
     private TupleInfo tupleInfo;
-    private Tuple tuple;
+    private Tuple oneTuple;
+    private Tuple next;
     private int scanCount;
     private int scanCountDelta;
 
-    public CubeSegmentTupleIterator(CubeSegment cubeSeg, Collection<HBaseKeyRange> keyRanges, HConnection conn, Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context) {
+    final List<MeasureType<?>> measureTypes;
+    final List<MeasureType.IAdvMeasureFiller> advMeasureFillers;
+    final List<Pair<Integer, Integer>> advMeasureIndexInRV;//first=> which rowValueDecoders,second => metric index
+
+    private int advMeasureRowsRemaining;
+    private int advMeasureRowIndex;
+
+    public CubeSegmentTupleIterator(CubeSegment cubeSeg, List<HBaseKeyRange> keyRanges, HConnection conn, Collection<TblColRef> dimensions, TupleFilter filter, Collection<TblColRef> groupBy, List<RowValueDecoder> rowValueDecoders, StorageContext context) {
         this.cube = cubeSeg.getCubeInstance();
         this.cubeSeg = cubeSeg;
         this.dimensions = dimensions;
@@ -103,14 +115,22 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         this.context = context;
         this.tableName = cubeSeg.getStorageLocationIdentifier();
         this.rowKeyDecoder = new RowKeyDecoder(this.cubeSeg);
+        
+        measureTypes = Lists.newArrayList();
+        advMeasureFillers = Lists.newArrayListWithCapacity(1);
+        advMeasureIndexInRV = Lists.newArrayListWithCapacity(1);
+
+        this.cubeTupleConverter = new CubeTupleConverter();
+        this.tupleInfo = buildTupleInfo(keyRanges.get(0).getCuboid());
+        this.oneTuple = new Tuple(this.tupleInfo);
+        this.rangeIterator = keyRanges.iterator();
+
 
         try {
             this.table = conn.getTable(tableName);
         } catch (Throwable t) {
             throw new StorageException("Error when open connection to table " + tableName, t);
         }
-        this.rangeIterator = keyRanges.iterator();
-        scanNextRange();
     }
 
     @Override
@@ -121,7 +141,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     private void closeScanner() {
         flushScanCountDelta();
-        
+
         if (logger.isDebugEnabled() && scan != null) {
             logger.debug("Scan " + scan.toString());
             byte[] metricsBytes = scan.getAttribute(Scan.SCAN_ATTRIBUTES_METRICS_DATA);
@@ -150,38 +170,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         }
     }
 
-    @Override
-    public boolean hasNext() {
-        return rangeIterator.hasNext() || resultIterator.hasNext();
-    }
-
-    @Override
-    public Tuple next() {
-        // get next result from hbase
-        Result result = null;
-        while (hasNext()) {
-            if (resultIterator.hasNext()) {
-                result = this.resultIterator.next();
-                scanCount++;
-                if (++scanCountDelta >= 1000)
-                    flushScanCountDelta();
-                break;
-            } else {
-                scanNextRange();
-            }
-        }
-        if (result == null) {
-            return null;
-        }
-        // translate result to tuple
-        try {
-            translateResult(result, this.tuple);
-        } catch (IOException e) {
-            throw new IllegalStateException("Can't translate result " + result, e);
-        }
-        return this.tuple;
-    }
-
     private void flushScanCountDelta() {
         context.increaseTotalScanCount(scanCountDelta);
         scanCountDelta = 0;
@@ -192,17 +180,80 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         throw new UnsupportedOperationException();
     }
 
-    private void scanNextRange() {
-        if (this.rangeIterator.hasNext()) {
-            closeScanner();
-            HBaseKeyRange keyRange = this.rangeIterator.next();
-            this.tupleInfo = buildTupleInfo(keyRange.getCuboid());
-            this.tuple = new Tuple(this.tupleInfo);
+    @Override
+    public boolean hasNext() {
 
-            this.resultIterator = doScan(keyRange);
-        } else {
-            this.resultIterator = Collections.<Result> emptyList().iterator();
+        if (next != null)
+            return true;
+
+        // consume any left rows from advanced measure filler
+        if (advMeasureRowsRemaining > 0) {
+            for (MeasureType.IAdvMeasureFiller filler : advMeasureFillers) {
+                filler.fillTuplle(oneTuple, advMeasureRowIndex);
+            }
+            advMeasureRowIndex++;
+            advMeasureRowsRemaining--;
+            next = oneTuple;
+            return true;
         }
+
+        if (resultIterator == null) {
+            if (rangeIterator.hasNext() == false)
+                return false;
+
+            resultIterator = doScan(rangeIterator.next());
+        }
+
+        if (resultIterator.hasNext() == false) {
+            closeScanner();
+            resultIterator = null;
+            return hasNext();
+        }
+
+        Result result = resultIterator.next();
+        scanCount++;
+        if (++scanCountDelta >= 1000)
+            flushScanCountDelta();
+
+        // translate into tuple
+        List<MeasureType.IAdvMeasureFiller> retFillers = null;
+        try {
+            retFillers = translateResult(result, oneTuple);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // the simple case
+        if (retFillers == null) {
+            next = oneTuple;
+            return true;
+        }
+
+        // advanced measure filling, like TopN, will produce multiple tuples out of one record
+        advMeasureRowsRemaining = -1;
+        for (MeasureType.IAdvMeasureFiller filler : retFillers) {
+            if (advMeasureRowsRemaining < 0)
+                advMeasureRowsRemaining = filler.getNumOfRows();
+            if (advMeasureRowsRemaining != filler.getNumOfRows())
+                throw new IllegalStateException();
+        }
+        if (advMeasureRowsRemaining < 0)
+            throw new IllegalStateException();
+
+        advMeasureRowIndex = 0;
+        return hasNext();
+    }
+
+    @Override
+    public Tuple next() {
+        if (next == null) {
+            hasNext();
+            if (next == null)
+                throw new NoSuchElementException();
+        }
+        Tuple r = next;
+        next = null;
+        return r;
     }
 
     private final Iterator<Result> doScan(HBaseKeyRange keyRange) {
@@ -272,7 +323,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         scan.setCacheBlocks(true);
 
         // cache less when there are memory hungry measures
-        if (RowValueDecoder.hasMemHungryCountDistinct(rowValueDecoders)) {
+        if (RowValueDecoder.hasMemHungryMeasures(rowValueDecoders)) {
             scan.setCaching(scan.getCaching() / 10);
         }
     }
@@ -306,6 +357,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
     }
 
     private TupleInfo buildTupleInfo(Cuboid cuboid) {
+
         TupleInfo info = new TupleInfo();
         int index = 0;
         rowKeyDecoder.setCuboid(cuboid);
@@ -331,19 +383,46 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
                     info.setField(derivedField, derivedCol, derivedCol.getType().getName(), index++);
                 }
                 // add filler
-                info.addDerivedColumnFiller(Tuple.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo, info, CubeManager.getInstance(this.cube.getConfig()), cubeSeg));
+                cubeTupleConverter.addDerivedColumnFiller(CubeTupleConverter.newDerivedColumnFiller(rowColumns, hostCols, deriveInfo, info, CubeManager.getInstance(this.cube.getConfig()), cubeSeg));
             }
         }
 
-        for (RowValueDecoder rowValueDecoder : this.rowValueDecoders) {
-            List<String> names = rowValueDecoder.getNames();
+        for (int i = 0; i < rowValueDecoders.size(); i++) {
+            RowValueDecoder rowValueDecoder = rowValueDecoders.get(i);
+            List<String> measureNames = rowValueDecoder.getNames();
             MeasureDesc[] measures = rowValueDecoder.getMeasures();
-            for (int i = 0; i < measures.length; i++) {
-                String dataType = measures[i].getFunction().getSQLType().getName();
-                info.setField(names.get(i), null, dataType, index++);
+
+            BitSet projectionIndex = rowValueDecoder.getProjectionIndex();
+            for (int mi = projectionIndex.nextSetBit(0); mi >= 0; mi = projectionIndex.nextSetBit(mi + 1)) {
+                FunctionDesc aggrFunc = measures[mi].getFunction();
+                String dataType = measures[mi].getFunction().getRewriteFieldType().getName();
+                info.setField(measureNames.get(mi), null, dataType, index++);
+
+                MeasureType<?> measureType = aggrFunc.getMeasureType();
+                if (measureType.needAdvancedTupleFilling()) {
+                    Map<TblColRef, Dictionary<String>> dictionaryMap = buildDictionaryMap(measureType.getColumnsNeedDictionary(aggrFunc));
+                    advMeasureFillers.add(measureType.getAdvancedTupleFiller(aggrFunc, tupleInfo, dictionaryMap));
+                    advMeasureIndexInRV.add(Pair.newPair(i, mi));
+                    measureTypes.add(null);
+                } else {
+                    measureTypes.add(measureType);
+                }
             }
+            //            for (int i = 0; i < measures.length; i++) {
+            //                String dataType = measures[i].getFunction().getRewriteFieldType().getName();
+            //                info.setField(measureNames.get(i), null, dataType, index++);
+            //            }
         }
         return info;
+    }
+
+    // load only needed dictionaries
+    private Map<TblColRef, Dictionary<String>> buildDictionaryMap(List<TblColRef> columnsNeedDictionary) {
+        Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
+        for (TblColRef col : columnsNeedDictionary) {
+            result.put(col, cubeSeg.getDictionary(col));
+        }
+        return result;
     }
 
     private String getFieldName(TblColRef column, Map<TblColRef, String> aliasMap) {
@@ -357,7 +436,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         return name;
     }
 
-    private void translateResult(Result res, Tuple tuple) throws IOException {
+    private List<MeasureType.IAdvMeasureFiller> translateResult(Result res, Tuple tuple) throws IOException {
         // groups
         byte[] rowkey = res.getRow();
         rowKeyDecoder.decode(rowkey);
@@ -373,11 +452,12 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         }
 
         // derived
-        for (IDerivedColumnFiller filler : tupleInfo.getDerivedColumnFillers()) {
+        for (CubeTupleConverter.IDerivedColumnFiller filler : cubeTupleConverter.getDerivedColumnFillers()) {
             filler.fillDerivedColumns(dimensionValues, tuple);
         }
 
         // aggregations
+        int measureIndex = 0;
         for (RowValueDecoder rowValueDecoder : this.rowValueDecoders) {
             HBaseColumnDesc hbaseColumn = rowValueDecoder.getHBaseColumn();
             String columnFamily = hbaseColumn.getColumnFamilyName();
@@ -389,8 +469,23 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             Object[] measureValues = rowValueDecoder.getValues();
             BitSet projectionIndex = rowValueDecoder.getProjectionIndex();
             for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
-                tuple.setMeasureValue(measureNames.get(i), measureValues[i]);
+                if (measureTypes.get(measureIndex) != null) {
+                    measureTypes.get(measureIndex).fillTupleSimply(tuple, tupleInfo.getFieldIndex(measureNames.get(i)), measureValues[i]);
+                }
             }
+            measureIndex++;
+        }
+
+        // advanced measure filling, due to possible row split, will complete at caller side
+        if (advMeasureFillers.isEmpty()) {
+            return null;
+        } else {
+            for (int i = 0; i < advMeasureFillers.size(); i++) {
+                Pair<Integer, Integer> metricLocation = advMeasureIndexInRV.get(i);
+                Object measureValue = rowValueDecoders.get(metricLocation.getFirst()).getValues()[metricLocation.getSecond()];
+                advMeasureFillers.get(i).reload(measureValue);
+            }
+            return advMeasureFillers;
         }
     }
 }

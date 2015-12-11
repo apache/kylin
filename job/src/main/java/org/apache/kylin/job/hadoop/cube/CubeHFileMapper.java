@@ -37,7 +37,7 @@ import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
-import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 import com.google.common.collect.Lists;
@@ -93,7 +93,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
         } else { // normal (complex) case that distributes measures to multiple
                  // HBase columns
 
-            inputCodec.decode(value, inputMeasures);
+            inputCodec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), inputMeasures);
 
             for (int i = 0; i < n; i++) {
                 outputValue = keyValueCreators.get(i).create(key, inputMeasures);

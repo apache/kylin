@@ -21,7 +21,7 @@ package org.apache.kylin.invertedindex.index;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.model.IIDesc;

@@ -19,7 +19,7 @@
 package org.apache.kylin.storage.hbase.coprocessor;
 
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
-import org.apache.kylin.dict.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;

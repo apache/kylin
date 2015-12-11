@@ -20,7 +20,7 @@ package org.apache.kylin.metadata.measure.fixedlen;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
-import org.apache.kylin.metadata.model.DataType;
+import org.apache.kylin.metadata.datatype.DataType;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 2/10/15.

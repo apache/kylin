@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
@@ -143,13 +142,8 @@ public class JobService extends BasicService {
         builder.setSubmitter(submitter);
 
         if (buildType == CubeBuildTypeEnum.BUILD) {
-            if (cube.getDescriptor().hasHolisticCountDistinctMeasures() && cube.getSegments().size() > 0) {
-                Pair<CubeSegment, CubeSegment> segs = getCubeManager().appendAndMergeSegments(cube, endDate);
-                job = builder.buildAndMergeJob(segs.getFirst(), segs.getSecond());
-            } else {
-                CubeSegment newSeg = getCubeManager().appendSegments(cube, endDate);
-                job = builder.buildJob(newSeg);
-            }
+            CubeSegment newSeg = getCubeManager().appendSegments(cube, endDate);
+            job = builder.buildJob(newSeg);
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);
             job = builder.mergeJob(newSeg);

@@ -18,11 +18,12 @@
 
 package org.apache.kylin.storage.hbase.coprocessor;
 
-import java.util.SortedMap;
 
-import org.apache.kylin.metadata.measure.MeasureAggregator;
 
 import com.google.common.collect.Maps;
+import org.apache.kylin.measure.MeasureAggregator;
+
+import java.util.SortedMap;
 
 /**
  * Created by Hongbin Ma(Binmahone) on 11/27/14.
@@ -60,7 +61,7 @@ public abstract class AggregationCache {
                 rowMemBytes = 0;
                 MeasureAggregator[] measureAggregators = aggBufMap.get(aggBufMap.firstKey());
                 for (MeasureAggregator agg : measureAggregators) {
-                    rowMemBytes += agg.getMemBytes();
+                    rowMemBytes += agg.getMemBytesEstimate();
                 }
             }
         }

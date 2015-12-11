@@ -48,7 +48,7 @@ public class HybridStorageEngine implements IStorageEngine {
     public ITupleIterator search(final StorageContext context, final SQLDigest sqlDigest) {
         List<ITupleIterator> tupleIterators = Lists.newArrayList();
         for (int i = 0; i < realizations.length; i++) {
-            if (realizations[i].isReady() && realizations[i].isCapable(sqlDigest)) {
+            if (realizations[i].isReady() && realizations[i].isCapable(sqlDigest).capable) {
                 ITupleIterator dataIterator = storageEngines[i].search(context, sqlDigest);
                 tupleIterators.add(dataIterator);
             }

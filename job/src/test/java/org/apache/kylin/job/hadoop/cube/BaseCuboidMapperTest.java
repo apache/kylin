@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -36,7 +37,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.kv.RowKeyDecoder;
 import org.apache.kylin.job.constant.BatchConstants;
-import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
 import org.junit.Before;
@@ -100,7 +101,7 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
     private void verifyMeasures(List<MeasureDesc> measures, Text valueBytes, String... valueStr) {
         MeasureCodec codec = new MeasureCodec(measures);
         Object[] values = new Object[measures.size()];
-        codec.decode(valueBytes, values);
+        codec.decode(ByteBuffer.wrap(valueBytes.getBytes()), values);
         assertTrue(new BigDecimal(valueStr[0]).equals(values[0]));
         assertTrue(new BigDecimal(valueStr[1]).equals(values[1]));
         assertTrue(new BigDecimal(valueStr[2]).equals(values[2]));
@@ -138,6 +139,6 @@ public class BaseCuboidMapperTest extends LocalFileMetadataTestCase {
         assertEquals(511, Bytes.toLong(cuboidId));
         assertEquals(22, restKey.length);
 
-        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "0", "0", "0", "1","22");
+        verifyMeasures(cube.getDescriptor().getMeasures(), result.get(0).getSecond(), "0", "0", "0", "1", "22");
     }
 }

@@ -35,6 +35,7 @@ import java.util.TreeSet;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.kylin.common.persistence.HBaseConnection;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -45,8 +46,8 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
-import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
@@ -87,6 +88,8 @@ public class CubeStorageEngine implements IStorageEngine {
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest) {
+        // allow custom measures hack
+        notifyBeforeStorageQuery(sqlDigest);
 
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
         TupleFilter filter = sqlDigest.filter;
@@ -354,12 +357,6 @@ public class CubeStorageEngine implements IStorageEngine {
             for (HBaseColumnDesc hbCol : hbCols) {
                 bestHBCol = hbCol;
                 bestIndex = hbCol.findMeasureIndex(aggrFunc);
-                MeasureDesc measure = hbCol.getMeasures()[bestIndex];
-                // criteria for holistic measure: Exact Aggregation && Exact Cuboid
-                if (measure.isHolisticCountDistinct() && context.isExactAggregation()) {
-                    logger.info("Holistic count distinct chosen for " + aggrFunc);
-                    break;
-                }
             }
 
             RowValueDecoder codec = codecMap.get(bestHBCol);
@@ -628,7 +625,7 @@ public class CubeStorageEngine implements IStorageEngine {
     }
 
     private void setThreshold(Collection<TblColRef> dimensions, List<RowValueDecoder> valueDecoders, StorageContext context) {
-        if (RowValueDecoder.hasMemHungryCountDistinct(valueDecoders) == false) {
+        if (RowValueDecoder.hasMemHungryMeasures(valueDecoders) == false) {
             return;
         }
 
@@ -638,7 +635,7 @@ public class CubeStorageEngine implements IStorageEngine {
             BitSet projectionIndex = decoder.getProjectionIndex();
             for (int i = projectionIndex.nextSetBit(0); i >= 0; i = projectionIndex.nextSetBit(i + 1)) {
                 FunctionDesc func = measures[i].getFunction();
-                rowSizeEst += func.getReturnDataType().getSpaceEstimate();
+                rowSizeEst += func.getReturnDataType().getStorageBytesEstimate();
             }
         }
 
@@ -664,5 +661,14 @@ public class CubeStorageEngine implements IStorageEngine {
     private void setCoprocessor(Set<TblColRef> groupsCopD, List<RowValueDecoder> valueDecoders, StorageContext context) {
         ObserverEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
     }
+
+
+    private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
+        for (MeasureDesc measure : cubeDesc.getMeasures()) {
+            MeasureType<?> measureType = measure.getFunction().getMeasureType();
+            measureType.adjustSqlDigest(measure, sqlDigest);
+        }
+    }
+
 
 }

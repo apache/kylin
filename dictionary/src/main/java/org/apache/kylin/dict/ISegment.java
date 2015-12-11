@@ -18,6 +18,7 @@
 
 package org.apache.kylin.dict;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -27,7 +28,7 @@ public interface ISegment {
 
     public abstract int getColumnLength(TblColRef col);
 
-    public abstract Dictionary<?> getDictionary(TblColRef col);
+    public abstract Dictionary<String> getDictionary(TblColRef col);
 
     public String getName();
 

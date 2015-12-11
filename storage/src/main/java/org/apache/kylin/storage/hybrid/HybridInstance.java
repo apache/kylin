@@ -28,6 +28,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -90,7 +91,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             for (int i = 0; i < realizationEntries.size(); i++) {
                 IRealization realization = registry.getRealization(realizationEntries.get(i).getType(), realizationEntries.get(i).getRealization());
                 if (realization == null) {
-                    logger.error("Realization '" + realization.getName() + " is not found, remove from Hybrid '" + this.getName() + "'");
+                    logger.error("Realization '" + realizationEntries.get(i) + " is not found, remove from Hybrid '" + this.getName() + "'");
                     continue;
                 }
                 if (realization.isReady() == false) {
@@ -150,26 +151,24 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             initiated = true;
         }
     }
-
     @Override
-    public boolean isCapable(SQLDigest digest) {
+    public CapabilityResult isCapable(SQLDigest digest) {
+        CapabilityResult result = new CapabilityResult();
+        result.cost = Integer.MAX_VALUE;
+
         for (IRealization realization : getRealizations()) {
-            if (realization.isCapable(digest))
-                return true;
-        }
-        return false;
-    }
-
-    @Override
-    public int getCost(SQLDigest digest) {
-        cost = 100;
-        for (IRealization realization : this.getRealizations()) {
-            if (realization.isCapable(digest))
-                cost = Math.min(cost, realization.getCost(digest));
+            CapabilityResult child = realization.isCapable(digest);
+            if (child.capable) {
+                result.capable = true;
+                result.cost = Math.min(result.cost, child.cost);
+                result.influences.addAll(child.influences);
+            }
         }
 
-        // Make hybrid always win its children
-        return cost - 1;
+        if (result.cost > 0)
+            result.cost--; // let hybrid win its children
+
+        return result;
     }
 
     @Override

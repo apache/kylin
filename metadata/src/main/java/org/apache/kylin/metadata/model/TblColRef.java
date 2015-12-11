@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.metadata.datatype.DataType;
 
 /**
  * Created with IntelliJ IDEA. User: lukhan Date: 9/26/13 Time: 1:30 PM To

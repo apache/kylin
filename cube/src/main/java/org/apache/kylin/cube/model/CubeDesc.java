@@ -34,7 +34,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.util.Base64;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -42,6 +41,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -562,7 +562,7 @@ public class CubeDesc extends RootPersistentEntity {
     private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
-        
+
         // Although FK derives PK automatically, user unaware of this can declare PK as derived dimension explicitly.
         // In that case, derivedCols[] will contain a FK which is transformed from the PK by initDimensionColRef().
         // Must drop FK from derivedCols[] before continue.
@@ -641,25 +641,22 @@ public class CubeDesc extends RootPersistentEntity {
             f.setExpression(f.getExpression().toUpperCase());
             f.initReturnDataType();
 
-            ParameterDesc p = f.getParameter();
-            p.normalizeColumnValue();
+            for (ParameterDesc p = f.getParameter(); p != null; p = p.getNextParameter()) {
+                p.setValue(p.getValue().toUpperCase());
+            }
 
-            if (p.isColumnType()) {
-                ArrayList<TblColRef> colRefs = Lists.newArrayList();
-                for (String cName : p.getValue().split("\\s*,\\s*")) {
-                    ColumnDesc sourceColumn = factTable.findColumnByName(cName);
+            ArrayList<TblColRef> colRefs = Lists.newArrayList();
+            for (ParameterDesc p = f.getParameter(); p != null; p = p.getNextParameter()) {
+                if (p.isColumnType()) {
+                    ColumnDesc sourceColumn = factTable.findColumnByName(p.getValue());
                     TblColRef colRef = new TblColRef(sourceColumn);
                     colRefs.add(colRef);
                     allColumns.add(colRef);
                 }
-                if (colRefs.isEmpty() == false)
-                    p.setColRefs(colRefs);
             }
 
-            // verify holistic count distinct as a dependent measure
-            if (m.isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
-                throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
-            }
+            f.getParameter().setColRefs(colRefs);
+
         }
     }
 
@@ -730,15 +727,6 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    public boolean hasHolisticCountDistinctMeasures() {
-        for (MeasureDesc measure : measures) {
-            if (measure.getFunction().isHolisticCountDistinct()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * Add error info and thrown exception out
      * 
@@ -793,5 +781,32 @@ public class CubeDesc extends RootPersistentEntity {
     public void setAutoMergeTimeRanges(long[] autoMergeTimeRanges) {
         this.autoMergeTimeRanges = autoMergeTimeRanges;
     }
+
+    public List<TblColRef> getAllColumnsNeedDictionary() {
+        List<TblColRef> result = Lists.newArrayList();
+
+        for (RowKeyColDesc rowKeyColDesc : rowkey.getRowKeyColumns()) {
+            TblColRef colRef = rowKeyColDesc.getColRef();
+            if (rowkey.isUseDictionary(colRef)) {
+                result.add(colRef);
+            }
+        }
+
+        for (MeasureDesc measure : measures) {
+            MeasureType<?> aggrType = measure.getFunction().getMeasureType();
+            result.addAll(aggrType.getColumnsNeedDictionary(measure.getFunction()));
+        }
+        return result;
+    }
+
+    public boolean hasMemoryHungryMeasures() {
+        for (MeasureDesc measure : measures) {
+            if (measure.getFunction().getMeasureType().isMemoryHungry()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 }
