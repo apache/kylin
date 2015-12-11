@@ -61,7 +61,7 @@ import com.google.common.collect.Lists;
 public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(InMemCubeBuilder.class);
-    static final double BASE_CUBOID_CACHE_OVERSIZE_FACTOR = 0.1;
+    static final double BASE_CUBOID_CACHE_OVERSIZE_FACTOR = 0.15;
 
     private final CuboidScheduler cuboidScheduler;
     private final long baseCuboidId;
@@ -100,8 +100,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         this.metricsAggrFuncs = metricsAggrFuncsList.toArray(new String[metricsAggrFuncsList.size()]);
     }
 
-    
-
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
         GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
 
@@ -113,7 +111,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         GridTable gridTable = new GridTable(info, store);
         return gridTable;
     }
-
 
     @Override
     public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
@@ -301,14 +298,14 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         // GC to be precise on memory left
         Runtime.getRuntime().gc();
         try {
-            Thread.sleep(1000);
+            Thread.sleep(2500);
         } catch (InterruptedException e) {
             logger.error("", e);
         }
         // GC again to be precise on memory left
         Runtime.getRuntime().gc();
         try {
-            Thread.sleep(1000);
+            Thread.sleep(2500);
         } catch (InterruptedException e) {
             logger.error("", e);
         }
@@ -345,7 +342,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req, true);
 
         long startTime = System.currentTimeMillis();
-        logger.info("Calculating cuboid " + baseCuboidId);
+        logger.info("Calculating base cuboid " + baseCuboidId + ", system avail " + mbBefore + " MB");
 
         int count = 0;
         for (GTRecord r : aggregationScanner) {
@@ -508,9 +505,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             this.info = info;
             this.input = input;
             this.record = new GTRecord(info);
-            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, 
-                    InMemCubeBuilderUtils.createTopNLiteralColDictionaryMap(cubeDesc, intermediateTableDesc, dictionaryMap), 
-                    info);
+            this.inMemCubeBuilderInputConverter = new InMemCubeBuilderInputConverter(cubeDesc, InMemCubeBuilderUtils.createTopNLiteralColDictionaryMap(cubeDesc, intermediateTableDesc, dictionaryMap), info);
         }
 
         @Override
