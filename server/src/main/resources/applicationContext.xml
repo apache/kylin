@@ -85,19 +85,19 @@
 
     <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
           p:cacheManager-ref="ehcache"/>
-    <beans profile="default">
+    <beans profile="ldap,saml">
         <bean id="ehcache"
               class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
               p:configLocation="classpath:ehcache.xml" p:shared="true"/>
     </beans>
-    <beans profile="sandbox,testing">
+    <beans profile="testing">
         <bean id="ehcache"
               class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
               p:configLocation="classpath:ehcache-test.xml" p:shared="true"/>
     </beans>
 
     <!-- hbase storage/global lock Config -->
-    <beans profile="default,sandbox">
+    <beans profile="ldap,saml">
         <bean id="aclHBaseStorage" class="org.apache.kylin.rest.security.RealAclHBaseStorage"/>
         <bean id="jobLock" class="org.apache.kylin.storage.hbase.util.ZookeeperJobLock"/>
     </beans>
