@@ -49,11 +49,7 @@ then
 
 
 
-    useSandbox=`sh ${dir}/get-properties.sh kylin.sandbox`
-    spring_profile="default"
-    if [ "$useSandbox" = "true" ]
-        then spring_profile="sandbox"
-    fi
+    spring_profile=`sh ${dir}/get-properties.sh kylin.security.profile`
 
     #retrive $hive_dependency and $hbase_dependency
     source ${dir}/find-hive-dependency.sh
@@ -64,7 +60,8 @@ then
     fi
 
     export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
-    export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
+    mkdir -p ${KYLIN_HOME}/ext
+    export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
 
     #debug if encounter NoClassDefError
     #hbase classpath
