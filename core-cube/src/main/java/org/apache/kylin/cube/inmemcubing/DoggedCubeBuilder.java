@@ -56,6 +56,10 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
     public DoggedCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         super(cubeDesc, dictionaryMap);
+        
+        // check memory more often if a single row is big
+        if (cubeDesc.hasMemoryHungryCountDistinctMeasures())
+            unitRows /= 10;
     }
 
     public void setSplitRowThreshold(int rowThreshold) {
@@ -241,12 +245,8 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 }
 
                 // wait cuboid build done
-                while (last.isAlive()) {
-                    if (last.builder.isAllCuboidDone()) {
-                        break;
-                    }
-                    Thread.sleep(1000);
-                }
+                last.join();
+                
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

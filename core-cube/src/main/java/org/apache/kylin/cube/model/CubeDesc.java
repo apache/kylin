@@ -738,6 +738,15 @@ public class CubeDesc extends RootPersistentEntity {
         return false;
     }
 
+    public boolean hasMemoryHungryCountDistinctMeasures() {
+        for (MeasureDesc measure : measures) {
+            if (measure.getFunction().isCountDistinct()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public long getRetentionRange() {
         return retentionRange;
     }
