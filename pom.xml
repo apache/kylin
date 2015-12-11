@@ -92,6 +92,8 @@
 
         <!-- REST Service -->
         <spring.framework.version>3.1.2.RELEASE</spring.framework.version>
+        <spring.framework.security.extensions.version>1.0.1.RELEASE</spring.framework.security.extensions.version>
+        <opensaml.version>2.6.1</opensaml.version>
         <spring.boot.version>1.2.7.RELEASE</spring.boot.version>
 
         <!-- Calcite Version -->
