@@ -295,21 +295,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private int getSystemAvailMB() {
-        // GC to be precise on memory left
-        Runtime.getRuntime().gc();
-        try {
-            Thread.sleep(2500);
-        } catch (InterruptedException e) {
-            logger.error("", e);
-        }
-        // GC again to be precise on memory left
-        Runtime.getRuntime().gc();
-        try {
-            Thread.sleep(2500);
-        } catch (InterruptedException e) {
-            logger.error("", e);
-        }
-        return MemoryBudgetController.getSystemAvailMB();
+        return MemoryBudgetController.gcAndGetSystemAvailMB();
     }
 
     private void makeMemoryBudget() {
@@ -330,19 +316,19 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private CuboidResult createBaseCuboid(BlockingQueue<List<String>> input) throws IOException {
+        int mbBefore = getSystemAvailMB();
+        int mbAfter = 0;
+
+        long startTime = System.currentTimeMillis();
+        logger.info("Calculating base cuboid " + baseCuboidId + ", system avail " + mbBefore + " MB");
+
         GridTable baseCuboid = newGridTableByCuboidID(baseCuboidId);
         GTBuilder baseBuilder = baseCuboid.rebuild();
         IGTScanner baseInput = new InputConverter(baseCuboid.getInfo(), input);
 
-        int mbBefore = getSystemAvailMB();
-        int mbAfter = 0;
-
         Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req, true);
-
-        long startTime = System.currentTimeMillis();
-        logger.info("Calculating base cuboid " + baseCuboidId + ", system avail " + mbBefore + " MB");
 
         int count = 0;
         for (GTRecord r : aggregationScanner) {
