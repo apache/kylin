@@ -60,7 +60,7 @@ import com.google.common.collect.Lists;
 public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(InMemCubeBuilder.class);
-    static final double BASE_CUBOID_CACHE_OVERSIZE_FACTOR = 0.15;
+    private static final double BASE_CUBOID_CACHE_OVERSIZE_FACTOR = 0.15;
 
     private final CuboidScheduler cuboidScheduler;
     private final long baseCuboidId;
@@ -292,21 +292,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private int getSystemAvailMB() {
-        // GC to be precise on memory left
-        Runtime.getRuntime().gc();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            logger.error("", e);
-        }
-        // GC again to be precise on memory left
-        Runtime.getRuntime().gc();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            logger.error("", e);
-        }
-        return MemoryBudgetController.getSystemAvailMB();
+        return MemoryBudgetController.gcAndGetSystemAvailMB();
     }
 
     private void makeMemoryBudget() {
@@ -327,19 +313,19 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private CuboidResult createBaseCuboid(BlockingQueue<List<String>> input) throws IOException {
+        int mbBefore = getSystemAvailMB();
+        int mbAfter = 0;
+
+        long startTime = System.currentTimeMillis();
+        logger.info("Calculating base cuboid " + baseCuboidId + ", system avail " + mbBefore + " MB");
+
         GridTable baseCuboid = newGridTableByCuboidID(baseCuboidId);
         GTBuilder baseBuilder = baseCuboid.rebuild();
         IGTScanner baseInput = new InputConverter(baseCuboid.getInfo(), input);
 
-        int mbBefore = getSystemAvailMB();
-        int mbAfter = 0;
-
         Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req, true);
-
-        long startTime = System.currentTimeMillis();
-        logger.info("Calculating cuboid " + baseCuboidId);
 
         int count = 0;
         for (GTRecord r : aggregationScanner) {
@@ -357,11 +343,22 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         int mbBaseAggrCacheOnHeap = mbAfter == 0 ? 0 : mbBefore - mbAfter;
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
-        int mbBaseAggrCache = (int) (mbBaseAggrCacheOnHeap * (1 + BASE_CUBOID_CACHE_OVERSIZE_FACTOR));
+        int mbBaseAggrCache = (int) (mbBaseAggrCacheOnHeap * (1 + getAggrCacheOversizeFactor(cubeDesc)));
         mbBaseAggrCache = Math.max(mbBaseAggrCache, 10); // let it be at least 10 MB
         logger.info("Base aggr cache is " + mbBaseAggrCache + " MB (heap " + mbBaseAggrCacheOnHeap + " MB, estimate " + mbEstimateBaseAggrCache + " MB)");
 
         return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, mbBaseAggrCache);
+    }
+
+    // Aggregation cache need to be oversized such that spawned thread not only has memory for 
+    // aggregation cache but also has enough for temporary measures and others.
+    static double getAggrCacheOversizeFactor(CubeDesc cubeDesc) {
+        double r = BASE_CUBOID_CACHE_OVERSIZE_FACTOR;
+        for (MeasureDesc m : cubeDesc.getMeasures()) {
+            if (m.getFunction().getMeasureType().isMemoryHungry())
+                r += BASE_CUBOID_CACHE_OVERSIZE_FACTOR;
+        }
+        return r;
     }
 
     private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
