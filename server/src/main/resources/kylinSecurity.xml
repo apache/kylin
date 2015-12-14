@@ -22,12 +22,6 @@
 		<constructor-arg ref="aclService" />
 		<property name="permissionFactory" ref="aclPermissionFactory" />
 	</bean>
-
-	<bean id="ldapSource" class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
-		<constructor-arg value="${ldap.server}" />
-		<property name="userDn" value="${ldap.username}" />
-		<property name="password" value="${ldap.password}" />
-	</bean>
 	
 	<bean id="aclAuthorizationStrategy"
 		class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
@@ -52,8 +46,17 @@
 	<bean id="permissionGrantingStrategy" class="org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy">
 		<constructor-arg ref="auditLogger" />
 	</bean>
+
+	<beans profile="ldap,saml">
+		<bean id="ldapSource" class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
+			<constructor-arg value="${ldap.server}" />
+			<property name="userDn" value="${ldap.username}" />
+			<property name="password" value="${ldap.password}" />
+		</bean>
+	</beans>
 	
 	<beans profile="ldap">
+		
 		<bean id="kylinUserAuthProvider" class="org.apache.kylin.rest.security.KylinAuthenticationProvider">
 			<constructor-arg>
 				<bean id="ldapUserAuthenticationProvider" class="org.springframework.security.ldap.authentication.LdapAuthenticationProvider">
@@ -172,7 +175,7 @@
 		<scr:http security="none" pattern="/js/**"/>
 		<scr:http security="none" pattern="/login/**"/>
 		<scr:http security="none" pattern="/api/projects" />
-
+		
 		<!-- Secured pages with SAML as entry point -->
 		<scr:http entry-point-ref="samlEntryPoint" use-expressions="false">
 			<scr:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
