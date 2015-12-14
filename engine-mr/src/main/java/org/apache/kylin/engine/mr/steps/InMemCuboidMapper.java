@@ -44,7 +44,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
     private IMRTableInputFormat flatTableInputFormat;
 
     private int counter;
-    private BlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(10000);
+    private BlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(64);
     private Future<?> future;
 
     @Override
