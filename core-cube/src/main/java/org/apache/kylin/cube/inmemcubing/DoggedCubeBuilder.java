@@ -73,14 +73,9 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private class BuildOnce {
-        private int cutAheadMB;
 
         BuildOnce() {
             int systemAvailMB = MemoryBudgetController.getSystemAvailMB();
-
-            // InMemCubeBuilder will over-estimate base cuboid size by a factor, must cut ahead at least the same factor
-            cutAheadMB = (int) (systemAvailMB * InMemCubeBuilder.getAggrCacheOversizeFactor(cubeDesc));
-            logger.info("Cut ahead MB is " + cutAheadMB);
 
             int half = systemAvailMB / 2;
             if (getReserveMemoryMB() > half) {
@@ -264,8 +259,8 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 return true;
             }
 
-            if (systemAvailMB <= reserveMemoryMB + cutAheadMB) {
-                logger.info("Split cut due to hitting memory threshold, system avail " + systemAvailMB + " MB <= reserve " + reserveMemoryMB + " MB + cut ahead " + cutAheadMB + " MB");
+            if (systemAvailMB <= reserveMemoryMB) {
+                logger.info("Split cut due to hitting memory threshold, system avail " + systemAvailMB + " MB <= reserve " + reserveMemoryMB + " MB");
                 return true;
             }
 
