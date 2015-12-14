@@ -271,4 +271,26 @@ public class MemoryBudgetController {
         return (int) (getSystemAvailBytes() / ONE_MB);
     }
 
+
+    // protective estimate of memory usage, prefer overestimate rather than underestimate
+    public static class MemoryWaterLevel {
+        int lowAvail = Integer.MAX_VALUE;
+        int highAvail = Integer.MIN_VALUE;
+
+        public void markHigh() {
+            // get avail mem without gc
+            lowAvail = Math.min(lowAvail, MemoryBudgetController.getSystemAvailMB());
+            logger.info("Lower system avail " + lowAvail + " MB in markHigh()");
+        }
+
+        public void markLow() {
+            // get avail mem after gc
+            highAvail = Math.max(highAvail, MemoryBudgetController.gcAndGetSystemAvailMB());
+            logger.info("Higher system avail " + highAvail + " MB in markLow()");
+        }
+
+        public int getEstimateMB() {
+            return highAvail - lowAvail;
+        }
+    }
 }

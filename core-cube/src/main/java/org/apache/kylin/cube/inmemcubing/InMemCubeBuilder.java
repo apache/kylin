@@ -33,6 +33,7 @@ import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
+import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
@@ -60,7 +61,10 @@ import com.google.common.collect.Lists;
 public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(InMemCubeBuilder.class);
-    private static final double BASE_CUBOID_CACHE_OVERSIZE_FACTOR = 0.15;
+
+    // by experience
+    private static final double DERIVE_AGGR_CACHE_CONSTANT_FACTOR = 0.1;
+    private static final double DERIVE_AGGR_CACHE_VARIABLE_FACTOR = 0.9;
 
     private final CuboidScheduler cuboidScheduler;
     private final long baseCuboidId;
@@ -70,6 +74,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     private final int measureCount;
 
     private MemoryBudgetController memBudget;
+    private MemoryWaterLevel baseCuboidMemTracker;
+
     private Thread[] taskThreads;
     private Throwable[] taskThreadExceptions;
     private TreeSet<CuboidTask> taskPending;
@@ -143,6 +149,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         long startTime = System.currentTimeMillis();
         logger.info("In Mem Cube Build start, " + cubeDesc.getName());
 
+        baseCuboidMemTracker = new MemoryWaterLevel();
+        baseCuboidMemTracker.markLow();
+
         // multiple threads to compute cuboid in parallel
         taskPending = new TreeSet<CuboidTask>();
         taskCuboidCompleted.set(0);
@@ -157,6 +166,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             return;
 
         // plan memory budget
+        baseCuboidMemTracker.markLow();
         makeMemoryBudget();
 
         // kick off N-D cuboid tasks and output
@@ -296,6 +306,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private void makeMemoryBudget() {
+        baseResult.aggrCacheMB = Math.max(baseCuboidMemTracker.getEstimateMB(), 10); // 10 MB at minimal
+        logger.info("Base cuboid aggr cache is " + baseResult.aggrCacheMB + " MB");
         int systemAvailMB = getSystemAvailMB();
         logger.info("System avail " + systemAvailMB + " MB");
         int reserve = reserveMemoryMB;
@@ -305,7 +317,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         if (budget < baseResult.aggrCacheMB) {
             // make sure we have base aggr cache as minimal
             budget = baseResult.aggrCacheMB;
-            logger.warn("!!! System avail memory (" + systemAvailMB + " MB) is less than base aggr cache (" + baseResult.aggrCacheMB + " MB) + minimal reservation (" + reserve + " MB), consider increase JVM heap -Xmx");
+            logger.warn("System avail memory (" + systemAvailMB + " MB) is less than base aggr cache (" + baseResult.aggrCacheMB + " MB) + minimal reservation (" + reserve + " MB), consider increase JVM heap -Xmx");
         }
 
         logger.info("Memory Budget is " + budget + " MB");
@@ -313,11 +325,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private CuboidResult createBaseCuboid(BlockingQueue<List<String>> input) throws IOException {
-        int mbBefore = getSystemAvailMB();
-        int mbAfter = 0;
-
         long startTime = System.currentTimeMillis();
-        logger.info("Calculating base cuboid " + baseCuboidId + ", system avail " + mbBefore + " MB");
+        logger.info("Calculating base cuboid " + baseCuboidId);
 
         GridTable baseCuboid = newGridTableByCuboidID(baseCuboidId);
         GTBuilder baseBuilder = baseCuboid.rebuild();
@@ -326,11 +335,12 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req, true);
+        aggregationScanner.trackMemoryLevel(baseCuboidMemTracker);
 
         int count = 0;
         for (GTRecord r : aggregationScanner) {
-            if (mbAfter == 0) {
-                mbAfter = getSystemAvailMB();
+            if (count == 0) {
+                baseCuboidMemTracker.markHigh();
             }
             baseBuilder.write(r);
             count++;
@@ -341,29 +351,16 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         long timeSpent = System.currentTimeMillis() - startTime;
         logger.info("Cuboid " + baseCuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
 
-        int mbBaseAggrCacheOnHeap = mbAfter == 0 ? 0 : mbBefore - mbAfter;
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
-        int mbBaseAggrCache = (int) (mbBaseAggrCacheOnHeap * (1 + getAggrCacheOversizeFactor(cubeDesc)));
-        mbBaseAggrCache = Math.max(mbBaseAggrCache, 10); // let it be at least 10 MB
-        logger.info("Base aggr cache is " + mbBaseAggrCache + " MB (heap " + mbBaseAggrCacheOnHeap + " MB, estimate " + mbEstimateBaseAggrCache + " MB)");
+        logger.info("Wild esitmate of base aggr cache is " + mbEstimateBaseAggrCache + " MB");
 
-        return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, mbBaseAggrCache);
-    }
-
-    // Aggregation cache need to be oversized such that spawned thread not only has memory for 
-    // aggregation cache but also has enough for temporary measures and others.
-    static double getAggrCacheOversizeFactor(CubeDesc cubeDesc) {
-        double r = BASE_CUBOID_CACHE_OVERSIZE_FACTOR;
-        for (MeasureDesc m : cubeDesc.getMeasures()) {
-            if (m.getFunction().getMeasureType().isMemoryHungry())
-                r += BASE_CUBOID_CACHE_OVERSIZE_FACTOR;
-        }
-        return r;
+        return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, 0);
     }
 
     private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
-        if (aggrCacheMB <= 0) {
-            aggrCacheMB = (int) Math.ceil(1.0 * nRows / baseResult.nRows * baseResult.aggrCacheMB);
+        if (aggrCacheMB <= 0 && baseResult != null) {
+            aggrCacheMB = (int) Math.ceil( //
+                    (DERIVE_AGGR_CACHE_CONSTANT_FACTOR + DERIVE_AGGR_CACHE_VARIABLE_FACTOR * nRows / baseResult.nRows) * baseResult.aggrCacheMB);
         }
 
         CuboidResult result = new CuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB);
@@ -547,6 +544,5 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         public int getScannedRowCount() {
             return 0;
         }
-
     }
 }

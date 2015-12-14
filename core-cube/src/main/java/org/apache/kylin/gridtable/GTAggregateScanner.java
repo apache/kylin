@@ -10,6 +10,7 @@ import java.util.SortedMap;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
+import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,6 @@ public class GTAggregateScanner implements IGTScanner {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(GTAggregateScanner.class);
-    private int aggregatedRowCount = 0;
 
     final GTInfo info;
     final ImmutableBitSet dimensions; // dimensions to return, can be more than group by
@@ -31,6 +31,9 @@ public class GTAggregateScanner implements IGTScanner {
     final IGTScanner inputScanner;
     final AggregationCache aggrCache;
     final boolean enableMemCheck;
+
+    private int aggregatedRowCount = 0;
+    private MemoryWaterLevel memTracker;
 
     public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, boolean enableMemCheck) {
         if (req.hasAggregation() == false)
@@ -44,6 +47,10 @@ public class GTAggregateScanner implements IGTScanner {
         this.inputScanner = inputScanner;
         this.aggrCache = new AggregationCache();
         this.enableMemCheck = enableMemCheck;
+    }
+
+    public void trackMemoryLevel(MemoryWaterLevel tracker) {
+        this.memTracker = tracker;
     }
 
     @Override
@@ -141,7 +148,10 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         void aggregate(GTRecord r) {
-            if (enableMemCheck && (++aggregatedRowCount % 100000 == 0)) {
+            if (enableMemCheck && (++aggregatedRowCount % 1000 == 0)) {
+                if (memTracker != null) {
+                    memTracker.markHigh();
+                }
                 long estimated = estimatedMemSize();
                 if (estimated > 10 * MemoryBudgetController.ONE_GB) {
                     throw new RuntimeException("AggregationCache exceed 10GB, estimated size is: " + estimated);
