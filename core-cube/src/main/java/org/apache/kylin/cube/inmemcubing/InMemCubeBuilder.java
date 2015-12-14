@@ -372,7 +372,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     public static double getAggrCacheOversizeFactor(CubeDesc cubeDesc) {
         double r = BASE_CUBOID_CACHE_OVERSIZE_FACTOR;
         for (MeasureDesc m : cubeDesc.getMeasures()) {
-            if (m.getFunction().isHolisticCountDistinct())
+            if (m.getFunction().isCountDistinct())
                 r += BASE_CUBOID_CACHE_OVERSIZE_FACTOR;
         }
         return r;

@@ -102,7 +102,7 @@ public class MemoryBudgetController {
             try {
                 reserve(consumer, requestMB);
                 if (debug && waitStart > 0)
-                    logger.debug(consumer + " waited " + (System.currentTimeMillis() - waitStart) + " ms on the " + requestMB + " MB request");
+                    logger.info(consumer + " waited " + (System.currentTimeMillis() - waitStart) + " ms on the " + requestMB + " MB request");
                 return;
             } catch (NotEnoughBudgetException ex) {
                 // retry
@@ -170,7 +170,7 @@ public class MemoryBudgetController {
 
         if (debug) {
             if (getSystemAvailMB() < getRemainingBudgetMB()) {
-                logger.debug("Remaining budget is " + getRemainingBudgetMB() + " MB free, but system only has " + getSystemAvailMB() + " MB free. If this persists, some memory calculation must be wrong.");
+                logger.info("Remaining budget is " + getRemainingBudgetMB() + " MB free, but system only has " + getSystemAvailMB() + " MB free. If this persists, some memory calculation must be wrong.");
             }
         }
     }
@@ -221,7 +221,7 @@ public class MemoryBudgetController {
             booking.remove(entry.consumer);
         }
         if (debug) {
-            logger.debug(entry.consumer + " reserved " + entry.reservedMB + " MB, total reserved " + totalReservedMB + " MB, remaining budget " + getRemainingBudgetMB() + " MB");
+            logger.info(entry.consumer + " reserved " + entry.reservedMB + " MB, total reserved " + totalReservedMB + " MB, remaining budget " + getRemainingBudgetMB() + " MB");
         }
 
         if (delta < 0) {
