@@ -30,12 +30,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.upgrade.CubeDescSignatureUpdate;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.DimensionDesc;
+import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -73,6 +76,7 @@ public class CubeMetadataUpgradeV2 {
 
         CubeMetadataUpgradeV2 metadataUpgrade = new CubeMetadataUpgradeV2(args);
         metadataUpgrade.upgradeModelMetadata();
+        metadataUpgrade.upgradeEmptyCubes();
         metadataUpgrade.verify();
 
         logger.info("=================================================================");
@@ -119,8 +123,9 @@ public class CubeMetadataUpgradeV2 {
         ProjectManager.getInstance(config);
     }
 
+    // Recalculate signature for CubeDesc
     private void upgradeCubeDescSignature(CubeDesc cubeDesc) {
-        CubeDescSignatureUpdate cubeDescSignatureUpdate = new CubeDescSignatureUpdate(new String[] {cubeDesc.getName()});
+        CubeDescSignatureUpdate cubeDescSignatureUpdate = new CubeDescSignatureUpdate(new String[] { cubeDesc.getName() });
         cubeDescSignatureUpdate.update();
 
         if (CollectionUtils.isEmpty(cubeDescSignatureUpdate.getErrorMsgs())) {
@@ -128,6 +133,29 @@ public class CubeMetadataUpgradeV2 {
         } else {
             logger.info("CubeDesc Signature updating failed: " + cubeDesc.getName());
             this.errorMsgs.addAll(cubeDescSignatureUpdate.getErrorMsgs());
+        }
+    }
+
+    // Update engine_type and storage_type to 2.0, if the cube has no segments.
+    private void upgradeEmptyCubes() {
+        CubeManager cubeManager = CubeManager.getInstance(config);
+        List<CubeInstance> cubes = cubeManager.listAllCubes();
+        for (CubeInstance cube : cubes) {
+            try {
+                CubeDesc cubeDesc = cube.getDescriptor();
+                if (ArrayUtils.isEmpty(models) || ArrayUtils.contains(models, cubeDesc.getModelName())) {
+                    if (cube.getFirstSegment() == null && cubeDesc != null && cubeDesc.getStorageType() == IStorageAware.ID_HBASE && cubeDesc.getEngineType() == IEngineAware.ID_MR_V1) {
+                        cubeDesc.setEngineType(IEngineAware.ID_MR_V2);
+                        cubeDesc.setStorageType(IStorageAware.ID_SHARDED_HBASE);
+
+                        store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
+                        updatedResources.add(cubeDesc.getResourcePath());
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                errorMsgs.add("Update Cube[" + cube.getName() + "] failed: " + e.getLocalizedMessage());
+            }
         }
     }
 
