@@ -79,7 +79,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             int systemAvailMB = MemoryBudgetController.getSystemAvailMB();
 
             // InMemCubeBuilder will over-estimate base cuboid size by a factor, must cut ahead at least the same factor
-            cutAheadMB = (int) (systemAvailMB * InMemCubeBuilder.BASE_CUBOID_CACHE_OVERSIZE_FACTOR);
+            cutAheadMB = (int) (systemAvailMB * InMemCubeBuilder.getAggrCacheOversizeFactor(cubeDesc));
             logger.info("Cut ahead MB is " + cutAheadMB);
 
             int half = systemAvailMB / 2;
