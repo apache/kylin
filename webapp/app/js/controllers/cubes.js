@@ -72,10 +72,11 @@ KylinApp
               item.kfkConfig = kfkConfig;
             }
           })
-          $scope.loading = false;
-          defer.resolve(resp);
-          return defer.promise;
         })
+
+        $scope.loading = false;
+        defer.resolve(resp);
+        return defer.promise;
 
       },function(resp){
         $scope.loading = false;
