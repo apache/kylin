@@ -804,7 +804,7 @@ public class CubeDesc extends RootPersistentEntity {
         return storageType;
     }
 
-    void setStorageType(int storageType) {
+    public void setStorageType(int storageType) {
         this.storageType = storageType;
     }
 
@@ -812,7 +812,7 @@ public class CubeDesc extends RootPersistentEntity {
         return engineType;
     }
 
-    void setEngineType(int engineType) {
+    public void setEngineType(int engineType) {
         this.engineType = engineType;
     }
 
