@@ -56,6 +56,10 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
     public DoggedCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         super(cubeDesc, dictionaryMap);
+
+        // check memory more often if a single row is big
+        if (cubeDesc.hasMemoryHungryMeasures())
+            unitRows /= 10;
     }
 
     public void setSplitRowThreshold(int rowThreshold) {
@@ -75,7 +79,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             int systemAvailMB = MemoryBudgetController.getSystemAvailMB();
 
             // InMemCubeBuilder will over-estimate base cuboid size by a factor, must cut ahead at least the same factor
-            cutAheadMB = (int) (systemAvailMB * InMemCubeBuilder.BASE_CUBOID_CACHE_OVERSIZE_FACTOR);
+            cutAheadMB = (int) (systemAvailMB * InMemCubeBuilder.getAggrCacheOversizeFactor(cubeDesc));
             logger.info("Cut ahead MB is " + cutAheadMB);
 
             int half = systemAvailMB / 2;
@@ -241,12 +245,8 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 }
 
                 // wait cuboid build done
-                while (last.isAlive()) {
-                    if (last.builder.isAllCuboidDone()) {
-                        break;
-                    }
-                    Thread.sleep(1000);
-                }
+                last.join();
+                
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
