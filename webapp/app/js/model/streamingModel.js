@@ -34,7 +34,6 @@ KylinApp.service('StreamingModel', function () {
       "name": "",
       "topic": "",
       "timeout": "60000",
-      "maxReadCount": "1000",
       "bufferSize": "65536",
       "parserName": "org.apache.kylin.streaming.TimedJsonStreamParser",
       "margin": "300000",

@@ -166,26 +166,6 @@
           <div class="form-group" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
-                <b>Max Read Count</b>
-              </label>
-
-              <div class="col-xs-12 col-sm-6"
-                   ng-class="{'has-error':forms.cube_streaming_form.maxReadCount.$invalid && (forms.cube_streaming_form.maxReadCount.$dirty||forms.cube_streaming_form.maxReadCount.$sbumitted)}">
-                <input ng-if="state.mode=='edit'" name="name" required ng-model="kafkaMeta.maxReadCount" type="text"
-                       placeholder="Input kafkaConfig maxReadCount"
-                       class="form-control"/>
-                <small class="help-block"
-                       ng-show="forms.cube_streaming_form.maxReadCount.$error.required && (forms.cube_streaming_form.maxReadCount.$dirty||forms.cube_streaming_form.$sbumitted)">
-                  Kafka maxReadCount is required.
-                </small>
-                <span ng-if="state.mode=='view'">{{kafkaMeta.maxReadCount}}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group" ng-class="{'required':state.mode=='edit'}">
-            <div class="row">
-              <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                 <b>Buffer Size</b>
               </label>
 
