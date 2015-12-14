@@ -3,7 +3,6 @@
   "name": "test_streaming_table_cube",
   "topic": "test_streaming_table_topic_xyz",
   "timeout": 60000,
-  "maxReadCount": 1000,
   "bufferSize": 65536,
   "parserName": "org.apache.kylin.source.kafka.TimedJsonStreamParser",
   "partition": 1,
