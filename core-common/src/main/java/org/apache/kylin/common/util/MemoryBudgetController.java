@@ -233,6 +233,30 @@ public class MemoryBudgetController {
         return true;
     }
 
+    public static int gcAndGetSystemAvailMB() {
+        final int tolerance = 1;
+        try {
+            int lastMB = -1;
+            while (true) {
+                Runtime.getRuntime().gc();
+                Thread.sleep(1000);
+                int thisMB = getSystemAvailMB();
+                
+                if (lastMB < 0) {
+                    lastMB = thisMB;
+                    continue;
+                }
+                if (lastMB - thisMB < tolerance) {
+                    return thisMB;
+                }
+                lastMB = thisMB;
+            }
+        } catch (InterruptedException e) {
+            logger.error("", e);
+            return getSystemAvailMB();
+        }
+    }
+
     public static long getSystemAvailBytes() {
         Runtime runtime = Runtime.getRuntime();
         long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
