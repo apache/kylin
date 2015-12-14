@@ -61,6 +61,7 @@ KylinApp
 
       $scope.loading = true;
 
+      //resolve cubes length
       return CubeList.list(queryParam).then(function (resp) {
 
         StreamingList.list().then(function(_resp){
@@ -72,10 +73,11 @@ KylinApp
               item.kfkConfig = kfkConfig;
             }
           })
-          $scope.loading = false;
-          defer.resolve(resp);
-          return defer.promise;
         })
+
+        $scope.loading = false;
+        defer.resolve(resp);
+        return defer.promise;
 
       },function(resp){
         $scope.loading = false;
