@@ -47,9 +47,14 @@ then
     #In this way we no longer need to explicitly configure hadoop/hbase related classpath for tomcat,
     #hbase command will do all the dirty tasks for us:
 
-
-
     spring_profile=`sh ${dir}/get-properties.sh kylin.security.profile`
+    if [ -z "$spring_profile" ]
+    then
+        echo 'please set kylin.security.profile in kylin.properties, options are: testing, ldap, saml.'
+        exit 1
+    else
+        echo "kylin.security.profile is set to $spring_profile"
+    fi
 
     #retrive $hive_dependency and $hbase_dependency
     source ${dir}/find-hive-dependency.sh
@@ -81,11 +86,7 @@ then
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
-    if [ "$useSandbox" = "true" ]
-        then echo "Please visit http://<your_sandbox_ip>:7070/kylin to play with the cubes! (Useranme: ADMIN, Password: KYLIN)"
-    else
-        echo "Please visit http://<ip>:7070/kylin"
-    fi
+    echo "Please visit http://<ip>:7070/kylin"
     echo "You can check the log at ${KYLIN_HOME}/logs/kylin.log"
     exit 0
 
