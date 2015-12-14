@@ -56,10 +56,23 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
     public DoggedCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<?>> dictionaryMap) {
         super(cubeDesc, dictionaryMap);
-        
+
         // check memory more often if a single row is big
         if (cubeDesc.hasMemoryHungryCountDistinctMeasures())
             unitRows /= 10;
+
+        // a meaningful default reserved memory
+        int sysAvailMB = MemoryBudgetController.getSystemAvailMB();
+        int reserve = Math.max(sysAvailMB / 10, 100); // 10% of system available, or 100 MB at least
+        int halfSysAvail = sysAvailMB / 2;
+        if (reserve > halfSysAvail) { // but no more than half of system available
+            logger.info("Reserve " + reserve + " MB is more than half of system avail " + sysAvailMB + " MB, override to " + halfSysAvail);
+            reserve = halfSysAvail;
+        }
+        
+        setReserveMemoryMB(reserve);
+        logger.info("Reserve memory is set to " + reserve + " MB");
+
     }
 
     public void setSplitRowThreshold(int rowThreshold) {
@@ -75,13 +88,6 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
     private class BuildOnce {
 
         BuildOnce() {
-            int systemAvailMB = MemoryBudgetController.getSystemAvailMB();
-
-            int half = systemAvailMB / 2;
-            if (getReserveMemoryMB() > half) {
-                logger.info("Reserve " + getReserveMemoryMB() + " MB is more than half of system avail " + systemAvailMB + " MB, override to " + half);
-                setReserveMemoryMB(half);
-            }
         }
 
         public void build(BlockingQueue<List<String>> input, ICuboidWriter output) throws IOException {
@@ -241,7 +247,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
 
                 // wait cuboid build done
                 last.join();
-                
+
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
