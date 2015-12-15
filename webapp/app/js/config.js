@@ -56,7 +56,7 @@ KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $log
 
   // Loop over routes and add to router.
   angular.forEach(Config.routes, function (route) {
-    $routeProvider.when(route.url, route.params);
+    $routeProvider.when(route.url, route.params).otherwise({redirectTo:'/'});
   });
 
   // Set to use HTML5 mode, which removes the #! from modern browsers.
