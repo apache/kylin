@@ -69,14 +69,18 @@ limitations under the License. See accompanying LICENSE file.
         <description>Block replication</description>
     </property>
 
-    <!--Properties for calculating cube by splits (in-mem), with which each Mapper need more mem to hold a full cube segment -->
+    <!-- Properties for calculating cube by splits (in-mem), with which each Mapper need more mem to hold a full cube segment -->
     <property>
         <name>mapreduce.map.java.opts</name>
-        <value>-Xmx3072m</value>
+        <value>-Xmx2500m</value>
     </property>
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>4096</value>
+        <value>3072</value>
+    </property>
+    <property>
+        <name>mapreduce.task.io.sort.mb</name>
+        <value>200</value>
     </property>
 
     <property>
