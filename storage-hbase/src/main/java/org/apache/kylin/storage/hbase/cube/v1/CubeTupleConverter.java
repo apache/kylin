@@ -63,7 +63,6 @@ public class CubeTupleConverter {
         for (int i = 0; i < dimCols.size(); i++) {
             TblColRef col = dimCols.get(i);
             dimensionTupleIdx[i] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
-            measureTypes.add(null);
         }
 
         // pre-calculate metrics index mapping to tuple
@@ -157,7 +156,7 @@ public class CubeTupleConverter {
             int[] measureIdx = metricsMeasureIdx[i];
             int[] tupleIdx = metricsTupleIdx[i];
             for (int j = 0; j < measureIdx.length; j++) {
-                if (measureTypes.get(dimensionValues.size() + j) != null) {
+                if (measureTypes.get(j) != null) {
                     tuple.setMeasureValue(tupleIdx[j], measureValues[measureIdx[j]]);
                 }
             }

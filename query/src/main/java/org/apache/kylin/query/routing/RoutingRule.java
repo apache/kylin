@@ -36,9 +36,6 @@ public abstract class RoutingRule {
     private static final Logger logger = LoggerFactory.getLogger(QueryRouter.class);
     private static List<RoutingRule> rules = Lists.newLinkedList();
 
-    //TODO: two rules are left out:
-    //1. simple query use II prior to cube
-    //2. exact match prior to week match
     static {
         rules.add(new RemoveUncapableRealizationsRule());
         rules.add(new RealizationSortRule());

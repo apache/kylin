@@ -73,17 +73,13 @@ public class FunctionDesc {
         }
 
         parameter.setColRefs(colRefs);
-        
-        // make sure sum/max/min returns the exact type as its input
-        if ((isSum() || isMax() || isMin()) && colRefs.size() > 0) {
-            setReturnType(colRefs.get(0).getDatatype());
-        }
+
     }
-    
+
     public MeasureType<?> getMeasureType() {
         if (isDimensionAsMetric)
             return null;
-        
+
         if (measureType == null) {
             measureType = MeasureTypeFactory.create(getExpression(), getReturnDataType());
         }
@@ -93,7 +89,7 @@ public class FunctionDesc {
     public boolean needRewrite() {
         if (isDimensionAsMetric)
             return false;
-        
+
         return getMeasureType().needRewrite();
     }
 
@@ -186,7 +182,7 @@ public class FunctionDesc {
         }
         return count;
     }
-    
+
     public String getReturnType() {
         return returnType;
     }
