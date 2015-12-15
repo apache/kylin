@@ -22,7 +22,7 @@ These are the mailing lists that have been established for this project. For eac
 ### Mailing List Archives
 For convenience, there's a forum style mailing list archives which not part of offical Apache archives:
 
-* [Developer List archive on Nabble](http://apache-kylin-incubating.74782.x6.nabble.com)
+* [Developer List archive on Nabble](http://apache-kylin.74782.x6.nabble.com)
 
 ### Social Media 
 The official Kylin Twitter account: [@ApacheKylin](https://twitter.com/ApacheKylin)
