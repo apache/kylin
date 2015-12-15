@@ -59,13 +59,18 @@
     <!--
     <property>
         <name>mapreduce.map.java.opts</name>
-        <value>-Xmx3072m</value>
+        <value>-Xmx2500m</value>
     </property>
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>4096</value>
+        <value>3072</value>
+    </property>
+    <property>
+        <name>mapreduce.task.io.sort.mb</name>
+        <value>200</value>
     </property>
     -->
+    
     <property>
         <name>mapred.task.timeout</name>
         <value>3600000</value>

@@ -97,6 +97,9 @@ public class MemoryBudgetController {
     }
 
     public void reserveInsist(MemoryConsumer consumer, int requestMB) {
+        if (requestMB > totalBudgetMB)
+            throw new NotEnoughBudgetException();
+        
         long waitStart = 0;
         while (true) {
             try {
