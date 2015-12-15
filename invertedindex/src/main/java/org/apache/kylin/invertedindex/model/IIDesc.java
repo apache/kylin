@@ -94,7 +94,7 @@ public class IIDesc extends RootPersistentEntity {
 
     @JsonProperty("storage_type")
     private int storageType = IStorageAware.ID_HBASE;
-    
+
     @JsonProperty("signature")
     private String signature;
 
@@ -230,7 +230,7 @@ public class IIDesc extends RootPersistentEntity {
         p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
         f1.setParameter(p1);
         f1.setReturnType(returnType);
-        if (f1.getReturnDataType().isIntegerFamily()) {
+        if (f1.isSum() && f1.getReturnDataType().isIntegerFamily()) {
             f1.setReturnType("bigint");
         }
 

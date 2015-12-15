@@ -1,12 +1,10 @@
 package org.apache.kylin.metadata.datatype;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.metadata.datatype.BigDecimalSerializer;
-import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
