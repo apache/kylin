@@ -174,14 +174,14 @@ __Check the artifacts:__
   `incubating` in the version.
 * In the two source distros `.tar.gz` and `.zip`, check that all files belong to a directory called
   `apache-kylin-X.Y.Z-src`.
-* That directory must contain files `DISCLAIMER`, `NOTICE`, `LICENSE`, `README.md`
+* That directory must contain files `NOTICE`, `LICENSE`, `README.md`
 * Check PGP, per [this](https://httpd.apache.org/dev/verification.html)
 
 __Run real release:__
 Now, run the release for real.  
 {% highlight bash %}
 # Prepare sets the version numbers, creates a tag, and pushes it to git.
-$ mvn -DskipTests -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" clean release:prepare
+$ mvn -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare
 
 # Perform checks out the tagged version, builds, and deploys to the staging repository
 $ mvn -DskipTests -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:perform
@@ -363,79 +363,6 @@ please recast your vote on the new thread.
 
 Luke
 
-{% endhighlight %}
-
-__Vote on Apache general mailing list__   
-Use the [Apache URL shortener](http://s.apache.org) to generate
-shortened URLs for the vote proposal and result emails. Examples:
-[http://s.apache.org/kylin-0.7.1-vote_rc3](http://s.apache.org/kylin-0.7.1-vote_rc3) and
-[http://s.apache.org/kylin-0.7.1-result_rc3](http://s.apache.org/kylin-0.7.1-result_rc3).
-
-{% highlight text %}
-To: general@apache.org
-Subject: [VOTE] Release Apache Kylin X.Y.Z (incubating)
-
-Hi all,
-
-The Apache Kylin community has voted on and approved a proposal to release
-Apache Kylin X.Y.Z (incubating).
-
-Proposal:
-http://s.apache.org/kylin-X.Y.Z-vote_rcN
-
-Vote result:
-N binding +1 votes
-N non-binding +1 votes
-No -1 votes
-http://s.apache.org/kylin-X.Y.Z-result_rcN
-
-
-The commit to be voted upon:
-https://github.com/apache/kylin/commit/XXX
-
-Its hash is XXX.
-
-The artifacts to be voted on are located here:
-https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-X.Y.Z-rcN/
-
-The hashes of the artifacts are as follows:
-src.zip.md5 XXX
-src.zip.sha1 XXX
-src.tar.gz.md5 XXX
-src.tar.gz.sha1 XXX
-
-A staged Maven repository is available for review at:
-https://repository.apache.org/content/repositories/orgapachekylin-NNNN/
-
-Release artifacts are signed with the following key:
-https://people.apache.org/keys/committer/lukehan.asc
-
-Pursuant to the Releases section of the Incubation Policy and with
-the endorsement of our mentors we would now like to request
-the permission of the PMC to publish the release. The vote
-is open for 72 hours, or until the necessary number of votes (3 +1)
-is reached.
-
-[ ] +1 Release this package
-[ ]  0 I don't feel strongly about it, but I'm okay with the release
-[ ] -1 Do not release this package because...
-
-
-Luke Han, on behalf of Apache Kylin PPMC
-{% endhighlight %}
-
-After vote finishes, send out the result:
-{% highlight text %}
-To: general@apache.org
-Subject: [RESULT] [VOTE] Release Apache Kylin X.Y.Z (incubating)
-
-This vote passes with N +1s and no 0 or -1 votes:
-
-+1 <name> (binding or no-binding)
-
-Thanks everyone. We’ll now roll the release out to the mirrors.
-
-Luke Han, on behalf of Apache Kylin PPMC
 {% endhighlight %}
 
 ## Publishing a release  
