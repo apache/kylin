@@ -54,7 +54,7 @@ then
 fi
 
 cd webapp/dist
-for f in * .[^.]*
+for f in * .[!.]*
 do
     echo "Adding $f to war"
     jar -uf ../../dist/tomcat/webapps/kylin.war $f
