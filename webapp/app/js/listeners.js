@@ -27,6 +27,9 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
 
   $rootScope.$on("$routeChangeStart", function () {
     AuthenticationService.ping(function (data) {
+      if(!data.userDetails){
+        $location.path(UserService.getHomePage());
+      }
       UserService.setCurUser(data);
     });
 
@@ -39,7 +42,7 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
     }
   });
 
-  /**
+    /**
    * Holds all the requests which failed due to 401 response.
    */
   $rootScope.requests401 = [];
