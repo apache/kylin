@@ -60,19 +60,6 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
         // check memory more often if a single row is big
         if (cubeDesc.hasMemoryHungryCountDistinctMeasures())
             unitRows /= 10;
-
-        // a meaningful default reserved memory
-        int sysAvailMB = MemoryBudgetController.getSystemAvailMB();
-        int reserve = Math.max(sysAvailMB / 10, 100); // 10% of system available, or 100 MB at least
-        int halfSysAvail = sysAvailMB / 2;
-        if (reserve > halfSysAvail) { // but no more than half of system available
-            logger.info("Reserve " + reserve + " MB is more than half of system avail " + sysAvailMB + " MB, override to " + halfSysAvail);
-            reserve = halfSysAvail;
-        }
-        
-        setReserveMemoryMB(reserve);
-        logger.info("Reserve memory is set to " + reserve + " MB");
-
     }
 
     public void setSplitRowThreshold(int rowThreshold) {
@@ -258,7 +245,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             int nSplit = splits.size();
             long splitRowCount = nSplit == 0 ? 0 : splits.get(nSplit - 1).inputRowCount;
 
-            logger.debug(splitRowCount + " records went into split #" + nSplit + "; " + systemAvailMB + " MB left, " + reserveMemoryMB + " MB threshold");
+            logger.info(splitRowCount + " records went into split #" + nSplit + "; " + systemAvailMB + " MB left, " + reserveMemoryMB + " MB threshold");
 
             if (splitRowCount >= splitRowThreshold) {
                 logger.info("Split cut due to hitting splitRowThreshold " + splitRowThreshold);
