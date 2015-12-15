@@ -21,6 +21,8 @@ package org.apache.kylin.rest.controller;
 import java.util.List;
 
 import org.apache.kylin.rest.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequestMapping(value = "/user")
 public class UserController {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     @Autowired
     UserService userService;
 
@@ -52,11 +55,23 @@ public class UserController {
     public UserDetails authenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
+        if (authentication == null) {
+            logger.info("authentication is null.");
             return null;
         }
+        
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            logger.info("authentication.getPrincipal() is " + authentication.getPrincipal());
+            return (UserDetails) authentication.getPrincipal();
+        }
 
-        return (UserDetails) authentication.getPrincipal();
+
+        if (authentication.getDetails() instanceof UserDetails) {
+            logger.info("authentication.getDetails() is " + authentication.getDetails());
+            return (UserDetails) authentication.getDetails();
+        }
+        
+        return null;
     }
 
     @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = "application/json")
