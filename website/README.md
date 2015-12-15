@@ -18,7 +18,7 @@ limitations under the License.
 -->
 
 # Apache Kylin website  
-This directory contains the source code for the Apache Kylin (incubating) website:
+This directory contains the source code for the Apache Kylin website:
 [http://kyin.apache.org](http://kylin.apache.org/).
 
 ## Kylin website's structure:
