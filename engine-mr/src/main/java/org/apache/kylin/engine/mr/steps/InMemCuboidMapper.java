@@ -17,6 +17,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -72,16 +73,22 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
 
             dictionaryMap.put(col, cubeSegment.getDictionary(col));
         }
-        
+
         DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
-        // Some may want to left out memory for "mapreduce.task.io.sort.mb", but that is not
-        // necessary, because the output phase is after all in-mem cubing is done, and at that
-        // time all memory has been released, cuboid data is read from ConcurrentDiskStore.
-        //cubeBuilder.setReserveMemoryMB(mapreduce.task.io.sort.mb);
-        
+        cubeBuilder.setReserveMemoryMB(calculateReserveMB(context.getConfiguration()));
+
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new MapContextGTRecordWriter(context, cubeDesc, cubeSegment)));
 
+    }
+
+    private int calculateReserveMB(Configuration configuration) {
+        int sysAvailMB = MemoryBudgetController.getSystemAvailMB();
+        int mrReserve = configuration.getInt("mapreduce.task.io.sort.mb", 100);
+        int sysReserve = Math.max(sysAvailMB / 10, 100);
+        int reserveMB = mrReserve + sysReserve;
+        logger.info("Reserve " + reserveMB + " MB = " + mrReserve + " (MR reserve) + " + sysReserve + " (SYS reserve)");
+        return reserveMB;
     }
 
     @Override
