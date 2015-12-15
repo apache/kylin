@@ -279,14 +279,20 @@ public class MemoryBudgetController {
 
         public void markHigh() {
             // get avail mem without gc
-            lowAvail = Math.min(lowAvail, MemoryBudgetController.getSystemAvailMB());
-            logger.info("Lower system avail " + lowAvail + " MB in markHigh()");
+            int mb = MemoryBudgetController.getSystemAvailMB();
+            if (mb < lowAvail) {
+                lowAvail = mb;
+                logger.info("Lower system avail " + lowAvail + " MB in markHigh()");
+            }
         }
 
         public void markLow() {
             // get avail mem after gc
-            highAvail = Math.max(highAvail, MemoryBudgetController.gcAndGetSystemAvailMB());
-            logger.info("Higher system avail " + highAvail + " MB in markLow()");
+            int mb = MemoryBudgetController.gcAndGetSystemAvailMB();
+            if (mb > highAvail) {
+                highAvail = mb;
+                logger.info("Higher system avail " + highAvail + " MB in markLow()");
+            }
         }
 
         public int getEstimateMB() {
