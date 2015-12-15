@@ -355,8 +355,9 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private CuboidResult updateCuboidResult(long cuboidId, GridTable table, int nRows, long timeSpent, int aggrCacheMB) {
         if (aggrCacheMB <= 0 && baseResult != null) {
-            aggrCacheMB = (int) Math.ceil( //
-                    (DERIVE_AGGR_CACHE_CONSTANT_FACTOR + DERIVE_AGGR_CACHE_VARIABLE_FACTOR * nRows / baseResult.nRows) * baseResult.aggrCacheMB);
+            aggrCacheMB = (int) Math.round( //
+                    (DERIVE_AGGR_CACHE_CONSTANT_FACTOR + DERIVE_AGGR_CACHE_VARIABLE_FACTOR * nRows / baseResult.nRows) //
+                            * baseResult.aggrCacheMB);
         }
 
         CuboidResult result = new CuboidResult(cuboidId, table, nRows, timeSpent, aggrCacheMB);
