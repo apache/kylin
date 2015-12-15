@@ -301,14 +301,10 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         }
     }
 
-    private int getSystemAvailMB() {
-        return MemoryBudgetController.gcAndGetSystemAvailMB();
-    }
-
     private void makeMemoryBudget() {
         baseResult.aggrCacheMB = Math.max(baseCuboidMemTracker.getEstimateMB(), 10); // 10 MB at minimal
         logger.info("Base cuboid aggr cache is " + baseResult.aggrCacheMB + " MB");
-        int systemAvailMB = getSystemAvailMB();
+        int systemAvailMB = MemoryBudgetController.gcAndGetSystemAvailMB();
         logger.info("System avail " + systemAvailMB + " MB");
         int reserve = reserveMemoryMB;
         logger.info("Reserve " + reserve + " MB for system basics");
