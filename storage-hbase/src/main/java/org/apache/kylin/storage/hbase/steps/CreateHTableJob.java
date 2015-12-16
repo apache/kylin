@@ -372,18 +372,24 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         // add the measure length
         int space = 0;
+        boolean isMemoryHungry = false;
         for (MeasureDesc measureDesc : cubeSegment.getCubeDesc().getMeasures()) {
             DataType returnType = measureDesc.getFunction().getReturnDataType();
             if (returnType.isHLLC()) {
-                // for HLL, it will be compressed when export to bytes
-                space += returnType.getStorageBytesEstimate() * 0.75;
-            } else {
-                space += returnType.getStorageBytesEstimate();
+                isMemoryHungry = true;
             }
+            space += returnType.getStorageBytesEstimate();
         }
         bytesLength += space;
 
         double ret = 1.0 * bytesLength * rowCount / (1024L * 1024L);
+        if (isMemoryHungry) {
+            logger.info("Cube is memory hungry, storage size estimation multiply 0.05");
+            ret *= 0.05;
+        } else {
+            logger.info("Cube is not memory hungry, storage size estimation multiply 0.25");
+            ret *= 0.25;
+        }
         logger.info("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength + " bytes." + " Total size is " + ret + "M.");
         return ret;
     }
