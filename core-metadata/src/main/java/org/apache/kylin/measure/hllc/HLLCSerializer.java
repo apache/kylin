@@ -81,8 +81,7 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
 
     @Override
     public int getStorageBytesEstimate() {
-        // for HLL, it will be compressed when export to bytes
-        return (int) (current().maxLength() * 0.75);
+        return current().maxLength();
     }
 
 }
