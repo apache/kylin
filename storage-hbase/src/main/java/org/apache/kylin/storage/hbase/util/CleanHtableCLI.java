@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,10 +58,13 @@ public class CleanHtableCLI extends AbstractHadoopJob {
         for (HTableDescriptor descriptor : hbaseAdmin.listTables()) {
             String name = descriptor.getNameAsString().toLowerCase();
             if (name.startsWith("kylin") || name.startsWith("_kylin")) {
-                String x = descriptor.getValue("KYLIN_HOST");
+                String x = descriptor.getValue(IRealizationConstants.HTableTag);
                 System.out.println("table name " + descriptor.getNameAsString() + " host: " + x);
                 System.out.println(descriptor);
                 System.out.println();
+
+                descriptor.setValue(IRealizationConstants.HTableOwner, "DL-eBay-Kylin@ebay.com");
+                hbaseAdmin.modifyTable(descriptor.getNameAsString(), descriptor);
             }
         }
         hbaseAdmin.close();

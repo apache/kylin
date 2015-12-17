@@ -91,7 +91,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
         options.addOption(OPTION_CUBE_NAME);
         options.addOption(OPTION_SEGMENT_NAME);
         options.addOption(OPTION_PARTITION_FILE_PATH);
-        options.addOption(OPTION_HTABLE_NAME);
         options.addOption(OPTION_STATISTICS_ENABLED);
         parseOptions(options, args);
 
@@ -106,7 +105,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
         segmentName = getOptionValue(OPTION_SEGMENT_NAME);
         CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
-        String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 
         try {
@@ -118,7 +116,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
                 splitKeys = getSplits(conf, partitionFilePath);
             }
 
-            CubeHTableUtil.createHTable(cubeDesc, tableName, splitKeys);
+            CubeHTableUtil.createHTable(cubeSegment, splitKeys);
             return 0;
         } catch (Exception e) {
             printUsage(options);
