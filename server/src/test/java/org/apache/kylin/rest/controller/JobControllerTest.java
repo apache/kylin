@@ -91,6 +91,7 @@ public class JobControllerTest extends ServiceTestBase {
         assertNotNull(cube);
 
         JobListRequest jobRequest = new JobListRequest();
+        jobRequest.setTimeFilter(4);
         Assert.assertNotNull(jobSchedulerController.list(jobRequest));
 
         JobBuildRequest jobBuildRequest = new JobBuildRequest();
