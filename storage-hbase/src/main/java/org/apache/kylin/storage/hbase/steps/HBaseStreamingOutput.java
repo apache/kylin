@@ -83,7 +83,7 @@ public class HBaseStreamingOutput implements IStreamingOutput {
 
     private HTableInterface createHTable(final CubeSegment cubeSegment) throws IOException {
         final String hTableName = cubeSegment.getStorageLocationIdentifier();
-        CubeHTableUtil.createHTable(cubeSegment.getCubeDesc(), hTableName, null);
+        CubeHTableUtil.createHTable(cubeSegment, null);
         final HTableInterface hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
         logger.info("hTable:" + hTableName + " for segment:" + cubeSegment.getName() + " created!");
         return hTable;
