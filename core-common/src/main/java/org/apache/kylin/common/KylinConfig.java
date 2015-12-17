@@ -55,6 +55,8 @@ public class KylinConfig implements Serializable {
      * NOTE: These key constants should be private or even better be removed.
      *       All external access should go through public methods.
      */
+    public static final String KYLIN_OWNER = "kylin.owner";
+
     public static final String KYLIN_STORAGE_URL = "kylin.storage.url";
 
     public static final String KYLIN_METADATA_URL = "kylin.metadata.url";
@@ -714,6 +716,10 @@ public class KylinConfig implements Serializable {
 
     public String getHiveDatabaseForIntermediateTable() {
         return this.getOptional(HIVE_DATABASE_FOR_INTERMEDIATE_TABLE, "default");
+    }
+
+    public String getKylinOwner() {
+        return this.getOptional(KYLIN_OWNER, "");
     }
 
     public void setRunAsRemoteCommand(String v) {
