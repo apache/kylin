@@ -2,6 +2,7 @@ package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -10,10 +11,11 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
-import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
@@ -29,14 +31,25 @@ public class CubeHTableUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeHTableUtil.class);
 
-    public static void createHTable(CubeDesc cubeDesc, String tableName, byte[][] splitKeys) throws IOException {
+    public static void createHTable(CubeSegment cubeSegment, byte[][] splitKeys) throws IOException {
+        String tableName = cubeSegment.getStorageLocationIdentifier();
+        CubeInstance cubeInstance = cubeSegment.getCubeInstance();
+        CubeDesc cubeDesc = cubeInstance.getDescriptor();
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
-        HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
+        HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(cubeSegment.getStorageLocationIdentifier()));
         // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
         tableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
         tableDesc.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
+
+        if (!StringUtils.isEmpty(kylinConfig.getKylinOwner())) {
+            //HTableOwner is the team that provides kylin service
+            tableDesc.setValue(IRealizationConstants.HTableOwner, kylinConfig.getKylinOwner());
+        }
+
+        //HTableUser is the cube owner, which will be the "user"
+        tableDesc.setValue(IRealizationConstants.HTableUser, cubeInstance.getOwner());
 
         Configuration conf = HBaseConfiguration.create();
         HBaseAdmin admin = new HBaseAdmin(conf);
