@@ -51,33 +51,33 @@ public class JobEngineConfig {
         return null;
     }
 
-    private String getHadoopJobConfFilePath(RealizationCapacity capaticy, boolean appendSuffix) throws IOException {
+    private String getHadoopJobConfFilePath(RealizationCapacity capaticy, String projectName, boolean appendSuffix) throws IOException {
         String hadoopJobConfFile;
         if (appendSuffix) {
-            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + ".xml");
+            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + "_" + projectName + ".xml");
         } else {
-            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + ".xml");
+            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + projectName + ".xml");
         }
 
         File jobConfig = getJobConfig(hadoopJobConfFile);
         if (jobConfig == null || !jobConfig.exists()) {
-            logger.warn("fail to locate " + hadoopJobConfFile + ", trying to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
-            jobConfig = getJobConfig(HADOOP_JOB_CONF_FILENAME + ".xml");
+            logger.warn("fail to locate " + hadoopJobConfFile + ", trying to locate " + HADOOP_JOB_CONF_FILENAME + "_" + projectName + ".xml");
+            jobConfig = getJobConfig(HADOOP_JOB_CONF_FILENAME + "_" + projectName + ".xml");
             if (jobConfig == null || !jobConfig.exists()) {
-                logger.error("fail to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
-                throw new RuntimeException("fail to locate " + HADOOP_JOB_CONF_FILENAME + ".xml");
+                logger.error("fail to locate " + HADOOP_JOB_CONF_FILENAME + "_" + projectName + ".xml");
+                throw new RuntimeException("fail to locate " + HADOOP_JOB_CONF_FILENAME + "_" + projectName + ".xml");
             }
         }
         return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
     }
 
-    public String getHadoopJobConfFilePath(RealizationCapacity capaticy) throws IOException {
-        String path = getHadoopJobConfFilePath(capaticy, true);
+    public String getHadoopJobConfFilePath(RealizationCapacity capaticy, String projectName) throws IOException {
+        String path = getHadoopJobConfFilePath(capaticy, projectName, true);
         if (!StringUtils.isEmpty(path)) {
             logger.info("Chosen job conf is : " + path);
             return path;
         } else {
-            path = getHadoopJobConfFilePath(capaticy, false);
+            path = getHadoopJobConfFilePath(capaticy, projectName, false);
             if (!StringUtils.isEmpty(path)) {
                 logger.info("Chosen job conf is : " + path);
                 return path;

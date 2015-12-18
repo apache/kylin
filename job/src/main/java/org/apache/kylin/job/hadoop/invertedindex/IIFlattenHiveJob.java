@@ -55,6 +55,7 @@ public class IIFlattenHiveJob extends AbstractHadoopJob {
 
             IIInstance iiInstance = IIManager.getInstance(config).getII(iiname);
             IIDesc iidesc = IIDescManager.getInstance(config).getIIDesc(iiInstance.getDescName());
+            final String projectName = iiInstance.getProjectName();
 
             String jobUUID = "00bf87b5-c7b5-4420-a12a-07f6b37b3187";
             JobEngineConfig engineConfig = new JobEngineConfig(config);
@@ -63,7 +64,7 @@ public class IIFlattenHiveJob extends AbstractHadoopJob {
             String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobUUID);
             String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, //
                     JobInstance.getJobWorkingDir(jobUUID, engineConfig.getHdfsWorkingDirectory()), jobUUID);
-            String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobUUID, engineConfig);
+            String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobUUID, engineConfig, projectName);
 
             StringBuffer buf = new StringBuffer();
             buf.append("hive -e \"");
