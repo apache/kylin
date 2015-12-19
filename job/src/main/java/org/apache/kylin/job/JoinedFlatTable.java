@@ -81,10 +81,10 @@ public class JoinedFlatTable {
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID, JobEngineConfig engineConfig) throws IOException {
+    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, String jobUUID, JobEngineConfig engineConfig, String projectName) throws IOException {
         StringBuilder sql = new StringBuilder();
 
-        File hadoopPropertiesFile = new File(engineConfig.getHadoopJobConfFilePath(intermediateTableDesc.getCapacity()));
+        File hadoopPropertiesFile = new File(engineConfig.getHadoopJobConfFilePath(intermediateTableDesc.getCapacity(), projectName));
 
         if (hadoopPropertiesFile.exists()) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -117,6 +117,7 @@ public class JoinedFlatTable {
 
         return sql.toString();
     }
+
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc intermediateTableDesc) {
         StringBuilder sql = new StringBuilder();

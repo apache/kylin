@@ -182,8 +182,9 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         final String intermediateHiveTableLocation = getIntermediateHiveTableLocation(intermediateTableDesc, jobId);
         final String factDistinctColumnsPath = getFactDistinctColumnsPath(seg, jobId);
         final String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
+        final String projectName = seg.getCubeInstance().getProjectName();
 
-        final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
+        final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId, projectName);
         result.addTask(intermediateHiveTableStep);
 
         result.addTask(createFactDistinctColumnsStep(seg, intermediateHiveTableName, jobId));
@@ -243,7 +244,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
     private void appendMapReduceParameters(StringBuilder builder, CubeSegment seg) {
         try {
-            String jobConf = engineConfig.getHadoopJobConfFilePath(seg.getCubeDesc().getModel().getCapacity());
+            String jobConf = engineConfig.getHadoopJobConfFilePath(seg.getCubeDesc().getModel().getCapacity(), seg.getCubeInstance().getProjectName());
             if (jobConf != null && jobConf.length() > 0) {
                 builder.append(" -conf ").append(jobConf);
             }

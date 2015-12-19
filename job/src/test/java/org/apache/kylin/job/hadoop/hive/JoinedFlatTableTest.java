@@ -45,6 +45,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
     CubeJoinedFlatTableDesc intermediateTableDesc = null;
     String fakeJobUUID = "abc-def";
     CubeSegment cubeSegment = null;
+    String projectName = "default";
 
     @Before
     public void setUp() throws Exception {
@@ -76,7 +77,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGenerateInsertSql() throws IOException {
-        String sqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, fakeJobUUID, new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        String sqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, fakeJobUUID, new JobEngineConfig(KylinConfig.getInstanceFromEnv()), projectName);
         System.out.println(sqls);
 
         int length = sqls.length();

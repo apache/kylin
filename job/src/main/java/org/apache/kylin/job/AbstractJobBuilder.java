@@ -62,14 +62,14 @@ public abstract class AbstractJobBuilder {
         return getJobWorkingDir(jobUUID) + "/" + intermediateTableDesc.getTableName(jobUUID);
     }
 
-    protected AbstractExecutable createIntermediateHiveTableStep(IJoinedFlatTableDesc intermediateTableDesc, String jobId) {
+    protected AbstractExecutable createIntermediateHiveTableStep(IJoinedFlatTableDesc intermediateTableDesc, String jobId, String projectName) {
 
         final String useDatabaseHql = "USE " + engineConfig.getConfig().getHiveDatabaseForIntermediateTable() + ";";
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobId);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobId), jobId);
         String insertDataHqls;
         try {
-            insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobId, this.engineConfig);
+            insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobId, this.engineConfig, projectName);
         } catch (IOException e1) {
             e1.printStackTrace();
             throw new RuntimeException("Failed to generate insert data SQL for intermediate table.");

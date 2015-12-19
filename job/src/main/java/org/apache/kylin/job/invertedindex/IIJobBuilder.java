@@ -60,8 +60,9 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         final String factDistinctColumnsPath = getIIDistinctColumnsPath(seg, jobId);
         final String iiRootPath = getJobWorkingDir(jobId) + "/" + seg.getIIInstance().getName() + "/";
         final String iiPath = iiRootPath + "*";
+        final String projectName = seg.getIIInstance().getProjectName();
 
-        final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
+        final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId, projectName);
         result.addTask(intermediateHiveTableStep);
 
         result.addTask(createFactDistinctColumnsStep(seg, intermediateHiveTableName, jobId, factDistinctColumnsPath));
@@ -98,9 +99,9 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         Preconditions.checkNotNull(engineConfig, "jobEngineConfig cannot be null");
     }
 
-    private void appendMapReduceParameters(StringBuilder builder, JobEngineConfig engineConfig) {
+    private void appendMapReduceParameters(StringBuilder builder, JobEngineConfig engineConfig, IISegment seg) {
         try {
-            String jobConf = engineConfig.getHadoopJobConfFilePath(RealizationCapacity.MEDIUM);
+            String jobConf = engineConfig.getHadoopJobConfFilePath(RealizationCapacity.MEDIUM, seg.getIIInstance().getProjectName());
             if (jobConf != null && jobConf.length() > 0) {
                 builder.append(" -conf ").append(jobConf);
             }
@@ -122,7 +123,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         result.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
         result.setMapReduceJobClass(IIDistinctColumnsJob.class);
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, engineConfig);
+        appendMapReduceParameters(cmd, engineConfig, seg);
         appendExecCmdParameters(cmd, "tablename", factTableName);
         appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
         appendExecCmdParameters(cmd, "output", output);
@@ -150,7 +151,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         MapReduceExecutable buildIIStep = new MapReduceExecutable();
 
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, engineConfig);
+        appendMapReduceParameters(cmd, engineConfig, seg);
 
         buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_II);
 
@@ -182,7 +183,7 @@ public final class IIJobBuilder extends AbstractJobBuilder {
         createHFilesStep.setName(ExecutableConstants.STEP_NAME_CONVERT_II_TO_HFILE);
         StringBuilder cmd = new StringBuilder();
 
-        appendMapReduceParameters(cmd, engineConfig);
+        appendMapReduceParameters(cmd, engineConfig, seg);
         appendExecCmdParameters(cmd, "iiname", seg.getIIInstance().getName());
         appendExecCmdParameters(cmd, "input", inputPath);
         appendExecCmdParameters(cmd, "output", getHFilePath(seg, jobId));
