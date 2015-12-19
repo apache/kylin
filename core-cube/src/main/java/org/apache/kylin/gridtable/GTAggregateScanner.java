@@ -1,20 +1,33 @@
 package org.apache.kylin.gridtable;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
 import java.util.SortedMap;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
+import org.apache.kylin.cube.util.KryoUtils;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -36,7 +49,7 @@ public class GTAggregateScanner implements IGTScanner {
     private MemoryWaterLevel memTracker;
 
     public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, boolean enableMemCheck) {
-        if (req.hasAggregation() == false)
+        if (!req.hasAggregation())
             throw new IllegalStateException();
 
         this.info = inputScanner.getInfo();
@@ -47,6 +60,30 @@ public class GTAggregateScanner implements IGTScanner {
         this.inputScanner = inputScanner;
         this.aggrCache = new AggregationCache();
         this.enableMemCheck = enableMemCheck;
+    }
+
+    public static long estimateSizeOfAggrCache(byte[] keySample, MeasureAggregator<?>[] aggrSample, int size) {
+        // Aggregation cache is basically a tree map. The tree map entry overhead is
+        // - 40 according to http://java-performance.info/memory-consumption-of-java-data-types-2/
+        // - 41~52 according to AggregationCacheMemSizeTest
+        return (estimateSizeOf(keySample) + estimateSizeOf(aggrSample) + 64) * size;
+    }
+
+    public static long estimateSizeOf(MeasureAggregator[] aggrs) {
+        // size of array, AggregationCacheMemSizeTest reports 4 for [0], 12 for [1], 12 for [2], 20 for [3] etc..
+        // Memory alignment to 8 bytes
+        long est = (aggrs.length + 1) / 2 * 8 + 4 + (4 /* extra */);
+        for (MeasureAggregator aggr : aggrs) {
+            if (aggr != null)
+                est += aggr.getMemBytesEstimate();
+        }
+        return est;
+    }
+
+    public static long estimateSizeOf(byte[] bytes) {
+        // AggregationCacheMemSizeTest reports 20 for byte[10] and 20 again for byte[16]
+        // Memory alignment to 8 bytes
+        return (bytes.length + 7) / 8 * 8 + 4 + (4 /* extra */);
     }
 
     public void trackMemoryLevel(MemoryWaterLevel tracker) {
@@ -66,6 +103,7 @@ public class GTAggregateScanner implements IGTScanner {
     @Override
     public void close() throws IOException {
         inputScanner.close();
+        aggrCache.close();
     }
 
     @Override
@@ -73,6 +111,8 @@ public class GTAggregateScanner implements IGTScanner {
         for (GTRecord r : inputScanner) {
             aggrCache.aggregate(r);
         }
+        logger.info("Last spill, current AggregationCache memory estimated size is: " + getEstimateSizeOfAggrCache());
+        aggrCache.spillBuffMap();
         return aggrCache.iterator();
     }
 
@@ -81,35 +121,44 @@ public class GTAggregateScanner implements IGTScanner {
         return aggrCache.estimatedMemSize();
     }
 
-    class AggregationCache {
-        final SortedMap<byte[], MeasureAggregator[]> aggBufMap;
+    class AggregationCache implements Closeable {
+        final static double SPILL_THRESHOLD_GB = 0.5;
+
+        final List<Dump> dumps;
         final int keyLength;
         final boolean[] compareMask;
+
+        final Kryo kryo = KryoUtils.getKryo();
+
+        final Comparator<byte[]> bytesComparator = new Comparator<byte[]>() {
+            @Override
+            public int compare(byte[] o1, byte[] o2) {
+                int result = 0;
+                // profiler shows this check is slow
+                // Preconditions.checkArgument(keyLength == o1.length && keyLength == o2.length);
+                for (int i = 0; i < keyLength; ++i) {
+                    if (compareMask[i]) {
+                        int a = (o1[i] & 0xff);
+                        int b = (o2[i] & 0xff);
+                        result = a - b;
+                        if (result == 0) {
+                            continue;
+                        } else {
+                            return result;
+                        }
+                    }
+                }
+                return result;
+            }
+        };
+
+        SortedMap<byte[], MeasureAggregator[]> aggBufMap;
 
         public AggregationCache() {
             compareMask = createCompareMask();
             keyLength = compareMask.length;
-            aggBufMap = Maps.newTreeMap(new Comparator<byte[]>() {
-                @Override
-                public int compare(byte[] o1, byte[] o2) {
-                    int result = 0;
-                    // profiler shows this check is slow
-                    // Preconditions.checkArgument(keyLength == o1.length && keyLength == o2.length);
-                    for (int i = 0; i < keyLength; ++i) {
-                        if (compareMask[i]) {
-                            int a = (o1[i] & 0xff);
-                            int b = (o2[i] & 0xff);
-                            result = a - b;
-                            if (result == 0) {
-                                continue;
-                            } else {
-                                return result;
-                            }
-                        }
-                    }
-                    return result;
-                }
-            });
+            dumps = Lists.newArrayList();
+            aggBufMap = createBuffMap();
         }
 
         private boolean[] createCompareMask() {
@@ -133,6 +182,10 @@ public class GTAggregateScanner implements IGTScanner {
             return mask;
         }
 
+        private SortedMap<byte[], MeasureAggregator[]> createBuffMap() {
+            return Maps.newTreeMap(bytesComparator);
+        }
+
         private byte[] createKey(GTRecord record) {
             byte[] result = new byte[keyLength];
             int offset = 0;
@@ -152,10 +205,13 @@ public class GTAggregateScanner implements IGTScanner {
                 if (memTracker != null) {
                     memTracker.markHigh();
                 }
-                long estimated = estimatedMemSize();
-                if (estimated > 10 * MemoryBudgetController.ONE_GB) {
-                    throw new RuntimeException("AggregationCache exceed 10GB, estimated size is: " + estimated);
-                }
+            }
+
+            // Here will spill to disk when aggBufMap used too large memory
+            long estimated = estimatedMemSize();
+            if (estimated > SPILL_THRESHOLD_GB * MemoryBudgetController.ONE_GB) {
+                logger.info("AggregationCache memory estimated size is: " + estimated);
+                spillBuffMap();
             }
 
             final byte[] key = createKey(r);
@@ -168,6 +224,28 @@ public class GTAggregateScanner implements IGTScanner {
                 int col = metrics.trueBitAt(i);
                 Object metrics = info.codeSystem.decodeColumnValue(col, r.cols[col].asBuffer());
                 aggrs[i].aggregate(metrics);
+            }
+        }
+
+        private void spillBuffMap() throws RuntimeException {
+            try {
+                Dump dump = new Dump(aggBufMap);
+                dump.flush();
+                dumps.add(dump);
+                aggBufMap = createBuffMap();
+            } catch (Exception e) {
+                throw new RuntimeException("AggregationCache spill failed: " + e.getMessage());
+            }
+        }
+
+        @Override
+        public void close() throws RuntimeException {
+            try {
+                for (Dump dump : dumps) {
+                    dump.terminate();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("AggregationCache close failed: " + e.getMessage());
             }
         }
 
@@ -185,9 +263,11 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         public Iterator<GTRecord> iterator() {
+            final DumpMerger merger = new DumpMerger(dumps);
+
             return new Iterator<GTRecord>() {
 
-                final Iterator<Entry<byte[], MeasureAggregator[]>> it = aggBufMap.entrySet().iterator();
+                final Iterator<Entry<byte[], MeasureAggregator[]>> it = merger.iterator();
 
                 final ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
                 final GTRecord secondRecord = new GTRecord(info);
@@ -227,29 +307,157 @@ public class GTAggregateScanner implements IGTScanner {
                 }
             };
         }
-    }
 
-    public static long estimateSizeOfAggrCache(byte[] keySample, MeasureAggregator<?>[] aggrSample, int size) {
-        // Aggregation cache is basically a tree map. The tree map entry overhead is
-        // - 40 according to http://java-performance.info/memory-consumption-of-java-data-types-2/
-        // - 41~52 according to AggregationCacheMemSizeTest
-        return (estimateSizeOf(keySample) + estimateSizeOf(aggrSample) + 64) * size;
-    }
+        class Dump implements Iterable<Entry<byte[], MeasureAggregator[]>> {
+            File dumpedFile;
+            Input input;
+            SortedMap<byte[], MeasureAggregator[]> buffMap;
 
-    public static long estimateSizeOf(MeasureAggregator[] aggrs) {
-        // size of array, AggregationCacheMemSizeTest reports 4 for [0], 12 for [1], 12 for [2], 20 for [3] etc..
-        // Memory alignment to 8 bytes
-        long est = (aggrs.length + 1) / 2 * 8 + 4 + (4 /* extra */);
-        for (MeasureAggregator aggr : aggrs) {
-            if (aggr != null)
-                est += aggr.getMemBytesEstimate();
+            public Dump(SortedMap<byte[], MeasureAggregator[]> buffMap) throws IOException {
+                this.buffMap = buffMap;
+            }
+
+            @Override
+            public Iterator<Entry<byte[], MeasureAggregator[]>> iterator() {
+                try {
+                    if (dumpedFile == null || !dumpedFile.exists()) {
+                        throw new RuntimeException("Dumped file cannot be found at: " + (dumpedFile == null ? "<null>" : dumpedFile.getAbsolutePath()));
+                    }
+
+                    input = new Input(new FileInputStream(dumpedFile));
+
+                    final int count = kryo.readObject(input, Integer.class);
+                    return new Iterator<Entry<byte[], MeasureAggregator[]>>() {
+                        int cursorIdx = 0;
+
+                        @Override
+                        public boolean hasNext() {
+                            return cursorIdx < count;
+                        }
+
+                        @Override
+                        public Entry<byte[], MeasureAggregator[]> next() {
+                            try {
+                                cursorIdx++;
+                                return (ImmutablePair<byte[], MeasureAggregator[]>) kryo.readObject(input, ImmutablePair.class);
+                            } catch (Exception e) {
+                                throw new RuntimeException("Cannot read AggregationCache from dumped file: " + e.getMessage());
+                            }
+                        }
+
+                        @Override
+                        public void remove() {
+                            throw new UnsupportedOperationException();
+                        }
+                    };
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to read dumped file: " + e.getMessage());
+                }
+            }
+
+            public void flush() throws IOException {
+                if (buffMap != null) {
+                    Output output = null;
+                    try {
+                        dumpedFile = File.createTempFile("KYLIN_AGGR_", ".tmp");
+
+                        logger.info("AggregationCache will dump to file: " + dumpedFile.getAbsolutePath());
+                        output = new Output(new FileOutputStream(dumpedFile));
+                        kryo.writeObject(output, buffMap.size());
+                        for (Entry<byte[], MeasureAggregator[]> entry : buffMap.entrySet()) {
+                            kryo.writeObject(output, new ImmutablePair(entry.getKey(), entry.getValue()));
+                        }
+                    } finally {
+                        buffMap = null;
+                        if (output != null)
+                            output.close();
+                    }
+                }
+            }
+
+            public void terminate() throws IOException {
+                buffMap = null;
+                if (input != null)
+                    input.close();
+                if (dumpedFile != null && dumpedFile.exists())
+                    dumpedFile.delete();
+            }
         }
-        return est;
-    }
 
-    public static long estimateSizeOf(byte[] bytes) {
-        // AggregationCacheMemSizeTest reports 20 for byte[10] and 20 again for byte[16]
-        // Memory alignment to 8 bytes
-        return (bytes.length + 7) / 8 * 8 + 4 + (4 /* extra */);
+        class DumpMerger implements Iterable<Entry<byte[], MeasureAggregator[]>> {
+            final PriorityQueue<Entry<byte[], Integer>> minHeap;
+            final List<Iterator<Entry<byte[], MeasureAggregator[]>>> dumpIterators;
+            final List<MeasureAggregator[]> dumpCurrentValues;
+
+            public DumpMerger(List<Dump> dumps) {
+                minHeap = new PriorityQueue<>(dumps.size(), new Comparator<Entry<byte[], Integer>>() {
+                    @Override
+                    public int compare(Entry<byte[], Integer> o1, Entry<byte[], Integer> o2) {
+                        return bytesComparator.compare(o1.getKey(), o2.getKey());
+                    }
+                });
+                dumpIterators = Lists.newArrayListWithCapacity(dumps.size());
+                dumpCurrentValues = Lists.newArrayListWithCapacity(dumps.size());
+
+                Iterator<Entry<byte[], MeasureAggregator[]>> it;
+                for (int i = 0; i < dumps.size(); i++) {
+                    it = dumps.get(i).iterator();
+                    if (it.hasNext()) {
+                        dumpIterators.add(i, it);
+                        Entry<byte[], MeasureAggregator[]> entry = it.next();
+                        minHeap.offer(new ImmutablePair(entry.getKey(), i));
+                        dumpCurrentValues.add(i, entry.getValue());
+                    } else {
+                        dumpIterators.add(i, null);
+                        dumpCurrentValues.add(i, null);
+                    }
+                }
+            }
+
+            private void enqueueFromDump(int index) {
+                if (dumpIterators.get(index) != null && dumpIterators.get(index).hasNext()) {
+                    Entry<byte[], MeasureAggregator[]> entry = dumpIterators.get(index).next();
+                    minHeap.offer(new ImmutablePair(entry.getKey(), index));
+                    dumpCurrentValues.set(index, entry.getValue());
+                }
+            }
+
+            @Override
+            public Iterator<Entry<byte[], MeasureAggregator[]>> iterator() {
+                return new Iterator<Entry<byte[], MeasureAggregator[]>>() {
+                    @Override
+                    public boolean hasNext() {
+                        return !CollectionUtils.isEmpty(minHeap);
+                    }
+
+                    @Override
+                    public Entry<byte[], MeasureAggregator[]> next() {
+                        // Use minimum heap to merge sort the keys,
+                        // also do aggregation for measures with same keys in different dumps
+                        Entry<byte[], Integer> peekEntry = minHeap.poll();
+                        MeasureAggregator[] mergedAggr = dumpCurrentValues.get(peekEntry.getValue());
+                        enqueueFromDump(peekEntry.getValue());
+
+                        while (!minHeap.isEmpty() && bytesComparator.compare(peekEntry.getKey(), minHeap.peek().getKey()) == 0) {
+                            Entry<byte[], Integer> newPeek = minHeap.poll();
+
+                            MeasureAggregator[] newPeekAggr = dumpCurrentValues.get(newPeek.getValue());
+                            for (int i = 0; i < newPeekAggr.length; i++) {
+                                mergedAggr[i].aggregate(newPeekAggr[i].getState());
+                            }
+
+                            enqueueFromDump(newPeek.getValue());
+                        }
+
+                        return new ImmutablePair(peekEntry.getKey(), mergedAggr);
+                    }
+
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        }
     }
 }
