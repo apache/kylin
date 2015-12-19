@@ -54,23 +54,24 @@ public class JobEngineConfig {
     public String getHadoopJobConfFilePath(RealizationCapacity capaticy, String projectName) throws IOException {
         String hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + "_" + projectName + ".xml");
         File jobConfig = getJobConfig(hadoopJobConfFile);
+        logger.info("trying to locate " + hadoopJobConfFile);
         if (jobConfig == null || !jobConfig.exists()) {
             logger.warn("fail to locate " + hadoopJobConfFile);
             
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + projectName + ".xml");
-            logger.warn("trying to locate " + hadoopJobConfFile);
+            logger.info("trying to locate " + hadoopJobConfFile);
             jobConfig = getJobConfig(hadoopJobConfFile);
             if (jobConfig == null || !jobConfig.exists()) {
                 logger.warn("fail to locate " + hadoopJobConfFile);
                 
                 hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + ".xml");
-                logger.warn("trying to locate " + hadoopJobConfFile);
+                logger.info("trying to locate " + hadoopJobConfFile);
                 jobConfig = getJobConfig(hadoopJobConfFile);
                 if (jobConfig == null || !jobConfig.exists()) {
                     logger.warn("fail to locate " + hadoopJobConfFile);
                     
                     hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + ".xml");
-                    logger.warn("trying to locate " + hadoopJobConfFile);
+                    logger.info("trying to locate " + hadoopJobConfFile);
                     jobConfig = getJobConfig(hadoopJobConfFile);
                     if (jobConfig == null || !jobConfig.exists()) {
                         logger.warn("fail to locate " + hadoopJobConfFile);
