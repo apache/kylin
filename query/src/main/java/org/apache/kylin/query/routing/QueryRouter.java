@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
@@ -84,13 +83,6 @@ public class QueryRouter {
             if (inf instanceof DimensionAsMeasure) {
                 FunctionDesc functionDesc = ((DimensionAsMeasure) inf).getMeasureFunction();
                 functionDesc.setDimensionAsMetric(true);
-                olapContext.rewriteFields.remove(functionDesc.getRewriteFieldName());
-                for (TblColRef col : functionDesc.getParameter().getColRefs()) {
-                    if (col != null) {
-                        olapContext.metricsColumns.remove(col);
-                        olapContext.groupByColumns.add(col);
-                    }
-                }
                 logger.info("Adjust DimensionAsMeasure for " + functionDesc);
             }
         }
