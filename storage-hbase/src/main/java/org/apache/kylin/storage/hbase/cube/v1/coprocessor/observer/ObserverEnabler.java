@@ -62,7 +62,7 @@ public class ObserverEnabler {
     public static ResultScanner scanWithCoprocessorIfBeneficial(CubeSegment segment, Cuboid cuboid, TupleFilter tupleFiler, //
             Collection<TblColRef> groupBy, Collection<RowValueDecoder> rowValueDecoders, StorageContext context, HTableInterface table, Scan scan) throws IOException {
 
-        if (true) {
+        if (context.isCoprocessorEnabled() == false) {
             return table.getScanner(scan);
         }
 
