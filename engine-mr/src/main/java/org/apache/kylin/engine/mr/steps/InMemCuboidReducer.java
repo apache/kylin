@@ -1,17 +1,18 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
-import org.apache.kylin.engine.mr.IMROutput2.IMRStorageOutputFormat;
 import org.apache.kylin.engine.mr.KylinReducer;
-import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.measure.MeasureAggregators;
@@ -27,13 +28,16 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCuboidReducer.class);
 
-    private IMRStorageOutputFormat storageOutputFormat;
     private MeasureCodec codec;
     private MeasureAggregators aggs;
 
     private int counter;
     private Object[] input;
     private Object[] result;
+    
+    private Text outputKey;
+    private Text outputValue;
+    private ByteBuffer valueBuf;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -47,16 +51,16 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeSegment cubeSeg = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
-        if (isMerge)
-            storageOutputFormat = MRUtil.getBatchMergeOutputSide2(cubeSeg).getStorageOutputFormat();
-        else
-            storageOutputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getStorageOutputFormat();
 
         List<MeasureDesc> measuresDescs = cubeDesc.getMeasures();
         codec = new MeasureCodec(measuresDescs);
         aggs = new MeasureAggregators(measuresDescs);
         input = new Object[measuresDescs.size()];
         result = new Object[measuresDescs.size()];
+        
+        outputKey = new Text();
+        outputValue = new Text();
+        valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
     }
 
     @Override
@@ -70,8 +74,16 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
         }
         aggs.collectStates(result);
 
-        storageOutputFormat.doReducerOutput(key, result, context);
+        // output key
+        outputKey.set(key.array(), key.offset(), key.length());
 
+        // output value
+        valueBuf.clear();
+        codec.encode(result, valueBuf);
+        outputValue.set(valueBuf.array(), 0, valueBuf.position());
+
+        context.write(outputKey, outputValue);
+        
         counter++;
         if (counter % BatchConstants.COUNTER_MAX == 0) {
             logger.info("Handled " + counter + " records!");

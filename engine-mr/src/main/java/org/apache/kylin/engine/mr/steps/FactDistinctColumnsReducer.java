@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,10 +29,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
@@ -41,8 +38,6 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
@@ -66,7 +61,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
     private long totalRowsBeforeMerge = 0;
-    private int SAMPING_PERCENTAGE = 5;
+    private int samplingPercentage = 100;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -85,7 +80,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
         if (collectStatistics) {
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
-            SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
+            samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "100"));
         }
     }
 
@@ -144,8 +139,15 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
         //output the hll info;
         if (collectStatistics) {
+            long grandTotal = 0;
+            for (HyperLogLogPlusCounter hll : cuboidHLLMap.values()) {
+                grandTotal += hll.getCountEstimate();
+            }
+            double mapperOverlapRatio = (double) totalRowsBeforeMerge / grandTotal;
+            
             writeMapperAndCuboidStatistics(context); // for human check
-            CuboidStatsUtil.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), cuboidHLLMap, SAMPING_PERCENTAGE); // for CreateHTableJob
+            CuboidStatsUtil.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), //
+                    cuboidHLLMap, samplingPercentage, mapperOverlapRatio); // for CreateHTableJob
         }
     }
 
@@ -163,7 +165,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
             msg = "Total cuboid number: \t" + allCuboids.size();
             writeLine(out, msg);
-            msg = "Samping percentage: \t" + SAMPING_PERCENTAGE;
+            msg = "Samping percentage: \t" + samplingPercentage;
             writeLine(out, msg);
 
             writeLine(out, "The following statistics are collected based sampling data.");
@@ -188,7 +190,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             writeLine(out, msg);
 
             if (grantTotal > 0) {
-                msg = "The compaction factor is: \t" + totalRowsBeforeMerge / grantTotal;
+                msg = "The mapper overlap ratio is: \t" + totalRowsBeforeMerge / grantTotal;
                 writeLine(out, msg);
             }
 

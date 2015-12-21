@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.util.Random;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -29,8 +30,11 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.CubingJob.AlgorithmEnum;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -45,6 +49,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
     private static final String CUBE_NAME = "cubeName";
     private static final String SEGMENT_ID = "segmentId";
     private static final String STATISTICS_PATH = "statisticsPath";
+    private static final String CUBING_JOB_ID = "cubingJobId";
 
     public SaveStatisticsStep() {
         super();
@@ -74,11 +79,35 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 fs.delete(statisticsFilePath, true);
             }
 
+            decideCubingAlgorithm(newSegment, kylinConf);
+
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } catch (IOException e) {
             logger.error("fail to save cuboid statistics", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
+    }
+
+    private void decideCubingAlgorithm(CubeSegment seg, KylinConfig kylinConf) throws IOException {
+        String algPref = kylinConf.getCubeAlgorithm();
+        AlgorithmEnum alg;
+        if (AlgorithmEnum.INMEM.name().equalsIgnoreCase(algPref)) {
+            alg = AlgorithmEnum.INMEM;
+        } else if (AlgorithmEnum.LAYER.name().equalsIgnoreCase(algPref)) {
+            alg = AlgorithmEnum.LAYER;
+        } else if ("random".equalsIgnoreCase(algPref)) { // for testing
+            alg = new Random().nextBoolean() ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
+        } else { // the default
+            double threshold = kylinConf.getCubeAlgorithmAutoThreshold();
+            double mapperOverlapRatio = new CubeStatsReader(seg, kylinConf).getMapperOverlapRatioOfFirstBuild();
+            logger.info("mapperOverlapRatio for " + seg.getName() + " is " + mapperOverlapRatio + " and threshold is " + threshold);
+            alg = mapperOverlapRatio < threshold ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
+        }
+
+        logger.info("The cube algorithm for " + seg.getName() + " is " + alg);
+
+        CubingJob cubingJob = (CubingJob) executableManager.getJob(getCubingJobId());
+        cubingJob.setAlgorithm(alg);
     }
 
     public void setCubeName(String cubeName) {
@@ -103,6 +132,14 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
     private String getStatisticsPath() {
         return getParam(STATISTICS_PATH);
+    }
+
+    public void setCubingJobId(String id) {
+        setParam(CUBING_JOB_ID, id);
+    }
+
+    private String getCubingJobId() {
+        return getParam(CUBING_JOB_ID);
     }
 
 }

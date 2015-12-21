@@ -270,7 +270,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private boolean validateReadySegments(CubeInstance cube) {
-        final List<CubeSegment> readySegments = cube.getSegment(SegmentStatusEnum.READY);
+        final List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
         if (readySegments.size() == 0) {
             return true;
         }
@@ -474,7 +474,7 @@ public class CubeManager implements IRealizationProvider {
     }
 
     private Pair<Long, Long> alignMergeRange(CubeInstance cube, long startDate, long endDate) {
-        List<CubeSegment> readySegments = cube.getSegment(SegmentStatusEnum.READY);
+        List<CubeSegment> readySegments = cube.getSegments(SegmentStatusEnum.READY);
         if (readySegments.isEmpty()) {
             throw new IllegalStateException("there are no segments in ready state");
         }
@@ -609,7 +609,7 @@ public class CubeManager implements IRealizationProvider {
             return null;
         }
 
-        List<CubeSegment> readySegments = Lists.newArrayList(cube.getSegment(SegmentStatusEnum.READY));
+        List<CubeSegment> readySegments = Lists.newArrayList(cube.getSegments(SegmentStatusEnum.READY));
 
         if (readySegments.size() == 0) {
             logger.debug("Cube " + cube.getName() + " has no ready segment to merge");

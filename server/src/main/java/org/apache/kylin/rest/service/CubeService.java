@@ -585,7 +585,7 @@ public class CubeService extends BasicService {
         if (desc.getRetentionRange() > 0) {
             synchronized (CubeService.class) {
                 cube = getCubeManager().getCube(cubeName);
-                List<CubeSegment> readySegs = cube.getSegment(SegmentStatusEnum.READY);
+                List<CubeSegment> readySegs = cube.getSegments(SegmentStatusEnum.READY);
                 long currentRange = 0;
                 int position = readySegs.size() - 1;
                 while (position >= 0) {

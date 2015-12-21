@@ -92,7 +92,7 @@ public class StreamingMonitor {
     private static List<CubeSegment> getSortedReadySegments(String cubeName) {
         final CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
         Preconditions.checkNotNull(cube);
-        final List<CubeSegment> segments = cube.getSegment(SegmentStatusEnum.READY);
+        final List<CubeSegment> segments = cube.getSegments(SegmentStatusEnum.READY);
         logger.info("totally " + segments.size() + " cubeSegments");
         Collections.sort(segments);
         return segments;
