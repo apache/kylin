@@ -42,7 +42,7 @@ public class MailService {
     private static final Log logger = LogFactory.getLog(MailService.class);
 
     public MailService(KylinConfig config) {
-        this("true".equalsIgnoreCase(config.getProperty(KylinConfig.MAIL_ENABLED, "false")), config.getProperty(KylinConfig.MAIL_HOST, ""), config.getProperty(KylinConfig.MAIL_USERNAME, ""), config.getProperty(KylinConfig.MAIL_PASSWORD, ""), config.getProperty(KylinConfig.MAIL_SENDER, ""));
+        this(config.isMailEnabled(), config.getMailHost(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());
     }
 
     private MailService(boolean enabled, String host, String username, String password, String sender) {

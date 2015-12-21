@@ -105,7 +105,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
                         if (key.get() == 0l) {
                             // sampling percentage;
                             averageSamplingPercentage += Bytes.toInt(value.getBytes());
-                        } else {
+                        } else if (key.get() > 0) {
                             HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
                             ByteArray byteArray = new ByteArray(value.getBytes());
                             hll.readRegisters(byteArray.asBuffer());

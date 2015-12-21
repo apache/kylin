@@ -117,6 +117,10 @@ public class MapReduceExecutable extends AbstractExecutable {
                 try {
                     //for async mr job, ToolRunner just return 0;
                     ToolRunner.run(hadoopJob, args);
+                    
+                    if (hadoopJob.isSkipped()) {
+                        return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped");
+                    }
                 } catch (Exception ex) {
                     StringBuilder log = new StringBuilder();
                     logger.error("error execute " + this.toString(), ex);
@@ -203,7 +207,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         if (yarnStatusCheckUrl != null) {
             return yarnStatusCheckUrl;
         } else {
-            logger.info(KylinConfig.KYLIN_JOB_YARN_APP_REST_CHECK_URL + " is not set, read from job configuration");
+            logger.info("kylin.job.yarn.app.rest.check.status.url" + " is not set, read from job configuration");
         }
         String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, job.getConfiguration());
         if(HAUtil.isHAEnabled(job.getConfiguration())) {

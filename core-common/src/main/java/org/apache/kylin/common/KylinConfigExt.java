@@ -16,25 +16,8 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr.steps;
+package org.apache.kylin.common;
 
-import org.apache.hadoop.util.ToolRunner;
-
-/**
- * @author honma
- * 
- */
-
-public class BaseCuboidJob extends CuboidJob {
-    
-    public BaseCuboidJob() {
-        this.setMapperClass(HiveToBaseCuboidMapper.class);
-    }
-    
-    public static void main(String[] args) throws Exception {
-        CuboidJob job = new BaseCuboidJob();
-        int exitCode = ToolRunner.run(job, args);
-        System.exit(exitCode);
-    }
+public class KylinConfigExt {
 
 }

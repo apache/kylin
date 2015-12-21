@@ -65,7 +65,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
 
         // assert one ready segment
         assertEquals(1, cube.getSegments().size());
-        CubeSegment seg = cube.getSegment(SegmentStatusEnum.READY).get(0);
+        CubeSegment seg = cube.getSegments(SegmentStatusEnum.READY).get(0);
         assertEquals(SegmentStatusEnum.READY, seg.getStatus());
 
         // append again, for non-partitioned cube, it becomes a full refresh

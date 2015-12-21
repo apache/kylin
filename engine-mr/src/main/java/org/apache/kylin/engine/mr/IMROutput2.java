@@ -1,13 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 package org.apache.kylin.engine.mr;
 
-import java.io.IOException;
-
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
@@ -17,93 +27,59 @@ public interface IMROutput2 {
     public IMRBatchCubingOutputSide2 getBatchCubingOutputSide(CubeSegment seg);
 
     /**
-     * Participate the batch cubing flow as the output side.
+     * Participate the batch cubing flow as the output side. Responsible for saving
+     * the cuboid output to storage at the end of Phase 3.
      * 
      * - Phase 1: Create Flat Table
      * - Phase 2: Build Dictionary
-     * - Phase 3: Build Cube (with StorageOutputFormat)
+     * - Phase 3: Build Cube
      * - Phase 4: Update Metadata & Cleanup
      */
     public interface IMRBatchCubingOutputSide2 {
 
-        /** Return an output format for Phase 3: Build Cube MR */
-        public IMRStorageOutputFormat getStorageOutputFormat();
-
         /** Add step that executes after build dictionary and before build cube. */
         public void addStepPhase2_BuildDictionary(DefaultChainedExecutable jobFlow);
 
-        /** Add step that executes after build cube. */
-        public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow);
+        /**
+         * Add step that saves cuboids from HDFS to storage.
+         * 
+         * The cuboid output is a directory of sequence files, where key is CUBOID+D1+D2+..+Dn, 
+         * value is M1+M2+..+Mm. CUBOID is 8 bytes cuboid ID; Dx is dimension value with
+         * dictionary encoding; Mx is measure value serialization form.
+         */
+        public void addStepPhase3_BuildCube(DefaultChainedExecutable jobFlow, String cuboidRootPath);
 
         /** Add step that does any necessary clean up. */
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
-    }
-
-    public IMRBatchMergeInputSide2 getBatchMergeInputSide(CubeSegment seg);
-
-    public interface IMRBatchMergeInputSide2 {
-        public IMRStorageInputFormat getStorageInputFormat();
-    }
-
-    /** Read in a cube as input of merge. Configure the input file format of mapper. */
-    @SuppressWarnings("rawtypes")
-    public interface IMRStorageInputFormat {
-
-        /** Configure MR mapper class and input file format. */
-        public void configureInput(Class<? extends Mapper> mapperClz, Class<? extends WritableComparable> outputKeyClz, Class<? extends Writable> outputValueClz, Job job) throws IOException;
-
-        /** Given a mapper context, figure out which segment the mapper reads from. */
-        public CubeSegment findSourceSegment(Mapper.Context context) throws IOException;
-
-        /**
-         * Read in a row of cuboid. Given the input KV, de-serialize back cuboid ID, dimensions, and measures.
-         * 
-         * @return <code>ByteArrayWritable</code> is the cuboid ID (8 bytes) + dimension values in dictionary encoding
-         *         <code>Object[]</code> is the measure values in order of <code>CubeDesc.getMeasures()</code>
-         */
-        public Pair<ByteArrayWritable, Object[]> parseMapperInput(Object inKey, Object inValue);
     }
 
     /** Return a helper to participate in batch merge job flow. */
     public IMRBatchMergeOutputSide2 getBatchMergeOutputSide(CubeSegment seg);
 
     /**
-     * Participate the batch merge flow as the output side.
+     * Participate the batch cubing flow as the output side. Responsible for saving
+     * the cuboid output to storage at the end of Phase 2.
      * 
      * - Phase 1: Merge Dictionary
-     * - Phase 2: Merge Cube (with StorageInputFormat & StorageOutputFormat)
+     * - Phase 2: Merge Cube
      * - Phase 3: Update Metadata & Cleanup
      */
     public interface IMRBatchMergeOutputSide2 {
 
-        /** Return an input format for Phase 2: Merge Cube MR */
-        public IMRStorageOutputFormat getStorageOutputFormat();
-
         /** Add step that executes after merge dictionary and before merge cube. */
         public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow);
 
-        /** Add step that executes after merge cube. */
-        public void addStepPhase2_BuildCube(DefaultChainedExecutable jobFlow);
+        /**
+         * Add step that saves cuboid output from HDFS to storage.
+         * 
+         * The cuboid output is a directory of sequence files, where key is CUBOID+D1+D2+..+Dn, 
+         * value is M1+M2+..+Mm. CUBOID is 8 bytes cuboid ID; Dx is dimension value with
+         * dictionary encoding; Mx is measure value serialization form.
+         */
+        public void addStepPhase2_BuildCube(DefaultChainedExecutable jobFlow, String cuboidRootPath);
 
         /** Add step that does any necessary clean up. */
         public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow);
     }
 
-    /** Write out a cube. Configure the output file format of reducer and do the actual K-V output. */
-    @SuppressWarnings("rawtypes")
-    public interface IMRStorageOutputFormat {
-        
-        /** Configure MR reducer class and output file format. */
-        public void configureOutput(Class<? extends Reducer> reducer, String jobFlowId, Job job) throws IOException;
-
-        /**
-         * Write out a row of cuboid. Given the cuboid ID, dimensions, and measures, serialize in whatever
-         * way and output to reducer context.
-         * 
-         * @param key     The cuboid ID (8 bytes) + dimension values in dictionary encoding
-         * @param value   The measure values in order of <code>CubeDesc.getMeasures()</code>
-         * @param context The reducer context output goes to
-         */
-        public void doReducerOutput(ByteArrayWritable key, Object[] value, Reducer.Context context) throws IOException, InterruptedException;
-    }
 }
