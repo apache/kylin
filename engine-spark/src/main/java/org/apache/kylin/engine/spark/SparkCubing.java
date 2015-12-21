@@ -56,6 +56,7 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.*;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.*;
+import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
 import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
 import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
 import org.apache.kylin.engine.spark.util.IteratorUtils;
@@ -453,7 +454,8 @@ public class SparkCubing extends AbstractApplication {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
-        final Map<Long, Long> cubeSizeMap = CreateHTableJob.getCubeRowCountMapFromCuboidStatistics(samplingResult, 100);
+        final Map<Long, Long> rowCountMap = InMemCuboidJob.getCubeRowCountMapFromCuboidStatistics(samplingResult, 100);
+        final Map<Long, Double> cubeSizeMap = InMemCuboidJob.getCubeSizeMapFromRowCount(cubeSegment, rowCountMap);
         System.out.println("cube size estimation:" + cubeSizeMap);
         final byte[][] splitKeys = CreateHTableJob.getSplitsFromCuboidStatistics(cubeSizeMap, kylinConfig, cubeSegment);
         CubeHTableUtil.createHTable(cubeSegment, splitKeys);
