@@ -122,7 +122,7 @@ abstract public class MeasureType<T> {
         return false;
     }
 
-    /** The simply filling mode, one tuple per storage record. */
+    /** The simple filling mode, one tuple per storage record. */
     public void fillTupleSimply(Tuple tuple, int indexInTuple, Object measureValue) {
         tuple.setMeasureValue(indexInTuple, measureValue);
     }
