@@ -18,17 +18,10 @@
 
 package org.apache.kylin.rest.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.restclient.Broadcaster;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -44,20 +37,28 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.broadcaster.BroadcasterReceiveServlet;
+import org.apache.kylin.rest.controller.CubeController;
+import org.apache.kylin.rest.request.CubeRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.Permission;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.junit.Assert.*;
 
 /**
- * Created by qianzhou on 1/16/15.
  */
-
 public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     private static Server server;
@@ -89,26 +90,40 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
                     public KylinConfig getConfig() {
                         return configB;
                     }
+
                 };
+
+                cacheService.setCubeService(new CubeService() {
+
+                    @Override
+                    public KylinConfig getConfig() {
+                        return configB;
+                    }
+                });
                 Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
                 Broadcaster.EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
                 final String log = "wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name;
                 logger.info(log);
                 counter.incrementAndGet();
                 switch (wipeEvent) {
-                case CREATE:
-                case UPDATE:
-                    cacheService.rebuildCache(wipeType, name);
-                    break;
-                case DROP:
-                    cacheService.removeCache(wipeType, name);
-                    break;
-                default:
-                    throw new RuntimeException("invalid type:" + wipeEvent);
+                    case CREATE:
+                    case UPDATE:
+                        cacheService.rebuildCache(wipeType, name);
+                        break;
+                    case DROP:
+                        cacheService.removeCache(wipeType, name);
+                        break;
+                    default:
+                        throw new RuntimeException("invalid type:" + wipeEvent);
                 }
             }
         })), "/");
         server.start();
+
+        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+        User user = new User("ADMIN", "ADMIN", authorities);
+        Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @AfterClass
@@ -125,6 +140,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
 
     @After
     public void after() throws Exception {
+        cleanupTestMetadata();
     }
 
     private void waitForCounterAndClear(long count) {
@@ -175,9 +191,9 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertNotNull(getCubeManager(configB));
         assertNotNull(getCubeDescManager(configA));
         assertNotNull(getCubeDescManager(configB));
+        assertNotNull(getProjectManager(configA));
         assertNotNull(getProjectManager(configB));
-        assertNotNull(getProjectManager(configB));
-        assertNotNull(getMetadataManager(configB));
+        assertNotNull(getMetadataManager(configA));
         assertNotNull(getMetadataManager(configB));
 
         assertTrue(!getCubeManager(configA).equals(getCubeManager(configB)));
@@ -311,14 +327,119 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         waitForCounterAndClear(1);
         assertEquals(dataModelDesc.getName(), metadataManagerB.getDataModelDesc(dataModelName).getName());
 
-        final LookupDesc[] lookups = dataModelDesc.getLookups();
-        assertTrue(lookups.length > 0);
-        dataModelDesc.setLookups(new LookupDesc[] { lookups[0] });
-        metadataManager.updateDataModelDesc(dataModelDesc);
-        //only one for data model update
-        assertEquals(1, broadcaster.getCounterAndClear());
-        waitForCounterAndClear(1);
-        assertEquals(dataModelDesc.getLookups().length, metadataManagerB.getDataModelDesc(dataModelName).getLookups().length);
+    }
+    
+    @Test
+    public void testCubeModelCRUD() throws Exception {
+        final Broadcaster broadcaster = Broadcaster.getInstance();
+        broadcaster.getCounterAndClear();
+
+        getStore().deleteResource("/cube/a_whole_new_cube_2.json");
+        getStore().deleteResource("/cube_desc/a_whole_new_cube_2.json");
+        getStore().deleteResource("/model_desc/a_whole_new_cube_2.json");
+        
+        final CubeController cubeController = new CubeController();
+
+        final CubeDesc cubeDesc = getCubeDescManager(configA).getCubeDesc("test_kylin_cube_with_slr_desc");
+        final DataModelDesc modelDesc = getMetadataManager(configA).getDataModelDesc(cubeDesc.getModelName());
+
+
+        cubeController.setCubeService(new CubeService() {
+            @Override
+            public KylinConfig getConfig() {
+                return configA;
+            }
+        });
+        cubeController.setAccessService(new AccessService() {
+
+            @Override
+            public Acl init(AclEntity ae, Permission initPermission) {
+                return null;
+            }
+            
+            @Override
+            public void inherit(AclEntity ae, AclEntity parentAe) {
+                
+            }
+
+            @Override
+            public void clean(AclEntity ae, boolean deleteChildren) {
+                
+            }
+        });
+        String newCubeName = "a_whole_new_cube_2";
+        cubeDesc.setName(newCubeName);
+        cubeDesc.setModelName(newCubeName);
+        modelDesc.setName(newCubeName);
+        cubeDesc.setLastModified(0);
+        modelDesc.setLastModified(0);
+
+        CubeRequest cubeRequest = new CubeRequest();
+
+        cubeRequest.setCubeName(newCubeName);
+        cubeRequest.setModelDescData(JsonUtil.writeValueAsString(modelDesc));
+        cubeRequest.setCubeDescData(JsonUtil.writeValueAsString(cubeDesc));
+        cubeRequest = cubeController.saveCubeDesc(cubeRequest);
+
+        // 4 events: model, cube desc, cube and project
+        assertEquals(4, broadcaster.getCounterAndClear());
+        waitForCounterAndClear(4);
+        assertTrue(cubeRequest.getSuccessful() == true);
+        
+        CubeDescManager cubeDescManagerB = getCubeDescManager(configB);
+        MetadataManager metadataManagerB = getMetadataManager(configB);
+        final CubeManager cubeManagerB = getCubeManager(configB);
+        assertTrue(metadataManagerB.getDataModelDesc(newCubeName) != null);
+        assertTrue(cubeDescManagerB.getCubeDesc(newCubeName) != null);
+        assertTrue(cubeManagerB.getCube(newCubeName) != null);
+        
+        // test a valid update
+        final DataModelDesc newdataModelDesc = getMetadataManager(configA).getDataModelDesc(newCubeName);
+        final CubeDesc newcubeDesc = getCubeDescManager(configA).getCubeDesc(newCubeName);
+        newdataModelDesc.setCapacity(DataModelDesc.RealizationCapacity.LARGE);
+        newcubeDesc.setRetentionRange(200000);
+        cubeRequest = new CubeRequest();
+        cubeRequest.setCubeName(newCubeName);
+        cubeRequest.setModelDescData(JsonUtil.writeValueAsString(newdataModelDesc));
+        cubeRequest.setCubeDescData(JsonUtil.writeValueAsString(newcubeDesc));
+        cubeRequest = cubeController.updateCubeDesc(cubeRequest);
+        assertTrue(cubeRequest.getSuccessful() == true);
+
+        // three event: model, cube desc, cube
+        assertEquals(3, broadcaster.getCounterAndClear());
+        waitForCounterAndClear(3);
+        assertTrue(getCubeDescManager(configB).getCubeDesc(newCubeName).getRetentionRange() == 200000);
+        assertTrue(getMetadataManager(configB).getDataModelDesc(newCubeName).getCapacity().equals(DataModelDesc.RealizationCapacity.LARGE));
+
+        
+        // test a invalid update (remove one lookup table from model desc, cube desc doesn't change)
+        final DataModelDesc validDataModelDesc = getMetadataManager(configA).getDataModelDesc(newCubeName);
+        
+        final CubeDesc invalidCubeDesc = getCubeDescManager(configA).getCubeDesc(newCubeName);
+
+        DataModelDesc modelDescCopy = JsonUtil.readValue(JsonUtil.writeValueAsString(validDataModelDesc), DataModelDesc.class);
+        int lookupTableCount = validDataModelDesc.getLookups().length;
+        LookupDesc[] newLookups = new LookupDesc[lookupTableCount - 1];
+        System.arraycopy(validDataModelDesc.getLookups(), 0, newLookups, 0, lookupTableCount - 1);
+        modelDescCopy.setLookups(newLookups);
+        cubeRequest = new CubeRequest();
+        cubeRequest.setCubeName(newCubeName);
+        cubeRequest.setModelDescData(JsonUtil.writeValueAsString(modelDescCopy));
+        cubeRequest.setCubeDescData(JsonUtil.writeValueAsString(invalidCubeDesc));
+        cubeRequest = cubeController.updateCubeDesc(cubeRequest);
+        assertTrue(cubeRequest.getSuccessful() == false);
+        // 2 events, all for model
+        assertEquals(2, broadcaster.getCounterAndClear());
+        waitForCounterAndClear(2);
+        assertTrue(getMetadataManager(configB).getDataModelDesc(newCubeName).getLookups().length == lookupTableCount);
+        assertTrue(getMetadataManager(configA).getDataModelDesc(newCubeName).getLookups().length == lookupTableCount);
+        
+        // test delete
+        cubeController.deleteCube(newCubeName);
+        // two events: cube, project
+        assertEquals(2, broadcaster.getCounterAndClear());
+        waitForCounterAndClear(2);
+        assertTrue(getCubeManager(configB).getCube(newCubeName) == null);
 
     }
 

@@ -84,12 +84,7 @@ import com.google.common.collect.Lists;
  */
 @Component("cubeMgmtService")
 public class CubeService extends BasicService {
-    private static final String DESC_SUFFIX = "_desc";
-
     private static final Logger logger = LoggerFactory.getLogger(CubeService.class);
-
-    @Autowired
-    private AccessService accessService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<CubeInstance> listAllCubes(final String cubeName, final String projectName) {
@@ -183,11 +178,6 @@ public class CubeService extends BasicService {
         }
 
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
-        accessService.init(createdCube, AclPermission.ADMINISTRATION);
-
-        ProjectInstance project = getProjectManager().getProject(projectName);
-        accessService.inherit(createdCube, project);
-
         return createdCube;
     }
 
@@ -210,7 +200,7 @@ public class CubeService extends BasicService {
         return result;
     }
 
-    private boolean isCubeInProject(String projectName, CubeInstance target) {
+    public boolean isCubeInProject(String projectName, CubeInstance target) {
         ProjectManager projectManager = getProjectManager();
         ProjectInstance project = projectManager.getProject(projectName);
         if (project == null) {
@@ -229,7 +219,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws UnknownHostException, IOException, JobException {
+    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws IOException, JobException {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new JobException("Cube schema shouldn't be changed with running job.");
@@ -246,13 +236,6 @@ public class CubeService extends BasicService {
             int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
 
-            ProjectManager projectManager = getProjectManager();
-            if (!isCubeInProject(newProjectName, cube)) {
-                String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-                ProjectInstance newProject = projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
-                accessService.inherit(cube, newProject);
-            }
-
             return updatedCubeDesc;
         } catch (IOException e) {
             throw new InternalErrorException("Failed to deal with the request.", e);
@@ -266,9 +249,8 @@ public class CubeService extends BasicService {
             throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
         }
 
-        this.releaseAllSegments(cube);
+        this.discardAllRunningJobs(cube);
         getCubeManager().dropCube(cube.getName(), true);
-        accessService.clean(cube, true);
     }
 
     public boolean isCubeEditable(CubeInstance ci) {
@@ -287,18 +269,6 @@ public class CubeService extends BasicService {
             }
         }
         return true;
-    }
-
-    public static String getCubeDescNameFromCube(String cubeName) {
-        return cubeName + DESC_SUFFIX;
-    }
-
-    public static String getCubeNameFromDesc(String descName) {
-        if (descName.toLowerCase().endsWith(DESC_SUFFIX)) {
-            return descName.substring(0, descName.toLowerCase().indexOf(DESC_SUFFIX));
-        } else {
-            return descName;
-        }
     }
 
     public void reloadCubeCache(String cubeName) {
@@ -328,6 +298,7 @@ public class CubeService extends BasicService {
         }
 
         try {
+            this.discardAllRunningJobs(cube);
             this.releaseAllSegments(cube);
             return cube;
         } catch (IOException e) {
@@ -430,10 +401,7 @@ public class CubeService extends BasicService {
      * @throws IOException Exception when HTable resource is not closed correctly.
      */
     public HBaseResponse getHTableInfo(String tableName) throws IOException {
-        // Get HBase storage conf.
-        String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-        Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
-
+        Configuration hconf = HadoopUtil.getCurrentHBaseConfiguration();
         HTable table = null;
         HBaseResponse hr = null;
         long tableSize = 0;
@@ -527,6 +495,11 @@ public class CubeService extends BasicService {
      * @throws JobException
      */
     private void releaseAllSegments(CubeInstance cube) throws IOException, JobException {
+        cube.getSegments().clear();
+        CubeManager.getInstance(getConfig()).updateCube(cube);
+    }
+    
+    private void discardAllRunningJobs(CubeInstance cube) {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
             final ExecutableState status = cubingJob.getStatus();
@@ -534,8 +507,6 @@ public class CubeService extends BasicService {
                 getExecutableManager().discardJob(cubingJob.getId());
             }
         }
-        cube.getSegments().clear();
-        CubeManager.getInstance(getConfig()).updateCube(cube);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)

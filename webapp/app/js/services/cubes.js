@@ -19,6 +19,7 @@
 KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
   return $resource(Config.service.url + 'cubes/:cubeId/:propName/:propValue/:action', {}, {
     list: {method: 'GET', params: {}, isArray: true},
+    getCube: {method: 'GET', params: {}, isArray: false},
     getSql: {method: 'GET', params: {propName: 'segs', action: 'sql'}, isArray: false},
     updateNotifyList: {method: 'PUT', params: {propName: 'notify_list'}, isArray: false},
     cost: {method: 'PUT', params: {action: 'cost'}, isArray: false},
@@ -27,6 +28,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     disable: {method: 'PUT', params: {action: 'disable'}, isArray: false},
     enable: {method: 'PUT', params: {action: 'enable'}, isArray: false},
     purge: {method: 'PUT', params: {action: 'purge'}, isArray: false},
+    clone: {method: 'PUT', params: {action: 'clone'}, isArray: false},
     drop: {method: 'DELETE', params: {}, isArray: false},
     save: {method: 'POST', params: {}, isArray: false},
     update: {method: 'PUT', params: {}, isArray: false},

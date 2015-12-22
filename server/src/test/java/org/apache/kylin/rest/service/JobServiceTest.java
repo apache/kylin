@@ -37,7 +37,6 @@ public class JobServiceTest extends ServiceTestBase {
     @Test
     public void testBasics() throws JobException, IOException {
         Assert.assertNotNull(jobService.getConfig());
-        Assert.assertNotNull(jobService.getKylinConfig());
         Assert.assertNotNull(jobService.getMetadataManager());
         Assert.assertNotNull(jobService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
         Assert.assertNull(jobService.getJobInstance("job_not_exist"));

@@ -27,8 +27,7 @@ KylinApp.constant('cubeConfig', {
   cubePartitionTypes: ['APPEND'],
   joinTypes: [
     {name: 'Left', value: 'left'},
-    {name: 'Inner', value: 'inner'},
-    {name: 'Right', value: 'right'}
+    {name: 'Inner', value: 'inner'}
   ],
   queryPriorities: [
     {name: 'NORMAL', value: 50},
@@ -70,5 +69,9 @@ KylinApp.constant('cubeConfig', {
     {attr: 'last_build_time', name: 'Last Build Time'},
     {attr: 'owner', name: 'Owner'},
     {attr: 'create_time', name: 'Create Time'}
+  ],
+  partitionDateFormatOpt:[
+    'yyyy-MM-dd',
+    'yyyyMMdd'
   ]
 });

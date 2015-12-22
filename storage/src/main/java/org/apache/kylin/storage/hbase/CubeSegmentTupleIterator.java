@@ -38,6 +38,7 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.Bytes;
@@ -71,8 +72,6 @@ import com.google.common.collect.Lists;
 public class CubeSegmentTupleIterator implements ITupleIterator {
 
     public static final Logger logger = LoggerFactory.getLogger(CubeSegmentTupleIterator.class);
-
-    public static final int SCAN_CACHE = 1024;
 
     private final CubeInstance cube;
     private final CubeSegment cubeSeg;
@@ -252,8 +251,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     private Scan buildScan(HBaseKeyRange keyRange) {
         Scan scan = new Scan();
-        scan.setCaching(SCAN_CACHE);
-        scan.setCacheBlocks(true);
+        tuneScanParameters(scan);
         scan.setAttribute(Scan.SCAN_ATTRIBUTES_METRICS_ENABLE, Bytes.toBytes(Boolean.TRUE));
         for (RowValueDecoder valueDecoder : this.rowValueDecoders) {
             HBaseColumnDesc hbaseColumn = valueDecoder.getHBaseColumn();
@@ -264,6 +262,19 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         scan.setStartRow(keyRange.getStartKey());
         scan.setStopRow(keyRange.getStopKey());
         return scan;
+    }
+
+    private void tuneScanParameters(Scan scan) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        
+        scan.setCaching(config.getHBaseScanCacheRows());
+        scan.setMaxResultSize(config.getHBaseScanMaxResultSize());
+        scan.setCacheBlocks(true);
+
+        // cache less when there are memory hungry measures
+        if (RowValueDecoder.hasMemHungryCountDistinct(rowValueDecoders)) {
+            scan.setCaching(scan.getCaching() / 10);
+        }
     }
 
     private void applyFuzzyFilter(Scan scan, HBaseKeyRange keyRange) {

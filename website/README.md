@@ -18,8 +18,8 @@ limitations under the License.
 -->
 
 # Apache Kylin website  
-This directory contains the source code for the Apache Kylin (incubating) website:
-[http://kyin.incubator.apache.org](http://kylin.incubator.apache.org/).
+This directory contains the source code for the Apache Kylin website:
+[http://kyin.apache.org](http://kylin.apache.org/).
 
 ## Kylin website's structure:
 
@@ -39,7 +39,7 @@ To add other language, please update _config.yml and follow the same pattern as 
 ## Setup
 
 1. `cd website`
-2. `svn co https://svn.apache.org/repos/asf/incubator/kylin/site _site`
+2. `svn co https://svn.apache.org/repos/asf/kylin/site _site`
 3. `sudo apt-get install rubygems ruby2.1-dev zlib1g-dev` (linux)
 4. `sudo gem install bundler github-pages jekyll`
 5. `bundle install`
@@ -61,4 +61,4 @@ Before opening a pull request or push to git repo, you can preview changes from 
 
 Within a few minutes, svnpubsub should kick in and you'll be able to
 see the results at
-[http://kylin.incubator.apache.org](http://kylin.incubator.apache.org/).
+[http://kylin.apache.org](http://kylin.apache.org/).

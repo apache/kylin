@@ -193,7 +193,7 @@ public class CubeMetadataUpgrade {
         MetadataManager.getInstance(config).reload();
         CubeDescManager.clearCache();
         CubeDescManager.getInstance(config);
-        CubeManager cubeManager = CubeManager.getInstance(config);
+        CubeManager.getInstance(config);
         ProjectManager.getInstance(config);
         //cleanup();
 
@@ -267,7 +267,7 @@ public class CubeMetadataUpgrade {
 
             InputStream is = null;
             try {
-                is = store.getResource(path);
+                is = store.getResource(path).inputStream;
                 if (is == null) {
                     continue;
                 }
@@ -496,7 +496,7 @@ public class CubeMetadataUpgrade {
                         if (pkToFK.containsKey(key) && !newSeg.getDictionaries().containsKey(pkToFK.get(key))) {
                             logger.debug("Duplicate dictionary for FK " + pkToFK.get(key) + " in cube " + newInstance.getName());
                             changedCubes.add(newInstance.getName());
-                            newDictionaries.add(new Pair(pkToFK.get(key), e.getValue()));
+                            newDictionaries.add(new Pair<String, String>(pkToFK.get(key), e.getValue()));
 
                         }
                     }
@@ -617,10 +617,11 @@ public class CubeMetadataUpgrade {
         for (int i = 0, size = job.getSteps().size(); i < size; ++i) {
             final JobInstance.JobStep jobStep = job.getSteps().get(i);
             final String outputPath = ResourceStore.JOB_OUTPUT_PATH_ROOT + "/" + job.getId() + "." + i;
-            final InputStream inputStream = getStore().getResource(outputPath);
+            final InputStream inputStream = getStore().getResource(outputPath).inputStream;
 
             String output = null;
             if (inputStream != null) {
+                @SuppressWarnings("unchecked")
                 HashMap<String, String> job_output = JsonUtil.readValue(inputStream, HashMap.class);
 
                 if (job_output != null) {

@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFactory {
     /** Log object for this class. */
-    private static Logger LOG = LoggerFactory.getLogger(DefaultSslProtocolSocketFactory.class);
+    private static Logger logger = LoggerFactory.getLogger(DefaultSslProtocolSocketFactory.class);
     private SSLContext sslcontext = null;
 
     /**
@@ -46,6 +46,18 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
      */
     public DefaultSslProtocolSocketFactory() {
         super();
+    }
+
+    private static SSLContext createEasySSLContext() {
+        try {
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(null, new TrustManager[] { new DefaultX509TrustManager(null) }, null);
+
+            return context;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new HttpClientError(e.toString());
+        }
     }
 
     /**
@@ -58,7 +70,7 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
     /**
      * Attempts to get a new socket connection to the given host within the
      * given time limit.
-     * 
+     *
      * <p>
      * To circumvent the limitations of older JREs that do not support connect
      * timeout a controller thread is executed. The controller thread attempts
@@ -66,7 +78,7 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
      * constructor does not return until the timeout expires, the controller
      * terminates and throws an {@link ConnectTimeoutException}
      * </p>
-     * 
+     *
      * @param host
      *            the host name/IP
      * @param port
@@ -77,9 +89,9 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
      *            the port on the local machine
      * @param params
      *            {@link HttpConnectionParams Http connection parameters}
-     * 
+     *
      * @return Socket a new socket
-     * 
+     *
      * @throws IOException
      *             if an I/O error occurs while creating the socket
      * @throws UnknownHostException
@@ -124,18 +136,6 @@ public class DefaultSslProtocolSocketFactory implements SecureProtocolSocketFact
 
     public int hashCode() {
         return DefaultX509TrustManager.class.hashCode();
-    }
-
-    private static SSLContext createEasySSLContext() {
-        try {
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, new TrustManager[] { new DefaultX509TrustManager(null) }, null);
-
-            return context;
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
-            throw new HttpClientError(e.toString());
-        }
     }
 
     private SSLContext getSSLContext() {

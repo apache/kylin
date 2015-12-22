@@ -76,7 +76,7 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
 
     public static void main(String[] args) throws Exception {
         IIBulkLoadJob job = new IIBulkLoadJob();
-        job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
+        job.setConf(HadoopUtil.getCurrentHBaseConfiguration());
         int exitCode = ToolRunner.run(job, args);
         System.exit(exitCode);
     }

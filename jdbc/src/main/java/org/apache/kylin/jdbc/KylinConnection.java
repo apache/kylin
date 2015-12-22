@@ -81,15 +81,15 @@ public class KylinConnection extends AvaticaConnection {
     Properties getConnectionProperties() {
         return info;
     }
-    
+
     public boolean getAutoCommit() throws SQLException {
-        if(meta.connectionSync(handle, new ConnectionPropertiesImpl()).isAutoCommit() == null)
+        if (meta.connectionSync(handle, new ConnectionPropertiesImpl()).isAutoCommit() == null)
             setAutoCommit(true);
         return super.getAutoCommit();
     }
 
     public boolean isReadOnly() throws SQLException {
-        if(meta.connectionSync(handle, new ConnectionPropertiesImpl()).isReadOnly() == null)
+        if (meta.connectionSync(handle, new ConnectionPropertiesImpl()).isReadOnly() == null)
             setReadOnly(true);
         return super.isReadOnly();
     }

@@ -32,8 +32,12 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.yarn.conf.HAUtil;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.RMHAUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -70,7 +74,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 return;
             }
             try {
-                Job job = new Cluster(new Configuration()).getJob(JobID.forName(mrJobId));
+                Configuration conf = HadoopUtil.getCurrentConfiguration();
+                Job job = new Cluster(conf).getJob(JobID.forName(mrJobId));
                 if (job.getJobState() == JobStatus.State.FAILED) {
                     //remove previous mr job info
                     super.onExecuteStart(executableContext);
@@ -99,11 +104,13 @@ public class MapReduceExecutable extends AbstractExecutable {
             Job job;
             final Map<String, String> extra = executableManager.getOutput(getId()).getExtra();
             if (extra.containsKey(ExecutableConstants.MR_JOB_ID)) {
-                job = new Cluster(new Configuration()).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
+                Configuration conf = HadoopUtil.getCurrentConfiguration();
+                job = new Cluster(conf).getJob(JobID.forName(extra.get(ExecutableConstants.MR_JOB_ID)));
                 logger.info("mr_job_id:" + extra.get(ExecutableConstants.MR_JOB_ID + " resumed"));
             } else {
                 final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
                 final AbstractHadoopJob hadoopJob = constructor.newInstance();
+                hadoopJob.setConf(HadoopUtil.getCurrentConfiguration());
                 hadoopJob.setAsync(true); // so the ToolRunner.run() returns right away
                 logger.info("parameters of the MapReduceExecutable:");
                 logger.info(params);
@@ -181,7 +188,12 @@ public class MapReduceExecutable extends AbstractExecutable {
         } else {
             logger.info(KylinConfig.KYLIN_JOB_YARN_APP_REST_CHECK_URL + " is not set, read from job configuration");
         }
-        String rmWebHost = job.getConfiguration().get("yarn.resourcemanager.webapp.address");
+        String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, job.getConfiguration());
+        if(HAUtil.isHAEnabled(job.getConfiguration())) {
+            YarnConfiguration conf = new YarnConfiguration(job.getConfiguration());
+            String active = RMHAUtils.findActiveRMHAId(conf);
+            rmWebHost = HAUtil.getConfValueForRMInstance(HAUtil.addSuffix(YarnConfiguration.RM_WEBAPP_ADDRESS, active), YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);
+        }
         if (StringUtils.isEmpty(rmWebHost)) {
             return null;
         }

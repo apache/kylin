@@ -479,10 +479,10 @@ public class TrieDictionaryBuilder<T> {
         int o = head.length;
         offsetMap.put(root, o);
         o = build_writeNode(root, o, true, sizeNoValuesBeneath, sizeChildOffset, trieBytes);
-        if (root.children.isEmpty() == false)
+        if (!root.children.isEmpty())
             open.addLast(root);
 
-        while (open.isEmpty() == false) {
+        while (!open.isEmpty()) {
             Node parent = open.removeFirst();
             build_overwriteChildOffset(offsetMap.get(parent), o - head.length, sizeChildOffset, trieBytes);
             for (int i = 0; i < parent.children.size(); i++) {
@@ -490,7 +490,7 @@ public class TrieDictionaryBuilder<T> {
                 boolean isLastChild = (i == parent.children.size() - 1);
                 offsetMap.put(c, o);
                 o = build_writeNode(c, o, isLastChild, sizeNoValuesBeneath, sizeChildOffset, trieBytes);
-                if (c.children.isEmpty() == false)
+                if (!c.children.isEmpty())
                     open.addLast(c);
             }
         }

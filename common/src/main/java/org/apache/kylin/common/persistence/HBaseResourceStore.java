@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -88,16 +89,10 @@ public class HBaseResourceStore extends ResourceStore {
         int cut = metadataUrl.indexOf('@');
         tableNameBase = cut < 0 ? DEFAULT_TABLE_NAME : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        if (!(StringUtils.isEmpty(hbaseUrl) || "hbase".equals(hbaseUrl)))
+            throw new IllegalArgumentException("to use hbase storage, pls set 'kylin.metadata.url=kylin_metadata@hbase' in kylin.properties");
 
         createHTableIfNeeded(getAllInOneTableName());
-
-        //        tableNameMap = new LinkedHashMap<String, String>();
-        //        for (Entry<String, String> entry : TABLE_SUFFIX_MAP.entrySet()) {
-        //            String pathPrefix = entry.getKey();
-        //            String tableName = tableNameBase + entry.getValue();
-        //            tableNameMap.put(pathPrefix, tableName);
-        //            createHTableIfNeeded(tableName);
-        //        }
 
     }
 
@@ -141,7 +136,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected boolean existsImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, null, null);
+        Result r = getByScan(resPath, false, false);
         return r != null;
     }
 
@@ -163,7 +158,7 @@ public class HBaseResourceStore extends ResourceStore {
             }
         } catch (IOException e) {
             for (RawResource rawResource : result) {
-                IOUtils.closeQuietly(rawResource.resource);
+                IOUtils.closeQuietly(rawResource.inputStream);
             }
             throw e;
         } finally {
@@ -189,7 +184,7 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     private long getTimestamp(Result r) {
-        if (r == null) {
+        if (r == null || r.getValue(B_FAMILY, B_COLUMN_TS) == null) {
             return 0;
         } else {
             return Bytes.toLong(r.getValue(B_FAMILY, B_COLUMN_TS));
@@ -197,17 +192,19 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected InputStream getResourceImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, B_FAMILY, B_COLUMN);
-        return getInputStream(resPath, r);
+    protected RawResource getResourceImpl(String resPath) throws IOException {
+        Result r = getByScan(resPath, true, true);
+        if (r == null)
+            return null;
+        else
+            return new RawResource(getInputStream(resPath, r), getTimestamp(r));
     }
 
     @Override
     protected long getResourceTimestampImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, B_FAMILY, B_COLUMN_TS);
-        return getTimestamp(r);
+        return getTimestamp(getByScan(resPath, false, true));
     }
-
+    
     @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -236,7 +233,7 @@ public class HBaseResourceStore extends ResourceStore {
 
             boolean ok = table.checkAndPut(row, B_FAMILY, B_COLUMN_TS, bOldTS, put);
             if (!ok) {
-                long real = getResourceTimestamp(resPath);
+                long real = getResourceTimestampImpl(resPath);
                 throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + real + ", but it is " + oldTS);
             }
 
@@ -265,15 +262,18 @@ public class HBaseResourceStore extends ResourceStore {
         return getAllInOneTableName() + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
     }
 
-    private Result getByScan(String path, byte[] family, byte[] column) throws IOException {
+    private Result getByScan(String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
         byte[] startRow = Bytes.toBytes(path);
         byte[] endRow = plusZero(startRow);
 
         Scan scan = new Scan(startRow, endRow);
-        if (family == null || column == null) {
+        if (!fetchContent && !fetchTimestamp) {
             scan.setFilter(new KeyOnlyFilter());
         } else {
-            scan.addColumn(family, column);
+            if (fetchContent)
+                scan.addColumn(B_FAMILY, B_COLUMN);
+            if (fetchTimestamp)
+                scan.addColumn(B_FAMILY, B_COLUMN_TS);
         }
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());

@@ -20,7 +20,7 @@ Jekyll is a Ruby script to generate a static HTML website from source text and t
 
 Here are good reference about basic usage of Jekyll: [Learning Jekyll By Example](http://learn.andrewmunsell.com/learn/jekyll-by-example/tutorial)
 
-Apache Kylin's website and documentation is using Jekyll to manage and generate final content which avaliable at [http://kylin.incubator.apache.org](http://kylin.incubator.apache.org).
+Apache Kylin's website and documentation is using Jekyll to manage and generate final content which avaliable at [http://kylin.apache.org](http://kylin.apache.org).
 
 ## Multi-Language
 To draft Chinese version document or translate existing one, just add or copy that doc and name with .cn.md as sufffix. It will generate under /cn folder with same name as html file.  
@@ -118,7 +118,7 @@ Then access http://127.0.0.1:4000 in your browser.
 ### Setup
 
 1. `cd website`
-2. `svn co https://svn.apache.org/repos/asf/incubator/kylin/site _site`
+2. `svn co https://svn.apache.org/repos/asf/kylin/site _site`
 3. `sudo apt-get install rubygems ruby2.1-dev zlib1g-dev` (linux)
 4. `sudo gem install bundler github-pages jekyll`
 5. `bundle install`
@@ -141,6 +141,6 @@ Before opening a pull request or push to git repo, you can preview changes from 
 
 Within a few minutes, svnpubsub should kick in and you'll be able to
 see the results at
-[http://kylin.incubator.apache.org](http://kylin.incubator.apache.org/).
+[http://kylin.apache.org](http://kylin.apache.org/).
 
 

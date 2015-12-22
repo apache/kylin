@@ -25,6 +25,7 @@ import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.DriverVersion;
 import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.UnregisteredDriver;
+import org.apache.kylin.jdbc.util.Log4jConfigurer;
 
 /**
  * <p>
@@ -72,6 +73,7 @@ public class Driver extends UnregisteredDriver {
     public static final String CONNECT_STRING_PREFIX = "jdbc:kylin:";
     static {
         try {
+            Log4jConfigurer.initLogger();
             DriverManager.registerDriver(new Driver());
         } catch (SQLException e) {
             throw new RuntimeException("Error occurred while registering JDBC driver " + Driver.class.getName() + ": " + e.toString());

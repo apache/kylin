@@ -208,7 +208,8 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
 var projCtrl = function ($scope, $location, $modalInstance, ProjectService, MessageService, projects, project, SweetAlert, ProjectModel, $cookieStore, $route) {
   $scope.state = {
     isEdit: false,
-    oldProjName: null
+    oldProjName: null,
+    projectIdx: -1
   };
   $scope.isEdit = false;
   $scope.proj = {name: '', description: ''};
@@ -217,6 +218,12 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
     $scope.state.isEdit = true;
     $scope.state.oldProjName = project.name;
     $scope.proj = project;
+    for (var i = 0; i < projects.length; i++){
+      if (projects[i].name === $scope.state.oldProjName){
+        $scope.state.projectIdx = i;
+        break;
+      }
+    }
   }
 
   $scope.createOrUpdate = function () {
@@ -268,6 +275,9 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
   };
 
   $scope.cancel = function () {
+    if($scope.state.isEdit){
+      projects[$scope.state.projectIdx].name = $scope.state.oldProjName;
+    }
     $modalInstance.dismiss('cancel');
   };
 

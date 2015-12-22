@@ -22,11 +22,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -101,7 +103,7 @@ public class PerformService extends BasicService {
         List<String[]> allRows = null;
         CSVReader reader = null;
         FileSystem fs = null;
-        Configuration conf = new Configuration();
+        Configuration conf = HadoopUtil.newConfiguration();
 
         try {
             fs = FileSystem.newInstance(conf);
@@ -114,7 +116,8 @@ public class PerformService extends BasicService {
         } catch (IOException e) {
             logger.info("failed to read hdfs file:", e);
         } finally {
-            fs.close();
+            IOUtils.closeQuietly(reader);
+            IOUtils.closeQuietly(fs);
         }
         return allRows;
     }

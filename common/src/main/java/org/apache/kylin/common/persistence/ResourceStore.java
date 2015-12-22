@@ -52,14 +52,17 @@ abstract public class ResourceStore {
     public static final String TABLE_EXD_RESOURCE_ROOT = "/table_exd";
     public static final String TABLE_RESOURCE_ROOT = "/table";
     public static final String HYBRID_RESOURCE_ROOT = "/hybrid";
+    public static final String EXECUTE_PATH_ROOT = "/execute";
+    public static final String EXECUTE_OUTPUT_ROOT = "/execute_output";
+
 
     private static ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
     public static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
 
     static {
-        knownImpl.add(HBaseResourceStore.class);
         knownImpl.add(FileResourceStore.class);
+        knownImpl.add(HBaseResourceStore.class);
     }
 
     public static ResourceStore getStore(KylinConfig kylinConfig) {
@@ -127,25 +130,29 @@ abstract public class ResourceStore {
      */
     final public <T extends RootPersistentEntity> T getResource(String resPath, Class<T> clz, Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
-        InputStream in = getResourceImpl(resPath);
-        if (in == null)
+        RawResource res = getResourceImpl(resPath);
+        if (res == null)
             return null;
-
-        DataInputStream din = new DataInputStream(in);
+        
+        DataInputStream din = new DataInputStream(res.inputStream);
         try {
             T r = serializer.deserialize(din);
-            r.setLastModified(getResourceTimestamp(resPath));
+            r.setLastModified(res.timestamp);
             return r;
         } finally {
             IOUtils.closeQuietly(din);
-            IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(res.inputStream);
         }
     }
 
-    final public InputStream getResource(String resPath) throws IOException {
+    final public RawResource getResource(String resPath) throws IOException {
         return getResourceImpl(norm(resPath));
     }
 
+    final public long getResourceTimestamp(String resPath) throws IOException {
+        return getResourceTimestampImpl(norm(resPath));
+    }
+    
     final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, Class<T> clazz, Serializer<T> serializer) throws IOException {
         final List<RawResource> allResources = getAllResources(rangeStart, rangeEnd);
         if (allResources.isEmpty()) {
@@ -154,28 +161,26 @@ abstract public class ResourceStore {
         List<T> result = Lists.newArrayList();
         try {
             for (RawResource rawResource : allResources) {
-                final T element = serializer.deserialize(new DataInputStream(rawResource.resource));
+                final T element = serializer.deserialize(new DataInputStream(rawResource.inputStream));
                 element.setLastModified(rawResource.timestamp);
                 result.add(element);
             }
             return result;
         } finally {
             for (RawResource rawResource : allResources) {
-                IOUtils.closeQuietly(rawResource.resource);
+                IOUtils.closeQuietly(rawResource.inputStream);
             }
         }
     }
 
     abstract protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException;
 
-    abstract protected InputStream getResourceImpl(String resPath) throws IOException;
-
-    final public long getResourceTimestamp(String resPath) throws IOException {
-        return getResourceTimestampImpl(norm(resPath));
-    }
-
+    /** returns null if not exists */
+    abstract protected RawResource getResourceImpl(String resPath) throws IOException;
+    
+    /** returns 0 if not exists */
     abstract protected long getResourceTimestampImpl(String resPath) throws IOException;
-
+    
     /**
      * overwrite a resource without write conflict check
      */

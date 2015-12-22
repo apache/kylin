@@ -40,12 +40,11 @@ import org.apache.kylin.common.util.HadoopUtil;
 public class PingHBaseCLI {
 
     public static void main(String[] args) throws IOException {
-        String metadataUrl = args[0];
-        String hbaseTable = args[1];
+        String hbaseTable = args[0];
 
         System.out.println("Hello friend.");
 
-        Configuration hconf = HadoopUtil.newHBaseConfiguration(metadataUrl);
+        Configuration hconf = HadoopUtil.getCurrentHBaseConfiguration();
         if (User.isHBaseSecurityEnabled(hconf)) {
             try {
                 System.out.println("--------------Getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());

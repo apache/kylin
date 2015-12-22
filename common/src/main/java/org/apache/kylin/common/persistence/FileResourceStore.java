@@ -75,14 +75,14 @@ public class FileResourceStore extends ResourceStore {
             for (String resource : resources) {
                 if (resource.compareTo(rangeStart) >= 0 && resource.compareTo(rangeEnd) <= 0) {
                     if (existsImpl(resource)) {
-                        result.add(new RawResource(getResourceImpl(resource), getResourceTimestampImpl(resource)));
+                        result.add(getResourceImpl(resource));
                     }
                 }
             }
             return result;
         } catch (IOException ex) {
             for (RawResource rawResource : result) {
-                IOUtils.closeQuietly(rawResource.resource);
+                IOUtils.closeQuietly(rawResource.inputStream);
             }
             throw ex;
         } catch (Exception ex) {
@@ -91,10 +91,10 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected InputStream getResourceImpl(String resPath) throws IOException {
+    protected RawResource getResourceImpl(String resPath) throws IOException {
         File f = file(resPath);
         if (f.exists() && f.isFile())
-            return new FileInputStream(file(resPath));
+            return new RawResource(new FileInputStream(f), f.lastModified());
         else
             return null;
     }
@@ -102,9 +102,12 @@ public class FileResourceStore extends ResourceStore {
     @Override
     protected long getResourceTimestampImpl(String resPath) throws IOException {
         File f = file(resPath);
-        return f.lastModified();
+        if (f.exists() && f.isFile())
+            return f.lastModified();
+        else
+            return 0;
     }
-
+    
     @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
         File f = file(resPath);
@@ -128,7 +131,7 @@ public class FileResourceStore extends ResourceStore {
         putResourceImpl(resPath, new ByteArrayInputStream(content), newTS);
 
         // some FS lose precision on given time stamp
-        return getResourceTimestamp(resPath);
+        return f.lastModified();
     }
 
     @Override

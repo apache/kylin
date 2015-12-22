@@ -36,10 +36,26 @@ do
         hive_conf_path=$data
     fi
 done
-hdp_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
 
-hcatalog=`find $hdp_home -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
-hive_lib=`find "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
+# in some versions of hive hcatalog is not in hive's classpath, find it separately
+if [ -z "$HCAT_HOME" ]
+then
+    echo "HCAT_HOME not found, try to find hcatalog path from hadoop home"
+    hadoop_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
+    if [ -d "${hadoop_home}/hive-hcatalog" ]; then
+      hcatalog_home=${hadoop_home}/hive-hcatalog
+    elif [ -d "${hadoop_home}/hive/hcatalog" ]; then
+      hcatalog_home=${hadoop_home}/hive/hcatalog
+    else 
+      echo "Couldn't locate hcatalog installation, please make sure it is installed and set HCAT_HOME to the path."
+      exit 1
+    fi
+else
+    echo "HCAT_HOME is set to: $HCAT_HOME, use it to find hcatalog path:"
+    hcatalog_home=${HCAT_HOME}
+fi
+
+hcatalog=`find -L ${hcatalog_home} -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
 
 if [ -z "$hcatalog" ]
 then
@@ -47,6 +63,8 @@ then
     exit 1
 fi
 
+
+hive_lib=`find -L "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
 hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}
 echo "hive dependency: $hive_dependency"
 export hive_dependency

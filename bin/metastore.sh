@@ -28,9 +28,6 @@
 dir=$(dirname ${0})
 source ${dir}/check-env.sh
 
-_jobjar=`ls ${KYLIN_HOME}/lib |grep kylin-job`
-_fulljobjar="${KYLIN_HOME}/lib/${_jobjar}"
-
 if [ $1 == "backup" ]
 then
 
@@ -41,7 +38,7 @@ then
     echo "Starting backup to ${_file}"
     mkdir -p ${_file}
 
-    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool download ${_file}
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool download ${_file}
     echo "metadata store backed up to ${_file}"
 
 elif [ $1 == "restore" ]
@@ -49,17 +46,17 @@ then
 
     _file=$2
     echo "Starting restoring $_file"
-    hbase  org.apache.hadoop.util.RunJar  ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool upload $_file
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload $_file
 
 elif [ $1 == "reset" ]
 then
 
-    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}   org.apache.kylin.common.persistence.ResourceTool  reset
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool  reset
     
 elif [ $1 == "clean" ]
 then
 
-    hbase  org.apache.hadoop.util.RunJar ${_fulljobjar}  org.apache.kylin.job.hadoop.cube.MetadataCleanupJob "${@:2}"
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.job.hadoop.cube.MetadataCleanupJob "${@:2}"
 
 else
     echo "usage: metastore.sh backup"

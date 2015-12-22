@@ -166,7 +166,7 @@ public class DateStrDictionary extends Dictionary<String> {
 
     @Override
     public boolean equals(Object o) {
-        if ((o instanceof DateStrDictionary) == false)
+        if (!(o instanceof DateStrDictionary))
             return false;
         DateStrDictionary that = (DateStrDictionary) o;
         return StringUtils.equals(this.pattern, that.pattern) && this.baseId == that.baseId;

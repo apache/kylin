@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -60,8 +59,7 @@ public class InvertedIndexHBaseTest extends HBaseMetadataTestCase {
         this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii");
         this.seg = ii.getFirstSegment();
 
-        String hbaseUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-        Configuration hconf = HadoopUtil.newHBaseConfiguration(hbaseUrl);
+        Configuration hconf = HadoopUtil.getCurrentHBaseConfiguration();
         hconn = HConnectionManager.createConnection(hconf);
 
         this.info = new TableRecordInfo(seg);

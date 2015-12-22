@@ -76,7 +76,7 @@ public class ZookeeperJobLock implements JobLock {
     }
 
     private String getZKConnectString() {
-        Configuration conf = HadoopUtil.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl());
+        Configuration conf = HadoopUtil.getCurrentHBaseConfiguration();
         return conf.get(HConstants.ZOOKEEPER_QUORUM) + ":" + conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
     }
 

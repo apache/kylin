@@ -117,7 +117,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
 
     public static void main(String[] args) throws Exception {
         IICreateHTableJob job = new IICreateHTableJob();
-        job.setConf(HadoopUtil.newHBaseConfiguration(KylinConfig.getInstanceFromEnv().getStorageUrl()));
+        job.setConf(HadoopUtil.getCurrentHBaseConfiguration());
         int exitCode = ToolRunner.run(job, args);
         System.exit(exitCode);
     }
