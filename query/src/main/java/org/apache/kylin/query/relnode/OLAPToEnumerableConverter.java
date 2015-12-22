@@ -69,6 +69,12 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         // find cube from olap context
         try {
             for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
+                // Context has no table scan is created by OLAPJoinRel which looks like
+                //     (sub-query) as A join (sub-query) as B
+                // No realization needed for such context.
+                if (context.firstTableScan == null) {
+                    continue;
+                }
                 IRealization realization = QueryRouter.selectRealization(context);
                 context.realization = realization;
             }

@@ -121,6 +121,7 @@
                         <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube)">Disable</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube)">Enable</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube)">Purge</a></li>
+                        <li><a ng-click="cloneCube(cube)">Clone</a></li>
 
                     </ul>
                 </div>
@@ -157,6 +158,7 @@
     <strong>Storage: {{getTotalSize(cubeList.cubes)}}</strong>
 </div>
 
+<div ng-include="'partials/cubes/cube_clone.html'"></div>
 <div ng-include="'partials/jobs/job_submit.html'"></div>
 <div ng-include="'partials/jobs/job_refresh.html'"></div>
 <div ng-include="'partials/jobs/job_merge.html'"></div>

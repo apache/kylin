@@ -36,6 +36,7 @@ import org.apache.kylin.cube.kv.FuzzyKeyEncoder;
 import org.apache.kylin.cube.kv.FuzzyMaskEncoder;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,9 +123,9 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
             stopValues.put(column, dimRange.getEndValue());
             fuzzyValues.put(column, dimRange.getEqualValues());
 
-            TblColRef partitionDateColumnRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
-            if (column.equals(partitionDateColumnRef)) {
-                initPartitionRange(dimRange);
+            PartitionDesc partDesc = cubeSeg.getCubeDesc().getModel().getPartitionDesc();
+            if (column.equals(partDesc.getPartitionDateColumnRef())) {
+                initPartitionRange(dimRange, partDesc.getPartitionDateFormat());
             }
         }
 
@@ -136,24 +137,19 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
         encoder.setBlankByte(RowConstants.ROWKEY_UPPER_BYTE);
 
-        // In order to make stopRow inclusive add a trailing 0 byte. #See
-        // Scan.setStopRow(byte [] stopRow)
+        // In order to make stopRow inclusive add a trailing 0 byte. #See Scan.setStopRow(byte [] stopRow)
         this.stopKey = Bytes.add(encoder.encode(stopValues), ZERO_TAIL_BYTES);
-
-        // restore encoder defaults for later reuse (note
-        // AbstractRowKeyEncoder.createInstance() caches instances)
-        encoder.setBlankByte(AbstractRowKeyEncoder.DEFAULT_BLANK_BYTE);
 
         // always fuzzy match cuboid ID to lock on the selected cuboid
         this.fuzzyKeys = buildFuzzyKeys(fuzzyValues);
     }
 
-    private void initPartitionRange(ColumnValueRange dimRange) {
+    private void initPartitionRange(ColumnValueRange dimRange, String partitionDateFormat) {
         if (null != dimRange.getBeginValue()) {
-            this.partitionColumnStartDate = DateFormat.stringToDate(dimRange.getBeginValue()).getTime();
+            this.partitionColumnStartDate = DateFormat.stringToDate(dimRange.getBeginValue(), partitionDateFormat).getTime();
         }
         if (null != dimRange.getEndValue()) {
-            this.partitionColumnEndDate = DateFormat.stringToDate(dimRange.getEndValue()).getTime();
+            this.partitionColumnEndDate = DateFormat.stringToDate(dimRange.getEndValue(), partitionDateFormat).getTime();
         }
     }
 

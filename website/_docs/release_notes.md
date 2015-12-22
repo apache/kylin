@@ -1,22 +1,159 @@
 ---
 layout: docs
-title:  Release Notes
+title:  Apache Kylin™ Release Notes
 categories: gettingstarted
 permalink: /docs/release_notes.html
-version: v1.0
+version: v1.2
 since: v0.7.1
 ---
 
-To download latest release, please visit: [http://kylin.incubator.apache.org/download/](http://kylin.incubator.apache.org/download/), there are source code package, binary package, ODBC driver and installation guide avaliable.
+To download latest release, please visit: [http://kylin.apache.org/download/](http://kylin.apache.org/download/), 
+there are source code package, binary package, ODBC driver and installation guide avaliable.
 
 Any problem or issue, please report to Apache Kylin JIRA project: [https://issues.apache.org/jira/browse/KYLIN](https://issues.apache.org/jira/browse/KYLIN)
 
 or send to Apache Kylin mailing list:   
-* User relative: [user@kylin.incubator.apache.org](mailto:user@kylin.incubator.apache.org)
-* Development relative: [dev@kylin.incubator.apache.org](mailto:dev@kylin.incubator.apache.org)
+* User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
+* Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
+
+## v1.2 - 2015-12-15
+_Tag:_ [kylin-1.2](https://github.com/apache/kylin/tree/kylin-1.2)
+
+__New Feature__
+
+    * [KYLIN-596] - Support Excel and Power BI
+    
+__Improvement__
+
+    * [KYLIN-389] - Can't edit cube name for existing cubes
+    * [KYLIN-702] - When Kylin create the flat hive table, it generates large number of small files in HDFS 
+    * [KYLIN-1021] - upload dependent jars of kylin to HDFS and set tmpjars
+    * [KYLIN-1058] - Remove "right join" during model creation
+    * [KYLIN-1064] - restore disabled queries in KylinQueryTest.testVerifyQuery
+    * [KYLIN-1065] - ODBC driver support tableau 9.1
+    * [KYLIN-1069] - update tip for 'Partition Column' on UI
+    * [KYLIN-1081] - ./bin/find-hive-dependency.sh may not find hive-hcatalog-core.jar
+    * [KYLIN-1095] - Update AdminLTE to latest version
+    * [KYLIN-1099] - Support dictionary of cardinality over 10 millions
+    * [KYLIN-1101] - Allow "YYYYMMDD" as a date partition column
+    * [KYLIN-1105] - Cache in AbstractRowKeyEncoder.createInstance() is useless
+    * [KYLIN-1119] - refine find-hive-dependency.sh to correctly get hcatalog path
+    * [KYLIN-1139] - Hive job not starting due to error "conflicting lock present for default mode EXCLUSIVE "
+    * [KYLIN-1149] - When yarn return an incomplete job tracking URL, Kylin will fail to get job status
+    * [KYLIN-1154] - Load job page is very slow when there are a lot of history job
+    * [KYLIN-1157] - CubeMigrationCLI doesn't copy ACL
+    * [KYLIN-1160] - Set default logger appender of log4j for JDBC
+    * [KYLIN-1161] - Rest API /api/cubes?cubeName=  is doing fuzzy match instead of exact match
+    * [KYLIN-1162] - Enhance HadoopStatusGetter to be compatible with YARN-2605
+    * [KYLIN-1166] - CubeMigrationCLI should disable and purge the cube in source store after be migrated
+    * [KYLIN-1168] - Couldn't save cube after doing some modification, get "Update data model is not allowed! Please create a new cube if needed" error
+    * [KYLIN-1190] - Make memory budget per query configurable
+
+__Bug__
+
+    * [KYLIN-693] - Couldn't change a cube's name after it be created
+    * [KYLIN-930] - can't see realizations under each project at project list page
+    * [KYLIN-966] - When user creates a cube, if enter a name which already exists, Kylin will thrown expection on last step
+    * [KYLIN-1033] - Error when joining two sub-queries
+    * [KYLIN-1039] - Filter like (A or false) yields wrong result
+    * [KYLIN-1067] - Support get MapReduce Job status for ResourceManager HA Env
+    * [KYLIN-1070] - changing  case in table name in  model desc
+    * [KYLIN-1093] - Consolidate getCurrentHBaseConfiguration() and newHBaseConfiguration() in HadoopUtil
+    * [KYLIN-1098] - two "kylin.hbase.region.count.min" in conf/kylin.properties
+    * [KYLIN-1106] - Can not send email caused by Build Base Cuboid Data step failed
+    * [KYLIN-1108] - Return Type Empty When Measure-> Count In Cube Design
+    * [KYLIN-1120] - MapReduce job read local meta issue
+    * [KYLIN-1121] - ResourceTool download/upload does not work in binary package
+    * [KYLIN-1140] - Kylin's sample cube "kylin_sales_cube" couldn't be saved.
+    * [KYLIN-1148] - Edit project's name and cancel edit, project's name still modified
+    * [KYLIN-1152] - ResourceStore should read content and timestamp in one go
+    * [KYLIN-1155] - unit test with minicluster doesn't work on 1.x
+    * [KYLIN-1203] - Cannot save cube after correcting the configuration mistake
+    * [KYLIN-1205] - hbase RpcClient java.io.IOException: Unexpected closed connection
+    * [KYLIN-1216] - Can't parse DateFormat like 'YYYYMMDD' correctly in query
+
+__Task__
+
+    * [KYLIN-1170] - Update website and status files to TLP
+
+
+## v1.1.1-incubating - 2015-11-04
+_Tag:_ [kylin-1.1.1-incubating](https://github.com/apache/kylin/tree/kylin-1.1.1-incubating)
+
+__Improvement__
+
+    * [KYLIN-999] - License check and cleanup for release
+
+## v1.1-incubating - 2015-10-25
+_Tag:_ [kylin-1.1-incubating](https://github.com/apache/kylin/tree/kylin-1.1-incubating)
+
+__New Feature__
+
+    * [KYLIN-222] - Web UI to Display CubeInstance Information
+    * [KYLIN-906] - cube retention
+    * [KYLIN-910] - Allow user to enter "retention range" in days on Cube UI
+
+__Bug__
+
+    * [KYLIN-457] - log4j error and dup lines in kylin.log
+    * [KYLIN-632] - "kylin.sh stop" doesn't check whether KYLIN_HOME was set
+    * [KYLIN-740] - Slowness with many IN() values
+    * [KYLIN-747] - bad query performance when IN clause contains a value doesn't exist in the dictionary
+    * [KYLIN-771] - query cache is not evicted when metadata changes
+    * [KYLIN-797] - Cuboid cache will cache massive invalid cuboid if existed many cubes which already be deleted 
+    * [KYLIN-847] - "select * from fact" does not work on 0.7 branch
+    * [KYLIN-913] - Cannot find rowkey column XXX in cube CubeDesc
+    * [KYLIN-918] - Calcite throws "java.lang.Float cannot be cast to java.lang.Double" error while executing SQL
+    * [KYLIN-944] - update doc about how to consume kylin API in javascript
+    * [KYLIN-950] - Web UI "Jobs" tab view the job reduplicated
+    * [KYLIN-952] - User can trigger a Refresh job on an non-existing cube segment via REST API
+    * [KYLIN-958] - update cube data model may fail and leave metadata in inconsistent state
+    * [KYLIN-961] - Can't get cube  source record count.
+    * [KYLIN-967] - Dump running queries on memory shortage
+    * [KYLIN-968] - CubeSegment.lastBuildJobID is null in new instance but used for rowkey_stats path
+    * [KYLIN-975] - change kylin.job.hive.database.for.intermediatetable cause job to fail
+    * [KYLIN-978] - GarbageCollectionStep dropped Hive Intermediate Table but didn't drop external hdfs path
+    * [KYLIN-982] - package.sh should grep out "Download*" messages when determining version
+    * [KYLIN-983] - Query sql offset keyword bug
+    * [KYLIN-985] - Don't suppoprt aggregation AVG while executing SQL
+    * [KYLIN-1001] - Kylin generates wrong HDFS path in creating intermediate table
+    * [KYLIN-1004] - Dictionary with '' value cause cube merge to fail
+    * [KYLIN-1005] - fail to acquire ZookeeperJobLock when hbase.zookeeper.property.clientPort is configured other than 2181
+    * [KYLIN-1015] - Hive dependency jars appeared twice on job configuration
+    * [KYLIN-1020] - Although "kylin.query.scan.threshold" is set, it still be restricted to less than 4 million 
+    * [KYLIN-1026] - Error message for git check is not correct in package.sh
+
+__Improvement__
+
+    * [KYLIN-343] - Enable timeout on query 
+    * [KYLIN-367] - automatically backup metadata everyday
+    * [KYLIN-589] - Cleanup Intermediate hive table after cube build
+    * [KYLIN-772] - Continue cube job when hive query return empty resultset
+    * [KYLIN-858] - add snappy compression support
+    * [KYLIN-882] - check access to kylin.hdfs.working.dir
+    * [KYLIN-895] - Add "retention_range" attribute for cube instance, and automatically drop the oldest segment when exceeds retention
+    * [KYLIN-901] - Add tool for cleanup Kylin metadata storage
+    * [KYLIN-956] - Allow users to configure hbase compression algorithm in kylin.properties
+    * [KYLIN-957] - Support HBase in a separate cluster
+    * [KYLIN-965] - Allow user to configure the region split size for cube
+    * [KYLIN-971] - kylin display timezone on UI
+    * [KYLIN-987] - Rename 0.7-staging and 0.8 branch
+    * [KYLIN-998] - Finish the hive intermediate table clean up job in org.apache.kylin.job.hadoop.cube.StorageCleanupJob
+    * [KYLIN-999] - License check and cleanup for release
+    * [KYLIN-1013] - Make hbase client configurations like timeout configurable
+    * [KYLIN-1025] - Save cube change is very slow
+    * [KYLIN-1034] - Faster bitmap indexes with Roaring bitmaps
+    * [KYLIN-1035] - Validate [Project] before create Cube on UI
+    * [KYLIN-1037] - Remove hardcoded "hdp.version" from regression tests
+    * [KYLIN-1047] - Upgrade to Calcite 1.4
+    * [KYLIN-1048] - CPU and memory killer in Cuboid.findById()
+    * [KYLIN-1061] - "kylin.sh start" should check whether kylin has already been running
+    * [KYLIN-1048] - CPU and memory killer in Cuboid.findById()
+    * [KYLIN-1061] - "kylin.sh start" should check whether kylin has already been running
+
 
 ## v1.0-incubating - 2015-09-06
-_Tag:_ [kylin-1.0-incubating](https://github.com/apache/incubator-kylin/tree/kylin-1.0-incubating)
+_Tag:_ [kylin-1.0-incubating](https://github.com/apache/kylin/tree/kylin-1.0-incubating)
 
 __New Feature__
 
@@ -78,7 +215,7 @@ __Task__
     * [KYLIN-931] - Port KYLIN-921 to 0.8 branch
 
 ## v0.7.2-incubating - 2015-07-21
-_Tag:_ [kylin-0.7.2-incubating](https://github.com/apache/incubator-kylin/tree/kylin-0.7.2-incubating)
+_Tag:_ [kylin-0.7.2-incubating](https://github.com/apache/kylin/tree/kylin-0.7.2-incubating)
 
 __Main Changes:__  
 Critical bug fixes after v0.7.1 release, please go with this version directly for new case and upgrade to this version for existing deployment.
@@ -134,7 +271,7 @@ __Task__
     * [KYLIN-812] - Upgrade to Calcite 0.9.2
 
 ## v0.7.1-incubating (First Apache Release) - 2015-06-10  
-_Tag:_ [kylin-0.7.1-incubating](https://github.com/apache/incubator-kylin/tree/kylin-0.7.1-incubating)
+_Tag:_ [kylin-0.7.1-incubating](https://github.com/apache/kylin/tree/kylin-0.7.1-incubating)
 
 Apache Kylin v0.7.1-incubating has rolled out on June 10, 2015. This is also the first Apache release after join incubating. 
 

@@ -20,7 +20,6 @@ package org.apache.kylin.rest.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.rest.request.SQLRequest;
@@ -55,8 +54,8 @@ public class BadQueryDetector extends Thread {
 
         this.notifiers.add(new Notifier() {
             @Override
-            public void badQueryFound(String adj, int runningSec, String sql) {
-                logger.info(adj + " query has been running " + runningSec + " seconds -- " + sql);
+            public void badQueryFound(String adj, int runningSec, String sql, Thread t) {
+                logger.info(adj + " query has been running " + runningSec + " seconds, (thread id 0x" + Long.toHexString(t.getId()) + ") -- " + sql);
             }
         });
     }
@@ -65,10 +64,10 @@ public class BadQueryDetector extends Thread {
         notifiers.add(notifier);
     }
 
-    private void notify(String adj, int runningSec, String sql) {
+    private void notify(String adj, int runningSec, String sql, Thread t) {
         for (Notifier notifier : notifiers) {
             try {
-                notifier.badQueryFound(adj, runningSec, sql);
+                notifier.badQueryFound(adj, runningSec, sql, t);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -76,11 +75,11 @@ public class BadQueryDetector extends Thread {
     }
 
     public interface Notifier {
-        void badQueryFound(String adj, int runningSec, String sql);
+        void badQueryFound(String adj, int runningSec, String sql, Thread t);
     }
-    
+
     public void queryStart(Thread thread, SQLRequest sqlRequest) {
-        runningQueries.put(thread, new Entry(sqlRequest));
+        runningQueries.put(thread, new Entry(thread, sqlRequest));
     }
 
     public void queryEnd(Thread thread) {
@@ -88,10 +87,12 @@ public class BadQueryDetector extends Thread {
     }
 
     private class Entry implements Comparable<Entry> {
+        final Thread thread;
         final SQLRequest sqlRequest;
         final long startTime;
 
-        Entry(SQLRequest sqlRequest) {
+        Entry(Thread thread, SQLRequest sqlRequest) {
+            this.thread = thread;
             this.sqlRequest = sqlRequest;
             this.startTime = System.currentTimeMillis();
         }
@@ -123,12 +124,12 @@ public class BadQueryDetector extends Thread {
         long now = System.currentTimeMillis();
         ArrayList<Entry> entries = new ArrayList<Entry>(runningQueries.values());
         Collections.sort(entries);
-        
+
         // report if query running long
         for (Entry e : entries) {
             int runningSec = (int) ((now - e.startTime) / 1000);
             if (runningSec >= alertRunningSec) {
-                notify("Slow", runningSec, e.sqlRequest.getSql());
+                notify("Slow", runningSec, e.sqlRequest.getSql(), e.thread);
             } else {
                 break; // entries are sorted by startTime
             }
@@ -137,23 +138,30 @@ public class BadQueryDetector extends Thread {
         // report if low memory
         if (getSystemAvailMB() < alertMB) {
             logger.info("System free memory less than " + alertMB + " MB. " + entries.size() + " queries running.");
-            
-            for (Map.Entry<Thread, Entry> mapEntry : runningQueries.entrySet()) {
-                Entry e = mapEntry.getValue();
+
+            for (Entry e : entries) {
                 int duration = (int) ((now - e.startTime) / 1000);
                 if (duration > killRunningSec) {
-                    notify("Kill", duration, e.sqlRequest.getSql());
-                    Thread queryThread = mapEntry.getKey();
-                    killQueryThread(queryThread);
+                    notify("Kill", duration, e.sqlRequest.getSql(), e.thread);
+                    killQueryThread(e.thread);
                 } else {
-                    notify("Low mem", duration, e.sqlRequest.getSql());
+                    notify("Low mem", duration, e.sqlRequest.getSql(), e.thread);
                 }
             }
         }
     }
-    
-    private void killQueryThread(Thread thread) {
-        thread.interrupt();
+
+    private void killQueryThread(Thread t) {
+        StackTraceElement[] stackTrace = t.getStackTrace();
+        t.interrupt();
+        
+        // log the stack trace of bad query thread for further analysis
+        StringBuilder buf = new StringBuilder("Interrupted thread 0x" + Long.toHexString(t.getId()));
+        buf.append("\n");
+        for (StackTraceElement e : stackTrace) {
+            buf.append("\t").append("at ").append(e.toString()).append("\n");
+        }
+        logger.info(buf.toString());
     }
 
     public static final int ONE_MB = 1024 * 1024;

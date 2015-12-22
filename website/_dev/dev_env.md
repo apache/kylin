@@ -46,7 +46,7 @@ ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
 First clone the Kylin project to your local:
 
 {% highlight Groff markup %}
-	git clone https://github.com/apache/incubator-kylin.git
+	git clone https://github.com/apache/kylin.git
 {% endhighlight %}
 	
 Install Kylin artifacts to the maven repo

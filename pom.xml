@@ -29,9 +29,9 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>1.1.1-incubating</version>
+    <version>1.2</version>
     <name>Kylin:HadoopOLAPEngine</name>
-    <url>http://kylin.incubator.apache.org</url>
+    <url>http://kylin.apache.org</url>
     <inceptionYear>2014</inceptionYear>
 
     <properties>
@@ -84,6 +84,7 @@
 
         <!-- REST Service -->
         <spring.framework.version>3.1.2.RELEASE</spring.framework.version>
+        <spring.boot.version>1.2.7.RELEASE</spring.boot.version>
 
         <!-- Calcite Version -->
         <calcite.version>1.4.0-incubating</calcite.version>
@@ -123,25 +124,25 @@
     <mailingLists>
         <mailingList>
             <name>kylin-dev</name>
-            <subscribe>dev-subscribe@kylin.incubator.apache.org</subscribe>
-            <unsubscribe>dev-unsubscribe@kylin.incubator.apache.org</unsubscribe>
-            <post>dev@kylin.incubator.apache.org</post>
+            <subscribe>dev-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>dev@kylin.apache.org</post>
             <archive>http://mail-archives.apache.org/mod_mbox/kylin-dev/</archive>
         </mailingList>
         <mailingList>
             <name>kylin-commits</name>
-            <subscribe>commits-subscribe@kylin.incubator.apache.org</subscribe>
-            <unsubscribe>commits-unsubscribe@kylin.incubator.apache.org</unsubscribe>
-            <post>commits@kylin.incubator.apache.org</post>
+            <subscribe>commits-subscribe@kylin.apache.org</subscribe>
+            <unsubscribe>commits-unsubscribe@kylin.apache.org</unsubscribe>
+            <post>commits@kylin.apache.org</post>
             <archive>http://mail-archives.apache.org/mod_mbox/kylin-commits/</archive>
         </mailingList>
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</connection>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</developerConnection>
-        <url>https://git-wip-us.apache.org/repos/asf/incubator-kylin.git</url>
-        <tag>kylin-1.1.1-incubating</tag>
+        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</developerConnection>
+        <url>https://git-wip-us.apache.org/repos/asf/kylin.git</url>
+        <tag>kylin-1.2</tag>
     </scm>
 
     <dependencyManagement>

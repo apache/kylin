@@ -26,11 +26,7 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.ISegment;
-import org.apache.kylin.metadata.filter.ColumnTupleFilter;
-import org.apache.kylin.metadata.filter.CompareTupleFilter;
-import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilterSerializer;
+import org.apache.kylin.metadata.filter.*;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer.Decorator;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -60,6 +56,9 @@ public class CoprocessorFilter {
         public TupleFilter onSerialize(TupleFilter filter) {
             if (filter == null)
                 return null;
+
+            ITupleFilterTranslator translator = new CoprocessorTupleFilterTranslator(columnIO);
+            filter = translator.translate(filter);
 
             // un-evaluatable filter is replaced with TRUE
             if (!filter.isEvaluable()) {

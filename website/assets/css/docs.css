@@ -87,6 +87,12 @@
   color: #666666;
 }
 
+.post-link {
+  font-family: 'Open sans';
+  color: #454545;
+  font-size: 20px;
+}
+
 .nside {
   color: #fb8d08 !important;
 }
@@ -114,6 +120,7 @@
 #navlist:hover, #navlist:focus{
   color:#000000;
 }
+
 
 
 

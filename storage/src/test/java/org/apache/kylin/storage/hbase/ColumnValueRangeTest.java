@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.hbase;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,6 +44,7 @@ public class ColumnValueRangeTest {
         r1.preEvaluateWithDict(dict);
         assertEquals(set("CN", "US"), r1.getEqualValues());
 
+        // less than rounding
         {
             ColumnValueRange r2 = new ColumnValueRange(col, set("CN"), FilterOperatorEnum.LT);
             r2.preEvaluateWithDict(dict);
@@ -53,14 +54,15 @@ public class ColumnValueRangeTest {
             ColumnValueRange r3 = new ColumnValueRange(col, set("Other"), FilterOperatorEnum.LT);
             r3.preEvaluateWithDict(dict);
             assertEquals(null, r3.getBeginValue());
-            assertEquals("US", r3.getEndValue());
+            assertEquals("CN", r3.getEndValue());
 
             ColumnValueRange r4 = new ColumnValueRange(col, set("UT"), FilterOperatorEnum.LT);
             r4.preEvaluateWithDict(dict);
             assertEquals(null, r4.getBeginValue());
-            assertEquals(null, r4.getEndValue());
+            assertEquals("US", r4.getEndValue());
         }
 
+        // greater than rounding
         {
             ColumnValueRange r2 = new ColumnValueRange(col, set("CN"), FilterOperatorEnum.GTE);
             r2.preEvaluateWithDict(dict);
@@ -69,13 +71,24 @@ public class ColumnValueRangeTest {
 
             ColumnValueRange r3 = new ColumnValueRange(col, set("Other"), FilterOperatorEnum.GTE);
             r3.preEvaluateWithDict(dict);
-            assertEquals("CN", r3.getBeginValue());
+            assertEquals("US", r3.getBeginValue());
             assertEquals(null, r3.getEndValue());
 
             ColumnValueRange r4 = new ColumnValueRange(col, set("CI"), FilterOperatorEnum.GTE);
             r4.preEvaluateWithDict(dict);
-            assertEquals(null, r4.getBeginValue());
+            assertEquals("CN", r4.getBeginValue());
             assertEquals(null, r4.getEndValue());
+        }
+        
+        // ever false check
+        {
+            ColumnValueRange r2 = new ColumnValueRange(col, set("UT"), FilterOperatorEnum.GTE);
+            r2.preEvaluateWithDict(dict);
+            assertTrue(r2.satisfyNone());
+
+            ColumnValueRange r3 = new ColumnValueRange(col, set("CM"), FilterOperatorEnum.LT);
+            r3.preEvaluateWithDict(dict);
+            assertTrue(r3.satisfyNone());
         }
     }
 

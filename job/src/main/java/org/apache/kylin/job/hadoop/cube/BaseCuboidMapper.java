@@ -107,7 +107,7 @@ public class BaseCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, Text
 
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
 
-        bytesSplitter = new BytesSplitter(200, 4096);
+        bytesSplitter = new BytesSplitter(200, 16384);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
 
         measureCodec = new MeasureCodec(cubeDesc.getMeasures());

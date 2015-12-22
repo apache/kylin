@@ -18,12 +18,12 @@
 
 'use strict';
 
-KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService, $filter, ModelService, MetaModel, CubeDescModel, CubeList, TableModel, ProjectModel,SweetAlert) {
+KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserService, ProjectService, AuthenticationService, $filter, ModelService,CubeService, MetaModel, CubeDescModel, CubeList, TableModel, ProjectModel, SweetAlert) {
 
   $scope.projects = [];
   $scope.newDimension = null;
   $scope.newMeasure = null;
-
+  $scope.allCubes = [];
 
   $scope.wizardSteps = [
     {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false},
@@ -49,6 +49,19 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
   if (!$scope.state) {
     $scope.state = {mode: "view"};
   }
+
+  // Add all cube names to avoid name conflict during cube creation.
+  var queryParam = {offset: 0, limit: 65535};
+
+  CubeService.list(queryParam, function (all_cubes) {
+      if($scope.allCubes.length > 0){
+          $scope.allCubes.splice(0,$scope.allCubes.length);
+      }
+
+      for (var i = 0; i < all_cubes.length; i++) {
+          $scope.allCubes.push(all_cubes[i].name.toUpperCase());
+      }
+  });
 
   $scope.$watch('cube.detail', function (newValue, oldValue) {
     if (!newValue) {
@@ -105,6 +118,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   //map right return type for param
   $scope.measureReturnTypeUpdate = function () {
+
+    if($scope.newMeasure.function.expression == 'COUNT'){
+      $scope.newMeasure.function.parameter.type= 'constant';
+    }
+
     if ($scope.newMeasure.function.parameter.type == "constant" && $scope.newMeasure.function.expression !== "COUNT_DISTINCT") {
       switch ($scope.newMeasure.function.expression) {
         case "SUM":
@@ -196,6 +214,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
   };
   $scope.nextView = function () {
     var stepIndex = $scope.wizardSteps.indexOf($scope.curStep);
+    if(stepIndex === 0 && $scope.cubeMode=="addNewCube" && ($scope.allCubes.indexOf($scope.cubeMetaFrame.name.toUpperCase()) >= 0)){
+        SweetAlert.swal('Oops...', "The cube named " + $scope.cubeMetaFrame.name.toUpperCase() + " already exists", 'error');
+        return;
+    }
 
     if (stepIndex < ($scope.wizardSteps.length - 1)) {
       $scope.curStep.isComplete = true;

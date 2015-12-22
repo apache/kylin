@@ -395,8 +395,10 @@ public class QueryService extends BasicService {
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 isPartialResult |= ctx.storageContext.isPartialResultReturned();
-                cube = ctx.realization.getName();
-                totalScanCount += ctx.storageContext.getTotalScanCount();
+                if (ctx.realization != null) {
+                    cube = ctx.realization.getName();
+                    totalScanCount += ctx.storageContext.getTotalScanCount();
+                }
             }
         }
 

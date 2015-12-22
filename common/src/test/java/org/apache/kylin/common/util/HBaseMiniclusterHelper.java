@@ -45,7 +45,7 @@ public class HBaseMiniclusterHelper {
 
     public static HBaseTestingUtility UTIL = new HBaseTestingUtility();
     private static volatile boolean clusterStarted = false;
-    private static String hbaseconnectionUrl = "";
+    private static String zkHost, zkPort, zkParent;
 
     private static final Log logger = LogFactory.getLog(HBaseMiniclusterHelper.class);
 
@@ -80,8 +80,10 @@ public class HBaseMiniclusterHelper {
 
     private static void updateKylinConfigWithMinicluster() {
 
-        KylinConfig.getInstanceFromEnv().setMetadataUrl(TEST_METADATA_TABLE + "@" + hbaseconnectionUrl);
-        KylinConfig.getInstanceFromEnv().setStorageUrl(hbaseconnectionUrl);
+        Configuration hbaseConfiguration = HadoopUtil.getCurrentHBaseConfiguration();
+        hbaseConfiguration.set(HConstants.ZOOKEEPER_QUORUM, zkHost);
+        hbaseConfiguration.set(HConstants.ZOOKEEPER_CLIENT_PORT, zkPort);
+        hbaseConfiguration.set(HConstants.ZOOKEEPER_ZNODE_PARENT, zkParent);
     }
 
     private static void startupMiniClusterAndImportData() throws Exception {
@@ -96,11 +98,11 @@ public class HBaseMiniclusterHelper {
         UTIL.getConfiguration().setInt("hbase.master.info.port", -1);//avoid port clobbering
 
         MiniHBaseCluster hbaseCluster = UTIL.startMiniCluster();
-
+        UTIL.startMiniMapReduceCluster();
         Configuration config = hbaseCluster.getConf();
-        String host = config.get(HConstants.ZOOKEEPER_QUORUM);
-        String port = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        String parent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
+        zkHost = config.get(HConstants.ZOOKEEPER_QUORUM);
+        zkPort = config.get(HConstants.ZOOKEEPER_CLIENT_PORT);
+        zkParent = config.get(HConstants.ZOOKEEPER_ZNODE_PARENT);
 
         // see in: https://hbase.apache.org/book.html#trouble.rs.runtime.zkexpired
         config.set("zookeeper.session.timeout", "1200000");
@@ -110,14 +112,11 @@ public class HBaseMiniclusterHelper {
         config.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "1");
         config.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
 
-        hbaseconnectionUrl = "hbase:" + host + ":" + port + ":" + parent;
         updateKylinConfigWithMinicluster();
-
-        UTIL.startMiniMapReduceCluster();
-
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         // create the metadata htables;
         @SuppressWarnings("unused")
-        HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
+        HBaseResourceStore store = new HBaseResourceStore(kylinConfig);
 
         // import the table content
         HbaseImporter.importHBaseData(hbaseTarLocation, UTIL.getConfiguration());

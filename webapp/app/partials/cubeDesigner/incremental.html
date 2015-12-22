@@ -50,7 +50,6 @@
                             ng-options="metaModel.model.fact_table+'.'+columns.name as metaModel.model.fact_table+'.'+columns.name for columns in getPartitonColumns(metaModel.model.fact_table)" >
                         <option value="">--Select Partition Column--</option>
                     </select>
-                    <p class="text-red"  ng-if="state.mode=='edit'">(data format in column should be 'YYYY-MM-DD')</p>
                     <span ng-if="state.mode=='view'">
                         {{!!(metaModel.model.partition_desc.partition_date_column)?metaModel.model.partition_desc.partition_date_column: ''}}</span>
                 </div>
@@ -71,6 +70,25 @@
                 </div>
             </div>
         </div>
+
+      <!--Date Format-->
+      <div class="form-group">
+        <div class="row">
+          <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Date Format</b></label>
+          <div class="col-xs-12 col-sm-6">
+            <select style="width: 100%" chosen
+                    ng-required="metaModel.model.partition_desc.partition_date_format"
+                    ng-model="metaModel.model.partition_desc.partition_date_format"
+                    ng-if="state.mode=='edit'"
+                    data-placement=""
+                    ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt">
+              <option value="">--Select Date Format--</option>
+            </select>
+            <span ng-if="state.mode=='view'&&metaModel.model.partition_desc.partition_date_column">{{(metaModel.model.partition_desc.partition_date_format)}}</span>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div class="col-xs-4">
@@ -83,7 +101,7 @@
                     <div class="col-xs-12">
                         <ol class="text-info">
                             <li>Not required,leave as default if this cube always need full build</li>
-                            <li>Partition column will select 'date' or 'string' type column from fact table</li>
+                            <li>Partition column will select 'date' type column from fact table</li>
                             <li>If column selected,please indicate start date to just pull certain data from source</li>
                         </ol>
                     </div>

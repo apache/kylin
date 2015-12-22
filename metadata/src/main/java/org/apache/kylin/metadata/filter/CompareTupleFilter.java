@@ -34,7 +34,11 @@ import org.apache.kylin.metadata.tuple.ITuple;
  */
 public class CompareTupleFilter extends TupleFilter {
 
+    // operand 1 is either a column or a function
     private TblColRef column;
+    private FunctionTupleFilter function;
+    
+    // operand 2 is constants
     private Collection<String> conditionValues;
     private String firstCondValue;
     private Map<String, String> dynamicVariables;
@@ -49,7 +53,7 @@ public class CompareTupleFilter extends TupleFilter {
                 || op == FilterOperatorEnum.GT || op == FilterOperatorEnum.GTE //
                 || op == FilterOperatorEnum.IN || op == FilterOperatorEnum.NOTIN //
                 || op == FilterOperatorEnum.ISNULL || op == FilterOperatorEnum.ISNOTNULL);
-        if (opGood == false)
+        if (!opGood)
             throw new IllegalArgumentException("Unsupported operator " + op);
     }
 
@@ -81,6 +85,8 @@ public class CompareTupleFilter extends TupleFilter {
         } else if (child instanceof DynamicTupleFilter) {
             DynamicTupleFilter dynamicFilter = (DynamicTupleFilter) child;
             this.dynamicVariables.put(dynamicFilter.getVariableName(), null);
+        } else if (child instanceof FunctionTupleFilter) {
+            this.function = (FunctionTupleFilter)child;
         }
         //TODO
         //        else if (child instanceof ExtractTupleFilter) {
@@ -103,6 +109,10 @@ public class CompareTupleFilter extends TupleFilter {
 
     public TblColRef getColumn() {
         return column;
+    }
+
+    public FunctionTupleFilter getFunction() {
+        return function;
     }
 
     public Map<String, String> getVariables() {
@@ -137,7 +147,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return "CompareFilter [" + column + " " + operator + " " + conditionValues + ", children=" + children + "]";
+        return "CompareFilter [" + (function == null ? column : function) + " " + operator + " " + conditionValues + ", children=" + children + "]";
     }
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
@@ -146,7 +156,7 @@ public class CompareTupleFilter extends TupleFilter {
         // extract tuple value
         String tupleValue = null;
         for (TupleFilter filter : this.children) {
-            if (isConstant(filter) == false) {
+            if (!isConstant(filter)) {
                 filter.evaluate(tuple);
                 tupleValue = filter.getValues().iterator().next();
             }
@@ -209,7 +219,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public boolean isEvaluable() {
-        return column != null && !conditionValues.isEmpty();
+        return (function != null || column != null) && !conditionValues.isEmpty();
     }
 
     @Override
@@ -239,5 +249,4 @@ public class CompareTupleFilter extends TupleFilter {
         }
         this.nullString = BytesUtil.readAsciiString(buffer);
     }
-
 }

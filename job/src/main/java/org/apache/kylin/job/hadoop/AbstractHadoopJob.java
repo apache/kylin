@@ -23,11 +23,10 @@ package org.apache.kylin.job.hadoop;
  *
  */
 
-import static org.apache.hadoop.util.StringUtils.formatTime;
+import static org.apache.hadoop.util.StringUtils.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +36,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -50,6 +50,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.StringSplitter;
@@ -147,6 +148,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         if (classpath == null || classpath.length() == 0) {
             logger.info("Didn't find " + MAP_REDUCE_CLASSPATH + " in job configuration, will run 'mapred classpath' to get the default value.");
             classpath = getDefaultMapRedClasspath();
+            classpath = classpath.replace(":", ","); // yarn classpath is comma separated
             logger.info("The default mapred classpath is: " + classpath);
         }
 
@@ -164,6 +166,66 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         jobConf.set(MAP_REDUCE_CLASSPATH, classpath);
         logger.info("Hadoop job classpath is: " + job.getConfiguration().get(MAP_REDUCE_CLASSPATH));
+
+        // set extra dependencies as tmpjars & tmpfiles if configured
+        setJobTmpJarsAndFiles(job);
+    }
+
+    private void setJobTmpJarsAndFiles(Job job) {
+        String mrLibDir = KylinConfig.getInstanceFromEnv().getKylinJobMRLibDir();
+        if (StringUtils.isBlank(mrLibDir))
+            return;
+
+        try {
+            Configuration jobConf = job.getConfiguration();
+            FileSystem fs = FileSystem.get(new Configuration(jobConf));
+            FileStatus[] fList = fs.listStatus(new Path(mrLibDir));
+            
+            StringBuilder jarList = new StringBuilder();
+            StringBuilder fileList = new StringBuilder();
+            
+            for (FileStatus file : fList) {
+                Path p = file.getPath();
+                StringBuilder list = (p.getName().endsWith(".jar")) ? jarList : fileList;
+                if (list.length() > 0)
+                    list.append(",");
+                list.append(mrLibDir + "/" + file.getPath().getName());
+            }
+            
+            appendTmpFiles(fileList.toString(), jobConf);
+            appendTmpJars(jarList.toString(), jobConf);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void appendTmpJars(String jarList, Configuration conf) {
+        if (StringUtils.isBlank(jarList))
+            return;
+        
+        String tmpJars = conf.get("tmpjars", null);
+        if (tmpJars == null) {
+            tmpJars = jarList;
+        } else {
+            tmpJars += "," + jarList;
+        }
+        conf.set("tmpjars", tmpJars);
+        logger.info("Job 'tmpjars' updated -- " + tmpJars);
+    }
+
+    private void appendTmpFiles(String fileList, Configuration conf) {
+        if (StringUtils.isBlank(fileList))
+            return;
+        
+        String tmpFiles = conf.get("tmpfiles", null);
+        if (tmpFiles == null) {
+            tmpFiles = fileList;
+        } else {
+            tmpFiles += "," + fileList;
+        }
+        conf.set("tmpfiles", tmpFiles);
+        logger.info("Job 'tmpfiles' updated -- " + tmpFiles);
     }
 
     private String getDefaultMapRedClasspath() {
@@ -174,7 +236,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             ShellCmdOutput output = new ShellCmdOutput();
             executor.execute("mapred classpath", output);
 
-            classpath = output.getOutput();
+            classpath = output.getOutput().trim();
         } catch (IOException e) {
             logger.error("Failed to run: 'mapred classpath'.", e);
         }
@@ -276,21 +338,20 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         else
             hdfsMetaDir = "file:///" + hdfsMetaDir;
         logger.info("HDFS meta dir is: " + hdfsMetaDir);
-        conf.set("tmpfiles", hdfsMetaDir);
+        
+        appendTmpFiles(hdfsMetaDir, conf);
     }
-
+    
     private void dumpResources(KylinConfig kylinConfig, File metaDir, ArrayList<String> dumpList) throws IOException {
         ResourceStore from = ResourceStore.getStore(kylinConfig);
         KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());
         ResourceStore to = ResourceStore.getStore(localConfig);
         for (String path : dumpList) {
-            InputStream in = from.getResource(path);
-            if (in == null)
+            RawResource res = from.getResource(path);
+            if (res == null)
                 throw new IllegalStateException("No resource found at -- " + path);
-            long ts = from.getResourceTimestamp(path);
-            to.putResource(path, in, ts);
-            //The following log is duplicate with in ResourceStore
-            //log.info("Dumped resource " + path + " to " + metaDir.getAbsolutePath());
+            to.putResource(path, res.inputStream, res.timestamp);
+            res.inputStream.close();
         }
     }
 

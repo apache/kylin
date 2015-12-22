@@ -35,6 +35,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.Log4jConfigurer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -243,12 +244,15 @@ public class KylinConfig {
      * @return
      */
     private static KylinConfig loadKylinConfig() {
+        Log4jConfigurer.initLogger();
+
         InputStream is = getKylinPropertiesAsInputSteam();
         if (is == null) {
             throw new IllegalArgumentException("Failed to load kylin config");
         }
         KylinConfig config = new KylinConfig();
         config.reloadKylinConfig(is);
+
         return config;
     }
 
@@ -331,6 +335,10 @@ public class KylinConfig {
             return "";
         }
         return getFileName(kylinHome + File.separator + "lib", JOB_JAR_NAME_PATTERN);
+    }
+    
+    public String getKylinJobMRLibDir() {
+        return getOptional("kylin.job.mr.lib.dir", "");
     }
 
     public void overrideKylinJobJarPath(String path) {
@@ -484,10 +492,22 @@ public class KylinConfig {
         return Boolean.parseBoolean(this.getOptional("kylin.query.cache.enabled", "true"));
     }
 
+    public long getQueryMemBudget() {
+        return Long.parseLong(this.getOptional("kylin.query.mem.budget", String.valueOf(3L * 1024 * 1024 * 1024)));
+    }
+
     public int getHBaseKeyValueSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
     }
+    
+    public int getHBaseScanCacheRows() {
+        return Integer.parseInt(this.getOptional("kylin.hbase.scan.cache_rows", "1024"));
+    }
 
+    public int getHBaseScanMaxResultSize() {
+        return Integer.parseInt(this.getOptional("kylin.hbase.scan.max_result_size", "" + (5 * 1024 * 1024))); // 5 MB
+    }
+    
     public String getHbaseDefaultCompressionCodec() {
         return getOptional(HTABLE_DEFAULT_COMPRESSION_CODEC, "");
 
@@ -638,7 +658,7 @@ public class KylinConfig {
         String hbaseMetadataUrl = getMetadataUrl();
         String defaultPrefix = "kylin_metadata";
 
-        if (org.apache.commons.lang3.StringUtils.containsIgnoreCase(hbaseMetadataUrl, "hbase:")) {
+        if (hbaseMetadataUrl.indexOf("@hbase") > 0) {
             int cut = hbaseMetadataUrl.indexOf('@');
             String tmp = cut < 0 ? defaultPrefix : hbaseMetadataUrl.substring(0, cut);
             return tmp;

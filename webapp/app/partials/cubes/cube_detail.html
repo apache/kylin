@@ -114,6 +114,7 @@
             <div ng-if="cube.hbase">
                 <div class="hr hr8 hr-double hr-dotted"></div>
                 <h5><b>Total Size:</b> <span class="red">{{cube.totalSize | bytes:2}}</span></h5>
+                <h5><b>Total Number:</b> <span class="red">{{cube.hbase.length}}</span></h5>
             </div>
             <div ng-if="cube.hbase.length == 0">
                 <h5>No HBase Info.</h5>

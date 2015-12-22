@@ -87,7 +87,7 @@ public class CubingJob extends DefaultChainedExecutable {
         content = content.replaceAll("\\$\\{job_name\\}", getName());
         content = content.replaceAll("\\$\\{result\\}", state.toString());
         content = content.replaceAll("\\$\\{cube_name\\}", getCubeName());
-        content = content.replaceAll("\\$\\{source_records_count\\}", getSourceRecordCount());
+        content = content.replaceAll("\\$\\{source_records_count\\}", StringUtil.noBlank(getSourceRecordCount(), "0"));
         content = content.replaceAll("\\$\\{start_time\\}", new Date(getStartTime()).toString());
         content = content.replaceAll("\\$\\{duration\\}", getDuration() / 60000 + "mins");
         content = content.replaceAll("\\$\\{mr_waiting\\}", getMapReduceWaitTime() / 60000 + "mins");

@@ -44,6 +44,7 @@ import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.QueryUtil;
+import org.apache.kylin.storage.hbase.ScanOutOfLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -191,18 +192,18 @@ public class QueryController extends BasicController {
 
             sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
 
-            // Access exception is bind with each user, it will not be cached
-            if ((e instanceof AccessDeniedException) == false) {
+            // for exception queries, only cache ScanOutOfLimitException
+            if (e instanceof ScanOutOfLimitException) {
                 Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                 exceptionCache.put(new Element(sqlRequest, sqlResponse));
             }
         }
 
         queryService.logQuery(sqlRequest, sqlResponse);
-        
+
         if (sqlResponse.getIsException())
             throw new InternalErrorException(sqlResponse.getExceptionMessage());
-        
+
         return sqlResponse;
     }
 

@@ -29,18 +29,19 @@ fi
 
 #package tar.gz
 echo 'package tar.gz'
-rm -rf dist/kylin-${version}
-mkdir dist/kylin-${version}
+package_name=apache-kylin-${version}-bin
+rm -rf dist/${package_name}
+mkdir dist/${package_name}
 # copy files
-cp -r lib bin conf dist/tomcat examples/sample_cube dist/commit.sha1 dist/kylin-${version}
+cp -r lib bin conf dist/tomcat examples/sample_cube dist/commit.sha1 dist/${package_name}
 # copy license files
-cp LICENSE README.md NOTICE DISCLAIMER  dist/kylin-${version}
+cp LICENSE README.md NOTICE DISCLAIMER  dist/${package_name}
 
-find dist/kylin-${version} -type d -exec chmod 755 {} \;
-find dist/kylin-${version} -type f -exec chmod 644 {} \;
-find dist/kylin-${version} -type f -name "*.sh" -exec chmod 755 {} \;
-cd dist
-tar -cvzf kylin-${version}-bin.tar.gz kylin-${version}
-rm -rf kylin-${version}
+find dist/${package_name} -type d -exec chmod 755 {} \;
+find dist/${package_name} -type f -exec chmod 644 {} \;
+find dist/${package_name} -type f -name "*.sh" -exec chmod 755 {} \;
+cd dist/
+tar -cvzf ${package_name}.tar.gz ${package_name}
+rm -rf ${package_name}
 
-echo "Package ready dist/kylin-${version}-bin.tar.gz"
+echo "Package ready dist/${package_name}.tar.gz"
