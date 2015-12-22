@@ -149,6 +149,34 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
 
   }
 
+  $scope.enableCache = function () {
+    SweetAlert.swal({
+      title: '',
+      text: 'Are you sure to enable query cache?',
+      type: '',
+      showCancelButton: true,
+      confirmButtonColor: '#DD6B55',
+      confirmButtonText: "Yes",
+      closeOnConfirm: true
+    }, function (isConfirm) {
+      if (isConfirm) {
+        AdminService.updateConfig({}, {key: 'kylin.query.cache.enabled', value: true}, function () {
+          SweetAlert.swal('Success!', 'Cache enabled successfully!', 'success');
+        }, function (e) {
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+          }
+        });
+      }
+
+    });
+
+  }
+
   $scope.toSetConfig = function () {
     $modal.open({
       templateUrl: 'updateConfig.html',
