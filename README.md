@@ -5,20 +5,20 @@ Apache Kylin
 
 Apache Kylin is an open source Distributed Analytics Engine, contributed by eBay Inc., provides SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets.
 
-For more details, see the website [http://kylin.incubator.apache.org](http://kylin.incubator.apache.org).
+For more details, see the website [http://kylin.apache.org](http://kylin.apache.org).
 
 Documentation
 =============
-Please refer to [http://kylin.incubator.apache.org/docs/](http://kylin.incubator.apache.org/docs/).
+Please refer to [http://kylin.apache.org/docs/](http://kylin.apache.org/docs/).
 
 Get Help
 ============
-The fastest way to get response from our developers is to send email to our mail list <dev@kylin.incubator.apache.org>,   
-and remember to subscribe our mail list via <dev-subscribe@kylin.incubator.apache.org>
+The fastest way to get response from our developers is to send email to our mail list <dev@kylin.apache.org>,   
+and remember to subscribe our mail list via <dev-subscribe@kylin.apache.org>
 
 License
 ============
-Please refer to [LICENSE](https://github.com/apache/incubator-kylin/blob/master/LICENSE) file.
+Please refer to [LICENSE](https://github.com/apache/kylin/blob/master/LICENSE) file.
 
 
 
