@@ -49,7 +49,7 @@ import com.google.common.collect.Maps;
  */
 public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWritable, Text> {
 
-    private List<TblColRef> columnList = new ArrayList();
+    private List<TblColRef> columnList = new ArrayList<TblColRef>();
     private boolean collectStatistics = false;
     private String statisticsOutput = null;
     private List<Long> baseCuboidRowCountInMappers;
@@ -57,7 +57,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
     private long totalRowsBeforeMerge = 0;
-    private int SAMPING_PERCENTAGE = 100;
+    private int samplingPercentage = 100;
     private List<ByteArray> colValues;
     private long currentColIndex = -1;
 
@@ -78,7 +78,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         if (collectStatistics) {
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
-            SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "100"));
+            samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "100"));
         }
 
         colValues = Lists.newArrayList();
@@ -159,8 +159,15 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         
         //output the hll info;
         if (collectStatistics) {
+            long grandTotal = 0;
+            for (HyperLogLogPlusCounter hll : cuboidHLLMap.values()) {
+                grandTotal += hll.getCountEstimate();
+            }
+            double mapperOverlapRatio = (double) totalRowsBeforeMerge / grandTotal;
+            
             writeMapperAndCuboidStatistics(context); // for human check
-            CuboidStatsUtil.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), cuboidHLLMap, SAMPING_PERCENTAGE); // for CreateHTableJob
+            CuboidStatsUtil.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), //
+                    cuboidHLLMap, samplingPercentage, mapperOverlapRatio); // for CreateHTableJob
         }
     }
 
@@ -178,7 +185,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
 
             msg = "Total cuboid number: \t" + allCuboids.size();
             writeLine(out, msg);
-            msg = "Samping percentage: \t" + SAMPING_PERCENTAGE;
+            msg = "Samping percentage: \t" + samplingPercentage;
             writeLine(out, msg);
 
             writeLine(out, "The following statistics are collected based sampling data.");
@@ -203,7 +210,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             writeLine(out, msg);
 
             if (grantTotal > 0) {
-                msg = "The compaction factor is: \t" + totalRowsBeforeMerge / grantTotal;
+                msg = "The mapper overlap ratio is: \t" + totalRowsBeforeMerge / grantTotal;
                 writeLine(out, msg);
             }
 

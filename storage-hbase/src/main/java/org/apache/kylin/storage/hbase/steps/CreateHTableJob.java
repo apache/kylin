@@ -46,6 +46,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.CuboidShardUtil;
 import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -94,7 +95,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         try {
             byte[][] splitKeys;
             if (statsEnabled) {
-                final Map<Long, Double> cuboidSizeMap = InMemCuboidJob.getCubeSizeMapFromCuboidStatistics(cubeSegment, kylinConfig, conf);
+                final Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, kylinConfig).getCuboidSizeMap();
                 splitKeys = getSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment);
             } else {
                 splitKeys = getSplits(conf, partitionFilePath);
