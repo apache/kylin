@@ -13,3 +13,10 @@ cd kylin
 {% endhighlight %}
 
 In order to generate binary package, **maven** and **npm** are pre-requisites.
+
+If you're behind a proxy server, both npm and bower need be told with the proxy info before running ./script/package.sh:
+
+{% highlight bash %}
+export http_proxy=http://your-proxy-host:port
+npm config set proxy http://your-proxy-host:port
+{% endhighlight %}
