@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.mr.common;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -29,7 +31,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.LongWritable;
@@ -76,14 +78,14 @@ public class CubeStatsReader {
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
         ResourceStore store = ResourceStore.getStore(kylinConfig);
         String statsKey = cubeSegment.getStatisticsResourcePath();
-        InputStream is = store.getResource(statsKey).inputStream;
+        File tmpSeqFile = writeTmpSeqFile(store.getResource(statsKey).inputStream);
         Reader reader = null;
 
         try {
             Configuration hadoopConf = HadoopUtil.getCurrentConfiguration();
 
-            Option streamInput = SequenceFile.Reader.stream(new FSDataInputStream(is));
-            reader = new SequenceFile.Reader(hadoopConf, streamInput);
+            Option seqInput = SequenceFile.Reader.file(new Path("file://" + tmpSeqFile.getAbsolutePath()));
+            reader = new SequenceFile.Reader(hadoopConf, seqInput);
 
             int percentage = 100;
             double mapperOverlapRatio = 0;
@@ -111,8 +113,21 @@ public class CubeStatsReader {
 
         } finally {
             IOUtils.closeStream(reader);
-            IOUtils.closeStream(is);
+            tmpSeqFile.delete();
         }
+    }
+
+    private File writeTmpSeqFile(InputStream inputStream) throws IOException {
+        File tempFile = File.createTempFile("kylin_stats_tmp", ".seq");
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(tempFile);
+            org.apache.commons.io.IOUtils.copy(inputStream, out);
+        } finally {
+            IOUtils.closeStream(inputStream);
+            IOUtils.closeStream(out);
+        }
+        return tempFile;
     }
 
     public Map<Long, Long> getCuboidRowCountMap() {
@@ -211,12 +226,12 @@ public class CubeStatsReader {
         logger.info("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength + " bytes." + " Total size is " + ret + "M.");
         return ret;
     }
-    
+
     public static void main(String[] args) throws IOException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(config).getCube(args[0]);
         List<CubeSegment> segments = cube.getSegments(SegmentStatusEnum.READY);
-        
+
         PrintWriter out = new PrintWriter(System.out);
         for (CubeSegment seg : segments) {
             new CubeStatsReader(seg, config).print(out);
