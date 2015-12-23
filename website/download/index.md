@@ -7,15 +7,15 @@ permalink: /download/index.html
 __Latest Release(Source Code)__  
 The latest release of Apache Kylin™ can be downloaded from the ASF:
 
-* [Apache Kylin v1.1.1-incubating](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.1.1-incubating/)
+* [Apache Kylin v1.2](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.2/)
 * [Release Notes](http://kylin.apache.org/docs/release_notes.html)
-* Git Tag: [kylin-1.1.1-incubating](https://github.com/apache/kylin/tree/kylin-1.1.1-incubating)
-* Git Commit: [6a9499b4d0fabb54211a8a536c2e18d3fe8b4a5d](https://github.com/apache/kylin/commit/6a9499b4d0fabb54211a8a536c2e18d3fe8b4a5d)
+* Git Tag: [kylin-1.2](https://github.com/apache/kylin/tree/kylin-1.2)
+* Git Commit: [c2589aee4ac5537b460b3b02fa89cdb3a922d64e](https://github.com/apache/kylin/commit/c2589aee4ac5537b460b3b02fa89cdb3a922d64e)
 
 __Binary Package (for running on HBase 0.98/0.99)__
 For convenience, there’s binary package also available: 
 
-* [apache-kylin-1.1.1-incubating-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.1.1-incubating/apache-kylin-1.1.1-incubating-bin.tar.gz)
+* [apache-kylin-1.2-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.2/apache-kylin-1.2-bin.tar.gz)
 * [Installation Guide](http://kylin.apache.org/docs/install)
 
 __Binary Package (for running on HBase 1.1.3 or above)__
@@ -33,7 +33,7 @@ __Build Binary Package__
 To build binary package from any version even latest development branch, please refer to this [guide](https://kylin.apache.org/development/howto_package.html)
 
 __Previous Release__  
- Older releases may be found in the [archives](https://dist.apache.org/repos/dist/release/kylin/).
+ Older releases may be found in the [archives](https://archive.apache.org/dist/kylin/).
     
 __ODBC Driver__  
 Kylin ODBC driver requires [Microsoft Visual C++ 2012 Redistributable](http://www.microsoft.com/en-us/download/details.aspx?id=30679) installed first. 

@@ -170,9 +170,9 @@ __Check the artifacts:__
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.asc
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.md5
   * apache-kylin-X.Y.Z-SNAPSHOT-src.zip.sha1
-* Note that the file names start `apache-kylin-` and include
-  `incubating` in the version.
-* In the two source distros `.tar.gz` and `.zip`, check that all files belong to a directory called
+* Remove the .zip, .zip.asc, .zip.md5 and zip.sha1 file as they are not needed.
+* Note that the file names start `apache-kylin-`.
+* In the source distro `.tar.gz`, check that all files belong to a directory called
   `apache-kylin-X.Y.Z-src`.
 * That directory must contain files `NOTICE`, `LICENSE`, `README.md`
 * Check PGP, per [this](https://httpd.apache.org/dev/verification.html)
