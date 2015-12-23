@@ -179,7 +179,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
     }
 
     protected int getMaxAgrGroupSize() {
-        String size = KylinConfig.getInstanceFromEnv().getProperty(KEY_MAX_AGR_GROUP_SIZE, String.valueOf(DEFAULT_MAX_AGR_GROUP_SIZE));
+        String size = KylinConfig.getInstanceFromEnv().getOptional(KEY_MAX_AGR_GROUP_SIZE, String.valueOf(DEFAULT_MAX_AGR_GROUP_SIZE));
         return Integer.parseInt(size);
     }
 }
