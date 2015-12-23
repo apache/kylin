@@ -131,11 +131,7 @@ public class CubeService extends BasicService {
         List<CubeInstance> cubes;
         cubes = listAllCubes(cubeName, projectName, modelName);
 
-        if (limit == null || offset == null) {
-            return cubes;
-        }
-
-        int climit = (null == limit) ? 30 : limit;
+        int climit = (null == limit) ? cubes.size() : limit;
         int coffset = (null == offset) ? 0 : offset;
 
         if (cubes.size() <= coffset) {
