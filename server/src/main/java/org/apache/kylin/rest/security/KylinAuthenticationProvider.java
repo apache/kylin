@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.saml.SAMLAuthenticationProvider;
 import org.springframework.util.Assert;
@@ -71,7 +72,12 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
 
             logger.debug("Authenticated user " + authed.toString());
             
-            UserDetails user = (UserDetails)authed.getDetails();
+            UserDetails user;
+            if (authed.getDetails() instanceof  UserDetails) {
+                user = (UserDetails) authed.getDetails();
+            } else {
+                user = new User(authentication.getName(), "skippped-ldap", authed.getAuthorities());
+            }
             Assert.notNull(user, "The UserDetail is null.");
 
             logger.debug("User authorities :" + user.getAuthorities());
