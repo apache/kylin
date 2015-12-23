@@ -203,7 +203,7 @@ public class MapReduceExecutable extends AbstractExecutable {
         if (yarnStatusCheckUrl != null) {
             return yarnStatusCheckUrl;
         } else {
-            logger.info(KylinConfig.KYLIN_JOB_YARN_APP_REST_CHECK_URL + " is not set, read from job configuration");
+            logger.info("kylin.job.yarn.app.rest.check.status.url" + " is not set, read from job configuration");
         }
         String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, job.getConfiguration());
         if(HAUtil.isHAEnabled(job.getConfiguration())) {
