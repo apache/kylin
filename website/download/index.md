@@ -24,8 +24,8 @@ Note the requirement of HBase version 1.1.3 (or above). There is a known bug in 
 missing rows or lesser aggregations in Kylin query result: [HBASE-14269](https://issues.apache.org/jira/browse/HBASE-14269)
 Also, please aware this is not a formal release, and it is not fully tested:
 
-* [apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.2-incubating-snapshot/apache-kylin-1.2-HBase1.1-incubating-SNAPSHOT-bin.tar.gz)
-* Git commit [3623dd6ff93d76141bb6a5fb623a3421ae78ca93](https://github.com/apache/kylin/commit/3623dd6ff93d76141bb6a5fb623a3421ae78ca93) 
+* [apache-kylin-1.3-HBase-1.1-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.3-snapshot/apache-kylin-1.3-HBase-1.1-SNAPSHOT-bin.tar.gz)
+* Git commit [a3b8eb04955310abec158ea30f61deb0119679d1](https://github.com/apache/kylin/commit/a3b8eb04955310abec158ea30f61deb0119679d1) 
 
 If you're using HBase 1.0, we suggest you to upgrade to 1.1.3+ or downgrade to 0.98/0.99.
 
