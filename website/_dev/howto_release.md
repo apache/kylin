@@ -423,6 +423,13 @@ Release same version in JIRA, check [Change Log](https://issues.apache.org/jira/
 ## Publishing the web site  
 Refer to [How to document](howto_docs.html) for more detail.
 
+## Send announcement mail to mailing list
+Send one mail with subject like "[Announce] Apache Kylin x.y released" to following list:
+* Apache Kylin Dev mailing list: dev@kylin.apache.org
+* Apache Kylin User mailing list: user@kylin.apache.org
+* Apache Announce mailing list: announce@apache.org
+Please notice to always use your Apache mail address to send this
+
 # Thanks  
 This guide drafted with reference from [Apache Calcite](http://calcite.apache.org) Howto doc, Thank you very much.
 
