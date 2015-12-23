@@ -206,7 +206,7 @@ public class JobService extends BasicService {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);
             job = EngineFactory.createBatchMergeJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.REFRESH) {
-            List<CubeSegment> readySegs = cube.getSegment(SegmentStatusEnum.READY);
+            List<CubeSegment> readySegs = cube.getSegments(SegmentStatusEnum.READY);
             boolean segExists = false;
             for (CubeSegment aSeg : readySegs) {
                 if (aSeg.getDateRangeStart() == startDate && aSeg.getDateRangeEnd() == endDate) {
