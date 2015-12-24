@@ -32,6 +32,27 @@ KylinApp
             }
         }
 
+      $scope.doubleClick = function (branch) {
+        if(!branch.parent_uid){
+          return;
+        }
+
+        var selectTable = false;
+        if(branch.data&&branch.data.table_TYPE=="TABLE"){
+          selectTable = true;
+        }
+
+        if(angular.isUndefined($scope.$parent.queryString)){
+          $scope.$parent.queryString='';
+        }
+        if(selectTable)
+          $scope.$parent.queryString += (branch.data.table_NAME+' ');
+        else
+          $scope.$parent.queryString += (branch.data.table_NAME+'.'+branch.data.column_NAME + ' ');
+
+
+      }
+
         $scope.projectMetaLoad = function () {
             var defer = $q.defer();
             $scope.selectedSrcDb = [];
