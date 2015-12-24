@@ -413,7 +413,7 @@ public class AbstractKylinConfig implements Serializable {
     }
 
     public boolean isQuerySecureEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.security.enabled", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.security.enabled", "true"));
     }
 
     public boolean isQueryCacheEnabled() {
