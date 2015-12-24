@@ -485,7 +485,7 @@ public class KylinConfig {
     }
 
     public boolean isQuerySecureEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.query.security.enabled", "false"));
+        return Boolean.parseBoolean(this.getOptional("kylin.query.security.enabled", "true"));
     }
 
     public boolean isQueryCacheEnabled() {
