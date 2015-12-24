@@ -459,8 +459,16 @@ public class CubeController extends BasicController {
             }
 
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+            String previousCubeDescSignature = cube.getDescriptor().getSignature();
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
+
+            // drop cube segments if signature changes
+            if (!StringUtils.equals(desc.getSignature(), previousCubeDescSignature)) {
+                logger.info("Detect signature change of [" + desc.getName() + "], drop all existing segments");
+                cube = cubeService.getCubeManager().getCube(cubeName);
+                cubeService.purgeCube(cube);
+            }
 
             ProjectManager projectManager = cubeService.getProjectManager();
             if (!cubeService.isCubeInProject(projectName, cube)) {

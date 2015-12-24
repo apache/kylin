@@ -252,15 +252,7 @@ public class CubeDescManager {
         }
 
         desc.setSignature(desc.calculateSignature());
-
-        // drop cube segments if signature changes
-        CubeInstance cube = getCubeManager().getCube(desc.getName());
-        if (cube != null && !StringUtils.equals(desc.getSignature(), cube.getDescriptor().getSignature())) {
-            logger.info("Detect signature change of [" + desc.getName() + "], drop all existing segments");
-            cube.getSegments().clear();
-            getCubeManager().updateCube(cube);
-        }
-
+        
         // Save Source
         String path = desc.getResourcePath();
         getStore().putResource(path, desc, CUBE_DESC_SERIALIZER);

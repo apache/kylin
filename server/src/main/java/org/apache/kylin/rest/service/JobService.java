@@ -312,7 +312,7 @@ public class JobService extends BasicService {
         CubeInstance cubeInstance = getCubeManager().getCube(job.getRelatedCube());
         for (String segmentId : segmentIds) {
             final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-            if (segment.getStatus() == SegmentStatusEnum.NEW) {
+            if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
                 cubeInstance.getSegments().remove(segment);
                 getCubeManager().updateCube(cubeInstance);
             }
