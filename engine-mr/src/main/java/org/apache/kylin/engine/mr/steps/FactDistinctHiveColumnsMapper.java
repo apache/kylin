@@ -20,26 +20,21 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  * @author yangli9
@@ -54,7 +49,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private Long[] cuboidIds;
     private HashFunction hf = null;
     private int rowCount = 0;
-    private int SAMPING_PERCENTAGE = 5;
+    private int samplingPercentage;
     private ByteArray[] row_hashcodes = null;
     private ByteBuffer keyBuffer;
     private static final Text EMPTY_TEXT = new Text();
@@ -65,7 +60,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         keyBuffer = ByteBuffer.allocate(4096);
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
-            SAMPING_PERCENTAGE = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "5"));
+            samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
             cuboidScheduler = new CuboidScheduler(cubeDesc);
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
@@ -133,7 +128,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             handleErrorRecord(row, ex);
         }
 
-        if (collectStatistics && rowCount < SAMPING_PERCENTAGE) {
+        if (collectStatistics && rowCount < samplingPercentage) {
             putRowKeyToHLL(row);
         }
 

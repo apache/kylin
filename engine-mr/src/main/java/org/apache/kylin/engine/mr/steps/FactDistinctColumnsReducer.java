@@ -57,7 +57,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
     private long totalRowsBeforeMerge = 0;
-    private int samplingPercentage = 100;
+    private int samplingPercentage;
     private List<ByteArray> colValues;
     private long currentColIndex = -1;
 
@@ -78,7 +78,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         if (collectStatistics) {
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
-            samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, "100"));
+            samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
         }
 
         colValues = Lists.newArrayList();
