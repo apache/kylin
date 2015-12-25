@@ -87,17 +87,17 @@ public class CubeController extends BasicController {
 
     @Autowired
     private AccessService accessService;
-    
+
     @Autowired
     private JobService jobService;
 
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = {RequestMethod.GET})
     @ResponseBody
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return cubeService.getCubes(cubeName, projectName, limit, offset);
     }
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}", method = {RequestMethod.GET})
     @ResponseBody
     public CubeInstance getCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -115,7 +115,7 @@ public class CubeController extends BasicController {
      * @throws UnknownHostException
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = {RequestMethod.GET})
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -138,7 +138,7 @@ public class CubeController extends BasicController {
      * @throws IOException
      * @throws CubeIntegrityException
      */
-    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/notify_list", method = {RequestMethod.PUT})
     @ResponseBody
     public void updateNotifyList(@PathVariable String cubeName, @RequestBody List<String> notifyList) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -156,7 +156,7 @@ public class CubeController extends BasicController {
 
     }
 
-    @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/cost", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
         try {
@@ -168,7 +168,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/coprocessor", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/coprocessor", method = {RequestMethod.PUT})
     @ResponseBody
     public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
         try {
@@ -186,7 +186,7 @@ public class CubeController extends BasicController {
      *
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName, @RequestParam(value = "lookupTable") String lookupTable) {
         try {
@@ -204,7 +204,7 @@ public class CubeController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/rebuild", method = {RequestMethod.PUT})
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest jobBuildRequest) {
         try {
@@ -221,7 +221,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/disable", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance disableCube(@PathVariable String cubeName) {
         try {
@@ -239,7 +239,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/purge", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance purgeCube(@PathVariable String cubeName) {
         try {
@@ -257,9 +257,9 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/clone", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/clone", method = {RequestMethod.PUT})
     @ResponseBody
-    public CubeInstance cloneCube(@PathVariable String cubeName,@RequestBody CubeRequest cubeRequest) {
+    public CubeInstance cloneCube(@PathVariable String cubeName, @RequestBody CubeRequest cubeRequest) {
         String targetCubeName = cubeRequest.getCubeName();
         String project = cubeRequest.getProject();
 
@@ -283,7 +283,7 @@ public class CubeController extends BasicController {
         try {
             newModel = metaManager.createDataModelDesc(modelDesc);
         } catch (IOException e) {
-            throw new InternalErrorException("failed to clone DataModelDesc",e);
+            throw new InternalErrorException("failed to clone DataModelDesc", e);
         }
 
         cubeDesc.setName(targetCubeName);
@@ -292,14 +292,14 @@ public class CubeController extends BasicController {
         cubeDesc.setModelName(targetCubeName);
         CubeInstance newCube = null;
         try {
-            newCube = cubeService.createCubeAndDesc(targetCubeName,project,cubeDesc);
+            newCube = cubeService.createCubeAndDesc(targetCubeName, project, cubeDesc);
         } catch (IOException e) {
             try {
                 metaManager.dropModel(newModel);
             } catch (IOException e1) {
-                throw new InternalErrorException("New model already created and failed to rollback",e);
+                throw new InternalErrorException("New model already created and failed to rollback", e);
             }
-            throw new InternalErrorException("failed to clone DataModelDesc",e);
+            throw new InternalErrorException("failed to clone DataModelDesc", e);
         }
 
         return newCube;
@@ -307,7 +307,7 @@ public class CubeController extends BasicController {
     }
 
 
-    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/enable", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance enableCube(@PathVariable String cubeName) {
         try {
@@ -324,7 +324,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{cubeName}", method = {RequestMethod.DELETE})
     @ResponseBody
     public void deleteCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -347,7 +347,7 @@ public class CubeController extends BasicController {
      * @return cubeRequest cube change request
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.POST })
+    @RequestMapping(value = "", method = {RequestMethod.POST})
     @ResponseBody
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
         //Update Model
@@ -360,23 +360,10 @@ public class CubeController extends BasicController {
         if (StringUtils.isEmpty(modelDesc.getName())) {
             return errorRequest(cubeRequest, "Missing modelName.");
         }
-        
-        try {
-            DataModelDesc existingModel = metaManager.getDataModelDesc(modelDesc.getName());
-            if (existingModel == null) {
-                metaManager.createDataModelDesc(modelDesc);
-            } else {
-                modelDesc.setLastModified(existingModel.getLastModified());
-                metaManager.updateDataModelDesc(modelDesc);
-            }
-        } catch (IOException e) {
-            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
-        }
 
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
         if (desc == null) {
-            return cubeRequest;
+            return errorRequest(cubeRequest, "Missing CubeDesc data in the request.");
         }
 
         if (StringUtils.isEmpty(desc.getName())) {
@@ -385,20 +372,41 @@ public class CubeController extends BasicController {
         }
 
         try {
+            metaManager.createDataModelDesc(modelDesc);
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
+            throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+        }
+
+        boolean updateCubeSuccess = false;
+
+        try {
+
             desc.setUuid(UUID.randomUUID().toString());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             CubeInstance createdCube = cubeService.createCubeAndDesc(desc.getName(), projectName, desc);
+            updateCubeSuccess = true;
 
             accessService.init(createdCube, AclPermission.ADMINISTRATION);
 
             ProjectInstance project = cubeService.getProjectManager().getProject(projectName);
             accessService.inherit(createdCube, project);
 
+
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
-        }
+        } finally {
+            if (!updateCubeSuccess) {
+                try {
+                    metaManager.dropModel(modelDesc);
+                } catch (IOException e) {
+                    logger.error("Failed to drop model " + modelDesc.getName() + " after cube created:" + e.getLocalizedMessage(), e);
+                    throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
+                }
+            }
 
+        }
         cubeRequest.setUuid(desc.getUuid());
         cubeRequest.setSuccessful(true);
         return cubeRequest;
@@ -410,7 +418,7 @@ public class CubeController extends BasicController {
      * @return cubeRequest cube change request
      * @throws JsonProcessingException
      */
-    @RequestMapping(value = "", method = { RequestMethod.PUT })
+    @RequestMapping(value = "", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
@@ -490,7 +498,7 @@ public class CubeController extends BasicController {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());
         } finally {
-            if (updateModelSuccess == true && updateCubeSuccess == false ) {
+            if (updateModelSuccess == true && updateCubeSuccess == false) {
                 // recover data model
                 try {
                     oldModelDesc.setLastModified(modelDesc.getLastModified());
@@ -514,7 +522,7 @@ public class CubeController extends BasicController {
      * @return true
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/hbase", method = {RequestMethod.GET})
     @ResponseBody
     public List<HBaseResponse> getHBaseInfo(@PathVariable String cubeName) {
         List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
@@ -593,7 +601,7 @@ public class CubeController extends BasicController {
      */
     private String omitMessage(List<String> errors) {
         StringBuffer buffer = new StringBuffer();
-        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext();) {
+        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext(); ) {
             String string = (String) iterator.next();
             buffer.append(string);
             buffer.append("\n");
