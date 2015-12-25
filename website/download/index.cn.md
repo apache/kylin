@@ -37,4 +37,4 @@ __ODBC 驱动__
 Kylin ODBC 驱动要求首先安装[Microsoft Visual C++ 2012 Redistributable]()。 
 Kylin ODBC 驱动可以从这里下载:
 
-  * [Kylin ODBC 驱动](http://kylin.apache.org/download/KylinODBCDriver.zip)
+  * [Kylin ODBC 驱动 v1.2](http://kylin.apache.org/download/KylinODBCDriver-1.2.zip)

@@ -6,7 +6,7 @@ author: Luke Han
 categories: blog
 ---
 
-Apache Kylin社区更新了最新的ODBC Driver(v1.2)，实现了与Tableau9.1、Microsoft Excel、Microsoft Power BI 等常用商业分析软件的集成。这次的更新为广大数据分析工作者带来了更多的选择
+Apache Kylin社区更新了最新的ODBC Driver(v1.2)，增加了对Tableau9.1、Microsoft Excel、Microsoft Power BI 等常用商业分析软件的支持。这次的更新为广大数据分析工作者带来了更多的选择
 
 ### 微软Excel 及 Power BI
 Microsoft Excel是当今Windows平台上最流行的数据处理软件之一，支持多种数据处理功能，可以利用Power Query从ODBC数据源读取数据并返回到数据表中。
@@ -21,7 +21,7 @@ Tableau是Windows平台上最流行的商业智能工具之一，它操作简洁
 
 ### 教程
 迫不及待的想试试? 请参考以下教程:  
-* [微软Excel及Power BI教程](／cn/docs/tutorial/powerbi.html) 
+* [微软Excel及Power BI教程](/cn/docs/tutorial/powerbi.html) 
 * [Tableau 9 教程](/cn/docs/tutorial/tableau_91.html)
 
 Enjoy!

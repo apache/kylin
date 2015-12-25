@@ -52,6 +52,8 @@ __Other contributors__
 
 * Thanks [eBay Inc.](https://www.ebayinc.com/) to donated this project to open source community, first announement at [eBay Techblog](http://www.ebaytechblog.com/2014/10/20/announcing-kylin-extreme-olap-engine-for-big-data/).  
 * Thanks [JetBrains](https://www.jetbrains.com/) for providing us a free license of [IntelliJ IDEA](https://www.jetbrains.com/idea/).
+* Thanks to [Vikash Agarwal](vikash_agarwal@hotmail.com), his artical __[ODBC Driver Development](http://www.drdobbs.com/windows/odbc-driver-development/184416434?pgno=5)__ and sample code introdued the basic idea about how to write an ODBC driver from scratch.
+
 
 
 
