@@ -73,7 +73,6 @@ public class HBaseMRSteps extends JobBuilderSupport {
         appendExecCmdParameters(cmd, "cubename", seg.getRealization().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
         appendExecCmdParameters(cmd, "input", getRowkeyDistributionOutputPath(jobId) + "/part-r-00000");
-        appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
         appendExecCmdParameters(cmd, "statisticsenabled", String.valueOf(withStats));
 
         createHtableStep.setJobParams(cmd.toString());
