@@ -41,7 +41,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -265,7 +264,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
         this.storageLocationIdentifier = storageLocationIdentifier;
     }
-    
+
     public Map<TblColRef, Dictionary<String>> buildDictionaryMap() {
         Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
         for (TblColRef col : getCubeDesc().getAllColumnsNeedDictionary()) {
@@ -348,7 +347,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("cube", cubeInstance.getName()).add("name", name).add("status", status).add("uuid", uuid).add("create_time_utc:", createTimeUTC).add("last_build_job_id", lastBuildJobID).toString();
+        return cubeInstance.getName() + "[" + name + "]";
     }
 
     public void setDictionaries(ConcurrentHashMap<String, String> dictionaries) {
