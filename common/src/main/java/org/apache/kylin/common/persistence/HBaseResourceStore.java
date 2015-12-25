@@ -148,6 +148,7 @@ public class HBaseResourceStore extends ResourceStore {
         Scan scan = new Scan(startRow, endRow);
         scan.addColumn(B_FAMILY, B_COLUMN_TS);
         scan.addColumn(B_FAMILY, B_COLUMN);
+        tuneScanParameters(scan);
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         List<RawResource> result = Lists.newArrayList();
@@ -165,6 +166,13 @@ public class HBaseResourceStore extends ResourceStore {
             IOUtils.closeQuietly(table);
         }
         return result;
+    }
+
+    private void tuneScanParameters(Scan scan) {
+        // divide by 10 as some resource like dictionary or snapshot can be very large
+        scan.setCaching(kylinConfig.getHBaseScanCacheRows() / 10);
+        scan.setMaxResultSize(kylinConfig.getHBaseScanMaxResultSize());
+        scan.setCacheBlocks(true);
     }
 
     private InputStream getInputStream(String resPath, Result r) throws IOException {
@@ -204,7 +212,7 @@ public class HBaseResourceStore extends ResourceStore {
     protected long getResourceTimestampImpl(String resPath) throws IOException {
         return getTimestamp(getByScan(resPath, false, true));
     }
-    
+
     @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
