@@ -123,7 +123,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                 context.addResult(ResultLevel.ERROR, "Return type for function " + func + " must be one of " + DataType.NUMBER_FAMILY);
             }
         } else {
-            if (StringUtils.equalsIgnoreCase(KylinConfig.getInstanceFromEnv().getProperty(KEY_IGNORE_UNKNOWN_FUNC, "false"), "false")) {
+            if (StringUtils.equalsIgnoreCase(KylinConfig.getInstanceFromEnv().getOptional(KEY_IGNORE_UNKNOWN_FUNC, "false"), "false")) {
                 context.addResult(ResultLevel.ERROR, "Unrecognized function: [" + func + "]");
             }
         }

@@ -51,7 +51,7 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
-import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -211,7 +211,7 @@ public class CubeStatsReader {
         int space = 0;
         boolean isMemoryHungry = false;
         for (MeasureDesc measureDesc : cubeSegment.getCubeDesc().getMeasures()) {
-            if (measureDesc.getFunction().getMeasureType().isMemoryHungry()) {
+            if (measureDesc.getFunction().isCountDistinct()) {
                 isMemoryHungry = true;
             }
             DataType returnType = measureDesc.getFunction().getReturnDataType();
