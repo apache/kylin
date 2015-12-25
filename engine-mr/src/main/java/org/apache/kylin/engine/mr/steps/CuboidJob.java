@@ -105,7 +105,7 @@ public class CuboidJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
             
             if (checkSkip(cubingJobId)) {
-                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + segmentName);
+                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + cubeName + "[" + segmentName + "]");
                 return 0;
             }
 

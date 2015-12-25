@@ -143,7 +143,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
             for (HyperLogLogPlusCounter hll : cuboidHLLMap.values()) {
                 grandTotal += hll.getCountEstimate();
             }
-            double mapperOverlapRatio = (double) totalRowsBeforeMerge / grandTotal;
+            double mapperOverlapRatio = grandTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grandTotal;
             
             writeMapperAndCuboidStatistics(context); // for human check
             CuboidStatsUtil.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), //

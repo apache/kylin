@@ -91,7 +91,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
 
             if (checkSkip(cubingJobId)) {
-                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + cubeSeg.getName());
+                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + cubeSeg);
                 return 0;
             }
 
