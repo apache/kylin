@@ -159,6 +159,7 @@ public class HBaseResourceStore extends ResourceStore {
         Scan scan = new Scan(startRow, endRow);
         scan.addColumn(B_FAMILY, B_COLUMN_TS);
         scan.addColumn(B_FAMILY, B_COLUMN);
+        tuneScanParameters(scan);
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         List<RawResource> result = Lists.newArrayList();
@@ -187,6 +188,7 @@ public class HBaseResourceStore extends ResourceStore {
         scan.addColumn(B_FAMILY, B_COLUMN_TS);
         scan.addColumn(B_FAMILY, B_COLUMN);
         scan.setFilter(generateTimeFilterList(timeStartInMillis, timeEndInMillis));
+        tuneScanParameters(scan);
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         List<RawResource> result = Lists.newArrayList();
@@ -206,21 +208,18 @@ public class HBaseResourceStore extends ResourceStore {
         return result;
     }
 
+    private void tuneScanParameters(Scan scan) {
+        // divide by 10 as some resource like dictionary or snapshot can be very large
+        scan.setCaching(kylinConfig.getHBaseScanCacheRows() / 10);
+        scan.setMaxResultSize(kylinConfig.getHBaseScanMaxResultSize());
+        scan.setCacheBlocks(true);
+    }
+
     private FilterList generateTimeFilterList(long timeStartInMillis, long timeEndInMillis) {
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-        SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(
-                B_FAMILY,
-                B_COLUMN_TS,
-                CompareFilter.CompareOp.GREATER,
-                Bytes.toBytes(timeStartInMillis)
-        );
+        SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.GREATER, Bytes.toBytes(timeStartInMillis));
         filterList.addFilter(timeStartFilter);
-        SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(
-                B_FAMILY,
-                B_COLUMN_TS,
-                CompareFilter.CompareOp.LESS_OR_EQUAL,
-                Bytes.toBytes(timeEndInMillis)
-        );
+        SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.LESS_OR_EQUAL, Bytes.toBytes(timeEndInMillis));
         filterList.addFilter(timeEndFilter);
         return filterList;
     }
@@ -262,7 +261,7 @@ public class HBaseResourceStore extends ResourceStore {
     protected long getResourceTimestampImpl(String resPath) throws IOException {
         return getTimestamp(getByScan(resPath, false, true));
     }
-    
+
     @Override
     protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
