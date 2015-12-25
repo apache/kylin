@@ -18,6 +18,6 @@
 
 package org.apache.kylin.common;
 
-public class KylinConfigOverride {
+public class KylinConfigExt {
 
 }

@@ -46,6 +46,10 @@ import org.apache.kylin.job.execution.Output;
 /**
  */
 public class CubingJob extends DefaultChainedExecutable {
+    
+    public static enum AlgorithmEnum {
+        LAYER, INMEM
+    }
 
     // KEYS of Output.extraInfo map, info passed across job steps
     public static final String SOURCE_RECORD_COUNT = "sourceRecordCount";
@@ -169,7 +173,24 @@ public class CubingJob extends DefaultChainedExecutable {
     public void setMapReduceWaitTime(long t) {
         addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
+    
+    public void setAlgorithm(AlgorithmEnum alg) {
+        addExtraInfo("algorithm", alg.name());
+    }
+    
+    public AlgorithmEnum getAlgorithm() {
+        String alg = getExtraInfo().get("algorithm");
+        return alg == null ? null : AlgorithmEnum.valueOf(alg);
+    }
 
+    public boolean isLayerCubing() {
+        return AlgorithmEnum.LAYER == getAlgorithm();
+    }
+    
+    public boolean isInMemCubing() {
+        return AlgorithmEnum.INMEM == getAlgorithm();
+    }
+    
     public long findSourceRecordCount() {
         return Long.parseLong(findExtraInfo(SOURCE_RECORD_COUNT, "0"));
     }
@@ -206,5 +227,5 @@ public class CubingJob extends DefaultChainedExecutable {
         }
         return dft;
     }
-    
+
 }

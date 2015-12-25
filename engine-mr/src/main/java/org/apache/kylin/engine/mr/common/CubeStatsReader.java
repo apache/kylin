@@ -72,7 +72,7 @@ public class CubeStatsReader {
 
     final CubeSegment seg;
     final int samplingPercentage;
-    final double mapperOverlapRatioOfFirstBuild;
+    final double mapperOverlapRatioOfFirstBuild; // only makes sense for the first build, is meaningless after merge
     final Map<Long, HyperLogLogPlusCounter> cuboidRowCountMap;
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
@@ -137,6 +137,10 @@ public class CubeStatsReader {
     // return map of Cuboid ID => MB
     public Map<Long, Double> getCuboidSizeMap() {
         return getCuboidSizeMapFromRowCount(seg, getCuboidRowCountMap());
+    }
+    
+    public double getMapperOverlapRatioOfFirstBuild() {
+        return mapperOverlapRatioOfFirstBuild;
     }
 
     public void print(PrintWriter out) {

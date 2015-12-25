@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  */
 @SuppressWarnings("serial")
-public class KylinConfig extends AbstractKylinConfig {
+public class KylinConfig extends KylinConfigBase {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 

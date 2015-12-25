@@ -26,10 +26,11 @@ import org.apache.hadoop.util.ToolRunner;
  */
 
 public class BaseCuboidJob extends CuboidJob {
+    
     public BaseCuboidJob() {
         this.setMapperClass(HiveToBaseCuboidMapper.class);
     }
-
+    
     public static void main(String[] args) throws Exception {
         CuboidJob job = new BaseCuboidJob();
         int exitCode = ToolRunner.run(job, args);
