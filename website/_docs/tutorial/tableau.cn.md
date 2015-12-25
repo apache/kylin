@@ -3,7 +3,7 @@ layout: docs-cn
 title:  Kylin和Tableau教程
 categories: 教程
 permalink: /cn/docs/tutorial/tableau.html
-version: v0.7.2
+version: v1.2
 since: v0.7.1
 ---
 
@@ -15,7 +15,7 @@ since: v0.7.1
 > 
 > 如需更多详细信息或有任何问题，请联系Kylin团队：`kylinolap@gmail.com`
 
-### 步骤1. 安装ODBC驱动程序
+### 步骤1. 安装Kylin ODBC驱动程序
 参见维基页面[Kylin ODBC Driver Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-ODBC-Driver-Tutorial)。
 
 ### 步骤2. 连接到Kylin服务器

@@ -3,6 +3,8 @@ layout: docs-cn
 title:  Kylin Cube 建立和Job监控教程
 categories: 教程
 permalink: /cn/docs/tutorial/cube_build_job.html
+version: v1.2
+since: v0.7.1
 ---
 
 ### Cube建立

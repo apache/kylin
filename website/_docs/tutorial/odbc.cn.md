@@ -3,7 +3,7 @@ layout: docs-cn
 title:  Kylin ODBC 驱动程序教程
 categories: 教程
 permalink: /cn/docs/tutorial/odbc.html
-version: v0.7.2
+version: v1.2
 since: v0.7.1
 ---
 

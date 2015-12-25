@@ -3,7 +3,7 @@ layout: docs-cn
 title:  "Kylin Cube 创建教程"
 categories: 教程
 permalink: /cn/docs/tutorial/create_cube.html
-version: v0.7.2
+version: v1.2
 since: v0.7.1
 ---
   

@@ -3,7 +3,7 @@ layout: docs
 title:  Kylin and Tableau Tutorial
 categories: tutorial
 permalink: /docs/tutorial/tableau.html
-version: v0.7.2
+version: v1.2
 since: v0.7.1
 ---
 
@@ -14,8 +14,11 @@ since: v0.7.1
 > * Do not try to join between fact tables or lookup tables;
 > * You can try to use high cardinality dimensions like seller id as Tableau Filter, but the engine will only return limited seller id in Tableau's filter now.
 
-### Step 1. Install ODBC Driver
-Refer to wiki page [Kylin ODBC Driver Tutorial](./odbc.html).
+### For Tableau 9.x User
+Please refer to [Tableau 9.x Tutorial](./tableau_91.html) for detail guide.
+
+### Step 1. Install Kylin ODBC Driver
+Refer to this guide: [Kylin ODBC Driver Tutorial](./odbc.html).
 
 ### Step 2. Connect to Kylin Server
 > We recommended to use Connect Using Driver instead of Using DSN since Tableau team will not manage your DSN on Tableau Servers.

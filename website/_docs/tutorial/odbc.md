@@ -3,7 +3,7 @@ layout: docs
 title:  Kylin ODBC Driver Tutorial
 categories: tutorial
 permalink: /docs/tutorial/odbc.html
-version: v0.7.2
+version: v1.2
 since: v0.7.1
 ---
 
