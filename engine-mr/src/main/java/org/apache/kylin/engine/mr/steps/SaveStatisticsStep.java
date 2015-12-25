@@ -100,11 +100,11 @@ public class SaveStatisticsStep extends AbstractExecutable {
         } else { // the default
             double threshold = kylinConf.getCubeAlgorithmAutoThreshold();
             double mapperOverlapRatio = new CubeStatsReader(seg, kylinConf).getMapperOverlapRatioOfFirstBuild();
-            logger.info("mapperOverlapRatio for " + seg.getName() + " is " + mapperOverlapRatio + " and threshold is " + threshold);
+            logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is " + threshold);
             alg = mapperOverlapRatio < threshold ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
         }
 
-        logger.info("The cube algorithm for " + seg.getName() + " is " + alg);
+        logger.info("The cube algorithm for " + seg + " is " + alg);
 
         CubingJob cubingJob = (CubingJob) executableManager.getJob(getCubingJobId());
         cubingJob.setAlgorithm(alg);
