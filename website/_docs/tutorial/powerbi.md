@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  Excel and Power BI Tutorial
+title:  MS Excel and Power BI Tutorial
 categories: tutorial
 permalink: /docs/tutorial/powerbi.html
 version: v1.2

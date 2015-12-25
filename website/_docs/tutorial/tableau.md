@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  Kylin and Tableau Tutorial
+title:  Tableau Tutorial
 categories: tutorial
 permalink: /docs/tutorial/tableau.html
 version: v1.2
@@ -21,7 +21,7 @@ Please refer to [Tableau 9.x Tutorial](./tableau_91.html) for detail guide.
 Refer to this guide: [Kylin ODBC Driver Tutorial](./odbc.html).
 
 ### Step 2. Connect to Kylin Server
-> We recommended to use Connect Using Driver instead of Using DSN since Tableau team will not manage your DSN on Tableau Servers.
+> We recommended to use Connect Using Driver instead of Using DSN.
 
 Connect Using Driver: Select "Other Database(ODBC)" in the left panel and choose KylinODBCDriver in the pop-up window. 
 

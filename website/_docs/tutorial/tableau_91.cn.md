@@ -7,7 +7,7 @@ version: v1.2
 since: v1.2
 ---
 
-Tableau 9已经发布一段时间了，社区有很多用户希望Apache Kylin能进一步支持该版本。现在你可以通过更新Kylin ODBC驱动以使用Tableau 9来与Kylin服务进行交互。
+Tableau 9已经发布一段时间了，社区有很多用户希望Apache Kylin能进一步支持该版本。现在可以通过更新Kylin ODBC驱动以使用Tableau 9来与Kylin服务进行交互。
 
 > Apache Kylin目前版本不支持原始数据的查询，部分查询会因此失败，导致应用程序发生异常，建议打上KYLIN-1075补丁包以优化查询结果的显示。
 

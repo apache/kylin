@@ -39,6 +39,6 @@ __ODBC Driver__
 Kylin ODBC driver requires [Microsoft Visual C++ 2012 Redistributable](http://www.microsoft.com/en-us/download/details.aspx?id=30679) installed first. 
 And Kylin ODBC Driver could be downloaded here: 
 
-* [Kylin ODBC Driver](http://kylin.apache.org/download/KylinODBCDriver.zip)
+* [Kylin ODBC Driver v1.2](http://kylin.apache.org/download/KylinODBCDriver-1.2.zip)
 
 

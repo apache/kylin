@@ -1,6 +1,6 @@
 ---
 layout: docs-cn
-title:  "Kylin Cube 创建教程"
+title:  Kylin Cube 创建教程
 categories: 教程
 permalink: /cn/docs/tutorial/create_cube.html
 version: v1.2

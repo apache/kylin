@@ -1,6 +1,6 @@
 ---
 layout: docs-cn
-title:  Kylin和Tableau教程
+title:  Tableau教程
 categories: 教程
 permalink: /cn/docs/tutorial/tableau.html
 version: v1.2
@@ -17,13 +17,13 @@ since: v0.7.1
 
 
 ### 使用Tableau 9.x的用户
-请参考[Tableau 9.x Tutorial](./tableau_91.html)以获得更详细帮助。
+请参考[Tableau 9 教程](./tableau_91.html)以获得更详细帮助。
 
 ### 步骤1. 安装Kylin ODBC驱动程序
-参见维基页面[Kylin ODBC Driver Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-ODBC-Driver-Tutorial)。
+参考页面[Kylin ODBC 驱动程序教程](./odbc.html)。
 
 ### 步骤2. 连接到Kylin服务器
-> 我们建议使用Connect Using Driver而不是Using DSN，因为Tableau团队将不会在Tableau服务器上管理你的DSN。
+> 我们建议使用Connect Using Driver而不是Using DSN。
 
 Connect Using Driver: 选择左侧面板中的“Other Database(ODBC)”和弹出窗口的“KylinODBCDriver”。
 
