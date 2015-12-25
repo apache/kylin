@@ -15,6 +15,10 @@ since: v0.7.1
 > 
 > 如需更多详细信息或有任何问题，请联系Kylin团队：`kylinolap@gmail.com`
 
+
+### 使用Tableau 9.x的用户
+请参考[Tableau 9.x Tutorial](./tableau_91.html)以获得更详细帮助。
+
 ### 步骤1. 安装Kylin ODBC驱动程序
 参见维基页面[Kylin ODBC Driver Tutorial](https://github.com/KylinOLAP/Kylin/wiki/Kylin-ODBC-Driver-Tutorial)。
 
