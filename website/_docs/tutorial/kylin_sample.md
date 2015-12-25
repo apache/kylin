@@ -3,7 +3,7 @@ layout: docs
 title:  Quick Start with Sample Cube
 categories: tutorial
 permalink: /docs/tutorial/kylin_sample.html
-version: v0.7.2
+version: v1.2
 since: v0.7.1
 ---
 

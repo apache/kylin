@@ -3,7 +3,7 @@ layout: docs-cn
 title:  Kylin Cube 权限授予教程
 categories: 教程
 permalink: /cn/docs/tutorial/acl.html
-version: v0.7.2
+version: v1.2
 since: v0.7.1
 ---
 
