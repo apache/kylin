@@ -269,6 +269,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected final void addExtraInfo(String key, String value) {
         executableManager.addJobInfo(getId(), key, value);
     }
+    
+    protected final Map<String, String> getExtraInfo() {
+        return executableManager.getOutput(getId()).getExtra();
+    }
 
     public final void setStartTime(long time) {
         addExtraInfo(START_TIME, time + "");

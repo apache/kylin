@@ -117,6 +117,10 @@ public class MapReduceExecutable extends AbstractExecutable {
                 try {
                     //for async mr job, ToolRunner just return 0;
                     ToolRunner.run(hadoopJob, args);
+                    
+                    if (hadoopJob.isSkipped()) {
+                        return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped");
+                    }
                 } catch (Exception ex) {
                     StringBuilder log = new StringBuilder();
                     logger.error("error execute " + this.toString(), ex);

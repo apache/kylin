@@ -37,11 +37,13 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.JobException;
+import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +58,23 @@ public class CuboidJob extends AbstractHadoopJob {
 
     @SuppressWarnings("rawtypes")
     private Class<? extends Mapper> mapperClass;
+    
+    private boolean skipped = false;
+    
+    @Override
+    public boolean isSkipped() {
+        return skipped;
+    }
+
+    private boolean checkSkip(String cubingJobId) {
+        if (cubingJobId == null)
+            return false;
+        
+        ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubingJob cubingJob = (CubingJob) execMgr.getJob(cubingJobId);
+        skipped = cubingJob.isLayerCubing() == false;
+        return skipped;
+    }
 
     @Override
     public int run(String[] args) throws Exception {
@@ -72,16 +91,23 @@ public class CuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_NCUBOID_LEVEL);
             options.addOption(OPTION_INPUT_FORMAT);
+            options.addOption(OPTION_CUBING_JOB_ID);
             parseOptions(options, args);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             int nCuboidLevel = Integer.parseInt(getOptionValue(OPTION_NCUBOID_LEVEL));
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
+            String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
 
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
+            
+            if (checkSkip(cubingJobId)) {
+                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + segmentName);
+                return 0;
+            }
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());

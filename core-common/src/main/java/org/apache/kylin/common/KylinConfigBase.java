@@ -41,9 +41,9 @@ import com.google.common.collect.Sets;
  * Subclass can override methods in this class to extend the content of the 'properties',
  * with some override values for example.
  */
-public class AbstractKylinConfig implements Serializable {
+public class KylinConfigBase implements Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractKylinConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(KylinConfigBase.class);
     
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
@@ -136,6 +136,10 @@ public class AbstractKylinConfig implements Serializable {
         } else {
             return defaultPrefix;
         }
+    }
+
+    public String getServerMode() {
+        return this.getOptional("kylin.server.mode", "all");
     }
 
     public String getStorageUrl() {
@@ -352,11 +356,15 @@ public class AbstractKylinConfig implements Serializable {
     public long getJobStepTimeout() {
         return Long.parseLong(getOptional("kylin.job.step.timeout", String.valueOf(2 * 60 * 60)));
     }
-
-    public String getServerMode() {
-        return this.getOptional("kylin.server.mode", "all");
+    
+    public String getCubeAlgorithm() {
+        return getOptional("kylin.cube.algorithm", "auto");
     }
-
+    
+    public double getCubeAlgorithmAutoThreshold() {
+        return Double.parseDouble(getOptional("kylin.cube.algorithm.auto.threshold", "8"));
+    }
+    
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
     }

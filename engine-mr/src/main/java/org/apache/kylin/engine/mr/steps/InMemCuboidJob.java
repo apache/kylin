@@ -33,12 +33,14 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
+import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
+import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +51,23 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(InMemCuboidJob.class);
 
+    private boolean skipped = false;
+
+    @Override
+    public boolean isSkipped() {
+        return skipped;
+    }
+
+    private boolean checkSkip(String cubingJobId) {
+        if (cubingJobId == null)
+            return false;
+
+        ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubingJob cubingJob = (CubingJob) execMgr.getJob(cubingJobId);
+        skipped = cubingJob.isInMemCubing() == false;
+        return skipped;
+    }
+
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
@@ -58,6 +77,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_CUBE_NAME);
             options.addOption(OPTION_SEGMENT_NAME);
             options.addOption(OPTION_OUTPUT_PATH);
+            options.addOption(OPTION_CUBING_JOB_ID);
             parseOptions(options, args);
 
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
@@ -68,6 +88,12 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
             CubeSegment cubeSeg = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+            String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
+
+            if (checkSkip(cubingJobId)) {
+                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + cubeSeg.getName());
+                return 0;
+            }
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());
@@ -105,7 +131,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             FileOutputFormat.setOutputPath(job, outputPath);
 
             HadoopUtil.deletePath(job.getConfiguration(), outputPath);
-            
+
             return waitForCompletion(job);
         } catch (Exception e) {
             logger.error("error in CuboidJob", e);
@@ -119,15 +145,15 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
     private int calculateReducerNum(CubeSegment cubeSeg) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        
+
         Map<Long, Double> cubeSizeMap = new CubeStatsReader(cubeSeg, kylinConfig).getCuboidSizeMap();
         double totalSizeInM = 0;
         for (Double cuboidSize : cubeSizeMap.values()) {
             totalSizeInM += cuboidSize;
         }
-        
+
         double perReduceInputMB = kylinConfig.getDefaultHadoopJobReducerInputMB();
-        
+
         // number of reduce tasks
         int numReduceTasks = (int) Math.round(totalSizeInM / perReduceInputMB);
 
