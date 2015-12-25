@@ -74,7 +74,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
 
     private void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
         RowKeyDesc rowKeyDesc = ((CubeSegment) seg).getCubeDesc().getRowkey();
-        final int groupRowkeyColumnsCount = ((CubeSegment) seg).getCubeDesc().getBuildLevel();
+        final int groupRowkeyColumnsCount = rowKeyDesc.getNCuboidBuildLevels();
         final int totalRowkeyColumnsCount = rowKeyDesc.getRowKeyColumns().length;
         final String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
         // base cuboid step
