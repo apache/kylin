@@ -147,14 +147,18 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             innerScanner = region.getScanner(scan);
             InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
 
+            CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
+            if (behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
+                if (scanReq.getAggrCacheGB() <= 0)
+                    scanReq.setAggrCacheGB(10); // 10 GB threshold, inherit from v1.0
+            }
+
             IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScan.hbaseColumns, hbaseColumnsToGT, request.getRowkeyPreambleSize());
             IGTScanner rawScanner = store.scan(scanReq);
 
-            CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
             IGTScanner finalScanner = scanReq.decorateScanner(rawScanner,//
                     behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal(),//
-                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal(),//
-                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal());//
+                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal());
 
             ByteBuffer buffer = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 

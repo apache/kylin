@@ -44,7 +44,7 @@ public class AggregationCacheSpillTest {
     }
 
     @Test
-    public void testAggregationCacheSpill() {
+    public void testAggregationCacheSpill() throws IOException {
         final List<GTRecord> testData = Lists.newArrayListWithCapacity(data.size() * 2);
         testData.addAll(data);
         testData.addAll(data);
@@ -71,13 +71,16 @@ public class AggregationCacheSpillTest {
         };
 
         GTScanRequest scanRequest = new GTScanRequest(info, null, new ImmutableBitSet(0, 3), new ImmutableBitSet(0, 3), new ImmutableBitSet(3, 6), new String[] { "SUM", "SUM", "COUNT_DISTINCT" }, null, true);
+        scanRequest.setAggrCacheGB(0.5); // 500 MB
 
-        GTAggregateScanner scanner = new GTAggregateScanner(inputScanner, scanRequest, false);
+        GTAggregateScanner scanner = new GTAggregateScanner(inputScanner, scanRequest);
 
         int count = 0;
         for (GTRecord record : scanner) {
-            count++;
+            if (record != null)
+                count++;
         }
         assertEquals(data.size(), count);
+        scanner.close();
     }
 }

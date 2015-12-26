@@ -66,6 +66,10 @@ public class Pair<T1, T2> implements Serializable {
     public void setFirst(T1 a) {
         this.first = a;
     }
+    
+    public void setKey(T1 a) {
+        setFirst(a);
+    }
 
     /**
      * Replace the second element of the pair.
@@ -73,6 +77,10 @@ public class Pair<T1, T2> implements Serializable {
      */
     public void setSecond(T2 b) {
         this.second = b;
+    }
+
+    public void setValue(T2 b) {
+        setSecond(b);
     }
 
     /**
@@ -83,6 +91,10 @@ public class Pair<T1, T2> implements Serializable {
         return first;
     }
 
+    public T1 getKey() {
+        return getFirst();
+    }
+    
     /**
      * Return the second element stored in the pair.
      * @return T2
@@ -90,13 +102,17 @@ public class Pair<T1, T2> implements Serializable {
     public T2 getSecond() {
         return second;
     }
+    
+    public T2 getValue() {
+        return getSecond();
+    }
 
     private static boolean equals(Object x, Object y) {
         return (x == null && y == null) || (x != null && x.equals(y));
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
-    @SuppressWarnings("unchecked")
     public boolean equals(Object other) {
         return other instanceof Pair && equals(first, ((Pair) other).first) && equals(second, ((Pair) other).second);
     }

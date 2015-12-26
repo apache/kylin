@@ -13,12 +13,11 @@ import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.SortedMap;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.util.KryoUtils;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.slf4j.Logger;
@@ -33,7 +32,6 @@ import com.google.common.collect.Maps;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class GTAggregateScanner implements IGTScanner {
 
-    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(GTAggregateScanner.class);
 
     final GTInfo info;
@@ -43,12 +41,12 @@ public class GTAggregateScanner implements IGTScanner {
     final String[] metricsAggrFuncs;
     final IGTScanner inputScanner;
     final AggregationCache aggrCache;
-    final boolean enableMemCheck;
+    final long spillThreshold;
 
     private int aggregatedRowCount = 0;
     private MemoryWaterLevel memTracker;
 
-    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, boolean enableMemCheck) {
+    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
         if (!req.hasAggregation())
             throw new IllegalStateException();
 
@@ -59,7 +57,7 @@ public class GTAggregateScanner implements IGTScanner {
         this.metricsAggrFuncs = req.getAggrMetricsFuncs();
         this.inputScanner = inputScanner;
         this.aggrCache = new AggregationCache();
-        this.enableMemCheck = enableMemCheck;
+        this.spillThreshold = (long) (req.getAggrCacheGB() * MemoryBudgetController.ONE_GB);
     }
 
     public static long estimateSizeOfAggrCache(byte[] keySample, MeasureAggregator<?>[] aggrSample, int size) {
@@ -111,9 +109,11 @@ public class GTAggregateScanner implements IGTScanner {
         for (GTRecord r : inputScanner) {
             aggrCache.aggregate(r);
         }
-        logger.info("Last spill, current AggregationCache memory estimated size is: " + getEstimateSizeOfAggrCache());
-        aggrCache.spillBuffMap();
         return aggrCache.iterator();
+    }
+
+    public int getNumOfSpills() {
+        return aggrCache.dumps.size();
     }
 
     /** return the estimate memory size of aggregation cache */
@@ -122,8 +122,6 @@ public class GTAggregateScanner implements IGTScanner {
     }
 
     class AggregationCache implements Closeable {
-        final static double SPILL_THRESHOLD_GB = 0.5;
-
         final List<Dump> dumps;
         final int keyLength;
         final boolean[] compareMask;
@@ -201,17 +199,16 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         void aggregate(GTRecord r) {
-            if (enableMemCheck && (++aggregatedRowCount % 1000 == 0)) {
+            if (++aggregatedRowCount % 1000 == 0) {
                 if (memTracker != null) {
                     memTracker.markHigh();
                 }
-            }
-
-            // Here will spill to disk when aggBufMap used too large memory
-            long estimated = estimatedMemSize();
-            if (estimated > SPILL_THRESHOLD_GB * MemoryBudgetController.ONE_GB) {
-                logger.info("AggregationCache memory estimated size is: " + estimated);
-                spillBuffMap();
+                if (spillThreshold > 0) {
+                    // spill to disk when aggBufMap used too large memory
+                    if (estimatedMemSize() > spillThreshold) {
+                        spillBuffMap();
+                    }
+                }
             }
 
             final byte[] key = createKey(r);
@@ -228,6 +225,9 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         private void spillBuffMap() throws RuntimeException {
+            if (aggBufMap.isEmpty())
+                return;
+            
             try {
                 Dump dump = new Dump(aggBufMap);
                 dump.flush();
@@ -263,52 +263,83 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         public Iterator<GTRecord> iterator() {
-            final DumpMerger merger = new DumpMerger(dumps);
+            // the all-in-mem case
+            if (dumps.isEmpty()) {
+                return new Iterator<GTRecord>() {
+                    final Iterator<Entry<byte[], MeasureAggregator[]>> it = aggBufMap.entrySet().iterator();
+                    final ReturningRecord returningRecord = new ReturningRecord();
 
-            return new Iterator<GTRecord>() {
-
-                final Iterator<Entry<byte[], MeasureAggregator[]>> it = merger.iterator();
-
-                final ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
-                final GTRecord secondRecord = new GTRecord(info);
-
-                @Override
-                public boolean hasNext() {
-                    return it.hasNext();
-                }
-
-                @Override
-                public GTRecord next() {
-                    Entry<byte[], MeasureAggregator[]> entry = it.next();
-                    create(entry.getKey(), entry.getValue());
-                    return secondRecord;
-                }
-
-                private void create(byte[] key, MeasureAggregator[] value) {
-                    int offset = 0;
-                    for (int i = 0; i < dimensions.trueBitCount(); i++) {
-                        int c = dimensions.trueBitAt(i);
-                        final int columnLength = info.codeSystem.maxCodeLength(c);
-                        secondRecord.set(c, new ByteArray(key, offset, columnLength));
-                        offset += columnLength;
+                    @Override
+                    public boolean hasNext() {
+                        return it.hasNext();
                     }
-                    metricsBuf.clear();
-                    for (int i = 0; i < value.length; i++) {
-                        int col = metrics.trueBitAt(i);
-                        int pos = metricsBuf.position();
-                        info.codeSystem.encodeColumnValue(col, value[i].getState(), metricsBuf);
-                        secondRecord.cols[col].set(metricsBuf.array(), pos, metricsBuf.position() - pos);
-                    }
-                }
 
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
+                    @Override
+                    public GTRecord next() {
+                        Entry<byte[], MeasureAggregator[]> entry = it.next();
+                        returningRecord.load(entry.getKey(), entry.getValue());
+                        return returningRecord.record;
+                    }
+
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+            // the spill case
+            else {
+                logger.info("Last spill, current AggregationCache memory estimated size is: " + getEstimateSizeOfAggrCache());
+                this.spillBuffMap();
+
+                return new Iterator<GTRecord>() {
+                    final DumpMerger merger = new DumpMerger(dumps);
+                    final Iterator<Pair<byte[], MeasureAggregator[]>> it = merger.iterator();
+                    final ReturningRecord returningRecord = new ReturningRecord();
+
+                    @Override
+                    public boolean hasNext() {
+                        return it.hasNext();
+                    }
+
+                    @Override
+                    public GTRecord next() {
+                        Pair<byte[], MeasureAggregator[]> entry = it.next();
+                        returningRecord.load(entry.getKey(), entry.getValue());
+                        return returningRecord.record;
+                    }
+
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
         }
 
-        class Dump implements Iterable<Entry<byte[], MeasureAggregator[]>> {
+        class ReturningRecord {
+            final GTRecord record = new GTRecord(info);
+            final ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
+
+            void load(byte[] key, MeasureAggregator[] value) {
+                int offset = 0;
+                for (int i = 0; i < dimensions.trueBitCount(); i++) {
+                    int c = dimensions.trueBitAt(i);
+                    final int columnLength = info.codeSystem.maxCodeLength(c);
+                    record.cols[c].set(key, offset, columnLength);
+                    offset += columnLength;
+                }
+                metricsBuf.clear();
+                for (int i = 0; i < value.length; i++) {
+                    int col = metrics.trueBitAt(i);
+                    int pos = metricsBuf.position();
+                    info.codeSystem.encodeColumnValue(col, value[i].getState(), metricsBuf);
+                    record.cols[col].set(metricsBuf.array(), pos, metricsBuf.position() - pos);
+                }
+            }
+        }
+
+        class Dump implements Iterable<Pair<byte[], MeasureAggregator[]>> {
             File dumpedFile;
             Input input;
             SortedMap<byte[], MeasureAggregator[]> buffMap;
@@ -318,7 +349,7 @@ public class GTAggregateScanner implements IGTScanner {
             }
 
             @Override
-            public Iterator<Entry<byte[], MeasureAggregator[]>> iterator() {
+            public Iterator<Pair<byte[], MeasureAggregator[]>> iterator() {
                 try {
                     if (dumpedFile == null || !dumpedFile.exists()) {
                         throw new RuntimeException("Dumped file cannot be found at: " + (dumpedFile == null ? "<null>" : dumpedFile.getAbsolutePath()));
@@ -327,7 +358,7 @@ public class GTAggregateScanner implements IGTScanner {
                     input = new Input(new FileInputStream(dumpedFile));
 
                     final int count = kryo.readObject(input, Integer.class);
-                    return new Iterator<Entry<byte[], MeasureAggregator[]>>() {
+                    return new Iterator<Pair<byte[], MeasureAggregator[]>>() {
                         int cursorIdx = 0;
 
                         @Override
@@ -336,10 +367,10 @@ public class GTAggregateScanner implements IGTScanner {
                         }
 
                         @Override
-                        public Entry<byte[], MeasureAggregator[]> next() {
+                        public Pair<byte[], MeasureAggregator[]> next() {
                             try {
                                 cursorIdx++;
-                                return (ImmutablePair<byte[], MeasureAggregator[]>) kryo.readObject(input, ImmutablePair.class);
+                                return (Pair<byte[], MeasureAggregator[]>) kryo.readObject(input, Pair.class);
                             } catch (Exception e) {
                                 throw new RuntimeException("Cannot read AggregationCache from dumped file: " + e.getMessage());
                             }
@@ -365,7 +396,7 @@ public class GTAggregateScanner implements IGTScanner {
                         output = new Output(new FileOutputStream(dumpedFile));
                         kryo.writeObject(output, buffMap.size());
                         for (Entry<byte[], MeasureAggregator[]> entry : buffMap.entrySet()) {
-                            kryo.writeObject(output, new ImmutablePair(entry.getKey(), entry.getValue()));
+                            kryo.writeObject(output, new Pair(entry.getKey(), entry.getValue()));
                         }
                     } finally {
                         buffMap = null;
@@ -384,28 +415,28 @@ public class GTAggregateScanner implements IGTScanner {
             }
         }
 
-        class DumpMerger implements Iterable<Entry<byte[], MeasureAggregator[]>> {
-            final PriorityQueue<Entry<byte[], Integer>> minHeap;
-            final List<Iterator<Entry<byte[], MeasureAggregator[]>>> dumpIterators;
+        class DumpMerger implements Iterable<Pair<byte[], MeasureAggregator[]>> {
+            final PriorityQueue<Pair<byte[], Integer>> minHeap;
+            final List<Iterator<Pair<byte[], MeasureAggregator[]>>> dumpIterators;
             final List<MeasureAggregator[]> dumpCurrentValues;
 
             public DumpMerger(List<Dump> dumps) {
-                minHeap = new PriorityQueue<>(dumps.size(), new Comparator<Entry<byte[], Integer>>() {
+                minHeap = new PriorityQueue<>(dumps.size(), new Comparator<Pair<byte[], Integer>>() {
                     @Override
-                    public int compare(Entry<byte[], Integer> o1, Entry<byte[], Integer> o2) {
-                        return bytesComparator.compare(o1.getKey(), o2.getKey());
+                    public int compare(Pair<byte[], Integer> o1, Pair<byte[], Integer> o2) {
+                        return bytesComparator.compare(o1.getFirst(), o2.getFirst());
                     }
                 });
                 dumpIterators = Lists.newArrayListWithCapacity(dumps.size());
                 dumpCurrentValues = Lists.newArrayListWithCapacity(dumps.size());
 
-                Iterator<Entry<byte[], MeasureAggregator[]>> it;
+                Iterator<Pair<byte[], MeasureAggregator[]>> it;
                 for (int i = 0; i < dumps.size(); i++) {
                     it = dumps.get(i).iterator();
                     if (it.hasNext()) {
                         dumpIterators.add(i, it);
-                        Entry<byte[], MeasureAggregator[]> entry = it.next();
-                        minHeap.offer(new ImmutablePair(entry.getKey(), i));
+                        Pair<byte[], MeasureAggregator[]> entry = it.next();
+                        minHeap.offer(new Pair(entry.getKey(), i));
                         dumpCurrentValues.add(i, entry.getValue());
                     } else {
                         dumpIterators.add(i, null);
@@ -416,30 +447,30 @@ public class GTAggregateScanner implements IGTScanner {
 
             private void enqueueFromDump(int index) {
                 if (dumpIterators.get(index) != null && dumpIterators.get(index).hasNext()) {
-                    Entry<byte[], MeasureAggregator[]> entry = dumpIterators.get(index).next();
-                    minHeap.offer(new ImmutablePair(entry.getKey(), index));
+                    Pair<byte[], MeasureAggregator[]> entry = dumpIterators.get(index).next();
+                    minHeap.offer(new Pair(entry.getKey(), index));
                     dumpCurrentValues.set(index, entry.getValue());
                 }
             }
 
             @Override
-            public Iterator<Entry<byte[], MeasureAggregator[]>> iterator() {
-                return new Iterator<Entry<byte[], MeasureAggregator[]>>() {
+            public Iterator<Pair<byte[], MeasureAggregator[]>> iterator() {
+                return new Iterator<Pair<byte[], MeasureAggregator[]>>() {
                     @Override
                     public boolean hasNext() {
-                        return !CollectionUtils.isEmpty(minHeap);
+                        return !minHeap.isEmpty();
                     }
 
                     @Override
-                    public Entry<byte[], MeasureAggregator[]> next() {
+                    public Pair<byte[], MeasureAggregator[]> next() {
                         // Use minimum heap to merge sort the keys,
                         // also do aggregation for measures with same keys in different dumps
-                        Entry<byte[], Integer> peekEntry = minHeap.poll();
+                        Pair<byte[], Integer> peekEntry = minHeap.poll();
                         MeasureAggregator[] mergedAggr = dumpCurrentValues.get(peekEntry.getValue());
                         enqueueFromDump(peekEntry.getValue());
 
                         while (!minHeap.isEmpty() && bytesComparator.compare(peekEntry.getKey(), minHeap.peek().getKey()) == 0) {
-                            Entry<byte[], Integer> newPeek = minHeap.poll();
+                            Pair<byte[], Integer> newPeek = minHeap.poll();
 
                             MeasureAggregator[] newPeekAggr = dumpCurrentValues.get(newPeek.getValue());
                             for (int i = 0; i < newPeekAggr.length; i++) {
@@ -449,7 +480,7 @@ public class GTAggregateScanner implements IGTScanner {
                             enqueueFromDump(newPeek.getValue());
                         }
 
-                        return new ImmutablePair(peekEntry.getKey(), mergedAggr);
+                        return new Pair(peekEntry.getKey(), mergedAggr);
                     }
 
                     @Override
