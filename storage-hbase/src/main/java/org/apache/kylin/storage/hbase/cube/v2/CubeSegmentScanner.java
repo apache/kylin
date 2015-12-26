@@ -94,14 +94,14 @@ public class CubeSegmentScanner implements IGTScanner {
     private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(TblColRef tblColRef, int index) {
         ByteArray start;
         if (cubeSeg.getDateRangeStart() != Long.MIN_VALUE) {
-            start = translateTsToString(cubeSeg.getDateRangeStart(), index, 1);
+            start = encodeTime(cubeSeg.getDateRangeStart(), index, 1);
         } else {
             start = new ByteArray();
         }
 
         ByteArray end;
         if (cubeSeg.getDateRangeEnd() != Long.MAX_VALUE) {
-            end = translateTsToString(cubeSeg.getDateRangeEnd(), index, -1);
+            end = encodeTime(cubeSeg.getDateRangeEnd(), index, -1);
         } else {
             end = new ByteArray();
         }
@@ -109,13 +109,12 @@ public class CubeSegmentScanner implements IGTScanner {
 
     }
 
-    private ByteArray translateTsToString(long ts, int index, int roundingFlag) {
+    private ByteArray encodeTime(long ts, int index, int roundingFlag) {
         String value;
         DataType partitionColType = info.getColumnType(index);
         if (partitionColType.isDate()) {
             value = DateFormat.formatToDateStr(ts);
-        } else if (partitionColType.isDatetime()) {
-            //TODO: if partition col is not dict encoded, value's format may differ from expected. Though by default it is not the case
+        } else if (partitionColType.isDatetime() || partitionColType.isTimestamp()) {
             value = DateFormat.formatToTimeWithoutMilliStr(ts);
         } else if (partitionColType.isStringFamily()) {
             String partitionDateFormat = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateFormat();
