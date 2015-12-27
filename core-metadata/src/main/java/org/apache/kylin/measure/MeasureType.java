@@ -55,6 +55,11 @@ abstract public class MeasureType<T> {
     public boolean isMemoryHungry() {
         return false;
     }
+
+    /** Return true if this MeasureType only aggregate values in base cuboid, and output initial value in child cuboid. */
+    public boolean onlyAggrInBaseCuboid() {
+        return false;
+    }
     
     /* ============================================================================
      * Build

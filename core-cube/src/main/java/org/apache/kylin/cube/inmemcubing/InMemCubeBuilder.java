@@ -46,6 +46,8 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -395,12 +397,31 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         return scanAndAggregateGridTable(parent.table, parent.cuboidId, cuboidId, allNeededColumns.getFirst(), allNeededColumns.getSecond());
     }
 
+    private GTAggregateScanner prepareGTAggregationScanner(GridTable gridTable, long parentId, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
+        GTInfo info = gridTable.getInfo();
+        GTScanRequest req = new GTScanRequest(info, null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
+        GTAggregateScanner scanner = (GTAggregateScanner) gridTable.scan(req);
+
+        // for child cuboid, some measures don't need aggregation.
+        if (parentId != cuboidId) {
+            boolean[] aggrMask = new boolean[measureDescs.length];
+            for (int i = 0; i < measureDescs.length; i++) {
+                aggrMask[i] = !measureDescs[i].getFunction().getMeasureType().onlyAggrInBaseCuboid();
+
+                if (!aggrMask[i]) {
+                    logger.info(measureDescs[i].toString() + " doesn't need aggregation.");
+                }
+            }
+            scanner.setAggrMask(aggrMask);
+        }
+
+        return scanner;
+    }
     private CuboidResult scanAndAggregateGridTable(GridTable gridTable, long parentId, long cuboidId, ImmutableBitSet aggregationColumns, ImmutableBitSet measureColumns) throws IOException {
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid " + cuboidId);
 
-        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
-        GTAggregateScanner scanner = (GTAggregateScanner) gridTable.scan(req);
+        GTAggregateScanner scanner = prepareGTAggregationScanner(gridTable, parentId, cuboidId, aggregationColumns, measureColumns);
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = newGridTable.rebuild();
 

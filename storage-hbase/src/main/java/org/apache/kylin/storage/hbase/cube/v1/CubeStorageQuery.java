@@ -123,7 +123,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         Set<TblColRef> dimensionsD = Sets.newHashSet();
         dimensionsD.addAll(groupsD);
         dimensionsD.addAll(othersD);
-        Cuboid cuboid = identifyCuboid(dimensionsD);
+        Cuboid cuboid = identifyCuboid(dimensionsD, metrics);
         context.setCuboid(cuboid);
 
         // isExactAggregation? meaning: tuples returned from storage requires no further aggregation in query engine
@@ -188,7 +188,12 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         }
     }
 
-    private Cuboid identifyCuboid(Set<TblColRef> dimensions) {
+    private Cuboid identifyCuboid(Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
+        for (FunctionDesc metric : metrics) {
+            if (metric.getMeasureType().onlyAggrInBaseCuboid())
+                return Cuboid.getBaseCuboid(cubeDesc);
+        }
+
         long cuboidID = 0;
         for (TblColRef column : dimensions) {
             int index = cubeDesc.getRowkey().getColumnBitIndex(column);

@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +46,7 @@ public class GTAggregateScanner implements IGTScanner {
 
     private int aggregatedRowCount = 0;
     private MemoryWaterLevel memTracker;
+    private boolean[] aggrMask;
 
     public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
         if (!req.hasAggregation())
@@ -58,6 +60,9 @@ public class GTAggregateScanner implements IGTScanner {
         this.inputScanner = inputScanner;
         this.aggrCache = new AggregationCache();
         this.spillThreshold = (long) (req.getAggrCacheGB() * MemoryBudgetController.ONE_GB);
+        this.aggrMask = new boolean[metricsAggrFuncs.length];
+
+        Arrays.fill(aggrMask, true);
     }
 
     public static long estimateSizeOfAggrCache(byte[] keySample, MeasureAggregator<?>[] aggrSample, int size) {
@@ -114,6 +119,10 @@ public class GTAggregateScanner implements IGTScanner {
 
     public int getNumOfSpills() {
         return aggrCache.dumps.size();
+    }
+
+    public void setAggrMask(boolean[] aggrMask) {
+        this.aggrMask = aggrMask;
     }
 
     /** return the estimate memory size of aggregation cache */
@@ -218,9 +227,11 @@ public class GTAggregateScanner implements IGTScanner {
                 aggBufMap.put(key, aggrs);
             }
             for (int i = 0; i < aggrs.length; i++) {
-                int col = metrics.trueBitAt(i);
-                Object metrics = info.codeSystem.decodeColumnValue(col, r.cols[col].asBuffer());
-                aggrs[i].aggregate(metrics);
+                if (aggrMask[i]) {
+                    int col = metrics.trueBitAt(i);
+                    Object metrics = info.codeSystem.decodeColumnValue(col, r.cols[col].asBuffer());
+                    aggrs[i].aggregate(metrics);
+                }
             }
         }
 
@@ -475,7 +486,8 @@ public class GTAggregateScanner implements IGTScanner {
 
                             MeasureAggregator[] newPeekAggr = dumpCurrentValues.get(newPeek.getValue());
                             for (int i = 0; i < newPeekAggr.length; i++) {
-                                mergedAggr[i].aggregate(newPeekAggr[i].getState());
+                                if (aggrMask[i])
+                                    mergedAggr[i].aggregate(newPeekAggr[i].getState());
                             }
 
                             enqueueFromDump(newPeek.getValue());
