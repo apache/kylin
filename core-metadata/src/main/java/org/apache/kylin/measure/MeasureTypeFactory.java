@@ -106,7 +106,7 @@ abstract public class MeasureTypeFactory<T> {
             String funcName = factory.getAggrFunctionName();
             if (funcName.equals(funcName.toUpperCase()) == false)
                 throw new IllegalArgumentException("Aggregation function name '" + funcName + "' must be in upper case");
-            String dataTypeName = factory.getAggrDataTypeName().toLowerCase();
+            String dataTypeName = factory.getAggrDataTypeName();
             if (dataTypeName.equals(dataTypeName.toLowerCase()) == false)
                 throw new IllegalArgumentException("Aggregation data type name '" + dataTypeName + "' must be in lower case");
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
