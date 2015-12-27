@@ -13,7 +13,7 @@ since: v0.7.1
 > 
 > Tested Operation System: Windows 7, Windows Server 2008 R2
 > 
-> Tested Application: Tableau 8.0.4 and Tableau 8.1.3
+> Tested Application: Tableau 8.0.4, Tableau 8.1.3 and Tableau 9.1
 
 ## Prerequisites
 1. Microsoft Visual C++ 2012 Redistributable 
@@ -30,6 +30,21 @@ since: v0.7.1
    * For 64 bit Tableau Desktop: Please install KylinODBCDriver (x64).exe
 
 3. Both drivers already be installed on Tableau Server, you properly should be able to publish to there without issues
+
+## DSN configuration
+1. Open ODBCAD to configure DSN.
+	* For 32 bit driver, please use the 32bit version in C:\Windows\SysWOW64\odbcad32.exe
+	* For 64 bit driver, please use the default "Data Sources (ODBC)" in Control Panel/Administrator Tools
+![]( /images/Kylin-ODBC-DSN/1.png)
+
+2. Open "System DSN" tab, and click "Add", you will see KylinODBCDriver listed as an option, Click "Finish" to continue.
+![]( /images/Kylin-ODBC-DSN/2.png)
+
+3. In the pop up dialog, fill in all the blanks, The server host is where your Kylin Rest Server is started.
+![]( /images/Kylin-ODBC-DSN/3.png)
+
+4. Click "Done", and you will see your new DSN listed in the "System Data Sources", you can use this DSN afterwards.
+![]( /images/Kylin-ODBC-DSN/4.png)
 
 ## Bug Report
 Please open Apache Kylin JIRA to report bug, or send to dev mailing list.
