@@ -24,6 +24,7 @@ public interface BatchConstants {
 
     String CFG_CUBE_NAME = "cube.name";
     String CFG_CUBE_SEGMENT_NAME = "cube.segment.name";
+    String CFG_CUBE_CUBOID_LEVEL = "cube.cuboid.level";
 
     String CFG_II_NAME = "ii.name";
     String CFG_II_SEGMENT_NAME = "ii.segment.name";
