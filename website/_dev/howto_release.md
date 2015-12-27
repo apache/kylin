@@ -10,7 +10,7 @@ _Shell commands is on Mac OS X as sample._
 _For people in China, please aware using proxy to avoid potential firewall issue._  
 
 ## Setup Account
-Make sure you have avaliable account and privlidge for following applications:
+Make sure you have avaliable account and privilege for following applications:
 
 * Apache account: [https://id.apache.org](https://id.apache.org/)    
 * Apache Kylin git repo (main cobe base): [https://git-wip-us.apache.org/repos/asf/kylin.git](https://git-wip-us.apache.org/repos/asf/kylin.git)  
