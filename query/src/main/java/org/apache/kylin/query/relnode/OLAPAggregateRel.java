@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.apache.calcite.adapter.enumerable.EnumerableAggregate;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
@@ -56,6 +57,7 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -133,11 +135,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         this.columnRowType = buildColumnRowType();
         this.afterAggregate = this.context.afterAggregate;
 
-        // only translate the first aggregation
+        // only translate the innermost aggregation
         if (!this.afterAggregate) {
             translateGroupBy();
-            fillbackOptimizedColumn();
-            translateAggregation();
+            this.context.aggregations.addAll(this.aggregations);
             this.context.afterAggregate = true;
         } else {
             for (AggregateCall aggCall : aggCalls) {
@@ -224,14 +225,71 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         context.groupByColumns.addAll(this.groups);
     }
 
+    @Override
+    public void implementRewrite(RewriteImplementor implementor) {
+        // only rewrite the innermost aggregation
+        if (!this.afterAggregate) {
+            translateAggregation();
+            buildRewriteFieldsAndMetricsColumns();
+        }
+
+        implementor.visitChild(this, getInput());
+
+        // only rewrite the innermost aggregation
+        if (!this.afterAggregate && RewriteImplementor.needRewrite(this.context)) {
+            // rewrite the aggCalls
+            this.rewriteAggCalls = new ArrayList<AggregateCall>(aggCalls.size());
+            for (int i = 0; i < this.aggCalls.size(); i++) {
+                AggregateCall aggCall = this.aggCalls.get(i);
+                FunctionDesc cubeFunc = this.context.aggregations.get(i);
+                if (cubeFunc.needRewrite()) {
+                    aggCall = rewriteAggregateCall(aggCall, cubeFunc);
+                }
+                this.rewriteAggCalls.add(aggCall);
+            }
+        }
+
+        // rebuild rowType & columnRowType
+        this.rowType = this.deriveRowType();
+        this.columnRowType = this.buildColumnRowType();
+    }
+
     private void translateAggregation() {
+        // now the realization is known, replace aggregations with what's defined on MeasureDesc
+        List<MeasureDesc> measures = this.context.realization.getMeasures();
+        List<FunctionDesc> newAggrs = Lists.newArrayList();
+        for (FunctionDesc aggFunc : this.aggregations) {
+            newAggrs.add(findInMeasures(aggFunc, measures));
+        }
+        this.aggregations.clear();
+        this.aggregations.addAll(newAggrs);
+        this.context.aggregations.clear();
+        this.context.aggregations.addAll(newAggrs);
+    }
+
+    private FunctionDesc findInMeasures(FunctionDesc aggFunc, List<MeasureDesc> measures) {
+        for (MeasureDesc m : measures) {
+            if (aggFunc.equals(m.getFunction()))
+                return m.getFunction();
+        }
+        return aggFunc;
+    }
+
+    private void buildRewriteFieldsAndMetricsColumns() {
+        fillbackOptimizedColumn();
+
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
-            context.aggregations.add(aggFunc);
+
+            if (aggFunc.isDimensionAsMetric()) {
+                this.context.groupByColumns.addAll(aggFunc.getParameter().getColRefs());
+                continue; // skip rewrite, let calcite handle
+            }
+
             if (aggFunc.needRewrite()) {
                 String rewriteFieldName = aggFunc.getRewriteFieldName();
-                context.rewriteFields.put(rewriteFieldName, null);
+                this.context.rewriteFields.put(rewriteFieldName, null);
 
                 TblColRef column = buildRewriteColumn(aggFunc);
                 this.context.metricsColumns.add(column);
@@ -261,31 +319,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 }
             }
         }
-    }
-
-    @Override
-    public void implementRewrite(RewriteImplementor implementor) {
-        implementor.visitChild(this, getInput());
-
-        // only rewrite the first aggregation
-        if (!this.afterAggregate && RewriteImplementor.needRewrite(this.context)) {
-            // rewrite the aggCalls
-            this.rewriteAggCalls = new ArrayList<AggregateCall>(aggCalls.size());
-            for (int i = 0; i < this.aggCalls.size(); i++) {
-                AggregateCall aggCall = this.aggCalls.get(i);
-                FunctionDesc cubeFunc = this.context.aggregations.get(i);
-                if (cubeFunc.needRewrite()) {
-                    aggCall = rewriteAggregateCall(aggCall, cubeFunc);
-                }
-                this.rewriteAggCalls.add(aggCall);
-            }
-        }
-
-        // rebuild rowType & columnRowType
-        //ClassUtil.updateFinalField(Aggregate.class, "aggCalls", this, rewriteAggCalls);
-        this.rowType = this.deriveRowType(); // this does not work coz super.aggCalls is final
-        this.columnRowType = this.buildColumnRowType();
-
     }
 
     private AggregateCall rewriteAggregateCall(AggregateCall aggCall, FunctionDesc func) {

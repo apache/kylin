@@ -84,13 +84,6 @@ public class QueryRouter {
             if (inf instanceof DimensionAsMeasure) {
                 FunctionDesc functionDesc = ((DimensionAsMeasure) inf).getMeasureFunction();
                 functionDesc.setDimensionAsMetric(true);
-                olapContext.rewriteFields.remove(functionDesc.getRewriteFieldName());
-                for (TblColRef col : functionDesc.getParameter().getColRefs()) {
-                    if (col != null) {
-                        olapContext.metricsColumns.remove(col);
-                        olapContext.groupByColumns.add(col);
-                    }
-                }
                 logger.info("Adjust DimensionAsMeasure for " + functionDesc);
             }
         }
