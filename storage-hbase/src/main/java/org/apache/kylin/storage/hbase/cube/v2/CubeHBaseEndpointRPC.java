@@ -223,11 +223,11 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 future.get(1, TimeUnit.HOURS);
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException("Visiting cube by endpoint gets interrupted");
+            throw new RuntimeException("Visiting cube by endpoint gets interrupted", e);
         } catch (ExecutionException e) {
             throw new RuntimeException("Visiting cube throw exception", e);
         } catch (TimeoutException e) {
-            throw new RuntimeException("Visiting cube by endpoint timeout");
+            throw new RuntimeException("Visiting cube by endpoint timeout", e);
         }
 
         return new EndpointResultsAsGTScanner(fullGTInfo, rowBlocks.iterator(), scanRequest.getColumns(), totalScannedCount.get());

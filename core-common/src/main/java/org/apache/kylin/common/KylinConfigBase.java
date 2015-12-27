@@ -420,6 +420,10 @@ public class KylinConfigBase implements Serializable {
         return Long.parseLong(this.getOptional("kylin.query.mem.budget", String.valueOf(3L * 1024 * 1024 * 1024)));
     }
 
+    public double getQueryCoprocessorMemGB() {
+        return Double.parseDouble(this.getOptional("kylin.query.coprocessor.mem.gb", "3.0"));
+    }
+    
     public boolean isQuerySecureEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.query.security.enabled", "false"));
     }
