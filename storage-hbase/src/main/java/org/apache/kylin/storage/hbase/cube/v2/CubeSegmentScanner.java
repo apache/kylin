@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.DateFormat;
@@ -84,8 +85,11 @@ public class CubeSegmentScanner implements IGTScanner {
         trimmedInfoBytes = GTInfo.serialize(info);
         GTInfo trimmedInfo = GTInfo.deserialize(trimmedInfoBytes);
 
+        KylinConfig config = cubeSeg.getCubeInstance().getConfig();
         for (GTScanRange range : scanRanges) {
-            scanRequests.add(new GTScanRequest(trimmedInfo, range.replaceGTInfo(trimmedInfo), gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate));
+            GTScanRequest req = new GTScanRequest(trimmedInfo, range.replaceGTInfo(trimmedInfo), gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate);
+            req.setAggrCacheGB(config.getQueryCoprocessorMemGB()); // limit the memory usage inside coprocessor
+            scanRequests.add(req);
         }
 
         scanner = new Scanner();
