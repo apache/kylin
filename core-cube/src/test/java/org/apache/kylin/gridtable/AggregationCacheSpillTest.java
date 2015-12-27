@@ -19,12 +19,15 @@
 package org.apache.kylin.gridtable;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.metadata.measure.LongMutable;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -35,24 +38,27 @@ import com.google.common.collect.Lists;
  */
 public class AggregationCacheSpillTest {
 
-    final GTInfo info = UnitTestSupport.hllInfo();
-    final List<GTRecord> data = UnitTestSupport.mockupHllData(info, 40000); // converts to about 34 MB data
+    final static int DATA_CARDINALITY = 40000;
+    final static int DATA_REPLICATION = 2;
+
+    final static GTInfo INFO = UnitTestSupport.hllInfo();
+    final static List<GTRecord> TEST_DATA = Lists.newArrayListWithCapacity(DATA_CARDINALITY * DATA_REPLICATION);;
 
     @BeforeClass
     public static void beforeClass() {
         System.setProperty("log4j.configuration", "kylin-log4j.properties");
+
+        final List<GTRecord> data = UnitTestSupport.mockupHllData(INFO, DATA_CARDINALITY);
+        for (int i = 0; i < DATA_REPLICATION; i++)
+            TEST_DATA.addAll(data);
     }
 
     @Test
     public void testAggregationCacheSpill() throws IOException {
-        final List<GTRecord> testData = Lists.newArrayListWithCapacity(data.size() * 2);
-        testData.addAll(data);
-        testData.addAll(data);
-
         IGTScanner inputScanner = new IGTScanner() {
             @Override
             public GTInfo getInfo() {
-                return info;
+                return INFO;
             }
 
             @Override
@@ -66,21 +72,69 @@ public class AggregationCacheSpillTest {
 
             @Override
             public Iterator<GTRecord> iterator() {
-                return testData.iterator();
+                return TEST_DATA.iterator();
             }
         };
 
-        GTScanRequest scanRequest = new GTScanRequest(info, null, new ImmutableBitSet(0, 3), new ImmutableBitSet(0, 3), new ImmutableBitSet(3, 6), new String[] { "SUM", "SUM", "COUNT_DISTINCT" }, null, true);
+        GTScanRequest scanRequest = new GTScanRequest(INFO, null, new ImmutableBitSet(0, 3), new ImmutableBitSet(0, 3), new ImmutableBitSet(3, 6), new String[] { "SUM", "SUM", "COUNT_DISTINCT" }, null, true);
         scanRequest.setAggrCacheGB(0.5); // 500 MB
 
         GTAggregateScanner scanner = new GTAggregateScanner(inputScanner, scanRequest);
 
         int count = 0;
         for (GTRecord record : scanner) {
-            if (record != null)
-                count++;
+            assertNotNull(record);
+            Object[] returnRecord = record.getValues();
+            assertEquals(20, ((LongMutable) returnRecord[3]).get());
+            assertEquals(21, ((BigDecimal) returnRecord[4]).longValue());
+            count++;
+
+//            System.out.println(record);
         }
-        assertEquals(data.size(), count);
+        assertEquals(DATA_CARDINALITY, count);
+        scanner.close();
+    }
+
+    @Test
+    public void testAggregationCacheInMem() throws IOException {
+        IGTScanner inputScanner = new IGTScanner() {
+            @Override
+            public GTInfo getInfo() {
+                return INFO;
+            }
+
+            @Override
+            public int getScannedRowCount() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void close() throws IOException {
+            }
+
+            @Override
+            public Iterator<GTRecord> iterator() {
+                return TEST_DATA.iterator();
+            }
+        };
+
+        // all-in-mem testcase
+        GTScanRequest scanRequest = new GTScanRequest(INFO, null, new ImmutableBitSet(0, 3), new ImmutableBitSet(1, 3), new ImmutableBitSet(3, 6), new String[] { "SUM", "SUM", "COUNT_DISTINCT" }, null, true);
+        scanRequest.setAggrCacheGB(0.5); // 500 MB
+
+        GTAggregateScanner scanner = new GTAggregateScanner(inputScanner, scanRequest);
+
+        int count = 0;
+        for (GTRecord record : scanner) {
+            assertNotNull(record);
+            Object[] returnRecord = record.getValues();
+            assertEquals(80000, ((LongMutable) returnRecord[3]).get());
+            assertEquals(84000, ((BigDecimal) returnRecord[4]).longValue());
+            count++;
+
+//            System.out.println(record);
+        }
+        assertEquals(10, count);
         scanner.close();
     }
 }
