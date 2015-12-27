@@ -48,7 +48,7 @@ public class KryoUtils {
         return deserialize(bytes, clazz);
     }
 
-    private static Kryo getKryo() {
+    public static Kryo getKryo() {
         if (_Kryo.get() == null) {
             Kryo kryo = new Kryo();
             kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));

@@ -29,6 +29,7 @@ public class GTScanRequest {
 
     // hint to storage behavior
     private boolean allowPreAggregation = true;
+    private double aggrCacheGB = 0; // no limit
 
     public GTScanRequest(GTInfo info) {
         this(info, null, null, null);
@@ -118,7 +119,7 @@ public class GTScanRequest {
     }
 
     public IGTScanner decorateScanner(IGTScanner scanner) throws IOException {
-        return decorateScanner(scanner, true, true, false);//by default do not check mem
+        return decorateScanner(scanner, true, true);//by default do not check mem
     }
 
     /**
@@ -127,7 +128,7 @@ public class GTScanRequest {
      * 
      * Refer to CoprocessorBehavior for explanation
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean doFilter, boolean doAggr, boolean doMemCheck) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean doFilter, boolean doAggr) throws IOException {
         IGTScanner result = scanner;
         if (!doFilter) { //Skip reading this section if you're not profiling! 
             lookAndForget(result);
@@ -144,13 +145,13 @@ public class GTScanRequest {
             }
 
             if (this.allowPreAggregation && this.hasAggregation()) {
-                result = new GTAggregateScanner(result, this, doMemCheck);
+                result = new GTAggregateScanner(result, this);
             }
             return result;
         }
     }
 
-    //touch every byte of the cell so that the cost of scanning will be trully reflected
+    //touch every byte of the cell so that the cost of scanning will be truly reflected
     private void lookAndForget(IGTScanner scanner) {
         byte meaninglessByte = 0;
         for (GTRecord gtRecord : scanner) {
@@ -213,6 +214,14 @@ public class GTScanRequest {
 
     public String[] getAggrMetricsFuncs() {
         return aggrMetricsFuncs;
+    }
+
+    public double getAggrCacheGB() {
+        return aggrCacheGB;
+    }
+
+    public void setAggrCacheGB(double gb) {
+        this.aggrCacheGB = gb;
     }
 
     @Override
