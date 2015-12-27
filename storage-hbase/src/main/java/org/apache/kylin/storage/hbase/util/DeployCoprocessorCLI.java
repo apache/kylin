@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,8 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
+
 /**
  */
 public class DeployCoprocessorCLI {
@@ -76,7 +79,15 @@ public class DeployCoprocessorCLI {
 
         List<String> tableNames = getHTableNames(kylinConfig);
         logger.info("Identify tables " + tableNames);
-
+        
+        if (args.length == 1) {
+            logger.info("Probe run, existing. Append argument 'all' or specific tables to execute.");
+            System.exit(0);
+        }
+        
+        tableNames = filterTables(tableNames, Arrays.asList(args).subList(1, args.length));
+        logger.info("Will execute tables " + tableNames);
+        
         Set<String> oldJarPaths = getCoprocessorJarPaths(hbaseAdmin, tableNames);
         logger.info("Old coprocessor jar: " + oldJarPaths);
 
@@ -92,6 +103,25 @@ public class DeployCoprocessorCLI {
 
         logger.info("Processed " + processedTables);
         logger.info("Active coprocessor jar: " + hdfsCoprocessorJar);
+    }
+
+    private static List<String> filterTables(List<String> tableNames, List<String> list) {
+        List<String> result = Lists.newArrayList();
+        for (String t : list) {
+            t = t.trim();
+            if (t.endsWith(","))
+                t = t.substring(0, t.length() - 1);
+            
+            if (t.equals("all")) {
+                result.addAll(tableNames);
+                break;
+            }
+            
+            if (tableNames.contains(t)) {
+                result.add(t);
+            }
+        }
+        return result;
     }
 
     public static void deployCoprocessor(HTableDescriptor tableDesc) {
