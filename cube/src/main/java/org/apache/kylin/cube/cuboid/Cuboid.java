@@ -88,6 +88,10 @@ public class Cuboid implements Comparable<Cuboid> {
         return cube.getRowkey().getFullMask();
     }
 
+    public static Cuboid getBaseCuboid(CubeDesc cube) {
+        return findById(cube, getBaseCuboidId(cube));
+    }
+
     private static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
         // add mandantory
         RowKeyDesc rowkey = cubeDesc.getRowkey();

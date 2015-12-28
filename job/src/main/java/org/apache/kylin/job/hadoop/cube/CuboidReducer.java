@@ -52,6 +52,8 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     private MeasureAggregators aggs;
 
     private int counter;
+    private int cuboidLevel;
+    private boolean[] needAggr;
     private Object[] input;
     private Object[] result;
 
@@ -62,6 +64,8 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     protected void setup(Context context) throws IOException {
         super.publishConfiguration(context.getConfiguration());
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
+        // only used in Build job, not in Merge job
+        cuboidLevel = context.getConfiguration().getInt(BatchConstants.CFG_CUBE_CUBOID_LEVEL, 0);
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata(context.getConfiguration());
 
@@ -73,6 +77,13 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
         input = new Object[measuresDescs.size()];
         result = new Object[measuresDescs.size()];
+        needAggr = new boolean[measuresDescs.size()];
+
+        if (cuboidLevel > 0) {
+            for (int i = 0; i < measuresDescs.size(); i++) {
+                needAggr[i] = !measuresDescs.get(i).getFunction().getMeasureType().onlyAggrInBaseCuboid();
+            }
+        }
     }
 
     @Override
@@ -82,7 +93,11 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
         for (Text value : values) {
             codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), input);
-            aggs.aggregate(input);
+            if (cuboidLevel > 0) {
+                aggs.aggregate(input, needAggr);
+            } else {
+                aggs.aggregate(input);
+            }
         }
         aggs.collectStates(result);
 

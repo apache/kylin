@@ -114,7 +114,7 @@ public class CubeStorageEngine implements IStorageEngine {
         Set<TblColRef> dimensionsD = Sets.newHashSet();
         dimensionsD.addAll(groupsD);
         dimensionsD.addAll(othersD);
-        Cuboid cuboid = identifyCuboid(dimensionsD);
+        Cuboid cuboid = identifyCuboid(dimensionsD, metrics);
         context.setCuboid(cuboid);
 
         // isExactAggregation? meaning: tuples returned from storage requires no further aggregation in query engine
@@ -163,7 +163,12 @@ public class CubeStorageEngine implements IStorageEngine {
         }
     }
 
-    private Cuboid identifyCuboid(Set<TblColRef> dimensions) {
+    private Cuboid identifyCuboid(Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
+        for (FunctionDesc metric : metrics) {
+            if (metric.getMeasureType().onlyAggrInBaseCuboid())
+                return Cuboid.getBaseCuboid(cubeDesc);
+        }
+
         long cuboidID = 0;
         for (TblColRef column : dimensions) {
             int index = cubeDesc.getRowkey().getColumnBitIndex(column);
@@ -662,13 +667,11 @@ public class CubeStorageEngine implements IStorageEngine {
         ObserverEnabler.enableCoprocessorIfBeneficial(cubeInstance, groupsCopD, valueDecoders, context);
     }
 
-
     private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
             MeasureType<?> measureType = measure.getFunction().getMeasureType();
             measureType.adjustSqlDigest(measure, sqlDigest);
         }
     }
-
 
 }

@@ -115,6 +115,8 @@ public class CuboidJob extends AbstractHadoopJob {
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
+            job.getConfiguration().setInt(BatchConstants.CFG_CUBE_CUBOID_LEVEL, nCuboidLevel);
+
             // add metadata to distributed cache
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
