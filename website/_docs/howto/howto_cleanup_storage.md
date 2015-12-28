@@ -11,18 +11,13 @@ Kylin will generate intermediate files in HDFS during the cube building; Besides
 automated garbage collection, it might not cover all cases; You can do an offline storage cleanup periodically:
 
 Steps:
-
-1. Check which resources can be cleanup, this will not remove anything: 
+1. Check which resources can be cleanup, this will not remove anything:
 {% highlight Groff markup %}
 hbase org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-(version).jar org.apache.kylin.job.hadoop.cube.StorageCleanupJob --delete false
 {% endhighlight %}
-
 Here please replace (version) with the specific Kylin jar version in your installation;
-
-2. You can pickup 1 or 2 resources to check whether they're no longer be referred; Then add the "--delete true" option to start the cleanup:  
-
+2. You can pickup 1 or 2 resources to check whether they're no longer be referred; Then add the "--delete true" option to start the cleanup:
 {% highlight Groff markup %}
 hbase org.apache.hadoop.util.RunJar ${KYLIN_HOME}/lib/kylin-job-(version).jar org.apache.kylin.job.hadoop.cube.StorageCleanupJob --delete true
 {% endhighlight %}
-
 On finish, the intermediate HDFS location and HTables will be dropped;
