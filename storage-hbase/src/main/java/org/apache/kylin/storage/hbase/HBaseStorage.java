@@ -44,8 +44,9 @@ import com.google.common.base.Preconditions;
 //used by reflection
 public class HBaseStorage implements IStorage {
 
-    private final static String v2CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery";
-    private final static String v1CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery";
+    public final static String v2CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery";
+    public final static String v1CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery";
+    public static String overwriteStorageQuery = null;//for test case
 
     private final static String defaultIIStorageQuery = "org.apache.kylin.storage.hbase.ii.InvertedIndexStorageQuery";
 
@@ -71,7 +72,9 @@ public class HBaseStorage implements IStorage {
         } else if (realization.getType() == RealizationType.CUBE) {
 
             String cubeStorageQuery;
-            if ("v1".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryVersion())) {
+            if (overwriteStorageQuery != null) {
+                cubeStorageQuery = overwriteStorageQuery;
+            } else if ("v1".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryVersion())) {
                 cubeStorageQuery = v1CubeStorageQuery;
             } else {
                 cubeStorageQuery = v2CubeStorageQuery;//by default use v2
