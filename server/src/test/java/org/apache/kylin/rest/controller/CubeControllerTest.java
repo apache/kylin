@@ -43,6 +43,7 @@ import com.google.common.collect.Lists;
 public class CubeControllerTest extends ServiceTestBase {
     private static final String SRC_CUBE_NAME = "test_kylin_cube_with_slr_ready";
     private static final String TEST_CUBE_NAME = SRC_CUBE_NAME + "_test_save";
+    private static final String TEST_MODEL_NAME = SRC_CUBE_NAME + "_test_model_save";
 
     private CubeController cubeController;
     private CubeDescController cubeDescController;
@@ -72,11 +73,12 @@ public class CubeControllerTest extends ServiceTestBase {
 
         srcCubeDesc = getCubeDescByName(SRC_CUBE_NAME);
 
-        saveTestCube(TEST_CUBE_NAME);
+        saveTestCube(TEST_CUBE_NAME,TEST_MODEL_NAME);
     }
 
     @After
     public void tearDown() throws Exception {
+        modelController.deleteModel(TEST_MODEL_NAME);
         cubeController.deleteCube(TEST_CUBE_NAME);
         super.after();
     }
@@ -89,17 +91,18 @@ public class CubeControllerTest extends ServiceTestBase {
         return cubes[0];
     }
 
-    private void saveTestCube(final String newCubeName) throws IOException {
+    private void saveTestCube(final String newCubeName,final String newModelName) throws IOException {
         CubeDesc newCube = new CubeDesc();
 
         try {
+            modelController.deleteModel(newModelName);
             cubeController.deleteCube(newCubeName);
         } catch (Exception e) {
             // it may not exist, ignore the exception
         }
 
         newCube.setName(newCubeName);
-        newCube.setModelName(newCubeName);
+        newCube.setModelName(newModelName);
         newCube.setModel(srcCubeDesc.getModel());
         newCube.setDimensions(srcCubeDesc.getDimensions());
         newCube.setHBaseMapping(srcCubeDesc.getHBaseMapping());
@@ -107,7 +110,7 @@ public class CubeControllerTest extends ServiceTestBase {
         newCube.setConfig(srcCubeDesc.getConfig());
         newCube.setRowkey(srcCubeDesc.getRowkey());
 
-        newCube.getModel().setName(newCubeName);
+        newCube.getModel().setName(newModelName);
         newCube.getModel().setLastModified(0);
 
         CubeRequest cubeRequest = new CubeRequest();
