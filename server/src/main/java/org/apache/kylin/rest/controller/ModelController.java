@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.service.CubeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -58,6 +59,20 @@ public class ModelController {
         return modeDesc;
 
     }
+
+    @RequestMapping(value = "/{modelName}", method = {RequestMethod.DELETE})
+    @ResponseBody
+    public void deleteModel(@PathVariable String modelName) {
+        MetadataManager metaManager = MetadataManager.getInstance(cubeService.getConfig());
+        DataModelDesc modeDesc = metaManager.getDataModelDesc(modelName);
+        try {
+            metaManager.dropModel(modeDesc);
+        } catch (IOException e) {
+            throw new InternalErrorException("Failed to delete model", e);
+        }
+    }
+
+
 
     public void setCubeService(CubeService cubeService) {
         this.cubeService = cubeService;
