@@ -168,7 +168,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testTableauQuery() throws Exception {
-        batchExecuteQuery("src/test/resources/query/sql_tableau");
+        execAndCompResultSize("src/test/resources/query/sql_tableau", null, true);
     }
 
     @Test

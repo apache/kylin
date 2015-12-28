@@ -12,7 +12,6 @@ import org.apache.kylin.common.topn.Counter;
 import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -21,12 +20,9 @@ import org.apache.kylin.cube.kv.RowKeyDecoder;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.lookup.LookupStringTable;
-import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
-import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 import org.apache.kylin.storage.tuple.Tuple;
 import org.apache.kylin.storage.tuple.TupleInfo;
@@ -40,7 +36,7 @@ public class CubeTupleConverter {
     final TupleInfo tupleInfo;
     final RowKeyDecoder rowKeyDecoder;
     final List<RowValueDecoder> rowValueDecoders;
-    final List<IDerivedColumnFiller> derivedColFillers; 
+    final List<IDerivedColumnFiller> derivedColFillers;
     final int[] dimensionTupleIdx;
     final int[][] metricsMeasureIdx;
     final int[][] metricsTupleIdx;
@@ -57,7 +53,7 @@ public class CubeTupleConverter {
         this.rowValueDecoders = rowValueDecoders;
         this.derivedColFillers = Lists.newArrayList();
         this.topNCol = topNCol;
-        
+
         List<TblColRef> dimCols = cuboid.getColumns();
 
         // pre-calculate dimension index mapping to tuple
@@ -66,7 +62,6 @@ public class CubeTupleConverter {
             TblColRef col = dimCols.get(i);
             dimensionTupleIdx[i] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
         }
-        
 
         // pre-calculate metrics index mapping to tuple
         metricsMeasureIdx = new int[rowValueDecoders.size()][];
@@ -79,7 +74,7 @@ public class CubeTupleConverter {
             metricsTupleIdx[i] = new int[selectedMeasures.cardinality()];
             for (int j = 0, mi = selectedMeasures.nextSetBit(0); j < metricsMeasureIdx[i].length; j++, mi = selectedMeasures.nextSetBit(mi + 1)) {
                 FunctionDesc aggrFunc = measures[mi].getFunction();
-                
+
                 int tupleIdx;
                 // a rewrite metrics is identified by its rewrite field name
                 if (aggrFunc.needRewrite()) {
@@ -99,10 +94,10 @@ public class CubeTupleConverter {
         if (this.topNCol != null) {
             this.topNColTupleIdx = tupleInfo.hasColumn(this.topNCol) ? tupleInfo.getColumnIndex(this.topNCol) : -1;
             this.topNMeasureTupleIdx = metricsTupleIdx[0][0];
-            
-            this.topNColDict = (Dictionary<String>)cubeSeg.getDictionary(this.topNCol);
+
+            this.topNColDict = (Dictionary<String>) cubeSeg.getDictionary(this.topNCol);
         }
-        
+
         // prepare derived columns and filler
         Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cuboid.getCube().getHostToDerivedInfo(dimCols, null);
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
@@ -128,12 +123,12 @@ public class CubeTupleConverter {
         private Tuple tuple;
         private Iterator<Counter> topNCounterIterator;
         private Counter<ByteArray> counter;
-        
+
         private TopNCounterTupleIterator(Tuple tuple, TopNCounter topNCounter) {
             this.tuple = tuple;
             this.topNCounterIterator = topNCounter.iterator();
         }
-        
+
         @Override
         public boolean hasNext() {
             return topNCounterIterator.hasNext();
@@ -146,7 +141,7 @@ public class CubeTupleConverter {
             String colValue = topNColDict.getValueFromId(key);
             tuple.setDimensionValue(topNColTupleIdx, colValue);
             tuple.setMeasureValue(topNMeasureTupleIdx, counter.getCount());
-            
+
             return tuple;
         }
 
@@ -155,7 +150,7 @@ public class CubeTupleConverter {
             throw new UnsupportedOperationException();
         }
     }
-    
+
     public void translateResult(Result hbaseRow, Tuple tuple) {
         try {
             byte[] rowkey = hbaseRow.getRow();
