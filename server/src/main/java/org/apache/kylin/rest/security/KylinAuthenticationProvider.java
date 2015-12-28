@@ -14,6 +14,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.saml.SAMLAuthenticationProvider;
 import org.springframework.util.Assert;
 
@@ -73,6 +74,12 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
             logger.debug("Authenticated user " + authed.toString());
             
             UserDetails user;
+            
+            if (authed.getDetails() == null) {
+                //authed.setAuthenticated(false);
+                throw new UsernameNotFoundException("User not found in LDAP, check whether he/she has been added to the groups.");
+            } 
+            
             if (authed.getDetails() instanceof  UserDetails) {
                 user = (UserDetails) authed.getDetails();
             } else {
