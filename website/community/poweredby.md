@@ -28,6 +28,6 @@ __Companies & Organizations__
 * [Baidu Map](http://map.baidu.com/)  (_NASDAQ: BIDU_)
 	* Apache Kylin is used for analysis Baidu Map's huge amounts of data about users, channels and etc, it performs quite fast with its own pre-calculation and index technologies along with the cubes.
 * [NetEase](http://www.163.com/)  (_NASDAQ: NTES_)
-	* Apache has been introduced as an OLAP engine for the data platform at NetEase, powering data analysis for various products & business with great performance.
+	* Apache Kylin has been introduced as an OLAP engine for the data platform at NetEase, powering data analysis for various products & business with great performance.
 
     
