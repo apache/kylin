@@ -140,6 +140,8 @@ public class HadoopStatusGetter {
     
     private static String DEFAULT_KRB5_CONFIG_LOCATION = "/etc/krb5.conf";
     private String getHttpResponseWithKerberosAuth(String url) throws IOException {
+        
+        // referred from https://stackoverflow.com/questions/24633380/how-do-i-authenticate-with-spnego-kerberos-and-apaches-httpclient
         String krb5ConfigPath = System.getProperty("java.security.krb5.conf");
         if (krb5ConfigPath == null) {
             krb5ConfigPath = DEFAULT_KRB5_CONFIG_LOCATION;
@@ -184,12 +186,28 @@ public class HadoopStatusGetter {
                 httpget.addHeader("accept", "application/json");
                 CloseableHttpResponse response = client.execute(httpget,context);
                 String redirect = null;
-                org.apache.http.Header h = response.getFirstHeader("Refresh");
+                org.apache.http.Header h = response.getFirstHeader("Location");
                 if (h != null) {
-                    String s = h.getValue();
-                    int cut = s.indexOf("url=");
-                    if (cut >= 0) {
-                        redirect = s.substring(cut + 4);
+                    redirect = h.getValue();
+                    if (isValidURL(redirect) == false) {
+                        log.info("Get invalid redirect url, skip it: " + redirect);
+                        Thread.sleep(1000l);
+                        continue;
+                    }
+                } else {
+                    h = response.getFirstHeader("Refresh");
+                    if (h != null) {
+                        String s = h.getValue();
+                        int cut = s.indexOf("url=");
+                        if (cut >= 0) {
+                            redirect = s.substring(cut + 4);
+
+                            if (isValidURL(redirect) == false) {
+                                log.info("Get invalid redirect url, skip it: " + redirect);
+                                Thread.sleep(1000l);
+                                continue;
+                            }
+                        }
                     }
                 }
     
@@ -200,6 +218,8 @@ public class HadoopStatusGetter {
                     url = redirect;
                     log.debug("Job " + mrJobId + " check redirect url " + url + ".\n");
                 } 
+            } catch (InterruptedException e) {
+                log.error(e.getMessage());
             } finally {
                 httpget.releaseConnection();
             }
