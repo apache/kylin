@@ -39,7 +39,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
  * @param <T> the Java type of aggregation data object, e.g. HyperLogLogPlusCounter
  */
 abstract public class MeasureType<T> {
-    
+
     /* ============================================================================
      * Define
      * ---------------------------------------------------------------------------- */
@@ -55,7 +55,12 @@ abstract public class MeasureType<T> {
     public boolean isMemoryHungry() {
         return false;
     }
-    
+
+    /** Return true if this MeasureType only aggregate values in base cuboid, and output initial value in child cuboid. */
+    public boolean onlyAggrInBaseCuboid() {
+        return false;
+    }
+
     /* ============================================================================
      * Build
      * ---------------------------------------------------------------------------- */
@@ -92,7 +97,7 @@ abstract public class MeasureType<T> {
     public CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc measureDesc) {
         return null;
     }
-    
+
     /* ============================================================================
      * Query Rewrite
      * ---------------------------------------------------------------------------- */
@@ -104,7 +109,7 @@ abstract public class MeasureType<T> {
 
     /** Returns a Calcite aggregation function implementation class */
     abstract public Class<?> getRewriteCalciteAggrFunctionClass();
-    
+
     /* ============================================================================
      * Storage
      * ---------------------------------------------------------------------------- */
