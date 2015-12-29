@@ -278,7 +278,7 @@ public class CubeController extends BasicController {
         //model name same as cube
         modelDesc.setName(targetCubeName);
         modelDesc.setLastModified(0);
-        modelDesc.setUuid(UUID.randomUUID().toString());
+        modelDesc.updateRandomUuid();
         DataModelDesc newModel = null;
         try {
             newModel = metaManager.createDataModelDesc(modelDesc);
@@ -288,7 +288,7 @@ public class CubeController extends BasicController {
 
         cubeDesc.setName(targetCubeName);
         cubeDesc.setLastModified(0);
-        cubeDesc.setUuid(UUID.randomUUID().toString());
+        cubeDesc.updateRandomUuid();
         cubeDesc.setModelName(targetCubeName);
         CubeInstance newCube = null;
         try {
@@ -372,6 +372,7 @@ public class CubeController extends BasicController {
         }
 
         try {
+            modelDesc.updateRandomUuid();
             metaManager.createDataModelDesc(modelDesc);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
@@ -382,7 +383,7 @@ public class CubeController extends BasicController {
 
         try {
 
-            desc.setUuid(UUID.randomUUID().toString());
+            desc.updateRandomUuid();
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
             CubeInstance createdCube = cubeService.createCubeAndDesc(desc.getName(), projectName, desc);
             updateCubeSuccess = true;
