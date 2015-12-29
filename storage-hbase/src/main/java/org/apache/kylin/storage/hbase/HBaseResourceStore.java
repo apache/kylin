@@ -284,6 +284,9 @@ public class HBaseResourceStore extends ResourceStore {
         byte[] endRow = plusZero(startRow);
 
         Scan scan = new Scan(startRow, endRow);
+        scan.setCaching(1);
+        scan.setMaxResultSize(kylinConfig.getHBaseScanMaxResultSize());
+        
         if (!fetchContent && !fetchTimestamp) {
             scan.setFilter(new KeyOnlyFilter());
         } else {
