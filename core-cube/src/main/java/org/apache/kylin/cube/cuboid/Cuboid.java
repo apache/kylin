@@ -171,10 +171,9 @@ public class Cuboid implements Comparable<Cuboid> {
                 } else {
                     //choose from a hierarchy that does not intersect with any joint dim, only check level 1 
                     long allJointDims = agg.getJointDimsMask();
-                    int index = 0;
                     for (HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
-                        long dim = hierarchyMask.allMasks[index];
-                        if ((nonJointDims & allJointDims) == 0) {
+                        long dim = hierarchyMask.allMasks[0];
+                        if ((dim & allJointDims) == 0) {
                             return cuboidID | dim;
                         }
                     }
