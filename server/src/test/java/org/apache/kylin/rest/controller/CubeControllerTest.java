@@ -127,7 +127,7 @@ public class CubeControllerTest extends ServiceTestBase {
         Assert.assertNotNull(cubeController.getSql(SRC_CUBE_NAME, "20130331080000_20131212080000"));
         Assert.assertNotNull(cubeController.getCubes(null, null, 0, 5));
 
-        DataModelDesc model = modelController.getModel(TEST_CUBE_NAME);
+        DataModelDesc model = modelController.getModel(TEST_MODEL_NAME);
         Assert.assertNotNull(model);
 
         List<String> notifyList = Lists.newArrayList();
