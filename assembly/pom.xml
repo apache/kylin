@@ -84,11 +84,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-mapreduce-client-core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-minicluster</artifactId>
             <scope>test</scope>
         </dependency>
@@ -106,11 +101,6 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-hadoop2-compat</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-client</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -165,6 +155,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.10</artifactId>
+            <version>${kafka.version}</version>
+            <!-- FIXME: Should be provided just like hive and hbase, inflates job jar from 9 MB to 21 MB -->
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -184,6 +181,13 @@
                             <minimizeJar>false</minimizeJar>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>job</shadedClassifierName>
+                            <artifactSet>
+                            	<excludes>
+	                            	<exclude>io.netty:*</exclude>
+	                            	<exclude>org.apache.zookeeper:*</exclude>
+	                            	<exclude>net.sf.ehcache:*</exclude>
+                            	</excludes>
+                            </artifactSet>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>

@@ -33,7 +33,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -220,7 +219,7 @@ public class BasicTest {
 
     @Test
     @Ignore("fix it later")
-    public void test2() throws IOException, ConfigurationException {
+    public void test2() throws IOException {
         ArrayList<String> x = Lists.newArrayListWithCapacity(10);
         x.set(2, "dd");
         for (String y : x) {
