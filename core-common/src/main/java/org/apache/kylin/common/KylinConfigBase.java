@@ -466,6 +466,10 @@ public class KylinConfigBase implements Serializable {
     public String getHiveDatabaseForIntermediateTable() {
         return this.getOptional("kylin.job.hive.database.for.intermediatetable", "default");
     }
+    
+    public boolean isGetJobStatusWithKerberos() {
+        return Boolean.valueOf(this.getOptional("kylin.job.status.with.kerberos", "false"));
+    }
 
     public String getKylinOwner() {
         return this.getOptional("kylin.owner", "");
