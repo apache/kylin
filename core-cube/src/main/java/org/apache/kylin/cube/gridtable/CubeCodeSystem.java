@@ -1,21 +1,20 @@
 package org.apache.kylin.cube.gridtable;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.DefaultGTComparator;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+
+import com.google.common.collect.Maps;
 
 /**
  * defines how column values will be encoded to/ decoded from GTRecord 
@@ -46,18 +45,19 @@ public class CubeCodeSystem implements IGTCodeSystem {
         this.dependentMetricsMap = dependentMetricsMap;
     }
 
-    public IGTCodeSystem trimForCoprocessor() {
-        DataTypeSerializer[] newSerializers = new DataTypeSerializer[serializers.length];
+    public TrimmedCubeCodeSystem trimForCoprocessor() {
+        Map<Integer,Integer> dictSizes = Maps.newHashMap();
+        Map<Integer,Integer> fixedLengthSizes = Maps.newHashMap();
 
         for (int i = 0; i < serializers.length; i++) {
             if (serializers[i] instanceof DictionarySerializer) {
-                newSerializers[i] = new TrimmedDictionarySerializer(serializers[i].maxLength());
-            } else {
-                newSerializers[i] = serializers[i];
+                dictSizes.put(i,serializers[i].maxLength());
+            } else if(serializers[i] instanceof  FixLenSerializer) {
+                fixedLengthSizes.put(i,serializers[i].maxLength());
             }
         }
 
-        return new TrimmedCubeCodeSystem(info, dependentMetricsMap, newSerializers, comparator);
+        return new TrimmedCubeCodeSystem(dependentMetricsMap,dictSizes,fixedLengthSizes);
     }
 
     @Override
@@ -80,6 +80,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
             }
         }
 
+        //when changing this, also take care of TrimmedCubeCodeSystem.init
         this.comparator = new DefaultGTComparator();
     }
 
@@ -156,7 +157,6 @@ public class CubeCodeSystem implements IGTCodeSystem {
 
         public TrimmedDictionarySerializer(int fieldSize) {
             this.fieldSize = fieldSize;
-
         }
 
         @Override
@@ -224,82 +224,6 @@ public class CubeCodeSystem implements IGTCodeSystem {
             return dictionary.getSizeOfId();
         }
 
-    }
-
-    static class FixLenSerializer extends DataTypeSerializer {
-
-        // be thread-safe and avoid repeated obj creation
-        private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
-
-        private int fixLen;
-
-        FixLenSerializer(int fixLen) {
-            this.fixLen = fixLen;
-        }
-
-        private byte[] currentBuf() {
-            byte[] buf = current.get();
-            if (buf == null) {
-                buf = new byte[fixLen];
-                current.set(buf);
-            }
-            return buf;
-        }
-
-        @Override
-        public void serialize(Object value, ByteBuffer out) {
-            byte[] buf = currentBuf();
-            if (value == null) {
-                Arrays.fill(buf, Dictionary.NULL);
-                out.put(buf);
-            } else {
-                byte[] bytes = Bytes.toBytes(value.toString());
-                if (bytes.length > fixLen) {
-                    throw new IllegalStateException("Expect at most " + fixLen + " bytes, but got " + bytes.length + ", value string: " + value.toString());
-                }
-                out.put(bytes);
-                for (int i = bytes.length; i < fixLen; i++) {
-                    out.put(RowConstants.ROWKEY_PLACE_HOLDER_BYTE);
-                }
-            }
-        }
-
-        @Override
-        public Object deserialize(ByteBuffer in) {
-            byte[] buf = currentBuf();
-            in.get(buf);
-
-            int tail = fixLen;
-            while (tail > 0 && (buf[tail - 1] == RowConstants.ROWKEY_PLACE_HOLDER_BYTE || buf[tail - 1] == Dictionary.NULL)) {
-                tail--;
-            }
-
-            if (tail == 0) {
-                return buf[0] == Dictionary.NULL ? null : "";
-            }
-
-            return Bytes.toString(buf, 0, tail);
-        }
-
-        @Override
-        public int peekLength(ByteBuffer in) {
-            return fixLen;
-        }
-
-        @Override
-        public int maxLength() {
-            return fixLen;
-        }
-
-        @Override
-        public int getStorageBytesEstimate() {
-            return fixLen;
-        }
-
-        @Override
-        public Object valueOf(String str) {
-            return str;
-        }
     }
 
 }

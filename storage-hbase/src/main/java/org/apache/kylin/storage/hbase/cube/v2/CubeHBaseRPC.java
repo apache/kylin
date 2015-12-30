@@ -70,8 +70,8 @@ public abstract class CubeHBaseRPC {
         if (rawScan.endKey != null) {
             scan.setStopRow(rawScan.endKey);
         }
-        if (rawScan.fuzzyKey != null) {
-            applyFuzzyFilter(scan, rawScan.fuzzyKey);
+        if (rawScan.fuzzyKeys != null) {
+            applyFuzzyFilter(scan, rawScan.fuzzyKeys);
         }
         if (rawScan.hbaseColumns != null) {
             applyHBaseColums(scan, rawScan.hbaseColumns);
@@ -257,8 +257,8 @@ public abstract class CubeHBaseRPC {
         info.append(rawScan.getEndKeyAsString());
         info.append(" - ");
         info.append(Bytes.toStringBinary(rawScan.endKey));
-        if (rawScan.fuzzyKey != null) {
-            info.append("\nFuzzy key counts: " + rawScan.fuzzyKey.size());
+        if (rawScan.fuzzyKeys != null) {
+            info.append("\nFuzzy key counts: " + rawScan.fuzzyKeys.size());
             info.append("\nFuzzy: ");
             info.append(rawScan.getFuzzyKeyAsString());
         } else {

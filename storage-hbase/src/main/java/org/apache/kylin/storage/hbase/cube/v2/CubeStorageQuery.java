@@ -72,7 +72,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         Set<TblColRef> groupsD = expandDerived(groups, derivedPostAggregation);
         Set<TblColRef> filterDimsD = expandDerived(filterDims, derivedPostAggregation);
         filterDimsD.removeAll(groupsD);
-        derivedPostAggregation.removeAll(groups);
 
         // identify cuboid
         Set<TblColRef> dimensionsD = new LinkedHashSet<TblColRef>();

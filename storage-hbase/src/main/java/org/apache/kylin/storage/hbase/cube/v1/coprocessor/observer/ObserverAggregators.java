@@ -36,7 +36,6 @@ import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorConstants;
 import org.apache.kylin.storage.hbase.steps.RowValueDecoder;
 
 /**
@@ -76,7 +75,7 @@ public class ObserverAggregators {
     }
 
     public static byte[] serialize(ObserverAggregators o) {
-        ByteBuffer buf = ByteBuffer.allocate(CoprocessorConstants.SERIALIZE_BUFFER_SIZE);
+        ByteBuffer buf = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
         System.arraycopy(buf.array(), 0, result, 0, buf.position());
@@ -87,9 +86,7 @@ public class ObserverAggregators {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
-    private static final Serializer serializer = new Serializer();
-
-    private static class Serializer implements BytesSerializer<ObserverAggregators> {
+    private static final BytesSerializer<ObserverAggregators> serializer = new BytesSerializer<ObserverAggregators>() {
 
         @Override
         public void serialize(ObserverAggregators value, ByteBuffer out) {
@@ -117,7 +114,7 @@ public class ObserverAggregators {
             return new ObserverAggregators(hcols);
         }
 
-    }
+    };
 
     // ============================================================================
 
@@ -125,7 +122,7 @@ public class ObserverAggregators {
     final int nHCols;
     final ByteBuffer[] hColValues;
     final int nTotalMeasures;
-    
+
     MeasureType measureTypes[];
 
     public ObserverAggregators(HCol[] _hcols) {
@@ -163,7 +160,7 @@ public class ObserverAggregators {
                     measureTypes[i++] = MeasureTypeFactory.create(col.funcNames[j], DataType.getType(col.dataTypes[j]));
             }
         }
-        
+
         MeasureAggregator[] aggrs = new MeasureAggregator[nTotalMeasures];
         for (int i = 0; i < nTotalMeasures; i++) {
             aggrs[i] = measureTypes[i].newAggregator();

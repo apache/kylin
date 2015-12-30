@@ -1,13 +1,16 @@
 package org.apache.kylin.gridtable;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.apache.kylin.common.util.BytesSerializer;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
-import org.apache.kylin.cube.util.KryoUtils;
+import org.apache.kylin.cube.gridtable.TrimmedCubeCodeSystem;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -18,26 +21,24 @@ public class GTInfo {
     }
 
     String tableName;
-
     IGTCodeSystem codeSystem;
 
     // column schema
-    int nColumns;
     DataType[] colTypes;
-    ImmutableBitSet colAll;
     ImmutableBitSet colPreferIndex;
+    transient int nColumns;
+    transient ImmutableBitSet colAll;
     transient TblColRef[] colRefs;
 
     // grid info
     ImmutableBitSet primaryKey; // order by, uniqueness is not required
     ImmutableBitSet[] colBlocks; // primary key must be the first column block
-    ImmutableBitSet colBlocksAll;
     int rowBlockSize; // 0: disable row block
+    transient ImmutableBitSet colBlocksAll;
 
     // must create from builder
     private GTInfo() {
     }
-
 
     public String getTableName() {
         return tableName;
@@ -94,7 +95,7 @@ public class GTInfo {
         }
         return result;
     }
-    
+
     public ImmutableBitSet selectColumnBlocks(ImmutableBitSet columns) {
         if (columns == null)
             columns = colAll;
@@ -241,23 +242,76 @@ public class GTInfo {
         }
     }
 
-    public static byte[] serialize(GTInfo info) {
-        if (info.codeSystem instanceof CubeCodeSystem) {
-            CubeCodeSystem origin = (CubeCodeSystem) info.codeSystem;
-            info.codeSystem = origin.trimForCoprocessor();
-            byte[] trimmedInfoBytes = KryoUtils.serialize(info);
-            info.codeSystem = origin;
-            return trimmedInfoBytes;
-        } else {
-            return KryoUtils.serialize(info);
-        }
-    }
-
-    public static GTInfo deserialize(byte[] bytes) {
-        return KryoUtils.deserialize(bytes, GTInfo.class);
-    }
-
     public IGTCodeSystem getCodeSystem() {
         return codeSystem;
     }
+
+    public static final BytesSerializer<GTInfo> serializer = new BytesSerializer<GTInfo>() {
+        @Override
+        public void serialize(GTInfo value, ByteBuffer out) {
+            if (value.codeSystem instanceof CubeCodeSystem) {
+                BytesUtil.writeAsciiString(CubeCodeSystem.class.getCanonicalName(), out);
+                TrimmedCubeCodeSystem trimmed = ((CubeCodeSystem) value.codeSystem).trimForCoprocessor();
+                TrimmedCubeCodeSystem.serializer.serialize(trimmed, out);
+            } else if (value.codeSystem instanceof GTSampleCodeSystem) {
+                BytesUtil.writeAsciiString(GTSampleCodeSystem.class.getCanonicalName(), out);
+                GTSampleCodeSystem.serializer.serialize((GTSampleCodeSystem) value.codeSystem, out);
+            } else {
+                throw new IllegalArgumentException("Can't recognize code system " + value.codeSystem.getClass());
+            }
+
+            BytesUtil.writeUTFString(value.tableName, out);
+            BytesUtil.writeVInt(value.colTypes.length, out);
+            for (DataType dataType : value.colTypes) {
+                DataType.serializer.serialize(dataType, out);
+            }
+            ImmutableBitSet.serializer.serialize(value.colPreferIndex, out);
+            ImmutableBitSet.serializer.serialize(value.primaryKey, out);
+            BytesUtil.writeVInt(value.colBlocks.length, out);
+            for (ImmutableBitSet x : value.colBlocks) {
+                ImmutableBitSet.serializer.serialize(x, out);
+            }
+            BytesUtil.writeVInt(value.rowBlockSize, out);
+        }
+
+        @Override
+        public GTInfo deserialize(ByteBuffer in) {
+            IGTCodeSystem codeSystem = null;
+            String codeSystemType = BytesUtil.readAsciiString(in);
+            if (CubeCodeSystem.class.getCanonicalName().equals(codeSystemType)) {
+                codeSystem = TrimmedCubeCodeSystem.serializer.deserialize(in);
+            } else if (GTSampleCodeSystem.class.getCanonicalName().equals(codeSystemType)) {
+                codeSystem = GTSampleCodeSystem.serializer.deserialize(in);
+            } else {
+                throw new IllegalArgumentException("Can't recognize code system " + codeSystemType);
+            }
+
+            String newTableName = BytesUtil.readUTFString(in);
+
+            int colTypesSize = BytesUtil.readVInt(in);
+            DataType[] newColTypes = new DataType[colTypesSize];
+            for (int i = 0; i < colTypesSize; ++i) {
+                newColTypes[i] = DataType.serializer.deserialize(in);
+            }
+
+            ImmutableBitSet newColPreferIndex = ImmutableBitSet.serializer.deserialize(in);
+            ImmutableBitSet newPrimaryKey = ImmutableBitSet.serializer.deserialize(in);
+
+            int colBlockSize = BytesUtil.readVInt(in);
+            ImmutableBitSet[] newColBlocks = new ImmutableBitSet[colBlockSize];
+            for (int i = 0; i < colBlockSize; ++i) {
+                newColBlocks[i] = ImmutableBitSet.serializer.deserialize(in);
+            }
+
+            int newRowBlockSize = BytesUtil.readVInt(in);
+
+            return GTInfo.builder().setCodeSystem(codeSystem).//
+                    setTableName(newTableName).//
+                    setColumns(newColTypes).//
+                    setColumnPreferIndex(newColPreferIndex).//
+                    setPrimaryKey(newPrimaryKey).//
+                    enableColumnBlock(newColBlocks).//
+                    enableRowBlock(newRowBlockSize).build();
+        }
+    };
 }

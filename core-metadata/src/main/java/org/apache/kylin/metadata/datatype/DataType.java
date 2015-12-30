@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.datatype;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -30,6 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.BytesSerializer;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 
@@ -37,7 +40,7 @@ import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
  */
 @SuppressWarnings("serial")
 public class DataType implements Serializable {
-    
+
     private static final LinkedHashSet<String> VALID_TYPES = new LinkedHashSet<String>();
 
     private static Pattern TYPE_PATTERN = null;
@@ -128,6 +131,12 @@ public class DataType implements Serializable {
     private String name;
     private int precision;
     private int scale;
+
+    public DataType(String name, int precision, int scale) {
+        this.name = name;
+        this.precision = precision;
+        this.scale = scale;
+    }
 
     private DataType(String datatype) {
         datatype = datatype.trim().toLowerCase();
@@ -295,4 +304,23 @@ public class DataType implements Serializable {
         else
             return name + "(" + precision + "," + scale + ")";
     }
+
+    public static final BytesSerializer<DataType> serializer = new BytesSerializer<DataType>() {
+        @Override
+        public void serialize(DataType value, ByteBuffer out) {
+            BytesUtil.writeUTFString(value.name, out);
+            BytesUtil.writeVInt(value.precision, out);
+            BytesUtil.writeVInt(value.scale, out);
+
+        }
+
+        @Override
+        public DataType deserialize(ByteBuffer in) {
+            String name = BytesUtil.readUTFString(in);
+            int precision = BytesUtil.readVInt(in);
+            int scale = BytesUtil.readVInt(in);
+
+            return new DataType(name, precision, scale);
+        }
+    };
 }
