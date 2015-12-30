@@ -110,19 +110,15 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         String[] row = flatTableInputFormat.parseMapperInput(record);
         try {
             for (int i = 0; i < factDictCols.size(); i++) {
-//                outputKey.set(Bytes.toBytes((long)factDictCols.get(i)));
                 String fieldValue = row[dictionaryColumnIndex[i]];
                 if (fieldValue == null)
                     continue;
-//                outputValue.set(bytes, 0, bytes.length);
 
                 keyBuffer.clear();
                 keyBuffer.putLong((long)factDictCols.get(i));
                 keyBuffer.put(Bytes.toBytes(fieldValue));
                 outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
                 context.write(outputKey, EMPTY_TEXT);
-                
-//                context.write(outputKey, outputValue);
             }
         } catch (Exception ex) {
             handleErrorRecord(row, ex);
