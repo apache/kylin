@@ -21,6 +21,7 @@ package org.apache.kylin.jdbc.json;
 public class QueryRequest {
     private String sql;
     private String project;
+    private boolean acceptPartial = false;
 
     public String getSql() {
         return sql;
@@ -36,5 +37,13 @@ public class QueryRequest {
 
     public void setProject(String project) {
         this.project = project;
+    }
+
+    public boolean isAcceptPartial() {
+        return acceptPartial;
+    }
+
+    public void setAcceptPartial(boolean acceptPartial) {
+        this.acceptPartial = acceptPartial;
     }
 }
