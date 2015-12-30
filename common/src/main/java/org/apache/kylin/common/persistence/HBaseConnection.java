@@ -64,13 +64,13 @@ public class HBaseConnection {
     }
 
     public static HConnection get(String url) {
-        // find configuration
-        Configuration conf = HadoopUtil.getCurrentHBaseConfiguration();
 
         HConnection connection = ConnPool.get(url);
         try {
             // I don't use DCL since recreate a connection is not a big issue.
             if (connection == null) {
+                // find configuration
+                Configuration conf = HadoopUtil.getCurrentHBaseConfiguration();
                 connection = HConnectionManager.createConnection(conf);
                 ConnPool.put(url, connection);
             }

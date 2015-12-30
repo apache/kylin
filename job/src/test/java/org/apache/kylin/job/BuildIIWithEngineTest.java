@@ -231,7 +231,7 @@ public class BuildIIWithEngineTest {
 
     private void backup() throws Exception {
         int exitCode = cleanupOldStorage();
-        if (exitCode == 0) {
+        if (exitCode == 0 && "true".equals(System.getProperty("kylin.exportHtables"))) {
             exportHBaseData();
         }
     }
