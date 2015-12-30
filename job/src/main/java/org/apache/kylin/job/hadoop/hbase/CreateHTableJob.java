@@ -79,7 +79,6 @@ public class CreateHTableJob extends AbstractHadoopJob {
         // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, ConstantSizeRegionSplitPolicy.class.getName());
         tableDesc.setValue(IRealizationConstants.HTableTag, config.getMetadataUrlPrefix());
-        tableDesc.setReadOnly(true);
 
         Configuration conf = HadoopUtil.getCurrentHBaseConfiguration();
         HBaseAdmin admin = new HBaseAdmin(conf);

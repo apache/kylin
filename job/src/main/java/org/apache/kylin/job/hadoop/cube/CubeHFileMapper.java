@@ -120,7 +120,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
 
             cfBytes = Bytes.toBytes(colDesc.getColumnFamilyName());
             qBytes = Bytes.toBytes(colDesc.getQualifier());
-            timestamp = System.currentTimeMillis();
+            timestamp = 0; // use 0 for timestamp
 
             List<MeasureDesc> measures = cubeDesc.getMeasures();
             String[] measureNames = getMeasureNames(cubeDesc);
