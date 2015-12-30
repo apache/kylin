@@ -142,11 +142,6 @@
                                     <include>com.esotericsoftware:kryo-shaded</include>
                                     <include>com.esotericsoftware:minlog</include>
                                     <include>org.objenesis:objenesis</include>
-
-                                    <!-- include>com.fasterxml.jackson.core:*</include -->
-                                    <!-- include>org.apache.commons:commons-lang3</include -->
-                                    <!-- include>commons-configuration:*</include -->
-                                    <!-- include>com.jcraft:jsch</include -->
                                 </includes>
                             </artifactSet>
                             <filters>

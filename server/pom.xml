@@ -246,10 +246,6 @@
             <artifactId>super-csv</artifactId>
             <version>2.1.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>
 		
         <!-- spring aop -->
         <dependency>
@@ -434,9 +430,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.thetransactioncompany</groupId>
-            <artifactId>cors-filter</artifactId>
-            <version>1.3.2</version>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
