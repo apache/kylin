@@ -33,7 +33,7 @@ public class KeyValueCreator {
 
         cfBytes = Bytes.toBytes(colDesc.getColumnFamilyName());
         qBytes = Bytes.toBytes(colDesc.getQualifier());
-        timestamp = System.currentTimeMillis();
+        timestamp = 0; // use 0 for timestamp
 
         refIndex = colDesc.getMeasureIndex();
         refMeasures = colDesc.getMeasures();
