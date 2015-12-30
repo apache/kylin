@@ -141,7 +141,8 @@ public class MapReduceExecutable extends AbstractExecutable {
                 return new ExecuteResult(ExecuteResult.State.ERROR, "restStatusCheckUrl is null");
             }
             String mrJobId = hadoopCmdOutput.getMrJobId();
-            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output);
+            boolean useKerberosAuth = context.getConfig().isGetJobStatusWithKerberos();
+            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
             while (!isDiscarded()) {
                 JobStepStatusEnum newStatus = statusChecker.checkStatus();

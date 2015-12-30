@@ -39,11 +39,13 @@ public class HadoopStatusChecker {
     private final String yarnUrl;
     private final String mrJobID;
     private final StringBuilder output;
+    private final boolean useKerberosAuth;
 
-    public HadoopStatusChecker(String yarnUrl, String mrJobID, StringBuilder output) {
+    public HadoopStatusChecker(String yarnUrl, String mrJobID, StringBuilder output, boolean useKerberosAuth) {
         this.yarnUrl = yarnUrl;
         this.mrJobID = mrJobID;
         this.output = output;
+        this.useKerberosAuth = useKerberosAuth;
     }
 
     public JobStepStatusEnum checkStatus() {
@@ -53,7 +55,7 @@ public class HadoopStatusChecker {
         }
         JobStepStatusEnum status = null;
         try {
-            final Pair<RMAppState, FinalApplicationStatus> result = new HadoopStatusGetter(yarnUrl, mrJobID).get();
+            final Pair<RMAppState, FinalApplicationStatus> result = new HadoopStatusGetter(yarnUrl, mrJobID).get(useKerberosAuth);
             logger.debug("State of Hadoop job: " + mrJobID + ":" + result.getLeft() + "-" + result.getRight());
             output.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(new Date()) + " - State of Hadoop job: " + mrJobID + ":" + result.getLeft() + " - " + result.getRight() + "\n");
 
