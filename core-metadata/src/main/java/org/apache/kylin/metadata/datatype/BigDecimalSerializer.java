@@ -35,9 +35,9 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     private static final Logger logger = LoggerFactory.getLogger(BigDecimalSerializer.class);
 
     final DataType type;
-    final int maxLength;
+    transient final int maxLength;
 
-    int avoidVerbose = 0;
+    transient int avoidVerbose = 0;
 
     public BigDecimalSerializer(DataType type) {
         this.type = type;
@@ -101,5 +101,5 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     public BigDecimal valueOf(String str) {
         return new BigDecimal(str);
     }
-    
+
 }

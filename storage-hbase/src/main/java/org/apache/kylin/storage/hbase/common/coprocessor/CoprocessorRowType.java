@@ -46,7 +46,7 @@ public class CoprocessorRowType {
         for (int i = 0; i < cols.size(); i++) {
             colSizes[i] = tableRecordInfo.getDigest().length(i);
         }
-        
+
         //TODO:check0
         return new CoprocessorRowType(cols.toArray(new TblColRef[cols.size()]), colSizes, 0);
     }
@@ -64,7 +64,7 @@ public class CoprocessorRowType {
     }
 
     public static byte[] serialize(CoprocessorRowType o) {
-        ByteBuffer buf = ByteBuffer.allocate(CoprocessorConstants.SERIALIZE_BUFFER_SIZE);
+        ByteBuffer buf = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
         System.arraycopy(buf.array(), 0, result, 0, buf.position());
@@ -75,9 +75,7 @@ public class CoprocessorRowType {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
-    private static final Serializer serializer = new Serializer();
-
-    private static class Serializer implements BytesSerializer<CoprocessorRowType> {
+    private static final BytesSerializer<CoprocessorRowType> serializer = new BytesSerializer<CoprocessorRowType>() {
 
         @Override
         public void serialize(CoprocessorRowType o, ByteBuffer out) {
@@ -113,7 +111,7 @@ public class CoprocessorRowType {
             }
             return new CoprocessorRowType(cols, colSizes, bodyOffset);
         }
-    }
+    };
 
     // ============================================================================
 

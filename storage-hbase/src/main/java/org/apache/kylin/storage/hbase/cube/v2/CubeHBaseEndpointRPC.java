@@ -42,11 +42,11 @@ import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.util.KryoUtils;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
@@ -153,9 +153,11 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             hbaseColumnsToGTIntList.add(IntList.newBuilder().addAllInts(list).build());
         }
 
-        byte[] scanRequestBytes = KryoUtils.serialize(scanRequest);
-        final ByteString scanRequestBytesString = HBaseZeroCopyByteString.wrap(scanRequestBytes);
-        logger.info("Serialized scanRequestBytes's size is " + scanRequestBytes.length);
+        ByteBuffer buffer = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
+        GTScanRequest.serializer.serialize(scanRequest, buffer);
+        buffer.flip();
+        final ByteString scanRequestBytesString = HBaseZeroCopyByteString.wrap(buffer.array(), buffer.position(), buffer.limit());
+        logger.info("Serialized scanRequestBytes's size is " + (buffer.limit() - buffer.position()));
 
         final List<byte[]> rowBlocks = Collections.synchronizedList(Lists.<byte[]> newArrayList());
 
@@ -176,9 +178,13 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             Future<?> future = executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    final byte[] rawScanBytes = KryoUtils.serialize(rawScan);
+
+                    ByteBuffer rawScanBuffer = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
+                    RawScan.serializer.serialize(rawScan, rawScanBuffer);
+                    rawScanBuffer.flip();
+
                     CubeVisitProtos.CubeVisitRequest.Builder builder = CubeVisitProtos.CubeVisitRequest.newBuilder();
-                    builder.setGtScanRequest(scanRequestBytesString).setHbaseRawScan(HBaseZeroCopyByteString.wrap(rawScanBytes));
+                    builder.setGtScanRequest(scanRequestBytesString).setHbaseRawScan(HBaseZeroCopyByteString.wrap(rawScanBuffer.array(), rawScanBuffer.position(), rawScanBuffer.limit()));
                     for (IntList intList : hbaseColumnsToGTIntList) {
                         builder.addHbaseColumnsToGT(intList);
                     }

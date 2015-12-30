@@ -129,7 +129,7 @@ public class TableRecordInfoDigest {
     }
 
     public static byte[] serialize(TableRecordInfoDigest o) {
-        ByteBuffer buf = ByteBuffer.allocate(Serializer.SERIALIZE_BUFFER_SIZE);
+        ByteBuffer buf = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
         System.arraycopy(buf.array(), 0, result, 0, buf.position());
@@ -144,9 +144,7 @@ public class TableRecordInfoDigest {
         return serializer.deserialize(buffer);
     }
 
-    private static final Serializer serializer = new Serializer();
-
-    private static class Serializer implements BytesSerializer<TableRecordInfoDigest> {
+    private static final BytesSerializer<TableRecordInfoDigest> serializer = new BytesSerializer<TableRecordInfoDigest>() {
 
         @Override
         public void serialize(TableRecordInfoDigest value, ByteBuffer out) {
@@ -173,5 +171,5 @@ public class TableRecordInfoDigest {
             return result;
         }
 
-    }
+    };
 }

@@ -71,7 +71,7 @@ public class ConcurrentDiskStoreTest {
             t[i] = new Thread() {
                 public void run() {
                     try {
-                        IGTScanner scanner = table.scan(new GTScanRequest(table.getInfo()));
+                        IGTScanner scanner = table.scan(new GTScanRequest(table.getInfo(), null, null, null));
                         int i = 0;
                         for (GTRecord r : scanner) {
                             assertEquals(data.get(i++), r);
