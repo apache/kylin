@@ -65,7 +65,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
             // ----------------------------------------------------------------------------
 
-            System.out.println("Starting: " + job.getJobName());
+            logger.info("Starting: " + job.getJobName());
 
             IIInstance ii = getII(iiname);
             short sharding = ii.getDescriptor().getSharding();

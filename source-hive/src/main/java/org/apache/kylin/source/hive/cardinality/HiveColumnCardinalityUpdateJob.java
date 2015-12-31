@@ -73,7 +73,7 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
             this.table = getOptionValue(OPTION_TABLE).toUpperCase();
             // start job
             String jobName = JOB_TITLE + getOptionsAsString();
-            System.out.println("Starting: " + jobName);
+            logger.info("Starting: " + jobName);
             Configuration conf = getConf();
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
@@ -92,7 +92,7 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
             columns = readLines(new Path(outPath), config);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Failed to resolve cardinality for " + tableName + " from " + outPath);
+            logger.info("Failed to resolve cardinality for " + tableName + " from " + outPath);
             return;
         }
 
@@ -103,7 +103,7 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
             String[] ss = StringUtils.split(string, "\t");
 
             if (ss.length != 2) {
-                System.out.println("The hadoop cardinality value is not valid " + string);
+                logger.info("The hadoop cardinality value is not valid " + string);
                 continue;
             }
             cardi.append(ss[1]);
