@@ -131,10 +131,10 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             admin.createTable(tableDesc, splitKeys);
             if (splitKeys != null) {
                 for (int i = 0; i < splitKeys.length; i++) {
-                    System.out.println("split key " + i + ": " + BytesUtil.toHex(splitKeys[i]));
+                    logger.info("split key " + i + ": " + BytesUtil.toHex(splitKeys[i]));
                 }
             }
-            System.out.println("create hbase table " + tableName + " done.");
+            logger.info("create hbase table " + tableName + " done.");
 
             return 0;
         } catch (Exception e) {

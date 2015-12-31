@@ -63,7 +63,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
             // start job
             String jobName = JOB_TITLE + getOptionsAsString();
-            System.out.println("Starting: " + jobName);
+            logger.info("Starting: " + jobName);
             Configuration conf = getConf();
             job = Job.getInstance(conf, jobName);
 
@@ -93,7 +93,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
             this.deletePath(job.getConfiguration(), output);
 
-            System.out.println("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
+            logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
             int result = waitForCompletion(job);
 
             return result;
