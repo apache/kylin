@@ -52,7 +52,7 @@ public class MergeCuboidJob extends CuboidJob {
 
             // start job
             String jobName = getOptionValue(OPTION_JOB_NAME);
-            System.out.println("Starting: " + jobName);
+            logger.info("Starting: " + jobName);
             job = Job.getInstance(getConf(), jobName);
 
             setJobClasspath(job);
