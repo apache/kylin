@@ -66,21 +66,23 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
         }
     }
 
-    /** peek into buffer and return the length of serialization */
+    /** Peek into buffer and return the length of serialization which is previously written by this.serialize().
+     *  The current position of input buffer is guaranteed to be at the beginning of the serialization.
+     *  The implementation must not alter the buffer position by its return. */
     abstract public int peekLength(ByteBuffer in);
 
-    /** return the max number of bytes to the longest serialization */
+    /** Return the max number of bytes to the longest possible serialization */
     abstract public int maxLength();
 
-    /** get an estimate of size in bytes of the serialized data */
+    /** Get an estimate of size in bytes of the serialized data */
     abstract public int getStorageBytesEstimate();
 
-    /** an optional convenient method that converts a string to this data type (for dimensions) */
+    /** An optional convenient method that converts a string to this data type (for dimensions) */
     public T valueOf(String str) {
         throw new UnsupportedOperationException();
     }
 
-    /** convert from obj to string */
+    /** Convert from obj to string */
     public String toString(T value) {
         if (value == null)
             return "NULL";
