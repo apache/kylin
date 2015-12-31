@@ -71,7 +71,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
         Class<?> clz = implementations.get(type.getName());
         if (clz == null)
-            throw new RuntimeException("No MeasureSerializer for type " + type);
+            throw new RuntimeException("No DataTypeSerializer for type " + type);
 
         try {
             return (DataTypeSerializer<?>) clz.getConstructor(DataType.class).newInstance(type);
