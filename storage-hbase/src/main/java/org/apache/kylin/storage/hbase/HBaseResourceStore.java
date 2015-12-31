@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
@@ -144,7 +145,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected boolean existsImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, false, false);
+        Result r = getFromHTable(resPath, false, false);
         return r != null;
     }
 
@@ -209,7 +210,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected RawResource getResourceImpl(String resPath) throws IOException {
-        Result r = getByScan(resPath, true, true);
+        Result r = getFromHTable(resPath, true, true);
         if (r == null)
             return null;
         else
@@ -218,7 +219,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected long getResourceTimestampImpl(String resPath) throws IOException {
-        return getTimestamp(getByScan(resPath, false, true));
+        return getTimestamp(getFromHTable(resPath, false, true));
     }
 
     @Override
@@ -279,30 +280,23 @@ public class HBaseResourceStore extends ResourceStore {
         return getAllInOneTableName() + "(key='" + resPath + "')@" + kylinConfig.getMetadataUrl();
     }
 
-    private Result getByScan(String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
-        byte[] startRow = Bytes.toBytes(path);
-        byte[] endRow = plusZero(startRow);
+    private Result getFromHTable(String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
+        byte[] rowkey = Bytes.toBytes(path);
 
-        Scan scan = new Scan(startRow, endRow);
-        scan.setCaching(1);
-        scan.setMaxResultSize(kylinConfig.getHBaseScanMaxResultSize());
+        Get get = new Get(rowkey);
         
         if (!fetchContent && !fetchTimestamp) {
-            scan.setFilter(new KeyOnlyFilter());
+            get.setCheckExistenceOnly(true);
         } else {
             if (fetchContent)
-                scan.addColumn(B_FAMILY, B_COLUMN);
+                get.addColumn(B_FAMILY, B_COLUMN);
             if (fetchTimestamp)
-                scan.addColumn(B_FAMILY, B_COLUMN_TS);
+                get.addColumn(B_FAMILY, B_COLUMN_TS);
         }
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
-            ResultScanner scanner = table.getScanner(scan);
-            Result result = null;
-            for (Result r : scanner) {
-                result = r;
-            }
+            Result result = table.get(get);
             return result == null || result.isEmpty() ? null : result;
         } finally {
             IOUtils.closeQuietly(table);
