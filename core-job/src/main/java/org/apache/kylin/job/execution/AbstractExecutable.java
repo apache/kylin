@@ -28,7 +28,6 @@ import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.LogTitlePrinter;
 import org.apache.kylin.common.util.MailService;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
@@ -97,8 +96,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     @Override
     public final ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException {
 
-        //print a eye-catching title in log
-        LogTitlePrinter.printTitle(this.getName());
+        logger.info("Executing >>>>>>>>>>>>>   " + this.getName() + "   <<<<<<<<<<<<<");
 
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
         ExecuteResult result;
@@ -269,7 +267,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected final void addExtraInfo(String key, String value) {
         executableManager.addJobInfo(getId(), key, value);
     }
-    
+
     protected final Map<String, String> getExtraInfo() {
         return executableManager.getOutput(getId()).getExtra();
     }
