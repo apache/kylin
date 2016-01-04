@@ -297,7 +297,8 @@ public class HBaseResourceStore extends ResourceStore {
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
             Result result = table.get(get);
-            return result == null || result.isEmpty() ? null : result;
+            boolean exists = result != null && (!result.isEmpty() || (result.getExists() != null && result.getExists()));
+            return exists ? result : null;
         } finally {
             IOUtils.closeQuietly(table);
         }
