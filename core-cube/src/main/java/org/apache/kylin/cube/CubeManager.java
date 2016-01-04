@@ -19,14 +19,8 @@
 package org.apache.kylin.cube;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
@@ -390,7 +384,7 @@ public class CubeManager implements IRealizationProvider {
         long appendStart = calculateStartDateForAppendSegment(cube);
         CubeSegment appendSegment = newSegment(cube, appendStart, endDate);
 
-        long startDate = cube.getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
+        long startDate = cube.getDescriptor().getPartitionDateStart();
         CubeSegment mergeSegment = newSegment(cube, startDate, endDate);
 
         validateNewSegments(cube, mergeSegment);
@@ -409,6 +403,11 @@ public class CubeManager implements IRealizationProvider {
         long startDate = 0;
         if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
             startDate = calculateStartDateForAppendSegment(cube);
+            if (endDate > cube.getDescriptor().getPartitionDateEnd()) {
+                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+                f.setTimeZone(TimeZone.getTimeZone("GMT"));
+                throw new IllegalArgumentException("The selected date couldn't be later than cube's end date '" + f.format(new Date(cube.getDescriptor().getPartitionDateEnd())) + "'.");
+            }
         } else {
             endDate = Long.MAX_VALUE;
         }
@@ -512,7 +511,7 @@ public class CubeManager implements IRealizationProvider {
     private long calculateStartDateForAppendSegment(CubeInstance cube) {
         List<CubeSegment> existing = cube.getSegments();
         if (existing.isEmpty()) {
-            return cube.getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
+            return cube.getDescriptor().getPartitionDateStart();
         } else {
             return existing.get(existing.size() - 1).getDateRangeEnd();
         }

@@ -238,5 +238,6 @@
   },
   "notify_list": null,
   "engine_type": 2,
-  "storage_type": 2
+  "storage_type": 2,
+  "partition_date_start" : 0
 }

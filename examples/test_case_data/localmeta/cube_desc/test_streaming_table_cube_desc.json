@@ -141,5 +141,6 @@
   },
   "notify_list": [],
   "engine_type": 2,
-  "storage_type": 2
+  "storage_type": 2,
+  "partition_date_start": 0
 }
