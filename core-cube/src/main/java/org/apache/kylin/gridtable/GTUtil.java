@@ -28,6 +28,16 @@ public class GTUtil {
         return new TblColRef(desc);
     }
 
+    public static byte[] serializeGTFilter(TupleFilter gtFilter, GTInfo info) {
+        IFilterCodeSystem<ByteArray> filterCodeSystem = wrap(info.codeSystem.getComparator());
+        return TupleFilterSerializer.serialize(gtFilter, filterCodeSystem);
+    }
+
+    public static TupleFilter deserializeGTFilter(byte[] bytes, GTInfo info) {
+        IFilterCodeSystem<ByteArray> filterCodeSystem = wrap(info.codeSystem.getComparator());
+        return TupleFilterSerializer.deserialize(bytes, filterCodeSystem);
+    }
+
     public static TupleFilter convertFilterUnevaluatable(TupleFilter rootFilter, GTInfo info, //
             Set<TblColRef> unevaluatableColumnCollector) {
         return convertFilter(rootFilter, info, null, false, unevaluatableColumnCollector);

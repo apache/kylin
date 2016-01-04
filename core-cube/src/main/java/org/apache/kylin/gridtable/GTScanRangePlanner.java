@@ -134,13 +134,16 @@ public class GTScanRangePlanner {
         List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, MAX_HBASE_FUZZY_KEYS);
 
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
-            GTRecord fuzzy = new GTRecord(info);
+
             BitSet bitSet = new BitSet(info.getColumnCount());
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 bitSet.set(entry.getKey());
+            }
+            GTRecord fuzzy = new GTRecord(info, new ImmutableBitSet(bitSet));
+            for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 fuzzy.set(entry.getKey(), entry.getValue());
             }
-            fuzzy.maskForEqualHashComp(new ImmutableBitSet(bitSet));
+
             result.add(fuzzy);
         }
         return result;

@@ -11,10 +11,9 @@ import com.google.common.base.Preconditions;
 
 public class GTRecord implements Comparable<GTRecord> {
 
-    final GTInfo info;
+    final transient GTInfo info;
     final ByteArray[] cols;
-
-    private ImmutableBitSet maskForEqualHashComp;
+    final ImmutableBitSet maskForEqualHashComp;
 
     public GTRecord(GTInfo info, ImmutableBitSet maskForEqualHashComp, ByteArray[] cols) {
         this.info = info;
@@ -139,10 +138,6 @@ public class GTRecord implements Comparable<GTRecord> {
 
     public ImmutableBitSet maskForEqualHashComp() {
         return maskForEqualHashComp;
-    }
-
-    public void maskForEqualHashComp(ImmutableBitSet set) {
-        this.maskForEqualHashComp = set;
     }
 
     @Override

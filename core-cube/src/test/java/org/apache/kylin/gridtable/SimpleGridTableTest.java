@@ -78,7 +78,7 @@ public class SimpleGridTableTest {
     }
 
     private IGTScanner scan(GridTable table) throws IOException {
-        GTScanRequest req = new GTScanRequest(table.getInfo());
+        GTScanRequest req = new GTScanRequest(table.getInfo(), null, null, null);
         IGTScanner scanner = table.scan(req);
         for (GTRecord r : scanner) {
             Object[] v = r.getValues();
@@ -94,7 +94,7 @@ public class SimpleGridTableTest {
     }
 
     private IGTScanner scanAndAggregate(GridTable table) throws IOException {
-        GTScanRequest req = new GTScanRequest(table.getInfo(), null, setOf(0, 2), setOf(3, 4), new String[] { "count", "sum" }, null);
+        GTScanRequest req = new GTScanRequest(table.getInfo(), null, null, setOf(0, 2), setOf(3, 4), new String[] { "count", "sum" }, null, true, 0);
         IGTScanner scanner = table.scan(req);
         int i = 0;
         for (GTRecord r : scanner) {

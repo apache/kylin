@@ -332,7 +332,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         IGTScanner baseInput = new InputConverter(baseCuboid.getInfo(), input);
 
         Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
-        GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
+        GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null, true, 0);
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req);
         aggregationScanner.trackMemoryLevel(baseCuboidMemTracker);
 
@@ -402,7 +402,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid " + cuboidId);
 
-        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
+        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, aggregationColumns, measureColumns, metricsAggrFuncs, null, true, 0);
         GTAggregateScanner scanner = (GTAggregateScanner) gridTable.scan(req);
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = newGridTable.rebuild();

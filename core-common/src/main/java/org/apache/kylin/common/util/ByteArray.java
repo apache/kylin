@@ -105,6 +105,16 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
         return copy;
     }
 
+    //notice this will have a length header
+    public void exportData(ByteBuffer out) {
+        BytesUtil.writeByteArray(this.data, this.offset, this.length, out);
+    }
+
+    public static ByteArray importData(ByteBuffer in) {
+        byte[] bytes = BytesUtil.readByteArray(in);
+        return new ByteArray(bytes);
+    }
+
     public void copyFrom(ByteArray other) {
         System.arraycopy(other.array(), other.offset, data, offset, other.length);
         this.length = other.length;

@@ -2,6 +2,7 @@ package org.apache.kylin.gridtable;
 
 import java.nio.ByteBuffer;
 
+import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
@@ -80,5 +81,16 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     public Object decodeColumnValue(int col, ByteBuffer buf) {
         return serializers[col].deserialize(buf);
     }
+
+    public static final BytesSerializer<GTSampleCodeSystem> serializer = new BytesSerializer<GTSampleCodeSystem>() {
+        @Override
+        public void serialize(GTSampleCodeSystem value, ByteBuffer out) {
+        }
+
+        @Override
+        public GTSampleCodeSystem deserialize(ByteBuffer in) {
+            return new GTSampleCodeSystem();
+        }
+    };
 
 }

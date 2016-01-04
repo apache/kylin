@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -28,6 +29,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.kylin.common.util.BytesSerializer;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
 
 /**
@@ -112,11 +115,13 @@ public class DataType implements Serializable {
     private int precision;
     private int scale;
 
-    DataType(String datatype) {
-        parseDataType(datatype);
+    DataType(String name, int precision, int scale) {
+        this.name = name;
+        this.precision = precision;
+        this.scale = scale;
     }
 
-    private void parseDataType(String datatype) {
+    DataType(String datatype) {
         datatype = datatype.trim().toLowerCase();
         datatype = replaceLegacy(datatype);
 
@@ -235,7 +240,7 @@ public class DataType implements Serializable {
     public boolean isHLLC() {
         return name.equals("hllc");
     }
-    
+
     public boolean isTopN() {
         return name.equals("topn");
     }
@@ -292,4 +297,23 @@ public class DataType implements Serializable {
         else
             return name + "(" + precision + "," + scale + ")";
     }
+
+    public static final BytesSerializer<DataType> serializer = new BytesSerializer<DataType>() {
+        @Override
+        public void serialize(DataType value, ByteBuffer out) {
+            BytesUtil.writeUTFString(value.name, out);
+            BytesUtil.writeVInt(value.precision, out);
+            BytesUtil.writeVInt(value.scale, out);
+
+        }
+
+        @Override
+        public DataType deserialize(ByteBuffer in) {
+            String name = BytesUtil.readUTFString(in);
+            int precision = BytesUtil.readVInt(in);
+            int scale = BytesUtil.readVInt(in);
+
+            return new DataType(name, precision, scale);
+        }
+    };
 }
