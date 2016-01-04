@@ -234,7 +234,23 @@
               </div>
             </div>
           </div>
+          <div class="form-group" ng-if="state.mode=='edit'" ng-class="{'required':state.mode=='edit'}">
+            <div class="row">
+              <label class="col-xs-12 col-sm-3 control-label no-padding-right">
+                <b>Parser Timestamp Column</b>
+              </label>
 
+              <div class="col-xs-12 col-sm-6 streamingParserCtr">
+                  <select chosen ng-model="streamingCfg.parseTsColumn"
+                           ng-options="column as column for column in streamingCfg.columnOptions "
+                           ng-change="streamingTsColUpdate()"
+                           data-placeholder="select a column"
+                           class="chosen-select">
+                    <option value=""></option>
+                  </select>
+              </div>
+            </div>
+          </div>
           <div class="form-group" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
