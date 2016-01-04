@@ -28,7 +28,7 @@
                     </button>
                     <ul class="dropdown-menu" role="menu">
                         <li><a ng-click="addDim('normal')">Normal</a></li>
-                        <li><a ng-click="addDim('hierarchy')">Hierarchy</a></li>
+                        <!--<li><a ng-click="addDim('hierarchy')">Hierarchy</a></li>-->
                         <li><a ng-click="addDim('derived')">Derived</a></li>
                     </ul>
                 </div>
@@ -59,7 +59,7 @@
                 <tr ng-repeat="dimension in cubeMetaFrame.dimensions | filter:dimState.filter track by $index">
                     <!--ID -->
                     <td>
-                        <b>{{dimension.id = ($index + 1)}}</b>
+                        <b>{{($index + 1)}}</b>
                     </td>
                     <!--Name -->
                     <td>
@@ -77,10 +77,10 @@
                     <td>
                         <div ng-repeat="t in getDimType(dimension)">
                             <div ng-switch="t">
-                                <dl class="dl-horizontal" ng-switch-when="hierarchy">
-                                    <dt>Hierarchy</dt>
-                                    <dd>{{dimension.column}}</dd>
-                                </dl>
+                                <!--<dl class="dl-horizontal" ng-switch-when="hierarchy">-->
+                                    <!--<dt>Hierarchy</dt>-->
+                                    <!--<dd>{{dimension.column}}</dd>-->
+                                <!--</dl>-->
                                 <dl class="dl-horizontal" ng-switch-when="derived">
                                     <dt>Derived</dt>
                                     <dd>{{dimension.derived}}</dd>
@@ -116,7 +116,7 @@
             </div>
             <div class="col-xs-3">
                 <ul class="list-unstyled">
-                    <li ng-repeat="d in c.dims">{{d.id}} - {{d.name}}</li>
+                    <li ng-repeat="d in c.dims">{{$index +1}} - {{d.name}}</li>
                 </ul>
             </div>
         </div>
@@ -273,7 +273,6 @@
                                         <li>Pick up Fact Table from Star Schema Tables first</li>
                                         <li>Data Type should match with Hive Table's Data Type</li>
                                         <li>Join Type have to be same as will be used in query</li>
-                                        <li>Using Hierarchy to inherit one dimension another</li>
                                         <li>Using Derived for One-One relationship between columns, like ID and Name</li>
                                     </ol>
                                 </div>

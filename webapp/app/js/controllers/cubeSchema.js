@@ -261,8 +261,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.check_cube_setting = function(){
         var errors = [];
 
-        angular.forEach($scope.cubeMetaFrame.rowkey.aggregation_groups,function(group){
-            if(!group.length){
+        angular.forEach($scope.cubeMetaFrame.aggregation_groups,function(group){
+            if(!group&&!group.includes){
                 errors.push("Each aggregation group can't be empty.");
             }
         })

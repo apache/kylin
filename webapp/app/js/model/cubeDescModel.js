@@ -29,22 +29,23 @@ KylinApp.service('CubeDescModel', function () {
       "dimensions": [],
       "measures": [
         {
-          "id": 1,
           "name": "_COUNT_",
           "function": {
             "expression": "COUNT",
             "returntype": "bigint",
             "parameter": {
               "type": "constant",
-              "value": "1"
+              "value": "1",
+              "next_parameter":null
             }
           }
         }
       ],
       "rowkey": {
-        "rowkey_columns": [],
-        "aggregation_groups": []
+        "rowkey_columns": []
       },
+      "aggregation_groups": []
+      ,
       "notify_list": [],
       "hbase_mapping": {
         "column_family": []
@@ -60,19 +61,34 @@ KylinApp.service('CubeDescModel', function () {
 
   this.createMeasure = function () {
     var measure = {
-      "id": "",
       "name": "",
       "function": {
         "expression": "",
         "returntype": "",
         "parameter": {
           "type": "",
-          "value": ""
+          "value": "",
+          "next_parameter":null
         }
       }
     };
 
     return measure;
   }
+
+  this.createAggGroup = function () {
+    var group = {
+      "includes" : [],
+      "select_rule" : {
+        "hierarchy_dims" : [],//2 dim array
+          "mandatory_dims" : [],
+          "joint_dims" : [  ]//2 dim array
+      }
+    }
+
+    return group;
+  }
+
+
 
 })

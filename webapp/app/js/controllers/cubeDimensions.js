@@ -34,8 +34,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
     /**
      * Helper func to get columns that dimensions based on, three cases:
      * 1. normal dimension: column array.
-     * 2. hierarchy dimension: column array, the array index is the hierarchy level.
-     * 3. derived dimension: derived columns array.
+     * 2. derived dimension: derived columns array.
      * TODO new cube schema change
      */
     var dimCols = function (dim) {
@@ -47,12 +46,12 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
         }
 
         // Case 2.
-        if (dim.hierarchy && dim.column.length) {
-            referredCols = referredCols.concat(dim.column);
-        }
+        //if (dim.hierarchy && dim.column.length) {
+        //    referredCols = referredCols.concat(dim.column);
+        //}
 
         // Case 1.
-        if (!dim.derived && !dim.hierarchy) {
+        if (!dim.derived && dim.column) {
             referredCols.push(dim.column);
         }
 
@@ -138,7 +137,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
 
     // Init the dimension, dimension name default as the column key. TODO new cube schema change.
     var Dimension = function (table, selectedCols, dimType) {
-        var origin = {name: '', table: table,hierarchy:false,derived:null,column:null};
+        var origin = {name: '', table: table,derived:null,column:null};
 
         switch (dimType) {
             case 'normal':
@@ -147,7 +146,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
                     origin.name = table + '.' + selectedCols[0];
                 }
 
-                origin.column = selectedCols;
+                origin.column = selectedCols[0];
                 break;
 
             case 'derived':
@@ -158,14 +157,14 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
                 origin.derived = selectedCols;
                 break;
 
-            case 'hierarchy':
-                if (table && selectedCols.length) {
-                    origin.name = table + '_hierarchy';
-                }
-
-                origin.hierarchy = true;
-                origin.column = selectedCols;
-                break;
+            //case 'hierarchy':
+            //    if (table && selectedCols.length) {
+            //        origin.name = table + '_hierarchy';
+            //    }
+            //
+            //    origin.hierarchy = true;
+            //    origin.column = selectedCols;
+            //    break;
         }
 
         return origin;
@@ -179,9 +178,9 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
             types.push('derived');
         }
 
-        if (dim.hierarchy && dim.column.length) {
-            types.push('hierarchy');
-        }
+        //if (dim.hierarchy && dim.column.length) {
+        //    types.push('hierarchy');
+        //}
 
         if (!types.length) {
             types.push('normal');
@@ -235,24 +234,24 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
             var errors = [];
             // null validate
 
-            if($scope.dimType[0]=="hierarchy"){
-                if($scope.newDimension.column.length<2){
-                    errors.push("Please define at least 2 hierarchy columns.");
-                }else{
-                    for(var i = 0;i<$scope.newDimension.column.length;i++){
-                        if($scope.newDimension.column[i]===""){
-                            errors.push("Hierarchy value can't be null.");
-                            break;
-                        }
-                    }
-                    var _columns = angular.copy($scope.newDimension.column).sort();
-                    for(var i = 0;i<_columns.length-1;i++){
-                        if(_columns[i]==_columns[i+1]&&_columns[i]!==""){
-                            errors.push("Duplicate column "+_columns[i]+".");
-                        }
-                    }
-                }
-            }
+            //if($scope.dimType[0]=="hierarchy"){
+            //    if($scope.newDimension.column.length<2){
+            //        errors.push("Please define at least 2 hierarchy columns.");
+            //    }else{
+            //        for(var i = 0;i<$scope.newDimension.column.length;i++){
+            //            if($scope.newDimension.column[i]===""){
+            //                errors.push("Hierarchy value can't be null.");
+            //                break;
+            //            }
+            //        }
+            //        var _columns = angular.copy($scope.newDimension.column).sort();
+            //        for(var i = 0;i<_columns.length-1;i++){
+            //            if(_columns[i]==_columns[i+1]&&_columns[i]!==""){
+            //                errors.push("Duplicate column "+_columns[i]+".");
+            //            }
+            //        }
+            //    }
+            //}
 
             if($scope.dimType[0]=="derived"){
                 if(!$scope.newDimension.derived.length){
