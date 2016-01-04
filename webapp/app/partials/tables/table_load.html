@@ -66,8 +66,8 @@
       </div>
       <div class="col-xs-6" ng-show="table.sourceValid">
         <ol class="text-info" style="margin-bottom: 30px;">
-          <li>Choose one 'timestamp' type column for streaming table.</li>
-          <li>Uncheck the 'timestamp' type column which will not be used.</li>
+          <li>Choose 'timestamp' type column for streaming table.</li>
+          <li>derived time dimensions are calculated from timestamp field to help analysis against different time granularities.</li>
         </ol>
         <form class="form-horizontal" name="form.setStreamingSchema" novalidate>
           <div class="form-group required">
@@ -108,8 +108,8 @@
               </select>
             </td>
             <td>
-              <label ng-if="column.type=='timestamp'&&column.fromSource=='Y'" class="badge badge-info">TIMESTAMP</label>
-              <label ng-if="column.fromSource=='N'" class="badge badge-info">AUTO APPEND</label>
+              <label ng-if="column.type=='timestamp'&&column.fromSource=='Y'" class="badge badge-info">timestamp</label>
+              <label ng-if="column.fromSource=='N'" class="badge badge-info">derived time dimension</label>
             </td>
           </tr>
         </table>
