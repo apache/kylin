@@ -139,7 +139,7 @@ public class BuildCubeWithSparkTest {
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
-        long dateStart = cubeManager.getCube(cubeName).getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
+        long dateStart = cubeManager.getCube(cubeName).getDescriptor().getPartitionDateStart();
         long dateEnd = f.parse("2050-11-12").getTime();
 
         // this cube's start date is 0, end date is 20501112000000
