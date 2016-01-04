@@ -18,27 +18,31 @@
 
 package org.apache.kylin.storage.hbase.cube.v2;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Pair;
+
+import com.google.common.collect.Lists;
 
 public class RawScan {
 
     public byte[] startKey;
     public byte[] endKey;
     public List<Pair<byte[], byte[]>> hbaseColumns;//only contain interested columns
-    public List<Pair<byte[], byte[]>> fuzzyKey;
+    public List<Pair<byte[], byte[]>> fuzzyKeys;
     public int hbaseCaching;
     public int hbaseMaxResultSize;
 
     public RawScan(byte[] startKey, byte[] endKey, List<Pair<byte[], byte[]>> hbaseColumns, //
-            List<Pair<byte[], byte[]>> fuzzyKey, int hbaseCaching, int hbaseMaxResultSize) {
+            List<Pair<byte[], byte[]>> fuzzyKeys, int hbaseCaching, int hbaseMaxResultSize) {
 
         this.startKey = startKey;
         this.endKey = endKey;
         this.hbaseColumns = hbaseColumns;
-        this.fuzzyKey = fuzzyKey;
+        this.fuzzyKeys = fuzzyKeys;
         this.hbaseCaching = hbaseCaching;
         this.hbaseMaxResultSize = hbaseMaxResultSize;
     }
@@ -53,7 +57,7 @@ public class RawScan {
 
     public String getFuzzyKeyAsString() {
         StringBuilder buf = new StringBuilder();
-        for (Pair<byte[], byte[]> fuzzyKey : this.fuzzyKey) {
+        for (Pair<byte[], byte[]> fuzzyKey : this.fuzzyKeys) {
             buf.append(BytesUtil.toHex(fuzzyKey.getFirst()));
             buf.append(" ");
             buf.append(BytesUtil.toHex(fuzzyKey.getSecond()));
@@ -61,5 +65,49 @@ public class RawScan {
         }
         return buf.toString();
     }
+
+    public static final BytesSerializer<RawScan> serializer = new BytesSerializer<RawScan>() {
+        @Override
+        public void serialize(RawScan value, ByteBuffer out) {
+            BytesUtil.writeByteArray(value.startKey, out);
+            BytesUtil.writeByteArray(value.endKey, out);
+            BytesUtil.writeVInt(value.hbaseColumns.size(), out);
+            for (Pair<byte[], byte[]> hbaseColumn : value.hbaseColumns) {
+                BytesUtil.writeByteArray(hbaseColumn.getFirst(), out);
+                BytesUtil.writeByteArray(hbaseColumn.getSecond(), out);
+            }
+            BytesUtil.writeVInt(value.fuzzyKeys.size(), out);
+            for (Pair<byte[], byte[]> fuzzyKey : value.fuzzyKeys) {
+                BytesUtil.writeByteArray(fuzzyKey.getFirst(), out);
+                BytesUtil.writeByteArray(fuzzyKey.getSecond(), out);
+            }
+            BytesUtil.writeVInt(value.hbaseCaching, out);
+            BytesUtil.writeVInt(value.hbaseMaxResultSize, out);
+        }
+
+        @Override
+        public RawScan deserialize(ByteBuffer in) {
+            byte[] sStartKey = BytesUtil.readByteArray(in);
+            byte[] sEndKey = BytesUtil.readByteArray(in);
+            int hbaseColumnsSize = BytesUtil.readVInt(in);
+            List<Pair<byte[], byte[]>> sHbaseCoumns = Lists.newArrayListWithCapacity(hbaseColumnsSize);
+            for (int i = 0; i < hbaseColumnsSize; i++) {
+                byte[] a = BytesUtil.readByteArray(in);
+                byte[] b = BytesUtil.readByteArray(in);
+                sHbaseCoumns.add(Pair.newPair(a, b));
+            }
+
+            int fuzzyKeysSize = BytesUtil.readVInt(in);
+            List<Pair<byte[], byte[]>> sFuzzyKeys = Lists.newArrayListWithCapacity(fuzzyKeysSize);
+            for (int i = 0; i < fuzzyKeysSize; i++) {
+                byte[] a = BytesUtil.readByteArray(in);
+                byte[] b = BytesUtil.readByteArray(in);
+                sFuzzyKeys.add(Pair.newPair(a, b));
+            }
+            int sHBaseCaching = BytesUtil.readVInt(in);
+            int sHBaseMaxResultSize = BytesUtil.readVInt(in);
+            return new RawScan(sStartKey, sEndKey, sHbaseCoumns, sFuzzyKeys, sHBaseCaching, sHBaseMaxResultSize);
+        }
+    };
 
 }

@@ -11,6 +11,8 @@ public class GTScanRange {
     final public GTRecord pkEnd; // inclusive, record must not be null, col[pk].array() can be null to mean unbounded
     final public List<GTRecord> fuzzyKeys; // partial matching primary keys
 
+
+
     public GTScanRange(GTRecord pkStart, GTRecord pkEnd) {
         this(pkStart, pkEnd, null);
     }

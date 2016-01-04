@@ -37,6 +37,7 @@ import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.Array;
+import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
@@ -50,7 +51,6 @@ import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
-import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorConstants;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
@@ -205,7 +205,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         RowKeyColumnIO rowKeyColumnIO = new RowKeyColumnIO(clearTextDictionary);
 
         byte[] recordBuffer = new byte[recordInfo.getByteFormLen()];
-        byte[] buffer = new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+        byte[] buffer = new byte[BytesSerializer.SERIALIZE_BUFFER_SIZE];
 
         int iteratedSliceCount = 0;
         long latestSliceTs = Long.MIN_VALUE;
@@ -273,7 +273,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
                 AggrKey aggrKey = entry.getKey();
                 IIProtos.IIResponseInternal.IIRow.Builder rowBuilder = IIProtos.IIResponseInternal.IIRow.newBuilder().setColumns(HBaseZeroCopyByteString.wrap(aggrKey.get(), aggrKey.offset(), aggrKey.length()));
                 if (offset + measureLength > buffer.length) {
-                    buffer =  new byte[CoprocessorConstants.METRIC_SERIALIZE_BUFFER_SIZE];
+                    buffer = new byte[BytesSerializer.SERIALIZE_BUFFER_SIZE];
                     offset = 0;
                 }
                 int length = aggregators.serializeMetricValues(entry.getValue(), buffer, offset);

@@ -33,7 +33,6 @@ import org.apache.kylin.metadata.measure.MeasureAggregator;
 import org.apache.kylin.metadata.measure.fixedlen.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorConstants;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -213,7 +212,7 @@ public class EndpointAggregators {
         }
         return length;
     }
-    
+
     public List<Object> deserializeMetricValues(ByteBuffer buffer) {
         List<Object> ret = Lists.newArrayList();
         for (int i = 0; i < measureSerializers.length; i++) {
@@ -225,7 +224,7 @@ public class EndpointAggregators {
     }
 
     public static byte[] serialize(EndpointAggregators o) {
-        ByteBuffer buf = ByteBuffer.allocate(CoprocessorConstants.SERIALIZE_BUFFER_SIZE);
+        ByteBuffer buf = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
         System.arraycopy(buf.array(), 0, result, 0, buf.position());
@@ -236,9 +235,7 @@ public class EndpointAggregators {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
-    private static final Serializer serializer = new Serializer();
-
-    private static class Serializer implements BytesSerializer<EndpointAggregators> {
+    private static final BytesSerializer<EndpointAggregators> serializer = new BytesSerializer<EndpointAggregators>() {
 
         @Override
         public void serialize(EndpointAggregators value, ByteBuffer out) {
@@ -277,7 +274,7 @@ public class EndpointAggregators {
             return new EndpointAggregators(funcNames, dataTypes, infos, tableInfo);
         }
 
-    }
+    };
 
     public int getMeasureSerializeLength() {
         int length = 0;

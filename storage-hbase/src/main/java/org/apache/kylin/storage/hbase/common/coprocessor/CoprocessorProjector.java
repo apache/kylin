@@ -71,7 +71,7 @@ public class CoprocessorProjector {
     }
 
     public static byte[] serialize(CoprocessorProjector o) {
-        ByteBuffer buf = ByteBuffer.allocate(CoprocessorConstants.SERIALIZE_BUFFER_SIZE);
+        ByteBuffer buf = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
         serializer.serialize(o, buf);
         byte[] result = new byte[buf.position()];
         System.arraycopy(buf.array(), 0, result, 0, buf.position());
@@ -82,10 +82,7 @@ public class CoprocessorProjector {
         return serializer.deserialize(ByteBuffer.wrap(bytes));
     }
 
-    private static final Serializer serializer = new Serializer();
-
-    private static class Serializer implements BytesSerializer<CoprocessorProjector> {
-
+    private static final BytesSerializer<CoprocessorProjector> serializer = new BytesSerializer<CoprocessorProjector>() {
         @Override
         public void serialize(CoprocessorProjector value, ByteBuffer out) {
             BytesUtil.writeByteArray(value.groupByMask, out);
@@ -98,7 +95,7 @@ public class CoprocessorProjector {
             boolean hasGroupBy = BytesUtil.readVInt(in) == 1;
             return new CoprocessorProjector(mask, hasGroupBy);
         }
-    }
+    };
 
     // ============================================================================
 

@@ -45,7 +45,6 @@ public class CubeSegmentScanner implements IGTScanner {
 
     final CubeSegment cubeSeg;
     final GTInfo info;
-    final byte[] trimmedInfoBytes;
     final List<GTScanRequest> scanRequests;
     final Scanner scanner;
     final Cuboid cuboid;
@@ -82,13 +81,9 @@ public class CubeSegmentScanner implements IGTScanner {
 
         scanRequests = Lists.newArrayListWithCapacity(scanRanges.size());
 
-        trimmedInfoBytes = GTInfo.serialize(info);
-        GTInfo trimmedInfo = GTInfo.deserialize(trimmedInfoBytes);
-
         KylinConfig config = cubeSeg.getCubeInstance().getConfig();
         for (GTScanRange range : scanRanges) {
-            GTScanRequest req = new GTScanRequest(trimmedInfo, range.replaceGTInfo(trimmedInfo), gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate);
-            req.setAggrCacheGB(config.getQueryCoprocessorMemGB()); // limit the memory usage inside coprocessor
+            GTScanRequest req = new GTScanRequest(info, range, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate, config.getQueryCoprocessorMemGB());
             scanRequests.add(req);
         }
 

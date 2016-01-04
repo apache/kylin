@@ -50,15 +50,6 @@ import com.google.common.collect.Maps;
 public class BasicTest {
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(BasicTest.class);
 
-    class A {
-        public void foo() {
-            System.out.println(this.getClass().getName());
-        }
-    }
-
-    class B extends A {
-    }
-
     private void log(ByteBuffer a) {
         Integer x = 4;
         foo(x);
