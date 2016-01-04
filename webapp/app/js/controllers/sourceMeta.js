@@ -287,17 +287,17 @@ KylinApp
           return;
         }
 
-        var timestampCount = 0;
-        angular.forEach($scope.columnList,function(item){
-          if(item.checked == "Y"&&item.type=="timestamp"&&item.fromSource=='Y'){
-            timestampCount++;
-          }
-        })
+        //var timestampCount = 0;
+        //angular.forEach($scope.columnList,function(item){
+        //  if(item.checked == "Y"&&item.type=="timestamp"&&item.fromSource=='Y'){
+        //    timestampCount++;
+        //  }
+        //})
 
-        if(timestampCount!=1){
-          $scope.rule.timestampColumnConflict = true;
-          return;
-        }
+        //if(timestampCount!=1){
+        //  $scope.rule.timestampColumnConflict = true;
+        //  return;
+        //}
 
         var columns = [];
         angular.forEach($scope.columnList,function(column,$index){

@@ -812,6 +812,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   });
 
 
+  $scope.streamingCfg = {
+    parseTsColumn:"{{}}",
+    columnOptions:[]
+  }
   //dimensions options is depend on the model input when add cube
   $scope.$watch('cubeMetaFrame.model_name', function (newValue, oldValue) {
     if (!newValue) {
@@ -822,18 +826,27 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     if(!$scope.metaModel.model){
       return;
     }
+
     var factTable = $scope.metaModel.model.fact_table;
     var cols = $scope.getColumnsByTable(factTable);
-    //
+
     for(var i=0;i<cols.length;i++){
       var col = cols[i];
-      if(col.datatype === "timestamp"&&col.name.indexOf("_TS")==-1){
-        $scope.kafkaMeta.parserProperties = "tsColName="+col.name+";formatTs=TRUE";
-        break;
+      if(col.datatype === "timestamp"){
+        $scope.streamingCfg.columnOptions.push(col.name);
       }
     }
+    $scope.kafkaMeta.parserProperties = "tsColName=' ';formatTs=TRUE";
+
 
   });
+
+  $scope.streamingTsColUpdate = function(){
+    if(!$scope.streamingCfg.parseTsColumn){
+      $scope.streamingCfg.parseTsColumn = ' ';
+    }
+    $scope.kafkaMeta.parserProperties = "tsColName="+$scope.streamingCfg.parseTsColumn+";formatTs=TRUE";
+  }
   $scope.$on('DimensionsEdited', function (event) {
     if ($scope.cubeMetaFrame) {
       reGenerateRowKey();
