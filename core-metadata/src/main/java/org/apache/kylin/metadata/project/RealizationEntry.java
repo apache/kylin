@@ -78,4 +78,11 @@ public class RealizationEntry {
     public String toString() {
         return "" + type.name() + "." + realization;
     }
+
+    public static RealizationEntry create(RealizationType type, String realization) {
+        RealizationEntry entry = new RealizationEntry();
+        entry.setRealization(realization);
+        entry.setType(type);
+        return entry;
+    }
 }

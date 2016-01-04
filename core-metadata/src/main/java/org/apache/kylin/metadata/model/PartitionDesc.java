@@ -196,4 +196,13 @@ public class PartitionDesc {
             return builder.toString();
         }
     }
+
+    public static PartitionDesc getCopyOf(PartitionDesc partitionDesc) {
+        PartitionDesc newPartDesc = new PartitionDesc();
+        newPartDesc.setCubePartitionType(partitionDesc.getCubePartitionType());
+        newPartDesc.setPartitionDateColumn(partitionDesc.getPartitionDateColumn());
+        newPartDesc.setPartitionDateFormat(partitionDesc.getPartitionDateFormat());
+        newPartDesc.setPartitionDateStart(partitionDesc.getPartitionDateStart());
+        return newPartDesc;
+    }
 }

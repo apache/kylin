@@ -791,4 +791,27 @@ public class CubeDesc extends RootPersistentEntity {
         return result;
     }
 
+    public static CubeDesc getCopyOf(CubeDesc cubeDesc) {
+        CubeDesc newCubeDesc = new CubeDesc();
+        newCubeDesc.setName(cubeDesc.getName());
+        newCubeDesc.setModelName(cubeDesc.getModelName());
+        newCubeDesc.setDescription(cubeDesc.getDescription());
+        newCubeDesc.setNullStrings(cubeDesc.getNullStrings());
+        newCubeDesc.setDimensions(cubeDesc.getDimensions());
+        newCubeDesc.setMeasures(cubeDesc.getMeasures());
+        newCubeDesc.setRowkey(cubeDesc.getRowkey());
+        newCubeDesc.setHbaseMapping(cubeDesc.getHbaseMapping());
+        newCubeDesc.setSignature(cubeDesc.getSignature());
+        newCubeDesc.setNotifyList(cubeDesc.getNotifyList());
+        newCubeDesc.setStatusNeedNotify(cubeDesc.getStatusNeedNotify());
+        newCubeDesc.setAutoMergeTimeRanges(cubeDesc.getAutoMergeTimeRanges());
+        newCubeDesc.setPartitionDateStart(cubeDesc.getPartitionDateStart());
+        newCubeDesc.setPartitionDateEnd(cubeDesc.getPartitionDateEnd());
+        newCubeDesc.setRetentionRange(cubeDesc.getRetentionRange());
+        newCubeDesc.setEngineType(cubeDesc.getEngineType());
+        newCubeDesc.setStorageType(cubeDesc.getStorageType());
+        newCubeDesc.setConfig(cubeDesc.getConfig());
+        newCubeDesc.updateRandomUuid();
+        return newCubeDesc;
+    }
 }

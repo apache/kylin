@@ -429,4 +429,19 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return getDescriptor().getEngineType();
     }
 
+    public static CubeInstance getCopyOf(CubeInstance cubeInstance) {
+        CubeInstance newCube = new CubeInstance();
+        newCube.setName(cubeInstance.getName());
+        newCube.setSegments(cubeInstance.getSegments());
+        newCube.setDescName(cubeInstance.getDescName());
+        newCube.setConfig(cubeInstance.getConfig());
+        newCube.setStatus(cubeInstance.getStatus());
+        newCube.setOwner(cubeInstance.getOwner());
+        newCube.setVersion(cubeInstance.getVersion());
+        newCube.setCost(cubeInstance.getCost());
+        newCube.setCreateTimeUTC(System.currentTimeMillis());
+        newCube.updateRandomUuid();
+        return newCube;
+    }
+
 }
