@@ -47,18 +47,23 @@ public class TimeConditionLiteralsReplacer implements TupleFilterSerializer.Deco
             DataType columnType = dateCompareTupleChildren.get(filter);
 
             for (String value : (Collection<String>) constantTupleFilter.getValues()) {
-                newValues.add(formatTime(Long.valueOf(value), columnType));
+                newValues.add(formatTime(value, columnType));
             }
             return new ConstantTupleFilter(newValues);
         }
         return filter;
     }
 
-    private String formatTime(long millis, DataType dataType) {
+    private String formatTime(String dateStr, DataType dataType) {
         if (dataType.isDatetime() || dataType.isTime()) {
             throw new RuntimeException("Datetime and time type are not supported yet");
         }
 
+        if (DateFormat.isSupportedDateFormat(dateStr)) {
+            return dateStr;
+        }
+
+        long millis = Long.valueOf(dateStr);
         if (dataType.isTimestamp()) {
             return DateFormat.formatToTimeStr(millis);
         } else if (dataType.isDate()) {
