@@ -109,8 +109,8 @@ public class CubeMetadataUpgradeV2 {
         List<CubeDesc> cubeDescs = cubeDescManager.listAllDesc();
         for (CubeDesc cubeDesc : cubeDescs) {
             if (ArrayUtils.isEmpty(models) || ArrayUtils.contains(models, cubeDesc.getModelName())) {
-                upgradeCubeDescSignature(cubeDesc);
                 upgradeDataModelDesc(cubeDesc);
+                upgradeCubeDescSignature(cubeDesc);
             }
         }
     }

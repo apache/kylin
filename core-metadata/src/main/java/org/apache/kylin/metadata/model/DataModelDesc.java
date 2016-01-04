@@ -330,4 +330,19 @@ public class DataModelDesc extends RootPersistentEntity {
     public void setMetrics(String[] metrics) {
         this.metrics = metrics;
     }
+
+    public static DataModelDesc getCopyOf(DataModelDesc dataModelDesc) {
+        DataModelDesc newDataModelDesc = new DataModelDesc();
+        newDataModelDesc.setName(dataModelDesc.getName());
+        newDataModelDesc.setCapacity(dataModelDesc.getCapacity());
+        newDataModelDesc.setDescription(dataModelDesc.getDescription());
+        newDataModelDesc.setDimensions(dataModelDesc.getDimensions());
+        newDataModelDesc.setFilterCondition(dataModelDesc.getFilterCondition());
+        newDataModelDesc.setFactTable(dataModelDesc.getFactTable());
+        newDataModelDesc.setLookups(dataModelDesc.getLookups());
+        newDataModelDesc.setMetrics(dataModelDesc.getMetrics());
+        newDataModelDesc.setPartitionDesc(PartitionDesc.getCopyOf(dataModelDesc.getPartitionDesc()));
+        newDataModelDesc.updateRandomUuid();
+        return newDataModelDesc;
+    }
 }
