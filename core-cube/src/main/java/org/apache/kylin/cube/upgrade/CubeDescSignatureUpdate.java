@@ -115,6 +115,7 @@ public class CubeDescSignatureUpdate {
 
     private void updateCubeDesc(CubeDesc cubeDesc) {
         try {
+            cubeDesc.setPartitionDateStart(cubeDesc.getModel().getPartitionDesc().getPartitionDateStart());
             String calculatedSign = cubeDesc.calculateSignature();
             if (!cubeDesc.getSignature().equals(calculatedSign)) {
                 cubeDesc.setSignature(calculatedSign);
