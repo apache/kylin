@@ -58,7 +58,7 @@ KylinApp.constant('cubeConfig', {
     queryPriority: {name: 'NORMAL', value: 50},
     cubePartitionType: 'APPEND'
   },
-  dictionaries: ["true", "false"],
+    dictionaries: ["true", "false"],
 
 //    cubes config
   theaditems: [

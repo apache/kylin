@@ -29,49 +29,55 @@
               <!--Cube Size-->
               <div class="form-group">
                 <div class="row">
-                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Auto Merge Time Ranges(days)</b></label>
+                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Auto Merge Time
+                    Ranges(days)</b></label>
+
                   <div class="col-xs-12 col-sm-6">
                     <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
-                    <div class="row"  ng-if="state.mode=='edit'">
+                    <div class="row" ng-if="state.mode=='edit'">
                       <table class="table">
                         <tbody>
-                          <tr ng-repeat="timeRange in _auto_merge_time_ranges">
-                            <td class="col-xs-4">
-                              <select  ng-if="timeRange.type=='hours'"
-                                       chosen ng-model="timeRange.range"
-                                       ng-options="rangeTypes as rangeTypes for rangeTypes in [0.5,1,2,4,8] "
-                                       ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
-                                       style="width: 100% !important;"
-                                       data-placeholder="hours range"
-                                       class="chosen-select">
-                              </select>
-                              <input type="text" ng-if="timeRange.type=='days'"  ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)" class="form-control input-sm" placeholder="days range" ng-model="timeRange.range">
-                            </td>
-                            <td class="col-xs-4">
-                              <select  chosen ng-model="timeRange.type"
-                                       ng-options="rangeTypes as rangeTypes for rangeTypes in ['hours','days'] "
-                                       ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
-                                       style="width: 200px !important;"
-                                       data-placeholder="select a project"
-                                       class="chosen-select">
-                              </select>
-                            </td>
-                            <td>
-                              <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'" ng-click="removeTimeRange(_auto_merge_time_ranges,$index, timeRange)">
-                                <i class="fa fa-minus"></i>
-                              </button>
-                            </td>
-                          </tr>
+                        <tr ng-repeat="timeRange in _auto_merge_time_ranges track by $index">
+                          <td class="col-xs-4">
+                            <select ng-if="timeRange.type=='hours'"
+                                    chosen ng-model="timeRange.range"
+                                    ng-options="rangeTypes as rangeTypes for rangeTypes in [0.5,1,2,4,8] "
+                                    ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
+                                    style="width: 100% !important;"
+                                    data-placeholder="hours range"
+                                    class="chosen-select">
+                            </select>
+                            <input type="text" ng-if="timeRange.type=='days'"
+                                   ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
+                                   class="form-control input-sm" placeholder="days range" ng-model="timeRange.range">
+                          </td>
+                          <td class="col-xs-4">
+                            <select chosen ng-model="timeRange.type"
+                                    ng-options="rangeTypes as rangeTypes for rangeTypes in ['hours','days'] "
+                                    ng-change="refreshAutoMergeTimeRanges(_auto_merge_time_ranges,$index,timeRange)"
+                                    style="width: 200px !important;"
+                                    data-placeholder="select a project"
+                                    class="chosen-select">
+                            </select>
+                          </td>
+                          <td>
+                            <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'"
+                                    ng-click="removeTimeRange(_auto_merge_time_ranges,$index, timeRange)">
+                              <i class="fa fa-minus"></i>
+                            </button>
+                          </td>
+                        </tr>
                         </tbody>
                       </table>
-                      <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'" ng-click="addNewMergeTimeRange()">
+                      <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'"
+                              ng-click="addNewMergeTimeRange()">
                         New Merge Range<i class="fa fa-plus"></i>
                       </button>
                     </div>
-                    <div class="row"  ng-if="state.mode=='view'">
+                    <div class="row" ng-if="state.mode=='view'">
                       <table class="table">
                         <tbody>
-                        <tr ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges">
+                        <tr ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges track by $index">
                           <td>
                             {{timeRange | timeRangeFormat}}
                           </td>
@@ -91,11 +97,17 @@
               <!--Cube Size-->
               <div class="form-group">
                 <div class="row">
-                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Retention Range(days)</b></label>
+                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Retention
+                    Range(days)</b></label>
+
                   <div class="col-xs-12 col-sm-6">
                     <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
-                    <input type="text" retention-format class="form-control ng-scope ng-pristine ng-valid" placeholder="how many days cube retention" ng-model="cubeMetaFrame.retention_range" ng-if="state.mode=='edit'">
-                    <small class="help-block text-red" ng-show="state.mode=='edit'">(by default it's '0',which will keep all historic cube segments ,or will keep latest [Retention Range] days cube segments )</small>
+                    <input type="text" retention-format class="form-control ng-scope ng-pristine ng-valid"
+                           placeholder="how many days cube retention" ng-model="cubeMetaFrame.retention_range"
+                           ng-if="state.mode=='edit'">
+                    <small class="help-block text-red" ng-show="state.mode=='edit'">(by default it's '0',which will keep
+                      all historic cube segments ,or will keep latest [Retention Range] days cube segments )
+                    </small>
                     <span ng-if="state.mode=='view'">{{cubeMetaFrame.retention_range | millisecondsToDay}}</span>
                   </div>
                 </div>
@@ -106,132 +118,236 @@
 
       </div>
 
-        <div class="form-group">
-            <h4 style="margin-left:42px">Aggregation Groups</h4>
-            <table style="margin-left:42px; width:92%"
-                   ng-if="cubeMetaFrame.rowkey.aggregation_groups.length > 0"
-                   class="table table-hover list">
+      <div class="form-group">
+        <h4 style="margin-left:42px">Aggregation Groups</h4>
+        <table style="margin-left:42px; width:92%"
+               ng-if="cubeMetaFrame.aggregation_groups.length > 0"
+               class="table table-hover list">
+          <tr class="row">
+            <th class="col-xs-1">ID</th>
+            <th class="col-xs-11">Aggregation Groups</th>
+            <th ng-if="state.mode=='edit'" class="col-xs-1"></th>
+          </tr>
+
+          <tr ng-repeat="aggregation_group in cubeMetaFrame.aggregation_groups track by $index" ng-init="rowIndex = $index" class="row">
+            <td class="col-xs-1">
+              <!-- ID -->
+              <b>{{($index + 1)}}</b>
+            </td>
+            <td class="col-xs-11">
+              <table class="table">
                 <tr class="row">
-                    <th class="col-xs-1">ID</th>
-                    <th class="col-xs-10">Aggregation Groups</th>
-                    <th ng-if="state.mode=='edit'" class="col-xs-1"></th>
+                  <td class="col-xs-3">
+                    Includes
+                  </td>
+                  <td class="col-xs-8">
+                    <!-- Dimensions -->
+                    <select ng-if="state.mode=='edit'" style="width: 100%"
+                            ng-model="aggregation_group.includes" chosen multiple
+                            ng-change="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
+                            ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubeMetaFrame.rowkey.rowkey_columns">
+                      <option value=""></option>
+                    </select>
+
+                    <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">
+                      {{aggregation_group.includes}}</p>
+                  </td>
+                  <td class="col-xs-1">
+                  </td>
+                </tr>
+                <tr class="row">
+                  <td class="col-xs-3">
+                    Mandatory Dimensions
+                  </td>
+                  <td class="col-xs-8">
+                    <!-- Dimensions -->
+                    <select ng-if="state.mode=='edit'" style="width: 100%"
+                            ng-model="aggregation_group.select_rule.mandatory_dims" chosen multiple
+                            ng-change="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
+                            ng-options="column as column for column in aggregation_group.includes">
+                      <option value=""></option>
+                    </select>
+                    <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">
+                      {{aggregation_group.select_rule.mandatory_dims}}</p>
+                  </td>
+                  <td class="col-xs-1">
+                  </td>
                 </tr>
 
-                <tr ng-repeat="aggregation_groups in cubeMetaFrame.rowkey.aggregation_groups" class="row">
-                    <td class="col-xs-1">
-                        <!-- ID -->
-                        <b>{{($index + 1)}}</b>
-                    </td>
-                    <td class="col-xs-11">
-                        <!-- Dimensions -->
-                        <select ng-if="state.mode=='edit'" style="width: 100%"
-                                ng-model="aggregation_groups"  chosen multiple
-                                ng-change="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
-                                ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubeMetaFrame.rowkey.rowkey_columns">
+
+                <tr class="row">
+                  <td class="col-xs-3">
+                    Hierarchy Dimensions
+                  </td>
+                  <td class="col-xs-9">
+                    <table class="table">
+                      <tr class="row" ng-repeat="hierarchyDims in aggregation_group.select_rule.hierarchy_dims track by $index">
+                        <td class="col-xs-10">
+                          <!-- Dimensions -->
+                          <select ng-if="state.mode=='edit'" style="width: 100%"
+                                  ng-model="hierarchyDims" chosen multiple
+                                  ng-change="refreshAggregationHierarchy(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,hierarchyDims)"
+                                  ng-options="column as column for column in aggregation_group.includes">
                             <option value=""></option>
-                        </select>
-                        <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">{{aggregation_groups}}</p>
-                    </td>
-                    <td ng-if="state.mode=='edit'" class="col-xs-1">
-                        <button class="btn btn-xs btn-info"
-                                ng-click="removeElement(cubeMetaFrame.rowkey.aggregation_groups, aggregation_groups)"><i
-                                class="fa fa-minus"></i>
-                        </button>
-                    </td>
+                          </select>
+                          <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">
+                            {{hierarchyDims}}</p>
+
+                        </td>
+                        <td class="col-xs-2">
+                          <button class="btn btn-sm btn-info"
+                                  ng-click="removeHierarchy(aggregation_group,hierarchyDims)"
+                                  ng-show="state.mode=='edit'"><i class="fa fa-minus"></i>
+                          </button>
+                        </td>
+                      </tr>
+
+                      <tr class="row">
+                        <td class="col-xs-12">
+                          <button class="btn btn-sm btn-info"
+                                  ng-click="addNewHierarchy(aggregation_group)" ng-show="state.mode=='edit'">New Hierarchy<i class="fa fa-plus"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </table>
+
+                  </td>
                 </tr>
-            </table>
-
-            <button class="btn btn-sm btn-info" style="margin-left:42px" ng-click="addNewAggregationGroup()"
-                    ng-show="state.mode=='edit'">New Aggregation Group<i class="fa fa-plus"></i>
-            </button>
 
 
-        </div>
-
-
-        <div class="form-group">
-            <h4 style="margin-left:42px">Rowkeys</h4>
-            <table style="margin-left:42px; width:92%"
-                   ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
-                   class="table table-hover list"
-                    >
-               <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Column</th>
-                        <th>Mandatory</th>
-                        <th>Dictionary</th>
-                        <th>Length</th>
-                        <th ng-if="state.mode=='edit'"></th>
-                    </tr>
-               </thead>
-
-                <tbody ui-sortable="state.mode=='edit'" ng-model="cubeMetaFrame.rowkey.rowkey_columns">
-
-                    <tr  ng-repeat="rowkey_column in cubeMetaFrame.rowkey.rowkey_columns" ng-class="state.mode=='edit'?'sort-item':''">
-
-                        <td>
-                            <!-- ID -->
-                            <span class="ng-binding" ng-class="state.mode=='edit'?'badge':''">{{($index + 1)}}</span>
+                <tr class="row">
+                  <td class="col-xs-3">
+                    Joint Dimensions
+                  </td>
+                  <td class="col-xs-9">
+                    <table class="table">
+                      <tr class="row" ng-repeat="jointDims in aggregation_group.select_rule.joint_dims track by $index">
+                        <td class="col-xs-10">
+                          <!-- Dimensions -->
+                          <select ng-if="state.mode=='edit'" style="width: 100%"
+                                  ng-model="jointDims" chosen multiple
+                                  ng-change="refreshAggregationJoint(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,jointDims)"
+                                  ng-options="column as column for column in aggregation_group.includes">
+                            <option value=""></option>
+                          </select>
+                          <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">
+                            {{jointDims}}</p>
                         </td>
-                        <td>
-                            <!--Column Name -->
-                            <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
-                                   tooltip="rowkey column name.." tooltip-trigger="focus"
-                                   ng-model="rowkey_column.column" class="form-control">
-
-                            <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
+                        <td class="col-xs-2">
+                          <button class="btn btn-sm btn-info"
+                                  ng-click="removeJointDims(aggregation_group,jointDims)"
+                                  ng-show="state.mode=='edit'"><i class="fa fa-minus"></i>
+                          </button>
                         </td>
-                        <td>
-                            <!-- Mandatory -->
-                            <button type="button " ng-if="state.mode=='edit'"
-                                    class="btn btn-xs btn-default {{rowkey_column.mandatory? 'active':''}}"
-                                    ng-model="rowkey_column.mandatory"
-                                    ng-click="updateMandatory(rowkey_column);"
-                                    btn-checkbox btn-checkbox-true="true" btn-checkbox-false="false">
-                                {{rowkey_column.mandatory? 'Y':'N'}}
-                            </button>
+                      </tr>
 
-                            <span ng-if="state.mode=='view'">{{rowkey_column.mandatory? 'Y':'N'}}</span>
+                      <tr class="row">
+                        <td class="col-xs-12">
+                          <button class="btn btn-sm btn-info"
+                                  ng-click="addNewJoint(aggregation_group)" ng-show="state.mode=='edit'">New Joint<i class="fa fa-plus"></i>
+                          </button>
                         </td>
+                      </tr>
+                    </table>
 
-                        <td>
-                            <!--Use Dictionary-->
-                            <div>
-                                <select ng-if="state.mode=='edit'" style="width:80px;"
-                                        chosen ng-model="rowkey_column.dictionary"
-                                        ng-change="dictionaryUpdated(rowkey_column);"
-                                        ng-options="dt as dt for dt in cubeConfig.dictionaries">
-                                    <option value=""></option>
-                                </select>
-                                <span ng-if="state.mode=='view'">{{rowkey_column.dictionary}}</span>
-                            </div>
-                        </td>
+                  </td>
+                </tr>
+              </table>
 
-                        <td>
-                            <!--Column Length -->
-                            <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
-                                   tooltip="rowkey column length.." tooltip-trigger="focus"
-                                   ng-disabled="rowkey_column.dictionary=='true'"
-                                   ng-model="rowkey_column.length"  class="form-control">
+            </td>
+            <td ng-if="state.mode=='edit'" class="col-xs-1">
+              <button class="btn btn-xs btn-info"
+                      ng-click="removeElement(cubeMetaFrame.aggregation_groups, aggregation_group)"><i
+                class="fa fa-minus"></i>
+              </button>
+            </td>
+          </tr>
+        </table>
 
-                            <span ng-if="state.mode=='view'">{{rowkey_column.length}}</span>
-                        </td>
+        <button class="btn btn-sm btn-info" style="margin-left:42px" ng-click="addNewAggregationGroup()"
+                ng-show="state.mode=='edit'">New Aggregation Group<i class="fa fa-plus"></i>
+        </button>
 
 
-                        <td ng-if="state.mode=='edit'">
-                            <button class="btn btn-xs btn-info"
-                                    ng-click="removeElement(cubeMetaFrame.rowkey.rowkey_columns, rowkey_column)"><i
-                                    class="fa fa-minus"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+      </div>
 
-            <button class="btn btn-sm btn-info" style="margin-left:42px"
-                    ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i></button>
-        </div>
+
+      <div class="form-group">
+        <h4 style="margin-left:42px">Rowkeys</h4>
+        <table style="margin-left:42px; width:92%"
+               ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
+               class="table table-hover table-bordered list"
+          >
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th style="width:200px;">Column</th>
+            <th>Dictionary</th>
+            <th>Fixed Length</th>
+            <th ng-if="state.mode=='edit'"></th>
+          </tr>
+          </thead>
+
+          <tbody ui-sortable="state.mode=='edit'" ng-model="convertedRowkeys">
+
+          <tr ng-repeat="rowkey_column in convertedRowkeys track by $index"
+              ng-class="state.mode=='edit'?'sort-item':''">
+
+            <td>
+              <!-- ID -->
+              <span class="ng-binding" ng-class="state.mode=='edit'?'badge':''">{{($index + 1)}}</span>
+            </td>
+            <td>
+              <!--Column Name -->
+              <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
+                     ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column)"
+                     tooltip="rowkey column name.." tooltip-trigger="focus"
+                     ng-model="rowkey_column.column" class="form-control">
+
+              <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
+            </td>
+            <td>
+              <select ng-if="state.mode=='edit'" style="width:80px;"
+                      chosen ng-model="rowkey_column.isDictionary"
+                      ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
+                      ng-options="dt as dt for dt in cubeConfig.dictionaries">
+                <option value=""></option>
+              </select>
+              <span ng-if="state.mode=='view'">{{rowkey_column.isDictionary}}</span>
+
+              <!--Use Dictionary-->
+              <!--<select ng-if="state.mode=='edit'" style="width:80px;"-->
+              <!--chosen ng-model="rowkey_column.encoding"-->
+              <!--ng-change="dictionaryUpdated(rowkey_column);"-->
+              <!--ng-options="dt.name as dt.value for dt in cubeConfig.dictionaries">-->
+              <!--<option value=""></option>-->
+              <!--</select>-->
+            </td>
+            <td>
+              <!--Column Length -->
+              <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
+                     tooltip="rowkey column length.." tooltip-trigger="focus"
+                     ng-disabled="rowkey_column.isDictionary=='true'"
+                     ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
+                     ng-model="rowkey_column.fixedLength" class="form-control">
+
+              <span ng-if="state.mode=='view'">{{rowkey_column.fixedLength}}</span>
+            </td>
+
+            <td ng-if="state.mode=='edit'">
+              <button class="btn btn-xs btn-info"
+                      ng-click="removeRowkey(convertedRowkeys, $index,rowkey_column)"><i
+                class="fa fa-minus"></i>
+              </button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+
+        <button class="btn btn-sm btn-info" style="margin-left:42px"
+                ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i>
+        </button>
+      </div>
     </div>
   </ng-form>
 </div>
