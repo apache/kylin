@@ -53,6 +53,10 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     @JsonProperty("name")
     private String name;
 
+    public void setRealizationEntries(List<RealizationEntry> realizationEntries) {
+        this.realizationEntries = realizationEntries;
+    }
+
     @JsonProperty("realizations")
     private List<RealizationEntry> realizationEntries;
 
@@ -72,6 +76,17 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     public List<RealizationEntry> getRealizationEntries() {
         return realizationEntries;
+    }
+
+    public static HybridInstance create(KylinConfig config, String name, List<RealizationEntry> realizationEntries) {
+        HybridInstance hybridInstance = new HybridInstance();
+
+        hybridInstance.setConfig(config);
+        hybridInstance.setName(name);
+        hybridInstance.setRealizationEntries(realizationEntries);
+        hybridInstance.updateRandomUuid();
+
+        return hybridInstance;
     }
 
     private void init() {
@@ -257,6 +272,10 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     public IRealization[] getRealizations() {
         init();
         return realizations;
+    }
+
+    public String getResourcePath() {
+        return concatResourcePath(name);
     }
 
     public static String concatResourcePath(String hybridName) {
