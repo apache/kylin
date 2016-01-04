@@ -165,5 +165,6 @@
   "auto_merge_time_ranges" : null,
   "retention_range" : 0,
   "engine_type" : 0,
-  "storage_type" : 0
+  "storage_type" : 0,
+  "partition_date_start" : 0
 }
