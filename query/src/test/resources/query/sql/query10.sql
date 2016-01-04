@@ -26,5 +26,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  inner JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  where test_kylin_fact.lstg_format_name='FP-GTC' 
- and test_cal_dt.week_beg_dt between DATE '2013-05-01' and DATE '2013-08-01' 
+ and test_cal_dt.week_beg_dt between '2013-05-01' and DATE '2013-08-01'
  group by test_cal_dt.week_beg_dt 

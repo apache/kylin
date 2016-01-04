@@ -29,6 +29,7 @@ public class DateFormat {
     public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
     public static final String DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS = "yyyy-MM-dd HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final String[] SUPPORTED_DATETIME_PATTERN = { DEFAULT_DATE_PATTERN, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, "yyyyMMdd" };
 
     static final private Map<String, ThreadLocal<SimpleDateFormat>> threadLocalMap = new ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>();
 
@@ -112,4 +113,17 @@ public class DateFormat {
         return true;
     }
 
+    public static boolean isSupportedDateFormat(String dateStr) {
+        assert dateStr != null;
+        for (String formatStr : SUPPORTED_DATETIME_PATTERN) {
+            try {
+                if (dateStr.equals(dateToString(stringToDate(dateStr, formatStr), formatStr))) {
+                    return true;
+                }
+            } catch (Exception ex) {
+                continue;
+            }
+        }
+        return false;
+    }
 }
