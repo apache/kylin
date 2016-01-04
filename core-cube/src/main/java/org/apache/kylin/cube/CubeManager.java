@@ -255,6 +255,21 @@ public class CubeManager implements IRealizationProvider {
         return cube;
     }
 
+    public CubeInstance createCube(CubeInstance cube, String projectName, String owner) throws IOException {
+        logger.info("Creating cube '" + projectName + "-->" + cube.getName() + "' from instance object. '");
+
+        // save cube resource
+        cube.setOwner(owner);
+
+        updateCubeWithRetry(new CubeUpdate(cube), 0);
+        ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cube.getName(), projectName, owner);
+
+        if (listener != null)
+            listener.afterCubeCreate(cube);
+
+        return cube;
+    }
+
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
         CubeInstance cube = updateCubeWithRetry(update, 0);
 
