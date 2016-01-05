@@ -199,11 +199,11 @@ public class DictionaryManager {
         signature.setLastModifiedTime(System.currentTimeMillis());
         signature.setPath("merged_with_no_original_path");
 
-        String dupDict = checkDupByInfo(newDictInfo);
-        if (dupDict != null) {
-            logger.info("Identical dictionary input " + newDictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
-            return getDictionaryInfo(dupDict);
-        }
+//        String dupDict = checkDupByInfo(newDictInfo);
+//        if (dupDict != null) {
+//            logger.info("Identical dictionary input " + newDictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
+//            return getDictionaryInfo(dupDict);
+//        }
 
         //check for cases where merging dicts are actually same
         boolean identicalSourceDicts = true;
