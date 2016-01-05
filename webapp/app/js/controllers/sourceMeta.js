@@ -85,6 +85,7 @@ KylinApp
       $modal.open({
         templateUrl: 'addHiveTable.html',
         controller: ModalInstanceCtrl,
+        backdrop : 'static',
         resolve: {
           tableNames: function () {
             return $scope.tableNames;
@@ -159,6 +160,7 @@ KylinApp
       $modal.open({
         templateUrl: 'addStreamingSource.html',
         controller: StreamingSourceCtrl,
+        backdrop : 'static',
         resolve: {
           tableNames: function () {
             return $scope.tableNames;
@@ -286,18 +288,6 @@ KylinApp
         if(!$scope.table.name||$scope.table.name===""){
           return;
         }
-
-        //var timestampCount = 0;
-        //angular.forEach($scope.columnList,function(item){
-        //  if(item.checked == "Y"&&item.type=="timestamp"&&item.fromSource=='Y'){
-        //    timestampCount++;
-        //  }
-        //})
-
-        //if(timestampCount!=1){
-        //  $scope.rule.timestampColumnConflict = true;
-        //  return;
-        //}
 
         var columns = [];
         angular.forEach($scope.columnList,function(column,$index){
