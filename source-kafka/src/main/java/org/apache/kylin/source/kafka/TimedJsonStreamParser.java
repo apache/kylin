@@ -65,7 +65,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
 
     private List<TblColRef> allColumns;
-    private boolean formatTs = false;
+    private boolean formatTs = false;//not used
     private final ObjectMapper mapper = new ObjectMapper();
     private String tsColName = "timestamp";
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
@@ -119,26 +119,26 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 String columnName = column.getName();
                 if (columnName.equalsIgnoreCase("minute_start")) {
                     normalized = TimeUtil.getMinuteStart(t);
-                    result.add(formatTs ? DateFormat.formatToTimeStr(normalized) : String.valueOf(normalized));
+                    result.add(DateFormat.formatToTimeStr(normalized));
                 } else if (columnName.equalsIgnoreCase("hour_start")) {
                     normalized = TimeUtil.getHourStart(t);
-                    result.add(formatTs ? DateFormat.formatToTimeStr(normalized) : String.valueOf(normalized));
+                    result.add(DateFormat.formatToTimeStr(normalized));
                 } else if (columnName.equalsIgnoreCase("day_start")) {
                     //from day_start on, formatTs will output date format
                     normalized = TimeUtil.getDayStart(t);
-                    result.add(formatTs ? DateFormat.formatToDateStr(normalized) : String.valueOf(normalized));
+                    result.add(DateFormat.formatToDateStr(normalized));
                 } else if (columnName.equalsIgnoreCase("week_start")) {
                     normalized = TimeUtil.getWeekStart(t);
-                    result.add(formatTs ? DateFormat.formatToDateStr(normalized) : String.valueOf(normalized));
+                    result.add(DateFormat.formatToDateStr(normalized));
                 } else if (columnName.equalsIgnoreCase("month_start")) {
                     normalized = TimeUtil.getMonthStart(t);
-                    result.add(formatTs ? DateFormat.formatToDateStr(normalized) : String.valueOf(normalized));
+                    result.add(DateFormat.formatToDateStr(normalized));
                 } else if (columnName.equalsIgnoreCase("quarter_start")) {
                     normalized = TimeUtil.getQuarterStart(t);
-                    result.add(formatTs ? DateFormat.formatToDateStr(normalized) : String.valueOf(normalized));
+                    result.add(DateFormat.formatToDateStr(normalized));
                 } else if (columnName.equalsIgnoreCase("year_start")) {
                     normalized = TimeUtil.getYearStart(t);
-                    result.add(formatTs ? DateFormat.formatToDateStr(normalized) : String.valueOf(normalized));
+                    result.add(DateFormat.formatToDateStr(normalized));
                 } else {
                     String x = root.get(columnName.toLowerCase());
                     result.add(x);
