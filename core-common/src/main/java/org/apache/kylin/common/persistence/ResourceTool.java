@@ -32,9 +32,9 @@ public class ResourceTool {
         args = StringUtil.filterSystemArgs(args);
 
         if (args.length == 0) {
-            System.out.println("Usage: MetadataTool list  RESOURCE_PATH");
-            System.out.println("Usage: MetadataTool download  LOCAL_DIR");
-            System.out.println("Usage: MetadataTool upload    LOCAL_DIR");
+            System.out.println("Usage: ResourceTool list  RESOURCE_PATH");
+            System.out.println("Usage: ResourceTool download  LOCAL_DIR");
+            System.out.println("Usage: ResourceTool upload    LOCAL_DIR");
             return;
         }
 
