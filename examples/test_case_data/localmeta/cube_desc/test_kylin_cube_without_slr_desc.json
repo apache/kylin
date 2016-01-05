@@ -166,6 +166,19 @@
         "returntype": "hllc(10)"
       },
       "dependent_measure_ref": null
+    },
+    {
+      "id": 8,
+      "name": "LEAF_CATEG_ID_BITMAP",
+      "function": {
+        "expression": "COUNT_DISTINCT",
+        "parameter": {
+          "type": "column",
+          "value": "LEAF_CATEG_ID"
+        },
+        "returntype": "bitmap"
+      },
+      "dependent_measure_ref": null
     }
   ],
   "rowkey": {
@@ -262,7 +275,8 @@
             "qualifier": "m",
             "measure_refs": [
               "seller_cnt_hll",
-              "seller_format_cnt"
+              "seller_format_cnt",
+              "leaf_categ_id_bitmap"
             ]
           }
         ]
