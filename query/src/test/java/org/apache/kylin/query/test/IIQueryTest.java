@@ -24,6 +24,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -56,6 +57,12 @@ public class IIQueryTest extends KylinQueryTest {
     @Test
     public void testDetailedQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
+    }
+
+    @Override
+    @Test
+    @Ignore ("Skip Precisely Distinct Count Queries for II")
+    public void testPreciselyDistinctCountQuery() {
     }
 
 }

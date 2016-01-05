@@ -29,6 +29,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.bitmap.BitmapCounter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.Test;
@@ -41,7 +42,7 @@ public class MeasureCodecTest {
 
     @Test
     public void basicTest() {
-        MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16"), measure("HLLC16") };
+        MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16"), measure("HLLC16"), measure("bitmap") };
         MeasureCodec codec = new MeasureCodec(descs);
 
         DoubleWritable d = new DoubleWritable(1.0);
@@ -53,7 +54,11 @@ public class MeasureCodecTest {
         HyperLogLogPlusCounter hllc2 = new HyperLogLogPlusCounter(16);
         hllc.add("1234567");
         hllc.add("abcdefg");
-        Object values[] = new Object[] { d, l, b, hllc, hllc2 };
+        BitmapCounter bitmap = new BitmapCounter();
+        bitmap.add(123);
+        bitmap.add(45678);
+        bitmap.add(Long.MAX_VALUE - 10);
+        Object values[] = new Object[] { d, l, b, hllc, hllc2, bitmap };
 
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 

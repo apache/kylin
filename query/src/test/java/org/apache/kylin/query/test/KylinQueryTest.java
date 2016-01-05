@@ -200,6 +200,11 @@ public class KylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testPreciselyDistinctCountQuery() throws Exception {
+        execAndCompQuery("src/test/resources/query/sql_distinct_precisely", null, true);
+    }
+
+    @Test
     public void testTableauQuery() throws Exception {
         batchExecuteQuery("src/test/resources/query/sql_tableau");
     }
