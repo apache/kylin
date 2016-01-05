@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-  .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, cubeConfig, ProjectModel, ModelService, MetaModel, CubeList,modelsManager,cubesManager,StreamingList) {
+  .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, cubeConfig, ProjectModel, ModelService, MetaModel, CubeList,modelsManager,cubesManager,StreamingList,kylinConfig) {
 
     $scope.cubeConfig = cubeConfig;
     $scope.cubeList = CubeList;
@@ -279,6 +279,18 @@ KylinApp
     };
 
     $scope.startJobSubmit = function (cube) {
+
+      // for streaming cube build tip
+      if(cube.streaming){
+        $modal.open({
+          templateUrl: 'streamingBuild.html',
+          controller: streamingBuildCtrl,
+          resolve: {
+          }
+        });
+        return;
+      }
+
       $scope.metaModel={
         model:modelsManager.getModelByCube(cube.name)
       }
@@ -510,3 +522,13 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   };
 };
 
+
+var streamingBuildCtrl = function ($scope, $modalInstance,kylinConfig) {
+  $scope.kylinConfig = kylinConfig;
+  var streamingGuildeUrl = kylinConfig.getProperty("kylin.web.streaming.guide");
+  $scope.streamingBuildUrl = streamingGuildeUrl?streamingGuildeUrl:"http://kylin.apache.org/";
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+}
