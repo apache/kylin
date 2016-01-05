@@ -36,21 +36,19 @@ public class BadQueryDetector extends Thread {
     private final long detectionInterval;
     private final int alertMB;
     private final int alertRunningSec;
-    private final int killRunningSec;
 
     private ArrayList<Notifier> notifiers = new ArrayList<Notifier>();
 
     public BadQueryDetector() {
-        this(60 * 1000, 100, 60, 5 * 60); // 1 minute, 100 MB, 60 seconds, 5 minutes
+        this(60 * 1000, 100, 90); // 1 minute, 100 MB, 90 seconds
     }
 
-    public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec, int killRunningSec) {
+    public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec) {
         super("BadQueryDetector");
         this.setDaemon(true);
         this.detectionInterval = detectionInterval;
         this.alertMB = alertMB;
         this.alertRunningSec = alertRunningSec;
-        this.killRunningSec = killRunningSec;
 
         this.notifiers.add(new Notifier() {
             @Override
@@ -130,6 +128,7 @@ public class BadQueryDetector extends Thread {
             int runningSec = (int) ((now - e.startTime) / 1000);
             if (runningSec >= alertRunningSec) {
                 notify("Slow", runningSec, e.sqlRequest.getSql(), e.thread);
+                dumpStackTrace(e.thread);
             } else {
                 break; // entries are sorted by startTime
             }
@@ -138,25 +137,13 @@ public class BadQueryDetector extends Thread {
         // report if low memory
         if (getSystemAvailMB() < alertMB) {
             logger.info("System free memory less than " + alertMB + " MB. " + entries.size() + " queries running.");
-            
-            for (Entry e : entries) {
-                int duration = (int) ((now - e.startTime) / 1000);
-                if (duration > killRunningSec) {
-                    notify("Kill", duration, e.sqlRequest.getSql(), e.thread);
-                    killQueryThread(e.thread);
-                } else {
-                    notify("Low mem", duration, e.sqlRequest.getSql(), e.thread);
-                }
-            }
         }
     }
 
-    private void killQueryThread(Thread t) {
+    // log the stack trace of bad query thread for further analysis
+    private void dumpStackTrace(Thread t) {
         StackTraceElement[] stackTrace = t.getStackTrace();
-        t.interrupt();
-        
-        // log the stack trace of bad query thread for further analysis
-        StringBuilder buf = new StringBuilder("Interrupted thread 0x" + Long.toHexString(t.getId()));
+        StringBuilder buf = new StringBuilder("Problematic thread 0x" + Long.toHexString(t.getId()));
         buf.append("\n");
         for (StackTraceElement e : stackTrace) {
             buf.append("\t").append("at ").append(e.toString()).append("\n");
