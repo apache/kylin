@@ -36,7 +36,6 @@ package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -109,10 +108,8 @@ public final class TimedJsonStreamParser extends StreamingParser {
             //" cannot be null, the message offset is " + messageAndOffset.getOffset() + " content is " + new String(messageAndOffset.getRawData()));
             long t;
             if (StringUtils.isEmpty(tsStr)) {
-                logger.info("tsStr not found");
                 t = 0;
             } else {
-                logger.info("tsStr is :" + tsStr);
                 t = Long.valueOf(tsStr);
             }
             ArrayList<String> result = Lists.newArrayList();
@@ -147,8 +144,6 @@ public final class TimedJsonStreamParser extends StreamingParser {
                     result.add(x);
                 }
             }
-
-            logger.info(Arrays.toString(result.toArray()));
 
             return new StreamingMessage(result, messageAndOffset.offset(), t, Collections.<String, Object> emptyMap());
 
