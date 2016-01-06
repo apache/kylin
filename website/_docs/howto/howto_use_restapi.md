@@ -144,8 +144,7 @@ Authorization:Basic {data}
          "signed":true,
          "autoIncrement":false,
          "definitelyWritable":false
-      },
-      ...
+      }
    ],
    "results":[  
       [  
@@ -171,8 +170,7 @@ Authorization:Basic {data}
          "85.78317064220418",
          "85.78317064220418",
          "1"
-      ],
-     ...
+      ]
    ],
    "cube":"test_kylin_cube_with_slr_desc",
    "affectedRowCount":0,
@@ -192,7 +190,7 @@ Authorization:Basic {data}
 * project - `required` `string` The project to load tables
 
 #### Response Sample
-```
+```sh
 [  
    {  
       "columns":[  
@@ -257,8 +255,7 @@ Authorization:Basic {data}
       "remarks":null,
       "type_CAT":null,
       "type_NAME":null
-   },
-  ...
+   }
 ]
 ```
 
@@ -274,7 +271,7 @@ Authorization:Basic {data}
 * limit - `required` `int ` Cubes per page.
 
 #### Response Sample
-```
+```sh
 [  
    {  
       "uuid":"1eaca32a-a33e-4b69-83dd-0bb8b1f8c53b",
@@ -309,8 +306,7 @@ Authorization:Basic {data}
 * cubeName - `required` `string` Cube name.
 
 #### Response Sample
-
-```
+```sh
 [
     {
         "uuid": "a24ca905-1fc6-4f67-985c-38fa5aeafd92", 
@@ -570,8 +566,7 @@ Authorization:Basic {data}
 * modelName - `required` `string` Data model name, by default it should be the same as cube name.
 
 #### Response Sample
-
-```
+```sh
 {
     "uuid": "ff527b94-f860-44c3-8452-93b17774c647", 
     "name": "test_kylin_with_slr_model_desc", 
@@ -670,7 +665,6 @@ Authorization:Basic {data}
          "info":null,
          "run_async":true
       },
-   ...
       {  
          "interruptCmd":null,
          "name":"Load HFile to HBase Table",
@@ -719,7 +713,7 @@ Authorization:Basic {data}
 * cubeName - `required` `string` Cube name.
 
 #### Response Sample
-```
+```sh
 {  
    "uuid":"1eaca32a-a33e-4b69-83dd-0bb8b1f8c53b",
    "last_modified":1407909046305,
@@ -814,7 +808,6 @@ Authorization:Basic {data}
          "info":null,
          "run_async":true
       },
-    ...
       {  
          "interruptCmd":null,
          "name":"Load HFile to HBase Table",
