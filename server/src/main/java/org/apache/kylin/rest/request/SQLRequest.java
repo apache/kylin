@@ -26,7 +26,7 @@ public class SQLRequest {
     private String project;
     private Integer offset = 0;
     private Integer limit = 0;
-    private boolean acceptPartial = true;
+    private boolean acceptPartial = false;
 
     private Map<String, String> backdoorToggles;
 
