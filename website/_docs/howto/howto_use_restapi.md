@@ -7,52 +7,54 @@ version: v1.0
 since: v0.7.1
 ---
 
-## Kylin Restful API List
+This page lists all the Restful API that provided by Kylin; The endpoint of the Rest service is started with **/kylin/api**, so don't forget to add it before a certain API's path. For example, to get all cube instances, send HTTP GET request to "/kylin/api/cubes".
 
 * QUERY
-   * Login
-   * Query
-   * List queryable tables
+   * [Login](#login)
+   * [Query](#query)
+   * [List queryable tables](#list-queryable-tables)
 * CUBE
-   * List cubes
-   * Rebuild cube
-   * Disable cube
-   * Purge cube
-   * Enable cube
+   * [List cubes](#list-cubes)
+   * [Get cube](#get-cube)
+   * [Get cube descriptor (dimension, measure info, etc)](#get-cube-descriptor)
+   * [Get data model (fact and lookup table info)](#get-data-model)
+   * [Build cube](#build-cube)
+   * [Disable cube](#disable-cube)
+   * [Purge cube](#purge-cube)
+   * [Enable cube](#enable-cube)
 * JOB
-   * Resume job
-   * Discard job
-   * Get job step log
+   * [Resume job](#resume-job)
+   * [Discard job](#discard-job)
+   * [Get job step output](#get-job-step-output)
 * Metadata
-   * Get Hive Table
-   * Get Hive Table (Extend Info)
-   * Get Hive Tables 
-   * Load Hive Table
-* Wipe cache
+   * [Get Hive Table](#get-hive-table)
+   * [Get Hive Table (Extend Info)](#get-hive-table-extend-info)
+   * [Get Hive Tables](#get-hive-tables)
+   * [Load Hive Tables](#load-hive-tables)
+* Cache
+   * [Wipe cache](#wipe-cache)
 
-### Login
+## Login
 `POST /user/authentication`
 
-for example:  
-```sh
+for example: 
 
+```
 curl -c /path/to/cookiefile.txt -X POST -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/json' http://<host>:<port>/kylin/api/user/authentication
 ```
 
 If login successfully, the JSESSIONID will be saved into the cookie file; In the subsequent http requests, attach the cookie, for example:
 
-```sh
+```
 curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/rebuild
 ```
 
-### Header
+#### Header
 Authorization data encoded by basic auth. Header sample:
 Authorization:Basic {data}
-### Response Sample
-```sh
 
-Status: 200OK
-```
+#### Response Sample
+
 ```sh
 {  
    "userDetails":{  
@@ -76,30 +78,29 @@ Status: 200OK
 
 ***
 
-### Query
+## Query
 `POST /query`
-### Request Body
+
+#### Request Body
 * sql - `required` `string` The sql query string.
 * offset - `optional` `int` Query offset. If offset is set in sql, curIndex will be ignored.
 * limit - `optional` `int` Query limit. If limit is set in sql, perPage will be ignored.
-* acceptPartial - `optional` `bool` Flag to switch partial query.
-* project - `optional` `string` Project to perform query. Default value is 'DEFAULT'
-```sh
+* acceptPartial - `optional` `bool` Whether accept a partial result or not, default be "true" to avoid a big scan on HBase. Set to "false" for production use. 
+* project - `optional` `string` Project to perform query. Default value is 'DEFAULT'.
+
+```
 {  
    "sql":"select * from TEST_KYLIN_FACT",
    "offset":0,
    "limit":50000,
-   "acceptPartial":true,
+   "acceptPartial":false,
    "project":"DEFAULT"
 }
 ```
 
-### Response Sample
+#### Response Sample
 
-```sh
-Status: 200OK
 ```
-```sh
 {  
    "columnMetas":[  
       {  
@@ -144,174 +145,7 @@ Status: 200OK
          "autoIncrement":false,
          "definitelyWritable":false
       },
-      {  
-         "isNullable":1,
-         "displaySize":10,
-         "label":"LSTG_SITE_ID",
-         "name":"LSTG_SITE_ID",
-         "schemaName":null,
-         "catelogName":null,
-         "tableName":null,
-         "precision":10,
-         "scale":0,
-         "columnType":4,
-         "columnTypeName":"INTEGER",
-         "readOnly":true,
-         "writable":false,
-         "caseSensitive":true,
-         "searchable":false,
-         "currency":false,
-         "signed":true,
-         "autoIncrement":false,
-         "definitelyWritable":false
-      },
-      {  
-         "isNullable":1,
-         "displaySize":5,
-         "label":"SLR_SEGMENT_CD",
-         "name":"SLR_SEGMENT_CD",
-         "schemaName":null,
-         "catelogName":null,
-         "tableName":null,
-         "precision":5,
-         "scale":0,
-         "columnType":5,
-         "columnTypeName":"SMALLINT",
-         "readOnly":true,
-         "writable":false,
-         "caseSensitive":true,
-         "searchable":false,
-         "currency":false,
-         "signed":true,
-         "autoIncrement":false,
-         "definitelyWritable":false
-      },
-      {  
-         "isNullable":1,
-         "displaySize":256,
-         "label":"LSTG_FORMAT_NAME",
-         "name":"LSTG_FORMAT_NAME",
-         "schemaName":null,
-         "catelogName":null,
-         "tableName":null,
-         "precision":256,
-         "scale":0,
-         "columnType":12,
-         "columnTypeName":"VARCHAR(256)",
-         "readOnly":true,
-         "writable":false,
-         "caseSensitive":true,
-         "searchable":false,
-         "currency":false,
-         "signed":true,
-         "autoIncrement":false,
-         "definitelyWritable":false
-      },
-      {  
-         "isNullable":1,
-         "displaySize":19,
-         "label":"SELLER_ID",
-         "name":"SELLER_ID",
-         "schemaName":null,
-         "catelogName":null,
-         "tableName":null,
-         "precision":19,
-         "scale":0,
-         "columnType":-5,
-         "columnTypeName":"BIGINT",
-         "readOnly":true,
-         "writable":false,
-         "caseSensitive":true,
-         "searchable":false,
-         "currency":false,
-         "signed":true,
-         "autoIncrement":false,
-         "definitelyWritable":false
-      },
-      {  
-         "isNullable":1,
-         "displaySize":19,
-         "label":"PRICE",
-         "name":"PRICE",
-         "schemaName":null,
-         "catelogName":null,
-         "tableName":null,
-         "precision":19,
-         "scale":4,
-         "columnType":3,
-         "columnTypeName":"DECIMAL(19, 4)",
-         "readOnly":true,
-         "writable":false,
-         "caseSensitive":true,
-         "searchable":false,
-         "currency":false,
-         "signed":true,
-         "autoIncrement":false,
-         "definitelyWritable":false
-      },
-      {  
-         "isNullable":1,
-         "displaySize":19,
-         "label":"MIN_PRICE_",
-         "name":"MIN_PRICE_",
-         "schemaName":null,
-         "catelogName":null,
-         "tableName":null,
-         "precision":19,
-         "scale":4,
-         "columnType":3,
-         "columnTypeName":"DECIMAL(19, 4)",
-         "readOnly":true,
-         "writable":false,
-         "caseSensitive":true,
-         "searchable":false,
-         "currency":false,
-         "signed":true,
-         "autoIncrement":false,
-         "definitelyWritable":false
-      },
-      {  
-         "isNullable":1,
-         "displaySize":19,
-         "label":"MAX_PRICE_",
-         "name":"MAX_PRICE_",
-         "schemaName":null,
-         "catelogName":null,
-         "tableName":null,
-         "precision":19,
-         "scale":4,
-         "columnType":3,
-         "columnTypeName":"DECIMAL(19, 4)",
-         "readOnly":true,
-         "writable":false,
-         "caseSensitive":true,
-         "searchable":false,
-         "currency":false,
-         "signed":true,
-         "autoIncrement":false,
-         "definitelyWritable":false
-      },
-      {  
-         "isNullable":1,
-         "displaySize":19,
-         "label":"COUNT__",
-         "name":"COUNT__",
-         "schemaName":null,
-         "catelogName":null,
-         "tableName":null,
-         "precision":19,
-         "scale":0,
-         "columnType":-5,
-         "columnTypeName":"BIGINT",
-         "readOnly":true,
-         "writable":false,
-         "caseSensitive":true,
-         "searchable":false,
-         "currency":false,
-         "signed":true,
-         "autoIncrement":false,
-         "definitelyWritable":false
-      }
+      ...
    ],
    "results":[  
       [  
@@ -338,54 +172,7 @@ Status: 200OK
          "85.78317064220418",
          "1"
       ],
-      [  
-         "2013-08-07",
-         "170083",
-         "3",
-         "12",
-         "FP-non GTC",
-         "10000688",
-         "49.4518822857833",
-         "49.4518822857833",
-         "49.4518822857833",
-         "1"
-      ],
-      [  
-         "2013-08-07",
-         "73506",
-         "0",
-         "14",
-         "Others",
-         "10000858",
-         "35.7556514660872",
-         "35.7556514660872",
-         "35.7556514660872",
-         "1"
-      ],
-      [  
-         "2013-08-07",
-         "26262",
-         "0",
-         "5",
-         "FP-GTC",
-         "10000914",
-         "69.63202173718798",
-         "69.63202173718798",
-         "69.63202173718798",
-         "1"
-      ],
-      [  
-         "2013-08-07",
-         "1161",
-         "3",
-         "12",
-         "Others",
-         "10000959",
-         "76.72392839984632",
-         "76.72392839984632",
-         "76.72392839984632",
-         "1"
-      ]
+     ...
    ],
    "cube":"test_kylin_cube_with_slr_desc",
    "affectedRowCount":0,
@@ -398,16 +185,14 @@ Status: 200OK
 
 ***
 
-### List queryable tables
+## List queryable tables
 `GET /tables_and_columns`
-### Request Parameters
+
+#### Request Parameters
 * project - `required` `string` The project to load tables
 
-### Response Sample
-```sh
-Status: 200OK
+#### Response Sample
 ```
-```sh
 [  
    {  
       "columns":[  
@@ -473,605 +258,23 @@ Status: 200OK
       "type_CAT":null,
       "type_NAME":null
    },
-   {  
-      "columns":[  
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"LEAF_CATEG_ID",
-            "data_TYPE":4,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":1,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"INTEGER"
-         },
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"SITE_ID",
-            "data_TYPE":4,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":2,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"INTEGER"
-         },
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"META_CATEG_NAME",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":3,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         },
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"CATEG_LVL2_NAME",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":4,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         },
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"CATEG_LVL3_NAME",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":5,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         },
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"USER_DEFINED_FIELD1",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":6,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         },
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"USER_DEFINED_FIELD3",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":7,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         },
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"UPD_DATE",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":8,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         },
-         {  
-            "table_NAME":"TEST_CATEGORY_GROUPINGS",
-            "table_SCHEM":"EDW",
-            "column_NAME":"UPD_USER",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":9,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         }
-      ],
-      "table_NAME":"TEST_CATEGORY_GROUPINGS",
-      "table_SCHEM":"EDW",
-      "ref_GENERATION":null,
-      "self_REFERENCING_COL_NAME":null,
-      "type_SCHEM":null,
-      "table_TYPE":"TABLE",
-      "table_CAT":"defaultCatalog",
-      "remarks":null,
-      "type_CAT":null,
-      "type_NAME":null
-   },
-   {  
-      "columns":[  
-         {  
-            "table_NAME":"TEST_KYLIN_FACT",
-            "table_SCHEM":"EDW",
-            "column_NAME":"CAL_DT",
-            "data_TYPE":91,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":1,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"DATE"
-         },
-         {  
-            "table_NAME":"TEST_KYLIN_FACT",
-            "table_SCHEM":"EDW",
-            "column_NAME":"LEAF_CATEG_ID",
-            "data_TYPE":4,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":2,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"INTEGER"
-         },
-         {  
-            "table_NAME":"TEST_KYLIN_FACT",
-            "table_SCHEM":"EDW",
-            "column_NAME":"LSTG_SITE_ID",
-            "data_TYPE":4,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":3,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"INTEGER"
-         },
-         {  
-            "table_NAME":"TEST_KYLIN_FACT",
-            "table_SCHEM":"EDW",
-            "column_NAME":"SLR_SEGMENT_CD",
-            "data_TYPE":5,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":4,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"SMALLINT"
-         },
-         {  
-            "table_NAME":"TEST_KYLIN_FACT",
-            "table_SCHEM":"EDW",
-            "column_NAME":"LSTG_FORMAT_NAME",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":5,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         },
-         {  
-            "table_NAME":"TEST_KYLIN_FACT",
-            "table_SCHEM":"EDW",
-            "column_NAME":"SELLER_ID",
-            "data_TYPE":-5,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":6,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"BIGINT"
-         },
-         {  
-            "table_NAME":"TEST_KYLIN_FACT",
-            "table_SCHEM":"EDW",
-            "column_NAME":"PRICE",
-            "data_TYPE":3,
-            "nullable":1,
-            "column_SIZE":19,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":4,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":19,
-            "ordinal_POSITION":7,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"DECIMAL(19, 4)"
-         }
-      ],
-      "table_NAME":"TEST_KYLIN_FACT",
-      "table_SCHEM":"EDW",
-      "ref_GENERATION":null,
-      "self_REFERENCING_COL_NAME":null,
-      "type_SCHEM":null,
-      "table_TYPE":"TABLE",
-      "table_CAT":"defaultCatalog",
-      "remarks":null,
-      "type_CAT":null,
-      "type_NAME":null
-   },
-   {  
-      "columns":[  
-         {  
-            "table_NAME":"TEST_SELLER_TYPE_DIM",
-            "table_SCHEM":"EDW",
-            "column_NAME":"SELLER_TYPE_CD",
-            "data_TYPE":5,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":1,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"SMALLINT"
-         },
-         {  
-            "table_NAME":"TEST_SELLER_TYPE_DIM",
-            "table_SCHEM":"EDW",
-            "column_NAME":"SELLER_TYPE_DESC",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":2,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         }
-      ],
-      "table_NAME":"TEST_SELLER_TYPE_DIM",
-      "table_SCHEM":"EDW",
-      "ref_GENERATION":null,
-      "self_REFERENCING_COL_NAME":null,
-      "type_SCHEM":null,
-      "table_TYPE":"TABLE",
-      "table_CAT":"defaultCatalog",
-      "remarks":null,
-      "type_CAT":null,
-      "type_NAME":null
-   },
-   {  
-      "columns":[  
-         {  
-            "table_NAME":"TEST_SITES",
-            "table_SCHEM":"EDW",
-            "column_NAME":"SITE_ID",
-            "data_TYPE":4,
-            "nullable":1,
-            "column_SIZE":-1,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":-1,
-            "ordinal_POSITION":1,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"INTEGER"
-         },
-         {  
-            "table_NAME":"TEST_SITES",
-            "table_SCHEM":"EDW",
-            "column_NAME":"SITE_NAME",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":2,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         },
-         {  
-            "table_NAME":"TEST_SITES",
-            "table_SCHEM":"EDW",
-            "column_NAME":"CRE_USER",
-            "data_TYPE":12,
-            "nullable":1,
-            "column_SIZE":256,
-            "buffer_LENGTH":-1,
-            "decimal_DIGITS":0,
-            "num_PREC_RADIX":10,
-            "column_DEF":null,
-            "sql_DATA_TYPE":-1,
-            "sql_DATETIME_SUB":-1,
-            "char_OCTET_LENGTH":256,
-            "ordinal_POSITION":3,
-            "is_NULLABLE":"YES",
-            "scope_CATLOG":null,
-            "scope_SCHEMA":null,
-            "scope_TABLE":null,
-            "source_DATA_TYPE":-1,
-            "iS_AUTOINCREMENT":null,
-            "table_CAT":"defaultCatalog",
-            "remarks":null,
-            "type_NAME":"VARCHAR(256) CHARACTER SET \"UTF-16LE\" COLLATE \"UTF-16LE$en_US$primary\""
-         }
-      ],
-      "table_NAME":"TEST_SITES",
-      "table_SCHEM":"EDW",
-      "ref_GENERATION":null,
-      "self_REFERENCING_COL_NAME":null,
-      "type_SCHEM":null,
-      "table_TYPE":"TABLE",
-      "table_CAT":"defaultCatalog",
-      "remarks":null,
-      "type_CAT":null,
-      "type_NAME":null
-   }
+  ...
 ]
 ```
 
-
 ***
 
-### List cubes
+## List cubes
 `GET /cubes`
-### Request Parameters
+
+#### Request Parameters
 * cubeName - `optional` `string` Cube name to find.
+* projectName - `optional` `string` project name.
 * offset - `required` `int` Offset used by pagination
 * limit - `required` `int ` Cubes per page.
 
-### Response Sample
-```sh
-Status: 200OK
+#### Response Sample
 ```
-```sh
 [  
    {  
       "uuid":"1eaca32a-a33e-4b69-83dd-0bb8b1f8c53b",
@@ -1092,21 +295,341 @@ Status: 200OK
 ]
 ```
 
-### Rebuild cube
-`PUT /cubes/{cubeName}/rebuild`
-### Path Variable
+## Get cube
+`GET /cubes/{cubeName}`
+
+#### Path Variable
+* cubeName - `required` `string` Cube name to find.
+
+
+## Get cube descriptor
+`GET /cube_desc/{cubeName}`
+
+#### Path Variable
 * cubeName - `required` `string` Cube name.
 
-### Request Body
+#### Response Sample
+
+```
+[
+    {
+        "uuid": "a24ca905-1fc6-4f67-985c-38fa5aeafd92", 
+        "name": "test_kylin_cube_with_slr_desc", 
+        "description": null, 
+        "dimensions": [
+            {
+                "id": 0, 
+                "name": "CAL_DT", 
+                "table": "EDW.TEST_CAL_DT", 
+                "column": null, 
+                "derived": [
+                    "WEEK_BEG_DT"
+                ], 
+                "hierarchy": false
+            }, 
+            {
+                "id": 1, 
+                "name": "CATEGORY", 
+                "table": "DEFAULT.TEST_CATEGORY_GROUPINGS", 
+                "column": null, 
+                "derived": [
+                    "USER_DEFINED_FIELD1", 
+                    "USER_DEFINED_FIELD3", 
+                    "UPD_DATE", 
+                    "UPD_USER"
+                ], 
+                "hierarchy": false
+            }, 
+            {
+                "id": 2, 
+                "name": "CATEGORY_HIERARCHY", 
+                "table": "DEFAULT.TEST_CATEGORY_GROUPINGS", 
+                "column": [
+                    "META_CATEG_NAME", 
+                    "CATEG_LVL2_NAME", 
+                    "CATEG_LVL3_NAME"
+                ], 
+                "derived": null, 
+                "hierarchy": true
+            }, 
+            {
+                "id": 3, 
+                "name": "LSTG_FORMAT_NAME", 
+                "table": "DEFAULT.TEST_KYLIN_FACT", 
+                "column": [
+                    "LSTG_FORMAT_NAME"
+                ], 
+                "derived": null, 
+                "hierarchy": false
+            }, 
+            {
+                "id": 4, 
+                "name": "SITE_ID", 
+                "table": "EDW.TEST_SITES", 
+                "column": null, 
+                "derived": [
+                    "SITE_NAME", 
+                    "CRE_USER"
+                ], 
+                "hierarchy": false
+            }, 
+            {
+                "id": 5, 
+                "name": "SELLER_TYPE_CD", 
+                "table": "EDW.TEST_SELLER_TYPE_DIM", 
+                "column": null, 
+                "derived": [
+                    "SELLER_TYPE_DESC"
+                ], 
+                "hierarchy": false
+            }, 
+            {
+                "id": 6, 
+                "name": "SELLER_ID", 
+                "table": "DEFAULT.TEST_KYLIN_FACT", 
+                "column": [
+                    "SELLER_ID"
+                ], 
+                "derived": null, 
+                "hierarchy": false
+            }
+        ], 
+        "measures": [
+            {
+                "id": 1, 
+                "name": "GMV_SUM", 
+                "function": {
+                    "expression": "SUM", 
+                    "parameter": {
+                        "type": "column", 
+                        "value": "PRICE", 
+                        "next_parameter": null
+                    }, 
+                    "returntype": "decimal(19,4)"
+                }, 
+                "dependent_measure_ref": null
+            }, 
+            {
+                "id": 2, 
+                "name": "GMV_MIN", 
+                "function": {
+                    "expression": "MIN", 
+                    "parameter": {
+                        "type": "column", 
+                        "value": "PRICE", 
+                        "next_parameter": null
+                    }, 
+                    "returntype": "decimal(19,4)"
+                }, 
+                "dependent_measure_ref": null
+            }, 
+            {
+                "id": 3, 
+                "name": "GMV_MAX", 
+                "function": {
+                    "expression": "MAX", 
+                    "parameter": {
+                        "type": "column", 
+                        "value": "PRICE", 
+                        "next_parameter": null
+                    }, 
+                    "returntype": "decimal(19,4)"
+                }, 
+                "dependent_measure_ref": null
+            }, 
+            {
+                "id": 4, 
+                "name": "TRANS_CNT", 
+                "function": {
+                    "expression": "COUNT", 
+                    "parameter": {
+                        "type": "constant", 
+                        "value": "1", 
+                        "next_parameter": null
+                    }, 
+                    "returntype": "bigint"
+                }, 
+                "dependent_measure_ref": null
+            }, 
+            {
+                "id": 5, 
+                "name": "ITEM_COUNT_SUM", 
+                "function": {
+                    "expression": "SUM", 
+                    "parameter": {
+                        "type": "column", 
+                        "value": "ITEM_COUNT", 
+                        "next_parameter": null
+                    }, 
+                    "returntype": "bigint"
+                }, 
+                "dependent_measure_ref": null
+            }
+        ], 
+        "rowkey": {
+            "rowkey_columns": [
+                {
+                    "column": "SELLER_ID", 
+                    "length": 18, 
+                    "dictionary": null, 
+                    "mandatory": true
+                }, 
+                {
+                    "column": "CAL_DT", 
+                    "length": 0, 
+                    "dictionary": "true", 
+                    "mandatory": false
+                }, 
+                {
+                    "column": "LEAF_CATEG_ID", 
+                    "length": 0, 
+                    "dictionary": "true", 
+                    "mandatory": false
+                }, 
+                {
+                    "column": "META_CATEG_NAME", 
+                    "length": 0, 
+                    "dictionary": "true", 
+                    "mandatory": false
+                }, 
+                {
+                    "column": "CATEG_LVL2_NAME", 
+                    "length": 0, 
+                    "dictionary": "true", 
+                    "mandatory": false
+                }, 
+                {
+                    "column": "CATEG_LVL3_NAME", 
+                    "length": 0, 
+                    "dictionary": "true", 
+                    "mandatory": false
+                }, 
+                {
+                    "column": "LSTG_FORMAT_NAME", 
+                    "length": 12, 
+                    "dictionary": null, 
+                    "mandatory": false
+                }, 
+                {
+                    "column": "LSTG_SITE_ID", 
+                    "length": 0, 
+                    "dictionary": "true", 
+                    "mandatory": false
+                }, 
+                {
+                    "column": "SLR_SEGMENT_CD", 
+                    "length": 0, 
+                    "dictionary": "true", 
+                    "mandatory": false
+                }
+            ], 
+            "aggregation_groups": [
+                [
+                    "LEAF_CATEG_ID", 
+                    "META_CATEG_NAME", 
+                    "CATEG_LVL2_NAME", 
+                    "CATEG_LVL3_NAME", 
+                    "CAL_DT"
+                ]
+            ]
+        }, 
+        "signature": "lsLAl2jL62ZApmOLZqWU3g==", 
+        "last_modified": 1445850327000, 
+        "model_name": "test_kylin_with_slr_model_desc", 
+        "null_string": null, 
+        "hbase_mapping": {
+            "column_family": [
+                {
+                    "name": "F1", 
+                    "columns": [
+                        {
+                            "qualifier": "M", 
+                            "measure_refs": [
+                                "GMV_SUM", 
+                                "GMV_MIN", 
+                                "GMV_MAX", 
+                                "TRANS_CNT", 
+                                "ITEM_COUNT_SUM"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }, 
+        "notify_list": null, 
+        "auto_merge_time_ranges": null, 
+        "retention_range": 0
+    }
+]
+```
+
+## Get data model
+`GET /model/{modelName}`
+
+#### Path Variable
+* modelName - `required` `string` Data model name, by default it should be the same as cube name.
+
+#### Response Sample
+
+```
+{
+    "uuid": "ff527b94-f860-44c3-8452-93b17774c647", 
+    "name": "test_kylin_with_slr_model_desc", 
+    "lookups": [
+        {
+            "table": "EDW.TEST_CAL_DT", 
+            "join": {
+                "type": "inner", 
+                "primary_key": [
+                    "CAL_DT"
+                ], 
+                "foreign_key": [
+                    "CAL_DT"
+                ]
+            }
+        }, 
+        {
+            "table": "DEFAULT.TEST_CATEGORY_GROUPINGS", 
+            "join": {
+                "type": "inner", 
+                "primary_key": [
+                    "LEAF_CATEG_ID", 
+                    "SITE_ID"
+                ], 
+                "foreign_key": [
+                    "LEAF_CATEG_ID", 
+                    "LSTG_SITE_ID"
+                ]
+            }
+        }
+    ], 
+    "capacity": "MEDIUM", 
+    "last_modified": 1442372116000, 
+    "fact_table": "DEFAULT.TEST_KYLIN_FACT", 
+    "filter_condition": null, 
+    "partition_desc": {
+        "partition_date_column": "DEFAULT.TEST_KYLIN_FACT.CAL_DT", 
+        "partition_date_start": 0, 
+        "partition_date_format": "yyyy-MM-dd", 
+        "partition_type": "APPEND", 
+        "partition_condition_builder": "org.apache.kylin.metadata.model.PartitionDesc$DefaultPartitionConditionBuilder"
+    }
+}
+```
+
+## Build cube
+`PUT /cubes/{cubeName}/rebuild`
+
+#### Path Variable
+* cubeName - `required` `string` Cube name.
+
+#### Request Body
 * startTime - `required` `long` Start timestamp of data to build, e.g. 1388563200000 for 2014-1-1
 * endTime - `required` `long` End timestamp of data to build
 * buildType - `required` `string` Build type: 'BUILD' OR 'MERGE'
 
-### Response Sample
-```sh
-Status: 200OK
+#### Response Sample
 ```
-```sh
 {  
    "uuid":"c143e0e4-ac5f-434d-acf3-46b0d15e3dc6",
    "last_modified":1407908916705,
@@ -1147,146 +670,7 @@ Status: 200OK
          "info":null,
          "run_async":true
       },
-      {  
-         "interruptCmd":null,
-         "name":"Build Dimension Dictionary",
-         "sequence_id":2,
-         "exec_cmd":" -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/fact_distinct_columns",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NO_MR_DICTIONARY",
-         "info":null,
-         "run_async":false
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build Base Cuboid Data",
-         "sequence_id":3,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/kylin_intermediate_test_kylin_cube_with_slr_desc_19700101000000_20140731160000_c143e0e4_ac5f_434d_acf3_46b0d15e3dc6 -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/base_cuboid -jobname Kylin_Base_Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_3 -level 0",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_BASECUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 8-Dimension",
-         "sequence_id":4,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/base_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/8d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_4 -level 1",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 7-Dimension",
-         "sequence_id":5,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/8d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/7d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_5 -level 2",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 6-Dimension",
-         "sequence_id":6,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/7d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/6d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_6 -level 3",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 5-Dimension",
-         "sequence_id":7,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/6d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/5d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_7 -level 4",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 4-Dimension",
-         "sequence_id":8,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/5d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/4d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_8 -level 5",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Calculate HTable Region Splits",
-         "sequence_id":9,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/* -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/rowkey_stats -jobname Kylin_Region_Splits_Calculator_test_kylin_cube_with_slr_empty_Step_9 -cubename test_kylin_cube_with_slr_empty",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Create HTable",
-         "sequence_id":10,
-         "exec_cmd":" -cubename test_kylin_cube_with_slr_empty -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/rowkey_stats/part-r-00000 -htablename KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_EMPTY-19700101000000_20140731160000_11BB4326-5975-4358-804C-70D53642E03A",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE",
-         "info":null,
-         "run_async":false
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Convert Cuboid Data to HFile",
-         "sequence_id":11,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/* -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/hfile -htablename KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_EMPTY-19700101000000_20140731160000_11BB4326-5975-4358-804C-70D53642E03A -jobname Kylin_HFile_Generator_test_kylin_cube_with_slr_empty_Step_11",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_CONVERTHFILE",
-         "info":null,
-         "run_async":true
-      },
+   ...
       {  
          "interruptCmd":null,
          "name":"Load HFile to HBase Table",
@@ -1308,34 +692,34 @@ Status: 200OK
 ```
 
 
-### Disable Cube
+## Disable Cube
 `PUT /cubes/{cubeName}/disable`
-### Path variable
+
+#### Path variable
 * cubeName - `required` `string` Cube name.
 
-### Response Sample
+#### Response Sample
 (Same as "Enable Cube")
 
 
-### Purge Cube
+## Purge Cube
 `PUT /cubes/{cubeName}/purge`
-### Path variable
+
+#### Path variable
 * cubeName - `required` `string` Cube name.
 
-### Response Sample
+#### Response Sample
 (Same as "Enable Cube")
 
 
-### Enable Cube
+## Enable Cube
 `PUT /cubes/{cubeName}/enable`
-### Path variable
+
+#### Path variable
 * cubeName - `required` `string` Cube name.
 
-### Response Sample
-```sh
-Status: 200OK
+#### Response Sample
 ```
-```sh
 {  
    "uuid":"1eaca32a-a33e-4b69-83dd-0bb8b1f8c53b",
    "last_modified":1407909046305,
@@ -1382,17 +766,14 @@ Status: 200OK
 }
 ```
 
-### Resume Job
+## Resume Job
 `PUT /jobs/{jobId}/resume`
 
-### Path variable
+#### Path variable
 * jobId- `required` `string` Job id.
 
-### Response Sample
-```sh
-Status: 200OK
+#### Response Sample
 ```
-```sh
 {  
    "uuid":"c143e0e4-ac5f-434d-acf3-46b0d15e3dc6",
    "last_modified":1407908916705,
@@ -1433,146 +814,7 @@ Status: 200OK
          "info":null,
          "run_async":true
       },
-      {  
-         "interruptCmd":null,
-         "name":"Build Dimension Dictionary",
-         "sequence_id":2,
-         "exec_cmd":" -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/fact_distinct_columns",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NO_MR_DICTIONARY",
-         "info":null,
-         "run_async":false
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build Base Cuboid Data",
-         "sequence_id":3,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/kylin_intermediate_test_kylin_cube_with_slr_desc_19700101000000_20140731160000_c143e0e4_ac5f_434d_acf3_46b0d15e3dc6 -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/base_cuboid -jobname Kylin_Base_Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_3 -level 0",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_BASECUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 8-Dimension",
-         "sequence_id":4,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/base_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/8d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_4 -level 1",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 7-Dimension",
-         "sequence_id":5,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/8d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/7d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_5 -level 2",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 6-Dimension",
-         "sequence_id":6,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/7d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/6d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_6 -level 3",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 5-Dimension",
-         "sequence_id":7,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/6d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/5d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_7 -level 4",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 4-Dimension",
-         "sequence_id":8,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/5d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/4d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_8 -level 5",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Calculate HTable Region Splits",
-         "sequence_id":9,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/* -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/rowkey_stats -jobname Kylin_Region_Splits_Calculator_test_kylin_cube_with_slr_empty_Step_9 -cubename test_kylin_cube_with_slr_empty",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Create HTable",
-         "sequence_id":10,
-         "exec_cmd":" -cubename test_kylin_cube_with_slr_empty -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/rowkey_stats/part-r-00000 -htablename KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_EMPTY-19700101000000_20140731160000_11BB4326-5975-4358-804C-70D53642E03A",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE",
-         "info":null,
-         "run_async":false
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Convert Cuboid Data to HFile",
-         "sequence_id":11,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/* -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/hfile -htablename KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_EMPTY-19700101000000_20140731160000_11BB4326-5975-4358-804C-70D53642E03A -jobname Kylin_HFile_Generator_test_kylin_cube_with_slr_empty_Step_11",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_CONVERTHFILE",
-         "info":null,
-         "run_async":true
-      },
+    ...
       {  
          "interruptCmd":null,
          "name":"Load HFile to HBase Table",
@@ -1593,242 +835,37 @@ Status: 200OK
 }
 ```
 
-### Discard Job
+## Discard Job
 `PUT /jobs/{jobId}/cancel`
-### Path variable
+
+#### Path variable
 * jobId- `required` `string` Job id.
 
-### Response Sample
-```sh
-Status: 200OK
-```
-```sh
-{  
-   "uuid":"c143e0e4-ac5f-434d-acf3-46b0d15e3dc6",
-   "last_modified":1407908916705,
-   "name":"test_kylin_cube_with_slr_empty - 19700101000000_20140731160000 - BUILD - PDT 2014-08-12 22:48:36",
-   "type":"BUILD",
-   "duration":0,
-   "related_cube":"test_kylin_cube_with_slr_empty",
-   "related_segment":"19700101000000_20140731160000",
-   "exec_start_time":0,
-   "exec_end_time":0,
-   "mr_waiting":0,
-   "steps":[  
-      {  
-         "interruptCmd":null,
-         "name":"Create Intermediate Flat Hive Table",
-         "sequence_id":0,
-         "exec_cmd":"hive -e \"DROP TABLE IF EXISTS kylin_intermediate_test_kylin_cube_with_slr_desc_19700101000000_20140731160000_c143e0e4_ac5f_434d_acf3_46b0d15e3dc6;\nCREATE EXTERNAL TABLE IF NOT EXISTS kylin_intermediate_test_kylin_cube_with_slr_desc_19700101000000_20140731160000_c143e0e4_ac5f_434d_acf3_46b0d15e3dc6\n(\nCAL_DT date\n,LEAF_CATEG_ID int\n,LSTG_SITE_ID int\n,META_CATEG_NAME string\n,CATEG_LVL2_NAME string\n,CATEG_LVL3_NAME string\n,LSTG_FORMAT_NAME string\n,SLR_SEGMENT_CD smallint\n,SELLER_ID bigint\n,PRICE decimal\n)\nROW FORMAT DELIMITED FIELDS TERMINATED BY '\\177'\nSTORED AS SEQUENCEFILE\nLOCATION '/tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/kylin_intermediate_test_kylin_cube_with_slr_desc_19700101000000_20140731160000_c143e0e4_ac5f_434d_acf3_46b0d15e3dc6';\nSET mapreduce.job.split.metainfo.maxsize=-1;\nSET mapred.compress.map.output=true;\nSET mapred.map.output.compression.codec=com.hadoop.compression.lzo.LzoCodec;\nSET mapred.output.compress=true;\nSET mapred.output.compression.codec=com.hadoop.compression.lzo.LzoCodec;\nSET mapred.output.compression.type=BLOCK;\nSET mapreduce.job.max.split.locations=2000;\nSET hive.exec.compress.output=true;\nSET hive.auto.convert.join.noconditionaltask = true;\nSET hive.auto.convert.join.noconditionaltask.size = 300000000;\nINSERT OVERWRITE TABLE kylin_intermediate_test_kylin_cube_with_slr_desc_19700101000000_20140731160000_c143e0e4_ac5f_434d_acf3_46b0d15e3dc6\nSELECT\nTEST_KYLIN_FACT.CAL_DT\n,TEST_KYLIN_FACT.LEAF_CATEG_ID\n,TEST_KYLIN_FACT.LSTG_SITE_ID\n,TEST_CATEGORY_GROUPINGS.META_CATEG_NAME\n,TEST_CATEGORY_GROUPINGS.CATEG_LVL2_NAME\n,TEST_CATEGORY_GROUPINGS.CATEG_LVL3_NAME\n,TEST_KYLIN_FACT.LSTG_FORMAT_NAME\n,TEST_KYLIN_FACT.SLR_SEGMENT_CD\n,TEST_KYLIN_FACT.SELLER_ID\n,TEST_KYLIN_FACT.PRICE\nFROM TEST_KYLIN_FACT\nINNER JOIN TEST_CAL_DT\nON TEST_KYLIN_FACT.CAL_DT = TEST_CAL_DT.CAL_DT\nINNER JOIN TEST_CATEGORY_GROUPINGS\nON TEST_KYLIN_FACT.LEAF_CATEG_ID = TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID AND TEST_KYLIN_FACT.LSTG_SITE_ID = TEST_CATEGORY_GROUPINGS.SITE_ID\nINNER JOIN TEST_SITES\nON TEST_KYLIN_FACT.LSTG_SITE_ID = TEST_SITES.SITE_ID\nINNER JOIN TEST_SELLER_TYPE_DIM\nON TEST_KYLIN_FACT.SLR_SEGMENT_CD = TEST_SELLER_TYPE_DIM.SELLER_TYPE_CD\nWHERE (test_kylin_fact.cal_dt < '2014-07-31 16:00:00')\n;\n\"",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"SHELL_CMD_HADOOP",
-         "info":null,
-         "run_async":false
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Extract Fact Table Distinct Columns",
-         "sequence_id":1,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/kylin_intermediate_test_kylin_cube_with_slr_desc_19700101000000_20140731160000_c143e0e4_ac5f_434d_acf3_46b0d15e3dc6 -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/fact_distinct_columns -jobname Kylin_Fact_Distinct_Columns_test_kylin_cube_with_slr_empty_Step_1",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_FACTDISTINCT",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build Dimension Dictionary",
-         "sequence_id":2,
-         "exec_cmd":" -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/fact_distinct_columns",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NO_MR_DICTIONARY",
-         "info":null,
-         "run_async":false
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build Base Cuboid Data",
-         "sequence_id":3,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/kylin_intermediate_test_kylin_cube_with_slr_desc_19700101000000_20140731160000_c143e0e4_ac5f_434d_acf3_46b0d15e3dc6 -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/base_cuboid -jobname Kylin_Base_Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_3 -level 0",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_BASECUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 8-Dimension",
-         "sequence_id":4,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/base_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/8d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_4 -level 1",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 7-Dimension",
-         "sequence_id":5,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/8d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/7d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_5 -level 2",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 6-Dimension",
-         "sequence_id":6,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/7d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/6d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_6 -level 3",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 5-Dimension",
-         "sequence_id":7,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/6d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/5d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_7 -level 4",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Build N-Dimension Cuboid Data : 4-Dimension",
-         "sequence_id":8,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -segmentname 19700101000000_20140731160000 -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/5d_cuboid -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/4d_cuboid -jobname Kylin_ND-Cuboid_Builder_test_kylin_cube_with_slr_empty_Step_8 -level 5",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NDCUBOID",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Calculate HTable Region Splits",
-         "sequence_id":9,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/* -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/rowkey_stats -jobname Kylin_Region_Splits_Calculator_test_kylin_cube_with_slr_empty_Step_9 -cubename test_kylin_cube_with_slr_empty",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_RANGEKEYDISTRIBUTION",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Create HTable",
-         "sequence_id":10,
-         "exec_cmd":" -cubename test_kylin_cube_with_slr_empty -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/rowkey_stats/part-r-00000 -htablename KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_EMPTY-19700101000000_20140731160000_11BB4326-5975-4358-804C-70D53642E03A",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADDOP_NO_MR_CREATEHTABLE",
-         "info":null,
-         "run_async":false
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Convert Cuboid Data to HFile",
-         "sequence_id":11,
-         "exec_cmd":" -conf C:/kylin/Kylin/server/src/main/resources/hadoop_job_conf_medium.xml -cubename test_kylin_cube_with_slr_empty -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/cuboid/* -output /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/hfile -htablename KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_EMPTY-19700101000000_20140731160000_11BB4326-5975-4358-804C-70D53642E03A -jobname Kylin_HFile_Generator_test_kylin_cube_with_slr_empty_Step_11",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_CONVERTHFILE",
-         "info":null,
-         "run_async":true
-      },
-      {  
-         "interruptCmd":null,
-         "name":"Load HFile to HBase Table",
-         "sequence_id":12,
-         "exec_cmd":" -input /tmp/kylin-c143e0e4-ac5f-434d-acf3-46b0d15e3dc6/test_kylin_cube_with_slr_empty/hfile/ -htablename KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_EMPTY-19700101000000_20140731160000_11BB4326-5975-4358-804C-70D53642E03A -cubename test_kylin_cube_with_slr_empty",
-         "interrupt_cmd":null,
-         "exec_start_time":0,
-         "exec_end_time":0,
-         "exec_wait_time":0,
-         "step_status":"PENDING",
-         "cmd_type":"JAVA_CMD_HADOOP_NO_MR_BULKLOAD",
-         "info":null,
-         "run_async":false
-      }
-   ],
-   "job_status":"PENDING",
-   "progress":0.0
-}
-```
+#### Response Sample
+(Same as "Resume job")
 
-### Get job step output
+## Get job step output
 `GET /{jobId}/steps/{stepId}/output`
-### Path Variable
+
+#### Path Variable
 * jobId - `required` `string` Job id.
 * stepId - `required` `string` Step id; the step id is composed by jobId with step sequence id; for example, the jobId is "fb479e54-837f-49a2-b457-651fc50be110", its 3rd step id is "fb479e54-837f-49a2-b457-651fc50be110-3", 
 
-### Response Sample
-```sh
-Status: 200OK
+#### Response Sample
 ```
-```sh
 {  
    "cmd_output":"log string"
 }
 ```
 
 
-### Get Hive Table
+## Get Hive Table
 `GET /tables/{tableName}`
-### Request Parameters
+
+#### Request Parameters
 * tableName - `required` `string` table name to find.
 
-### Response Sample
-```sh
-Status: 200OK
-```
+#### Response Sample
 ```sh
 {
     uuid: "69cc92c0-fc42-4bb9-893f-bd1141c91dbe",
@@ -1855,16 +892,14 @@ Status: 200OK
 }
 ```
 
-### Get Hive Table  (Extend Info)
+## Get Hive Table (Extend Info)
 `GET /tables/{tableName}/exd-map`
-### Request Parameters
+
+#### Request Parameters
 * tableName - `optional` `string` table name to find.
 
-### Response Sample
-```sh
-Status: 200OK
+#### Response Sample
 ```
-```sh
 {
     "minFileSize": "46055",
     "totalNumberFiles": "1",
@@ -1884,16 +919,14 @@ Status: 200OK
 }
 ```
 
-### Get Hive Tables
+## Get Hive Tables
 `GET /tables`
-### Request Parameters
+
+#### Request Parameters
 * project- `required` `string` will list all tables in the project.
 * ext- `optional` `boolean`  set true to get extend info of table.
 
-### Response Sample
-```sh
-Status: 200OK
-```
+#### Response Sample
 ```sh
 [
  {
@@ -1936,82 +969,21 @@ Status: 200OK
         totalFileSize: "46069",
         outputformat: "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
     }
-}, {
-    uuid: "82d72d9c-705c-4706-aaf5-358ac2661cf9",
-    name: "TEST_KYLIN_FACT",
-    columns: [{
-        id: "1",
-        name: "TRANS_ID",
-        datatype: "bigint"
-    }, {
-        id: "2",
-        name: "CAL_DT",
-        datatype: "date"
-    }, {
-        id: "3",
-        name: "LSTG_FORMAT_NAME",
-        datatype: "string"
-    }, {
-        id: "4",
-        name: "LEAF_CATEG_ID",
-        datatype: "int"
-    }, {
-        id: "5",
-        name: "LSTG_SITE_ID",
-        datatype: "int"
-    }, {
-        id: "6",
-        name: "SLR_SEGMENT_CD",
-        datatype: "smallint"
-    }, {
-        id: "7",
-        name: "PRICE",
-        datatype: "decimal(38,16)"
-    }, {
-        id: "8",
-        name: "ITEM_COUNT",
-        datatype: "bigint"
-    }, {
-        id: "9",
-        name: "SELLER_ID",
-        datatype: "bigint"
-    }],
-    database: "DEFAULT",
-    cardinality: {},
-    last_modified: 0,
-    exd: {
-        minFileSize: "607328",
-        totalNumberFiles: "1",
-        location: "hdfs://sandbox.hortonworks.com:8020/apps/hive/warehouse/test_kylin_fact",
-        lastAccessTime: "1418899958520",
-        lastUpdateTime: "1414051037179",
-        columns: "struct columns { i64 trans_id, date cal_dt, string lstg_format_name, i32 leaf_categ_id, i32 lstg_site_id, i16 slr_segment_cd, decimal(38,16) price, i64 item_count, i64 seller_id}",
-        partitionColumns: "",
-        EXD_STATUS: "true",
-        maxFileSize: "607328",
-        inputformat: "org.apache.hadoop.mapred.TextInputFormat",
-        partitioned: "false",
-        tableName: "test_kylin_fact",
-        owner: "root",
-        totalFileSize: "607328",
-        outputformat: "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-    }
- }
+}
 ]
 ```
 
-### Load Hive Tables
+## Load Hive Tables
 `POST /tables/{tables}/{project}`
 
-* tables- `required` `string` tables you want to load from hive,split with comma.
-* project- `required` `String`  specif.
+
+#### Request Parameters
+* tables- `required` `string` table names you want to load from hive, separated with comma.
+* project- `required` `String`  the project which the tables will be loaded into.
 
 
-### Response Sample
-```sh
-Status: 200OK
+#### Response Sample
 ```
-```sh
 {
     "result.loaded": ["DEFAULT.SAMPLE_07"],
     "result.unloaded": ["sapmle_08"]
@@ -2019,15 +991,11 @@ Status: 200OK
 ```
 
 
-### Wipe cache
+## Wipe cache
 `GET /cache/{type}/{name}/{action}`
-### Path variable
-* type - `required` `string` 'METADATA' or 'CUBE'
-* name - `required` `string` Cache key.
-* action - `required` `string` 'create', 'update' or 'drop'
 
-### Response Sample
-```sh
-Status: 200OK
-```
+#### Path variable
+* type - `required` `string` 'METADATA' or 'CUBE'
+* name - `required` `string` Cache key, e.g the cube name.
+* action - `required` `string` 'create', 'update' or 'drop'
 
