@@ -870,6 +870,8 @@ public class CubeDesc extends RootPersistentEntity {
         newCubeDesc.setNotifyList(cubeDesc.getNotifyList());
         newCubeDesc.setStatusNeedNotify(cubeDesc.getStatusNeedNotify());
         newCubeDesc.setAutoMergeTimeRanges(cubeDesc.getAutoMergeTimeRanges());
+        newCubeDesc.setPartitionDateStart(cubeDesc.getPartitionDateStart());
+        newCubeDesc.setPartitionDateEnd(cubeDesc.getPartitionDateEnd());
         newCubeDesc.setRetentionRange(cubeDesc.getRetentionRange());
         newCubeDesc.setEngineType(cubeDesc.getEngineType());
         newCubeDesc.setStorageType(cubeDesc.getStorageType());
