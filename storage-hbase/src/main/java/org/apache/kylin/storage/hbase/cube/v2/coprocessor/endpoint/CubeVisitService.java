@@ -128,6 +128,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         RegionScanner innerScanner = null;
         HRegion region = null;
 
+        StringBuilder sb = new StringBuilder();
+        byte[] allRows;
+
         try {
             this.serviceStartTime = System.currentTimeMillis();
 
@@ -140,13 +143,16 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             Scan scan = CubeHBaseRPC.buildScan(hbaseRawScan);
 
+            sb.append(System.currentTimeMillis() - this.serviceStartTime);
+            sb.append(",");
+
             region = env.getRegion();
             region.startRegionOperation();
 
             innerScanner = region.getScanner(scan);
-            InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
-
             CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
+
+            InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
             if (behavior.ordinal() < CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
                 scanReq.setAggrCacheGB(0); // disable mem check if so told
             }
@@ -171,16 +177,27 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 finalRowCount++;
             }
 
+            sb.append(System.currentTimeMillis() - this.serviceStartTime);
+            sb.append(",");
+
+            //outputStream.close() is not necessary
+            allRows = outputStream.toByteArray();
+            byte[] compressedAllRows = CompressionUtils.compress(allRows);
+
+            sb.append(System.currentTimeMillis() - this.serviceStartTime);
+            sb.append(",");
+
             OperatingSystemMXBean operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
             double systemCpuLoad = operatingSystemMXBean.getSystemCpuLoad();
             double freePhysicalMemorySize = operatingSystemMXBean.getFreePhysicalMemorySize();
             double freeSwapSpaceSize = operatingSystemMXBean.getFreeSwapSpaceSize();
 
-            //outputStream.close() is not necessary
-            byte[] allRows = outputStream.toByteArray();
+            sb.append(System.currentTimeMillis() - this.serviceStartTime);
+            sb.append(",");
+
             CubeVisitProtos.CubeVisitResponse.Builder responseBuilder = CubeVisitProtos.CubeVisitResponse.newBuilder();
             done.run(responseBuilder.//
-                    setCompressedRows(HBaseZeroCopyByteString.wrap(CompressionUtils.compress(allRows))).//too many array copies 
+                    setCompressedRows(HBaseZeroCopyByteString.wrap(compressedAllRows)).//too many array copies 
                     setStats(CubeVisitProtos.CubeVisitResponse.Stats.newBuilder().//
                             setAggregatedRowCount(finalScanner.getScannedRowCount() - finalRowCount).//
                             setScannedRowCount(finalScanner.getScannedRowCount()).//
@@ -189,7 +206,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                             setSystemCpuLoad(systemCpuLoad).//
                             setFreePhysicalMemorySize(freePhysicalMemorySize).//
                             setFreeSwapSpaceSize(freeSwapSpaceSize).//
-                            setHostname(InetAddress.getLocalHost().getHostName()).//
+                            setHostname(InetAddress.getLocalHost().getHostName()).// 
+                            setEtcMsg(sb.toString()).//
                             build()).//
                     build());
 

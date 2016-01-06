@@ -228,7 +228,6 @@ public class GTScanRequest {
                 }
             }
         }
-        System.out.println("meaningless byte is now " + meaninglessByte);
     }
 
     public boolean hasFilterPushDown() {
