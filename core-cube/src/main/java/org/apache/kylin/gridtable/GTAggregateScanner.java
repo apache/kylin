@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -18,14 +20,13 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.util.KryoUtils;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
+import org.apache.kylin.metadata.measure.MeasureAggregators;
+import org.apache.kylin.metadata.measure.MeasureCodec;
+import org.apache.kylin.metadata.model.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -125,8 +126,7 @@ public class GTAggregateScanner implements IGTScanner {
         final List<Dump> dumps;
         final int keyLength;
         final boolean[] compareMask;
-
-        final Kryo kryo = KryoUtils.getKryo();
+        final MeasureCodec measureCodec;
 
         final Comparator<byte[]> bytesComparator = new Comparator<byte[]>() {
             @Override
@@ -157,6 +157,15 @@ public class GTAggregateScanner implements IGTScanner {
             keyLength = compareMask.length;
             dumps = Lists.newArrayList();
             aggBufMap = createBuffMap();
+            measureCodec = createMeasureCodec();
+        }
+
+        private MeasureCodec createMeasureCodec() {
+            DataType[] types = new DataType[metrics.trueBitCount()];
+            for (int i = 0; i < types.length; i++) {
+                types[i] = info.getColumnType(metrics.trueBitAt(i));
+            }
+            return new MeasureCodec(types);
         }
 
         private boolean[] createCompareMask() {
@@ -227,7 +236,7 @@ public class GTAggregateScanner implements IGTScanner {
         private void spillBuffMap() throws RuntimeException {
             if (aggBufMap.isEmpty())
                 return;
-            
+
             try {
                 Dump dump = new Dump(aggBufMap);
                 dump.flush();
@@ -339,9 +348,9 @@ public class GTAggregateScanner implements IGTScanner {
             }
         }
 
-        class Dump implements Iterable<Pair<byte[], MeasureAggregator[]>> {
+        class Dump implements Iterable<Pair<byte[], byte[]>> {
             File dumpedFile;
-            Input input;
+            ObjectInputStream ois;
             SortedMap<byte[], MeasureAggregator[]> buffMap;
 
             public Dump(SortedMap<byte[], MeasureAggregator[]> buffMap) throws IOException {
@@ -349,16 +358,15 @@ public class GTAggregateScanner implements IGTScanner {
             }
 
             @Override
-            public Iterator<Pair<byte[], MeasureAggregator[]>> iterator() {
+            public Iterator<Pair<byte[], byte[]>> iterator() {
                 try {
                     if (dumpedFile == null || !dumpedFile.exists()) {
                         throw new RuntimeException("Dumped file cannot be found at: " + (dumpedFile == null ? "<null>" : dumpedFile.getAbsolutePath()));
                     }
 
-                    input = new Input(new FileInputStream(dumpedFile));
-
-                    final int count = kryo.readObject(input, Integer.class);
-                    return new Iterator<Pair<byte[], MeasureAggregator[]>>() {
+                    ois = new ObjectInputStream(new FileInputStream(dumpedFile));
+                    final int count = ois.readInt();
+                    return new Iterator<Pair<byte[], byte[]>>() {
                         int cursorIdx = 0;
 
                         @Override
@@ -367,10 +375,12 @@ public class GTAggregateScanner implements IGTScanner {
                         }
 
                         @Override
-                        public Pair<byte[], MeasureAggregator[]> next() {
+                        public Pair<byte[], byte[]> next() {
                             try {
                                 cursorIdx++;
-                                return (Pair<byte[], MeasureAggregator[]>) kryo.readObject(input, Pair.class);
+                                byte[] key = (byte[]) ois.readObject();
+                                byte[] value = (byte[]) ois.readObject();
+                                return new Pair<>(key, value);
                             } catch (Exception e) {
                                 throw new RuntimeException("Cannot read AggregationCache from dumped file: " + e.getMessage());
                             }
@@ -388,28 +398,38 @@ public class GTAggregateScanner implements IGTScanner {
 
             public void flush() throws IOException {
                 if (buffMap != null) {
-                    Output output = null;
+                    ObjectOutputStream oos = null;
+                    Object[] aggrResult = null;
+                    final ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
+
                     try {
                         dumpedFile = File.createTempFile("KYLIN_AGGR_", ".tmp");
 
                         logger.info("AggregationCache will dump to file: " + dumpedFile.getAbsolutePath());
-                        output = new Output(new FileOutputStream(dumpedFile));
-                        kryo.writeObject(output, buffMap.size());
+                        oos = new ObjectOutputStream(new FileOutputStream(dumpedFile));
+                        oos.writeInt(buffMap.size());
+
                         for (Entry<byte[], MeasureAggregator[]> entry : buffMap.entrySet()) {
-                            kryo.writeObject(output, new Pair(entry.getKey(), entry.getValue()));
+                            metricsBuf.clear();
+                            MeasureAggregators aggs = new MeasureAggregators(entry.getValue());
+                            aggrResult = new Object[metrics.trueBitCount()];
+                            aggs.collectStates(aggrResult);
+                            measureCodec.encode(aggrResult, metricsBuf);
+                            oos.writeObject(entry.getKey());
+                            oos.writeObject(metricsBuf.array());
                         }
                     } finally {
                         buffMap = null;
-                        if (output != null)
-                            output.close();
+                        if (oos != null)
+                            oos.close();
                     }
                 }
             }
 
             public void terminate() throws IOException {
                 buffMap = null;
-                if (input != null)
-                    input.close();
+                if (ois != null)
+                    ois.close();
                 if (dumpedFile != null && dumpedFile.exists())
                     dumpedFile.delete();
             }
@@ -417,8 +437,10 @@ public class GTAggregateScanner implements IGTScanner {
 
         class DumpMerger implements Iterable<Pair<byte[], MeasureAggregator[]>> {
             final PriorityQueue<Pair<byte[], Integer>> minHeap;
-            final List<Iterator<Pair<byte[], MeasureAggregator[]>>> dumpIterators;
-            final List<MeasureAggregator[]> dumpCurrentValues;
+            final List<Iterator<Pair<byte[], byte[]>>> dumpIterators;
+            final List<Object[]> dumpCurrentValues;
+            final MeasureAggregator[] resultMeasureAggregators = newAggregators();
+            final MeasureAggregators resultAggrs = new MeasureAggregators(resultMeasureAggregators);
 
             public DumpMerger(List<Dump> dumps) {
                 minHeap = new PriorityQueue<>(dumps.size(), new Comparator<Pair<byte[], Integer>>() {
@@ -430,26 +452,26 @@ public class GTAggregateScanner implements IGTScanner {
                 dumpIterators = Lists.newArrayListWithCapacity(dumps.size());
                 dumpCurrentValues = Lists.newArrayListWithCapacity(dumps.size());
 
-                Iterator<Pair<byte[], MeasureAggregator[]>> it;
+                Iterator<Pair<byte[], byte[]>> it;
                 for (int i = 0; i < dumps.size(); i++) {
+                    dumpCurrentValues.add(i, null);
                     it = dumps.get(i).iterator();
                     if (it.hasNext()) {
                         dumpIterators.add(i, it);
-                        Pair<byte[], MeasureAggregator[]> entry = it.next();
-                        minHeap.offer(new Pair(entry.getKey(), i));
-                        dumpCurrentValues.add(i, entry.getValue());
+                        enqueueFromDump(i);
                     } else {
                         dumpIterators.add(i, null);
-                        dumpCurrentValues.add(i, null);
                     }
                 }
             }
 
             private void enqueueFromDump(int index) {
                 if (dumpIterators.get(index) != null && dumpIterators.get(index).hasNext()) {
-                    Pair<byte[], MeasureAggregator[]> entry = dumpIterators.get(index).next();
-                    minHeap.offer(new Pair(entry.getKey(), index));
-                    dumpCurrentValues.set(index, entry.getValue());
+                    Pair<byte[], byte[]> pair = dumpIterators.get(index).next();
+                    minHeap.offer(new Pair(pair.getKey(), index));
+                    Object[] metricValues = new Object[metrics.trueBitCount()];
+                    measureCodec.decode(ByteBuffer.wrap(pair.getValue()), metricValues);
+                    dumpCurrentValues.set(index, metricValues);
                 }
             }
 
@@ -461,26 +483,24 @@ public class GTAggregateScanner implements IGTScanner {
                         return !minHeap.isEmpty();
                     }
 
+                    private void internalAggregate() {
+                        Pair<byte[], Integer> peekEntry = minHeap.poll();
+                        resultAggrs.aggregate(dumpCurrentValues.get(peekEntry.getValue()));
+                        enqueueFromDump(peekEntry.getValue());
+                    }
+
                     @Override
                     public Pair<byte[], MeasureAggregator[]> next() {
                         // Use minimum heap to merge sort the keys,
                         // also do aggregation for measures with same keys in different dumps
-                        Pair<byte[], Integer> peekEntry = minHeap.poll();
-                        MeasureAggregator[] mergedAggr = dumpCurrentValues.get(peekEntry.getValue());
-                        enqueueFromDump(peekEntry.getValue());
+                        resultAggrs.reset();
+                        byte[] peekKey = minHeap.peek().getKey();
+                        internalAggregate();
 
-                        while (!minHeap.isEmpty() && bytesComparator.compare(peekEntry.getKey(), minHeap.peek().getKey()) == 0) {
-                            Pair<byte[], Integer> newPeek = minHeap.poll();
-
-                            MeasureAggregator[] newPeekAggr = dumpCurrentValues.get(newPeek.getValue());
-                            for (int i = 0; i < newPeekAggr.length; i++) {
-                                mergedAggr[i].aggregate(newPeekAggr[i].getState());
-                            }
-
-                            enqueueFromDump(newPeek.getValue());
+                        while (!minHeap.isEmpty() && bytesComparator.compare(peekKey, minHeap.peek().getKey()) == 0) {
+                            internalAggregate();
                         }
-
-                        return new Pair(peekEntry.getKey(), mergedAggr);
+                        return new Pair(peekKey, resultMeasureAggregators);
                     }
 
                     @Override
