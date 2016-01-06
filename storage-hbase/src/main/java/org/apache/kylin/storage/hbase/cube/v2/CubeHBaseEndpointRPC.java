@@ -242,11 +242,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     private String getStatsString(CubeVisitProtos.CubeVisitResponse result, int shardIndex) {
         StringBuilder sb = new StringBuilder();
         Stats stats = result.getStats();
-        sb.append("Shard " + shardIndex + " on host: " + stats.getHostname());
+        sb.append("Shard " + shardIndex + " on host: " + stats.getHostname() + ".");
         sb.append("Total scanned row: " + stats.getScannedRowCount() + ". ");
         sb.append("Total filtered/aggred row: " + stats.getAggregatedRowCount() + ". ");
         sb.append("Time elapsed in EP: " + (stats.getServiceEndTime() - stats.getServiceStartTime()) + "(ms). ");
-        sb.append("Server CPU usage: " + stats.getSystemCpuLoad() + ", server physical mem left: " + stats.getFreePhysicalMemorySize() + ", server swap mem left:" + stats.getFreeSwapSpaceSize());
+        sb.append("Server CPU usage: " + stats.getSystemCpuLoad() + ", server physical mem left: " + stats.getFreePhysicalMemorySize() + ", server swap mem left:" + stats.getFreeSwapSpaceSize() + ".");
+        sb.append("Etc message: " + stats.getEtcMsg() + ".");
         return sb.toString();
 
     }
