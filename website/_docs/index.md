@@ -21,33 +21,30 @@ Advanced Topics
 
 #### Connectivity
 
-1.[How to use kylin remote jdbc driver](howto/howto_jdbc.html)
-
-2.[SQL Reference](http://calcite.apache.org/)
+1. [How to use Kylin remote JDBC driver](howto/howto_jdbc.html)
+2. [SQL reference](http://calcite.apache.org/)
 
 ---
 
 #### REST API
 
-1.[Kylin Restful API List](howto/howto_use_restapi.html)
-
-2.[Build Cube with Restful API](howto/howto_build_cube_with_restapi.html)
-
-3.[How to consume Kylin REST API in javascript](howto/howto_use_restapi_in_js.html)
+1. [Kylin Restful API list](howto/howto_use_restapi.html)
+2. [Build cube with Restful API](howto/howto_build_cube_with_restapi.html)
+3. [How to consume Kylin REST API in javascript](howto/howto_use_restapi_in_js.html)
 
 ---
 
 #### Operations
 
-1.[Check Kylin Metadata Store](howto/howto_backup_metadata.html)
-
-2.[Advanced settings of Kylin environment](install/advance_settings.html)
+1. [Backup/restore Kylin metadata store](howto/howto_backup_metadata.html)
+2. [Cleanup storage (HDFS & HBase tables)](howto/howto_cleanup_storage.html)
+3. [Advanced env configurations](install/advance_settings.html)
 
 ---
 
 #### Technical Details
 
-1.[New meta data model structure](/development/new_metadata.html)
+1. [New meta data model structure](/development/new_metadata.html)
 
 
 
