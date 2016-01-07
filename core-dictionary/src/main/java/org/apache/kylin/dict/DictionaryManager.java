@@ -199,11 +199,11 @@ public class DictionaryManager {
         signature.setLastModifiedTime(System.currentTimeMillis());
         signature.setPath("merged_with_no_original_path");
 
-//        String dupDict = checkDupByInfo(newDictInfo);
-//        if (dupDict != null) {
-//            logger.info("Identical dictionary input " + newDictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
-//            return getDictionaryInfo(dupDict);
-//        }
+        //        String dupDict = checkDupByInfo(newDictInfo);
+        //        if (dupDict != null) {
+        //            logger.info("Identical dictionary input " + newDictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
+        //            return getDictionaryInfo(dupDict);
+        //        }
 
         //check for cases where merging dicts are actually same
         boolean identicalSourceDicts = true;
@@ -356,11 +356,11 @@ public class DictionaryManager {
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
 
-        logger.debug("Going to load DictionaryInfo from " + resourcePath);
+        //logger.debug("Going to load DictionaryInfo from " + resourcePath);
         DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
 
-        if (loadDictObj)
-            logger.debug("Loaded dictionary at " + resourcePath);
+        //        if (loadDictObj)
+        //            logger.debug("Loaded dictionary at " + resourcePath);
 
         return info;
     }

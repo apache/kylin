@@ -105,7 +105,7 @@ public class MemoryBudgetController {
             try {
                 reserve(consumer, requestMB);
                 if (debug && waitStart > 0)
-                    logger.info(consumer + " waited " + (System.currentTimeMillis() - waitStart) + " ms on the " + requestMB + " MB request");
+                    logger.debug(consumer + " waited " + (System.currentTimeMillis() - waitStart) + " ms on the " + requestMB + " MB request");
                 return;
             } catch (NotEnoughBudgetException ex) {
                 // retry
@@ -173,7 +173,7 @@ public class MemoryBudgetController {
 
         if (debug) {
             if (getSystemAvailMB() < getRemainingBudgetMB()) {
-                logger.info("Remaining budget is " + getRemainingBudgetMB() + " MB free, but system only has " + getSystemAvailMB() + " MB free. If this persists, some memory calculation must be wrong.");
+                logger.debug("Remaining budget is " + getRemainingBudgetMB() + " MB free, but system only has " + getSystemAvailMB() + " MB free. If this persists, some memory calculation must be wrong.");
             }
         }
     }
@@ -224,7 +224,7 @@ public class MemoryBudgetController {
             booking.remove(entry.consumer);
         }
         if (debug) {
-            logger.info(entry.consumer + " reserved " + entry.reservedMB + " MB, total reserved " + totalReservedMB + " MB, remaining budget " + getRemainingBudgetMB() + " MB");
+            logger.debug(entry.consumer + " reserved " + entry.reservedMB + " MB, total reserved " + totalReservedMB + " MB, remaining budget " + getRemainingBudgetMB() + " MB");
         }
 
         if (delta < 0) {
@@ -285,7 +285,7 @@ public class MemoryBudgetController {
             int mb = MemoryBudgetController.getSystemAvailMB();
             if (mb < lowAvail) {
                 lowAvail = mb;
-                logger.info("Lower system avail " + lowAvail + " MB in markHigh()");
+                logger.debug("Lower system avail " + lowAvail + " MB in markHigh()");
             }
         }
 
@@ -294,7 +294,7 @@ public class MemoryBudgetController {
             int mb = MemoryBudgetController.gcAndGetSystemAvailMB();
             if (mb > highAvail) {
                 highAvail = mb;
-                logger.info("Higher system avail " + highAvail + " MB in markLow()");
+                logger.debug("Higher system avail " + highAvail + " MB in markLow()");
             }
         }
 

@@ -89,7 +89,7 @@ abstract public class AbstractInMemCubeBuilder {
             output.write(cuboidId, record);
         }
         scanner.close();
-        logger.info("Cuboid " + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
+        logger.debug("Cuboid " + cuboidId + " output takes " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
 }

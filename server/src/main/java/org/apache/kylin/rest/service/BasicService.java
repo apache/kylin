@@ -58,44 +58,44 @@ public abstract class BasicService {
 
         return kylinConfig;
     }
-    
-    public final MetadataManager getMetadataManager() {
+
+    public MetadataManager getMetadataManager() {
         return MetadataManager.getInstance(getConfig());
     }
 
-    public final CubeManager getCubeManager() {
+    public CubeManager getCubeManager() {
         return CubeManager.getInstance(getConfig());
     }
 
-    public final StreamingManager getStreamingManager() {
+    public StreamingManager getStreamingManager() {
         return StreamingManager.getInstance(getConfig());
     }
 
-    public final KafkaConfigManager getKafkaManager() throws IOException {
-        return  KafkaConfigManager.getInstance(getConfig());
+    public KafkaConfigManager getKafkaManager() throws IOException {
+        return KafkaConfigManager.getInstance(getConfig());
     }
 
-    public final CubeDescManager getCubeDescManager() {
+    public CubeDescManager getCubeDescManager() {
         return CubeDescManager.getInstance(getConfig());
     }
 
-    public final ProjectManager getProjectManager() {
+    public ProjectManager getProjectManager() {
         return ProjectManager.getInstance(getConfig());
     }
 
-    public final HybridManager getHybridManager() {
+    public HybridManager getHybridManager() {
         return HybridManager.getInstance(getConfig());
     }
 
-    public final ExecutableManager getExecutableManager() {
+    public ExecutableManager getExecutableManager() {
         return ExecutableManager.getInstance(getConfig());
     }
 
-    public final IIDescManager getIIDescManager() {
+    public IIDescManager getIIDescManager() {
         return IIDescManager.getInstance(getConfig());
     }
 
-    public final IIManager getIIManager() {
+    public IIManager getIIManager() {
         return IIManager.getInstance(getConfig());
     }
 
