@@ -40,7 +40,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("KylinQueryTest is contained by ITCombinationTest")
+//@Ignore("KylinQueryTest is contained by ITCombinationTest")
 public class ITKylinQueryTest extends KylinTestBase {
 
     @BeforeClass
@@ -95,7 +95,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/temp/query01.sql";
+        String queryFileName = "src/test/resources/query/sql/sample.txt";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
