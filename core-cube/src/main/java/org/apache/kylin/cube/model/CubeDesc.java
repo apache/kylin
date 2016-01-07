@@ -120,7 +120,7 @@ public class CubeDesc extends RootPersistentEntity {
     @JsonProperty("partition_date_start")
     private long partitionDateStart = 0L;
     @JsonProperty("partition_date_end")
-    private long partitionDateEnd = Long.MAX_VALUE;
+    private long partitionDateEnd = 3153600000000l;
     @JsonProperty("auto_merge_time_ranges")
     private long[] autoMergeTimeRanges;
     @JsonProperty("retention_range")

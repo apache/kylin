@@ -68,12 +68,6 @@ KylinApp.service('MetaModel',function(){
     };
 
 
-    this.converDateToGMT = function(){
-        if(this.model.partition_desc&&this.model.partition_desc.partition_date_start){
-            this.model.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
-        }
-    };
-    //
     this.createNew = function () {
         var metaModel = {
             name: '',

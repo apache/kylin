@@ -83,14 +83,6 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                             ProjectModel.setSelectedProject(modelsManager.selectedModel.project);
                             TableModel.aceSrcTbLoaded();
                         }
-
-                        //use
-                        //convert GMT mills ,to make sure partition date show GMT Date
-                        //should run only one time
-                        if(model.partition_desc&&model.partition_desc.partition_date_start)
-                        {
-                            MetaModel.converDateToGMT();
-                        }
                     }
                 });
         //init project
@@ -105,17 +97,6 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     $scope.prepareModel = function () {
         // generate column family
 
-        if (modelsManager.selectedModel.partition_desc.partition_date_column!=null&&(modelsManager.selectedModel.partition_desc.partition_date_start|modelsManager.selectedModel.partition_desc.partition_date_start==0)) {
-            var dateStart = new Date(modelsManager.selectedModel.partition_desc.partition_date_start);
-            dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
-            //switch selected time to utc timestamp
-            modelsManager.selectedModel.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
-
-
-        }
-        if(modelsManager.selectedModel.partition_desc.partition_date_column==null){
-            modelsManager.selectedModel.partition_desc.partition_date_start=null;
-        }
         $scope.state.project = modelsManager.selectedModel.project;
         var _model = angular.copy(modelsManager.selectedModel);
         delete _model.project;
@@ -221,13 +202,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
 //    reverse the date
     $scope.saveModelRollBack = function (){
-        if(modelsManager.selectedModel.partition_desc.partition_date_start==0){
-            modelsManager.selectedModel.partition_desc.partition_date_start = null;
-        }
-        if(modelsManager.selectedModel&&(modelsManager.selectedModel.partition_desc.partition_date_start||modelsManager.selectedModel.partition_desc.partition_date_start==0))
-        {
-            modelsManager.selectedModel.partition_desc.partition_date_start+=new Date().getTimezoneOffset()*60000;
-        }
+
     };
 
     $scope.removeTableDimensions = function(tableIndex){
