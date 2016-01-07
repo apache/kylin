@@ -48,7 +48,7 @@ Please make sure to download and install Kylin ODBC Driver __v1.2__. If you alre
 3.  If you didn’t input the SQL statement in last step, Power BI will list all tables in the project, which means you can load data from the whole table. But, since Apache Kylin cannot query on raw data currently, this function may be limited.
 ![](/images/tutorial/odbc/ms_tool/Picture7.png)
 
-4.  Now you can start to enjou analyzing with Power BI.
+4.  Now you can start to enjoy analyzing with Power BI.
 ![](/images/tutorial/odbc/ms_tool/Picture8.png)
 
 5.  To reload the data and redraw the charts, just click `Refresh` button in `Home` fast tab.

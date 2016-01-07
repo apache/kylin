@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  How to optimize cubes
+title:  How to Optimize Cubes
 categories: howto
 permalink: /docs/howto/howto_optimize_cubes.html
 version: v0.7.2
