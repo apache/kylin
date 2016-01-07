@@ -56,18 +56,18 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
-            logger.info("authentication is null.");
+            logger.debug("authentication is null.");
             return null;
         }
         
         if (authentication.getPrincipal() instanceof UserDetails) {
-            logger.info("authentication.getPrincipal() is " + authentication.getPrincipal());
+            logger.debug("authentication.getPrincipal() is " + authentication.getPrincipal());
             return (UserDetails) authentication.getPrincipal();
         }
 
 
         if (authentication.getDetails() instanceof UserDetails) {
-            logger.info("authentication.getDetails() is " + authentication.getDetails());
+            logger.debug("authentication.getDetails() is " + authentication.getDetails());
             return (UserDetails) authentication.getDetails();
         }
         
