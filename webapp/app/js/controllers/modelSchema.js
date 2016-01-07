@@ -252,9 +252,6 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
   };
   $scope.check_model_setting = function () {
     var errors = [];
-    if (modelsManager.selectedModel.partition_desc.partition_date_column != null && modelsManager.selectedModel.partition_desc.partition_date_start == null) {
-      errors.push("Please indicate start date when partition date column selected.");
-    }
     var errorInfo = "";
     angular.forEach(errors, function (item) {
       errorInfo += "\n" + item;
