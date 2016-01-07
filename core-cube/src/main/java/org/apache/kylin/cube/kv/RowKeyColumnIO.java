@@ -44,6 +44,10 @@ public class RowKeyColumnIO {
         this.IDictionaryAwareness = IDictionaryAwareness;
     }
 
+    public IDictionaryAware getIDictionaryAware() {
+        return IDictionaryAwareness;
+    }
+
     public int getColumnLength(TblColRef col) {
         return IDictionaryAwareness.getColumnLength(col);
     }

@@ -24,6 +24,7 @@ import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.gridtable.NotEnoughGTInfoException;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.dict.TupleFilterDictionaryTranslater;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
@@ -32,6 +33,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.filter.ITupleFilterTranslator;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -56,6 +58,10 @@ public class CubeSegmentScanner implements IGTScanner {
         this.info = CubeGridTable.newGTInfo(cubeSeg, cuboid.getId());
 
         CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
+
+        // translate FunctionTupleFilter to IN clause
+        ITupleFilterTranslator translator = new TupleFilterDictionaryTranslater(this.cubeSeg);
+        filter = translator.translate(filter);
 
         //replace the constant values in filter to dictionary codes 
         TupleFilter gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, mapping.getCuboidDimensionsInGTOrder(), groups);

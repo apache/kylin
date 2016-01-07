@@ -290,6 +290,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     }
 
     private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
+        if (filter == null)
+            return;
+
         if (filter instanceof ColumnTupleFilter) {
             collectColumns(((ColumnTupleFilter) filter).getColumn(), collector);
         }
