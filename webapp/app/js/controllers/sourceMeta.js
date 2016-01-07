@@ -249,9 +249,9 @@ KylinApp
           for(var i = 0;i<timeMeasure.length;i++){
             var defaultCheck = 'Y';
             columnList.push({
-              'name': timeMeasure[i],
+              'name': timeMeasure[i].name,
               'checked': defaultCheck,
-              'type': 'timestamp',
+              'type': timeMeasure[i].type,
               'fromSource':'N'
             });
           }
