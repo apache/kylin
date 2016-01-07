@@ -62,8 +62,11 @@ public class BytesSplitter {
         for (int i = 0; i < byteLen; i++) {
             if (bytes[i] == delimiter) {
                 SplittedBytes split = this.splitBuffers[this.bufferSize++];
-                split.length = length;
+                if(length > split.value.length) {
+                    length = split.value.length;
+                }
                 System.arraycopy(bytes, offset, split.value, 0, length);
+                split.length = length;
                 offset = i + 1;
                 length = 0;
             } else {
@@ -71,6 +74,9 @@ public class BytesSplitter {
             }
         }
         SplittedBytes split = this.splitBuffers[this.bufferSize++];
+        if(length > split.value.length) {
+            length = split.value.length;
+        }
         System.arraycopy(bytes, offset, split.value, 0, length);
         split.length = length;
 
