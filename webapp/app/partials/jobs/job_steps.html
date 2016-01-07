@@ -45,10 +45,10 @@
                             <td>
                                 <span class="label"
                                         ng-class="{
-                                        'label-default' : state.selectedJob.job_status=='PENDING',
+                                        'label label-default' : state.selectedJob.job_status=='PENDING',
                                         'label bg-aqua' : state.selectedJob.job_status=='RUNNING',
-                                        'label-success' : state.selectedJob.job_status=='FINISHED',
-                                        'label-danger' : state.selectedJob.job_status=='ERROR',
+                                        'label label-success' : state.selectedJob.job_status=='FINISHED',
+                                        'label label-danger' : state.selectedJob.job_status=='ERROR',
                                         'label bg-navy' : state.selectedJob.job_status=='DISCARDED'}"
                                 >{{state.selectedJob.job_status}}</span>
                             </td>
