@@ -107,8 +107,8 @@ public class TupleFilterSerializer {
 
             // deserialize filter
             TupleFilter filter = createTupleFilter(opVal);
-            byte[] filetrBytes = BytesUtil.readByteArray(buffer);
-            filter.deserialize(filetrBytes, cs);
+            byte[] filterBytes = BytesUtil.readByteArray(buffer);
+            filter.deserialize(filterBytes, cs);
 
             if (rootFilter == null) {
                 // push root to stack
@@ -170,6 +170,9 @@ public class TupleFilterSerializer {
             break;
         case DYNAMIC:
             filter = new DynamicTupleFilter(null);
+            break;
+        case FUNCTION:
+            filter = new FunctionTupleFilter(null);
             break;
         default:
             throw new IllegalStateException("Error FilterOperatorEnum: " + op.getValue());
