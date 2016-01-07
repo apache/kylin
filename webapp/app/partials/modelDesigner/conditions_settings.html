@@ -57,23 +57,6 @@
             </div>
         </div>
 
-        <!--Data Range Start-->
-        <div class="form-group">
-            <div class="row">
-                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Start Date</b></label>
-                <div class="col-xs-12 col-sm-6" ng-class="modelsManager.selectedModel.partition_desc.partition_date_column!=null&& modelsManager.selectedModel.partition_desc.partition_date_start==null?'has-error':''">
-                  <!--edit model will convert in MetaModel.converDateToGMT-->
-                    <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd"
-                           ng-model="modelsManager.selectedModel.partition_desc.partition_date_start" ng-if="state.mode=='edit'"
-                           placeholder="Click to choose start date..." is-open="opened" />
-                    <small class="help-block" ng-show="modelsManager.selectedModel.partition_desc.partition_date_column!=null&& modelsManager.selectedModel.partition_desc.partition_date_start==null">Please input start date when partition date column selected.</small>
-                  <!--vier model will convert use filter-->
-                    <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_date_column">{{(modelsManager.selectedModel.partition_desc.partition_date_start)|reverseToGMT0 }}</span>
-                </div>
-            </div>
-        </div>
-
-
         <!--Date Format-->
         <div class="form-group">
           <div class="row">
