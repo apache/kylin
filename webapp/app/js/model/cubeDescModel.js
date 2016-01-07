@@ -45,6 +45,8 @@ KylinApp.service('CubeDescModel', function () {
         "rowkey_columns": [],
         "aggregation_groups": []
       },
+      "partition_date_start":0,
+      "partition_date_end":undefined,
       "notify_list": [],
       "hbase_mapping": {
         "column_family": []
