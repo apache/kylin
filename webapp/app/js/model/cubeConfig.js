@@ -70,7 +70,15 @@ KylinApp.constant('cubeConfig', {
     {attr: 'owner', name: 'Owner'},
     {attr: 'create_time', name: 'Create Time'}
   ],
-  streamingAutoGenerateMeasure:['year_start','quarter_start','month_start','week_start','day_start','hour_start','minute_start'],
+  streamingAutoGenerateMeasure:[
+    {name:"year_start",type:"date"},
+    {name:"quarter_start",type:"date"},
+    {name:"month_start",type:"date"},
+    {name:"week_start",type:"date"},
+    {name:"day_start",type:"date"},
+    {name:"hour_start",type:"timestamp"},
+    {name:"minute_start",type:"timestamp"}
+  ],
   partitionDateFormatOpt:[
     'yyyy-MM-dd',
     'yyyyMMdd'
