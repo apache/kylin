@@ -34,7 +34,11 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
  */
 public class CompareTupleFilter extends TupleFilter {
 
+    // operand 1 is either a column or a function
     private TblColRef column;
+    private FunctionTupleFilter function;
+
+    // operand 2 is constants
     private Set<Object> conditionValues;
     private Object firstCondValue;
     private Map<String, Object> dynamicVariables;
@@ -84,6 +88,8 @@ public class CompareTupleFilter extends TupleFilter {
             if (!this.dynamicVariables.containsKey(dynamicFilter.getVariableName())) {
                 this.dynamicVariables.put(dynamicFilter.getVariableName(), null);
             }
+        } else if (child instanceof FunctionTupleFilter) {
+            this.function = (FunctionTupleFilter) child;
         }
     }
 
@@ -102,6 +108,10 @@ public class CompareTupleFilter extends TupleFilter {
 
     public TblColRef getColumn() {
         return column;
+    }
+
+    public FunctionTupleFilter getFunction() {
+        return function;
     }
 
     public Map<String, Object> getVariables() {
@@ -128,7 +138,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public String toString() {
-        return column + " " + operator + " " + conditionValues;
+        return (function == null ? column : function) + " " + operator + " " + conditionValues;
     }
 
     // TODO requires generalize, currently only evaluates COLUMN {op} CONST
@@ -197,7 +207,7 @@ public class CompareTupleFilter extends TupleFilter {
 
     @Override
     public boolean isEvaluable() {
-        return column != null && !conditionValues.isEmpty();
+        return ((function != null && function.isEvaluable()) || column != null) && !conditionValues.isEmpty();
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
