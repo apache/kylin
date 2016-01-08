@@ -168,8 +168,13 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   });
 
-    $scope.checkCubeForm = function(){
-        if(!$scope.curStep.form){
+    $scope.checkCubeForm = function(stepIndex){
+      // do not check for Prev Step
+      if (stepIndex + 1 < $scope.curStep.step) {
+        return true;
+      }
+
+      if(!$scope.curStep.form){
             return true;
         }
         if($scope.state.mode==='view'){
