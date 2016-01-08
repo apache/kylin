@@ -83,7 +83,8 @@ public class DictionaryManager {
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
-        this.dictCache = CacheBuilder.newBuilder().weakValues().expireAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, DictionaryInfo>() {
+        this.dictCache = CacheBuilder.newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getCachedDictMaxEntrySize())//
+                .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, DictionaryInfo>() {
             @Override
             public DictionaryInfo load(String key) throws Exception {
                 DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
@@ -357,7 +358,7 @@ public class DictionaryManager {
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
 
-        //logger.debug("Going to load DictionaryInfo from " + resourcePath);
+        logger.debug("Loading DictionaryInfo(loadDictObj:" + loadDictObj + ") from " + resourcePath);
         DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
 
         //        if (loadDictObj)
