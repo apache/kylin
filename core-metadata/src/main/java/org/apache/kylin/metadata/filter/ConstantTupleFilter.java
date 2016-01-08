@@ -54,6 +54,15 @@ public class ConstantTupleFilter extends TupleFilter {
     }
 
     @Override
+    public TupleFilter reverse() {
+        if (this.evaluate(null, null)) {
+            return ConstantTupleFilter.FALSE;
+        } else {
+            return ConstantTupleFilter.TRUE;
+        }
+    }
+
+    @Override
     public void addChild(TupleFilter child) {
         throw new UnsupportedOperationException("This is " + this + " and child is " + child);
     }
