@@ -34,6 +34,11 @@ public class MeasureAggregators implements Serializable {
     private final MeasureAggregator[] aggs;
     private final int descLength;
 
+    public MeasureAggregators(MeasureAggregator... aggs) {
+        this.descLength = aggs.length;
+        this.aggs = aggs;
+    }
+
     public MeasureAggregators(Collection<MeasureDesc> measureDescs) {
         this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs.size()]));
     }
