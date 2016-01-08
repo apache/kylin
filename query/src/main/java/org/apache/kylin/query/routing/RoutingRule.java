@@ -43,11 +43,10 @@ public abstract class RoutingRule {
 
     public static void applyRules(List<Candidate> candidates) {
         for (RoutingRule rule : rules) {
-            logger.info("Realizations order before: " + getPrintableText(candidates));
-            logger.info("Applying rule : " + rule);
+            String before = getPrintableText(candidates);
             rule.apply(candidates);
-            logger.info("Realizations order after: " + getPrintableText(candidates));
-            logger.info("===================================================");
+            String after = getPrintableText(candidates);
+            logger.info("Applying rule: " + rule + ", realizations before: " + before + ", realizations after: " + after);
         }
     }
 

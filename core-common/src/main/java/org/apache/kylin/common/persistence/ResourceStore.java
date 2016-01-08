@@ -227,7 +227,7 @@ abstract public class ResourceStore {
      */
     final public <T extends RootPersistentEntity> long putResource(String resPath, T obj, Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
-        logger.debug("Saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
+        //logger.debug("Saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
 
         long oldTS = obj.getLastModified();
         long newTS = System.currentTimeMillis();

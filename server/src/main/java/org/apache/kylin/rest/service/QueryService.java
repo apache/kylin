@@ -266,7 +266,7 @@ public class QueryService extends BasicService {
 
         String correctedSql = QueryUtil.massageSql(sqlRequest);
         if (correctedSql.equals(sqlRequest.getSql()) == false)
-            logger.debug("The corrected query: " + correctedSql);
+            logger.info("The corrected query: " + correctedSql);
 
         // add extra parameters into olap context, like acceptPartial
         Map<String, String> parameters = new HashMap<String, String>();
