@@ -395,7 +395,8 @@ var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   $scope.projectModel = ProjectModel;
 
   $scope.targetObj={
-    cubeName:cube.descriptor+"_clone"
+    cubeName:cube.descriptor+"_clone",
+    targetProject:$scope.projectModel.selectedProject
   }
 
   $scope.cancel = function () {
@@ -406,7 +407,7 @@ var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
     $scope.cubeRequest = {
       cubeName:$scope.targetObj.cubeName,
-      project:$scope.projectModel.selectedProject
+      project:$scope.targetObj.targetProject
     }
 
     SweetAlert.swal({
