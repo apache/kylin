@@ -69,9 +69,8 @@ public class QueryRouter {
         Candidate chosen = candidates.get(0);
         adjustForDimensionAsMeasure(chosen, olapContext);
 
-        logger.info("The realizations remaining: ");
-        logger.info(RoutingRule.getPrintableText(candidates));
-        logger.info("The realization being chosen: " + chosen.realization.getName());
+        logger.info("The realizations remaining: " + RoutingRule.getPrintableText(candidates) + " And the final chosen one is the first one");
+
 
         return chosen.realization;
     }

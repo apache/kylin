@@ -157,18 +157,18 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         GTScanRequest.serializer.serialize(scanRequest, buffer);
         buffer.flip();
         final ByteString scanRequestBytesString = HBaseZeroCopyByteString.wrap(buffer.array(), buffer.position(), buffer.limit());
-        logger.info("Serialized scanRequestBytes's size is " + (buffer.limit() - buffer.position()));
+        logger.debug("Serialized scanRequestBytes's size is " + (buffer.limit() - buffer.position()));
 
         final List<byte[]> rowBlocks = Collections.synchronizedList(Lists.<byte[]> newArrayList());
 
-        logger.info("Total RawScan range count: " + rawScans.size());
+        logger.debug("Total RawScan range count: " + rawScans.size());
         for (RawScan rawScan : rawScans) {
             logScan(rawScan, cubeSeg.getStorageLocationIdentifier());
         }
 
         final AtomicInteger totalScannedCount = new AtomicInteger(0);
         final String toggle = BackdoorToggles.getCoprocessorBehavior() == null ? CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString() : BackdoorToggles.getCoprocessorBehavior();
-        logger.info("The execution of this query will use " + toggle + " as endpoint's behavior");
+        logger.debug("The execution of this query will use " + toggle + " as endpoint's behavior");
         List<Future<?>> futures = Lists.newArrayList();
 
         for (int i = 0; i < rawScans.size(); ++i) {
@@ -200,7 +200,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
                     //results.size() supposed to be 1;
                     if (results.size() != 1) {
-                        logger.warn("{} CubeVisitResponse returned for shard {}", results.size(), shardIndex);
+                        logger.info("{} CubeVisitResponse returned for shard {}", results.size(), shardIndex);
                     }
 
                     for (CubeVisitProtos.CubeVisitResponse result : results) {

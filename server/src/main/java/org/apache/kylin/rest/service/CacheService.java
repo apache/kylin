@@ -20,7 +20,6 @@ package org.apache.kylin.rest.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +31,7 @@ import javax.sql.DataSource;
 import net.sf.ehcache.CacheManager;
 
 import org.apache.calcite.jdbc.Driver;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.Broadcaster;
@@ -56,8 +56,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
-
-import com.google.common.io.Files;
 
 /**
  */
@@ -140,16 +138,12 @@ public class CacheService extends BasicService {
 
         DataSource ret = olapDataSources.get(project);
         if (ret == null) {
-            logger.debug("Creating a new data source");
-            logger.debug("OLAP data source pointing to " + getConfig());
-
+            logger.debug("Creating a new data source, OLAP data source pointing to " + getConfig());
             File modelJson = OLAPSchemaFactory.createTempOLAPJson(project, getConfig());
 
             try {
-                List<String> text = Files.readLines(modelJson, Charset.defaultCharset());
-                logger.debug("The new temp olap json is :");
-                for (String line : text)
-                    logger.debug(line);
+                String text = FileUtils.readFileToString(modelJson);
+                logger.debug("The new temp olap json is :" + text);
             } catch (IOException e) {
                 e.printStackTrace(); // logging failure is not critical
             }

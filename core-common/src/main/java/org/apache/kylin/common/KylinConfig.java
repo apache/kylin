@@ -99,8 +99,7 @@ public class KylinConfig extends KylinConfigBase {
                     throw new IllegalStateException("Metadata uri : " + metaUri + " is not a valid REST URI address");
             }
         } catch (Exception e) {
-            logger.info(e.getLocalizedMessage());
-            throw new IllegalStateException("Metadata uri : " + metaUri + " is not recognized");
+            throw new IllegalStateException("Metadata uri : " + metaUri + " is not recognized", e);
         }
     }
 

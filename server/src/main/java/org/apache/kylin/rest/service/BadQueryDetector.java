@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,7 +134,7 @@ public class BadQueryDetector extends Thread {
                 break; // entries are sorted by startTime
             }
         }
-        
+
         // report if low memory
         if (getSystemAvailMB() < alertMB) {
             logger.info("System free memory less than " + alertMB + " MB. " + entries.size() + " queries running.");
@@ -142,10 +143,16 @@ public class BadQueryDetector extends Thread {
 
     // log the stack trace of bad query thread for further analysis
     private void dumpStackTrace(Thread t) {
+        int maxStackTraceDepth = KylinConfig.getInstanceFromEnv().getBadQueryStackTraceDepth();
+        int current = 0;
+
         StackTraceElement[] stackTrace = t.getStackTrace();
         StringBuilder buf = new StringBuilder("Problematic thread 0x" + Long.toHexString(t.getId()));
         buf.append("\n");
         for (StackTraceElement e : stackTrace) {
+            if (++current > maxStackTraceDepth) {
+                break;
+            }
             buf.append("\t").append("at ").append(e.toString()).append("\n");
         }
         logger.info(buf.toString());
