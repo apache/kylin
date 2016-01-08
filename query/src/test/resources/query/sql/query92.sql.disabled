@@ -26,5 +26,5 @@ select meta_categ_name, count(1) as cnt, sum(price) as GMV
  left JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
 
- where meta_categ_name not in ('Unknown')
+ where meta_categ_name not in ('Unknown','ToyHobbies')
  group by meta_categ_name 
