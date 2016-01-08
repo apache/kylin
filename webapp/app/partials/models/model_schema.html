@@ -26,7 +26,7 @@
                 <ul class="wizard-steps">
                     <li ng-repeat="step in wizardSteps"
                         class="{{step==curStep?'active':''}} {{step.isComplete?'complete':''}}">
-                        <span style="cursor:pointer;" ng-click="checkForm()?goToStep($index):''" class="step">{{step.step = ($index + 1)}}</span>
+                        <span style="cursor:pointer;" ng-click="checkForm($index)?goToStep($index):''" class="step">{{step.step = ($index + 1)}}</span>
                         <span class="title">{{step.title}}</span>
                      </li>
                 </ul>
@@ -47,12 +47,12 @@
                             <i class="ace-icon fa fa-arrow-left"></i>
                             Prev
                         </button>
-                        <button id="nextButton" class="btn btn-success btn-next" ng-disabled="forms[curStep.form].$invalid" ng-click="checkForm()?nextView():''"
+                        <button id="nextButton" class="btn btn-success btn-next" ng-disabled="forms[curStep.form].$invalid" ng-click="checkForm($index)?nextView():''"
                                 ng-show="curStep.title!='Settings'">
                             Next
                             <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
                         </button>
-                        <button class="btn btn-primary"  ng-click="checkForm()?saveModel():''"
+                        <button class="btn btn-primary"  ng-click="checkForm($index)?saveModel():''"
                                 ng-if="curStep.title=='Settings' && state.mode=='edit'">
                             Save
                         </button>

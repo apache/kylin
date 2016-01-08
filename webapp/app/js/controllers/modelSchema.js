@@ -124,7 +124,12 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     }
   };
 
-  $scope.checkForm = function () {
+  $scope.checkForm = function (stepIndex) {
+    // do not check for Prev Step
+    if (stepIndex + 1 < $scope.curStep.step) {
+      return true;
+    }
+
     if (!$scope.curStep.form) {
       return true;
     }
