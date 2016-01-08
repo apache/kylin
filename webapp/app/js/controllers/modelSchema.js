@@ -271,7 +271,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
 
 
   $scope.goToStep = function (stepIndex) {
-    if ($scope.state.mode == "edit") {
+    if ($scope.modelMode == "addNewModel") {
       if (stepIndex + 1 >= $scope.curStep.step) {
         return;
       }
