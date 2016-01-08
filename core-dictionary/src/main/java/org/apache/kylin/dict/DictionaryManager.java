@@ -46,6 +46,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Lists;
 
 public class DictionaryManager {
@@ -83,18 +85,23 @@ public class DictionaryManager {
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
-        this.dictCache = CacheBuilder.newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getCachedDictMaxEntrySize())//
-                .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, DictionaryInfo>() {
+        this.dictCache = CacheBuilder.newBuilder().removalListener(new RemovalListener<String, DictionaryInfo>() {
             @Override
-            public DictionaryInfo load(String key) throws Exception {
-                DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
-                if (dictInfo == null) {
-                    return NONE_INDICATOR;
-                } else {
-                    return dictInfo;
-                }
+            public void onRemoval(RemovalNotification<String, DictionaryInfo> notification) {
+                DictionaryManager.logger.info("Dict with resource path " + notification.getKey() + " is removed due to " + notification.getCause());
             }
-        });
+        }).maximumSize(KylinConfig.getInstanceFromEnv().getCachedDictMaxEntrySize())//
+                .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, DictionaryInfo>() {
+                    @Override
+                    public DictionaryInfo load(String key) throws Exception {
+                        DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
+                        if (dictInfo == null) {
+                            return NONE_INDICATOR;
+                        } else {
+                            return dictInfo;
+                        }
+                    }
+                });
     }
 
     public Dictionary<?> getDictionary(String resourcePath) throws IOException {
@@ -320,6 +327,7 @@ public class DictionaryManager {
     }
 
     public void removeDictionary(String resourcePath) throws IOException {
+        logger.info("Remvoing dict: " + resourcePath);
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         store.deleteResource(resourcePath);
         dictCache.invalidate(resourcePath);
@@ -358,7 +366,7 @@ public class DictionaryManager {
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
 
-        logger.debug("Loading DictionaryInfo(loadDictObj:" + loadDictObj + ") from " + resourcePath);
+        logger.info("DictionaryManager(" + System.identityHashCode(this) + ") loading DictionaryInfo(loadDictObj:" + loadDictObj + ") at " + resourcePath);
         DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
 
         //        if (loadDictObj)
