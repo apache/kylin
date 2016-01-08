@@ -53,6 +53,14 @@ public class ConstantTupleFilter extends TupleFilter {
         this.constantValues.addAll(values);
     }
 
+    public TupleFilter reverse() {
+        if (this.evaluate(null, null)) {
+            return ConstantTupleFilter.FALSE;
+        } else {
+            return ConstantTupleFilter.TRUE;
+        }
+    }
+
     @Override
     public void addChild(TupleFilter child) {
         throw new UnsupportedOperationException("This is " + this + " and child is " + child);
