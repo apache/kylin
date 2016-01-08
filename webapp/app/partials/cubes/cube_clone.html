@@ -29,7 +29,7 @@
           <div class="form-group">
             <b>Target Project is:</b>
             <br/>
-            <select ng-required="projectModel.projects.length" chosen ng-model="projectModel.selectedProject"
+            <select ng-required="projectModel.projects.length" chosen ng-model="targetObj.targetProject"
                     ng-init="newAccess.permission=permissions.READ.value;"
                     ng-options="project as project for project in projectModel.projects "
                     style="width: 100% !important;"
