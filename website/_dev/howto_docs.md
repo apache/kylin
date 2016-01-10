@@ -8,12 +8,17 @@ permalink: /development/howto_docs.html
 ## Before your work
 
 Install following tools before you add or edit documentation:  
-1. First, make sure Ruby and Gem are works on your machine  
-_For Mac User, please refer [this](https://github.com/sstephenson/rbenv#homebrew-on-mac-os-x) to setup ruby env._  
-2. Then, install [Jekyll](http://jekyllrb.com), and plugins, for example:  
-`gem install jekyll jekyll-multiple-languages kramdown rouge`  
-3. [Jekyll Multiple Languages Plugin](http://jekyll-langs.liaohuqiu.net/cn/)  
-4. And any markdown editor
+
+1. First, make sure Ruby and Gem work on your machine  
+	* For Mac user, please refer [this](https://github.com/sstephenson/rbenv#homebrew-on-mac-os-x) to setup ruby env.
+	* For Windows user, use the [ruby installer](http://rubyinstaller.org/downloads/).
+	* For China user, consider use a [local gem repository](https://ruby.taobao.org/) in case of network issues.
+
+2. Then, install [Jekyll](http://jekyllrb.com), and required plugins
+	* `gem install jekyll jekyll-multiple-languages kramdown rouge`  
+	* __Note__: Some specific version of jekyll and jekyll-multiple-languages does not work together (I got a "undefined method" error with jekyll 3.0.1 and jekyll-multiple-languages 2.0.3). In that case, `jekyll 2.5.3` and `jekyll-multiple-languages 1.0.8` is the known working version.
+	
+3. And optionally any markdown editor you prefer
 
 ## About Jekyll
 Jekyll is a Ruby script to generate a static HTML website from source text and themes, the HTML is generated before being deployed to the web server. Jekyll also happens to be the engine behind GitHub Pages.
@@ -105,7 +110,7 @@ We are using [Rouge](https://github.com/jneen/rouge) to highlight code syntax.
 check this doc's source code for more detail sample.
 
 # How to preview in your local
-You can preview in your markdown editor, to check exactly what it will looks like on website, please run Jekyll from "website" folder:
+You can preview in your markdown editor, to check exactly what it will looks like on website, please run Jekyll from `website` folder:
 
 ```
 jekyll server
