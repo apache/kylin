@@ -49,9 +49,7 @@ public class GTScanRangePlanner {
      * @param partitionColRef the TblColRef in GT
      */
     public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> segmentStartAndEnd, TblColRef partitionColRef) {
-        if (partitionColRef != null && segmentStartAndEnd == null) {
-            throw new IllegalArgumentException("segmentStartAndEnd not provided when partitionColRef is set to " + partitionColRef);
-        }
+      
 
         this.info = info;
         this.segmentStartAndEnd = segmentStartAndEnd;
