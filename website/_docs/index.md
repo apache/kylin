@@ -26,7 +26,7 @@ Advanced Topics
 
 ---
 
-#### REST API
+#### REST APIs
 
 1. [Kylin Restful API list](howto/howto_use_restapi.html)
 2. [Build cube with Restful API](howto/howto_build_cube_with_restapi.html)
