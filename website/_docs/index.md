@@ -39,6 +39,7 @@ Advanced Topics
 1. [Backup/restore Kylin metadata store](howto/howto_backup_metadata.html)
 2. [Cleanup storage (HDFS & HBase tables)](howto/howto_cleanup_storage.html)
 3. [Advanced env configurations](install/advance_settings.html)
+3. [How to upgrade](howto/howto_upgrade.html)
 
 ---
 
