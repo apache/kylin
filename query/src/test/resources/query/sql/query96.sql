@@ -24,5 +24,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.leaf_categ_id = test_category_groupings.leaf_categ_id AND test_kylin_fact.lstg_site_id = test_category_groupings.site_id
  inner JOIN edw.test_sites as test_sites
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
- where test_kylin_fact.lstg_format_name='XXXUnknownFP-GTC' 
+ where test_kylin_fact.lstg_format_name='XXXUnknown' 
  group by test_cal_dt.cal_dt 
