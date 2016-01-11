@@ -43,7 +43,16 @@ public class GTScanRangePlanner {
     final private RecordComparator rangeEndComparator;
     final private RecordComparator rangeStartEndComparator;
 
+    /**
+     * @param info
+     * @param segmentStartAndEnd in GT encoding
+     * @param partitionColRef the TblColRef in GT
+     */
     public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> segmentStartAndEnd, TblColRef partitionColRef) {
+        if (partitionColRef != null && segmentStartAndEnd == null) {
+            throw new IllegalArgumentException("segmentStartAndEnd not provided when partitionColRef is set to " + partitionColRef);
+        }
+
         this.info = info;
         this.segmentStartAndEnd = segmentStartAndEnd;
         this.partitionColRef = partitionColRef;
@@ -91,9 +100,9 @@ public class GTScanRangePlanner {
         List<GTRecord> fuzzyKeys;
 
         for (ColumnRange range : andDimRanges) {
-
             if (partitionColRef != null && range.column.equals(partitionColRef)) {
-
+                logger.debug("Pre-check partition col filter, partitionColRef {}, segmentstartandend {}, range begin {}, range end {}",//
+                        new Object[] { partitionColRef, segmentStartAndEnd, range.begin, range.end });
                 if (rangeStartEndComparator.comparator.compare(segmentStartAndEnd.getFirst(), range.end) <= 0 //
                         && rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) < 0) {
                     //segment range is [Closed,Open)

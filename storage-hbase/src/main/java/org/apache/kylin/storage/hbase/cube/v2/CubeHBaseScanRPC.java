@@ -19,6 +19,8 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -27,6 +29,7 @@ import com.google.common.collect.Lists;
  * for test use only
  */
 public class CubeHBaseScanRPC extends CubeHBaseRPC {
+    public static final Logger logger = LoggerFactory.getLogger(CubeHBaseScanRPC.class);
 
     static class TrimmedInfoGTRecordAdapter implements Iterable<GTRecord> {
 
@@ -118,7 +121,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             }
         };
 
-        IGTStore store = new HBaseReadonlyStore(cellListIterator, scanRequest, rawScans.get(0).hbaseColumns, hbaseColumnsToGT,cubeSeg.getRowKeyPreambleSize());
+        IGTStore store = new HBaseReadonlyStore(cellListIterator, scanRequest, rawScans.get(0).hbaseColumns, hbaseColumnsToGT, cubeSeg.getRowKeyPreambleSize());
         IGTScanner rawScanner = store.scan(scanRequest);
 
         final IGTScanner decorateScanner = scanRequest.decorateScanner(rawScanner);
