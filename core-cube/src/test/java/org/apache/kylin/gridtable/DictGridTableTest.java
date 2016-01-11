@@ -89,6 +89,7 @@ public class DictGridTableTest {
         ageComp2 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "20"));
         ageComp3 = compare(info.colRef(1), FilterOperatorEnum.EQ, enc(info, 1, "30"));
         ageComp4 = compare(info.colRef(1), FilterOperatorEnum.NEQ, enc(info, 1, "30"));
+
     }
 
     @Test
@@ -137,6 +138,26 @@ public class DictGridTableTest {
             assertEquals(1, r.size());
             assertEquals("[1421193600000, null]-[null, null]", r.get(0).toString());
             assertEquals(0, r.get(0).fuzzyKeys.size());
+        }
+        {
+            //skip FALSE filter
+            LogicalTupleFilter filter = and(ageComp1, ConstantTupleFilter.FALSE);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(0, r.size());
+        }
+        {
+            //TRUE or FALSE filter
+            LogicalTupleFilter filter = or(ConstantTupleFilter.TRUE, ConstantTupleFilter.FALSE);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(1, r.size());
+            assertEquals("[null, null]-[null, null]", r.get(0).toString());
+        }
+        {
+            //TRUE or other filter
+            LogicalTupleFilter filter = or(ageComp1, ConstantTupleFilter.TRUE);
+            List<GTScanRange> r = planner.planScanRanges(filter);
+            assertEquals(1, r.size());
+            assertEquals("[null, null]-[null, null]", r.get(0).toString());
         }
     }
 
