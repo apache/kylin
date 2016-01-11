@@ -23,6 +23,7 @@ ambari-server start
 {% endhighlight %}
 	
 With both command successfully run you can go to ambari home page at <http://yoursandboxip:8080> (user:admin,password:admin) to check everything's status. By default ambari disables Hbase, you'll need manually start the `Hbase` service.
+![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
 
 For other hadoop distribution, basically start the hadoop cluster, make sure HDFS, YARN, Hive, HBase are running.
 

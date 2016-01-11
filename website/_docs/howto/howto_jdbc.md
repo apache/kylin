@@ -3,7 +3,7 @@ layout: docs
 title:  How to Use kylin Remote JDBC Driver
 categories: howto
 permalink: /docs/howto/howto_jdbc.html
-version: v0.7.2
+version: v1.2
 since: v0.7.1
 ---
 
@@ -24,20 +24,20 @@ jdbc:kylin://<hostname>:<port>/<kylin_project_name>
 
 ### 1. Query with Statement
 {% highlight Groff markup %}
-        Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").newInstance();
+Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").newInstance();
 
-        Properties info = new Properties();
-        info.put("user", "ADMIN");
-        info.put("password", "KYLIN");
-        Connection conn = driver.connect("jdbc:kylin://localhost:7070/kylin_project_name", info);
-        Statement state = conn.createStatement();
-        ResultSet resultSet = state.executeQuery("select * from test_table");
+Properties info = new Properties();
+info.put("user", "ADMIN");
+info.put("password", "KYLIN");
+Connection conn = driver.connect("jdbc:kylin://localhost:7070/kylin_project_name", info);
+Statement state = conn.createStatement();
+ResultSet resultSet = state.executeQuery("select * from test_table");
 
-        while (resultSet.next()) {
-            assertEquals("foo", resultSet.getString(1));
-            assertEquals("bar", resultSet.getString(2));
-            assertEquals("tool", resultSet.getString(3));
-        }
+while (resultSet.next()) {
+    assertEquals("foo", resultSet.getString(1));
+    assertEquals("bar", resultSet.getString(2));
+    assertEquals("tool", resultSet.getString(3));
+}
 {% endhighlight %}
 
 ### 2. Query with PreparedStatement
@@ -56,39 +56,39 @@ jdbc:kylin://<hostname>:<port>/<kylin_project_name>
 * setTimestamp
 
 {% highlight Groff markup %}
-        Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").newInstance();
-        Properties info = new Properties();
-        info.put("user", "ADMIN");
-        info.put("password", "KYLIN");
-        Connection conn = driver.connect("jdbc:kylin://localhost:7070/kylin_project_name", info);
-        PreparedStatement state = conn.prepareStatement("select * from test_table where id=?");
-        state.setInt(1, 10);
-        ResultSet resultSet = state.executeQuery();
+Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").newInstance();
+Properties info = new Properties();
+info.put("user", "ADMIN");
+info.put("password", "KYLIN");
+Connection conn = driver.connect("jdbc:kylin://localhost:7070/kylin_project_name", info);
+PreparedStatement state = conn.prepareStatement("select * from test_table where id=?");
+state.setInt(1, 10);
+ResultSet resultSet = state.executeQuery();
 
-        while (resultSet.next()) {
-            assertEquals("foo", resultSet.getString(1));
-            assertEquals("bar", resultSet.getString(2));
-            assertEquals("tool", resultSet.getString(3));
-        }
+while (resultSet.next()) {
+    assertEquals("foo", resultSet.getString(1));
+    assertEquals("bar", resultSet.getString(2));
+    assertEquals("tool", resultSet.getString(3));
+}
 {% endhighlight %}
 
-### 3. Get query result metadata
+### 3. Get query result set metadata
 Kylin jdbc driver supports metadata list methods:
 List catalog, schema, table and column with sql pattern filters(such as %).
 
 {% highlight Groff markup %}
-        Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").newInstance();
-        Properties info = new Properties();
-        info.put("user", "ADMIN");
-        info.put("password", "KYLIN");
-        Connection conn = driver.connect("jdbc:kylin://localhost:7070/kylin_project_name", info);
-        Statement state = conn.createStatement();
-        ResultSet resultSet = state.executeQuery("select * from test_table");
+Driver driver = (Driver) Class.forName("org.apache.kylin.jdbc.Driver").newInstance();
+Properties info = new Properties();
+info.put("user", "ADMIN");
+info.put("password", "KYLIN");
+Connection conn = driver.connect("jdbc:kylin://localhost:7070/kylin_project_name", info);
+Statement state = conn.createStatement();
+ResultSet resultSet = state.executeQuery("select * from test_table");
 
-        ResultSet tables = conn.getMetaData().getTables(null, null, "dummy", null);
-        while (tables.next()) {
-            for (int i = 0; i < 10; i++) {
-                assertEquals("dummy", tables.getString(i + 1));
-            }
-        }
+ResultSet tables = conn.getMetaData().getTables(null, null, "dummy", null);
+while (tables.next()) {
+    for (int i = 0; i < 10; i++) {
+        assertEquals("dummy", tables.getString(i + 1));
+    }
+}
 {% endhighlight %}

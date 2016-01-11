@@ -22,8 +22,8 @@ If you don't know how, here's a simple tutorial for hortonworks sanbox:
 
 Use ambari helps to launch hadoop:
 
-	ambari-agent start
-	ambari-server start
+ambari-agent start
+ambari-server start
 	
 With both command successfully run you can go to ambari homepage at <http://your_sandbox_ip:8080> (user:admin,password:admin) to check everything's status. **By default hortonworks ambari disables Hbase, you'll need manually start the `Hbase` service at ambari homepage.**
 

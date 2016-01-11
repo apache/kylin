@@ -3,14 +3,14 @@ layout: docs
 title:  How to Use Restful API
 categories: howto
 permalink: /docs/howto/howto_use_restapi.html
-version: v1.0
+version: v1.2
 since: v0.7.1
 ---
 
-This page lists all the Restful API that provided by Kylin; The endpoint of the Rest service is started with **/kylin/api**, so don't forget to add it before a certain API's path. For example, to get all cube instances, send HTTP GET request to "/kylin/api/cubes".
+This page lists all the Rest APIs provided by Kylin; The base of the URL is `/kylin/api`, so don't forget to add it before a certain API's path. For example, to get all cube instances, send HTTP GET request to "/kylin/api/cubes".
 
-* QUERY
-   * [Login](#login)
+* Query
+   * [Authentication](#authentication)
    * [Query](#query)
    * [List queryable tables](#list-queryable-tables)
 * CUBE
@@ -34,24 +34,15 @@ This page lists all the Restful API that provided by Kylin; The endpoint of the 
 * Cache
    * [Wipe cache](#wipe-cache)
 
-## Login
+## Authentication
 `POST /user/authentication`
 
-for example: 
-
-```
-curl -c /path/to/cookiefile.txt -X POST -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/json' http://<host>:<port>/kylin/api/user/authentication
-```
-
-If login successfully, the JSESSIONID will be saved into the cookie file; In the subsequent http requests, attach the cookie, for example:
-
-```
-curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/rebuild
-```
-
-#### Header
-Authorization data encoded by basic auth. Header sample:
+#### Request Header
+Authorization data encoded by basic auth is needed in the header, such as:
 Authorization:Basic {data}
+
+#### Response Body
+* userDetails - Defined authorities and status of current user.
 
 #### Response Sample
 
@@ -76,19 +67,33 @@ Authorization:Basic {data}
 }
 ```
 
+Example with `curl`: 
+
+```
+curl -c /path/to/cookiefile.txt -X POST -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/json' http://<host>:<port>/kylin/api/user/authentication
+```
+
+If login successfully, the JSESSIONID will be saved into the cookie file; In the subsequent http requests, attach the cookie, for example:
+
+```
+curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/rebuild
+```
+
 ***
 
 ## Query
 `POST /query`
 
 #### Request Body
-* sql - `required` `string` The sql query string.
+* sql - `required` `string` The text of sql statement.
 * offset - `optional` `int` Query offset. If offset is set in sql, curIndex will be ignored.
 * limit - `optional` `int` Query limit. If limit is set in sql, perPage will be ignored.
-* acceptPartial - `optional` `bool` Whether accept a partial result or not, default be "true" to avoid a big scan on HBase. Set to "false" for production use. 
+* acceptPartial - `optional` `bool` Whether accept a partial result or not, default be "false". Set to "false" for production use. 
 * project - `optional` `string` Project to perform query. Default value is 'DEFAULT'.
 
-```
+#### Request Sample
+
+```sh
 {  
    "sql":"select * from TEST_KYLIN_FACT",
    "offset":0,
@@ -98,9 +103,19 @@ Authorization:Basic {data}
 }
 ```
 
+#### Response Body
+* columnMetas - Column metadata information of result set.
+* results - Data set of result.
+* cube - Cube used for this query.
+* affectedRowCount - Count of affected row by this sql statement.
+* isException - Whether this response is an exception.
+* ExceptionMessage - Message content of the exception.
+* Duration - Time cost of this query
+* Partial - Whether the response is a partial result or not. Decided by `acceptPartial` of request.
+
 #### Response Sample
 
-```
+```sh
 {  
    "columnMetas":[  
       {  
@@ -180,8 +195,6 @@ Authorization:Basic {data}
    "partial":false
 }
 ```
-
-***
 
 ## List queryable tables
 `GET /tables_and_columns`
@@ -265,10 +278,10 @@ Authorization:Basic {data}
 `GET /cubes`
 
 #### Request Parameters
-* cubeName - `optional` `string` Cube name to find.
-* projectName - `optional` `string` project name.
 * offset - `required` `int` Offset used by pagination
 * limit - `required` `int ` Cubes per page.
+* cubeName - `optional` `string` Keyword for cube names. To find cubes whose name contains this keyword.
+* projectName - `optional` `string` Project name.
 
 #### Response Sample
 ```sh
@@ -298,9 +311,9 @@ Authorization:Basic {data}
 #### Path Variable
 * cubeName - `required` `string` Cube name to find.
 
-
 ## Get cube descriptor
 `GET /cube_desc/{cubeName}`
+Get descriptor for specified cube instance.
 
 #### Path Variable
 * cubeName - `required` `string` Cube name.
@@ -563,7 +576,7 @@ Authorization:Basic {data}
 `GET /model/{modelName}`
 
 #### Path Variable
-* modelName - `required` `string` Data model name, by default it should be the same as cube name.
+* modelName - `required` `string` Data model name, by default it should be the same with cube name.
 
 #### Response Sample
 ```sh
@@ -685,27 +698,6 @@ Authorization:Basic {data}
 }
 ```
 
-
-## Disable Cube
-`PUT /cubes/{cubeName}/disable`
-
-#### Path variable
-* cubeName - `required` `string` Cube name.
-
-#### Response Sample
-(Same as "Enable Cube")
-
-
-## Purge Cube
-`PUT /cubes/{cubeName}/purge`
-
-#### Path variable
-* cubeName - `required` `string` Cube name.
-
-#### Response Sample
-(Same as "Enable Cube")
-
-
 ## Enable Cube
 `PUT /cubes/{cubeName}/enable`
 
@@ -760,11 +752,31 @@ Authorization:Basic {data}
 }
 ```
 
+## Disable Cube
+`PUT /cubes/{cubeName}/disable`
+
+#### Path variable
+* cubeName - `required` `string` Cube name.
+
+#### Response Sample
+(Same as "Enable Cube")
+
+## Purge Cube
+`PUT /cubes/{cubeName}/purge`
+
+#### Path variable
+* cubeName - `required` `string` Cube name.
+
+#### Response Sample
+(Same as "Enable Cube")
+
+***
+
 ## Resume Job
 `PUT /jobs/{jobId}/resume`
 
 #### Path variable
-* jobId- `required` `string` Job id.
+* jobId - `required` `string` Job id.
 
 #### Response Sample
 ```
@@ -832,7 +844,7 @@ Authorization:Basic {data}
 `PUT /jobs/{jobId}/cancel`
 
 #### Path variable
-* jobId- `required` `string` Job id.
+* jobId - `required` `string` Job id.
 
 #### Response Sample
 (Same as "Resume job")
@@ -851,6 +863,7 @@ Authorization:Basic {data}
 }
 ```
 
+***
 
 ## Get Hive Table
 `GET /tables/{tableName}`
@@ -962,18 +975,16 @@ Authorization:Basic {data}
         totalFileSize: "46069",
         outputformat: "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
     }
-}
+  }
 ]
 ```
 
 ## Load Hive Tables
 `POST /tables/{tables}/{project}`
 
-
 #### Request Parameters
-* tables- `required` `string` table names you want to load from hive, separated with comma.
-* project- `required` `String`  the project which the tables will be loaded into.
-
+* tables - `required` `string` table names you want to load from hive, separated with comma.
+* project - `required` `String`  the project which the tables will be loaded into.
 
 #### Response Sample
 ```
@@ -983,6 +994,7 @@ Authorization:Basic {data}
 }
 ```
 
+***
 
 ## Wipe cache
 `GET /cache/{type}/{name}/{action}`
