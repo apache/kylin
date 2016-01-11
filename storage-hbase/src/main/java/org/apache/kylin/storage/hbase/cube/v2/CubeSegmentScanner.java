@@ -37,11 +37,15 @@ import org.apache.kylin.metadata.filter.ITupleFilterTranslator;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class CubeSegmentScanner implements IGTScanner {
+
+    private static final Logger logger = LoggerFactory.getLogger(CubeSegmentScanner.class);
 
     private static final int MAX_SCAN_RANGES = 200;
 
@@ -74,12 +78,14 @@ public class CubeSegmentScanner implements IGTScanner {
         GTScanRangePlanner scanRangePlanner;
         if (cubeSeg.getCubeDesc().getModel().getPartitionDesc().isPartitioned()) {
             TblColRef tblColRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
-            Pair<ByteArray, ByteArray> segmentStartAndEnd = null;
+            Pair<ByteArray, ByteArray> segmentStartAndEnd;
             int index = mapping.getIndexOf(tblColRef);
             if (index >= 0) {
-                segmentStartAndEnd = getSegmentStartAndEnd(tblColRef, index);
+                segmentStartAndEnd = getSegmentStartAndEnd(index);
+            } else {
+                throw new IllegalStateException("Cannot found partition column on cuboid to gt mapping:" + tblColRef);
             }
-            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd, tblColRef);
+            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd, info.colRef(index));
         } else {
             scanRangePlanner = new GTScanRangePlanner(info, null, null);
         }
@@ -96,7 +102,7 @@ public class CubeSegmentScanner implements IGTScanner {
         scanner = new Scanner();
     }
 
-    private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(TblColRef tblColRef, int index) {
+    private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(int index) {
         ByteArray start;
         if (cubeSeg.getDateRangeStart() != Long.MIN_VALUE) {
             start = encodeTime(cubeSeg.getDateRangeStart(), index, 1);
