@@ -49,13 +49,15 @@ public class CoprocessorTupleFilterTranslator implements ITupleFilterTranslator 
     public TupleFilter translate(TupleFilter tupleFilter) {
         TupleFilter translated = null;
         if (tupleFilter instanceof CompareTupleFilter) {
-            logger.info("Translation to IN clause: " + tupleFilter);
             translated = translateCompareTupleFilter((CompareTupleFilter) tupleFilter);
-            logger.info(translated == null ? "Failed, will use Calcite to handle computed comparison." : "Succeed: " + translated);
+            if (translated != null) {
+                logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
+            }
         } else if (tupleFilter instanceof FunctionTupleFilter) {
-            logger.info("Translation to IN clause: " + tupleFilter);
             translated = translateFunctionTupleFilter((FunctionTupleFilter) tupleFilter);
-            logger.info(translated == null ? "Failed, will use Calcite to handle computed column." : "Succeed: " + translated);
+            if (translated != null) {
+                logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
+            }
         }
         return translated == null ? tupleFilter : translated;
     }
