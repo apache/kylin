@@ -106,7 +106,7 @@ public abstract class CubeHBaseRPC {
                 return shardEnd;
             }
         });
-        
+
         Preconditions.checkState(startKeys.size() == endKeys.size());
         List<Pair<byte[], byte[]>> hbaseFuzzyKeys = translateFuzzyKeys(fuzzyKeys);
 
@@ -115,7 +115,7 @@ public abstract class CubeHBaseRPC {
         int hbaseMaxResultSize = config.getHBaseScanMaxResultSize();
         if (isMemoryHungry(selectedColBlocks))
             hbaseCaching /= 10;
-        
+
         for (short i = 0; i < startKeys.size(); ++i) {
             ret.add(new RawScan(startKeys.get(i), endKeys.get(i), selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize));
         }
@@ -240,7 +240,7 @@ public abstract class CubeHBaseRPC {
 
     protected void logScan(RawScan rawScan, String tableName) {
         StringBuilder info = new StringBuilder();
-        info.append("\nVisiting hbase table ").append(tableName).append(": ");
+        info.append("Visiting hbase table ").append(tableName).append(": ");
         if (cuboid.requirePostAggregation()) {
             info.append("cuboid require post aggregation, from ");
         } else {
@@ -251,15 +251,15 @@ public abstract class CubeHBaseRPC {
         info.append(cuboid.getId());
         info.append("\nStart: ");
         info.append(rawScan.getStartKeyAsString());
-        info.append(" - ");
-        info.append(Bytes.toStringBinary(rawScan.startKey));
+        info.append(" (");
+        info.append(Bytes.toStringBinary(rawScan.startKey) + ")");
         info.append("\nStop:  ");
         info.append(rawScan.getEndKeyAsString());
-        info.append(" - ");
-        info.append(Bytes.toStringBinary(rawScan.endKey));
-        if (rawScan.fuzzyKeys != null) {
+        info.append(" (");
+        info.append(Bytes.toStringBinary(rawScan.endKey) + ")");
+        if (rawScan.fuzzyKeys != null && rawScan.fuzzyKeys.size() != 0) {
             info.append("\nFuzzy key counts: " + rawScan.fuzzyKeys.size());
-            info.append("\nFuzzy: ");
+            info.append(". Fuzzy keys : ");
             info.append(rawScan.getFuzzyKeyAsString());
         } else {
             info.append("\nNo Fuzzy Key");

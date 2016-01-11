@@ -63,8 +63,12 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.HBaseZeroCopyByteString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
+
+    public static final Logger logger = LoggerFactory.getLogger(CubeHBaseEndpointRPC.class);
 
     private static ExecutorService executorService = Executors.newCachedThreadPool();
 
