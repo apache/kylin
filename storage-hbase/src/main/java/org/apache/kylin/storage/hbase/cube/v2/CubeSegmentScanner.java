@@ -78,14 +78,14 @@ public class CubeSegmentScanner implements IGTScanner {
         GTScanRangePlanner scanRangePlanner;
         if (cubeSeg.getCubeDesc().getModel().getPartitionDesc().isPartitioned()) {
             TblColRef tblColRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
-            Pair<ByteArray, ByteArray> segmentStartAndEnd;
+            TblColRef partitionColOfGT = null;
+            Pair<ByteArray, ByteArray> segmentStartAndEnd = null;
             int index = mapping.getIndexOf(tblColRef);
             if (index >= 0) {
                 segmentStartAndEnd = getSegmentStartAndEnd(index);
-            } else {
-                throw new IllegalStateException("Cannot found partition column on cuboid to gt mapping:" + tblColRef);
+                partitionColOfGT =  info.colRef(index);
             }
-            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd, info.colRef(index));
+            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd,partitionColOfGT);
         } else {
             scanRangePlanner = new GTScanRangePlanner(info, null, null);
         }
