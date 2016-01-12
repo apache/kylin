@@ -917,8 +917,8 @@
                                 <exclude>dictionary/metastore_db/**</exclude>
 
                                 <!-- MIT license -->
-                                <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
+                                <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
 
                                 <!--configuration file -->
                                 <exclude>webapp/app/routes.json</exclude>
