@@ -466,8 +466,8 @@ public class KylinConfig {
         return getOptionalStringArray(KYLIN_REST_SERVERS);
     }
 
-    public String getAdminDls() {
-        return getOptional("kylin.job.admin.dls", null);
+    public String[] getAdminDls() {
+        return getOptionalStringArray("kylin.job.admin.dls");
     }
 
     public long getJobStepTimeout() {

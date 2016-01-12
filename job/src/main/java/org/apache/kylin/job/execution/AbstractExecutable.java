@@ -199,9 +199,9 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         try {
             List<String> users = Lists.newArrayList();
             users.addAll(getNotifyList());
-            final String adminDls = KylinConfig.getInstanceFromEnv().getAdminDls();
+            final String[] adminDls = KylinConfig.getInstanceFromEnv().getAdminDls();
             if (null != adminDls) {
-                for (String adminDl : adminDls.split(",")) {
+                for (String adminDl : adminDls) {
                     users.add(adminDl);
                 }
             }
