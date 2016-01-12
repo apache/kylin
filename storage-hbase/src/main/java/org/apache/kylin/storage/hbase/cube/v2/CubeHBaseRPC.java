@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
@@ -32,7 +30,6 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -55,7 +52,7 @@ public abstract class CubeHBaseRPC {
         this.fuzzyMaskEncoder = new FuzzyMaskEncoder(cubeSeg, cuboid);
     }
 
-    abstract IGTScanner getGTScanner(GTScanRequest scanRequest) throws IOException;
+    abstract IGTScanner getGTScanner(final List<GTScanRequest> scanRequests) throws IOException;
 
     public static Scan buildScan(RawScan rawScan) {
         Scan scan = new Scan();
@@ -80,34 +77,22 @@ public abstract class CubeHBaseRPC {
         return scan;
     }
 
-    protected List<RawScan> preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
+    protected RawScan preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
         final List<Pair<byte[], byte[]>> selectedColumns = makeHBaseColumns(selectedColBlocks);
-        List<RawScan> ret = Lists.newArrayList();
 
         LazyRowKeyEncoder encoder = new LazyRowKeyEncoder(cubeSeg, cuboid);
         byte[] start = encoder.createBuf();
         byte[] end = encoder.createBuf();
-        List<byte[]> startKeys;
-        List<byte[]> endKeys;
 
         encoder.setBlankByte(RowConstants.ROWKEY_LOWER_BYTE);
         encoder.encode(pkStart, pkStart.getInfo().getPrimaryKey(), start);
-        startKeys = encoder.getRowKeysDifferentShards(start);
 
         encoder.setBlankByte(RowConstants.ROWKEY_UPPER_BYTE);
         encoder.encode(pkEnd, pkEnd.getInfo().getPrimaryKey(), end);
-        endKeys = encoder.getRowKeysDifferentShards(end);
-        endKeys = Lists.transform(endKeys, new Function<byte[], byte[]>() {
-            @Nullable
-            @Override
-            public byte[] apply(byte[] input) {
-                byte[] shardEnd = new byte[input.length + 1];//append extra 0 to the end key to make it inclusive while scanning
-                System.arraycopy(input, 0, shardEnd, 0, input.length);
-                return shardEnd;
-            }
-        });
+        byte[] temp = new byte[end.length + 1];//append extra 0 to the end key to make it inclusive while scanning
+        System.arraycopy(end, 0, temp, 0, end.length);
+        end = temp;
 
-        Preconditions.checkState(startKeys.size() == endKeys.size());
         List<Pair<byte[], byte[]>> hbaseFuzzyKeys = translateFuzzyKeys(fuzzyKeys);
 
         KylinConfig config = cubeSeg.getCubeDesc().getConfig();
@@ -116,11 +101,7 @@ public abstract class CubeHBaseRPC {
         if (isMemoryHungry(selectedColBlocks))
             hbaseCaching /= 10;
 
-        for (short i = 0; i < startKeys.size(); ++i) {
-            ret.add(new RawScan(startKeys.get(i), endKeys.get(i), selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize));
-        }
-        return ret;
-
+        return new RawScan(start, end, selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize);
     }
 
     private boolean isMemoryHungry(ImmutableBitSet selectedColBlocks) {
