@@ -412,7 +412,6 @@ public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dict.cache.max.entry", "3000"));
     }
 
-
     public boolean getQueryRunLocalCoprocessor() {
         return Boolean.parseBoolean(getOptional("kylin.query.run.local.coprocessor", "false"));
     }
@@ -451,6 +450,10 @@ public class KylinConfigBase implements Serializable {
 
     public int getHBaseScanCacheRows() {
         return Integer.parseInt(this.getOptional("kylin.hbase.scan.cache_rows", "1024"));
+    }
+
+    public boolean isGrowingDictEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.dict.growing.enabled", "false"));
     }
 
     public int getHBaseScanMaxResultSize() {
