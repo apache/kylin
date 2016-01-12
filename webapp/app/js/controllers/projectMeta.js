@@ -23,6 +23,7 @@ KylinApp
     $scope.selectedSrcDb = [];
     $scope.selectedSrcTable = {};
     $scope.treeOptions = {
+      dirSelectable:false,
       nodeChildren: "columns",
       injectClasses: {
         ul: "a1",
@@ -38,6 +39,14 @@ KylinApp
     $scope.lastSelected = null;
 
     $scope.showSelected = function (table) {
+      if (angular.isUndefined(table.column_NAME)) {
+        $scope.selectedSrcTable = table;
+      } else {
+        $scope.selectedSrcTable.selectedSrcColumn = table;
+      }
+    }
+
+    $scope.onDblClick = function (table) {
       if (!angular.isUndefined(table.table_NAME)){
         var selectColumn = true;
         if (angular.isUndefined(table.column_NAME)) {
@@ -46,7 +55,6 @@ KylinApp
         } else {
           $scope.selectedSrcTable.selectedSrcColumn = table;
         }
-        if($scope.lastSelected == table){
           $scope.lastSelected = null;
           if(angular.isUndefined($scope.$parent.queryString)){
             $scope.$parent.queryString='';
@@ -55,10 +63,8 @@ KylinApp
             $scope.$parent.queryString += (table.table_NAME + '.' + table.column_NAME + ' ');
           else
             $scope.$parent.queryString += (table.table_NAME + ' ');
-        } else {
-          $scope.lastSelected = table;
-        }
       }
+
     }
 
     $scope.projectMetaLoad = function () {

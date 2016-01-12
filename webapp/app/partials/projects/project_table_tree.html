@@ -29,6 +29,7 @@
                      tree-model="selectedSrcDb"
                      options="treeOptions"
                      on-selection="showSelected(node)"
+                     on-dblclick="onDblClick(node)"
                      selected-node="selectedSrcTable">
             {{node.name}} {{!!(node.type_NAME)?'(' + trimType(node.type_NAME) + ')' : ''}}
         </treecontrol>
