@@ -796,7 +796,8 @@
 
                                 <!-- MIT license -->
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
-                                
+                                <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
+
                                 <!--configuration file -->
                                 <exclude>webapp/app/routes.json</exclude>
                                 <exclude>webapp/bower.json</exclude>
