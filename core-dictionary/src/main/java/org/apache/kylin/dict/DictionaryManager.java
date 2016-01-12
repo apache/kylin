@@ -140,24 +140,56 @@ public class DictionaryManager {
 
         initDictInfo(newDict, newDictInfo);
 
-        DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
-        if (largestDictInfo != null) {
-            largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
-            Dictionary<?> largestDictObject = largestDictInfo.getDictionaryObject();
-            if (largestDictObject.contains(newDict)) {
-                logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDictInfo.getResourcePath());
-                return largestDictInfo;
-            } else if (newDict.contains(largestDictObject)) {
-                logger.info("dictionary content " + newDict + " is by far the largest, save it");
-                return saveNewDict(newDictInfo);
+        if (KylinConfig.getInstanceFromEnv().isGrowingDictEnabled()) {
+            DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
+            if (largestDictInfo != null) {
+                largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
+                Dictionary<?> largestDictObject = largestDictInfo.getDictionaryObject();
+                if (largestDictObject.contains(newDict)) {
+                    logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDictInfo.getResourcePath());
+                    return largestDictInfo;
+                } else if (newDict.contains(largestDictObject)) {
+                    logger.info("dictionary content " + newDict + " is by far the largest, save it");
+                    return saveNewDict(newDictInfo);
+                } else {
+                    logger.info("merge dict and save...");
+                    return mergeDictionary(Lists.newArrayList(newDictInfo, largestDictInfo));
+                }
             } else {
-                logger.info("merge dict and save...");
-                return mergeDictionary(Lists.newArrayList(newDictInfo, largestDictInfo));
+                logger.info("first dict of this column, save it directly");
+                return saveNewDict(newDictInfo);
             }
         } else {
-            logger.info("first dict of this column, save it directly");
+            logger.info("Growing dict is not enabled");
+            String dupDict = checkDupByContent(newDictInfo, newDict);
+            if (dupDict != null) {
+                logger.info("Identical dictionary content, reuse existing dictionary at " + dupDict);
+                return getDictionaryInfo(dupDict);
+            }
+
             return saveNewDict(newDictInfo);
         }
+    }
+
+    private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<?> dict) throws IOException {
+        ResourceStore store = MetadataManager.getInstance(config).getStore();
+        ArrayList<String> existings = store.listResources(dictInfo.getResourceDir());
+        if (existings == null)
+            return null;
+
+        logger.info("{} existing dictionaries of the same column", existings.size());
+        if (existings.size() > 100) {
+            logger.warn("Too many dictionaries under {}, dict count: {}", dictInfo.getResourceDir(), existings.size());
+        }
+
+        for (String existing : existings) {
+            DictionaryInfo existingInfo = getDictionaryInfo(existing);
+            if (existingInfo != null && dict.equals(existingInfo.getDictionaryObject())) {
+                return existing;
+            }
+        }
+
+        return null;
     }
 
     private void initDictInfo(Dictionary<?> newDict, DictionaryInfo newDictInfo) {
