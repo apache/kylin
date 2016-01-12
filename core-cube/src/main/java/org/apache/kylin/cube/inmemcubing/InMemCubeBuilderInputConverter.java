@@ -17,10 +17,13 @@
 */
 package org.apache.kylin.cube.inmemcubing;
 
+import org.apache.kylin.common.util.Bytes;
+
 import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
+import com.google.common.collect.Lists;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.gridtable.GTInfo;
@@ -35,12 +38,15 @@ import org.apache.kylin.metadata.model.TblColRef;
  */
 public class InMemCubeBuilderInputConverter {
 
+    public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
+    
     private final CubeJoinedFlatTableDesc intermediateTableDesc;
     private final MeasureDesc[] measureDescs;
     private final MeasureIngester<?>[] measureIngesters;
     private final int measureCount;
     private final Map<TblColRef, Dictionary<String>> dictionaryMap;
     private final GTInfo gtInfo;
+    protected List<byte[]> nullBytes;
     
 
     public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap, GTInfo gtInfo) {
@@ -50,6 +56,7 @@ public class InMemCubeBuilderInputConverter {
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
         this.measureIngesters = MeasureIngester.create(cubeDesc.getMeasures());
         this.dictionaryMap = dictionaryMap;
+        initNullBytes(cubeDesc);
     }
     
     public final GTRecord convert(List<String> row) {
@@ -73,6 +80,9 @@ public class InMemCubeBuilderInputConverter {
 
         for (int i = 0; i < keySize; i++) {
             key[i] = row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]);
+            if (key[i] != null && isNull(Bytes.toBytes((String)key[i]))) {
+                key[i] = null;
+            }
         }
 
         return key;
@@ -112,4 +122,24 @@ public class InMemCubeBuilderInputConverter {
         return measureIngesters[idxOfMeasure].valueOf(inputToMeasure, measure, dictionaryMap);
     }
 
+    private void initNullBytes(CubeDesc cubeDesc) {
+        nullBytes = Lists.newArrayList();
+        nullBytes.add(HIVE_NULL);
+        String[] nullStrings = cubeDesc.getNullStrings();
+        if (nullStrings != null) {
+            for (String s : nullStrings) {
+                nullBytes.add(Bytes.toBytes(s));
+            }
+        }
+    }
+
+    private boolean isNull(byte[] v) {
+        for (byte[] nullByte : nullBytes) {
+            if (Bytes.equals(v, nullByte))
+                return true;
+        }
+        return false;
+    }
+
+    
 }
