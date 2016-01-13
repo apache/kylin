@@ -33,6 +33,7 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
@@ -49,6 +50,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.junit.After;
 import org.junit.Before;
@@ -103,9 +105,9 @@ public class BuildCubeWithEngineTest {
 
     @Before
     public void before() throws Exception {
-
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
+        cleanupOldStorage();
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
@@ -320,6 +322,13 @@ public class BuildCubeWithEngineTest {
         jobService.addJob(job);
         waitForJob(job.getId());
         return job.getId();
+    }
+
+    private int cleanupOldStorage() throws Exception {
+        String[] args = { "--delete", "true" };
+
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
     }
 
 }
