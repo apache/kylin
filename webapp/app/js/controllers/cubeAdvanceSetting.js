@@ -25,7 +25,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     if($scope.state.mode==="edit") {
         $scope.metaModel = MetaModel;
       if(!$scope.cubeMetaFrame.auto_merge_time_ranges){
-        $scope.cubeMetaFrame.auto_merge_time_ranges = [604800000,2419200000];
+        $scope.cubeMetaFrame.auto_merge_time_ranges = [];
       }
       $scope._auto_merge_time_ranges = [];
       angular.forEach($scope.cubeMetaFrame.auto_merge_time_ranges,function(item){
