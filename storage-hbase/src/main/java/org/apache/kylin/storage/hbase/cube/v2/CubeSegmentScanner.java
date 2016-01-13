@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +24,7 @@ import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.gridtable.NotEnoughGTInfoException;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.TupleFilterDictionaryTranslater;
+import org.apache.kylin.gridtable.EmptyGTScanner;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
@@ -83,9 +83,9 @@ public class CubeSegmentScanner implements IGTScanner {
             int index = mapping.getIndexOf(tblColRef);
             if (index >= 0) {
                 segmentStartAndEnd = getSegmentStartAndEnd(index);
-                partitionColOfGT =  info.colRef(index);
+                partitionColOfGT = info.colRef(index);
             }
-            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd,partitionColOfGT);
+            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd, partitionColOfGT);
         } else {
             scanRangePlanner = new GTScanRangePlanner(info, null, null);
         }
@@ -220,90 +220,39 @@ public class CubeSegmentScanner implements IGTScanner {
     }
 
     private class Scanner {
-        final IGTScanner[] inputScanners = new IGTScanner[scanRequests.size()];
-        int cur = 0;
-        Iterator<GTRecord> curIterator = null;
-        GTRecord next = null;
+        IGTScanner internal = null;
+
+        public Scanner() {
+            CubeHBaseRPC rpc;
+            if ("scan".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryProtocol())) {
+                rpc = null;
+            } else {
+                rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);//default behavior
+            }
+            //change previous line to CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
+            //to debug locally
+
+            try {
+                if (scanRequests.size() == 0) {
+                    internal = new EmptyGTScanner();
+                } else {
+                    internal = rpc.getGTScanner(scanRequests);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("error", e);
+            }
+        }
 
         public Iterator<GTRecord> iterator() {
-            return new Iterator<GTRecord>() {
-
-                @Override
-                public boolean hasNext() {
-                    if (next != null)
-                        return true;
-
-                    if (curIterator == null) {
-                        if (cur >= scanRequests.size())
-                            return false;
-
-                        try {
-
-                            CubeHBaseRPC rpc;
-                            if ("scan".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryProtocol())) {
-                                rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
-                            } else {
-                                rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);//default behavior
-                            }
-
-                            //change previous line to CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
-                            //to debug locally
-
-                            inputScanners[cur] = rpc.getGTScanner(scanRequests.get(cur));
-                            curIterator = inputScanners[cur].iterator();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-                    if (curIterator.hasNext() == false) {
-                        curIterator = null;
-                        cur++;
-                        return hasNext();
-                    }
-
-                    next = curIterator.next();
-                    return true;
-                }
-
-                @Override
-                public GTRecord next() {
-                    // fetch next record
-                    if (next == null) {
-                        hasNext();
-                        if (next == null)
-                            throw new NoSuchElementException();
-                    }
-
-                    GTRecord result = next;
-                    next = null;
-                    return result;
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
+            return internal.iterator();
         }
 
         public void close() throws IOException {
-            for (int i = 0; i < inputScanners.length; i++) {
-                if (inputScanners[i] != null) {
-                    inputScanners[i].close();
-                }
-            }
+            internal.close();
         }
 
         public int getScannedRowCount() {
-            int result = 0;
-            for (int i = 0; i < inputScanners.length; i++) {
-                if (inputScanners[i] == null)
-                    break;
-
-                result += inputScanners[i].getScannedRowCount();
-            }
-            return result;
+            return internal.getScannedRowCount();
         }
 
     }

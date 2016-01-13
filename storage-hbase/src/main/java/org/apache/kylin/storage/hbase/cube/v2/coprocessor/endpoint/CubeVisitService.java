@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -36,6 +37,7 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTRecord;
@@ -123,6 +125,20 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         }
     }
 
+    private void updateRawScanByCurrentRegion(RawScan rawScan, HRegion region, int shardLength) {
+        if (shardLength == 0) {
+            return;
+        }
+        byte[] regionStartKey = ArrayUtils.isEmpty(region.getStartKey()) ? new byte[shardLength] : region.getStartKey();
+        Bytes.putBytes(rawScan.startKey, 0, regionStartKey, 0, shardLength);
+        Bytes.putBytes(rawScan.endKey, 0, regionStartKey, 0, shardLength);
+    }
+
+    private void appendProfileInfo(StringBuilder sb) {
+        sb.append(System.currentTimeMillis() - this.serviceStartTime);
+        sb.append(",");
+    }
+
     @Override
     public void visitCube(RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
         RegionScanner innerScanner = null;
@@ -134,20 +150,25 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         try {
             this.serviceStartTime = System.currentTimeMillis();
 
+            region = env.getRegion();
+            region.startRegionOperation();
+
             GTScanRequest scanReq = GTScanRequest.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
             RawScan hbaseRawScan = RawScan.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getHbaseRawScan())));
+
             List<List<Integer>> hbaseColumnsToGT = Lists.newArrayList();
             for (IntList intList : request.getHbaseColumnsToGTList()) {
                 hbaseColumnsToGT.add(intList.getIntsList());
             }
 
+            if (request.getRowkeyPreambleSize() - RowConstants.ROWKEY_CUBOIDID_LEN > 0) {
+                //if has shard, fill region shard to raw scan start/end
+                updateRawScanByCurrentRegion(hbaseRawScan, region, request.getRowkeyPreambleSize() - RowConstants.ROWKEY_CUBOIDID_LEN);
+            }
+            
             Scan scan = CubeHBaseRPC.buildScan(hbaseRawScan);
 
-            sb.append(System.currentTimeMillis() - this.serviceStartTime);
-            sb.append(",");
-
-            region = env.getRegion();
-            region.startRegionOperation();
+            appendProfileInfo(sb);
 
             innerScanner = region.getScanner(scan);
             CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
@@ -177,23 +198,20 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 finalRowCount++;
             }
 
-            sb.append(System.currentTimeMillis() - this.serviceStartTime);
-            sb.append(",");
+            appendProfileInfo(sb);
 
             //outputStream.close() is not necessary
             allRows = outputStream.toByteArray();
             byte[] compressedAllRows = CompressionUtils.compress(allRows);
 
-            sb.append(System.currentTimeMillis() - this.serviceStartTime);
-            sb.append(",");
+            appendProfileInfo(sb);
 
             OperatingSystemMXBean operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
             double systemCpuLoad = operatingSystemMXBean.getSystemCpuLoad();
             double freePhysicalMemorySize = operatingSystemMXBean.getFreePhysicalMemorySize();
             double freeSwapSpaceSize = operatingSystemMXBean.getFreeSwapSpaceSize();
 
-            sb.append(System.currentTimeMillis() - this.serviceStartTime);
-            sb.append(",");
+            appendProfileInfo(sb);
 
             CubeVisitProtos.CubeVisitResponse.Builder responseBuilder = CubeVisitProtos.CubeVisitResponse.newBuilder();
             done.run(responseBuilder.//
