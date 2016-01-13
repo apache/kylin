@@ -111,6 +111,9 @@ public class Cuboid implements Comparable<Cuboid> {
     }
 
     public static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
+        if(cuboidID==getBaseCuboidId(cubeDesc)){
+            return cuboidID;
+        }
         List<Long> candidates = Lists.newArrayList();
         for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
             Long candidate = translateToValidCuboid(agg, cuboidID);
