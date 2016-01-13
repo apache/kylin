@@ -26,10 +26,16 @@
                     <b>Model Name</b>
                   </label>
                   <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.cube_info_form.model_name.$invalid && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.model_name.$sbumitted)}">
-                    <input  ng-if="state.mode=='edit'" ng-disabled="{{isEdit}}" name="model_name" required ng-model="cubeMetaFrame.model_name" type="text"
-                            placeholder="Input your model name"
-                            typeahead="model for model in modelsManager.modelNameList"
-                            class="form-control"/>
+                    <select chosen ng-model="cubeMetaFrame.model_name" ng-if="state.mode=='edit'"
+                            ng-options="model for model in modelsManager.modelNameList"
+                            style="width:100%;"
+                            name="model_name"
+                            ng-required="true"
+                            data-placeholder="select a model"
+                            class="chosen-select">
+                      <option value=""> -- Choose Model -- </option>
+                    </select>
+
                     <small class="help-block" ng-show="forms.cube_info_form.model_name.$error.required && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.$sbumitted)">Model name is required.</small>
                     <span ng-if="state.mode=='view'">{{cubeMetaFrame.model_name}}</span>
                   </div>
