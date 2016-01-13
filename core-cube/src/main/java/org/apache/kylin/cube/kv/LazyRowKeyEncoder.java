@@ -18,8 +18,14 @@
 
 package org.apache.kylin.cube.kv;
 
+import com.google.common.collect.Lists;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A LazyRowKeyEncoder will not try to calculate shard
@@ -37,5 +43,25 @@ public class LazyRowKeyEncoder extends RowKeyEncoder {
         } else {
             throw new RuntimeException("If enableSharding false, you should never calculate shard");
         }
+    }
+
+
+    //for non-sharding cases it will only return one byte[] with not shard at beginning
+    public List<byte[]> getRowKeysDifferentShards(byte[] halfCookedKey) {
+        final short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
+
+        if (!enableSharding) {
+            return Lists.newArrayList(halfCookedKey);//not shard to append at head, so it is already well cooked
+        } else {
+            List<byte[]> ret = Lists.newArrayList();
+            for (short i = 0; i < cuboidShardNum; ++i) {
+                short shard = ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), i, cubeSeg.getTotalShards());
+                byte[] cookedKey = Arrays.copyOf(halfCookedKey, halfCookedKey.length);
+                BytesUtil.writeShort(shard, cookedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
+                ret.add(cookedKey);
+            }
+            return ret;
+        }
+
     }
 }
