@@ -169,7 +169,7 @@ public class CubeMetadataUpgradeV2 {
                 cubeDesc.setPartitionDateStart(modelPartDesc.getPartitionDateStart());
 
                 store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
-                updatedResources.add(modelDesc.getResourcePath());
+                updatedResources.add(cubeDesc.getResourcePath());
             }
         } catch (Exception e) {
             e.printStackTrace();
