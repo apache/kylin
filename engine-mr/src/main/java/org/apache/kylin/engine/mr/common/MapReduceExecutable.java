@@ -53,11 +53,10 @@ import com.google.common.base.Preconditions;
  */
 public class MapReduceExecutable extends AbstractExecutable {
 
+    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
     private static final String KEY_MR_JOB = "MR_JOB_CLASS";
     private static final String KEY_PARAMS = "MR_JOB_PARAMS";
     private static final String KEY_COUNTER_SAVEAS = "MR_COUNTER_SAVEAS";
-
-    public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
 
     public MapReduceExecutable() {
         super();
@@ -117,7 +116,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                 try {
                     //for async mr job, ToolRunner just return 0;
                     ToolRunner.run(hadoopJob, args);
-                    
+
                     if (hadoopJob.isSkipped()) {
                         return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped");
                     }
@@ -169,7 +168,15 @@ public class MapReduceExecutable extends AbstractExecutable {
                 }
                 Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000);
             }
-            //TODO kill discarded mr job using "hadoop job -kill " + mrJobId
+
+            // try to kill running map-reduce job to release resources.
+            if (job != null) {
+                try {
+                    job.killJob();
+                } catch (Exception e) {
+                    logger.warn("failed to kill hadoop job: " + job.getJobID(), e);
+                }
+            }
 
             return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
 
@@ -211,7 +218,7 @@ public class MapReduceExecutable extends AbstractExecutable {
             logger.info("kylin.job.yarn.app.rest.check.status.url" + " is not set, read from job configuration");
         }
         String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, job.getConfiguration());
-        if(HAUtil.isHAEnabled(job.getConfiguration())) {
+        if (HAUtil.isHAEnabled(job.getConfiguration())) {
             YarnConfiguration conf = new YarnConfiguration(job.getConfiguration());
             String active = RMHAUtils.findActiveRMHAId(conf);
             rmWebHost = HAUtil.getConfValueForRMInstance(HAUtil.addSuffix(YarnConfiguration.RM_WEBAPP_ADDRESS, active), YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);
@@ -236,20 +243,20 @@ public class MapReduceExecutable extends AbstractExecutable {
         addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
 
-    public void setMapReduceJobClass(Class<? extends AbstractHadoopJob> clazzName) {
-        setParam(KEY_MR_JOB, clazzName.getName());
-    }
-
     public String getMapReduceJobClass() throws ExecuteException {
         return getParam(KEY_MR_JOB);
     }
 
-    public void setMapReduceParams(String param) {
-        setParam(KEY_PARAMS, param);
+    public void setMapReduceJobClass(Class<? extends AbstractHadoopJob> clazzName) {
+        setParam(KEY_MR_JOB, clazzName.getName());
     }
 
     public String getMapReduceParams() {
         return getParam(KEY_PARAMS);
+    }
+
+    public void setMapReduceParams(String param) {
+        setParam(KEY_PARAMS, param);
     }
 
     public String getCounterSaveAs() {
