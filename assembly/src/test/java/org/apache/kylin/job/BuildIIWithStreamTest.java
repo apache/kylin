@@ -71,6 +71,8 @@ import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.source.hive.HiveTableReader;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -113,6 +115,11 @@ public class BuildIIWithStreamTest {
                 iiManager.updateII(ii);
             }
         }
+    }
+    
+    @AfterClass
+    public void cleanup() throws Exception {
+        cleanupOldStorage();
     }
 
     private String createIntermediateTable(IIDesc desc, KylinConfig kylinConfig) throws IOException {
@@ -271,6 +278,13 @@ public class BuildIIWithStreamTest {
             }
         });
         return unsorted;
+    }
+
+    private int cleanupOldStorage() throws Exception {
+        String[] args = { "--delete", "true" };
+
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
     }
 
 }
