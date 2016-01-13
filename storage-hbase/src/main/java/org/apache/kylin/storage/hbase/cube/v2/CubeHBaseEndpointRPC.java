@@ -27,6 +27,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.DataFormatException;
 
@@ -93,7 +94,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             }
             try {
                 current++;
-                return queue.take();
+                return queue.poll(1, TimeUnit.HOURS);
             } catch (InterruptedException e) {
                 throw new RuntimeException("error when waiting queue", e);
             }
