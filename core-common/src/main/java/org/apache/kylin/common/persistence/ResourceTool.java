@@ -19,6 +19,9 @@
 package org.apache.kylin.common.persistence;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -68,8 +71,34 @@ public class ResourceTool {
         case "remove":
             remove(KylinConfig.getInstanceFromEnv(), args[1]);
             break;
+        case "cat":
+            cat(KylinConfig.getInstanceFromEnv(), args[1]);
+            break;
         default:
             System.out.println("Unknown cmd: " + cmd);
+        }
+    }
+
+    public static void cat(KylinConfig config, String path) throws IOException {
+        ResourceStore store = ResourceStore.getStore(config);
+        InputStream is = store.getResource(path).inputStream;
+        BufferedReader br = null;
+        String line;
+        try {
+            br = new BufferedReader(new InputStreamReader(is));
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
