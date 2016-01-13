@@ -18,6 +18,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.common.FuzzyValueCombination;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
@@ -49,7 +50,6 @@ public class GTScanRangePlanner {
      * @param partitionColRef the TblColRef in GT
      */
     public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> segmentStartAndEnd, TblColRef partitionColRef) {
-      
 
         this.info = info;
         this.segmentStartAndEnd = segmentStartAndEnd;
@@ -188,7 +188,9 @@ public class GTScanRangePlanner {
                 throw new IllegalStateException("Filter should be AND instead of " + andFilter);
 
             Collection<ColumnRange> andRanges = translateToAndDimRanges(andFilter.getChildren());
-            result.add(andRanges);
+            if (andRanges != null) {
+                result.add(andRanges);
+            }
         }
 
         return preEvaluateConstantConditions(result);
@@ -198,7 +200,11 @@ public class GTScanRangePlanner {
         Map<TblColRef, ColumnRange> rangeMap = new HashMap<TblColRef, ColumnRange>();
         for (TupleFilter filter : andFilters) {
             if ((filter instanceof CompareTupleFilter) == false) {
-                continue;
+                if (filter instanceof ConstantTupleFilter && !filter.evaluate(null, null)) {
+                    return null;
+                } else {
+                    continue;
+                }
             }
 
             CompareTupleFilter comp = (CompareTupleFilter) filter;
