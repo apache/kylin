@@ -180,7 +180,7 @@
                             <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Column Name</b></label>
                             <div class="col-xs-12 col-sm-6">
                                 <select class="form-control" required="true" chosen data-placeholder="Select a column"
-                                        ng-model="newDimension.column[0]" ng-options="column.name as column.name for column in getDimColumnsByTable(newDimension.table)">
+                                        ng-model="newDimension.column" ng-options="column.name as column.name for column in getDimColumnsByTable(newDimension.table)">
                                     <option value=""></option>
                                 </select>
                             </div>
