@@ -79,13 +79,20 @@ public class DeployCoprocessorCLI {
 
         List<String> tableNames = getHTableNames(kylinConfig);
         logger.info("Identify tables " + tableNames);
-        
-        if (args.length == 1) {
-            logger.info("Probe run, existing. Append argument 'all' or specific tables to execute.");
-            System.exit(0);
+
+        if (args.length <= 1) {
+            printUsageAndExit();
         }
-        
-        tableNames = filterTables(tableNames, Arrays.asList(args).subList(1, args.length));
+
+        String filterType = args[1].toLowerCase();
+        if (filterType.equals("-table")) {
+            tableNames = filterByTables(tableNames, Arrays.asList(args).subList(2, args.length));
+        } else if (filterType.equals("-cube")) {
+            tableNames = filterByCubes(tableNames, Arrays.asList(args).subList(2, args.length));
+        } else if (!filterType.equals("all")) {
+            printUsageAndExit();
+        }
+
         logger.info("Will execute tables " + tableNames);
         
         Set<String> oldJarPaths = getCoprocessorJarPaths(hbaseAdmin, tableNames);
@@ -105,19 +112,38 @@ public class DeployCoprocessorCLI {
         logger.info("Active coprocessor jar: " + hdfsCoprocessorJar);
     }
 
-    private static List<String> filterTables(List<String> tableNames, List<String> list) {
+    private static void printUsageAndExit() {
+        logger.info("Probe run, exiting. Append argument 'all' or specific tables/cubes to execute.");
+        System.exit(0);
+    }
+
+    private static List<String> filterByCubes(List<String> allTableNames, List<String> cubeNames) {
+        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         List<String> result = Lists.newArrayList();
-        for (String t : list) {
+        for (String c : cubeNames) {
+            c = c.trim();
+            if (c.endsWith(","))
+                c = c.substring(0, c.length() - 1);
+
+            CubeInstance cubeInstance = cubeManager.getCube(c);
+            for (CubeSegment segment : cubeInstance.getSegments()) {
+                String tableName = segment.getStorageLocationIdentifier();
+                if (allTableNames.contains(tableName)) {
+                    result.add(tableName);
+                }
+            }
+        }
+        return result;
+    }
+
+    private static List<String> filterByTables(List<String> allTableNames, List<String> tableNames) {
+        List<String> result = Lists.newArrayList();
+        for (String t : tableNames) {
             t = t.trim();
             if (t.endsWith(","))
                 t = t.substring(0, t.length() - 1);
             
-            if (t.equals("all")) {
-                result.addAll(tableNames);
-                break;
-            }
-            
-            if (tableNames.contains(t)) {
+            if (allTableNames.contains(t)) {
                 result.add(t);
             }
         }
