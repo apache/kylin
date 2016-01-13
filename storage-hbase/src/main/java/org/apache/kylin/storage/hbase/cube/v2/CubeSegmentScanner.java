@@ -225,7 +225,7 @@ public class CubeSegmentScanner implements IGTScanner {
         public Scanner() {
             CubeHBaseRPC rpc;
             if ("scan".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryProtocol())) {
-                rpc = null;
+                rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
             } else {
                 rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);//default behavior
             }
