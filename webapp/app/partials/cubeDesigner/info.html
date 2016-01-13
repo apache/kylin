@@ -30,6 +30,7 @@
                             ng-options="model for model in modelsManager.modelNameList"
                             style="width:100%;"
                             name="model_name"
+                            ng-disabled="{{isEdit}}"
                             ng-required="true"
                             data-placeholder="select a model"
                             class="chosen-select">
