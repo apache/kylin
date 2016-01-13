@@ -118,7 +118,7 @@ public class BuildIIWithStreamTest {
     }
     
     @AfterClass
-    public void cleanup() throws Exception {
+    public static void cleanup() throws Exception {
         cleanupOldStorage();
     }
 
@@ -280,7 +280,7 @@ public class BuildIIWithStreamTest {
         return unsorted;
     }
 
-    private int cleanupOldStorage() throws Exception {
+    private static int cleanupOldStorage() throws Exception {
         String[] args = { "--delete", "true" };
 
         int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
