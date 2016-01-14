@@ -1,0 +1,4 @@
+REVIEWBOARD_URL = "https://reviews.apache.org"
+REPOSITORY = "kylin"
+BRANCH = "2.x-staging"
+LAND_DEST_BRANCH = "2.x-staging"
