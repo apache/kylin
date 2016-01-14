@@ -204,7 +204,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     public IGTScanner getGTScanner(final List<GTScanRequest> scanRequests) throws IOException {
 
         final String toggle = BackdoorToggles.getCoprocessorBehavior() == null ? CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString() : BackdoorToggles.getCoprocessorBehavior();
-        logger.debug("The execution of this query will use " + toggle + " as endpoint's behavior");
+        logger.debug("New scanner for current segment {} will use {} as endpoint's behavior", cubeSeg, toggle);
 
         short cuboidBaseShard = cubeSeg.getCuboidBaseShard(this.cuboid.getId());
         short shardNum = cubeSeg.getCuboidShardNum(this.cuboid.getId());
@@ -225,6 +225,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             hbaseColumnsToGTIntList.add(IntList.newBuilder().addAllInts(list).build());
         }
 
+        boolean scanLogged = false;
         for (GTScanRequest req : scanRequests) {
             ByteBuffer buffer = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
             GTScanRequest.serializer.serialize(req, buffer);
@@ -239,10 +240,15 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             rawScanByteStrings.add(HBaseZeroCopyByteString.wrap(rawScanBuffer.array(), rawScanBuffer.position(), rawScanBuffer.limit()));
 
             logger.debug("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", buffer.limit() - buffer.position(), rawScanBuffer.limit() - rawScanBuffer.position());
-            logScan(rawScan, cubeSeg.getStorageLocationIdentifier());
+
+            if (!scanLogged) {
+                logger.info("The scan(s) info for current segment is as below, shard part of start/end key is set to 0", cubeSeg);
+                logScan(rawScan, cubeSeg.getStorageLocationIdentifier());
+                scanLogged = true;
+            }
         }
 
-        logger.debug("Start to executing: {} shards starting from {}", shardNum, cuboidBaseShard);
+        logger.debug("Submitting rpc to {} shards starting from shard {}, scan requests count {}", new Object[] { shardNum, cuboidBaseShard, scanRequests.size() });
 
         final AtomicInteger totalScannedCount = new AtomicInteger(0);
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(scanRequests.size() * shardNum);
@@ -288,7 +294,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     private String getStatsString(Map.Entry<byte[], CubeVisitProtos.CubeVisitResponse> result) {
         StringBuilder sb = new StringBuilder();
         Stats stats = result.getValue().getStats();
-        sb.append("Shard " + BytesUtil.toHex(result.getKey()) + " on host: " + stats.getHostname() + ".");
+        sb.append("Endpoint RPC returned from HTable " + cubeSeg.getStorageLocationIdentifier() + " Shard " + BytesUtil.toHex(result.getKey()) + " on host: " + stats.getHostname() + ".");
         sb.append("Total scanned row: " + stats.getScannedRowCount() + ". ");
         sb.append("Total filtered/aggred row: " + stats.getAggregatedRowCount() + ". ");
         sb.append("Time elapsed in EP: " + (stats.getServiceEndTime() - stats.getServiceStartTime()) + "(ms). ");
