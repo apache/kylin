@@ -90,6 +90,14 @@ public class GTScanRangePlanner {
         return mergedRanges;
     }
 
+    private String makeReadable(ByteArray byteArray) {
+        if (byteArray == null) {
+            return null;
+        } else {
+            return byteArray.toReadableText();
+        }
+    }
+
     private GTScanRange newScanRange(Collection<ColumnRange> andDimRanges) {
         GTRecord pkStart = new GTRecord(info);
         GTRecord pkEnd = new GTRecord(info);
@@ -99,12 +107,12 @@ public class GTScanRangePlanner {
 
         for (ColumnRange range : andDimRanges) {
             if (partitionColRef != null && range.column.equals(partitionColRef)) {
-                logger.debug("Pre-check partition col filter, partitionColRef {}, segmentstartandend {}, range begin {}, range end {}",//
-                        new Object[] { partitionColRef, segmentStartAndEnd, range.begin, range.end });
                 if (rangeStartEndComparator.comparator.compare(segmentStartAndEnd.getFirst(), range.end) <= 0 //
                         && rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) < 0) {
                     //segment range is [Closed,Open)
                 } else {
+                    logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}",//
+                            new Object[] { partitionColRef, makeReadable(segmentStartAndEnd.getFirst()), makeReadable(segmentStartAndEnd.getSecond()), makeReadable(range.begin), makeReadable(range.end) });
                     return null;
                 }
             }
