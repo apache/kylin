@@ -56,7 +56,6 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public boolean hasNext() {
-        logger.info("hasNext called");
         if (next != null)
             return true;
         
@@ -118,6 +117,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         advMeasureRowIndex = 0;
         return hasNext();
     }
+    
 
     @Override
     public ITuple next() {
