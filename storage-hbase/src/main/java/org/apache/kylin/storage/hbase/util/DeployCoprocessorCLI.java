@@ -62,11 +62,12 @@ import com.google.common.collect.Lists;
  */
 public class DeployCoprocessorCLI {
 
-    private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
-
     public static final String CubeObserverClass = "org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.AggregateRegionObserver";
     public static final String CubeEndpointClass = "org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.CubeVisitService";
+    public static final String CubeObserverClassOld = "org.apache.kylin.storage.hbase.coprocessor.observer.AggregateRegionObserver";
+    public static final String IIEndpointClassOld = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
     public static final String IIEndpointClass = "org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.IIEndpoint";
+    private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
     public static void main(String[] args) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -94,7 +95,7 @@ public class DeployCoprocessorCLI {
         }
 
         logger.info("Will execute tables " + tableNames);
-        
+
         Set<String> oldJarPaths = getCoprocessorJarPaths(hbaseAdmin, tableNames);
         logger.info("Old coprocessor jar: " + oldJarPaths);
 
@@ -142,7 +143,7 @@ public class DeployCoprocessorCLI {
             t = t.trim();
             if (t.endsWith(","))
                 t = t.substring(0, t.length() - 1);
-            
+
             if (allTableNames.contains(t)) {
                 result.add(t);
             }
@@ -194,7 +195,13 @@ public class DeployCoprocessorCLI {
         while (desc.hasCoprocessor(IIEndpointClass)) {
             desc.removeCoprocessor(IIEndpointClass);
         }
-
+        // remove legacy coprocessor from v1.x
+        while (desc.hasCoprocessor(CubeObserverClassOld)) {
+            desc.removeCoprocessor(CubeObserverClassOld);
+        }
+        while (desc.hasCoprocessor(IIEndpointClassOld)) {
+            desc.removeCoprocessor(IIEndpointClassOld);
+        }
         addCoprocessorOnHTable(desc, hdfsCoprocessorJar);
         hbaseAdmin.modifyTable(tableName, desc);
 
