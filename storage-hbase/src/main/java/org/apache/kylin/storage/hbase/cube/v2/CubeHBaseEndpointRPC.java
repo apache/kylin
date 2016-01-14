@@ -34,6 +34,7 @@ import java.util.zip.DataFormatException;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
@@ -217,7 +218,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         final ImmutableBitSet selectedColBlocks = scanRequests.get(0).getSelectedColBlocks().set(0);
 
         // globally shared connection, does not require close
-        final HTableInterface hbaseTable = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl()).getTable(cubeSeg.getStorageLocationIdentifier());
+        final HConnection conn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
 
         final List<IntList> hbaseColumnsToGTIntList = Lists.newArrayList();
         List<List<Integer>> hbaseColumnsToGT = getHBaseColumnsGTMapping(selectedColBlocks);
@@ -269,7 +270,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
                         Map<byte[], CubeVisitProtos.CubeVisitResponse> results;
                         try {
-                            results = getResults(builder.build(), hbaseTable, epRange.getFirst(), epRange.getSecond());
+                            results = getResults(builder.build(), conn.getTable(cubeSeg.getStorageLocationIdentifier()), epRange.getFirst(), epRange.getSecond());
                         } catch (Throwable throwable) {
                             throw new RuntimeException("Error when visiting cubes by endpoint:", throwable);
                         }
