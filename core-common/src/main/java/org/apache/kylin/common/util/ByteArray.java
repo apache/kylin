@@ -166,6 +166,14 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
             return Bytes.compareTo(this.data, this.offset, this.length, o.data, o.offset, o.length);
     }
 
+    public String toReadableText() {
+        if (data == null) {
+            return null;
+        } else {
+            return BytesUtil.toHex(data, offset, length);
+        }
+    }
+
     @Override
     public String toString() {
         if (data == null)
