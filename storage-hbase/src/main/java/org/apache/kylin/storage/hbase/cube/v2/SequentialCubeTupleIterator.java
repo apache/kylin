@@ -51,6 +51,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public boolean hasNext() {
+        logger.info("hasNext called");
         if (next != null)
             return true;
 
@@ -58,7 +59,10 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             if (scannerIterator.hasNext()) {
                 curScanner = scannerIterator.next();
                 curRecordIterator = curScanner.iterator();
-                curTupleConverter = new CubeTupleConverter(curScanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo, null);
+                if (curRecordIterator.hasNext()) {
+                    //if the segment does not has any tuples, don't bother to create a converter
+                    curTupleConverter = new CubeTupleConverter(curScanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo, null);
+                }
             } else {
                 return false;
             }
@@ -119,7 +123,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             logger.error("Exception when close CubeScanner", e);
         }
     }
-    
+
     public int getScanCount() {
         return scanCount;
     }
