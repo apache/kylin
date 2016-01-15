@@ -105,9 +105,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     //add cube dimension column for specific measure
     angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension,index){
       if(dimension.column){
-        angular.forEach(dimension.column,function(column,index){
-          me_columns.push(column);
-        })
+        me_columns.push(dimension.column);
       }
     });
 
