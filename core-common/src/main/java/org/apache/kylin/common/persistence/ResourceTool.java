@@ -131,7 +131,7 @@ public class ResourceTool {
     private static void resetR(ResourceStore store, String path) throws IOException {
         ArrayList<String> children = store.listResources(path);
         if (children == null) { // path is a resource (not a folder)
-            if (matchFilter(path) == false) {
+            if (matchFilter(path)) {
                 store.deleteResource(path);
             }
         } else {
