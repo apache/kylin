@@ -279,7 +279,7 @@ KylinApp
     };
 
     $scope.startJobSubmit = function (cube) {
-
+      $scope.loadDetail(cube);
       // for streaming cube build tip
       if(cube.streaming){
         $modal.open({
