@@ -54,12 +54,12 @@
                 <label tooltip="Clean unused HDFS and HBASE space" style="cursor: pointer;">Clean Up Storage</label>
             </button>
         </div>
-        <div style="padding-top: 10px;width: 180px;">
+        <div style="padding-top: 10px;width: 180px;" ng-if="isCacheEnabled()">
             <button class="btn btn-primary btn-lg btn-block" ng-click="disableCache()">
                 <label tooltip="Disable Query Cache" style="cursor: pointer;">Disable Cache</label>
             </button>
         </div>
-      <div style="padding-top: 10px;width: 180px;">
+      <div style="padding-top: 10px;width: 180px;" ng-if="!isCacheEnabled()">
         <button class="btn btn-primary btn-lg btn-block" ng-click="enableCache()">
           <label tooltip="Enable Query Cache" style="cursor: pointer;">Enable Cache</label>
         </button>

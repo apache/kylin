@@ -18,9 +18,14 @@
 
 'use strict';
 
-KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, $modal, SweetAlert) {
+KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, $modal, SweetAlert,kylinConfig) {
   $scope.configStr = "";
   $scope.envStr = "";
+
+  $scope.isCacheEnabled = function(){
+    console.log("cache enabled?:"+kylinConfig.isCacheEnabled());
+    return kylinConfig.isCacheEnabled();
+  }
 
   $scope.getEnv = function () {
     AdminService.env({}, function (env) {
@@ -134,6 +139,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       if (isConfirm) {
         AdminService.updateConfig({}, {key: 'kylin.query.cache.enabled', value: false}, function () {
           SweetAlert.swal('Success!', 'Cache disabled successfully!', 'success');
+          location.reload();
         }, function (e) {
           if (e.data && e.data.exception) {
             var message = e.data.exception;
@@ -162,6 +168,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       if (isConfirm) {
         AdminService.updateConfig({}, {key: 'kylin.query.cache.enabled', value: true}, function () {
           SweetAlert.swal('Success!', 'Cache enabled successfully!', 'success');
+          location.reload();
         }, function (e) {
           if (e.data && e.data.exception) {
             var message = e.data.exception;
