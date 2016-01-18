@@ -47,6 +47,14 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     return this.timezone;
   }
 
+  this.isCacheEnabled = function(){
+    var status = this.getProperty("kylin.query.cache.enabled").trim();
+    if(status!=='false'){
+      return true;
+    }
+    return false;
+  }
+
   this.getDeployEnv = function () {
     if (!this.deployEnv) {
       this.deployEnv = this.getProperty("deploy.env").trim();
