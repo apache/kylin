@@ -151,22 +151,9 @@ public class Cuboid implements Comparable<Cuboid> {
             if (cuboidWithoutMandatory != 0) {
                 return cuboidID;
             } else {
-                // no column (except mandatory), add one column
-                long toAddCol = (1 << (BitSet.valueOf(new long[] { rowkey.getTailMask() }).cardinality()));
-                // check if the toAddCol belongs to any hierarchy
-                List<HierarchyMask> hierarchyMaskList = rowkey.getHierarchyMasks();
-                if (hierarchyMaskList != null && hierarchyMaskList.size() > 0) {
-                    for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
-                        long result = toAddCol & hierarchyMasks.fullMask;
-                        if (result > 0) {
-                            // replace it with the root col in hierarchy
-                            toAddCol = hierarchyMasks.allMasks[0];
-                            break;
-                        }
-                    }
-                }
-                cuboidID = cuboidID | toAddCol;
-                return cuboidID;
+                // no column except mandatory, add one column
+                cuboidID = cuboidID | Long.lowestOneBit(rowkey.getAggrGroupFullMask());
+                return translateToValidCuboid(cubeDesc, cuboidID);
             }
         }
 
@@ -174,66 +161,6 @@ public class Cuboid implements Comparable<Cuboid> {
         cuboidID = cuboidID | rowkey.getTailMask();
         return cuboidID;
 
-    }
-
-    // Breadth-First-Search
-
-    /**
-     * @deprecated due to poor performance
-     * @param cube
-     * @param cuboidID
-     * @return
-     */
-    private static long translateToValidCuboidDeprecated(CubeDesc cube, long cuboidID) {
-        if (Cuboid.isValid(cube, cuboidID)) {
-            return cuboidID;
-        }
-
-        HashSet<Long> dedupped = new HashSet<Long>();
-        Queue<Long> queue = new LinkedList<Long>();
-        List<Long> parents = Cuboid.getAllPossibleParents(cube, cuboidID);
-
-        // check each parent
-        addToQueue(queue, parents, dedupped);
-        while (queue.size() > 0) {
-            long parent = pollFromQueue(queue, dedupped);
-            if (Cuboid.isValid(cube, parent)) {
-                return parent;
-            } else {
-                addToQueue(queue, Cuboid.getAllPossibleParents(cube, parent), dedupped);
-            }
-        }
-        return -1;
-    }
-
-    private static List<Long> getAllPossibleParents(CubeDesc cube, long cuboidID) {
-        List<Long> allPossibleParents = new ArrayList<Long>();
-
-        for (int i = 0; i < cube.getRowkey().getRowKeyColumns().length; i++) {
-            long mask = 1L << i;
-            long parentId = cuboidID | mask;
-            if (parentId != cuboidID) {
-                allPossibleParents.add(parentId);
-            }
-        }
-
-        return allPossibleParents;
-    }
-
-    private static void addToQueue(Queue<Long> queue, List<Long> parents, HashSet<Long> dedupped) {
-        Collections.sort(parents);
-        for (Long p : parents) {
-            if (!dedupped.contains(p)) {
-                dedupped.add(p);
-                queue.offer(p);
-            }
-        }
-    }
-
-    private static long pollFromQueue(Queue<Long> queue, HashSet<Long> dedupped) {
-        long element = queue.poll();
-        dedupped.remove(element);
-        return element;
     }
 
     private static boolean checkBaseCuboid(RowKeyDesc rowkey, long cuboidID) {
