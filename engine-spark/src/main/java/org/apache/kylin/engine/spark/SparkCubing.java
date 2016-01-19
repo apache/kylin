@@ -518,6 +518,7 @@ public class SparkCubing extends AbstractApplication {
         kyroClasses.addAll(new Reflections("org.apache.kylin.metadata.model").getSubTypesOf(Object.class));
         kyroClasses.addAll(new Reflections("org.apache.kylin.metadata.measure").getSubTypesOf(Object.class));
         kyroClasses.add(HashMap.class);
+        kyroClasses.add(org.apache.kylin.cube.CubeSegment.class);
         kyroClasses.add(org.apache.spark.sql.Row[].class);
         kyroClasses.add(org.apache.spark.sql.Row.class);
         kyroClasses.add(org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema.class);
