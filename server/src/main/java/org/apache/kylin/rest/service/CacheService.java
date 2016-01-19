@@ -261,7 +261,7 @@ public class CacheService extends BasicService {
             case TABLE:
                 throw new UnsupportedOperationException(log);
             case DATA_MODEL:
-                throw new UnsupportedOperationException(log);
+                getMetadataManager().removeModelCache(cacheKey);
             default:
                 throw new RuntimeException("invalid cacheType:" + cacheType);
             }
