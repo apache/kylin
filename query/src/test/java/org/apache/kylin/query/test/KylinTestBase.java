@@ -209,7 +209,7 @@ public class KylinTestBase {
         if (needSort) {
             queryTable = new SortedTable(queryTable, columnNames);
         }
-         printResult(queryTable);
+//         printResult(queryTable);
 
         return queryTable;
     }
@@ -265,7 +265,7 @@ public class KylinTestBase {
         if (needSort) {
             queryTable = new SortedTable(queryTable, columnNames);
         }
-         printResult(queryTable);
+//         printResult(queryTable);
         return queryTable;
     }
 
