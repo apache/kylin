@@ -54,9 +54,11 @@ public class UpdateHTableHostCLI {
     private List<String> htables;
     private HBaseAdmin hbaseAdmin;
     private KylinConfig kylinConfig;
+    private String oldHostValue;
 
-    public UpdateHTableHostCLI(List<String> htables) throws IOException {
+    public UpdateHTableHostCLI(List<String> htables, String oldHostValue) throws IOException {
         this.htables = htables;
+        this.oldHostValue = oldHostValue;
         this.hbaseAdmin = new HBaseAdmin(HBaseConnection.getCurrentHBaseConfiguration());
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
     }
@@ -67,16 +69,21 @@ public class UpdateHTableHostCLI {
         }
 
         List<String> tableNames = getHTableNames(KylinConfig.getInstanceFromEnv());
-        String filterType = args[0].toLowerCase();
+        if (!args[0].toLowerCase().equals("-from")) {
+            printUsageAndExit();
+        }
+        String oldHostValue = args[1].toLowerCase();
+        String filterType = args[2].toLowerCase();
         if (filterType.equals("-table")) {
-            tableNames = filterByTables(tableNames, Arrays.asList(args).subList(1, args.length));
+            tableNames = filterByTables(tableNames, Arrays.asList(args).subList(3, args.length));
         } else if (filterType.equals("-cube")) {
-            tableNames = filterByCubes(tableNames, Arrays.asList(args).subList(1, args.length));
+            tableNames = filterByCubes(tableNames, Arrays.asList(args).subList(3, args.length));
         } else if (!filterType.equals("-all")) {
             printUsageAndExit();
         }
+        logger.info("These htables are needed to be updated: " + StringUtils.join(tableNames, ","));
 
-        UpdateHTableHostCLI updateHTableHostCLI = new UpdateHTableHostCLI(tableNames);
+        UpdateHTableHostCLI updateHTableHostCLI = new UpdateHTableHostCLI(tableNames, oldHostValue);
         updateHTableHostCLI.execute();
 
         logger.info("=================================================================");
@@ -104,7 +111,7 @@ public class UpdateHTableHostCLI {
     }
 
     private static void printUsageAndExit() {
-        logger.info("Usage: exec -all|-cube cubeA,cubeB|-table tableA,tableB");
+        logger.info("Usage: exec -from oldHostValue -all|-cube cubeA,cubeB|-table tableA,tableB");
         System.exit(0);
     }
 
@@ -172,17 +179,20 @@ public class UpdateHTableHostCLI {
 
     private void updateHtable(String tableName) throws IOException {
         HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-        hbaseAdmin.disableTable(tableName);
-        desc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
-        hbaseAdmin.modifyTable(tableName, desc);
-        hbaseAdmin.enableTable(tableName);
+        if (oldHostValue.equals(desc.getValue(kylinConfig.getMetadataUrlPrefix()))) {
+            desc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
+            hbaseAdmin.disableTable(tableName);
+            hbaseAdmin.modifyTable(tableName, desc);
+            hbaseAdmin.enableTable(tableName);
+
+            updatedResources.add(tableName);
+        }
     }
 
     public void execute() {
         for (String htable : htables) {
             try {
                 updateHtable(htable);
-                updatedResources.add(htable);
             } catch (IOException ex) {
                 ex.printStackTrace();
                 errorMsgs.add("Update HTable[" + htable + "] failed: " + ex.getMessage());
