@@ -30,6 +30,7 @@
     "angular-bootstrap-nav-tree": "*",
     "components-font-awesome": "~4.3.0",
     "bootstrap-sweetalert": "~0.4.3",
+    "angular-toggle-switch":"1.3.0",
     "angular-ui-select": "0.13.2",
     "angular-sanitize": "1.2.18"
   },
