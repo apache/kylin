@@ -62,7 +62,7 @@ Local configuration must be modified to point to your hadoop sandbox (or CLI) ma
 
 * In **examples/test_case_data/sandbox/kylin.properties**
    * Find `sandbox` and replace with your hadoop hosts (if you're using HDP sandbox, this can be skipped)
-   * Fine `kylin.job.run.as.remote.cmd` and change it to "true" (in code repository the default is false, which assume running it on hadoop CLI)
+   * Find `kylin.job.run.as.remote.cmd` and change it to "true" (in code repository the default is false, which assume running it on hadoop CLI)
    * Find `kylin.job.remote.cli.username` and `kylin.job.remote.cli.password`, fill in the user name and password used to login hadoop cluster for hadoop command execution; If you're using HDP sandbox, the default username is "root" and password is "hadoop".
 
 * In **examples/test_case_data/sandbox**
