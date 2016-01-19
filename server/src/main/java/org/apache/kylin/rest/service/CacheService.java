@@ -262,6 +262,7 @@ public class CacheService extends BasicService {
                 throw new UnsupportedOperationException(log);
             case DATA_MODEL:
                 getMetadataManager().removeModelCache(cacheKey);
+                break;
             default:
                 throw new RuntimeException("invalid cacheType:" + cacheType);
             }
