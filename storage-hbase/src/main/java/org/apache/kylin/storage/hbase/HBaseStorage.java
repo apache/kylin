@@ -26,6 +26,7 @@ import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -71,8 +72,11 @@ public class HBaseStorage implements IStorage {
             }
         } else if (realization.getType() == RealizationType.CUBE) {
 
+            CubeInstance cubeInstance = (CubeInstance) realization;
             String cubeStorageQuery;
-            if (overwriteStorageQuery != null) {
+            if (cubeInstance.getStorageType() == IStorageAware.ID_HBASE) {//v2 query engine cannot go with v1 storage now
+                cubeStorageQuery = v1CubeStorageQuery;
+            } else if (overwriteStorageQuery != null) {
                 cubeStorageQuery = overwriteStorageQuery;
             } else if ("v1".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryVersion())) {
                 cubeStorageQuery = v1CubeStorageQuery;
