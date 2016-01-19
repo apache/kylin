@@ -16,15 +16,25 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.storage.hybrid;
+package org.apache.kylin.storage.hbase.util;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -35,9 +45,13 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hybrid.HybridInstance;
+import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +60,10 @@ import com.google.common.collect.Lists;
 /**
  * Created by dongli on 12/29/15.
  */
-public class ExtendCubeToHybridTool {
-    private static final Logger logger = LoggerFactory.getLogger(ExtendCubeToHybridTool.class);
+public class ExtendCubeToHybridCLI {
+    public static final String ACL_INFO_FAMILY = "i";
+    private static final Logger logger = LoggerFactory.getLogger(ExtendCubeToHybridCLI.class);
+    private static final String ACL_INFO_FAMILY_PARENT_COLUMN = "p";
 
     private KylinConfig kylinConfig;
     private CubeManager cubeManager;
@@ -55,7 +71,7 @@ public class ExtendCubeToHybridTool {
     private MetadataManager metadataManager;
     private ResourceStore store;
 
-    public ExtendCubeToHybridTool() {
+    public ExtendCubeToHybridCLI() {
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
         this.store = ResourceStore.getStore(kylinConfig);
         this.cubeManager = CubeManager.getInstance(kylinConfig);
@@ -65,11 +81,11 @@ public class ExtendCubeToHybridTool {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 2 && args.length != 3) {
-            System.out.println("Usage: ExtendCubeToHybridTool project cube [partition_date]");
+            System.out.println("Usage: ExtendCubeToHybridCLI project cube [partition_date]");
             return;
         }
 
-        ExtendCubeToHybridTool tool = new ExtendCubeToHybridTool();
+        ExtendCubeToHybridCLI tool = new ExtendCubeToHybridCLI();
 
         String projectName = args[0];
         String cubeName = args[1];
@@ -97,7 +113,7 @@ public class ExtendCubeToHybridTool {
         return true;
     }
 
-    public void createFromCube(String projectName, String cubeName, String partitionDateStr) throws IOException {
+    public void createFromCube(String projectName, String cubeName, String partitionDateStr) throws Exception {
         logger.info("Create hybrid for cube[" + cubeName + "], project[" + projectName + "], partition_date[" + partitionDateStr + "].");
 
         CubeInstance cubeInstance = cubeManager.getCube(cubeName);
@@ -107,6 +123,11 @@ public class ExtendCubeToHybridTool {
 
         CubeDesc cubeDesc = cubeDescManager.getCubeDesc(cubeInstance.getDescName());
         DataModelDesc dataModelDesc = metadataManager.getDataModelDesc(cubeDesc.getModelName());
+        if (StringUtils.isEmpty(dataModelDesc.getPartitionDesc().getPartitionDateColumn())) {
+            logger.error("No incremental cube, no need to extend.");
+            return;
+        }
+
         String owner = cubeInstance.getOwner();
         String dateFormat = dataModelDesc.getPartitionDesc().getPartitionDateFormat();
         long partitionDate = partitionDateStr != null ? DateFormat.stringToMillis(partitionDateStr, dateFormat) : 0;
@@ -174,6 +195,10 @@ public class ExtendCubeToHybridTool {
         store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
         logger.info("HybridInstance was saved at: " + hybridInstance.getResourcePath());
+
+        // copy Acl from old cube to new cube
+        copyAcl(cubeInstance.getId(), newCubeInstance.getId(), projectName);
+        logger.info("Acl copied from [" + cubeName + "] to [" + newCubeInstanceName + "].");
     }
 
     private void verify() {
@@ -191,6 +216,39 @@ public class ExtendCubeToHybridTool {
     }
 
     private String rename(String origName) {
-        return origName + "_1";
+        return origName + "_legacy";
+    }
+
+    private void copyAcl(String origCubeId, String newCubeId, String projectName) throws Exception {
+        String projectResPath = ProjectInstance.concatResourcePath(projectName);
+        Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
+        ProjectInstance project = store.getResource(projectResPath, ProjectInstance.class, projectSerializer);
+        String projUUID = project.getUuid();
+        HTableInterface aclHtable = null;
+        try {
+            aclHtable = HBaseConnection.get(kylinConfig.getStorageUrl()).getTable(kylinConfig.getMetadataUrlPrefix() + "_acl");
+
+            // cube acl
+            Result result = aclHtable.get(new Get(Bytes.toBytes(origCubeId)));
+            if (result.listCells() != null) {
+                for (Cell cell : result.listCells()) {
+                    byte[] family = CellUtil.cloneFamily(cell);
+                    byte[] column = CellUtil.cloneQualifier(cell);
+                    byte[] value = CellUtil.cloneValue(cell);
+
+                    // use the target project uuid as the parent
+                    if (Bytes.toString(family).equals(ACL_INFO_FAMILY) && Bytes.toString(column).equals(ACL_INFO_FAMILY_PARENT_COLUMN)) {
+                        String valueString = "{\"id\":\"" + projUUID + "\",\"type\":\"org.apache.kylin.metadata.project.ProjectInstance\"}";
+                        value = Bytes.toBytes(valueString);
+                    }
+                    Put put = new Put(Bytes.toBytes(newCubeId));
+                    put.add(family, column, value);
+                    aclHtable.put(put);
+                }
+            }
+            aclHtable.flushCommits();
+        } finally {
+            IOUtils.closeQuietly(aclHtable);
+        }
     }
 }
