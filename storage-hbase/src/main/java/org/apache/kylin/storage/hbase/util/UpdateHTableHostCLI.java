@@ -179,7 +179,7 @@ public class UpdateHTableHostCLI {
 
     private void updateHtable(String tableName) throws IOException {
         HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-        if (oldHostValue.equals(desc.getValue(kylinConfig.getMetadataUrlPrefix()))) {
+        if (oldHostValue.equals(desc.getValue(IRealizationConstants.HTableTag))) {
             desc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
             hbaseAdmin.disableTable(tableName);
             hbaseAdmin.modifyTable(tableName, desc);
