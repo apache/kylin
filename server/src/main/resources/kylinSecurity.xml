@@ -176,9 +176,6 @@
 		<scr:http security="none" pattern="/js/**"/>
 		<scr:http security="none" pattern="/login/**"/>
 		<scr:http security="none" pattern="/routes.json"/>
-		<scr:http security="none" pattern="/api/projects" />
-		<scr:http security="none" pattern="/api/admin/config" />
-		<scr:http security="none" pattern="/api/admin/env" />
 
 		<!-- Secured Rest API urls with LDAP basic authentication -->
 		<scr:http pattern="/api/**" use-expressions="true" authentication-manager-ref="apiAccessAuthenticationManager">
