@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "angular-bootstrap": "0.10.0",
-    "angular": "1.2.15",
+    "angular": "1.2.29",
     "angular-resource": "~1.3.12",
     "angular-route": "1.2.15",
     "ng-grid": "2.0.11",
@@ -39,7 +39,7 @@
     "angular-mocks-unstable": "~1.1.5"
   },
   "resolutions": {
-    "angular": "1.2.15",
+    "angular": "1.2.29",
     "nvd3": "1.1.15-beta",
     "d3": "3.4.4",
     "moment": "2.4.0",
