@@ -219,6 +219,10 @@ public class AccessService {
     public void clean(AclEntity ae, boolean deleteChildren) {
         Assert.notNull(ae, "Acl domain object required");
 
+        // For those may have null uuid, like DataModel, won't delete Acl.
+        if (ae.getId() == null)
+            return;
+
         ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
 
         try {
