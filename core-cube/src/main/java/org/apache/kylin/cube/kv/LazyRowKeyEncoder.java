@@ -18,15 +18,14 @@
 
 package org.apache.kylin.cube.kv;
 
-import java.util.Arrays;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 
-import com.google.common.collect.Lists;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A LazyRowKeyEncoder will not try to calculate shard
@@ -45,6 +44,7 @@ public class LazyRowKeyEncoder extends RowKeyEncoder {
             throw new RuntimeException("If enableSharding false, you should never calculate shard");
         }
     }
+
 
     //for non-sharding cases it will only return one byte[] with not shard at beginning
     public List<byte[]> getRowKeysDifferentShards(byte[] halfCookedKey) {

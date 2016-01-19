@@ -45,6 +45,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Lists;
 
 public class DictionaryManager {
@@ -82,17 +84,23 @@ public class DictionaryManager {
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
-        this.dictCache = CacheBuilder.newBuilder().weakValues().expireAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, DictionaryInfo>() {
+        this.dictCache = CacheBuilder.newBuilder().removalListener(new RemovalListener<String, DictionaryInfo>() {
             @Override
-            public DictionaryInfo load(String key) throws Exception {
-                DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
-                if (dictInfo == null) {
-                    return NONE_INDICATOR;
-                } else {
-                    return dictInfo;
-                }
+            public void onRemoval(RemovalNotification<String, DictionaryInfo> notification) {
+                DictionaryManager.logger.info("Dict with resource path " + notification.getKey() + " is removed due to " + notification.getCause());
             }
-        });
+        }).maximumSize(KylinConfig.getInstanceFromEnv().getCachedDictMaxEntrySize())//
+                .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, DictionaryInfo>() {
+                    @Override
+                    public DictionaryInfo load(String key) throws Exception {
+                        DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
+                        if (dictInfo == null) {
+                            return NONE_INDICATOR;
+                        } else {
+                            return dictInfo;
+                        }
+                    }
+                });
     }
 
     public Dictionary<?> getDictionary(String resourcePath) throws IOException {
@@ -131,24 +139,56 @@ public class DictionaryManager {
 
         initDictInfo(newDict, newDictInfo);
 
-        DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
-        if (largestDictInfo != null) {
-            largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
-            Dictionary<?> largestDictObject = largestDictInfo.getDictionaryObject();
-            if (largestDictObject.contains(newDict)) {
-                logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDictInfo.getResourcePath());
-                return largestDictInfo;
-            } else if (newDict.contains(largestDictObject)) {
-                logger.info("dictionary content " + newDict + " is by far the largest, save it");
-                return saveNewDict(newDictInfo);
+        if (KylinConfig.getInstanceFromEnv().isGrowingDictEnabled()) {
+            DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
+            if (largestDictInfo != null) {
+                largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
+                Dictionary<?> largestDictObject = largestDictInfo.getDictionaryObject();
+                if (largestDictObject.contains(newDict)) {
+                    logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDictInfo.getResourcePath());
+                    return largestDictInfo;
+                } else if (newDict.contains(largestDictObject)) {
+                    logger.info("dictionary content " + newDict + " is by far the largest, save it");
+                    return saveNewDict(newDictInfo);
+                } else {
+                    logger.info("merge dict and save...");
+                    return mergeDictionary(Lists.newArrayList(newDictInfo, largestDictInfo));
+                }
             } else {
-                logger.info("merge dict and save...");
-                return mergeDictionary(Lists.newArrayList(newDictInfo, largestDictInfo));
+                logger.info("first dict of this column, save it directly");
+                return saveNewDict(newDictInfo);
             }
         } else {
-            logger.info("first dict of this column, save it directly");
+            logger.info("Growing dict is not enabled");
+            String dupDict = checkDupByContent(newDictInfo, newDict);
+            if (dupDict != null) {
+                logger.info("Identical dictionary content, reuse existing dictionary at " + dupDict);
+                return getDictionaryInfo(dupDict);
+            }
+
             return saveNewDict(newDictInfo);
         }
+    }
+
+    private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<?> dict) throws IOException {
+        ResourceStore store = MetadataManager.getInstance(config).getStore();
+        ArrayList<String> existings = store.listResources(dictInfo.getResourceDir());
+        if (existings == null)
+            return null;
+
+        logger.info("{} existing dictionaries of the same column", existings.size());
+        if (existings.size() > 100) {
+            logger.warn("Too many dictionaries under {}, dict count: {}", dictInfo.getResourceDir(), existings.size());
+        }
+
+        for (String existing : existings) {
+            DictionaryInfo existingInfo = getDictionaryInfo(existing);
+            if (existingInfo != null && dict.equals(existingInfo.getDictionaryObject())) {
+                return existing;
+            }
+        }
+
+        return null;
     }
 
     private void initDictInfo(Dictionary<?> newDict, DictionaryInfo newDictInfo) {
@@ -199,11 +239,11 @@ public class DictionaryManager {
         signature.setLastModifiedTime(System.currentTimeMillis());
         signature.setPath("merged_with_no_original_path");
 
-        String dupDict = checkDupByInfo(newDictInfo);
-        if (dupDict != null) {
-            logger.info("Identical dictionary input " + newDictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
-            return getDictionaryInfo(dupDict);
-        }
+        //        String dupDict = checkDupByInfo(newDictInfo);
+        //        if (dupDict != null) {
+        //            logger.info("Identical dictionary input " + newDictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
+        //            return getDictionaryInfo(dupDict);
+        //        }
 
         //check for cases where merging dicts are actually same
         boolean identicalSourceDicts = true;
@@ -318,6 +358,7 @@ public class DictionaryManager {
     }
 
     public void removeDictionary(String resourcePath) throws IOException {
+        logger.info("Remvoing dict: " + resourcePath);
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         store.deleteResource(resourcePath);
         dictCache.invalidate(resourcePath);
@@ -356,11 +397,11 @@ public class DictionaryManager {
     DictionaryInfo load(String resourcePath, boolean loadDictObj) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
 
-        logger.debug("Going to load DictionaryInfo from " + resourcePath);
+        logger.info("DictionaryManager(" + System.identityHashCode(this) + ") loading DictionaryInfo(loadDictObj:" + loadDictObj + ") at " + resourcePath);
         DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
 
-        if (loadDictObj)
-            logger.debug("Loaded dictionary at " + resourcePath);
+        //        if (loadDictObj)
+        //            logger.debug("Loaded dictionary at " + resourcePath);
 
         return info;
     }

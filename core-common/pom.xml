@@ -49,16 +49,12 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -67,11 +63,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-email</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>${commons-collections4.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-httpclient</groupId>
@@ -117,6 +108,11 @@
         </dependency>
 
         <!-- Env & Test -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

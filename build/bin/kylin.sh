@@ -84,7 +84,7 @@ then
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dkylin.hbase.dependency=${hbase_dependency} \
     -Dspring.profiles.active=${spring_profile} \
-    org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.log 2>&1 & echo $! > ${KYLIN_HOME}/pid &
+    org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
     echo "Please visit http://<ip>:7070/kylin"
     echo "You can check the log at ${KYLIN_HOME}/logs/kylin.log"

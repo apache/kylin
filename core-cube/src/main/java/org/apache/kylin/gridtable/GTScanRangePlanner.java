@@ -18,6 +18,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.common.FuzzyValueCombination;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
+import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
@@ -43,7 +44,13 @@ public class GTScanRangePlanner {
     final private RecordComparator rangeEndComparator;
     final private RecordComparator rangeStartEndComparator;
 
+    /**
+     * @param info
+     * @param segmentStartAndEnd in GT encoding
+     * @param partitionColRef the TblColRef in GT
+     */
     public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> segmentStartAndEnd, TblColRef partitionColRef) {
+
         this.info = info;
         this.segmentStartAndEnd = segmentStartAndEnd;
         this.partitionColRef = partitionColRef;
@@ -83,6 +90,14 @@ public class GTScanRangePlanner {
         return mergedRanges;
     }
 
+    private String makeReadable(ByteArray byteArray) {
+        if (byteArray == null) {
+            return null;
+        } else {
+            return byteArray.toReadableText();
+        }
+    }
+
     private GTScanRange newScanRange(Collection<ColumnRange> andDimRanges) {
         GTRecord pkStart = new GTRecord(info);
         GTRecord pkEnd = new GTRecord(info);
@@ -91,13 +106,13 @@ public class GTScanRangePlanner {
         List<GTRecord> fuzzyKeys;
 
         for (ColumnRange range : andDimRanges) {
-
             if (partitionColRef != null && range.column.equals(partitionColRef)) {
-
                 if (rangeStartEndComparator.comparator.compare(segmentStartAndEnd.getFirst(), range.end) <= 0 //
                         && rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) < 0) {
                     //segment range is [Closed,Open)
                 } else {
+                    logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}",//
+                            new Object[] { partitionColRef, makeReadable(segmentStartAndEnd.getFirst()), makeReadable(segmentStartAndEnd.getSecond()), makeReadable(range.begin), makeReadable(range.end) });
                     return null;
                 }
             }
@@ -134,13 +149,16 @@ public class GTScanRangePlanner {
         List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, MAX_HBASE_FUZZY_KEYS);
 
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
-            GTRecord fuzzy = new GTRecord(info);
+
             BitSet bitSet = new BitSet(info.getColumnCount());
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 bitSet.set(entry.getKey());
+            }
+            GTRecord fuzzy = new GTRecord(info, new ImmutableBitSet(bitSet));
+            for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 fuzzy.set(entry.getKey(), entry.getValue());
             }
-            fuzzy.maskForEqualHashComp(new ImmutableBitSet(bitSet));
+
             result.add(fuzzy);
         }
         return result;
@@ -178,7 +196,9 @@ public class GTScanRangePlanner {
                 throw new IllegalStateException("Filter should be AND instead of " + andFilter);
 
             Collection<ColumnRange> andRanges = translateToAndDimRanges(andFilter.getChildren());
-            result.add(andRanges);
+            if (andRanges != null) {
+                result.add(andRanges);
+            }
         }
 
         return preEvaluateConstantConditions(result);
@@ -188,7 +208,11 @@ public class GTScanRangePlanner {
         Map<TblColRef, ColumnRange> rangeMap = new HashMap<TblColRef, ColumnRange>();
         for (TupleFilter filter : andFilters) {
             if ((filter instanceof CompareTupleFilter) == false) {
-                continue;
+                if (filter instanceof ConstantTupleFilter && !filter.evaluate(null, null)) {
+                    return null;
+                } else {
+                    continue;
+                }
             }
 
             CompareTupleFilter comp = (CompareTupleFilter) filter;

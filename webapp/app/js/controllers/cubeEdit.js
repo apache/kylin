@@ -164,6 +164,12 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     CubeDescService.query({cube_name: $routeParams.cubeName}, function (detail) {
       if (detail.length > 0) {
         $scope.cubeMetaFrame = detail[0];
+        //convert GMT mills ,to make sure partition date show GMT Date
+        if($scope.cubeMetaFrame.partition_date_start)
+        {
+          $scope.cubeMetaFrame.partition_date_start+=new Date().getTimezoneOffset()*60000;
+        }
+
         $scope.metaModel = {};
 
         //get model from API when page refresh
@@ -214,11 +220,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     //generate rowkey
     reGenerateRowKey();
 
-    if ($scope.metaModel.model.partition_desc.partition_date_column && ($scope.metaModel.model.partition_desc.partition_date_start | $scope.metaModel.model.partition_desc.partition_date_start == 0)) {
-      var dateStart = new Date($scope.metaModel.model.partition_desc.partition_date_start);
+    if ($scope.metaModel.model.partition_desc.partition_date_column && ($scope.cubeMetaFrame.partition_date_start | $scope.cubeMetaFrame.partition_date_start == 0)) {
+      var dateStart = new Date($scope.cubeMetaFrame.partition_date_start);
       dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
       //switch selected time to utc timestamp
-      $scope.metaModel.model.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
+      $scope.cubeMetaFrame.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
 
 
       if ($scope.metaModel.model.partition_desc.partition_date_column.indexOf(".") == -1) {
@@ -455,8 +461,8 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 //    reverse the date
   $scope.saveCubeRollBack = function () {
-    if ($scope.metaModel.model && ($scope.metaModel.model.partition_desc.partition_date_start || $scope.metaModel.model.partition_desc.partition_date_start == 0)) {
-      $scope.metaModel.model.partition_desc.partition_date_start += new Date().getTimezoneOffset() * 60000;
+    if ($scope.metaModel.model && ($scope.cubeMetaFrame.partition_date_start || $scope.cubeMetaFrame.partition_date_start == 0)) {
+      $scope.cubeMetaFrame.partition_date_start += new Date().getTimezoneOffset() * 60000;
     }
   }
 
@@ -812,6 +818,10 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   });
 
 
+  $scope.streamingCfg = {
+    parseTsColumn:"{{}}",
+    columnOptions:[]
+  }
   //dimensions options is depend on the model input when add cube
   $scope.$watch('cubeMetaFrame.model_name', function (newValue, oldValue) {
     if (!newValue) {
@@ -822,18 +832,27 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     if(!$scope.metaModel.model){
       return;
     }
+
     var factTable = $scope.metaModel.model.fact_table;
     var cols = $scope.getColumnsByTable(factTable);
-    //
+
     for(var i=0;i<cols.length;i++){
       var col = cols[i];
-      if(col.datatype === "timestamp"&&col.name.indexOf("_TS")==-1){
-        $scope.kafkaMeta.parserProperties = "tsColName="+col.name+";formatTs=TRUE";
-        break;
+      if(col.datatype === "timestamp"){
+        $scope.streamingCfg.columnOptions.push(col.name);
       }
     }
+    $scope.kafkaMeta.parserProperties = "tsColName=' ';formatTs=TRUE";
+
 
   });
+
+  $scope.streamingTsColUpdate = function(){
+    if(!$scope.streamingCfg.parseTsColumn){
+      $scope.streamingCfg.parseTsColumn = ' ';
+    }
+    $scope.kafkaMeta.parserProperties = "tsColName="+$scope.streamingCfg.parseTsColumn+";formatTs=TRUE";
+  }
   $scope.$on('DimensionsEdited', function (event) {
     if ($scope.cubeMetaFrame) {
       reGenerateRowKey();

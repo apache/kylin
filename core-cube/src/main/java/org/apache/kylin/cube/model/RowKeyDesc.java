@@ -68,6 +68,7 @@ public class RowKeyDesc {
     private long mandatoryColumnMask;
     private AggrGroupMask[] aggrGroupMasks;
     private long aggrGroupFullMask;
+    private long hierarchyFullMask;
     private long tailMask;
 
     private List<HierarchyMask> hierarchyMasks;
@@ -133,6 +134,10 @@ public class RowKeyDesc {
 
     public List<HierarchyMask> getHierarchyMasks() {
         return hierarchyMasks;
+    }
+
+    public long getHierarchyFullMask() {
+        return hierarchyFullMask;
     }
 
     public long getTailMask() {
@@ -281,6 +286,7 @@ public class RowKeyDesc {
                               // aggregation group combination anyway
 
                 mask.fullMask |= bit;
+                this.hierarchyFullMask |= bit;
                 allMaskList.add(mask.fullMask);
             }
 

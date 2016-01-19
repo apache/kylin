@@ -44,7 +44,7 @@ import com.google.common.collect.Sets;
 public class KylinConfigBase implements Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfigBase.class);
-    
+
     /*
      * DON'T DEFINE CONSTANTS FOR PROPERTY KEYS!
      * 
@@ -62,9 +62,9 @@ public class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
-    
+
     private volatile Properties properties = new Properties();
-    
+
     public String getOptional(String prop) {
         return getOptional(prop, null);
     }
@@ -90,7 +90,7 @@ public class KylinConfigBase implements Serializable {
         }
         return r;
     }
-    
+
     /**
      * Use with care, properties should be read-only. This is for testing mostly.
      */
@@ -98,7 +98,7 @@ public class KylinConfigBase implements Serializable {
         logger.info("Kylin Config was updated with " + key + " : " + value);
         properties.setProperty(key, value);
     }
-    
+
     protected Properties getAllProperties() {
         return properties;
     }
@@ -114,9 +114,9 @@ public class KylinConfigBase implements Serializable {
         }
         this.properties = newProperties;
     }
-    
+
     // ============================================================================
-    
+
     public String getMetadataUrl() {
         return getOptional("kylin.metadata.url");
     }
@@ -356,15 +356,15 @@ public class KylinConfigBase implements Serializable {
     public long getJobStepTimeout() {
         return Long.parseLong(getOptional("kylin.job.step.timeout", String.valueOf(2 * 60 * 60)));
     }
-    
+
     public String getCubeAlgorithm() {
         return getOptional("kylin.cube.algorithm", "auto");
     }
-    
+
     public double getCubeAlgorithmAutoThreshold() {
         return Double.parseDouble(getOptional("kylin.cube.algorithm.auto.threshold", "8"));
     }
-    
+
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
     }
@@ -404,6 +404,14 @@ public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
 
+    public int getBadQueryStackTraceDepth() {
+        return Integer.parseInt(getOptional("kylin.query.badquery.stacktrace.depth", "10"));
+    }
+
+    public int getCachedDictMaxEntrySize() {
+        return Integer.parseInt(getOptional("kylin.dict.cache.max.entry", "3000"));
+    }
+
     public boolean getQueryRunLocalCoprocessor() {
         return Boolean.parseBoolean(getOptional("kylin.query.run.local.coprocessor", "false"));
     }
@@ -423,7 +431,7 @@ public class KylinConfigBase implements Serializable {
     public double getQueryCoprocessorMemGB() {
         return Double.parseDouble(this.getOptional("kylin.query.coprocessor.mem.gb", "3.0"));
     }
-    
+
     public boolean isQuerySecureEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.query.security.enabled", "false"));
     }
@@ -442,6 +450,10 @@ public class KylinConfigBase implements Serializable {
 
     public int getHBaseScanCacheRows() {
         return Integer.parseInt(this.getOptional("kylin.hbase.scan.cache_rows", "1024"));
+    }
+
+    public boolean isGrowingDictEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.dict.growing.enabled", "false"));
     }
 
     public int getHBaseScanMaxResultSize() {
@@ -467,6 +479,10 @@ public class KylinConfigBase implements Serializable {
         return this.getOptional("kylin.job.hive.database.for.intermediatetable", "default");
     }
     
+    public boolean isGetJobStatusWithKerberos() {
+        return Boolean.valueOf(this.getOptional("kylin.job.status.with.kerberos", "false"));
+    }
+
     public boolean isGetJobStatusWithKerberos() {
         return Boolean.valueOf(this.getOptional("kylin.job.status.with.kerberos", "false"));
     }

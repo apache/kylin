@@ -29,6 +29,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         {title: 'Cube Info', src: 'partials/cubeDesigner/info.html', isComplete: false,form:'cube_info_form'},
         {title: 'Dimensions', src: 'partials/cubeDesigner/dimensions.html', isComplete: false,form:'cube_dimension_form'},
         {title: 'Measures', src: 'partials/cubeDesigner/measures.html', isComplete: false,form:'cube_measure_form'},
+        {title: 'Refresh Setting', src: 'partials/cubeDesigner/refresh_settings.html', isComplete: false,form:'refresh_setting_form'},
+
     ];
     if (UserService.hasRole("ROLE_ADMIN")) {
             $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false,form:'cube_setting_form'});
@@ -110,7 +112,8 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     $scope.goToStep = function(stepIndex){
-        if($scope.state.mode=="edit"){
+      console.log($scope.cubeMode);
+        if($scope.cubeMode == "addNewCube"){
             if(stepIndex+1>=$scope.curStep.step){
                 return;
             }
@@ -167,8 +170,13 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
   });
 
-    $scope.checkCubeForm = function(){
-        if(!$scope.curStep.form){
+    $scope.checkCubeForm = function(stepIndex){
+      // do not check for Prev Step
+      if (stepIndex + 1 < $scope.curStep.step) {
+        return true;
+      }
+
+      if(!$scope.curStep.form){
             return true;
         }
         if($scope.state.mode==='view'){

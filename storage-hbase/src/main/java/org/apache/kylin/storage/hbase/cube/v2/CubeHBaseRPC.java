@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
@@ -55,7 +53,7 @@ public abstract class CubeHBaseRPC {
         this.fuzzyMaskEncoder = new FuzzyMaskEncoder(cubeSeg, cuboid);
     }
 
-    abstract IGTScanner getGTScanner(GTScanRequest scanRequest) throws IOException;
+    abstract IGTScanner getGTScanner(final List<GTScanRequest> scanRequests) throws IOException;
 
     public static Scan buildScan(RawScan rawScan) {
         Scan scan = new Scan();
@@ -70,8 +68,8 @@ public abstract class CubeHBaseRPC {
         if (rawScan.endKey != null) {
             scan.setStopRow(rawScan.endKey);
         }
-        if (rawScan.fuzzyKey != null) {
-            applyFuzzyFilter(scan, rawScan.fuzzyKey);
+        if (rawScan.fuzzyKeys != null) {
+            applyFuzzyFilter(scan, rawScan.fuzzyKeys);
         }
         if (rawScan.hbaseColumns != null) {
             applyHBaseColums(scan, rawScan.hbaseColumns);
@@ -80,7 +78,34 @@ public abstract class CubeHBaseRPC {
         return scan;
     }
 
-    protected List<RawScan> preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
+    protected RawScan preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
+        final List<Pair<byte[], byte[]>> selectedColumns = makeHBaseColumns(selectedColBlocks);
+
+        LazyRowKeyEncoder encoder = new LazyRowKeyEncoder(cubeSeg, cuboid);
+        byte[] start = encoder.createBuf();
+        byte[] end = encoder.createBuf();
+
+        encoder.setBlankByte(RowConstants.ROWKEY_LOWER_BYTE);
+        encoder.encode(pkStart, pkStart.getInfo().getPrimaryKey(), start);
+
+        encoder.setBlankByte(RowConstants.ROWKEY_UPPER_BYTE);
+        encoder.encode(pkEnd, pkEnd.getInfo().getPrimaryKey(), end);
+        byte[] temp = new byte[end.length + 1];//append extra 0 to the end key to make it inclusive while scanning
+        System.arraycopy(end, 0, temp, 0, end.length);
+        end = temp;
+
+        List<Pair<byte[], byte[]>> hbaseFuzzyKeys = translateFuzzyKeys(fuzzyKeys);
+
+        KylinConfig config = cubeSeg.getCubeDesc().getConfig();
+        int hbaseCaching = config.getHBaseScanCacheRows();
+        int hbaseMaxResultSize = config.getHBaseScanMaxResultSize();
+        if (isMemoryHungry(selectedColBlocks))
+            hbaseCaching /= 10;
+
+        return new RawScan(start, end, selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize);
+    }
+
+    protected List<RawScan> preparedHBaseScans(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
         final List<Pair<byte[], byte[]>> selectedColumns = makeHBaseColumns(selectedColBlocks);
         List<RawScan> ret = Lists.newArrayList();
 
@@ -98,7 +123,6 @@ public abstract class CubeHBaseRPC {
         encoder.encode(pkEnd, pkEnd.getInfo().getPrimaryKey(), end);
         endKeys = encoder.getRowKeysDifferentShards(end);
         endKeys = Lists.transform(endKeys, new Function<byte[], byte[]>() {
-            @Nullable
             @Override
             public byte[] apply(byte[] input) {
                 byte[] shardEnd = new byte[input.length + 1];//append extra 0 to the end key to make it inclusive while scanning
@@ -106,7 +130,7 @@ public abstract class CubeHBaseRPC {
                 return shardEnd;
             }
         });
-        
+
         Preconditions.checkState(startKeys.size() == endKeys.size());
         List<Pair<byte[], byte[]>> hbaseFuzzyKeys = translateFuzzyKeys(fuzzyKeys);
 
@@ -115,7 +139,7 @@ public abstract class CubeHBaseRPC {
         int hbaseMaxResultSize = config.getHBaseScanMaxResultSize();
         if (isMemoryHungry(selectedColBlocks))
             hbaseCaching /= 10;
-        
+
         for (short i = 0; i < startKeys.size(); ++i) {
             ret.add(new RawScan(startKeys.get(i), endKeys.get(i), selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize));
         }
@@ -240,7 +264,7 @@ public abstract class CubeHBaseRPC {
 
     protected void logScan(RawScan rawScan, String tableName) {
         StringBuilder info = new StringBuilder();
-        info.append("\nVisiting hbase table ").append(tableName).append(": ");
+        info.append("Visiting hbase table ").append(tableName).append(": ");
         if (cuboid.requirePostAggregation()) {
             info.append("cuboid require post aggregation, from ");
         } else {
@@ -251,15 +275,15 @@ public abstract class CubeHBaseRPC {
         info.append(cuboid.getId());
         info.append("\nStart: ");
         info.append(rawScan.getStartKeyAsString());
-        info.append(" - ");
-        info.append(Bytes.toStringBinary(rawScan.startKey));
+        info.append(" (");
+        info.append(Bytes.toStringBinary(rawScan.startKey) + ")");
         info.append("\nStop:  ");
         info.append(rawScan.getEndKeyAsString());
-        info.append(" - ");
-        info.append(Bytes.toStringBinary(rawScan.endKey));
-        if (rawScan.fuzzyKey != null) {
-            info.append("\nFuzzy key counts: " + rawScan.fuzzyKey.size());
-            info.append("\nFuzzy: ");
+        info.append(" (");
+        info.append(Bytes.toStringBinary(rawScan.endKey) + ")");
+        if (rawScan.fuzzyKeys != null && rawScan.fuzzyKeys.size() != 0) {
+            info.append("\nFuzzy key counts: " + rawScan.fuzzyKeys.size());
+            info.append(". Fuzzy keys : ");
             info.append(rawScan.getFuzzyKeyAsString());
         } else {
             info.append("\nNo Fuzzy Key");

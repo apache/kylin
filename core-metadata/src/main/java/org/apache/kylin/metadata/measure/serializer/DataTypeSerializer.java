@@ -48,7 +48,9 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
         impl.put("long", LongSerializer.class);
         impl.put("integer", LongSerializer.class);
         impl.put("int", LongSerializer.class);
+        impl.put("tinyint", LongSerializer.class);
         impl.put("smallint", LongSerializer.class);
+        impl.put("boolean", BooleanSerializer.class);
         impl.put("date", DateTimeSerializer.class);
         impl.put("datetime", DateTimeSerializer.class);
         impl.put("timestamp", DateTimeSerializer.class);
@@ -71,7 +73,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
         Class<?> clz = implementations.get(type.getName());
         if (clz == null)
-            throw new RuntimeException("No MeasureSerializer for type " + type);
+            throw new RuntimeException("No DataTypeSerializer for type " + type);
 
         try {
             return (DataTypeSerializer<?>) clz.getConstructor(DataType.class).newInstance(type);

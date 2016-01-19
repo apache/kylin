@@ -34,22 +34,28 @@
 
 package org.apache.kylin.source.kafka;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import kafka.message.MessageAndOffset;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.StreamingMessage;
+import org.apache.kylin.common.util.TimeUtil;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
 import com.google.common.collect.Lists;
-import kafka.message.MessageAndOffset;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.common.util.TimeUtil;
-import org.apache.kylin.common.util.StreamingMessage;
-import org.apache.kylin.metadata.model.TblColRef;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * each json message with a "timestamp" field
@@ -59,7 +65,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
 
     private List<TblColRef> allColumns;
-    private boolean formatTs = false;
+    private boolean formatTs = false;//not used
     private final ObjectMapper mapper = new ObjectMapper();
     private String tsColName = "timestamp";
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
@@ -108,25 +114,38 @@ public final class TimedJsonStreamParser extends StreamingParser {
             }
             ArrayList<String> result = Lists.newArrayList();
 
+            long normalized = 0;
             for (TblColRef column : allColumns) {
                 String columnName = column.getName();
                 if (columnName.equalsIgnoreCase("minute_start")) {
-                    long minuteStart = TimeUtil.getMinuteStart(t);
-                    result.add(formatTs ? DateFormat.formatToTimeStr(minuteStart) : String.valueOf(minuteStart));
+                    normalized = TimeUtil.getMinuteStart(t);
+                    result.add(DateFormat.formatToTimeStr(normalized));
                 } else if (columnName.equalsIgnoreCase("hour_start")) {
-                    long hourStart = TimeUtil.getHourStart(t);
-                    result.add(formatTs ? DateFormat.formatToTimeStr(hourStart) : String.valueOf(hourStart));
+                    normalized = TimeUtil.getHourStart(t);
+                    result.add(DateFormat.formatToTimeStr(normalized));
                 } else if (columnName.equalsIgnoreCase("day_start")) {
-                    //of day start we'll add yyyy-mm-dd
-                    long ts = TimeUtil.getDayStart(t);
-                    result.add(DateFormat.formatToDateStr(ts));
+                    //from day_start on, formatTs will output date format
+                    normalized = TimeUtil.getDayStart(t);
+                    result.add(DateFormat.formatToDateStr(normalized));
+                } else if (columnName.equalsIgnoreCase("week_start")) {
+                    normalized = TimeUtil.getWeekStart(t);
+                    result.add(DateFormat.formatToDateStr(normalized));
+                } else if (columnName.equalsIgnoreCase("month_start")) {
+                    normalized = TimeUtil.getMonthStart(t);
+                    result.add(DateFormat.formatToDateStr(normalized));
+                } else if (columnName.equalsIgnoreCase("quarter_start")) {
+                    normalized = TimeUtil.getQuarterStart(t);
+                    result.add(DateFormat.formatToDateStr(normalized));
+                } else if (columnName.equalsIgnoreCase("year_start")) {
+                    normalized = TimeUtil.getYearStart(t);
+                    result.add(DateFormat.formatToDateStr(normalized));
                 } else {
                     String x = root.get(columnName.toLowerCase());
                     result.add(x);
                 }
             }
 
-            return new StreamingMessage(result, messageAndOffset.offset(), t, Collections.<String, Object>emptyMap());
+            return new StreamingMessage(result, messageAndOffset.offset(), t, Collections.<String, Object> emptyMap());
 
         } catch (IOException e) {
             logger.error("error", e);

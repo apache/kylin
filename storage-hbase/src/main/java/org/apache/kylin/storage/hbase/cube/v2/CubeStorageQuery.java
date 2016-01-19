@@ -101,7 +101,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             try {
                 scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation);
             } catch (NotEnoughGTInfoException e) {
-                logger.info("Cannot construct Segment {}'s GTInfo, this may due to empty segment or broken metadata");
+                //deal with empty cube segment
+                logger.info("Cannot construct Segment {}'s GTInfo, this may due to empty segment or broken metadata", cubeSeg);
+                logger.info("error stack", e);
                 continue;
             }
             scanners.add(scanner);
@@ -323,6 +325,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     }
 
     private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
+        if (filter == null)
+            return;
+
         if (filter instanceof ColumnTupleFilter) {
             collectColumns(((ColumnTupleFilter) filter).getColumn(), collector);
         }

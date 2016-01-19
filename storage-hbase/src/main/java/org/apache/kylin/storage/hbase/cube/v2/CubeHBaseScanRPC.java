@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -19,7 +21,10 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -27,6 +32,7 @@ import com.google.common.collect.Lists;
  * for test use only
  */
 public class CubeHBaseScanRPC extends CubeHBaseRPC {
+    public static final Logger logger = LoggerFactory.getLogger(CubeHBaseScanRPC.class);
 
     static class TrimmedInfoGTRecordAdapter implements Iterable<GTRecord> {
 
@@ -65,7 +71,48 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
     }
 
     @Override
-    public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
+    public IGTScanner getGTScanner(final List<GTScanRequest> scanRequests) throws IOException {
+        final List<IGTScanner> scanners = Lists.newArrayList();
+        for (GTScanRequest request : scanRequests) {
+            scanners.add(getGTScanner(request));
+        }
+
+        return new IGTScanner() {
+            @Override
+            public GTInfo getInfo() {
+                return scanners.get(0).getInfo();
+            }
+
+            @Override
+            public int getScannedRowCount() {
+                int sum = 0;
+                for (IGTScanner s : scanners) {
+                    sum += s.getScannedRowCount();
+                }
+                return sum;
+            }
+
+            @Override
+            public void close() throws IOException {
+                for (IGTScanner s : scanners) {
+                    s.close();
+                }
+            }
+
+            @Override
+            public Iterator<GTRecord> iterator() {
+                return Iterators.concat(Iterators.transform(scanners.iterator(), new Function<IGTScanner, Iterator<GTRecord>>() {
+                    @Nullable
+                    @Override
+                    public Iterator<GTRecord> apply(IGTScanner input) {
+                        return input.iterator();
+                    }
+                }));
+            }
+        };
+    }
+
+    private IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
 
         // primary key (also the 0th column block) is always selected
         final ImmutableBitSet selectedColBlocks = scanRequest.getSelectedColBlocks().set(0);
@@ -73,7 +120,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         HConnection hbaseConn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
         final HTableInterface hbaseTable = hbaseConn.getTable(cubeSeg.getStorageLocationIdentifier());
 
-        List<RawScan> rawScans = preparedHBaseScan(scanRequest.getPkStart(), scanRequest.getPkEnd(), scanRequest.getFuzzyKeys(), selectedColBlocks);
+        List<RawScan> rawScans = preparedHBaseScans(scanRequest.getPkStart(), scanRequest.getPkEnd(), scanRequest.getFuzzyKeys(), selectedColBlocks);
         List<List<Integer>> hbaseColumnsToGT = getHBaseColumnsGTMapping(selectedColBlocks);
 
         final List<ResultScanner> scanners = Lists.newArrayList();
@@ -118,7 +165,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             }
         };
 
-        IGTStore store = new HBaseReadonlyStore(cellListIterator, scanRequest, rawScans.get(0).hbaseColumns, hbaseColumnsToGT,cubeSeg.getRowKeyPreambleSize());
+        IGTStore store = new HBaseReadonlyStore(cellListIterator, scanRequest, rawScans.get(0).hbaseColumns, hbaseColumnsToGT, cubeSeg.getRowKeyPreambleSize());
         IGTScanner rawScanner = store.scan(scanRequest);
 
         final IGTScanner decorateScanner = scanRequest.decorateScanner(rawScanner);

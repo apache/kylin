@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,6 +40,7 @@ import org.apache.kylin.metadata.model.DimensionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 
@@ -109,8 +110,9 @@ public class CubeMetadataUpgradeV2 {
         List<CubeDesc> cubeDescs = cubeDescManager.listAllDesc();
         for (CubeDesc cubeDesc : cubeDescs) {
             if (ArrayUtils.isEmpty(models) || ArrayUtils.contains(models, cubeDesc.getModelName())) {
-                upgradeCubeDescSignature(cubeDesc);
+                upgradeCubeDesc(cubeDesc);
                 upgradeDataModelDesc(cubeDesc);
+                upgradeCubeDescSignature(cubeDesc);
             }
         }
     }
@@ -156,6 +158,22 @@ public class CubeMetadataUpgradeV2 {
                 e.printStackTrace();
                 errorMsgs.add("Update Cube[" + cube.getName() + "] failed: " + e.getLocalizedMessage());
             }
+        }
+    }
+
+    private void upgradeCubeDesc(CubeDesc cubeDesc) {
+        try {
+            DataModelDesc modelDesc = cubeDesc.getModel();
+            PartitionDesc modelPartDesc = modelDesc.getPartitionDesc();
+            if (cubeDesc.getPartitionDateStart() == 0 && modelPartDesc.getPartitionDateStart() != 0) {
+                cubeDesc.setPartitionDateStart(modelPartDesc.getPartitionDateStart());
+
+                store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
+                updatedResources.add(cubeDesc.getResourcePath());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorMsgs.add("Update CubeDesc[" + cubeDesc.getName() + "] failed: " + e.getLocalizedMessage());
         }
     }
 

@@ -91,48 +91,6 @@ public class BytesSplitter {
         this.bufferSize = buffers.length;
     }
 
-    public byte inferByteRowDelimiter(byte[] bytes, int byteLen, int expectedSplits) throws IOException {
-
-        if (expectedSplits > this.splitBuffers.length)
-            throw new IOException("expectSplits can not be greater than split buffer size");
-
-        boolean delimiterFound = false;
-        byte foundDelimiter = 0;
-        for (int i = 0; i < bytes.length; ++i) {
-            byte c = bytes[i];
-            if (!Character.isLetterOrDigit((char) c)) {
-                try {
-                    int actualSplits = this.split(bytes, byteLen, c);
-                    if (actualSplits == expectedSplits) {
-                        if (!delimiterFound) {
-                            logger.info("Delimiter found, value is : " + c);
-                            delimiterFound = true;
-                            foundDelimiter = c;
-                        } else if (c != foundDelimiter) {
-                            throw new IOException("Duplicate delimiter found, found delimiter is : " + foundDelimiter + " new delimiter is " + c);
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.info("Unqualified delimiter pruned, value is " + c);
-                }
-            }
-        }
-
-        if (delimiterFound)
-            return foundDelimiter;
-        else
-            throw new IOException("No delimiter found");
-    }
-
-    public int detectDelim(byte[] array, int arrayLen, int expectedParts) {
-        for (int i = 0; i < COMMON_DELIMS.length; i++) {
-            int nParts = split(array, arrayLen, (byte) COMMON_DELIMS[i]);
-            if (nParts == expectedParts)
-                return COMMON_DELIMS[i];
-        }
-        throw new RuntimeException("Cannot detect delimeter from first line -- " + Bytes.toString(array, 0, arrayLen) + " -- expect " + expectedParts + " columns");
-    }
-
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();

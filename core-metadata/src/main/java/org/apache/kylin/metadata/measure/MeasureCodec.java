@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 
 import org.apache.kylin.metadata.measure.serializer.DataTypeSerializer;
+import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
@@ -50,7 +51,19 @@ public class MeasureCodec {
         init(dataTypes);
     }
 
+    public MeasureCodec(DataType... dateTypes) {
+        init(dateTypes);
+    }
+
     private void init(String[] dataTypes) {
+        DataType[] typeInstances = new DataType[dataTypes.length];
+        for (int i = 0; i < dataTypes.length; i++) {
+            typeInstances[i] = DataType.getInstance(dataTypes[i]);
+        }
+        init(typeInstances);
+    }
+
+    private void init(DataType[] dataTypes) {
         nMeasures = dataTypes.length;
         serializers = new DataTypeSerializer[nMeasures];
 

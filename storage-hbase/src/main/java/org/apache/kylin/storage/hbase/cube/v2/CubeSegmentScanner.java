@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +23,8 @@ import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.gridtable.NotEnoughGTInfoException;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.dict.TupleFilterDictionaryTranslater;
+import org.apache.kylin.gridtable.EmptyGTScanner;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
@@ -31,21 +32,25 @@ import org.apache.kylin.gridtable.GTScanRangePlanner;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.metadata.filter.ITupleFilterTranslator;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class CubeSegmentScanner implements IGTScanner {
 
+    private static final Logger logger = LoggerFactory.getLogger(CubeSegmentScanner.class);
+
     private static final int MAX_SCAN_RANGES = 200;
 
     final CubeSegment cubeSeg;
     final GTInfo info;
-    final byte[] trimmedInfoBytes;
     final List<GTScanRequest> scanRequests;
     final Scanner scanner;
     final Cuboid cuboid;
@@ -58,6 +63,10 @@ public class CubeSegmentScanner implements IGTScanner {
 
         CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
 
+        // translate FunctionTupleFilter to IN clause
+        ITupleFilterTranslator translator = new TupleFilterDictionaryTranslater(this.cubeSeg);
+        filter = translator.translate(filter);
+
         //replace the constant values in filter to dictionary codes 
         TupleFilter gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, mapping.getCuboidDimensionsInGTOrder(), groups);
 
@@ -69,12 +78,14 @@ public class CubeSegmentScanner implements IGTScanner {
         GTScanRangePlanner scanRangePlanner;
         if (cubeSeg.getCubeDesc().getModel().getPartitionDesc().isPartitioned()) {
             TblColRef tblColRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
+            TblColRef partitionColOfGT = null;
             Pair<ByteArray, ByteArray> segmentStartAndEnd = null;
             int index = mapping.getIndexOf(tblColRef);
             if (index >= 0) {
-                segmentStartAndEnd = getSegmentStartAndEnd(tblColRef, index);
+                segmentStartAndEnd = getSegmentStartAndEnd(index);
+                partitionColOfGT = info.colRef(index);
             }
-            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd, tblColRef);
+            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd, partitionColOfGT);
         } else {
             scanRangePlanner = new GTScanRangePlanner(info, null, null);
         }
@@ -82,20 +93,16 @@ public class CubeSegmentScanner implements IGTScanner {
 
         scanRequests = Lists.newArrayListWithCapacity(scanRanges.size());
 
-        trimmedInfoBytes = GTInfo.serialize(info);
-        GTInfo trimmedInfo = GTInfo.deserialize(trimmedInfoBytes);
-
         KylinConfig config = cubeSeg.getCubeInstance().getConfig();
         for (GTScanRange range : scanRanges) {
-            GTScanRequest req = new GTScanRequest(trimmedInfo, range.replaceGTInfo(trimmedInfo), gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate);
-            req.setAggrCacheGB(config.getQueryCoprocessorMemGB()); // limit the memory usage inside coprocessor
+            GTScanRequest req = new GTScanRequest(info, range, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate, config.getQueryCoprocessorMemGB());
             scanRequests.add(req);
         }
 
         scanner = new Scanner();
     }
 
-    private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(TblColRef tblColRef, int index) {
+    private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(int index) {
         ByteArray start;
         if (cubeSeg.getDateRangeStart() != Long.MIN_VALUE) {
             start = encodeTime(cubeSeg.getDateRangeStart(), index, 1);
@@ -213,90 +220,40 @@ public class CubeSegmentScanner implements IGTScanner {
     }
 
     private class Scanner {
-        final IGTScanner[] inputScanners = new IGTScanner[scanRequests.size()];
-        int cur = 0;
-        Iterator<GTRecord> curIterator = null;
-        GTRecord next = null;
+        IGTScanner internal = null;
+
+        public Scanner() {
+            CubeHBaseRPC rpc;
+            if ("scan".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryProtocol())) {
+                rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
+            } else {
+                rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);//default behavior
+            }
+            //change previous line to CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
+            //to debug locally
+
+            try {
+                if (scanRequests.size() == 0) {
+                    logger.info("Segment {} will be skipped", cubeSeg);
+                    internal = new EmptyGTScanner();
+                } else {
+                    internal = rpc.getGTScanner(scanRequests);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("error", e);
+            }
+        }
 
         public Iterator<GTRecord> iterator() {
-            return new Iterator<GTRecord>() {
-
-                @Override
-                public boolean hasNext() {
-                    if (next != null)
-                        return true;
-
-                    if (curIterator == null) {
-                        if (cur >= scanRequests.size())
-                            return false;
-
-                        try {
-
-                            CubeHBaseRPC rpc;
-                            if ("scan".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryProtocol())) {
-                                rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
-                            } else {
-                                rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);//default behavior
-                            }
-
-                            //change previous line to CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
-                            //to debug locally
-
-                            inputScanners[cur] = rpc.getGTScanner(scanRequests.get(cur));
-                            curIterator = inputScanners[cur].iterator();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-                    if (curIterator.hasNext() == false) {
-                        curIterator = null;
-                        cur++;
-                        return hasNext();
-                    }
-
-                    next = curIterator.next();
-                    return true;
-                }
-
-                @Override
-                public GTRecord next() {
-                    // fetch next record
-                    if (next == null) {
-                        hasNext();
-                        if (next == null)
-                            throw new NoSuchElementException();
-                    }
-
-                    GTRecord result = next;
-                    next = null;
-                    return result;
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
+            return internal.iterator();
         }
 
         public void close() throws IOException {
-            for (int i = 0; i < inputScanners.length; i++) {
-                if (inputScanners[i] != null) {
-                    inputScanners[i].close();
-                }
-            }
+            internal.close();
         }
 
         public int getScannedRowCount() {
-            int result = 0;
-            for (int i = 0; i < inputScanners.length; i++) {
-                if (inputScanners[i] == null)
-                    break;
-
-                result += inputScanners[i].getScannedRowCount();
-            }
-            return result;
+            return internal.getScannedRowCount();
         }
 
     }

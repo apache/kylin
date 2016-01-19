@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.util;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -29,13 +28,15 @@ import java.util.regex.Pattern;
 import org.apache.kylin.rest.model.SelectedColumnMeta;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * @author xduo
- * 
  */
 public class QueryUtil {
 
+    protected static final Logger logger = LoggerFactory.getLogger(QueryUtil.class);
+    
     private static final String S0 = "\\s*";
     private static final String S1 = "\\s";
     private static final String SM = "\\s+";
@@ -156,16 +157,10 @@ public class QueryUtil {
         String[] tokens = sql.split("[\r\n\t \\(\\)]");
         for (int i = 0; i < tableauTestQueries.length; ++i) {
             if (isTokenWiseEqual(tokens, tableauTestQueriesInToken.get(i))) {
-                printInfo("Hit fake response " + i);
+                logger.info("Hit fake response " + i);
                 return fakeResponses[i];
             }
         }
-
-        // if(sql.trim().endsWith("LIMIT 1"))
-        // {
-        // //queries end with LIMIT 1 is test queries sent by Tableau
-        // return temp;
-        // }
 
         return null;
     }
@@ -210,10 +205,6 @@ public class QueryUtil {
             }
         }
         return true;
-    }
-
-    private static void printInfo(String info) {
-        System.out.println(new Timestamp(System.currentTimeMillis()) + " - " + info);
     }
 
 }

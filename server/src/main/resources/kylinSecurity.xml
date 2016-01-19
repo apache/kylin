@@ -176,9 +176,6 @@
 		<scr:http security="none" pattern="/js/**"/>
 		<scr:http security="none" pattern="/login/**"/>
 		<scr:http security="none" pattern="/routes.json"/>
-		<scr:http security="none" pattern="/api/projects" />
-		<scr:http security="none" pattern="/api/admin/config" />
-		<scr:http security="none" pattern="/api/admin/env" />
 
 		<!-- Secured Rest API urls with LDAP basic authentication -->
 		<scr:http pattern="/api/**" use-expressions="true" authentication-manager-ref="apiAccessAuthenticationManager">
@@ -415,7 +412,9 @@
 		</bean>
 
 		<!-- SAML 2.0 WebSSO Assertion Consumer -->
-		<bean id="webSSOprofileConsumer" class="org.springframework.security.saml.websso.WebSSOProfileConsumerImpl"/>
+		<bean id="webSSOprofileConsumer" class="org.springframework.security.saml.websso.WebSSOProfileConsumerImpl">
+			<property name="responseSkew" value="600"/> <!-- 10 minutes -->
+		</bean>
 
 		<!-- SAML 2.0 Holder-of-Key WebSSO Assertion Consumer -->
 		<bean id="hokWebSSOprofileConsumer" class="org.springframework.security.saml.websso.WebSSOProfileConsumerHoKImpl"/>
@@ -430,7 +429,9 @@
 		<bean id="ecpprofile" class="org.springframework.security.saml.websso.WebSSOProfileECPImpl"/>
 
 		<!-- SAML 2.0 Logout Profile -->
-		<bean id="logoutprofile" class="org.springframework.security.saml.websso.SingleLogoutProfileImpl"/>
+		<bean id="logoutprofile" class="org.springframework.security.saml.websso.SingleLogoutProfileImpl">
+			<property name="responseSkew" value="600"/> <!-- 10 minutes -->
+		</bean>
 
 		<!-- Bindings, encoders and decoders used for creating and parsing messages -->
 		<bean id="postBinding" class="org.springframework.security.saml.processor.HTTPPostBinding">

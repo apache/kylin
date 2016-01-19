@@ -52,9 +52,7 @@ public class QueryRouter {
             throw new NoRealizationFoundException("Can't find any realization. Please confirm with providers. SQL digest: " + olapContext.getSQLDigest().toString());
         }
 
-        logger.info("The realizations remaining: ");
-        logger.info(RoutingRule.getPrintableText(realizations));
-        logger.info("The realization being chosen: " + realizations.get(0).getName());
+        logger.info("The realizations remaining: " + RoutingRule.getPrintableText(realizations) + " And the final chosen one is the first one");
 
         return realizations.get(0);
     }

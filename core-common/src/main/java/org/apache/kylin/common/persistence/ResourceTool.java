@@ -33,9 +33,9 @@ public class ResourceTool {
         args = StringUtil.filterSystemArgs(args);
 
         if (args.length == 0) {
-            System.out.println("Usage: MetadataTool list  RESOURCE_PATH");
-            System.out.println("Usage: MetadataTool download  LOCAL_DIR");
-            System.out.println("Usage: MetadataTool upload    LOCAL_DIR");
+            System.out.println("Usage: ResourceTool list  RESOURCE_PATH");
+            System.out.println("Usage: ResourceTool download  LOCAL_DIR");
+            System.out.println("Usage: ResourceTool upload    LOCAL_DIR");
             return;
         }
 
@@ -131,7 +131,7 @@ public class ResourceTool {
     private static void resetR(ResourceStore store, String path) throws IOException {
         ArrayList<String> children = store.listResources(path);
         if (children == null) { // path is a resource (not a folder)
-            if (matchFilter(path) == false) {
+            if (matchFilter(path)) {
                 store.deleteResource(path);
             }
         } else {

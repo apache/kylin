@@ -197,7 +197,6 @@ public class CubingUtils {
                 cubeSegment.putDictResPath(tblColRef, realDict.getResourcePath());
                 realDictMap.put(tblColRef, realDict.getDictionaryObject());
             } catch (IOException e) {
-                logger.error("error save dictionary for column:" + tblColRef, e);
                 throw new RuntimeException("error save dictionary for column:" + tblColRef, e);
             }
         }

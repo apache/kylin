@@ -43,6 +43,7 @@ import javax.sql.DataSource;
 
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
@@ -64,7 +65,6 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.storage.hbase.HBaseConnection;
-import org.h2.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -266,7 +266,7 @@ public class QueryService extends BasicService {
 
         String correctedSql = QueryUtil.massageSql(sqlRequest);
         if (correctedSql.equals(sqlRequest.getSql()) == false)
-            logger.debug("The corrected query: " + correctedSql);
+            logger.info("The corrected query: " + correctedSql);
 
         // add extra parameters into olap context, like acceptPartial
         Map<String, String> parameters = new HashMap<String, String>();
@@ -282,7 +282,7 @@ public class QueryService extends BasicService {
         Connection conn = null;
         ResultSet columnMeta = null;
         List<TableMeta> tableMetas = null;
-        if (StringUtils.isNullOrEmpty(project)) {
+        if (StringUtils.isBlank(project)) {
             return Collections.emptyList();
         }
         try {

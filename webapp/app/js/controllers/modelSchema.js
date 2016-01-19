@@ -124,7 +124,12 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     }
   };
 
-  $scope.checkForm = function () {
+  $scope.checkForm = function (stepIndex) {
+    // do not check for Prev Step
+    if (stepIndex + 1 < $scope.curStep.step) {
+      return true;
+    }
+
     if (!$scope.curStep.form) {
       return true;
     }
@@ -252,9 +257,6 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
   };
   $scope.check_model_setting = function () {
     var errors = [];
-    if (modelsManager.selectedModel.partition_desc.partition_date_column != null && modelsManager.selectedModel.partition_desc.partition_date_start == null) {
-      errors.push("Please indicate start date when partition date column selected.");
-    }
     var errorInfo = "";
     angular.forEach(errors, function (item) {
       errorInfo += "\n" + item;
@@ -269,7 +271,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
 
 
   $scope.goToStep = function (stepIndex) {
-    if ($scope.state.mode == "edit") {
+    if ($scope.modelMode == "addNewModel") {
       if (stepIndex + 1 >= $scope.curStep.step) {
         return;
       }

@@ -43,6 +43,7 @@ public class PartitionDesc {
 
     @JsonProperty("partition_date_column")
     private String partitionDateColumn;
+    
     @JsonProperty("partition_date_start")
     private long partitionDateStart = 0L;
     @JsonProperty("partition_date_format")
@@ -92,10 +93,12 @@ public class PartitionDesc {
         this.partitionDateColumn = partitionDateColumn;
     }
 
+    @Deprecated
     public long getPartitionDateStart() {
         return partitionDateStart;
     }
 
+    @Deprecated
     public void setPartitionDateStart(long partitionDateStart) {
         this.partitionDateStart = partitionDateStart;
     }
@@ -192,5 +195,14 @@ public class PartitionDesc {
 
             return builder.toString();
         }
+    }
+
+    public static PartitionDesc getCopyOf(PartitionDesc partitionDesc) {
+        PartitionDesc newPartDesc = new PartitionDesc();
+        newPartDesc.setCubePartitionType(partitionDesc.getCubePartitionType());
+        newPartDesc.setPartitionDateColumn(partitionDesc.getPartitionDateColumn());
+        newPartDesc.setPartitionDateFormat(partitionDesc.getPartitionDateFormat());
+        newPartDesc.setPartitionDateStart(partitionDesc.getPartitionDateStart());
+        return newPartDesc;
     }
 }

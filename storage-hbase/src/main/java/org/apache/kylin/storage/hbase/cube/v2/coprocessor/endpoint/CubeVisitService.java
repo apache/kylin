@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -36,9 +37,9 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.cube.util.KryoUtils;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
@@ -124,30 +125,55 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         }
     }
 
+    private void updateRawScanByCurrentRegion(RawScan rawScan, HRegion region, int shardLength) {
+        if (shardLength == 0) {
+            return;
+        }
+        byte[] regionStartKey = ArrayUtils.isEmpty(region.getStartKey()) ? new byte[shardLength] : region.getStartKey();
+        Bytes.putBytes(rawScan.startKey, 0, regionStartKey, 0, shardLength);
+        Bytes.putBytes(rawScan.endKey, 0, regionStartKey, 0, shardLength);
+    }
+
+    private void appendProfileInfo(StringBuilder sb) {
+        sb.append(System.currentTimeMillis() - this.serviceStartTime);
+        sb.append(",");
+    }
+
     @Override
     public void visitCube(RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
         RegionScanner innerScanner = null;
         HRegion region = null;
 
+        StringBuilder sb = new StringBuilder();
+        byte[] allRows;
+
         try {
             this.serviceStartTime = System.currentTimeMillis();
 
-            GTScanRequest scanReq = KryoUtils.deserialize(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest()), GTScanRequest.class);
-            RawScan hbaseRawScan = KryoUtils.deserialize(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getHbaseRawScan()), RawScan.class);
+            region = env.getRegion();
+            region.startRegionOperation();
+
+            GTScanRequest scanReq = GTScanRequest.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
+            RawScan hbaseRawScan = RawScan.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getHbaseRawScan())));
+
             List<List<Integer>> hbaseColumnsToGT = Lists.newArrayList();
             for (IntList intList : request.getHbaseColumnsToGTList()) {
                 hbaseColumnsToGT.add(intList.getIntsList());
             }
 
+            if (request.getRowkeyPreambleSize() - RowConstants.ROWKEY_CUBOIDID_LEN > 0) {
+                //if has shard, fill region shard to raw scan start/end
+                updateRawScanByCurrentRegion(hbaseRawScan, region, request.getRowkeyPreambleSize() - RowConstants.ROWKEY_CUBOIDID_LEN);
+            }
+            
             Scan scan = CubeHBaseRPC.buildScan(hbaseRawScan);
 
-            region = env.getRegion();
-            region.startRegionOperation();
+            appendProfileInfo(sb);
 
             innerScanner = region.getScanner(scan);
-            InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
-
             CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
+
+            InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
             if (behavior.ordinal() < CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
                 scanReq.setAggrCacheGB(0); // disable mem check if so told
             }
@@ -172,16 +198,24 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 finalRowCount++;
             }
 
+            appendProfileInfo(sb);
+
+            //outputStream.close() is not necessary
+            allRows = outputStream.toByteArray();
+            byte[] compressedAllRows = CompressionUtils.compress(allRows);
+
+            appendProfileInfo(sb);
+
             OperatingSystemMXBean operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
             double systemCpuLoad = operatingSystemMXBean.getSystemCpuLoad();
             double freePhysicalMemorySize = operatingSystemMXBean.getFreePhysicalMemorySize();
             double freeSwapSpaceSize = operatingSystemMXBean.getFreeSwapSpaceSize();
 
-            //outputStream.close() is not necessary
-            byte[] allRows = outputStream.toByteArray();
+            appendProfileInfo(sb);
+
             CubeVisitProtos.CubeVisitResponse.Builder responseBuilder = CubeVisitProtos.CubeVisitResponse.newBuilder();
             done.run(responseBuilder.//
-                    setCompressedRows(HBaseZeroCopyByteString.wrap(CompressionUtils.compress(allRows))).//too many array copies 
+                    setCompressedRows(HBaseZeroCopyByteString.wrap(compressedAllRows)).//too many array copies 
                     setStats(CubeVisitProtos.CubeVisitResponse.Stats.newBuilder().//
                             setAggregatedRowCount(finalScanner.getScannedRowCount() - finalRowCount).//
                             setScannedRowCount(finalScanner.getScannedRowCount()).//
@@ -190,7 +224,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                             setSystemCpuLoad(systemCpuLoad).//
                             setFreePhysicalMemorySize(freePhysicalMemorySize).//
                             setFreeSwapSpaceSize(freeSwapSpaceSize).//
-                            setHostname(InetAddress.getLocalHost().getHostName()).//
+                            setHostname(InetAddress.getLocalHost().getHostName()).// 
+                            setEtcMsg(sb.toString()).//
                             build()).//
                     build());
 

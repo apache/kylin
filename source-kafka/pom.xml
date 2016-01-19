@@ -29,6 +29,7 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.10</artifactId>
             <version>${kafka.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Env & Test -->

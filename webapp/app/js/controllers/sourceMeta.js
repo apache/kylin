@@ -85,6 +85,7 @@ KylinApp
       $modal.open({
         templateUrl: 'addHiveTable.html',
         controller: ModalInstanceCtrl,
+        backdrop : 'static',
         resolve: {
           tableNames: function () {
             return $scope.tableNames;
@@ -159,6 +160,7 @@ KylinApp
       $modal.open({
         templateUrl: 'addStreamingSource.html',
         controller: StreamingSourceCtrl,
+        backdrop : 'static',
         resolve: {
           tableNames: function () {
             return $scope.tableNames;
@@ -247,9 +249,9 @@ KylinApp
           for(var i = 0;i<timeMeasure.length;i++){
             var defaultCheck = 'Y';
             columnList.push({
-              'name': timeMeasure[i],
+              'name': timeMeasure[i].name,
               'checked': defaultCheck,
-              'type': 'timestamp',
+              'type': timeMeasure[i].type,
               'fromSource':'N'
             });
           }
@@ -284,18 +286,6 @@ KylinApp
         }
 
         if(!$scope.table.name||$scope.table.name===""){
-          return;
-        }
-
-        var timestampCount = 0;
-        angular.forEach($scope.columnList,function(item){
-          if(item.checked == "Y"&&item.type=="timestamp"&&item.fromSource=='Y'){
-            timestampCount++;
-          }
-        })
-
-        if(timestampCount!=1){
-          $scope.rule.timestampColumnConflict = true;
           return;
         }
 

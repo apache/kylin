@@ -19,14 +19,8 @@
 package org.apache.kylin.cube;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
@@ -260,6 +254,21 @@ public class CubeManager implements IRealizationProvider {
         return cube;
     }
 
+    public CubeInstance createCube(CubeInstance cube, String projectName, String owner) throws IOException {
+        logger.info("Creating cube '" + projectName + "-->" + cube.getName() + "' from instance object. '");
+
+        // save cube resource
+        cube.setOwner(owner);
+
+        updateCubeWithRetry(new CubeUpdate(cube), 0);
+        ProjectManager.getInstance(config).moveRealizationToProject(RealizationType.CUBE, cube.getName(), projectName, owner);
+
+        if (listener != null)
+            listener.afterCubeCreate(cube);
+
+        return cube;
+    }
+
     public CubeInstance updateCube(CubeUpdate update) throws IOException {
         CubeInstance cube = updateCubeWithRetry(update, 0);
 
@@ -390,7 +399,7 @@ public class CubeManager implements IRealizationProvider {
         long appendStart = calculateStartDateForAppendSegment(cube);
         CubeSegment appendSegment = newSegment(cube, appendStart, endDate);
 
-        long startDate = cube.getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
+        long startDate = cube.getDescriptor().getPartitionDateStart();
         CubeSegment mergeSegment = newSegment(cube, startDate, endDate);
 
         validateNewSegments(cube, mergeSegment);
@@ -409,6 +418,11 @@ public class CubeManager implements IRealizationProvider {
         long startDate = 0;
         if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
             startDate = calculateStartDateForAppendSegment(cube);
+            if (endDate > cube.getDescriptor().getPartitionDateEnd()) {
+                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+                f.setTimeZone(TimeZone.getTimeZone("GMT"));
+                throw new IllegalArgumentException("The selected date couldn't be later than cube's end date '" + f.format(new Date(cube.getDescriptor().getPartitionDateEnd())) + "'.");
+            }
         } else {
             endDate = Long.MAX_VALUE;
         }
@@ -512,7 +526,7 @@ public class CubeManager implements IRealizationProvider {
     private long calculateStartDateForAppendSegment(CubeInstance cube) {
         List<CubeSegment> existing = cube.getSegments();
         if (existing.isEmpty()) {
-            return cube.getDescriptor().getModel().getPartitionDesc().getPartitionDateStart();
+            return cube.getDescriptor().getPartitionDateStart();
         } else {
             return existing.get(existing.size() - 1).getDateRangeEnd();
         }
@@ -820,7 +834,7 @@ public class CubeManager implements IRealizationProvider {
                 usedStorageLocation.put(cubeName.toUpperCase(), segment.getStorageLocationIdentifier());
             }
 
-            logger.info("Reloaded new cube: " + cubeName + " with reference being" + cubeInstance + " having " + cubeInstance.getSegments().size() + " segments:" + StringUtils.join(Collections2.transform(cubeInstance.getSegments(), new Function<CubeSegment, String>() {
+            logger.debug("Reloaded new cube: " + cubeName + " with reference being" + cubeInstance + " having " + cubeInstance.getSegments().size() + " segments:" + StringUtils.join(Collections2.transform(cubeInstance.getSegments(), new Function<CubeSegment, String>() {
                 @Nullable
                 @Override
                 public String apply(CubeSegment input) {

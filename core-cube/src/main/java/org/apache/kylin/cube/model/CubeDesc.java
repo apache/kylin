@@ -116,6 +116,11 @@ public class CubeDesc extends RootPersistentEntity {
     private List<String> notifyList;
     @JsonProperty("status_need_notify")
     private List<String> statusNeedNotify = Collections.emptyList();
+
+    @JsonProperty("partition_date_start")
+    private long partitionDateStart = 0L;
+    @JsonProperty("partition_date_end")
+    private long partitionDateEnd = 3153600000000l;
     @JsonProperty("auto_merge_time_ranges")
     private long[] autoMergeTimeRanges;
     @JsonProperty("retention_range")
@@ -819,6 +824,22 @@ public class CubeDesc extends RootPersistentEntity {
         this.engineType = engineType;
     }
 
+    public long getPartitionDateStart() {
+        return partitionDateStart;
+    }
+
+    public void setPartitionDateStart(long partitionDateStart) {
+        this.partitionDateStart = partitionDateStart;
+    }
+
+    public long getPartitionDateEnd() {
+        return partitionDateEnd;
+    }
+
+    public void setPartitionDateEnd(long partitionDateEnd) {
+        this.partitionDateEnd = partitionDateEnd;
+    }
+    
     public List<TblColRef> getAllColumnsNeedDictionary() {
         List<TblColRef> result = Lists.newArrayList();
 
@@ -835,4 +856,27 @@ public class CubeDesc extends RootPersistentEntity {
         return result;
     }
 
+    public static CubeDesc getCopyOf(CubeDesc cubeDesc) {
+        CubeDesc newCubeDesc = new CubeDesc();
+        newCubeDesc.setName(cubeDesc.getName());
+        newCubeDesc.setModelName(cubeDesc.getModelName());
+        newCubeDesc.setDescription(cubeDesc.getDescription());
+        newCubeDesc.setNullStrings(cubeDesc.getNullStrings());
+        newCubeDesc.setDimensions(cubeDesc.getDimensions());
+        newCubeDesc.setMeasures(cubeDesc.getMeasures());
+        newCubeDesc.setRowkey(cubeDesc.getRowkey());
+        newCubeDesc.setHBaseMapping(cubeDesc.getHBaseMapping());
+        newCubeDesc.setSignature(cubeDesc.getSignature());
+        newCubeDesc.setNotifyList(cubeDesc.getNotifyList());
+        newCubeDesc.setStatusNeedNotify(cubeDesc.getStatusNeedNotify());
+        newCubeDesc.setAutoMergeTimeRanges(cubeDesc.getAutoMergeTimeRanges());
+        newCubeDesc.setPartitionDateStart(cubeDesc.getPartitionDateStart());
+        newCubeDesc.setPartitionDateEnd(cubeDesc.getPartitionDateEnd());
+        newCubeDesc.setRetentionRange(cubeDesc.getRetentionRange());
+        newCubeDesc.setEngineType(cubeDesc.getEngineType());
+        newCubeDesc.setStorageType(cubeDesc.getStorageType());
+        newCubeDesc.setConfig(cubeDesc.getConfig());
+        newCubeDesc.updateRandomUuid();
+        return newCubeDesc;
+    }
 }

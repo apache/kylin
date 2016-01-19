@@ -32,6 +32,7 @@ message CubeVisitResponse {
         optional double freePhysicalMemorySize = 6;
         optional double freeSwapSpaceSize = 7;
         optional string hostname = 8;
+        optional string etcMsg = 9;
     }
     required bytes compressedRows = 1;
     required Stats stats = 2;

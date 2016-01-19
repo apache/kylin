@@ -306,11 +306,11 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
     private void makeMemoryBudget() {
         baseResult.aggrCacheMB = Math.max(baseCuboidMemTracker.getEstimateMB(), 10); // 10 MB at minimal
-        logger.info("Base cuboid aggr cache is " + baseResult.aggrCacheMB + " MB");
+        logger.debug("Base cuboid aggr cache is " + baseResult.aggrCacheMB + " MB");
         int systemAvailMB = MemoryBudgetController.gcAndGetSystemAvailMB();
-        logger.info("System avail " + systemAvailMB + " MB");
+        logger.debug("System avail " + systemAvailMB + " MB");
         int reserve = reserveMemoryMB;
-        logger.info("Reserve " + reserve + " MB for system basics");
+        logger.debug("Reserve " + reserve + " MB for system basics");
 
         int budget = systemAvailMB - reserve;
         if (budget < baseResult.aggrCacheMB) {
@@ -319,7 +319,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             logger.warn("System avail memory (" + systemAvailMB + " MB) is less than base aggr cache (" + baseResult.aggrCacheMB + " MB) + minimal reservation (" + reserve + " MB), consider increase JVM heap -Xmx");
         }
 
-        logger.info("Memory Budget is " + budget + " MB");
+        logger.debug("Memory Budget is " + budget + " MB");
         memBudget = new MemoryBudgetController(budget);
     }
 
@@ -332,7 +332,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         IGTScanner baseInput = new InputConverter(baseCuboid.getInfo(), input);
 
         Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
-        GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null);
+        GTScanRequest req = new GTScanRequest(baseCuboid.getInfo(), null, null, dimensionMetricsBitSet.getFirst(), dimensionMetricsBitSet.getSecond(), metricsAggrFuncs, null, true, 0);
         GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req);
         aggregationScanner.trackMemoryLevel(baseCuboidMemTracker);
 
@@ -351,7 +351,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         logger.info("Cuboid " + baseCuboidId + " has " + count + " rows, build takes " + timeSpent + "ms");
 
         int mbEstimateBaseAggrCache = (int) (aggregationScanner.getEstimateSizeOfAggrCache() / MemoryBudgetController.ONE_MB);
-        logger.info("Wild esitmate of base aggr cache is " + mbEstimateBaseAggrCache + " MB");
+        logger.info("Wild estimate of base aggr cache is " + mbEstimateBaseAggrCache + " MB");
 
         return updateCuboidResult(baseCuboidId, baseCuboid, count, timeSpent, 0);
     }
@@ -402,7 +402,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         long startTime = System.currentTimeMillis();
         logger.info("Calculating cuboid " + cuboidId);
 
-        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, aggregationColumns, measureColumns, metricsAggrFuncs, null);
+        GTScanRequest req = new GTScanRequest(gridTable.getInfo(), null, null, aggregationColumns, measureColumns, metricsAggrFuncs, null, true, 0);
         GTAggregateScanner scanner = (GTAggregateScanner) gridTable.scan(req);
         GridTable newGridTable = newGridTableByCuboidID(cuboidId);
         GTBuilder builder = newGridTable.rebuild();

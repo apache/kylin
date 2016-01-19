@@ -64,11 +64,10 @@
         <commons-cli.version>1.2</commons-cli.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-lang3.version>3.1</commons-lang3.version>
+        <commons-collections.version>3.2.1</commons-collections.version>
         <commons-io.version>2.4</commons-io.version>
-        <commons-configuration.version>1.9</commons-configuration.version>
         <commons-daemon.version>1.0.15</commons-daemon.version>
         <commons-httpclient.version>3.1</commons-httpclient.version>
-        <commons-collections4.version>4.0</commons-collections4.version>
         <commons-email.version>1.1</commons-email.version>
         <commons-math3.version>3.5</commons-math3.version>
 
@@ -332,6 +331,11 @@
                 <version>${commons-lang3.version}</version>
             </dependency>
             <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>${commons-collections.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-math3</artifactId>
                 <version>${commons-math3.version}</version>
@@ -341,11 +345,6 @@
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-configuration</groupId>
-                <artifactId>commons-configuration</artifactId>
-                <version>${commons-configuration.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-daemon</groupId>
@@ -386,11 +385,6 @@
                 <groupId>commons-httpclient</groupId>
                 <artifactId>commons-httpclient</artifactId>
                 <version>${commons-httpclient.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-collections4</artifactId>
-                <version>${commons-collections4.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -711,112 +705,6 @@
                         </configuration>
                     </plugin>
 
-                    <!-- Apache-RAT checks for files without headers.
-                         If run on a messy developer's sandbox, it will fail.
-                         This serves as a reminder to only build a release in a clean
-                         sandbox! -->
-                    <plugin>
-                        <groupId>org.apache.rat</groupId>
-                        <artifactId>apache-rat-plugin</artifactId>
-                        <configuration>
-                            <numUnapprovedLicenses>0</numUnapprovedLicenses>
-                            <excludes>
-                                <exclude>DEPENDENCIES</exclude>
-                                <exclude>README.*</exclude>
-                                <exclude>**/LICENSE*</exclude>
-                                <!-- Local git repo -->
-                                <exclude>.git/**</exclude>
-                                <!-- IDE files -->
-                                <exclude>.idea/**</exclude>
-                                <exclude>**/*.iml</exclude>                                
-                                <exclude>.settings/**</exclude>
-                                <exclude>**/.classpath</exclude>
-                                <exclude>**/.project</exclude>
-
-                                <!-- text files without comments -->
-                                <exclude>**/*.csv</exclude>
-                                <exclude>**/*.json</exclude>
-                                <exclude>**/*.md</exclude>
-                                <!-- binary files -->
-                                <exclude>**/*.dict</exclude>
-                                <exclude>**/*.dic</exclude>
-                                <exclude>**/*.snapshot</exclude>
-                                <exclude>**/*.log</exclude>
-                                
-                                <!-- image files constitute images required for documentation. .pptx contain the sources for images -->
-                                <exclude>**/*.png</exclude>
-                                <exclude>**/*.jpg</exclude>
-                                <exclude>**/*.gif</exclude>
-                                <exclude>**/*.ico</exclude>
-
-                                <exclude>server/logs**</exclude>
-
-                                <exclude>**/.checkstyle</exclude>
-                                <!--Job's Test Data-->
-                                <exclude>**/src/test/resources/**</exclude>
-
-                                <!-- generated files -->
-                                <exclude>**/target/**</exclude>
-                                <exclude>lib/**</exclude>
-                                <exclude>dist/**</exclude>
-                                <!-- Kylin's website content -->
-                                <exclude>**/.sass-cache/**</exclude>
-
-                                <exclude>website/**</exclude>
-
-                                <!-- front end libary and generated files -->
-                                <exclude>webapp/node_modules/**</exclude>
-                                <exclude>webapp/dist/**</exclude>
-                                <exclude>webapp/app/components/**</exclude>
-                                <!-- json configuration file-->
-                                <exclude>webapp/.bowerrc</exclude>
-                                <exclude>webapp/.jshintrc</exclude>
-                                <!-- generated dict files -->
-                                <exclude>dictionary/metastore_db/**</exclude>
-
-                                <!-- MIT license -->
-                                <exclude>webapp/app/css/AdminLTE.css</exclude>
-                                
-                                <!--configuration file -->
-                                <exclude>webapp/app/routes.json</exclude>
-                                <exclude>webapp/bower.json</exclude>
-                                <exclude>webapp/grunt.json</exclude>
-                                <exclude>webapp/package.json</exclude>
-
-                                <!-- jdbc log -->
-                                <exclude>jdbc/kylin_jdbc.log*</exclude>
-                                <!-- server log -->
-                                <exclude>server/logs/**</exclude>
-
-                                <!-- HBase MiniCluster Testing Data, for testing only -->
-                                <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
-                                <exclude>examples/test_case_data/**/*.xml</exclude>
-
-                            </excludes>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.apache.maven.doxia</groupId>
-                                <artifactId>doxia-core</artifactId>
-                                <version>1.6</version>
-                                <exclusions>
-                                    <exclusion>
-                                        <groupId>xerces</groupId>
-                                        <artifactId>xercesImpl</artifactId>
-                                    </exclusion>
-                                </exclusions>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-
                     <!-- Override the parent assembly execution to customize the assembly
                         descriptor and final name. -->
                     <plugin>
@@ -884,6 +772,34 @@
                         <configuration>
                             <!-- Exclude files/folders for apache release -->
                             <excludes>
+                                <exclude>DEPENDENCIES</exclude>
+                                <exclude>.settings/**</exclude>
+                                <exclude>**/LICENSE*</exclude>
+                                <!-- Local git repo -->
+                                <exclude>.git/**</exclude>
+                                <!-- IDE files -->
+                                <exclude>.idea/**</exclude>
+                                <exclude>**/*.iml</exclude>
+                                <exclude>**/.classpath</exclude>
+                                <exclude>**/.project</exclude>
+
+                                <!-- image files constitute images required for documentation. .pptx contain the sources for images -->
+                                <exclude>**/*.png</exclude>
+                                <exclude>**/*.jpg</exclude>
+                                <exclude>**/*.gif</exclude>
+                                <exclude>**/*.ico</exclude>
+
+                                <exclude>server/logs**</exclude>
+
+                                <!--Job's Test Data-->
+                                <exclude>**/src/test/resources/**</exclude>
+
+                                <!-- generated files -->
+                                <exclude>**/target/**</exclude>
+                                <exclude>lib/**</exclude>
+                                <exclude>dist/**</exclude>
+
+                                <exclude>website/**</exclude>
                                 <!-- text files without comments -->
                                 <exclude>**/*.csv</exclude>
                                 <exclude>**/*.json</exclude>
@@ -901,14 +817,8 @@
                                 <exclude>**/.checkstyle</exclude>
                                 <!--Job's Test Data-->
                                 <exclude>**/src/test/resources/data/**</exclude>
-
-                                <!-- generated files -->
-                                <exclude>**/target/**</exclude>
-                                <exclude>lib/**</exclude>
                                 <!-- Kylin's website content -->
                                 <exclude>**/.sass-cache/**</exclude>
-
-                                <exclude>website/**</exclude>
 
                                 <!-- tomcat package -->
                                 <exclude>tomcat/**</exclude>
@@ -923,8 +833,8 @@
                                 <exclude>dictionary/metastore_db/**</exclude>
 
                                 <!-- MIT license -->
-                                <exclude>webapp/app/css/AdminLTE-fonts.css</exclude>
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
+                                <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
 
                                 <!--configuration file -->
                                 <exclude>webapp/app/routes.json</exclude>

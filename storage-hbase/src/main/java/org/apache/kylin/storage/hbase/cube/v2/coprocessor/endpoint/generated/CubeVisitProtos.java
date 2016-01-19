@@ -1919,6 +1919,21 @@ public final class CubeVisitProtos {
        */
       com.google.protobuf.ByteString
           getHostnameBytes();
+
+      // optional string etcMsg = 9;
+      /**
+       * <code>optional string etcMsg = 9;</code>
+       */
+      boolean hasEtcMsg();
+      /**
+       * <code>optional string etcMsg = 9;</code>
+       */
+      java.lang.String getEtcMsg();
+      /**
+       * <code>optional string etcMsg = 9;</code>
+       */
+      com.google.protobuf.ByteString
+          getEtcMsgBytes();
     }
     /**
      * Protobuf type {@code CubeVisitResponse.Stats}
@@ -2009,6 +2024,11 @@ public final class CubeVisitProtos {
               case 66: {
                 bitField0_ |= 0x00000080;
                 hostname_ = input.readBytes();
+                break;
+              }
+              case 74: {
+                bitField0_ |= 0x00000100;
+                etcMsg_ = input.readBytes();
                 break;
               }
             }
@@ -2206,6 +2226,49 @@ public final class CubeVisitProtos {
         }
       }
 
+      // optional string etcMsg = 9;
+      public static final int ETCMSG_FIELD_NUMBER = 9;
+      private java.lang.Object etcMsg_;
+      /**
+       * <code>optional string etcMsg = 9;</code>
+       */
+      public boolean hasEtcMsg() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional string etcMsg = 9;</code>
+       */
+      public java.lang.String getEtcMsg() {
+        java.lang.Object ref = etcMsg_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            etcMsg_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>optional string etcMsg = 9;</code>
+       */
+      public com.google.protobuf.ByteString
+          getEtcMsgBytes() {
+        java.lang.Object ref = etcMsg_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          etcMsg_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
       private void initFields() {
         serviceStartTime_ = 0L;
         serviceEndTime_ = 0L;
@@ -2215,6 +2278,7 @@ public final class CubeVisitProtos {
         freePhysicalMemorySize_ = 0D;
         freeSwapSpaceSize_ = 0D;
         hostname_ = "";
+        etcMsg_ = "";
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -2251,6 +2315,9 @@ public final class CubeVisitProtos {
         }
         if (((bitField0_ & 0x00000080) == 0x00000080)) {
           output.writeBytes(8, getHostnameBytes());
+        }
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          output.writeBytes(9, getEtcMsgBytes());
         }
         getUnknownFields().writeTo(output);
       }
@@ -2292,6 +2359,10 @@ public final class CubeVisitProtos {
         if (((bitField0_ & 0x00000080) == 0x00000080)) {
           size += com.google.protobuf.CodedOutputStream
             .computeBytesSize(8, getHostnameBytes());
+        }
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(9, getEtcMsgBytes());
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -2353,6 +2424,11 @@ public final class CubeVisitProtos {
           result = result && getHostname()
               .equals(other.getHostname());
         }
+        result = result && (hasEtcMsg() == other.hasEtcMsg());
+        if (hasEtcMsg()) {
+          result = result && getEtcMsg()
+              .equals(other.getEtcMsg());
+        }
         result = result &&
             getUnknownFields().equals(other.getUnknownFields());
         return result;
@@ -2400,6 +2476,10 @@ public final class CubeVisitProtos {
         if (hasHostname()) {
           hash = (37 * hash) + HOSTNAME_FIELD_NUMBER;
           hash = (53 * hash) + getHostname().hashCode();
+        }
+        if (hasEtcMsg()) {
+          hash = (37 * hash) + ETCMSG_FIELD_NUMBER;
+          hash = (53 * hash) + getEtcMsg().hashCode();
         }
         hash = (29 * hash) + getUnknownFields().hashCode();
         memoizedHashCode = hash;
@@ -2526,6 +2606,8 @@ public final class CubeVisitProtos {
           bitField0_ = (bitField0_ & ~0x00000040);
           hostname_ = "";
           bitField0_ = (bitField0_ & ~0x00000080);
+          etcMsg_ = "";
+          bitField0_ = (bitField0_ & ~0x00000100);
           return this;
         }
 
@@ -2586,6 +2668,10 @@ public final class CubeVisitProtos {
             to_bitField0_ |= 0x00000080;
           }
           result.hostname_ = hostname_;
+          if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+            to_bitField0_ |= 0x00000100;
+          }
+          result.etcMsg_ = etcMsg_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -2626,6 +2712,11 @@ public final class CubeVisitProtos {
           if (other.hasHostname()) {
             bitField0_ |= 0x00000080;
             hostname_ = other.hostname_;
+            onChanged();
+          }
+          if (other.hasEtcMsg()) {
+            bitField0_ |= 0x00000100;
+            etcMsg_ = other.etcMsg_;
             onChanged();
           }
           this.mergeUnknownFields(other.getUnknownFields());
@@ -2956,6 +3047,80 @@ public final class CubeVisitProtos {
   }
   bitField0_ |= 0x00000080;
           hostname_ = value;
+          onChanged();
+          return this;
+        }
+
+        // optional string etcMsg = 9;
+        private java.lang.Object etcMsg_ = "";
+        /**
+         * <code>optional string etcMsg = 9;</code>
+         */
+        public boolean hasEtcMsg() {
+          return ((bitField0_ & 0x00000100) == 0x00000100);
+        }
+        /**
+         * <code>optional string etcMsg = 9;</code>
+         */
+        public java.lang.String getEtcMsg() {
+          java.lang.Object ref = etcMsg_;
+          if (!(ref instanceof java.lang.String)) {
+            java.lang.String s = ((com.google.protobuf.ByteString) ref)
+                .toStringUtf8();
+            etcMsg_ = s;
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>optional string etcMsg = 9;</code>
+         */
+        public com.google.protobuf.ByteString
+            getEtcMsgBytes() {
+          java.lang.Object ref = etcMsg_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            etcMsg_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>optional string etcMsg = 9;</code>
+         */
+        public Builder setEtcMsg(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+          etcMsg_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string etcMsg = 9;</code>
+         */
+        public Builder clearEtcMsg() {
+          bitField0_ = (bitField0_ & ~0x00000100);
+          etcMsg_ = getDefaultInstance().getEtcMsg();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional string etcMsg = 9;</code>
+         */
+        public Builder setEtcMsgBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+          etcMsg_ = value;
           onChanged();
           return this;
         }
@@ -3758,19 +3923,19 @@ public final class CubeVisitProtos {
       "canRequest\030\002 \002(\014\022\024\n\014hbaseRawScan\030\003 \002(\014\022\032" +
       "\n\022rowkeyPreambleSize\030\004 \002(\005\0223\n\020hbaseColum" +
       "nsToGT\030\005 \003(\0132\031.CubeVisitRequest.IntList\032" +
-      "\027\n\007IntList\022\014\n\004ints\030\001 \003(\005\"\251\002\n\021CubeVisitRe" +
+      "\027\n\007IntList\022\014\n\004ints\030\001 \003(\005\"\271\002\n\021CubeVisitRe" +
       "sponse\022\026\n\016compressedRows\030\001 \002(\014\022\'\n\005stats\030" +
-      "\002 \002(\0132\030.CubeVisitResponse.Stats\032\322\001\n\005Stat",
+      "\002 \002(\0132\030.CubeVisitResponse.Stats\032\342\001\n\005Stat",
       "s\022\030\n\020serviceStartTime\030\001 \001(\003\022\026\n\016serviceEn" +
       "dTime\030\002 \001(\003\022\027\n\017scannedRowCount\030\003 \001(\005\022\032\n\022" +
       "aggregatedRowCount\030\004 \001(\005\022\025\n\rsystemCpuLoa" +
       "d\030\005 \001(\001\022\036\n\026freePhysicalMemorySize\030\006 \001(\001\022" +
       "\031\n\021freeSwapSpaceSize\030\007 \001(\001\022\020\n\010hostname\030\010" +
-      " \001(\t2F\n\020CubeVisitService\0222\n\tvisitCube\022\021." +
-      "CubeVisitRequest\032\022.CubeVisitResponseB`\nE" +
-      "org.apache.kylin.storage.hbase.cube.v2.c" +
-      "oprocessor.endpoint.generatedB\017CubeVisit" +
-      "ProtosH\001\210\001\001\240\001\001"
+      " \001(\t\022\016\n\006etcMsg\030\t \001(\t2F\n\020CubeVisitService" +
+      "\0222\n\tvisitCube\022\021.CubeVisitRequest\032\022.CubeV" +
+      "isitResponseB`\nEorg.apache.kylin.storage" +
+      ".hbase.cube.v2.coprocessor.endpoint.gene" +
+      "ratedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3800,7 +3965,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitResponse_Stats_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitResponse_Stats_descriptor,
-              new java.lang.String[] { "ServiceStartTime", "ServiceEndTime", "ScannedRowCount", "AggregatedRowCount", "SystemCpuLoad", "FreePhysicalMemorySize", "FreeSwapSpaceSize", "Hostname", });
+              new java.lang.String[] { "ServiceStartTime", "ServiceEndTime", "ScannedRowCount", "AggregatedRowCount", "SystemCpuLoad", "FreePhysicalMemorySize", "FreeSwapSpaceSize", "Hostname", "EtcMsg", });
           return null;
         }
       };
