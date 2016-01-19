@@ -37,13 +37,18 @@
                         <b>{{($index + 1)}}</b>
                     </td>
                     <td class="col-xs-11">
-                        <!-- Dimensions -->
-                        <select ng-if="state.mode=='edit'" style="width: 100%"
-                                ng-model="aggregation_groups"  chosen multiple
-                                ng-change="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
-                                ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubeMetaFrame.rowkey.rowkey_columns">
-                            <option value=""></option>
-                        </select>
+
+                      <ui-select
+                        autofocus="true"
+                        on-select="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
+                        on-remove="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
+                        ng-if="state.mode=='edit'" style="width: 100%" multiple ng-model="aggregation_groups">
+                        <ui-select-match placeholder="Select Column...">{{$item.column}}</ui-select-match>
+                        <ui-select-choices
+                          repeat="rowkey_column.column as rowkey_column in cubeMetaFrame.rowkey.rowkey_columns | filter:$select.search">
+                          {{rowkey_column.column}}
+                        </ui-select-choices>
+                      </ui-select>
                         <p ng-if="state.mode=='view'">{{aggregation_groups}}</p>
                     </td>
                     <td ng-if="state.mode=='edit'" class="col-xs-1">

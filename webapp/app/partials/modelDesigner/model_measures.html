@@ -42,12 +42,18 @@
     </table>
     <div  ng-if="state.mode=='edit'" class="form-group" style="width: 100%">
         <h3 class="box-title">Select your measures</h3>
-        <select style="width: 100%"
-                ng-model="modelsManager.selectedModel.metrics"  chosen multiple
-                ng-change=""
-                ng-options="measure.name as measure.name for measure in getColumnsByTable(modelsManager.selectedModel.fact_table)">
-            <option value=""></option>
-        </select>
+        <ui-select
+          ng-if="state.mode=='edit'"
+          style="width: 100%"
+          autofocus="true"
+          ng-model="modelsManager.selectedModel.metrics" multiple>
+          <ui-select-match placeholder="Select Column...">{{$item.name}}</ui-select-match>
+          <ui-select-choices
+            repeat="measure.name as measure in getColumnsByTable(modelsManager.selectedModel.fact_table) | filter:$select.search">
+            {{measure.name}}
+          </ui-select-choices>
+        </ui-select>
+
     </div>
 </div>
 

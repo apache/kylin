@@ -69,13 +69,16 @@
                             {{dimension.table}}
                     </td>
                     <td class="col-xs-9">
-                        <!-- Dimensions -->
-                        <select ng-if="state.mode=='edit'" style="width: 100%"
-                                ng-model="modelsManager.selectedModel.dimensions[$index].columns" chosen multiple
-                                ng-change=""
-                                ng-options="column.name as column.name for column in getColumnsByTable(dimension.table)">
-                            <option value=""></option>
-                        </select>
+                      <ui-select
+                        ng-if="state.mode=='edit'" style="width: 100%"
+                        autofocus="true"
+                        ng-model="modelsManager.selectedModel.dimensions[$index].columns" multiple>
+                        <ui-select-match placeholder="Select Column...">{{$item.name}}</ui-select-match>
+                        <ui-select-choices
+                          repeat="column.name as column in getColumnsByTable(dimension.table) | filter:$select.search">
+                          {{column.name}}
+                        </ui-select-choices>
+                      </ui-select>
                     </td>
                 </tr>
             </table>
