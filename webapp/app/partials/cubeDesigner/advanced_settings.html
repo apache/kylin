@@ -43,12 +43,18 @@
                   </td>
                   <td class="col-xs-8">
                     <!-- Dimensions -->
-                    <select ng-if="state.mode=='edit'" style="width: 100%"
-                            ng-model="aggregation_group.includes" chosen multiple
-                            ng-change="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
-                            ng-options="rowkey_column.column as rowkey_column.column for rowkey_column in cubeMetaFrame.rowkey.rowkey_columns">
-                      <option value=""></option>
-                    </select>
+
+                    <ui-select
+                      autofocus="true"
+                      on-select="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
+                      on-remove="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
+                      ng-if="state.mode=='edit'" style="width: 100%" multiple ng-model="aggregation_group.includes">
+                     <ui-select-match placeholder="Select Column...">{{$item.column}}</ui-select-match>
+                      <ui-select-choices
+                      repeat="rowkey_column.column as rowkey_column in cubeMetaFrame.rowkey.rowkey_columns | filter:$select.search">
+                    {{rowkey_column.column}}
+                      </ui-select-choices>
+                    </ui-select>
 
                     <p ng-if="state.mode=='view'">
                       {{aggregation_group.includes}}</p>
@@ -62,12 +68,25 @@
                   </td>
                   <td class="col-xs-8">
                     <!-- Dimensions -->
-                    <select ng-if="state.mode=='edit'" style="width: 100%"
-                            ng-model="aggregation_group.select_rule.mandatory_dims" chosen multiple
-                            ng-change="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
-                            ng-options="column as column for column in aggregation_group.includes">
-                      <option value=""></option>
-                    </select>
+                    <!--<select ng-if="state.mode=='edit'" style="width: 100%"-->
+                            <!--ng-model="aggregation_group.select_rule.mandatory_dims" chosen multiple-->
+                            <!--ng-change="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"-->
+                            <!--ng-options="column as column for column in aggregation_group.includes">-->
+                      <!--<option value=""></option>-->
+                    <!--</select>-->
+
+                    <ui-select
+                      autofocus="true"
+                      on-select="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
+                      on-remove="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
+                      ng-if="state.mode=='edit'" style="width: 100%" multiple ng-model="aggregation_group.select_rule.mandatory_dims">
+                      <ui-select-match placeholder="Select Column...">{{$item}}</ui-select-match>
+                      <ui-select-choices
+                        repeat="column in aggregation_group.includes | filter:$select.search">
+                        {{column}}
+                      </ui-select-choices>
+                    </ui-select>
+
                     <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">
                       {{aggregation_group.select_rule.mandatory_dims}}</p>
                   </td>
@@ -85,12 +104,24 @@
                       <tr class="row" ng-repeat="hierarchyDims in aggregation_group.select_rule.hierarchy_dims track by $index">
                         <td class="col-xs-10">
                           <!-- Dimensions -->
-                          <select ng-if="state.mode=='edit'" style="width: 100%"
-                                  ng-model="hierarchyDims" chosen multiple
-                                  ng-change="refreshAggregationHierarchy(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,hierarchyDims)"
-                                  ng-options="column as column for column in aggregation_group.includes">
-                            <option value=""></option>
-                          </select>
+                          <!--<select ng-if="state.mode=='edit'" style="width: 100%"-->
+                                  <!--ng-model="hierarchyDims" chosen multiple-->
+                                  <!--ng-change="refreshAggregationHierarchy(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,hierarchyDims)"-->
+                                  <!--ng-options="column as column for column in aggregation_group.includes">-->
+                            <!--<option value=""></option>-->
+                          <!--</select>-->
+
+                          <ui-select
+                            autofocus="true"
+                            on-select="refreshAggregationHierarchy(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,hierarchyDims)"
+                            on-remove="refreshAggregationHierarchy(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,hierarchyDims)"
+                            ng-if="state.mode=='edit'" style="width: 100%" multiple ng-model="hierarchyDims">
+                            <ui-select-match placeholder="Select Column...">{{$item}}</ui-select-match>
+                            <ui-select-choices
+                              repeat="column in aggregation_group.includes | filter:$select.search">
+                              {{column}}
+                            </ui-select-choices>
+                          </ui-select>
                           <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">
                             {{hierarchyDims}}</p>
 
@@ -125,12 +156,17 @@
                       <tr class="row" ng-repeat="jointDims in aggregation_group.select_rule.joint_dims track by $index">
                         <td class="col-xs-10">
                           <!-- Dimensions -->
-                          <select ng-if="state.mode=='edit'" style="width: 100%"
-                                  ng-model="jointDims" chosen multiple
-                                  ng-change="refreshAggregationJoint(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,jointDims)"
-                                  ng-options="column as column for column in aggregation_group.includes">
-                            <option value=""></option>
-                          </select>
+                          <ui-select
+                            autofocus="true"
+                            on-select="refreshAggregationJoint(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,jointDims)"
+                            on-remove="refreshAggregationJoint(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,jointDims)"
+                            ng-if="state.mode=='edit'" style="width: 100%" multiple ng-model="jointDims">
+                            <ui-select-match placeholder="Select Column...">{{$item}}</ui-select-match>
+                            <ui-select-choices
+                              repeat="column in aggregation_group.includes | filter:$select.search">
+                              {{column}}
+                            </ui-select-choices>
+                          </ui-select>
                           <p ng-if="state.mode=='view'" style="word-wrap: break-word; word-break: normal;max-width: 1000px ">
                             {{jointDims}}</p>
                         </td>
@@ -216,13 +252,6 @@
               </select>
               <span ng-if="state.mode=='view'">{{rowkey_column.isDictionary}}</span>
 
-              <!--Use Dictionary-->
-              <!--<select ng-if="state.mode=='edit'" style="width:80px;"-->
-              <!--chosen ng-model="rowkey_column.encoding"-->
-              <!--ng-change="dictionaryUpdated(rowkey_column);"-->
-              <!--ng-options="dt.name as dt.value for dt in cubeConfig.dictionaries">-->
-              <!--<option value=""></option>-->
-              <!--</select>-->
             </td>
             <td>
               <!--Column Length -->
