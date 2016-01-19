@@ -40,6 +40,8 @@
                 "app/components/jquery-ui/jquery-ui.min.js",
                 "app/components/angular-ui-sortable/sortable.js",
                 "app/components/angular-busy/dist/angular-busy.js",
+                "app/components/angular-ui-select/dist/select.js",
+                "app/components/angular-sanitize/angular-sanitize.js",
                 "tmp/js/scripts.js"
             ],
             "dest": "tmp/js/scripts.min.js"
@@ -60,6 +62,7 @@
                 "app/css/AdminLTE.css",
                 "app/components/bootstrap-sweetalert/lib/sweet-alert.css",
                 "app/components/angular-busy/dist/angular-busy.css",
+                "app/components/angular-ui-select/dist/select.css",
                 "tmp/css/styles.css"
             ],
             "dest": "tmp/css/styles.min.css"
