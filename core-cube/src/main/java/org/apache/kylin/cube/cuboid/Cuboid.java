@@ -151,8 +151,17 @@ public class Cuboid implements Comparable<Cuboid> {
             if (cuboidWithoutMandatory != 0) {
                 return cuboidID;
             } else {
+                if (rowkey.getAggrGroupFullMask() == 0) {
+                    throw new IllegalStateException("Current segment's getAggrGroupFullMask is 0");
+                }
+                
                 // no column except mandatory, add one column
-                cuboidID = cuboidID | Long.lowestOneBit(rowkey.getAggrGroupFullMask());
+                long nonHierarchyAggGroupMask = rowkey.getAggrGroupFullMask() & ~rowkey.getHierarchyFullMask();
+                if (nonHierarchyAggGroupMask == 0) {
+                    cuboidID = cuboidID | Long.lowestOneBit(rowkey.getAggrGroupFullMask());
+                } else {
+                    cuboidID = cuboidID | Long.lowestOneBit(nonHierarchyAggGroupMask);
+                }
                 return translateToValidCuboid(cubeDesc, cuboidID);
             }
         }
