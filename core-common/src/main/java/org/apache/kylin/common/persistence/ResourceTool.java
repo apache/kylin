@@ -26,6 +26,7 @@ import org.apache.kylin.common.util.StringUtil;
 
 public class ResourceTool {
 
+    private static String[] includes = null;
     private static String[] excludes = null;
 
     public static void main(String[] args) throws IOException {
@@ -38,6 +39,10 @@ public class ResourceTool {
             return;
         }
 
+        String include = System.getProperty("include");
+        if (include != null) {
+            includes = include.split("\\s*,\\s*");
+        }
         String exclude = System.getProperty("exclude");
         if (exclude != null) {
             excludes = exclude.split("\\s*,\\s*");
@@ -83,7 +88,7 @@ public class ResourceTool {
 
         // case of resource (not a folder)
         if (children == null) {
-            if (matchExclude(path) == false) {
+            if (matchFilter(path)) {
                 RawResource res = src.getResource(path);
                 if (res != null) {
                     dst.putResource(path, res.inputStream, res.timestamp);
@@ -100,14 +105,22 @@ public class ResourceTool {
         }
     }
 
-    private static boolean matchExclude(String path) {
-        if (excludes == null)
-            return false;
-        for (String exclude : excludes) {
-            if (path.startsWith(exclude))
-                return true;
+    private static boolean matchFilter(String path) {
+        if (includes != null) {
+            boolean in = false;
+            for (String include : includes) {
+                in = in || path.startsWith(include);
+            }
+            if (!in)
+                return false;
         }
-        return false;
+        if (excludes != null) {
+            for (String exclude : excludes) {
+                if (path.startsWith(exclude))
+                    return false;
+            }
+        }
+        return true;
     }
 
     public static void reset(KylinConfig config) throws IOException {
@@ -118,7 +131,7 @@ public class ResourceTool {
     private static void resetR(ResourceStore store, String path) throws IOException {
         ArrayList<String> children = store.listResources(path);
         if (children == null) { // path is a resource (not a folder)
-            if (matchExclude(path) == false) {
+            if (matchFilter(path)) {
                 store.deleteResource(path);
             }
         } else {
