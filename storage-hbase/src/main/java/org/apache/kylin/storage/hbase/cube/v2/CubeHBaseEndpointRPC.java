@@ -255,11 +255,11 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(scanRequests.size() * shardNum);
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
-            for (int i = 0; i < scanRequests.size(); ++i) {
-                final int scanIndex = i;
-                executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < scanRequests.size(); ++i) {
+                        int scanIndex = i;
                         CubeVisitProtos.CubeVisitRequest.Builder builder = CubeVisitProtos.CubeVisitRequest.newBuilder();
                         builder.setGtScanRequest(scanRequestByteStrings.get(scanIndex)).setHbaseRawScan(rawScanByteStrings.get(scanIndex));
                         for (IntList intList : hbaseColumnsToGTIntList) {
@@ -285,8 +285,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                             }
                         }
                     }
-                });
-            }
+                }
+            });
         }
 
         return new EndpointResultsAsGTScanner(fullGTInfo, epResultItr, scanRequests.get(0).getColumns(), totalScannedCount.get());
