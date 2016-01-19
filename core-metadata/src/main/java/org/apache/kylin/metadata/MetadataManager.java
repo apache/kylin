@@ -385,11 +385,11 @@ public class MetadataManager {
     }
 
     private void afterModelDropped(DataModelDesc desc) {
-        removeModelCache(desc);
+        removeModelCache(desc.getName());
     }
 
-    private void removeModelCache(DataModelDesc desc) {
-        dataModelDescMap.remove(desc.getName());
+    public void removeModelCache(String modelName) {
+        dataModelDescMap.remove(modelName);
     }
 
     public DataModelDesc createDataModelDesc(DataModelDesc desc, String projectName, String owner) throws IOException {
