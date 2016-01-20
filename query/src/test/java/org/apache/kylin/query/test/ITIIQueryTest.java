@@ -26,6 +26,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -83,4 +84,9 @@ public class ITIIQueryTest extends ITKylinQueryTest {
         execAndCompQuery("src/test/resources/query/sql_ii", null, true);
     }
 
+    @Override
+    @Test
+    @Ignore("Skip Precisely Distinct Count Queries for II")
+    public void testPreciselyDistinctCountQuery() {
+    }
 }

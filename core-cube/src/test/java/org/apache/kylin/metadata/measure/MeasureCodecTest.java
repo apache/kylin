@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.bitmap.BitmapCounter;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -39,7 +40,8 @@ public class MeasureCodecTest {
     
     @Test
     public void basicTest() {
-        MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16") };
+        MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure
+            ("decimal"), measure("HLLC16"), measure("bitmap") };
         MeasureCodec codec = new MeasureCodec(descs);
 
         DoubleMutable d = new DoubleMutable(1.0);
@@ -48,7 +50,11 @@ public class MeasureCodecTest {
         HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(16);
         hllc.add("1234567");
         hllc.add("abcdefg");
-        Object values[] = new Object[] { d, l, b, hllc };
+        BitmapCounter bitmap = new BitmapCounter();
+        bitmap.add(123);
+        bitmap.add(45678);
+        bitmap.add(Long.MAX_VALUE-10);
+        Object values[] = new Object[] { d, l, b, hllc, bitmap };
 
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
