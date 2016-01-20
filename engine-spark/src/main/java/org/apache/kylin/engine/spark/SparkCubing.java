@@ -276,7 +276,7 @@ public class SparkCubing extends AbstractApplication {
                         List<String>,
                         HashMap<Long, HyperLogLogPlusCounter>>() {
 
-                    final HashFunction hashFunction = Hashing.murmur3_32();
+                    final HashFunction hashFunction = Hashing.murmur3_128();
 
                     @Override
                     public HashMap<Long, HyperLogLogPlusCounter> call(HashMap<Long, HyperLogLogPlusCounter> v1, List<String> v2) throws Exception {
@@ -365,12 +365,11 @@ public class SparkCubing extends AbstractApplication {
                 prepare();
 
                 final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-                final CubeDesc cubeDesc = cubeInstance.getDescriptor();
 
                 LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue();
                 System.out.println("load properties finished");
                 AbstractInMemCubeBuilder inMemCubeBuilder = new DoggedCubeBuilder(cubeInstance.getDescriptor(), dictionaryMap);
-                final SparkCuboidWriter sparkCuboidWriter = new BufferedCuboidWriter(new DefaultTupleConverter(cubeSegment, columnLengthMap));
+                final SparkCuboidWriter sparkCuboidWriter = new BufferedCuboidWriter(new DefaultTupleConverter(cubeInstance.getSegmentById(segmentId), columnLengthMap));
                 Executors.newCachedThreadPool().submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, sparkCuboidWriter));
                 try {
                     while (listIterator.hasNext()) {
@@ -540,7 +539,6 @@ public class SparkCubing extends AbstractApplication {
         kyroClasses.addAll(new Reflections("org.apache.kylin.metadata.model").getSubTypesOf(Object.class));
         kyroClasses.addAll(new Reflections("org.apache.kylin.metadata.measure").getSubTypesOf(Object.class));
         kyroClasses.add(HashMap.class);
-        kyroClasses.add(org.apache.kylin.cube.CubeSegment.class);
         kyroClasses.add(org.apache.spark.sql.Row[].class);
         kyroClasses.add(org.apache.spark.sql.Row.class);
         kyroClasses.add(org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema.class);
