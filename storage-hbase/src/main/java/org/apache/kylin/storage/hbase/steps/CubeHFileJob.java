@@ -33,6 +33,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.slf4j.Logger;
@@ -57,6 +58,9 @@ public class CubeHFileJob extends AbstractHadoopJob {
             parseOptions(options, args);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            if(KylinConfig.getInstanceFromEnv().isTransformPathToMasterNN()) {
+                output = HadoopUtil.transformPathToNN(output);
+            }
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
 
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());

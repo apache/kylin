@@ -482,6 +482,10 @@ public class KylinConfigBase implements Serializable {
     public boolean isGetJobStatusWithKerberos() {
         return Boolean.valueOf(this.getOptional("kylin.job.status.with.kerberos", "false"));
     }
+    
+    public boolean isTransformPathToMasterNN() {
+        return Boolean.valueOf(this.getOptional("kylin.transform.hdfs.path.enable", "false"));
+    }
 
     public String getKylinOwner() {
         return this.getOptional("kylin.owner", "");

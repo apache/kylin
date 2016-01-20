@@ -78,6 +78,7 @@ import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
 import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
@@ -389,6 +390,9 @@ public class SparkCubing extends AbstractApplication {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Configuration conf = getConfigurationForHFile(cubeSegment.getStorageLocationIdentifier());
         Path path = new Path(kylinConfig.getHdfsWorkingDirectory(), "hfile_" + UUID.randomUUID().toString());
+        if(kylinConfig.isTransformPathToMasterNN()) {
+        	path = HadoopUtil.transformPathToNN(path);
+        }
         Preconditions.checkArgument(!FileSystem.get(conf).exists(path));
         String url = conf.get("fs.defaultFS") + path.toString();
         System.out.println("use " + url + " as hfile");
