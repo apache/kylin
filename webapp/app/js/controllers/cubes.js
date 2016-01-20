@@ -457,8 +457,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   $scope.rebuild = function (jobsubmit) {
 
     $scope.message = null;
-    $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
-    $scope.jobBuildRequest.endTime = new Date($scope.jobBuildRequest.endTime).getTime();
 
     if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
       $scope.message = "WARNING: End time should be later than the start time.";
@@ -548,16 +546,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     }
   };
 
-  $scope.updateDate = function () {
-    $scope.jobBuildRequest.endTime = $scope.formatDate($scope.jobBuildRequest.endTime);
-  };
-
-  $scope.formatDate = function (timestemp) {
-    var dateStart = new Date(timestemp);
-    dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
-    //switch selected time to utc timestamp
-    return new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
-  };
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };

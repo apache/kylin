@@ -61,8 +61,7 @@
             <div class="row">
                 <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Start Date</b></label>
                 <div class="col-xs-12 col-sm-6">
-                  <!--edit model will convert in MetaModel.converDateToGMT-->
-                    <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd"
+                    <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd" datepicker-timezone
                            ng-model="metaModel.model.partition_desc.partition_date_start" ng-if="state.mode=='edit'"
                            placeholder="Click to choose start date..." is-open="opened" />
                   <!--vier model will convert use filter-->

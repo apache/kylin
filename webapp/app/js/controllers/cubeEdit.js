@@ -95,13 +95,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           if (model) {
             MetaModel.setMetaModel(model);
             $scope.metaModel = MetaModel;
-
-            //use
-            //convert GMT mills ,to make sure partition date show GMT Date
-            //should run only one time
-            if (model.partition_desc && model.partition_desc.partition_date_start) {
-              MetaModel.converDateToGMT();
-            }
           }
         });
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
@@ -129,11 +122,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 
     if ($scope.metaModel.model.partition_desc.partition_date_column && ($scope.metaModel.model.partition_desc.partition_date_start | $scope.metaModel.model.partition_desc.partition_date_start == 0)) {
-      var dateStart = new Date($scope.metaModel.model.partition_desc.partition_date_start);
-      dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
-      //switch selected time to utc timestamp
-      $scope.metaModel.model.partition_desc.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
-
 
       if ($scope.metaModel.model.partition_desc.partition_date_column.indexOf(".") == -1) {
         $scope.metaModel.model.partition_desc.partition_date_column = $scope.metaModel.model.fact_table + "." + $scope.metaModel.model.partition_desc.partition_date_column;
@@ -286,10 +274,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
 //    reverse the date
   $scope.saveCubeRollBack = function () {
-    if ($scope.metaModel.model && ($scope.metaModel.model.partition_desc.partition_date_start || $scope.metaModel.model.partition_desc.partition_date_start == 0)) {
-      $scope.metaModel.model.partition_desc.partition_date_start += new Date().getTimezoneOffset() * 60000;
-    }
-
     //update model last modified
     $scope.statusRefresh();
   }
