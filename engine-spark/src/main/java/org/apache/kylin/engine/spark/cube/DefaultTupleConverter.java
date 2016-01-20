@@ -83,7 +83,7 @@ public final class DefaultTupleConverter implements TupleConverter {
         }
 
         byte[] rowKey = rowkeyEncoder.createBuf();
-        rowkeyEncoder.encode(new ByteArray(rowKeyBodyBuf), new ByteArray(rowKey));
+        rowkeyEncoder.encode(new ByteArray(rowKeyBodyBuf, 0, offSet), new ByteArray(rowKey));
 
         ByteBuffer valueBuf = getValueBuf();
         valueBuf.clear();
