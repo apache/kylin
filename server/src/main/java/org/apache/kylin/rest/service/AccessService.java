@@ -56,10 +56,9 @@ import org.springframework.util.Assert;
 public class AccessService {
 
     @Autowired
-    private AclService aclService;
-
-    @Autowired
     UserService userService;
+    @Autowired
+    private AclService aclService;
 
     // ~ Methods to manage acl life circle of domain objects ~
 
@@ -218,6 +217,10 @@ public class AccessService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public void clean(AclEntity ae, boolean deleteChildren) {
         Assert.notNull(ae, "Acl domain object required");
+
+        // For those may have null uuid, like DataModel, won't delete Acl.
+        if (ae.getId() == null)
+            return;
 
         ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
 
