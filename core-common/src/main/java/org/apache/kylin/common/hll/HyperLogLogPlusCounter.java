@@ -42,7 +42,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
 
     private final int p;
     private final int m;
-    private transient final HashFunction hashFunc;
+    private final HashFunction hashFunc;
     byte[] registers;
 
     public HyperLogLogPlusCounter() {
