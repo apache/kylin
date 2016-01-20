@@ -75,7 +75,6 @@ $ keytool -importkeystore -srckeystore kylin.p12 -srcstoretype PKCS12 -srcstorep
 
 Enter destination keystore password:  changeit
 Re-enter new password: changeit
-
 ```
 
 It will put the keys to "samlKeystore.jks" with alias "kylin";
@@ -116,11 +115,10 @@ saml.context.scheme=https
 saml.context.serverName=host-name
 saml.context.serverPort=443
 saml.context.contextPath=/kylin
-
 ```
 
 Please note, Kylin assume in the SAML message there is a "email" attribute representing the login user, and the name before @ will be used to search LDAP. 
 
 ### Enable SSO
-Set "kylin.security.profile=saml" in conf/kylin.properties, then restart Kylin server; After enabling SSO, when you try to access a URL like "/kylin" or "/kylin/cubes", it will redirect to SSO for login, and jump back after authorized. While login with LDAP is still available, you can type "/kylin/login" to use original way. The Rest API (/kylin/api/*) still use LDAP + Basic authentication, no impact.
+Set "kylin.security.profile=saml" in conf/kylin.properties, then restart Kylin server; After that, type a URL like "/kylin" or "/kylin/cubes" will redirect to SSO for login, and jump back after be authorized. While login with LDAP is still available, you can type "/kylin/login" to use original way. The Rest API (/kylin/api/*) still use LDAP + basic authentication, no impact.
 
