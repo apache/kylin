@@ -106,6 +106,8 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public void close() {
+        // hasNext() loop may exit because of limit, threshold, etc.
+        // close all the remaining segmentIterator
         flushScanCountDelta();
 
         if (curScanner != null)

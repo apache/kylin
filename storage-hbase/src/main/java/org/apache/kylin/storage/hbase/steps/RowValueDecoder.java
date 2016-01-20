@@ -30,10 +30,15 @@ import org.apache.kylin.metadata.measure.LongMutable;
 import org.apache.kylin.metadata.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.storage.hbase.util.Results;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class RowValueDecoder implements Cloneable {
+
+    private static final Logger logger = LoggerFactory.getLogger(RowValueDecoder.class);
 
     private final HBaseColumnDesc hbaseColumn;
     private final byte[] hbaseColumnFamily;
@@ -57,13 +62,14 @@ public class RowValueDecoder implements Cloneable {
     public void decodeAndConvertJavaObj(Result hbaseRow) {
         decode(hbaseRow, true);
     }
-    
+
     public void decode(Result hbaseRow) {
         decode(hbaseRow, false);
     }
 
     private void decode(Result hbaseRow, boolean convertToJavaObject) {
-        decode(hbaseRow.getValueAsByteBuffer(hbaseColumnFamily, hbaseColumnQualifier), convertToJavaObject);
+        ByteBuffer buffer = Results.getValueAsByteBuffer(hbaseRow, hbaseColumnFamily, hbaseColumnQualifier);
+        decode(buffer, convertToJavaObject);
     }
 
     public void decodeAndConvertJavaObj(byte[] bytes) {
@@ -73,7 +79,7 @@ public class RowValueDecoder implements Cloneable {
     public void decode(byte[] bytes) {
         decode(ByteBuffer.wrap(bytes), false);
     }
-    
+
     private void decode(ByteBuffer buffer, boolean convertToJavaObject) {
         codec.decode(buffer, values);
         if (convertToJavaObject) {
@@ -113,7 +119,7 @@ public class RowValueDecoder implements Cloneable {
     public MeasureDesc[] getMeasures() {
         return measures;
     }
-    
+
     // result is in order of <code>CubeDesc.getMeasures()</code>
     public void loadCubeMeasureArray(Object result[]) {
         int[] measureIndex = hbaseColumn.getMeasureIndex();
