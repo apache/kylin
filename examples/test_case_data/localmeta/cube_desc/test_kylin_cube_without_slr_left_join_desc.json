@@ -132,6 +132,17 @@
     },
     "dependent_measure_ref" : null
   }, {
+    "name": "LEAF_CATEG_ID_BITMAP",
+    "function": {
+      "expression": "COUNT_DISTINCT",
+      "parameter": {
+        "type": "column",
+        "value": "LEAF_CATEG_ID"
+      },
+      "returntype": "bitmap"
+    },
+    "dependent_measure_ref": null
+  }, {
     "name" : "TOP_SELLER",
     "function" : {
       "expression" : "TOP_N",
@@ -190,7 +201,7 @@
       "name" : "f2",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "seller_cnt_hll", "seller_format_cnt" ]
+        "measure_refs" : [ "seller_cnt_hll", "seller_format_cnt", "leaf_categ_id_bitmap" ]
       } ]
     }, {
       "name" : "f3",

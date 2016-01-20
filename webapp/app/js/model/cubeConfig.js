@@ -47,7 +47,8 @@ KylinApp.constant('cubeConfig', {
     {name: 'Error Rate < 4.88%', value: 'hllc12'},
     {name: 'Error Rate < 2.44%', value: 'hllc14'},
     {name: 'Error Rate < 1.72%', value: 'hllc15'},
-    {name: 'Error Rate < 1.22%', value: 'hllc16'}
+    {name: 'Error Rate < 1.22%', value: 'hllc16'},
+    {name: 'Precisely (Only for Integer Family column)', value: 'bitmap'}
   ],
   dftSelections: {
     measureExpression: 'SUM',

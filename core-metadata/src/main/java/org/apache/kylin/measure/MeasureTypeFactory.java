@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.measure.basic.BasicMeasureType;
+import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -91,6 +92,7 @@ abstract public class MeasureTypeFactory<T> {
 
         // two built-in advanced measure types
         factoryInsts.add(new HLLCMeasureType.Factory());
+        factoryInsts.add(new BitmapMeasureType.Factory());
         factoryInsts.add(new TopNMeasureType.Factory());
 
         /*

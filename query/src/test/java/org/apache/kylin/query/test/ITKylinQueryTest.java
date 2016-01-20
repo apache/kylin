@@ -162,6 +162,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testPreciselyDistinctCountQuery() throws Exception {
+        execAndCompQuery("src/test/resources/query/sql_distinct_precisely", null, true);
+    }
+
+    @Test
     public void testStreamingTableQuery() throws Exception {
         execAndCompQuery("src/test/resources/query/sql_streaming", null, true);
     }
