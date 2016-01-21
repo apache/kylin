@@ -413,19 +413,13 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   };
   $scope.message = "";
 
-  $scope.rebuild = function (jobsubmit) {
+  $scope.rebuild = function () {
 
     $scope.message = null;
-    $scope.jobBuildRequest.startTime = new Date($scope.jobBuildRequest.startTime).getTime();
-    $scope.jobBuildRequest.endTime = new Date($scope.jobBuildRequest.endTime).getTime();
 
     if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
       $scope.message = "WARNING: End time should be later than the start time.";
 
-      //rollback date setting
-      if (jobsubmit) {
-        $scope.rebuildRollback();
-      }
       return;
     }
 
@@ -436,11 +430,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
       $modalInstance.dismiss('cancel');
       SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
     }, function (e) {
-
-      //rollback date setting
-      if (jobsubmit) {
-        $scope.rebuildRollback();
-      }
 
       loadingRequest.hide();
       if (e.data && e.data.exception) {
@@ -458,7 +447,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
           }, function (isConfirm) {
             if (isConfirm) {
               $scope.jobBuildRequest.forceMergeEmptySegment = true;
-              $scope.rebuild(jobsubmit);
+              $scope.rebuild();
             }
           });
           return;
@@ -471,10 +460,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
       }
     });
   };
-
-  $scope.rebuildRollback = function () {
-    $scope.jobBuildRequest.endTime += new Date().getTimezoneOffset() * 60000;
-  }
 
   // used by cube segment refresh
   $scope.segmentSelected = function (selectedSegment) {
@@ -507,16 +492,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     }
   };
 
-  $scope.updateDate = function () {
-    $scope.jobBuildRequest.endTime = $scope.formatDate($scope.jobBuildRequest.endTime);
-  };
-
-  $scope.formatDate = function (timestemp) {
-    var dateStart = new Date(timestemp);
-    dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
-    //switch selected time to utc timestamp
-    return new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
-  };
   $scope.cancel = function () {
     $modalInstance.dismiss('cancel');
   };

@@ -164,11 +164,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     CubeDescService.query({cube_name: $routeParams.cubeName}, function (detail) {
       if (detail.length > 0) {
         $scope.cubeMetaFrame = detail[0];
-        //convert GMT mills ,to make sure partition date show GMT Date
-        if($scope.cubeMetaFrame.partition_date_start)
-        {
-          $scope.cubeMetaFrame.partition_date_start+=new Date().getTimezoneOffset()*60000;
-        }
 
         $scope.metaModel = {};
 
@@ -221,11 +216,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     reGenerateRowKey();
 
     if ($scope.metaModel.model.partition_desc.partition_date_column && ($scope.cubeMetaFrame.partition_date_start | $scope.cubeMetaFrame.partition_date_start == 0)) {
-      var dateStart = new Date($scope.cubeMetaFrame.partition_date_start);
-      dateStart = (dateStart.getFullYear() + "-" + (dateStart.getMonth() + 1) + "-" + dateStart.getDate());
-      //switch selected time to utc timestamp
-      $scope.cubeMetaFrame.partition_date_start = new Date(moment.utc(dateStart, "YYYY-MM-DD").format()).getTime();
-
 
       if ($scope.metaModel.model.partition_desc.partition_date_column.indexOf(".") == -1) {
         $scope.metaModel.model.partition_desc.partition_date_column = $scope.metaModel.model.fact_table + "." + $scope.metaModel.model.partition_desc.partition_date_column;
@@ -459,11 +449,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   }
 
 
-//    reverse the date
   $scope.saveCubeRollBack = function () {
-    if ($scope.metaModel.model && ($scope.cubeMetaFrame.partition_date_start || $scope.cubeMetaFrame.partition_date_start == 0)) {
-      $scope.cubeMetaFrame.partition_date_start += new Date().getTimezoneOffset() * 60000;
-    }
   }
 
   $scope.updateMandatory = function (rowkey_column) {

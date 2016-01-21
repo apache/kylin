@@ -123,7 +123,7 @@
                   <div class="col-xs-12 col-sm-6"
                        ng-class="metaModel.model.partition_desc.partition_date_column!=null&& cubeMetaFrame.partition_date_start==null?'has-error':''">
                     <!--edit model will convert &ndash;&gt;-->
-                    <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd"
+                    <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd" datepicker-timezone
                            ng-model="cubeMetaFrame.partition_date_start" ng-if="state.mode=='edit'"
                            placeholder="Click to choose start date..." is-open="opened"/>
                     <small class="help-block"
