@@ -228,4 +228,4 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
            });
       }
     };
-  });;
+  });
