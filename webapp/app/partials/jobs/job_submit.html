@@ -52,7 +52,7 @@
                         <tr>
                             <td>End Date (Exclude)</td>
                             <td>
-                                <input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%"
+                                <input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%" datepicker-timezone
                                        ng-model="jobBuildRequest.endTime"
                                        placeholder="Click to choose END date..." is-open="opened" />
                             </td>
@@ -72,7 +72,7 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-success" ng-click="updateDate();rebuild(true)" ng-disabled="jobBuildRequest.endTime<=0">Submit</button>
+        <button class="btn btn-success" ng-click="rebuild()" ng-disabled="jobBuildRequest.endTime<=0">Submit</button>
         <button class="btn btn-primary" ng-click="cancel()">Close</button>
     </div>
 </script>
