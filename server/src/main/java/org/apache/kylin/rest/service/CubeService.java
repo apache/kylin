@@ -154,6 +154,10 @@ public class CubeService extends BasicService {
         CubeDesc createdDesc = null;
         CubeInstance createdCube = null;
 
+        desc.init(getConfig(), getMetadataManager().getAllTablesMap());
+        int cuboidCount = CuboidCLI.simulateCuboidGeneration(desc);
+        logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
+        
         boolean isNew = false;
         if (getCubeDescManager().getCubeDesc(desc.getName()) == null) {
             createdDesc = getCubeDescManager().createCubeDesc(desc);
@@ -167,14 +171,6 @@ public class CubeService extends BasicService {
                 getCubeDescManager().removeCubeDesc(createdDesc);
             }
             throw new InternalErrorException(createdDesc.getError().get(0));
-        }
-
-        try {
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc);
-            logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
-        } catch (Exception e) {
-            getCubeDescManager().removeCubeDesc(createdDesc);
-            throw new InternalErrorException("Failed to deal with the request.", e);
         }
 
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
@@ -225,16 +221,18 @@ public class CubeService extends BasicService {
             throw new JobException("Cube schema shouldn't be changed with running job.");
         }
 
+        desc.init(getConfig(), getMetadataManager().getAllTablesMap());
+        int cuboidCount = CuboidCLI.simulateCuboidGeneration(desc);
+        logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
+
         try {
+            
             CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
             if (!updatedCubeDesc.getError().isEmpty()) {
                 return updatedCubeDesc;
             }
-
-            cube = getCubeManager().updateCube(cube);
-
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc);
-            logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
+            
+            getCubeManager().updateCube(cube);
 
             return updatedCubeDesc;
         } catch (IOException e) {
