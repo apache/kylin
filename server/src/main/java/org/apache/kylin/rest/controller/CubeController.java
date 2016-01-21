@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -71,6 +71,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+
+import javax.xml.crypto.Data;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -260,7 +262,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/clone", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance cloneCube(@PathVariable String cubeName, @RequestBody CubeRequest cubeRequest) {
-        String targetCubeName = cubeRequest.getCubeName();
+        String newCubeName = cubeRequest.getCubeName();
         String project = cubeRequest.getProject();
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -275,27 +277,33 @@ public class CubeController extends BasicController {
 
         DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
 
+        DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);
+
         //model name same as cube
-        modelDesc.setName(targetCubeName);
-        modelDesc.setLastModified(0);
-        modelDesc.updateRandomUuid();
-        DataModelDesc newModel = null;
+        newModelDesc.setName(newCubeName);
+        newModelDesc.updateRandomUuid();
         try {
-            newModel = metaManager.createDataModelDesc(modelDesc);
+            newModelDesc = metaManager.createDataModelDesc(newModelDesc);
+
+            //reload to avoid shallow property clone in cache
+            metaManager.reloadDataModelDesc(newModelDesc.getName());
         } catch (IOException e) {
             throw new InternalErrorException("failed to clone DataModelDesc", e);
         }
 
-        cubeDesc.setName(targetCubeName);
-        cubeDesc.setLastModified(0);
-        cubeDesc.updateRandomUuid();
-        cubeDesc.setModelName(targetCubeName);
+        CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
+
+        newCubeDesc.setName(newCubeName);
+        newCubeDesc.updateRandomUuid();
+        newCubeDesc.setModelName(newCubeName);
         CubeInstance newCube = null;
         try {
-            newCube = cubeService.createCubeAndDesc(targetCubeName, project, cubeDesc);
+            newCube = cubeService.createCubeAndDesc(newCubeName, project, newCubeDesc);
+            //reload to avoid shallow property clone in cache
+            cubeService.getCubeDescManager().reloadCubeDesc(newCubeName);
         } catch (IOException e) {
             try {
-                metaManager.dropModel(newModel);
+                metaManager.dropModel(newModelDesc);
             } catch (IOException e1) {
                 throw new InternalErrorException("New model already created and failed to rollback", e);
             }
@@ -629,4 +637,18 @@ public class CubeController extends BasicController {
         this.accessService = accessService;
     }
 
+    public static Object deepClone(Object object) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(object);
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+            return objectInputStream.readObject();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

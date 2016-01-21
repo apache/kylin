@@ -233,4 +233,16 @@ public class DataModelDesc extends RootPersistentEntity {
         return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
+    public static DataModelDesc getCopyOf(DataModelDesc dataModelDesc) {
+        DataModelDesc newDataModelDesc = new DataModelDesc();
+        newDataModelDesc.setName(dataModelDesc.getName());
+        newDataModelDesc.setCapacity(dataModelDesc.getCapacity());
+        newDataModelDesc.setFilterCondition(dataModelDesc.getFilterCondition());
+        newDataModelDesc.setFactTable(dataModelDesc.getFactTable());
+        newDataModelDesc.setLookups(dataModelDesc.getLookups());
+        newDataModelDesc.setPartitionDesc(PartitionDesc.getCopyOf(dataModelDesc.getPartitionDesc()));
+        newDataModelDesc.updateRandomUuid();
+        return newDataModelDesc;
+    }
+
 }
