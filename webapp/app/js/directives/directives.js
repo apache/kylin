@@ -220,4 +220,26 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
         });
       }
     }
+  }).directive('datepickerTimezone', function () {
+    // this directive workaround to convert GMT0 timestamp to GMT date for datepicker
+    return {
+      restrict: 'A',
+      priority: 1,
+      require: 'ngModel',
+      link: function (scope, element, attrs, ctrl) {
+        ctrl.$formatters.push(function (value) {
+          //return value;
+          var date = new Date(value + (60000 * new Date().getTimezoneOffset()));
+          return date;
+        });
+
+        ctrl.$parsers.push(function (value) {
+          if (isNaN(value)) {
+            return value;
+          }
+          value = new Date(value.getFullYear(), value.getMonth(), value.getDate(), 0, 0, 0, 0);
+          return value.getTime()-(60000 * value.getTimezoneOffset());
+        });
+      }
+    };
   });
