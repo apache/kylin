@@ -18,13 +18,15 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -149,6 +151,47 @@ public class ModelController extends BasicController {
         }
     }
 
+    @RequestMapping(value = "/{modelName}/clone", method = {RequestMethod.PUT})
+    @ResponseBody
+    public ModelRequest  cloneModel(@PathVariable String modelName, @RequestBody ModelRequest modelRequest) {
+        String project = modelRequest.getProject();
+        MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
+        String newModelName = modelRequest.getModelName();
+
+        if (StringUtils.isEmpty(project)) {
+            logger.info("Project name should not be empty.");
+            throw new BadRequestException("Project name should not be empty.");
+        }
+
+        if (modelDesc == null || StringUtils.isEmpty(modelName)) {
+            logger.info("Model does not exist.");
+            throw new BadRequestException("Model does not exist.");
+        }
+
+        if (StringUtils.isEmpty(newModelName)) {
+            logger.info("New model name is empty.");
+            throw new BadRequestException("New model name is empty.");
+        }
+
+
+        DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);
+        newModelDesc.setName(newModelName);
+        try {
+            newModelDesc = modelService.createModelDesc(project, newModelDesc);
+
+            //reload avoid shallow
+            metaManager.reloadDataModelDesc(newModelName);
+        } catch (IOException e) {
+            throw new InternalErrorException("failed to clone DataModelDesc", e);
+        }
+
+        modelRequest.setUuid(newModelDesc.getUuid());
+        modelRequest.setSuccessful(true);
+        return modelRequest;
+    }
+
+
     private DataModelDesc deserializeDataModelDesc(ModelRequest modelRequest) {
         DataModelDesc desc = null;
         try {
@@ -190,4 +233,5 @@ public class ModelController extends BasicController {
         }
         return buffer.toString();
     }
+
 }
