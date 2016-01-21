@@ -454,17 +454,13 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
   };
   $scope.message = "";
 
-  $scope.rebuild = function (jobsubmit) {
+  $scope.rebuild = function () {
 
     $scope.message = null;
 
     if ($scope.jobBuildRequest.startTime >= $scope.jobBuildRequest.endTime) {
       $scope.message = "WARNING: End time should be later than the start time.";
 
-      //rollback date setting
-      if (jobsubmit) {
-        $scope.rebuildRollback();
-      }
       return;
     }
 
@@ -475,11 +471,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
       $modalInstance.dismiss('cancel');
       SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
     }, function (e) {
-
-      //rollback date setting
-      if (jobsubmit) {
-        $scope.rebuildRollback();
-      }
 
       loadingRequest.hide();
       if (e.data && e.data.exception) {
@@ -497,7 +488,7 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
           }, function (isConfirm) {
             if (isConfirm) {
               $scope.jobBuildRequest.forceMergeEmptySegment = true;
-              $scope.rebuild(jobsubmit);
+              $scope.rebuild();
             }
           });
           return;
@@ -510,10 +501,6 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
       }
     });
   };
-
-  $scope.rebuildRollback = function () {
-    $scope.jobBuildRequest.endTime += new Date().getTimezoneOffset() * 60000;
-  }
 
   // used by cube segment refresh
   $scope.segmentSelected = function (selectedSegment) {
