@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -258,6 +258,123 @@ public class CubeController extends BasicController {
         }
     }
 
+
+    @RequestMapping(value = "/{cubeName}/clone", method = {RequestMethod.PUT})
+    @ResponseBody
+    public CubeInstance cloneCube(@PathVariable String cubeName, @RequestBody CubeRequest cubeRequest) {
+        String newCubeName = cubeRequest.getCubeName();
+        String project = cubeRequest.getProject();
+
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+        CubeDesc cubeDesc = cube.getDescriptor();
+        CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
+
+        newCubeDesc.setName(newCubeName);
+
+        CubeInstance newCube = null;
+        try {
+            newCube = cubeService.createCubeAndDesc(newCubeName, project, newCubeDesc);
+
+            //reload to avoid shallow clone
+            cubeService.getCubeDescManager().reloadCubeDescLocal(newCubeName);
+        } catch (IOException e) {
+            throw new InternalErrorException("Failed to clone cube ", e);
+        }
+
+        boolean isStreamingCube = false, cloneStreamingConfigSuccess = false, cloneKafkaConfigSuccess = false;
+
+
+        List<StreamingConfig> streamingConfigs = null;
+        try {
+            streamingConfigs = streamingService.listAllStreamingConfigs(cubeName);
+            if (streamingConfigs.size() != 0) {
+                isStreamingCube = true;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        StreamingConfig newStreamingConfig = null;
+        KafkaConfig newKafkaConfig = null;
+
+        try {
+
+            if (isStreamingCube) {
+
+                isStreamingCube = true;
+                newStreamingConfig = streamingConfigs.get(0).clone();
+                newStreamingConfig.setName(newCubeName + "_STREAMING");
+                newStreamingConfig.updateRandomUuid();
+                newStreamingConfig.setLastModified(0);
+                newStreamingConfig.setCubeName(newCubeName);
+                try {
+                    streamingService.createStreamingConfig(newStreamingConfig);
+                    cloneStreamingConfigSuccess = true;
+                } catch (IOException e) {
+                    throw new InternalErrorException("Failed to clone streaming config. ", e);
+                }
+
+                //StreamingConfig name and KafkaConfig name is the same for same cube
+                String kafkaConfigName = streamingConfigs.get(0).getName();
+                KafkaConfig kafkaConfig = null;
+                try {
+                    kafkaConfig = kafkaConfigService.getKafkaConfig(kafkaConfigName);
+                    if (kafkaConfig != null) {
+                        newKafkaConfig = kafkaConfig.clone();
+                        newKafkaConfig.setName(newStreamingConfig.getName());
+                        newKafkaConfig.setLastModified(0);
+                        newKafkaConfig.updateRandomUuid();
+                    }
+                } catch (IOException e) {
+                    throw new InternalErrorException("Failed to get kafka config info. ", e);
+                }
+
+                try {
+                    kafkaConfigService.createKafkaConfig(newKafkaConfig);
+                    cloneKafkaConfigSuccess = true;
+                } catch (IOException e) {
+                    throw new InternalErrorException("Failed to clone streaming config. ", e);
+                }
+            }
+        } finally {
+
+            //rollback if failed
+            if (isStreamingCube) {
+                if (cloneStreamingConfigSuccess == false || cloneKafkaConfigSuccess == false) {
+                    try {
+                        cubeService.deleteCube(newCube);
+                    } catch (Exception ex) {
+                        throw new InternalErrorException("Failed, and failed to rollback on delete cube. " + " Caused by: " + ex.getMessage(), ex);
+                    }
+                    if (cloneStreamingConfigSuccess == true) {
+                        try {
+                            streamingService.dropStreamingConfig(newStreamingConfig);
+                        } catch (IOException e) {
+                            throw new InternalErrorException("Failed to clone cube, and StreamingConfig created and failed to delete: " + e.getLocalizedMessage());
+                        }
+                    }
+                    if (cloneKafkaConfigSuccess == true) {
+                        try {
+                            kafkaConfigService.dropKafkaConfig(newKafkaConfig);
+                        } catch (IOException e) {
+                            throw new InternalErrorException("Failed to clone cube, and KafkaConfig created and failed to delete: " + e.getLocalizedMessage());
+                        }
+                    }
+
+                }
+
+            }
+        }
+
+        return newCube;
+
+    }
+
+
     @RequestMapping(value = "/{cubeName}/enable", method = {RequestMethod.PUT})
     @ResponseBody
     public CubeInstance enableCube(@PathVariable String cubeName) {
@@ -346,7 +463,7 @@ public class CubeController extends BasicController {
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
 
-        boolean createStreamingConfigSuccess = false,createKafkaConfigSuccess = false;
+        boolean createStreamingConfigSuccess = false, createKafkaConfigSuccess = false;
         StreamingConfig streamingConfig = null;
         KafkaConfig kafkaConfig = null;
 
@@ -361,9 +478,10 @@ public class CubeController extends BasicController {
                     cubeRequest.setMessage("No KafkaConfig info defined.");
                     return cubeRequest;
                 }
-                if(streamingConfig == null){
+                if (streamingConfig == null) {
                     cubeRequest.setMessage("No StreamingConfig info defined.");
-                    return cubeRequest;                }
+                    return cubeRequest;
+                }
 
                 try {
                     streamingConfig.setUuid(UUID.randomUUID().toString());
@@ -383,23 +501,23 @@ public class CubeController extends BasicController {
                 }
 
             }
-        }finally {
+        } finally {
             //rollback if failed
             if (isStreamingCube) {
-                if(createStreamingConfigSuccess == false || createKafkaConfigSuccess == false){
+                if (createStreamingConfigSuccess == false || createKafkaConfigSuccess == false) {
                     try {
                         cubeService.deleteCube(cubeInstance);
                     } catch (Exception ex) {
                         throw new InternalErrorException("Failed to rollback on delete cube. " + " Caused by: " + ex.getMessage(), ex);
                     }
-                    if(createStreamingConfigSuccess == true){
+                    if (createStreamingConfigSuccess == true) {
                         try {
                             streamingService.dropStreamingConfig(streamingConfig);
                         } catch (IOException e) {
                             throw new InternalErrorException("Failed to create cube, and StreamingConfig created and failed to delete: " + e.getLocalizedMessage());
                         }
                     }
-                    if(createKafkaConfigSuccess == true){
+                    if (createKafkaConfigSuccess == true) {
                         try {
                             kafkaConfigService.dropKafkaConfig(kafkaConfig);
                         } catch (IOException e) {
@@ -469,14 +587,14 @@ public class CubeController extends BasicController {
             return cubeRequest;
         }
 
-        boolean updateStreamingConfigSuccess = false,updateKafkaConfigSuccess = false;
+        boolean updateStreamingConfigSuccess = false, updateKafkaConfigSuccess = false;
 
         boolean isStreamingCube = cubeRequest.getStreamingCube() != null && cubeRequest.getStreamingCube().equals("true");
 
         //oldConfig is for recover use
-        StreamingConfig streamingConfig = null,oldStreamingConfig =null;
-        KafkaConfig kafkaConfig = null,oldKafkaConfig = null;
-        if(isStreamingCube){
+        StreamingConfig streamingConfig = null, oldStreamingConfig = null;
+        KafkaConfig kafkaConfig = null, oldKafkaConfig = null;
+        if (isStreamingCube) {
             streamingConfig = deserializeStreamingDesc(cubeRequest);
             kafkaConfig = deserializeKafkaDesc(cubeRequest);
             try {
@@ -498,7 +616,7 @@ public class CubeController extends BasicController {
                     return cubeRequest;
                 }
 
-                if(oldStreamingConfig == null){
+                if (oldStreamingConfig == null) {
                     streamingConfig.setUuid(UUID.randomUUID().toString());
                     try {
                         streamingService.createStreamingConfig(streamingConfig);
@@ -507,7 +625,7 @@ public class CubeController extends BasicController {
                         logger.error("Failed to add StreamingConfig:" + e.getLocalizedMessage(), e);
                         throw new InternalErrorException("Failed to add StreamingConfig: " + e.getLocalizedMessage());
                     }
-                }else{
+                } else {
                     try {
                         streamingConfig = streamingService.updateStreamingConfig(streamingConfig);
                         updateStreamingConfigSuccess = true;
@@ -517,7 +635,7 @@ public class CubeController extends BasicController {
                         throw new InternalErrorException("Failed to update StreamingConfig: " + e.getLocalizedMessage());
                     }
                 }
-                if(oldKafkaConfig == null){
+                if (oldKafkaConfig == null) {
                     kafkaConfig.setUuid(UUID.randomUUID().toString());
                     try {
                         kafkaConfigService.createKafkaConfig(kafkaConfig);
@@ -527,7 +645,7 @@ public class CubeController extends BasicController {
                         throw new InternalErrorException("Failed to add KafkaConfig: " + e.getLocalizedMessage());
                     }
 
-                }else{
+                } else {
                     try {
                         kafkaConfig = kafkaConfigService.updateKafkaConfig(kafkaConfig);
                         updateKafkaConfigSuccess = true;
@@ -538,10 +656,10 @@ public class CubeController extends BasicController {
                 }
 
             }
-        }finally {
+        } finally {
             if (isStreamingCube) {
                 //recover cube desc
-                if(updateStreamingConfigSuccess == false || updateKafkaConfigSuccess ==false){
+                if (updateStreamingConfigSuccess == false || updateKafkaConfigSuccess == false) {
                     oldCubeDesc.setLastModified(desc.getLastModified());
                     CubeInstance cube = cubeService.getCubeManager().getCube(cubeRequest.getCubeName());
                     try {
@@ -551,9 +669,9 @@ public class CubeController extends BasicController {
                         throw new InternalErrorException("Failed to recover CubeDesc: " + e.getLocalizedMessage());
                     }
 
-                    if(updateStreamingConfigSuccess == true){
+                    if (updateStreamingConfigSuccess == true) {
 
-                        if(oldStreamingConfig!=null){
+                        if (oldStreamingConfig != null) {
 
                             oldStreamingConfig.setLastModified(streamingConfig.getLastModified());
                             try {
@@ -562,7 +680,7 @@ public class CubeController extends BasicController {
                                 logger.error("Failed to recover StreamingConfig:" + e.getLocalizedMessage(), e);
                                 throw new InternalErrorException("Failed to recover StreamingConfig: " + e.getLocalizedMessage());
                             }
-                        } else{
+                        } else {
                             try {
                                 streamingService.dropStreamingConfig(streamingConfig);
                             } catch (IOException e) {
@@ -572,8 +690,8 @@ public class CubeController extends BasicController {
                         }
                     }
 
-                    if(updateKafkaConfigSuccess == true){
-                        if(oldKafkaConfig!=null) {
+                    if (updateKafkaConfigSuccess == true) {
+                        if (oldKafkaConfig != null) {
                             oldKafkaConfig.setLastModified(kafkaConfig.getLastModified());
                             try {
                                 kafkaConfigService.updateKafkaConfig(oldKafkaConfig);
@@ -581,7 +699,7 @@ public class CubeController extends BasicController {
                                 logger.error("Failed to recover KafkaConfig:" + e.getLocalizedMessage(), e);
                                 throw new InternalErrorException("Failed to recover KafkaConfig: " + e.getLocalizedMessage());
                             }
-                        }else{
+                        } else {
                             try {
                                 kafkaConfigService.dropKafkaConfig(kafkaConfig);
                             } catch (IOException e) {
@@ -780,4 +898,5 @@ public class CubeController extends BasicController {
     public void setKafkaConfigService(KafkaConfigService kafkaConfigService) {
         this.kafkaConfigService = kafkaConfigService;
     }
+
 }
