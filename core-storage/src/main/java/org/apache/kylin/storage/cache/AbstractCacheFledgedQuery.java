@@ -58,7 +58,7 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
                 //maxBytesLocalHeap(10, MemoryUnit.MEGABYTES).//
                 persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.NONE)));
 
-        CACHE_MANAGER.addCache(storageCache);
+        CACHE_MANAGER.addCacheIfAbsent(storageCache);
     }
 
     protected StreamSQLResult getStreamSQLResult(StreamSQLDigest streamSQLDigest) {
@@ -103,8 +103,7 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
                     //maxBytesLocalHeap(templateConf.getMaxBytesLocalHeap(), MemoryUnit.BYTES).//using pooled size
                     persistence(templateConf.getPersistenceConfiguration()));
 
-            CACHE_MANAGER.addCache(storageCache);
-
+            CACHE_MANAGER.addCacheIfAbsent(storageCache);
         }
     }
 }
