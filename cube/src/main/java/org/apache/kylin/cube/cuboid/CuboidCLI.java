@@ -74,7 +74,7 @@ public class CuboidCLI {
         
         int mathCount = mathCalcCuboidCount(cube);
         if (mathCount != cuboidSet.size()) {
-            throw new IllegalStateException("Math cuboid count " + mathCount + ", but actual cuboid count " + cuboidSet.size());
+            throw new IllegalStateException("Math cuboid count " + mathCount + ", but actual cuboid count " + cuboidSet.size() + ", make sure aggregation groups has no duplication.");
         }
 
         return mathCount;
