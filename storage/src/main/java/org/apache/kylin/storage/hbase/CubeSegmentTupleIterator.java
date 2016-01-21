@@ -462,7 +462,6 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
             HBaseColumnDesc hbaseColumn = rowValueDecoder.getHBaseColumn();
             String columnFamily = hbaseColumn.getColumnFamilyName();
             String qualifier = hbaseColumn.getQualifier();
-            // FIXME: avoidable bytes array creation, why not use res.getValueAsByteBuffer directly?
             byte[] valueBytes = res.getValue(Bytes.toBytes(columnFamily), Bytes.toBytes(qualifier));
             rowValueDecoder.decode(valueBytes);
             List<String> measureNames = rowValueDecoder.getNames();

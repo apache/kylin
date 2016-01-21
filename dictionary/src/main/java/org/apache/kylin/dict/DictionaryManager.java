@@ -28,9 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -48,6 +45,10 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 public class DictionaryManager {
 
@@ -84,17 +85,19 @@ public class DictionaryManager {
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
-        this.dictCache = CacheBuilder.newBuilder().weakValues().expireAfterWrite(10, TimeUnit.MINUTES).build(new CacheLoader<String, DictionaryInfo>() {
-            @Override
-            public DictionaryInfo load(String key) throws Exception {
-                DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
-                if (dictInfo == null) {
-                    return NONE_INDICATOR;
-                } else {
-                    return dictInfo;
-                }
-            }
-        });
+        this.dictCache = CacheBuilder.newBuilder().maximumSize(KylinConfig.getInstanceFromEnv().getCachedDictMaxEntrySize())//
+                .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, DictionaryInfo>() {
+
+                    @Override
+                    public DictionaryInfo load(String key) throws Exception {
+                        DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);
+                        if (dictInfo == null) {
+                            return NONE_INDICATOR;
+                        } else {
+                            return dictInfo;
+                        }
+                    }
+                });
     }
 
     public Dictionary<?> getDictionary(String resourcePath) throws IOException {

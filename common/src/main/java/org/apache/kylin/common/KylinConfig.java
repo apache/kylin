@@ -466,6 +466,11 @@ public class KylinConfig {
         return this.getOptional("kylin.server.mode", "all");
     }
 
+    public int getCachedDictMaxEntrySize() {
+        return Integer.parseInt(getOptional("kylin.dict.cache.max.entry", "3000"));
+    }
+
+
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
     }
