@@ -20,7 +20,10 @@ package org.apache.kylin.common.persistence;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
 
+import com.google.common.base.Function;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
 
@@ -74,6 +77,14 @@ public class ResourceTool {
         ResourceStore store = ResourceStore.getStore(config);
         ArrayList<String> result = store.listResources(path);
         System.out.println("" + result);
+    }
+
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {
+        ResourceStore src = ResourceStore.getStore(srcConfig);
+        ResourceStore dst = ResourceStore.getStore(dstConfig);
+        for (String path : paths) {
+            copyR(src, dst, path);
+        }
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {

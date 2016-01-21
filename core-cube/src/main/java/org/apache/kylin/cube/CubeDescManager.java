@@ -112,7 +112,7 @@ public class CubeDescManager {
     public CubeDesc reloadCubeDescLocal(String name) throws IOException {
 
         // Save Source
-        String path = CubeDesc.getCubeDescResourcePath(name);
+        String path = CubeDesc.concatResourcePath(name);
 
         // Reload the CubeDesc
         CubeDesc ndesc = loadCubeDesc(path);

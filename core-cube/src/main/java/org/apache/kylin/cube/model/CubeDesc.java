@@ -267,10 +267,10 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return getCubeDescResourcePath(name);
+        return concatResourcePath(name);
     }
 
-    public static String getCubeDescResourcePath(String descName) {
+    public static String concatResourcePath(String descName) {
         return ResourceStore.CUBE_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 

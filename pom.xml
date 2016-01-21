@@ -457,11 +457,11 @@
                 <artifactId>curator-recipes</artifactId>
                 <version>${curator.version}</version>
             </dependency>
-      		<dependency>	
-      			<groupId>org.apache.httpcomponents</groupId>
-	           	<artifactId>httpclient</artifactId>
- 	          	<version>${apache-httpclient.version}</version>
- 	     	</dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${apache-httpclient.version}</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -619,6 +619,7 @@
         <module>jdbc</module>
         <module>invertedindex</module>
         <module>assembly</module>
+        <module>kylin-it</module>
     </modules>
 
     <profiles>
@@ -639,6 +640,7 @@
                             <maxmem>2048m</maxmem>
                         </configuration>
                     </plugin>
+
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
@@ -647,47 +649,22 @@
                             <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
                             <excludes>
                                 <exclude>**/IT*.java</exclude>
-
-                                <!--Build cube/II need to be run separately-->
-                                <exclude>**/BuildCube*.java</exclude>
-                                <exclude>**/BuildII*.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <property>
                                     <name>useSandbox</name>
-                                    <value>true</value>
+                                    <value>false</value>
                                 </property>
-                            </systemProperties>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>2.16</version>
-                        <executions>
-                            <execution>
-                                <id>integration-tests</id>
-                                <phase>integration-test</phase>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                    <goal>verify</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <excludes>
-                                <exclude>**/*$*</exclude>
-                                <exclude>**/ITKafka*.java</exclude>
-
-                            </excludes>
-                            <systemProperties>
                                 <property>
-                                    <name>useSandbox</name>
-                                    <value>true</value>
+                                    <name>buildCubeUsingProvidedData</name>
+                                    <value>false</value>
                                 </property>
                             </systemProperties>
+                            <argLine>-Xms1G -Xmx4G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
                         </configuration>
                     </plugin>
+
+
                 </plugins>
             </build>
         </profile>
@@ -727,41 +704,6 @@
                         </executions>
                     </plugin>
 
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.16</version>
-                        <configuration>
-                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
-                            <excludes>
-                                <exclude>**/BuildCubeWithEngineTest.java</exclude>
-                                <exclude>**/BuildIIWithEngineTest.java</exclude>
-                                <exclude>**/SampleCubeSetupTest.java</exclude>
-                                <exclude>**/KylinQueryTest.java</exclude>
-                                <exclude>**/SnapshotManagerTest.java</exclude>
-                                <exclude>**/HiveTableReaderTest.java</exclude>
-                                <exclude>**/TableControllerTest.java</exclude>
-
-                                <!--test case under server folder are problematic when tested against minicluster-->
-                                <exclude>**/ServiceTestBase.java</exclude>
-                                <exclude>**/JDBCDriverTest.java</exclude>
-                                <exclude>%regex[.*ControllerTest.*]</exclude>
-                                <exclude>%regex[.*ServiceTest.*]</exclude>
-
-                            </excludes>
-                            <systemProperties>
-                                <property>
-                                    <name>useSandbox</name>
-                                    <value>false</value>
-                                </property>
-                                <property>
-                                    <name>buildCubeUsingProvidedData</name>
-                                    <value>false</value>
-                                </property>
-                            </systemProperties>
-                            <argLine>-Xms1G -Xmx4G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
-                        </configuration>
-                    </plugin>
                     <!-- Apache-RAT checks for files without headers.
                          If run on a messy developer's sandbox, it will fail.
                          This serves as a reminder to only build a release in a clean
@@ -841,7 +783,7 @@
                                 <exclude>webapp/bower.json</exclude>
                                 <exclude>webapp/grunt.json</exclude>
                                 <exclude>webapp/package.json</exclude>
-                                
+
                                 <!-- jdbc log -->
                                 <exclude>jdbc/kylin_jdbc.log*</exclude>
                                 <!-- server log -->

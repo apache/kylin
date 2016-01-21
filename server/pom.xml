@@ -17,7 +17,8 @@
  limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-server</artifactId>
@@ -81,7 +82,7 @@
             <scope>test</scope>
             <version>${project.parent.version}</version>
         </dependency>
-        
+
         <!-- depends on kylin-jdbc just for running jdbc test cases in server module -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -257,7 +258,7 @@
             <artifactId>super-csv</artifactId>
             <version>2.1.0</version>
         </dependency>
-		
+
         <!-- spring aop -->
         <dependency>
             <groupId>org.aspectj</groupId>
@@ -384,7 +385,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>org.apache.hive.hcatalog</groupId>
             <artifactId>hive-hcatalog-core</artifactId>
             <version>${hive-hcatalog.version}</version>
@@ -399,7 +400,7 @@
                     <artifactId>jsp-api</artifactId>
                 </exclusion>
             </exclusions>
-          </dependency>
+        </dependency>
         <!-- Tomcat Env -->
         <dependency>
             <groupId>org.apache.tomcat</groupId>
@@ -467,6 +468,14 @@
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.1.1</version>
+                <configuration>
+                    <attachClasses>true</attachClasses>
+                    <classesClassifier>classes</classesClassifier>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>

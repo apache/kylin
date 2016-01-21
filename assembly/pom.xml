@@ -43,13 +43,13 @@
             <artifactId>kylin-engine-streaming</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-invertedindex</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        
+
         <!-- Env & Test -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -182,11 +182,11 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>job</shadedClassifierName>
                             <artifactSet>
-                            	<excludes>
-	                            	<exclude>io.netty:*</exclude>
-	                            	<exclude>org.apache.zookeeper:*</exclude>
-	                            	<exclude>net.sf.ehcache:*</exclude>
-                            	</excludes>
+                                <excludes>
+                                    <exclude>io.netty:*</exclude>
+                                    <exclude>org.apache.zookeeper:*</exclude>
+                                    <exclude>net.sf.ehcache:*</exclude>
+                                </excludes>
                             </artifactSet>
                             <filters>
                                 <filter>
@@ -205,5 +205,19 @@
         </plugins>
     </build>
 
+
+    <profiles>
+        <profile>
+            <id>sandbox</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
