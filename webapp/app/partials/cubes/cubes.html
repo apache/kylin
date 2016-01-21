@@ -91,6 +91,8 @@
                         <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube)">Disable</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube)">Enable</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube)">Purge</a></li>
+                        <li><a ng-click="cloneCube(cube)">Clone</a></li>
+
 
                     </ul>
                 </div>
@@ -138,5 +140,6 @@
 <div ng-include="'partials/jobs/job_merge.html'"></div>
 <div ng-include="'partials/projects/project_create.html'"></div>
 <div ng-include="'partials/models/model_detail.html'"></div>
+<div ng-include="'partials/cubes/cube_clone.html'"></div>
 
 </div>

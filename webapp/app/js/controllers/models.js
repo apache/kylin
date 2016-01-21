@@ -122,6 +122,19 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     });
   };
 
+  $scope.cloneModel = function(model){
+    $modal.open({
+      templateUrl: 'modelClone.html',
+      controller: modelCloneCtrl,
+      windowClass:"clone-cube-window",
+      resolve: {
+        model: function () {
+          return model;
+        }
+      }
+    });
+  }
+
   $scope.openModal = function (model) {
     $scope.modelsManager.selectedModel = model;
     $modal.open({
@@ -142,3 +155,54 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
   };
 
 });
+
+var modelCloneCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, model, MetaModel, SweetAlert,ProjectModel, loadingRequest,ModelService) {
+  $scope.projectModel = ProjectModel;
+
+  $scope.targetObj={
+    modelName:model.name+"_clone",
+    targetProject:$scope.projectModel.selectedProject
+  }
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope.cloneModel = function(){
+
+    $scope.modelRequest = {
+      modelName:$scope.targetObj.modelName,
+      project:$scope.targetObj.targetProject
+    }
+
+    SweetAlert.swal({
+      title: '',
+      text: 'Are you sure to clone the model? ',
+      type: '',
+      showCancelButton: true,
+      confirmButtonColor: '#DD6B55',
+      confirmButtonText: "Yes",
+      closeOnConfirm: true
+    }, function (isConfirm) {
+      if (isConfirm) {
+
+        loadingRequest.show();
+        ModelService.clone({modelId: model.name}, $scope.modelRequest, function (result) {
+          loadingRequest.hide();
+          SweetAlert.swal('Success!', 'Clone model successfully', 'success');
+          location.reload();
+        }, function (e) {
+          loadingRequest.hide();
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+          }
+        });
+      }
+    });
+  }
+
+}
