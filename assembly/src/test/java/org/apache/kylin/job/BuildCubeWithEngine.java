@@ -52,38 +52,26 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class BuildCubeWithEngineTest {
+public class BuildCubeWithEngine {
 
     private CubeManager cubeManager;
     private DefaultScheduler scheduler;
     protected ExecutableManager jobService;
     private static boolean fastBuildMode = false;
 
-    private static final Log logger = LogFactory.getLog(BuildCubeWithEngineTest.class);
+    private static final Log logger = LogFactory.getLog(BuildCubeWithEngine.class);
 
-    protected void waitForJob(String jobId) {
-        while (true) {
-            AbstractExecutable job = jobService.getJob(jobId);
-            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR) {
-                break;
-            } else {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    public static void main(String[] args) throws Exception {
+        beforeClass();
+        BuildCubeWithEngine buildCubeWithEngine = new BuildCubeWithEngine();
+        buildCubeWithEngine.before();
+        buildCubeWithEngine.build();
+        afterClass();
     }
 
-    @BeforeClass
     public static void beforeClass() throws Exception {
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
@@ -101,11 +89,10 @@ public class BuildCubeWithEngineTest {
             throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
         }
 
+        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
     }
 
-    @Before
     public void before() throws Exception {
-        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
 
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
@@ -127,16 +114,29 @@ public class BuildCubeWithEngineTest {
 
     }
 
-    @After
-    public void after() {
+    public static void afterClass() {
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
-    @Test
-    public void test() throws Exception {
+    public void build() throws Exception {
         DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_left_join_empty");
         testInner();
         testLeft();
+    }
+
+    protected void waitForJob(String jobId) {
+        while (true) {
+            AbstractExecutable job = jobService.getJob(jobId);
+            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR) {
+                break;
+            } else {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     private void testInner() throws Exception {
@@ -189,9 +189,9 @@ public class BuildCubeWithEngineTest {
         @Override
         public List<String> call() throws Exception {
             try {
-                final Method method = BuildCubeWithEngineTest.class.getDeclaredMethod(methodName);
+                final Method method = BuildCubeWithEngine.class.getDeclaredMethod(methodName);
                 method.setAccessible(true);
-                return (List<String>) method.invoke(BuildCubeWithEngineTest.this);
+                return (List<String>) method.invoke(BuildCubeWithEngine.this);
             } catch (Exception e) {
                 logger.error(e.getMessage());
                 throw e;

@@ -34,12 +34,15 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.UUID;
 
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
@@ -50,59 +53,59 @@ import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.common.util.StreamingBatch;
 import org.apache.kylin.common.util.StreamingMessage;
+import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.Slice;
+import org.apache.kylin.invertedindex.index.SliceBuilder;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.invertedindex.model.IIRow;
-import org.apache.kylin.invertedindex.index.SliceBuilder;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.storage.hbase.ii.IICreateHTableJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.source.hive.HiveTableReader;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hbase.ii.IICreateHTableJob;
 import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-/**
- */
-public class BuildIIWithStreamTest {
+public class BuildIIWithStream {
 
-    private static final Logger logger = LoggerFactory.getLogger(BuildIIWithStreamTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(BuildIIWithStream.class);
 
     private static final String[] II_NAME = new String[] { "test_kylin_ii_left_join", "test_kylin_ii_inner_join" };
     private IIManager iiManager;
     private KylinConfig kylinConfig;
 
-    @BeforeClass
+    public static void main(String[] args) throws Exception {
+        beforeClass();
+        BuildIIWithStream buildCubeWithEngine = new BuildIIWithStream();
+        buildCubeWithEngine.before();
+        buildCubeWithEngine.build();
+        afterClass();
+    }
+
     public static void beforeClass() throws Exception {
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         if (System.getProperty("hdp.version") == null) {
             throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
         }
+        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
     }
 
-    @Before
     public void before() throws Exception {
-        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
         DeployUtil.overrideJobJarLocations();
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -116,10 +119,10 @@ public class BuildIIWithStreamTest {
             }
         }
     }
-    
-    @AfterClass
-    public static void cleanup() throws Exception {
+
+    public static void afterClass() throws Exception {
         cleanupOldStorage();
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
     private String createIntermediateTable(IIDesc desc, KylinConfig kylinConfig) throws IOException {
@@ -209,7 +212,7 @@ public class BuildIIWithStreamTest {
                 messages.clear();
             }
         }
-        
+
         if (!messages.isEmpty()) {
             build(sliceBuilder, new StreamingBatch(messages, Pair.newPair(System.currentTimeMillis(), System.currentTimeMillis())), htable);
         }
@@ -219,8 +222,7 @@ public class BuildIIWithStreamTest {
         logger.info("stream build finished, htable name:" + segment.getStorageLocationIdentifier());
     }
 
-    @Test
-    public void test() throws Exception {
+    public void build() throws Exception {
         for (String iiName : II_NAME) {
             buildII(iiName);
             IIInstance ii = iiManager.getII(iiName);
@@ -230,7 +232,7 @@ public class BuildIIWithStreamTest {
             }
         }
     }
-    
+
     private void build(SliceBuilder sliceBuilder, StreamingBatch batch, HTableInterface htable) throws IOException {
         final Slice slice = sliceBuilder.buildSlice(batch);
         try {
@@ -239,7 +241,7 @@ public class BuildIIWithStreamTest {
             throw new RuntimeException(e);
         }
     }
-    
+
     private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
         List<Put> data = Lists.newArrayList();
         for (IIRow row : codec.encodeKeyValue(slice)) {
@@ -261,7 +263,7 @@ public class BuildIIWithStreamTest {
     }
 
     private StreamingMessage parse(String[] row) {
-        return new StreamingMessage(Lists.newArrayList(row), System.currentTimeMillis(), System.currentTimeMillis(), Collections.<String, Object>emptyMap());
+        return new StreamingMessage(Lists.newArrayList(row), System.currentTimeMillis(), System.currentTimeMillis(), Collections.<String, Object> emptyMap());
     }
 
     private List<String[]> getSortedRows(HiveTableReader reader, final int tsCol) throws IOException {
