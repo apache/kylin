@@ -25,4 +25,4 @@ permalink: /development/howto_contribute.html
 * Committer will review in terms of correctness, performance, design, coding style, test coverage
 * Discuss and revise if necessary
 * Finally committer merge code into target branch
-
+	* We use `git rebase` to ensure the merged result is a streamline of commits.
