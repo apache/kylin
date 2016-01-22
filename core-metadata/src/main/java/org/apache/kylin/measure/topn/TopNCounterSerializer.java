@@ -75,8 +75,10 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
         out.putInt(keyLength);
         dds.serialize(counters, out);
         Iterator<Counter<ByteArray>> iterator = value.iterator();
+        ByteArray item;
         while (iterator.hasNext()) {
-            out.put(iterator.next().getItem().array());
+            item = iterator.next().getItem();
+            out.put(item.array(), item.offset(), item.length());
         }
     }
 
@@ -89,10 +91,13 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
 
         TopNCounter<ByteArray> counter = new TopNCounter<ByteArray>(capacity);
         ByteArray byteArray;
+        byte[] keyArray = new byte[size * keyLength];
+        int offset = 0;
         for (int i = 0; i < size; i++) {
-            byteArray = new ByteArray(keyLength);
-            in.get(byteArray.array());
+            in.get(keyArray, offset, keyLength);
+            byteArray = new ByteArray(keyArray, offset, keyLength);
             counter.offerToHead(byteArray, counters[i]);
+            offset += keyLength;
         }
 
         return counter;
