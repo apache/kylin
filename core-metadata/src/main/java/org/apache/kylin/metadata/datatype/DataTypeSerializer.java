@@ -76,7 +76,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
     /** Return the max number of bytes to the longest possible serialization */
     abstract public int maxLength();
 
-    /** Get an estimate of size in bytes of the serialized data */
+    /** Get an estimate of the average size in bytes of this kind of serialized data */
     abstract public int getStorageBytesEstimate();
     
     /** An optional convenient method that converts a string to this data type (for dimensions) */
