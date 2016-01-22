@@ -34,9 +34,7 @@
 
 package org.apache.kylin.job;
 
-import java.io.File;
-import java.util.UUID;
-
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
@@ -47,15 +45,24 @@ import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
 
 /**
  *  for streaming cubing case "test_streaming_table"
  */
-public class BuildCubeWithStream {
+public class BuildCubeWithStreamTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStream.class);
+    private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStreamTest.class);
     private static final String streamingName = "test_streaming_table_cube";
     private static final long startTime = DateFormat.stringToMillis("2015-01-01 00:00:00");
     private static final long endTime = DateFormat.stringToMillis("2015-01-03 00:00:00");
@@ -63,14 +70,7 @@ public class BuildCubeWithStream {
 
     private KylinConfig kylinConfig;
 
-    public static void main(String[] args) throws Exception {
-        beforeClass();
-        BuildCubeWithStream buildCubeWithStream = new BuildCubeWithStream();
-        buildCubeWithStream.before();
-        buildCubeWithStream.build();
-        afterClass();
-    }
-
+    @BeforeClass
     public static void beforeClass() throws Exception {
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
@@ -78,10 +78,12 @@ public class BuildCubeWithStream {
         if (System.getProperty("hdp.version") == null) {
             throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
         }
-        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
+
     }
 
+    @Before
     public void before() throws Exception {
+        HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
         DeployUtil.overrideJobJarLocations();
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -96,11 +98,13 @@ public class BuildCubeWithStream {
         DeployUtil.prepareTestDataForStreamingCube(startTime, endTime, config.getCubeName(), streamingConfig);
     }
 
+    @AfterClass
     public static void afterClass() throws Exception {
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
-    public void build() throws Exception {
+    @Test
+    public void test() throws Exception {
         logger.info("start time:" + startTime + " end time:" + endTime + " batch interval:" + batchInterval + " batch count:" + ((endTime - startTime) / batchInterval));
         for (long start = startTime; start < endTime; start += batchInterval) {
             logger.info(String.format("build batch:{%d, %d}", start, start + batchInterval));

@@ -46,13 +46,10 @@ import org.apache.kylin.storage.hbase.steps.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-//TODO: convert it to a normal class rather than a test case, like in BuildCubeWithEngine 
-@Ignore
 public class BuildCubeWithSparkTest {
 
     private CubeManager cubeManager;
