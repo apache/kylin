@@ -20,25 +20,28 @@ package org.apache.kylin.rest.util;
 
 import javax.servlet.ServletContextEvent;
 
+import org.apache.kylin.common.KylinConfig;
+
 public class Log4jConfigListener extends org.springframework.web.util.Log4jConfigListener {
 
-    private boolean isTesting;
+    private boolean isDebugTomcat;
 
     public Log4jConfigListener() {
-        // set by DebugTomcat
-        this.isTesting = "testing".equals(System.getProperty("spring.profiles.active"));
+        // check if is DebugTomcat
+        String property = System.getProperty(KylinConfig.KYLIN_CONF);
+        this.isDebugTomcat = property != null && property.contains("examples/test_case_data/sandbox");
     }
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
-        if (!isTesting) {
+        if (!isDebugTomcat) {
             super.contextInitialized(event);
         }
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {
-        if (!isTesting) {
+        if (!isDebugTomcat) {
             super.contextDestroyed(event);
         }
     }
