@@ -31,8 +31,8 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.metadata.measure.MeasureAggregator;
-import org.apache.kylin.storage.hbase.common.coprocessor.AggregationCache;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
+import org.apache.kylin.storage.hbase.common.coprocessor.AggregationCache;
 
 /**
  * @author yangli9
@@ -67,15 +67,20 @@ public class ObserverAggregationCache extends AggregationCache {
 
         @Override
         public boolean next(List<Cell> results) throws IOException {
-            // AggregateRegionObserver.LOG.info("Kylin Scanner next()");
-            boolean hasMore = false;
-            if (iterator.hasNext()) {
-                Entry<AggrKey, MeasureAggregator[]> entry = iterator.next();
-                makeCells(entry, results);
-                hasMore = iterator.hasNext();
+            try {
+                // AggregateRegionObserver.LOG.info("Kylin Scanner next()");
+                boolean hasMore = false;
+                if (iterator.hasNext()) {
+                    Entry<AggrKey, MeasureAggregator[]> entry = iterator.next();
+                    makeCells(entry, results);
+                    hasMore = iterator.hasNext();
+                }
+                // AggregateRegionObserver.LOG.info("Kylin Scanner next() done");
+
+                return hasMore;
+            } catch (Exception e) {
+                throw new IOException("Error when calling next", e);
             }
-            // AggregateRegionObserver.LOG.info("Kylin Scanner next() done");
-            return hasMore;
         }
 
         private void makeCells(Entry<AggrKey, MeasureAggregator[]> entry, List<Cell> results) {
