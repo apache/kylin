@@ -11,9 +11,11 @@ In general, there should be unit tests to cover individual classes; there must b
 ## 2.x branches
 
 * `mvn test` to run unit tests, which has a limited test coverage.
+    * Unit tests has no external dependency and can run on any machine.
     * The unit tests do not cover end-to-end scenarios like build, merge, and query.
     * The unit tests take a few minutes to complete.
 * `dev-support/test_all_against_hdp_2_2_4_2_2.sh` to run integration tests, which has the best test coverage.
+    * Integration tests __must run on a Hadoop sandbox__. Make sure all changes you want to test are avaiable on sandbox.
     * As the name indicates, the script is only for hdp 2.2.4.2, but you get the idea of how integration test run from it.
     * The integration tests start from generate random data, then build cube, merge cube, and finally query the result and compare to H2 DB.
     * The integration tests take a few hours to complete.
