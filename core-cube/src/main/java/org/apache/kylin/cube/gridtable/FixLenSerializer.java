@@ -25,8 +25,12 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FixLenSerializer extends DataTypeSerializer {
+
+    private static Logger logger = LoggerFactory.getLogger(FixLenSerializer.class);
 
     // be thread-safe and avoid repeated obj creation
     private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
@@ -55,9 +59,9 @@ public class FixLenSerializer extends DataTypeSerializer {
         } else {
             byte[] bytes = Bytes.toBytes(value.toString());
             if (bytes.length > fixLen) {
-                throw new IllegalStateException("Expect at most " + fixLen + " bytes, but got " + bytes.length + ", value string: " + value.toString());
+                logger.warn("Expect at most " + fixLen + " bytes, but got " + bytes.length + ", will truncate, value string: " + value.toString());
             }
-            out.put(bytes);
+            out.put(bytes, 0, Math.min(bytes.length, fixLen));
             for (int i = bytes.length; i < fixLen; i++) {
                 out.put(RowConstants.ROWKEY_PLACE_HOLDER_BYTE);
             }
