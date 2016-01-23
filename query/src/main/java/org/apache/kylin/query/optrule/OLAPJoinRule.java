@@ -63,7 +63,7 @@ public class OLAPJoinRule extends ConverterRule {
         try {
             newRel = new OLAPJoinRel(cluster, traitSet, left, right, //
                     info.getEquiCondition(left, right, cluster.getRexBuilder()), //
-                    info.leftKeys, info.rightKeys, join.getJoinType(), join.getVariablesStopped());
+                    info.leftKeys, info.rightKeys, join.getVariablesSet(), join.getJoinType());
         } catch (InvalidRelException e) {
             // Semantic error not possible. Must be a bug. Convert to internal error.
             throw new AssertionError(e);

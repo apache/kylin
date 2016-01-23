@@ -31,6 +31,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 
@@ -59,8 +60,8 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
     }
 
     @Override
-    public RelOptCost computeSelfCost(RelOptPlanner planner) {
-        return super.computeSelfCost(planner).multiplyBy(.05);
+    public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+        return super.computeSelfCost(planner, mq).multiplyBy(.05);
     }
 
     @Override

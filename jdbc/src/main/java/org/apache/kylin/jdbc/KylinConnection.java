@@ -118,7 +118,7 @@ public class KylinConnection extends AvaticaConnection {
         ArrayList<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
         Map<String, Object> internalParams = Collections.<String, Object> emptyMap();
 
-        return new Meta.Signature(columns, sql, params, internalParams, CursorFactory.ARRAY);
+        return new Meta.Signature(columns, sql, params, internalParams, CursorFactory.ARRAY, Meta.StatementType.SELECT);
     }
 
     private KylinJdbcFactory factory() {

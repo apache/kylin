@@ -35,6 +35,7 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterImpl;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -56,8 +57,8 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
     }
 
     @Override
-    public RelOptCost computeSelfCost(RelOptPlanner planner) {
-        return super.computeSelfCost(planner).multiplyBy(.05);
+    public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+        return super.computeSelfCost(planner, mq).multiplyBy(.05);
     }
 
     @Override
