@@ -40,6 +40,7 @@ import org.apache.calcite.plan.volcano.AbstractConverter.ExpandConversionRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateJoinTransposeRule;
 import org.apache.calcite.rel.rules.AggregateProjectMergeRule;
@@ -165,8 +166,8 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     }
 
     @Override
-    public RelOptCost computeSelfCost(RelOptPlanner planner) {
-        return super.computeSelfCost(planner).multiplyBy(.05);
+    public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+        return super.computeSelfCost(planner, mq).multiplyBy(.05);
     }
 
     @Override

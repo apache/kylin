@@ -32,6 +32,7 @@ import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -58,8 +59,8 @@ public class OLAPSortRel extends Sort implements OLAPRel {
     }
 
     @Override
-    public RelOptCost computeSelfCost(RelOptPlanner planner) {
-        return super.computeSelfCost(planner).multiplyBy(.05);
+    public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+        return super.computeSelfCost(planner, mq).multiplyBy(.05);
     }
 
     @Override
@@ -115,7 +116,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
-        return new EnumerableSort(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE, collation), //
+        return new EnumerableSort(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE).replace(collation), //
                 sole(inputs), collation, offset, fetch);
     }
 

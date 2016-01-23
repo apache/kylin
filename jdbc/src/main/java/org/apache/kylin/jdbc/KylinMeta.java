@@ -30,6 +30,10 @@ import java.util.regex.Pattern;
 import org.apache.calcite.avatica.AvaticaUtils;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.MetaImpl;
+import org.apache.calcite.avatica.MissingResultsException;
+import org.apache.calcite.avatica.NoSuchStatementException;
+import org.apache.calcite.avatica.QueryState;
+import org.apache.calcite.avatica.remote.TypedValue;
 
 import com.google.common.collect.ImmutableList;
 
@@ -54,6 +58,13 @@ public class KylinMeta extends MetaImpl {
         StatementHandle result = super.createStatement(ch);
         result.signature = connection().mockPreparedSignature(sql);
         return result;
+    }
+
+    // real execution happens in KylinResultSet.execute()
+    @Override
+    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, long maxRowCount) throws NoSuchStatementException {
+        final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId,  sh.id, false, sh.signature, null);
+        return new ExecuteResult(ImmutableList.of(metaResultSet));
     }
 
     // mimic from CalciteMetaImpl, real execution happens via callback in KylinResultSet.execute()
@@ -91,24 +102,24 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public MetaResultSet getTableTypes() {
+    public MetaResultSet getTableTypes(ConnectionHandle ch) {
         return createResultSet(metaTableTypes, MetaTableType.class, "TABLE_TYPE");
     }
 
     @Override
-    public MetaResultSet getCatalogs() {
+    public MetaResultSet getCatalogs(ConnectionHandle ch) {
         List<KMetaCatalog> catalogs = getMetaProject().catalogs;
         return createResultSet(catalogs, KMetaCatalog.class, "TABLE_CAT");
     }
 
     @Override
-    public MetaResultSet getSchemas(String catalog, Pat schemaPattern) {
+    public MetaResultSet getSchemas(ConnectionHandle ch, String catalog, Pat schemaPattern) {
         List<KMetaSchema> schemas = getMetaProject().getSchemas(catalog, schemaPattern);
         return createResultSet(schemas, KMetaSchema.class, "TABLE_SCHEM", "TABLE_CATALOG");
     }
 
     @Override
-    public MetaResultSet getTables(String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
+    public MetaResultSet getTables(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
         List<KMetaTable> tables = getMetaProject().getTables(catalog, schemaPattern, tableNamePattern, typeList);
         return createResultSet(tables, KMetaTable.class, //
                 "TABLE_CAT", //
@@ -124,7 +135,7 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public MetaResultSet getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
+    public MetaResultSet getColumns(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
         List<KMetaColumn> columns = getMetaProject().getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
         return createResultSet(columns, KMetaColumn.class, //
                 "TABLE_CAT", //
@@ -172,7 +183,7 @@ public class KylinMeta extends MetaImpl {
         }
 
         CursorFactory cursorFactory = CursorFactory.record(clazz, fields, fieldNames);
-        Signature signature = new Signature(columns, "", null, Collections.<String, Object> emptyMap(), cursorFactory);
+        Signature signature = new Signature(columns, "", null, Collections.<String, Object> emptyMap(), cursorFactory, StatementType.SELECT);
         StatementHandle sh = this.createStatement(connection().handle);
         Frame frame = new Frame(0, true, iterable);
 
@@ -353,6 +364,30 @@ public class KylinMeta extends MetaImpl {
         public List<NamedWithChildren> getChildren() {
             return Collections.<NamedWithChildren> emptyList();
         }
+    }
+
+    @Override
+    public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException, MissingResultsException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean syncResults(StatementHandle sh, QueryState state, long offset) throws NoSuchStatementException {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void commit(ConnectionHandle ch) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void rollback(ConnectionHandle ch) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

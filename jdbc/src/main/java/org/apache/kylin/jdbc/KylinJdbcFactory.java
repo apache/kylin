@@ -30,6 +30,7 @@ import org.apache.calcite.avatica.AvaticaPreparedStatement;
 import org.apache.calcite.avatica.AvaticaResultSet;
 import org.apache.calcite.avatica.AvaticaResultSetMetaData;
 import org.apache.calcite.avatica.AvaticaStatement;
+import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.Meta.Frame;
 import org.apache.calcite.avatica.Meta.Signature;
 import org.apache.calcite.avatica.Meta.StatementHandle;
@@ -93,9 +94,9 @@ public class KylinJdbcFactory implements AvaticaFactory {
     }
 
     @Override
-    public AvaticaResultSet newResultSet(AvaticaStatement statement, Signature signature, TimeZone timeZone, Frame firstFrame) throws SQLException {
+    public AvaticaResultSet newResultSet(AvaticaStatement statement, QueryState state, Signature signature, TimeZone timeZone, Frame firstFrame) throws SQLException {
         AvaticaResultSetMetaData resultSetMetaData = new AvaticaResultSetMetaData(statement, null, signature);
-        return new KylinResultSet(statement, signature, resultSetMetaData, timeZone, firstFrame);
+        return new KylinResultSet(statement, state, signature, resultSetMetaData, timeZone, firstFrame);
     }
 
     @Override
