@@ -62,6 +62,7 @@ package org.apache.kylin.job.hadoop.cube;
 //        conf = new Configuration();
 //        conf.set("fs.default.name", "file:///");
 //        conf.set("mapred.job.tracker", "local");
+//        conf.set("mapreduce.application.framework.path", "");
 //    }
 //
 //    @Test

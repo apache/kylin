@@ -39,6 +39,7 @@ public class BaseCuboidJobTest extends LocalFileMetadataTestCase {
         conf = new Configuration();
         conf.set("fs.default.name", "file:///");
         conf.set("mapred.job.tracker", "local");
+        conf.set("mapreduce.application.framework.path", "");
 
         // for local runner out-of-memory issue
         conf.set("mapreduce.task.io.sort.mb", "10");

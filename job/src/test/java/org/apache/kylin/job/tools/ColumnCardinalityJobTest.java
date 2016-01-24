@@ -45,6 +45,7 @@ public class ColumnCardinalityJobTest {
         conf = new Configuration();
         conf.set("fs.default.name", "file:///");
         conf.set("mapred.job.tracker", "local");
+        conf.set("mapreduce.application.framework.path", "");
     }
 
     @Test
