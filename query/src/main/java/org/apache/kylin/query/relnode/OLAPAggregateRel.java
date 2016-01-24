@@ -43,6 +43,7 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.schema.AggregateFunction;
 import org.apache.calcite.schema.FunctionParameter;
 import org.apache.calcite.schema.impl.AggregateFunctionImpl;
@@ -63,6 +64,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.base.Preconditions;
 
@@ -281,6 +283,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         fillbackOptimizedColumn();
 
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
+        RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
 
@@ -291,7 +294,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
             if (aggFunc.needRewrite()) {
                 String rewriteFieldName = aggFunc.getRewriteFieldName();
-                this.context.rewriteFields.put(rewriteFieldName, null);
+                RelDataType rewriteFieldType = OLAPTable.createSqlType(typeFactory, aggFunc.getRewriteFieldType(), true);
+                this.context.rewriteFields.put(rewriteFieldName, rewriteFieldType);
 
                 TblColRef column = buildRewriteColumn(aggFunc);
                 this.context.metricsColumns.add(column);
