@@ -31,18 +31,22 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class BaseCuboidJobTest extends LocalFileMetadataTestCase {
+    
+    public static void setLocalMR(Configuration conf) {
+        conf.set("fs.default.name", "file:///");
+        conf.set("mapreduce.framework.name", "local");
+        conf.set("mapreduce.application.framework.path", "");
+
+        // for local runner out-of-memory issue
+        conf.set("mapreduce.task.io.sort.mb", "10");
+    }
 
     private Configuration conf;
 
     @Before
     public void setup() throws Exception {
         conf = new Configuration();
-        conf.set("fs.default.name", "file:///");
-        conf.set("mapred.job.tracker", "local");
-        conf.set("mapreduce.application.framework.path", "");
-
-        // for local runner out-of-memory issue
-        conf.set("mapreduce.task.io.sort.mb", "10");
+        BaseCuboidJobTest.setLocalMR(conf);
 
         createTestMetadata();
     }

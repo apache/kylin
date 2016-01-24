@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.job.hadoop.cardinality.HiveColumnCardinalityJob;
+import org.apache.kylin.job.hadoop.cube.BaseCuboidJobTest;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -43,9 +44,7 @@ public class ColumnCardinalityJobTest {
     @Before
     public void setup() throws IOException {
         conf = new Configuration();
-        conf.set("fs.default.name", "file:///");
-        conf.set("mapred.job.tracker", "local");
-        conf.set("mapreduce.application.framework.path", "");
+        BaseCuboidJobTest.setLocalMR(conf);
     }
 
     @Test
