@@ -426,8 +426,14 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         cubeRequest.setCubeName(newCubeName);
         cubeRequest.setModelDescData(JsonUtil.writeValueAsString(modelDescCopy));
         cubeRequest.setCubeDescData(JsonUtil.writeValueAsString(invalidCubeDesc));
-        cubeRequest = cubeController.updateCubeDesc(cubeRequest);
-        assertTrue(cubeRequest.getSuccessful() == false);
+        boolean throwException = false; 
+        try {
+            cubeController.updateCubeDesc(cubeRequest);
+        } catch (Exception e) {
+            throwException = true;
+        }
+        
+        assertTrue(throwException);
         // 2 events, all for model
         assertEquals(2, broadcaster.getCounterAndClear());
         waitForCounterAndClear(2);

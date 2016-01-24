@@ -221,12 +221,10 @@ public class CubeService extends BasicService {
             throw new JobException("Cube schema shouldn't be changed with running job.");
         }
 
-        desc.init(getConfig(), getMetadataManager().getAllTablesMap());
-        int cuboidCount = CuboidCLI.simulateCuboidGeneration(desc);
-        logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
-
         try {
-            
+            desc.init(getConfig(), getMetadataManager().getAllTablesMap());
+            int cuboidCount = CuboidCLI.simulateCuboidGeneration(desc);
+            logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
             CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
             if (!updatedCubeDesc.getError().isEmpty()) {
                 return updatedCubeDesc;
