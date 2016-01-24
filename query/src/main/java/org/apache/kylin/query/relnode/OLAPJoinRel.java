@@ -281,7 +281,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         implementor.visitChild(this, this.right);
 
         this.rowType = this.deriveRowType();
-
+        
         if (this.isTopJoin && RewriteImplementor.needRewrite(this.context)) {
             // find missed rewrite fields
             int paramIndex = this.rowType.getFieldList().size();
