@@ -38,12 +38,8 @@ public class MergeCuboidJobTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         conf = new Configuration();
-        conf.set("fs.default.name", "file:///");
-        conf.set("mapred.job.tracker", "local");
-        conf.set("mapreduce.application.framework.path", "");
+        BaseCuboidJobTest.setLocalMR(conf);
 
-        // for local runner out-of-memory issue
-        conf.set("mapreduce.task.io.sort.mb", "10");
         createTestMetadata();
     }
 

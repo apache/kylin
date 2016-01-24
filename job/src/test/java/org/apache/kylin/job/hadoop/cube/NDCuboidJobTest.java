@@ -18,7 +18,7 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
 
@@ -37,12 +37,7 @@ public class NDCuboidJobTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
         conf = new Configuration();
-        conf.set("fs.default.name", "file:///");
-        conf.set("mapred.job.tracker", "local");
-        conf.set("mapreduce.application.framework.path", "");
-
-        // for local runner out-of-memory issue
-        conf.set("mapreduce.task.io.sort.mb", "10");
+        BaseCuboidJobTest.setLocalMR(conf);
 
         createTestMetadata();
     }
