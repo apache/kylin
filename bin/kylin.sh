@@ -22,7 +22,7 @@ source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
 
 # start command
-if [ $1 == "start" ]
+if [ "$1" == "start" ]
 then
 
     if [ -f "${KYLIN_HOME}/pid" ]
@@ -93,7 +93,7 @@ then
     exit 0
 
 # stop command
-elif [ $1 == "stop" ]
+elif [ "$1" == "stop" ]
 then
     if [ -f "${KYLIN_HOME}/pid" ]
     then
