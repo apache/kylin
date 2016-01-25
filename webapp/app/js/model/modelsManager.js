@@ -40,11 +40,13 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
 
             angular.forEach(_models, function (model, index) {
                 $log.info("Add model permission info");
+              if(model.uuid){
                 modelPermission.push(
                 AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
                     model.accessEntities = accessEntities;
                 }).$promise
                 )
+              }
                 $log.info("Add cube info to model ,not detail info");
                 cubeDetail.push(
                     CubeService.list({modelName:model.name}, function (_cubes) {

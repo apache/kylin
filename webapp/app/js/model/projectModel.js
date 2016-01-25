@@ -31,12 +31,6 @@ KylinApp.service('ProjectModel', function () {
       this.selectedProject = project;
     }
   };
-  this.getSelectedProject = function (project) {
-    if (this.selectedProject == "_null") {
-      return null;
-    }
-    return this.selectedProject;
-  };
 
   this.isSelectedProjectValid = function(){
     if(this.selectedProject == "_null"){
@@ -44,6 +38,13 @@ KylinApp.service('ProjectModel', function () {
     }
     return true;
   }
+
+  this.getSelectedProject = function (project) {
+    if (this.selectedProject == "_null") {
+      return null;
+    }
+    return this.selectedProject;
+  };
 
   this.setProjects = function (projects) {
     if (projects.length) {
@@ -104,6 +105,27 @@ KylinApp.service('ProjectModel', function () {
     this.projects = _.sortBy(this.projects, function (i) {
       return i.name.toLowerCase();
     });
+  }
+
+  this.clear = function(){
+    this.projects = [];
+    this.selectedProject = "_null";
+  }
+
+  this.clearProjects = function(){
+    this.projects = [];
+  }
+
+  this.getIndex = function(project){
+    var index = -1;
+    for (var i = 0; i < this.projects.length; i++) {
+      if (this.projects[i].name == project) {
+        index = i;
+        break;
+      }
+    }
+    return index;
+
   }
 
 })

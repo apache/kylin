@@ -50,9 +50,9 @@
 
             <div class="pull-right" showonhoverparent style="display:none;" class="cube_model_trees">
 
-              <a href="models/edit/{{model.name}}" title="Edit Model" ng-if="userService.hasRole('ROLE_MODELER') "><span class="fa fa-pencil fa-lg fa-fw"></span></a>
-              <a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-copy fa-lg fa-fw"></span></a>
-              <a ng-click="dropModel(model)" title="Drop Model" style="cursor:pointer;margin-right: 8px;" ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
+              <a href="models/edit/{{model.name}}" title="Edit Model" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-pencil fa-lg fa-fw"></span></a>
+              <a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-copy fa-lg fa-fw"></span></a>
+              <a ng-click="dropModel(model)" title="Drop Model" style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
 
             </div>
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService, loadingRequest, SweetAlert) {
+KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService, loadingRequest, $cookieStore,ProjectService,ProjectModel,AccessService,SweetAlert,loadingRequest) {
 
   $rootScope.permissions = {
     READ: {name: 'CUBE QUERY', value: 'READ', mask: 1},
@@ -26,18 +26,65 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
   };
 
   $rootScope.$on("$routeChangeStart", function () {
-    AuthenticationService.ping(function (data) {
-      if(!data.userDetails){
-        $location.path(UserService.getHomePage());
-      }
-      UserService.setCurUser(data);
-    });
+      AuthenticationService.ping(function (data) {
+        if(!data.userDetails){
+          $location.path(UserService.getHomePage());
+        }else{
+          UserService.setCurUser(data);
+          //get project info when login
+          if (!ProjectModel.projects.length&&!$rootScope.userAction.islogout) {
+
+            loadingRequest.show();
+            ProjectService.listReadable({}, function (projects) {
+              loadingRequest.hide();
+
+              if(!projects.length){
+                return;
+              }
+
+              var _projects = [];
+              _projects = _.sortBy(projects, function (i) {
+                return i.name.toLowerCase();
+              });
+              ProjectModel.setProjects(_projects);
+              var projectInCookie = $cookieStore.get("project");
+              if(projectInCookie&&ProjectModel.getIndex(projectInCookie)==-1){
+                projectInCookie = null;
+              }
+              var selectedProject = projectInCookie != null ? projectInCookie : null;
+              if(projectInCookie!=null){
+                selectedProject = projectInCookie;
+              }else if(UserService.hasRole('ROLE_ADMIN')){
+                selectedProject = null;
+              }else{
+                selectedProject = ProjectModel.projects[0].name
+              }
+
+              //var selectedProject = ProjectModel.selectedProject != null ? ProjectModel.selectedProject : projectInCookie != null ? projectInCookie : ProjectModel.projects[0].name;
+              ProjectModel.setSelectedProject(selectedProject);
+              angular.forEach(ProjectModel.projects, function (project, index) {
+                project.accessLoading = true;
+                AccessService.list({type: 'ProjectInstance', uuid: project.uuid}, function (accessEntities) {
+                  project.accessLoading = false;
+                  project.accessEntities = accessEntities;
+                });
+              });
+
+            },function(e){
+              loadingRequest.hide();
+              $location.path(UserService.getHomePage());
+            });
+          }
+        }
+      });
+
 
     if ($location.url() == '' || $location.url() == '/') {
       AuthenticationService.ping(function (data) {
         UserService.setCurUser(data);
         $location.path(UserService.getHomePage());
       });
+
       return;
     }
   });

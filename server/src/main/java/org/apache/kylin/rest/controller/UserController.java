@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.rest.service.UserService;
@@ -76,7 +77,12 @@ public class UserController {
 
     @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = "application/json")
     public List<String> getAuthorities() {
-        return userService.getUserAuthorities();
+//        return userService.getUserAuthorities();
+        ArrayList<String> lists = new ArrayList<>();
+        lists.add("ROLE_ADMIN");
+        lists.add("ROLE_MODELER");
+        lists.add("ROLE_ANALYST");
+        return lists;
     }
 
 }
