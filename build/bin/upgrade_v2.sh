@@ -21,7 +21,7 @@ dir=$(dirname ${0})
 source ${dir}/check-env.sh
 
 echo "======Deploy coprocessor======="
-$KYLIN_HOME/bin/kylin.sh org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-2.0-incubating-SNAPSHOT.jar all
+$KYLIN_HOME/bin/kylin.sh org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-2.0-SNAPSHOT.jar all
 
 echo "=====Upgrade Cube metadata====="
 $KYLIN_HOME/bin/kylin.sh org.apache.kylin.cube.upgrade.v2.CubeMetadataUpgradeV2
