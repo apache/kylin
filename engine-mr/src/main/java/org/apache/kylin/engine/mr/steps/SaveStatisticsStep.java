@@ -39,6 +39,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  * Save the cube segment statistic to Kylin metadata store
@@ -95,15 +96,28 @@ public class SaveStatisticsStep extends AbstractExecutable {
             alg = AlgorithmEnum.INMEM;
         } else if (AlgorithmEnum.LAYER.name().equalsIgnoreCase(algPref)) {
             alg = AlgorithmEnum.LAYER;
-        } else if ("random".equalsIgnoreCase(algPref)) { // for testing
-            alg = new Random().nextBoolean() ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
-        } else { // the default
-            double threshold = kylinConf.getCubeAlgorithmAutoThreshold();
-            double mapperOverlapRatio = new CubeStatsReader(seg, kylinConf).getMapperOverlapRatioOfFirstBuild();
-            logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is " + threshold);
-            alg = mapperOverlapRatio < threshold ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
-        }
+        } else {
+            boolean memoryHungry = false;
+            for (MeasureDesc measure : seg.getCubeDesc().getMeasures()) {
+                if (measure.getFunction().getMeasureType().isMemoryHungry()) {
+                    logger.info("This cube has memory-hungry measure " + measure.getFunction().getExpression());
+                    memoryHungry = true;
+                    break;
+                }
+            }
+            
+            if (memoryHungry == true) {
+                alg = AlgorithmEnum.LAYER;
+            } else if ("random".equalsIgnoreCase(algPref)) { // for testing
+                alg = new Random().nextBoolean() ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
+            } else { // the default
+                double threshold = kylinConf.getCubeAlgorithmAutoThreshold();
+                double mapperOverlapRatio = new CubeStatsReader(seg, kylinConf).getMapperOverlapRatioOfFirstBuild();
+                logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is " + threshold);
+                alg = mapperOverlapRatio < threshold ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
+            }
 
+        }
         logger.info("The cube algorithm for " + seg + " is " + alg);
 
         CubingJob cubingJob = (CubingJob) executableManager.getJob(getCubingJobId());
