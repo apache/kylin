@@ -18,13 +18,9 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.apache.hadoop.io.DataInputByteBuffer;
-import org.roaringbitmap.RoaringBitmap;
 import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 
 /**
@@ -49,40 +45,22 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         bitmap.add(value);
     }
 
-    public void add(byte[] value) {
-        if (value == null || value.length == 0) {
-            return;
-        }
-        try {
-            int l = Integer.parseInt(new String(value));
-            add(l);
-        } catch (NumberFormatException e) {
-            throw e;
-        }
+    public void add(byte[] value) {add(value, 0, value.length);
     }
 
     public void add(byte[] value, int offset, int length) {
         if (value == null || length == 0) {
             return;
         }
-        try {
-            int l = Integer.parseInt(new String(value, offset, length));
-            add(l);
-        } catch (NumberFormatException e) {
-            throw e;
-        }
+        
+        add(new String(value, offset, length));
     }
 
     public void add(String value) {
         if (value == null || value.isEmpty()) {
             return;
         }
-        try {
-            int l = Integer.parseInt(value);
-            add(l);
-        } catch (NumberFormatException e) {
-            throw e;
-        }
+        add(Integer.parseInt(value));
     }
 
     public void add(long value) {
@@ -160,7 +138,7 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
 
         DataInputByteBuffer input = new DataInputByteBuffer();
         input.reset(new ByteBuffer[]{in});
-        RoaringBitmap bitmap = new RoaringBitmap();
+        MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
         try {
             bitmap.deserialize(input);
         } catch (IOException e) {
@@ -169,5 +147,95 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         len = in.position() - mark;
         in.position(mark);
         return len;
+    }
+
+    static class DataInputByteBuffer extends DataInputStream {
+        private DataInputByteBuffer.Buffer buffers;
+
+        public DataInputByteBuffer() {
+            this(new DataInputByteBuffer.Buffer());
+        }
+
+        private DataInputByteBuffer(DataInputByteBuffer.Buffer buffers) {
+            super(buffers);
+            this.buffers = buffers;
+        }
+
+        public void reset(ByteBuffer... input) {
+            this.buffers.reset(input);
+        }
+
+        public ByteBuffer[] getData() {
+            return this.buffers.getData();
+        }
+
+        public int getPosition() {
+            return this.buffers.getPosition();
+        }
+
+        public int getLength() {
+            return this.buffers.getLength();
+        }
+
+        private static class Buffer extends InputStream {
+            private final byte[] scratch;
+            ByteBuffer[] buffers;
+            int bidx;
+            int pos;
+            int length;
+
+            private Buffer() {
+                this.scratch = new byte[1];
+                this.buffers = new ByteBuffer[0];
+            }
+
+            public int read() {
+                return -1 == this.read(this.scratch, 0, 1)?-1:this.scratch[0] & 255;
+            }
+
+            public int read(byte[] b, int off, int len) {
+                if(this.bidx >= this.buffers.length) {
+                    return -1;
+                } else {
+                    int cur = 0;
+
+                    do {
+                        int rem = Math.min(len, this.buffers[this.bidx].remaining());
+                        this.buffers[this.bidx].get(b, off, rem);
+                        cur += rem;
+                        off += rem;
+                        len -= rem;
+                    } while(len > 0 && ++this.bidx < this.buffers.length);
+
+                    this.pos += cur;
+                    return cur;
+                }
+            }
+
+            public void reset(ByteBuffer[] buffers) {
+                this.bidx = this.pos = this.length = 0;
+                this.buffers = buffers;
+                ByteBuffer[] arr$ = buffers;
+                int len$ = buffers.length;
+
+                for(int i$ = 0; i$ < len$; ++i$) {
+                    ByteBuffer b = arr$[i$];
+                    this.length += b.remaining();
+                }
+
+            }
+
+            public int getPosition() {
+                return this.pos;
+            }
+
+            public int getLength() {
+                return this.length;
+            }
+
+            public ByteBuffer[] getData() {
+                return this.buffers;
+            }
+        }
     }
 }
