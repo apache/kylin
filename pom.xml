@@ -51,7 +51,8 @@
         <hive.version>0.14.0</hive.version>
         <hive-hcatalog.version>0.14.0</hive-hcatalog.version>
         <hbase-hadoop2.version>0.98.8-hadoop2</hbase-hadoop2.version>
-
+        <!-- ElasticSearch -->
+        <elasticsearch.version>1.5.1</elasticsearch.version>
         <!-- Dependency versions -->
         <antlr.version>3.4</antlr.version>
         <junit.version>4.11</junit.version>
@@ -229,7 +230,20 @@
                 <version>${mrunit.version}</version>
                 <classifier>hadoop2</classifier>
             </dependency>
+            <!-- ES dependencies -->
+            <dependency>
+                <groupId>org.elasticsearch</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${elasticsearch.version}</version>
+            </dependency>
 
+            <dependency>
+                <groupId>org.elasticsearch</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${elasticsearch.version}</version>
+                <scope>test</scope>
+                <type>test-jar</type>
+            </dependency>
             <!-- Hive dependencies -->
             <dependency>
                 <groupId>org.apache.hive</groupId>

@@ -49,7 +49,7 @@ public class StorageContext {
     private List<OrderEnum> sortOrders;
     private boolean acceptPartialResult;
     private BiMap<TblColRef, String> aliasMap;
-
+    private String esClusterUrl;
     private boolean exactAggregation;
     private boolean enableLimit;
     private boolean enableCoprocessor;
@@ -198,5 +198,11 @@ public class StorageContext {
     public boolean isCoprocessorEnabled() {
         return this.enableCoprocessor;
     }
+    public String getEsClusterUrl() {
+        return esClusterUrl;
+    }
 
+    public void setEsClusterUrl(String esClusterUrl) {
+        this.esClusterUrl = esClusterUrl;
+    }
 }

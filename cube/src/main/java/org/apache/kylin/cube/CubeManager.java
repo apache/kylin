@@ -449,7 +449,7 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    private void saveResource(CubeInstance cube) throws IOException {
+    public void saveResource(CubeInstance cube) throws IOException {
         ResourceStore store = getStore();
         store.putResource(cube.getResourcePath(), cube, CUBE_SERIALIZER);
         this.afterCubeUpdated(cube);

@@ -187,6 +187,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
             OLAPSchema schema = olapTable.getSchema();
             context.olapSchema = schema;
             context.storageContext.setConnUrl(schema.getStorageUrl());
+            context.storageContext.setEsClusterUrl(schema.getEsClusterUrl());
         }
 
         if (context.firstTableScan == null) {

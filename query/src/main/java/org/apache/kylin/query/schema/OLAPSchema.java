@@ -43,11 +43,13 @@ public class OLAPSchema extends AbstractSchema {
     private String storageUrl;
     private String starSchemaUrl;
     private String starSchemaUser;
+    private String esClusterUrl;
     private String starSchemaPassword;
 
     private void init() {
         this.config = KylinConfig.getInstanceFromEnv();
         this.storageUrl = config.getStorageUrl();
+        this.esClusterUrl= config.getKylinEsClusterUrl();
         this.starSchemaUrl = config.getHiveUrl();
         this.starSchemaUser = config.getHiveUser();
         this.starSchemaPassword = config.getHivePassword();
@@ -92,7 +94,9 @@ public class OLAPSchema extends AbstractSchema {
     public String getStorageUrl() {
         return storageUrl;
     }
-
+    public String getEsClusterUrl() {
+        return esClusterUrl;
+    }
     public boolean hasStarSchemaUrl() {
         return starSchemaUrl != null && !starSchemaUrl.isEmpty();
     }

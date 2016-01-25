@@ -55,6 +55,8 @@ public class KylinConfig {
 
     public static final String KYLIN_STORAGE_URL = "kylin.storage.url";
 
+    public static final String KYLIN_ES_CLUSTER_URL = "kylin.es.cluster.url";
+
     public static final String KYLIN_METADATA_URL = "kylin.metadata.url";
 
     public static final String KYLIN_REST_SERVERS = "kylin.rest.servers";
@@ -260,7 +262,7 @@ public class KylinConfig {
 
     private String metadataUrl;
     private String storageUrl;
-
+    private String esClusterUrl;
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
         CliCommandExecutor exec = new CliCommandExecutor();
         if (getRunAsRemoteCommand()) {
@@ -290,7 +292,9 @@ public class KylinConfig {
     public String getStorageUrl() {
         return storageUrl;
     }
-
+    public String getKylinEsClusterUrl(){
+        return esClusterUrl;
+    }
     /** Use the hive reroute feature instead */
     @Deprecated
     public String getHiveUrl() {
@@ -559,6 +563,7 @@ public class KylinConfig {
         this.kylinConfig = config;
         this.metadataUrl = getOptional(KYLIN_METADATA_URL);
         this.storageUrl = getOptional(KYLIN_STORAGE_URL);
+        this.esClusterUrl = getOptional(KYLIN_ES_CLUSTER_URL);
     }
 
     public void writeProperties(File file) throws IOException {
@@ -676,7 +681,10 @@ public class KylinConfig {
         kylinConfig.setProperty(KYLIN_STORAGE_URL, storageUrl);
         this.storageUrl = storageUrl;
     }
-
+    public void setKylinEsClusterUrl(String esClusterUrl) {
+        kylinConfig.setProperty(KYLIN_ES_CLUSTER_URL, esClusterUrl);
+        this.esClusterUrl = esClusterUrl;
+    }
     public String getHiveDatabaseForIntermediateTable() {
         return this.getOptional(HIVE_DATABASE_FOR_INTERMEDIATE_TABLE, "default");
     }

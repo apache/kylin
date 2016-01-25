@@ -34,12 +34,7 @@ import org.apache.kylin.job.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.hadoop.cube.BaseCuboidJob;
-import org.apache.kylin.job.hadoop.cube.CubeHFileJob;
-import org.apache.kylin.job.hadoop.cube.FactDistinctColumnsJob;
-import org.apache.kylin.job.hadoop.cube.MergeCuboidJob;
-import org.apache.kylin.job.hadoop.cube.NDCuboidJob;
-import org.apache.kylin.job.hadoop.cube.RangeKeyDistributionJob;
+import org.apache.kylin.job.hadoop.cube.*;
 import org.apache.kylin.job.hadoop.dict.CreateDictionaryJob;
 import org.apache.kylin.job.hadoop.hbase.BulkLoadJob;
 import org.apache.kylin.job.hadoop.hbase.CreateHTableJob;
@@ -56,7 +51,35 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
     public CubingJobBuilder(JobEngineConfig engineConfig) {
         super(engineConfig);
     }
+    public CubingJob buildESJob(CubeSegment seg) {
+        checkPreconditions(seg);
 
+        final CubingJob result = initialJob(seg, "BUILD");
+        final String jobId = result.getId();
+        final List<String> toDeletePaths = Lists.newArrayList();
+
+        final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(seg.getCubeDesc(), seg);
+        final String intermediateHiveTableLocation = getIntermediateHiveTableLocation(intermediateTableDesc, jobId);
+
+        final AbstractExecutable intermediateHiveTableStep = createIntermediateHiveTableStep(intermediateTableDesc, jobId);
+        // cubing
+
+        result.addTask(intermediateHiveTableStep);
+
+
+
+        // bulk index step(elasticsearch)
+        final MapReduceExecutable bulkEsStep = bulkES(seg, intermediateHiveTableLocation);
+        result.addTask(bulkEsStep);
+        // update cube info
+        result.addTask(createUpdateCubeInfoAfterIndex(seg,jobId));
+
+        //final CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(seg.getCubeDesc(), seg);
+        final String hiveIntermediateTable = this.getIntermediateHiveTableName(intermediateTableDesc, jobId);
+        result.addTask(createGarbageCollectionStep(seg, null, hiveIntermediateTable, toDeletePaths));
+
+        return result;
+    }
     public CubingJob buildJob(CubeSegment seg) {
         checkPreconditions(seg);
 
@@ -251,7 +274,26 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
             throw new RuntimeException(e);
         }
     }
+    private MapReduceExecutable bulkES(CubeSegment seg, String intermediateHiveTableLocation) {
+        // base cuboid job
+        MapReduceExecutable loadEsStep = new MapReduceExecutable();
 
+        StringBuilder cmd = new StringBuilder();
+        appendMapReduceParameters(cmd, seg);
+
+        loadEsStep.setName(ExecutableConstants.STEP_NAME_BULK_ES);
+
+        appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "segmentname", seg.getName());
+        appendExecCmdParameters(cmd, "input", intermediateHiveTableLocation);
+        appendExecCmdParameters(cmd, "output", "/tmp/kylines");
+        appendExecCmdParameters(cmd, "jobname", "Kylin_Load_Data_to_ES_" + seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "level", "0");
+
+        loadEsStep.setMapReduceParams(cmd.toString());
+        loadEsStep.setMapReduceJobClass(BulkESJob.class);
+        return loadEsStep;
+    }
     private String[] getCuboidOutputPaths(String cuboidRootPath, int totalRowkeyColumnCount, int groupRowkeyColumnsCount) {
         String[] paths = new String[groupRowkeyColumnsCount + 1];
         for (int i = 0; i <= groupRowkeyColumnsCount; i++) {
@@ -295,7 +337,14 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         result.setMapReduceParams(cmd.toString());
         return result;
     }
-
+    private UpdateCubeInfoAfterIndex createUpdateCubeInfoAfterIndex(CubeSegment seg,   String jobId) {
+        final UpdateCubeInfoAfterIndex updateCubeInfoStep = new UpdateCubeInfoAfterIndex();
+        updateCubeInfoStep.setName(ExecutableConstants.STEP_NAME_UPDATE_CUBE_INFO);
+        updateCubeInfoStep.setCubeName(seg.getCubeInstance().getName());
+        updateCubeInfoStep.setSegmentId(seg.getUuid());
+        updateCubeInfoStep.setCubingJobId(jobId);
+        return updateCubeInfoStep;
+    }
     private HadoopShellExecutable createBuildDictionaryStep(CubeSegment seg, String factDistinctColumnsPath) {
         // base cuboid job
         HadoopShellExecutable buildDictionaryStep = new HadoopShellExecutable();
