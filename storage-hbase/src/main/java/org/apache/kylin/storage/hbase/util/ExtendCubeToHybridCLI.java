@@ -48,6 +48,7 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hybrid.HybridInstance;
@@ -186,6 +187,7 @@ public class ExtendCubeToHybridCLI {
 
         // clear segments for old cube
         cubeInstance.setSegments(new ArrayList<CubeSegment>());
+        cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         store.putResource(cubeInstance.getResourcePath(), cubeInstance, CubeManager.CUBE_SERIALIZER);
         logger.info("CubeInstance was saved at: " + cubeInstance.getResourcePath());
 
