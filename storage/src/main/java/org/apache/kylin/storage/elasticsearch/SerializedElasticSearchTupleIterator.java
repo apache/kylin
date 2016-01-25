@@ -74,7 +74,6 @@ public class SerializedElasticSearchTupleIterator  implements ITupleIterator {
                 .setQuery(queryBuilder)
                 .setSize(size)
                 .execute().actionGet();
-        System.out.println("queryBuilder:"+queryBuilder);
 
         doScan(response);
 

@@ -49,7 +49,6 @@ public class ElasticSearchStorageEngine implements IStorageEngine {
     private final CubeInstance cubeInstance;
     private final CubeDesc cubeDesc;
 
-    QueryBuilder qb = boolQuery();
 
     public ElasticSearchStorageEngine(CubeInstance cube) {
         this.cubeInstance = cube;

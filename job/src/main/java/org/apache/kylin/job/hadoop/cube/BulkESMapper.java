@@ -129,7 +129,6 @@ public class BulkESMapper<KEYIN> extends KylinMapper<KEYIN, Text, Text, Text> {
         }
 
         mapping.endObject().endObject();
-        System.out.println("mapping:"+mapping.string());
         PutMappingRequest mappingRequest = Requests.putMappingRequest(index).type(type).source(mapping.string());
         client.admin().indices().putMapping(mappingRequest).actionGet();
 
