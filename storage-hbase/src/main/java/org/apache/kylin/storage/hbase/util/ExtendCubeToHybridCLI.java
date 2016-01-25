@@ -62,6 +62,8 @@ import com.google.common.collect.Lists;
  */
 public class ExtendCubeToHybridCLI {
     public static final String ACL_INFO_FAMILY = "i";
+    private static final String CUBE_POSTFIX = "_old";
+    private static final String HYBRID_POSTFIX = "_hybrid";
     private static final Logger logger = LoggerFactory.getLogger(ExtendCubeToHybridCLI.class);
     private static final String ACL_INFO_FAMILY_PARENT_COLUMN = "p";
 
@@ -133,12 +135,12 @@ public class ExtendCubeToHybridCLI {
         long partitionDate = partitionDateStr != null ? DateFormat.stringToMillis(partitionDateStr, dateFormat) : 0;
 
         // get new name for old cube and cube_desc
-        String newCubeDescName = rename(cubeDesc.getName());
-        String newCubeInstanceName = rename(cubeInstance.getName());
+        String newCubeDescName = renameCube(cubeDesc.getName());
+        String newCubeInstanceName = renameCube(cubeInstance.getName());
         while (cubeDescManager.getCubeDesc(newCubeDescName) != null)
-            newCubeDescName = rename(newCubeDescName);
+            newCubeDescName = renameCube(newCubeDescName);
         while (cubeManager.getCube(newCubeInstanceName) != null)
-            newCubeInstanceName = rename(newCubeInstanceName);
+            newCubeInstanceName = renameCube(newCubeInstanceName);
 
         // create new cube_instance for old segments
         CubeInstance newCubeInstance = CubeInstance.getCopyOf(cubeInstance);
@@ -191,7 +193,7 @@ public class ExtendCubeToHybridCLI {
         List<RealizationEntry> realizationEntries = Lists.newArrayListWithCapacity(2);
         realizationEntries.add(RealizationEntry.create(RealizationType.CUBE, cubeInstance.getName()));
         realizationEntries.add(RealizationEntry.create(RealizationType.CUBE, newCubeInstance.getName()));
-        HybridInstance hybridInstance = HybridInstance.create(kylinConfig, cubeInstance.getName(), realizationEntries);
+        HybridInstance hybridInstance = HybridInstance.create(kylinConfig, renameHybrid(cubeInstance.getName()), realizationEntries);
         store.putResource(hybridInstance.getResourcePath(), hybridInstance, HybridManager.HYBRID_SERIALIZER);
         ProjectManager.getInstance(kylinConfig).moveRealizationToProject(RealizationType.HYBRID, hybridInstance.getName(), projectName, owner);
         logger.info("HybridInstance was saved at: " + hybridInstance.getResourcePath());
@@ -215,8 +217,12 @@ public class ExtendCubeToHybridCLI {
         HybridManager.getInstance(kylinConfig);
     }
 
-    private String rename(String origName) {
-        return origName + "_legacy";
+    private String renameCube(String origName) {
+        return origName + CUBE_POSTFIX;
+    }
+
+    private String renameHybrid(String origName) {
+        return origName + HYBRID_POSTFIX;
     }
 
     private void copyAcl(String origCubeId, String newCubeId, String projectName) throws Exception {
