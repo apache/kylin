@@ -294,7 +294,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     throw new IllegalStateException();
 
                 Counter<ByteArray> counter = topNCounterIterator.next();
-                int key = BytesUtil.readUnsigned(counter.getItem().array(), 0, counter.getItem().array().length);
+                int key = BytesUtil.readUnsigned(counter.getItem().array(), counter.getItem().offset(), counter.getItem().length());
                 String colValue = topNColDict.getValueFromId(key);
                 tuple.setDimensionValue(literalTupleIdx, colValue);
                 tuple.setMeasureValue(numericTupleIdx, counter.getCount());
