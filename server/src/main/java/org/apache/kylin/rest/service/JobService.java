@@ -143,12 +143,17 @@ public class JobService extends BasicService {
         builder.setSubmitter(submitter);
 
         if (buildType == CubeBuildTypeEnum.BUILD) {
-            if (cube.getDescriptor().hasHolisticCountDistinctMeasures() && cube.getSegments().size() > 0) {
-                Pair<CubeSegment, CubeSegment> segs = getCubeManager().appendAndMergeSegments(cube, endDate);
-                job = builder.buildAndMergeJob(segs.getFirst(), segs.getSecond());
-            } else {
+            if("ES".equals(cube.getDescriptor().getDescription().toUpperCase())){
                 CubeSegment newSeg = getCubeManager().appendSegments(cube, endDate);
-                job = builder.buildJob(newSeg);
+                job = builder.buildESJob(newSeg);
+            }else {
+                if (cube.getDescriptor().hasHolisticCountDistinctMeasures() && cube.getSegments().size() > 0) {
+                    Pair<CubeSegment, CubeSegment> segs = getCubeManager().appendAndMergeSegments(cube, endDate);
+                    job = builder.buildAndMergeJob(segs.getFirst(), segs.getSecond());
+                } else {
+                    CubeSegment newSeg = getCubeManager().appendSegments(cube, endDate);
+                    job = builder.buildJob(newSeg);
+                }
             }
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);

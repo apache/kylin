@@ -80,7 +80,7 @@ public abstract class TupleFilter {
     protected final List<TupleFilter> children;
     protected FilterOperatorEnum operator;
     protected boolean hasChildren;
-
+    public int level=0;
     protected TupleFilter(List<TupleFilter> filters, FilterOperatorEnum op) {
         this.children = filters;
         this.operator = op;
