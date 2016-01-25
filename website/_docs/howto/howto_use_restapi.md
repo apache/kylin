@@ -634,7 +634,7 @@ Get descriptor for specified cube instance.
 #### Request Body
 * startTime - `required` `long` Start timestamp of data to build, e.g. 1388563200000 for 2014-1-1
 * endTime - `required` `long` End timestamp of data to build
-* buildType - `required` `string` Build type: 'BUILD' OR 'MERGE'
+* buildType - `required` `string` Supported build type: 'BUILD', 'MERGE', 'REFRESH'
 
 #### Response Sample
 ```
