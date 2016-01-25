@@ -170,6 +170,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         if (classpath == null || classpath.length() == 0) {
             logger.info("Didn't find " + MAP_REDUCE_CLASSPATH + " in job configuration, will run 'mapred classpath' to get the default value.");
             classpath = getDefaultMapRedClasspath();
+            classpath = classpath.replace(":", ","); // yarn classpath is comma separated
             logger.info("The default mapred classpath is: " + classpath);
         }
 
