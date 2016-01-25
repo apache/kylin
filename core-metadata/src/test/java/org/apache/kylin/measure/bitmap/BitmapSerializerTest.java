@@ -51,7 +51,7 @@ public class BitmapSerializerTest {
 
         buffer.position(0);
         assertEquals(len, deSerializer.peekLength(buffer));
-        assertEquals(32 * 1024 * 1024, deSerializer.maxLength());
+        assertEquals(8 * 1024 * 1024, deSerializer.maxLength());
         System.out.println("counter size " + deSerializer.getStorageBytesEstimate());
     }
 }
