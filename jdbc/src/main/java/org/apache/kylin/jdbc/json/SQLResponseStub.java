@@ -21,8 +21,11 @@ package org.apache.kylin.jdbc.json;
 import java.io.Serializable;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SQLResponseStub implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -54,6 +57,10 @@ public class SQLResponseStub implements Serializable {
     private boolean hitCache = false;
 
     public SQLResponseStub() {
+    }
+
+    public static long getSerialversionuid() {
+        return serialVersionUID;
     }
 
     public List<ColumnMetaStub> getColumnMetas() {
@@ -136,10 +143,7 @@ public class SQLResponseStub implements Serializable {
         this.hitCache = hitCache;
     }
 
-    public static long getSerialversionuid() {
-        return serialVersionUID;
-    }
-
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ColumnMetaStub {
 
         private boolean isAutoIncrement;
