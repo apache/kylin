@@ -3,6 +3,7 @@ package org.apache.kylin.storage.cache;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.Status;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.PersistenceConfiguration;
@@ -85,8 +86,8 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
     }
 
     private void makeCacheIfNecessary(String storageUUID) {
-        if (CACHE_MANAGER == null) {
-            logger.warn("CACHE_MANAGER is not provided");
+        if (CACHE_MANAGER == null || (!(CACHE_MANAGER.getStatus().equals(Status.STATUS_ALIVE)))) {
+            logger.warn("CACHE_MANAGER is not provided or not alive");
             initCacheManger();
         }
 

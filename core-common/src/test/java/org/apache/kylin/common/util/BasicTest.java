@@ -79,6 +79,8 @@ public class BasicTest {
 
     @Test
     public void testxx() throws InterruptedException {
+        System.out.println(System.getProperty("skipTests").length());
+        System.out.println(System.getProperty("skipXests"));
         byte[][] data = new byte[10000000][];
         byte[] temp = new byte[100];
         for (int i = 0; i < 100; i++) {
