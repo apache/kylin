@@ -158,12 +158,16 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testDistinctCountQuery() throws Exception {
-        batchExecuteQuery("src/test/resources/query/sql_distinct");
+        if ("left".equalsIgnoreCase(joinType)) {
+            batchExecuteQuery("src/test/resources/query/sql_distinct");
+        }
     }
 
     @Test
     public void testPreciselyDistinctCountQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_distinct_precisely", null, true);
+        if ("left".equalsIgnoreCase(joinType)) {
+            execAndCompQuery("src/test/resources/query/sql_distinct_precisely", null, true);
+        }
     }
 
     @Test
@@ -229,6 +233,13 @@ public class ITKylinQueryTest extends KylinTestBase {
     public void testLimitEnabled() throws Exception {
         runSqlFile("src/test/resources/query/sql_optimize/enable-limit01.sql");
         assertLimitWasEnabled();
+    }
+
+    @Test
+    public void testTopNQuery() throws Exception {
+            if ("left".equalsIgnoreCase(joinType)) {
+            this.execAndCompDynamicQuery("src/test/resources/query/sql_topn", null, true);
+        }
     }
 
     private void assertLimitWasEnabled() {
