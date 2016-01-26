@@ -137,6 +137,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             List<? extends TupleFilter> children = filter.getChildren();
             TblColRef inColumn = null;
             List<String> inValues = new LinkedList<String>();
+            Map<String, String> dynamicVariable = new HashMap<>();
             for (TupleFilter child : children) {
                 if (child.getOperator() == FilterOperatorEnum.EQ) {
                     CompareTupleFilter compFilter = (CompareTupleFilter) child;
@@ -149,6 +150,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
                         return null;
                     }
                     inValues.addAll(compFilter.getValues());
+                    dynamicVariable.putAll(compFilter.getVariables());
                 } else {
                     return null;
                 }
@@ -159,6 +161,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             CompareTupleFilter inFilter = new CompareTupleFilter(FilterOperatorEnum.IN);
             inFilter.addChild(new ColumnTupleFilter(inColumn));
             inFilter.addChild(new ConstantTupleFilter(inValues));
+            inFilter.getVariables().putAll(dynamicVariable);
             return inFilter;
         }
 
