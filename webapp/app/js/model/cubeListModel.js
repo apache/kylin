@@ -36,11 +36,11 @@ KylinApp.service('CubeList',function(CubeService,$q,AccessService){
                                 cube.last_build_time = cube.segments[i].last_build_time;
                                 break;
                             }else if(i===0){
-                                cube.last_build_time = cube.create_time_utc;
+                                cube.last_build_time = undefined;
                             }
                         }
                     } else {
-                        cube.last_build_time = cube.create_time_utc;
+                        cube.last_build_time = undefined;
                     }
                 }
             });
