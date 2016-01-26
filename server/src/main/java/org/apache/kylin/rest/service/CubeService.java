@@ -206,7 +206,7 @@ public class CubeService extends BasicService {
         return createdCube;
     }
 
-    private List<CubeInstance> listAllCubes(String projectName) {
+    public List<CubeInstance> listAllCubes(String projectName) {
         ProjectManager projectManager = getProjectManager();
         ProjectInstance project = projectManager.getProject(projectName);
         if (project == null) {

@@ -25,11 +25,11 @@
           <!--<i> New </i> <span class="caret"></span>-->
         </a>
         <ul class="dropdown-menu">
-          <li ng-if="userService.hasRole('ROLE_ADMIN')">
-            <a href="models/add"  ng-if="userService.hasRole('ROLE_MODELER')"><i class="fa fa-star"></i>New Model</a>
+          <li ng-if="userService.hasRole('ROLE_MODELER')">
+            <a href="models/add"><i class="fa fa-star"></i>New Model</a>
           </li>
-          <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
-            <a href="cubes/add" ng-if="userService.hasRole('ROLE_ADMIN')"><i class="fa fa-cube"></i>New Cube</a>
+          <li ng-if="userService.hasRole('ROLE_MODELER')">
+            <a href="cubes/add"><i class="fa fa-cube"></i>New Cube</a>
           </li>
 
         </ul>
@@ -51,9 +51,9 @@
 
             <div class="pull-right" showonhoverparent style="display:none;">
 
-              <a href="models/edit/{{model.name}}" data-placement="bottom" title="Edit Model" ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-pencil fa-lg fa-fw"></span></a>
-              <a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-copy fa-lg fa-fw"></span></a>
-              <a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;" ng-if="userService.hasRole('ROLE_MODELER')"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
+              <a href="models/edit/{{model.name}}" data-placement="bottom" title="Edit Model" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-pencil fa-lg fa-fw"></span></a>
+              <a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-copy fa-lg fa-fw"></span></a>
+              <a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
             </div>
 
           </li>
@@ -64,4 +64,3 @@
 </div>
 
 <div ng-include="'partials/models/model_detail.html'"></div>
-

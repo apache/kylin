@@ -106,4 +106,25 @@ KylinApp.service('ProjectModel', function () {
     });
   }
 
+  this.clear = function(){
+    this.projects = [];
+    this.selectedProject = "_null";
+  }
+
+  this.clearProjects = function(){
+    this.projects = [];
+  }
+
+  this.getIndex = function(project){
+    var index = -1;
+    for (var i = 0; i < this.projects.length; i++) {
+      if (this.projects[i].name == project) {
+        index = i;
+        break;
+      }
+    }
+    return index;
+
+  }
+
 })

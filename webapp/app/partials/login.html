@@ -32,26 +32,14 @@
                             <form name="login_form" ng-submit="login()">
                                 <div class="form-group">
                                     <span class="width-100 input-icon input-icon-right">
-                                        <input id="username" class="form-control" ng-model="username" type="text" autofocus="autofocus" required placeholder="Username" auto-fill-sync />
+                                        <input id="username" class="form-control" ng-model="username" type="text" autofocus="autofocus" ng-required placeholder="Username" auto-fill-sync />
                                         <i class="ace-icon fa fa-user"></i>
                                     </span>
                                 </div>
                                 <div class="form-group">
                                     <span class="width-100 input-icon input-icon-right">
-                                        <input id="password" class="form-control" ng-model="password" type="password" required placeholder="Password" auto-fill-sync />
+                                        <input id="password" class="form-control" ng-model="password" type="password" ng-required placeholder="Password" auto-fill-sync />
                                         <i class="ace-icon fa fa-lock"></i>
-                                    </span>
-                                </div>
-                                <div class="form-group">
-                                    <span>
-
-                                        <select  ng-required="projectModel.projects.length" chosen ng-model="projectModel.selectedProject" ng-init="newAccess.permission=permissions.READ.value;"
-                                                ng-options="project.name as project.name for project in projectModel.projects "
-                                                style="width: 100% !important;"
-                                                data-placeholder="select a project"
-                                                class="chosen-select">
-                                            <option value=""></option>
-                                        </select>
                                     </span>
                                 </div>
                                 <div class="space"></div>

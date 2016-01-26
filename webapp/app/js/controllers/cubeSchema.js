@@ -314,7 +314,7 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     // ~ private methods
     function initProject() {
-        ProjectService.list({}, function (projects) {
+        ProjectService.listReadable({}, function (projects) {
             $scope.projects = projects;
 
             var cubeName = (!!$scope.routeParams.cubeName)? $scope.routeParams.cubeName:$scope.state.cubeName;
