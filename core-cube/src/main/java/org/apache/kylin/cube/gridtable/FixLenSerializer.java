@@ -37,6 +37,7 @@ public class FixLenSerializer extends DataTypeSerializer {
     private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
 
     private int fixLen;
+    transient int avoidVerbose = 0;
 
     FixLenSerializer(int fixLen) {
         this.fixLen = fixLen;
@@ -60,7 +61,9 @@ public class FixLenSerializer extends DataTypeSerializer {
         } else {
             byte[] bytes = Bytes.toBytes(value.toString());
             if (bytes.length > fixLen) {
-                logger.warn("Expect at most " + fixLen + " bytes, but got " + bytes.length + ", will truncate, value string: " + value.toString());
+                if (avoidVerbose++ % 10000 == 0) {
+                    logger.warn("Expect at most " + fixLen + " bytes, but got " + bytes.length + ", will truncate, value string: " + value.toString() + " times:" + avoidVerbose);
+                }
             }
             out.put(bytes, 0, Math.min(bytes.length, fixLen));
             for (int i = bytes.length; i < fixLen; i++) {
