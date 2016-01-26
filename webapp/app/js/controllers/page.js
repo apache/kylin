@@ -25,7 +25,9 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
     $log.debug(data);
     kylinConfig.initWebConfigInfo();
   });
-
+  $rootScope.userAction={
+   'islogout':false
+  }
   $scope.kylinConfig = kylinConfig;
 
   $scope.header = {show: true};
@@ -42,34 +44,12 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   $scope.activeTab = "";
   $scope.projectModel = ProjectModel;
   $scope.tableModel = TableModel;
-  //init
-  ProjectService.list({}, function (projects) {
-    var _projects = [];
-    angular.forEach(projects, function (project, index) {
-      $scope.listAccess(project, 'ProjectInstance');
-      _projects.push(project);
-    });
-    _projects = _.sortBy(_projects, function (i) {
-      return i.name.toLowerCase();
-    });
-
-    ProjectModel.setProjects(_projects);
-
-    var absUrl = $location.absUrl();
-
-    var projectInCookie = $cookieStore.get("project");
-    if (absUrl.indexOf("/login") == -1) {
-      var selectedProject = projectInCookie != null ? projectInCookie : null;
-      $scope.projectModel.setSelectedProject(selectedProject);
-    } else {
-      var selectedProject = $scope.projectModel.selectedProject != null ? $scope.projectModel.selectedProject : projectInCookie != null ? projectInCookie : $scope.projectModel.projects[0];
-      $scope.projectModel.setSelectedProject(selectedProject);
-    }
-  });
 
 
   // Set up common methods
   $scope.logout = function () {
+    ProjectModel.clear();
+    $rootScope.userAction.islogout = true;
     $scope.$emit('event:logoutRequest');
     $http.get(Config.service.base + 'j_spring_security_logout').success(function () {
       UserService.setCurUser({});
@@ -110,7 +90,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   // common acl methods
   $scope.hasPermission = function (entity) {
     var curUser = UserService.getCurUser();
-    if (!curUser) {
+    if (!curUser.userDetails) {
       return curUser;
     }
 
@@ -182,8 +162,10 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
 
   $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
     if (newValue != oldValue) {
-      //$log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
-      $cookieStore.put("project", $scope.projectModel.selectedProject);
+      if(!$rootScope.userAction.islogout) {
+        //$log.log("project updated in page controller,from:"+oldValue+" To:"+newValue);
+        $cookieStore.put("project", $scope.projectModel.selectedProject);
+      }
     }
 
   });

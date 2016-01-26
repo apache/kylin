@@ -47,9 +47,14 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     var defer = $q.defer();
     var queryParam = {};
     if (!$scope.projectModel.isSelectedProjectValid()) {
-      return;
+      defer.resolve([]);
+      return defer.promise;
     }
 
+    if (!$scope.projectModel.projects.length) {
+      defer.resolve([]);
+      return defer.promise;
+    }
     queryParam.projectName = $scope.projectModel.selectedProject;
     return modelsManager.list(queryParam).then(function (resp) {
       defer.resolve(resp);

@@ -34,7 +34,7 @@ KylinApp
             var queryParam = {offset: offset, limit: limit};
 
             $scope.loading = true;
-            ProjectService.list(queryParam, function (projects) {
+            ProjectService.listReadable(queryParam, function (projects) {
                 $scope.projects = $scope.projects.concat(projects);
                 angular.forEach(projects, function (project) {
                     $scope.listAccess(project, 'ProjectInstance');
