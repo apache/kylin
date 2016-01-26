@@ -238,7 +238,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testTopNQuery() throws Exception {
             if ("left".equalsIgnoreCase(joinType)) {
-            this.execAndCompDynamicQuery("src/test/resources/query/sql_topn", null, true);
+            this.execAndCompQuery("src/test/resources/query/sql_topn", null, true);
         }
     }
 
