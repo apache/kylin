@@ -68,11 +68,11 @@ public class ExecutableDao {
         return pathOfJob(job.getUuid());
     }
 
-    private String pathOfJob(String uuid) {
+    public static String pathOfJob(String uuid) {
         return ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + uuid;
     }
 
-    private String pathOfJobOutput(String uuid) {
+    public static String pathOfJobOutput(String uuid) {
         return ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + uuid;
     }
 
