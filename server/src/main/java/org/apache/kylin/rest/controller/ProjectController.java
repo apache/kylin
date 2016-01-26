@@ -149,6 +149,9 @@ public class ProjectController extends BasicController {
                 List<CubeInstance> cubeInstances = cubeService.listAllCubes(projectInstance.getName());
 
                 for (CubeInstance cubeInstance : cubeInstances) {
+                    if(cubeInstance == null){
+                        continue;
+                    }
                     boolean hasCubePermission = false;
                     AclEntity cubeAe = accessService.getAclEntity("CubeInstance", cubeInstance.getId());
                     Acl cubeAcl = accessService.getAcl(cubeAe);
