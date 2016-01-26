@@ -81,7 +81,9 @@ public class CompareTupleFilter extends TupleFilter {
             }
         } else if (child instanceof ConstantTupleFilter) {
             this.conditionValues.addAll(child.getValues());
-            this.firstCondValue = this.conditionValues.iterator().next();
+            if (!this.conditionValues.isEmpty()) {
+                this.firstCondValue = this.conditionValues.iterator().next();
+            }
         } else if (child instanceof DynamicTupleFilter) {
             DynamicTupleFilter dynamicFilter = (DynamicTupleFilter) child;
             this.dynamicVariables.put(dynamicFilter.getVariableName(), null);
