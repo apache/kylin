@@ -20,21 +20,13 @@ package org.apache.kylin.cube.model;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -43,6 +35,9 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.cube.model.validation.IValidatorRule;
+import org.apache.kylin.cube.model.validation.ResultLevel;
+import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -65,12 +60,15 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeDesc extends RootPersistentEntity {
+    private static final Logger logger = LoggerFactory.getLogger(CubeDesc.class);
 
     public static class CannotFilterExtendedColumnException extends RuntimeException {
         public CannotFilterExtendedColumnException(TblColRef tblColRef) {
@@ -479,6 +477,9 @@ public class CubeDesc extends RootPersistentEntity {
             this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
         }
 
+        // check if aggregation group is valid
+        validate(this);
+
         this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
 
         if (this.model == null) {
@@ -508,6 +509,146 @@ public class CubeDesc extends RootPersistentEntity {
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
             addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "). ");
         }
+    }
+
+    public void validate(CubeDesc cube) {
+        inner(cube);
+    }
+
+    private void inner(CubeDesc cube) {
+        int maxSize = getMaxAgrGroupSize();
+        int index = 0;
+
+        for (AggregationGroup agg : cube.getAggregationGroups()) {
+            if (agg.getIncludes() == null) {
+                logger.error("Aggregation group " + index + " includes field not set");
+                throw new IllegalStateException("Aggregation group " + index + " includes field not set");
+            }
+
+            if (agg.getSelectRule() == null) {
+                logger.error("Aggregation group " + index + " includes field not set");
+                throw new IllegalStateException("Aggregation group " + index + " select rule field not set");
+            }
+
+            Set<String> includeDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            getDims(includeDims, agg.getIncludes());
+
+            Set<String> mandatoryDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            getDims(mandatoryDims, agg.getSelectRule().mandatory_dims);
+
+            ArrayList<Set<String>> hierarchyDimsList = new ArrayList ();
+            Set<String> hierarchyDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            getDims(hierarchyDimsList, hierarchyDims, agg.getSelectRule().hierarchy_dims);
+
+            ArrayList<Set<String>> jointDimsList = new ArrayList ();
+            Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            getDims(jointDimsList, jointDims, agg.getSelectRule().joint_dims);
+
+            if (!includeDims.containsAll(mandatoryDims) || !containsAll(includeDims, hierarchyDimsList) || !containsAll(includeDims, jointDimsList)) {
+                logger.error("Aggregation group " + index + " Include dims not containing all the used dims");
+                throw new IllegalStateException("Aggregation group " + index + " Include dims not containing all the used dims");
+            }
+
+            Set<String> normalDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            normalDims.addAll(includeDims);
+            normalDims.removeAll(mandatoryDims);
+            normalDims.removeAll(hierarchyDims);
+            normalDims.removeAll(jointDims);
+
+            int normalDimSize = normalDims.size();
+            int hierarchyDimSize = hierarchyDimsList.size();
+            int jointDimSize = jointDimsList.size();
+
+            if (normalDimSize + hierarchyDimSize + jointDimSize > maxSize) {
+                logger.error("Aggregation group " + index + " has too many dimensions");
+                throw new IllegalStateException("Aggregation group " + index + " has too many dimensions");
+            }
+
+            if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
+                logger.warn("Aggregation group " + index + " mandatory dims overlap with hierarchy dims");
+            }
+            if (CollectionUtils.containsAny(mandatoryDims, jointDims)) {
+                logger.warn("Aggregation group " + index + " mandatory dims overlap with joint dims");
+            }
+            if (CollectionUtils.containsAny(hierarchyDims, jointDims)) {
+                logger.error("Aggregation group " + index + " hierarchy dims overlap with joint dims");
+                throw new IllegalStateException("Aggregation group " + index + " hierarchy dims overlap with joint dims");
+            }
+            if (hasSingle(hierarchyDimsList)) {
+                logger.error("Aggregation group " + index + " require at least 2 dims in a hierarchy");
+                throw new IllegalStateException("Aggregation group " + index + " require at least 2 dims in a hierarchy");
+            }
+            if (hasSingle(jointDimsList)) {
+                logger.error("Aggregation group " + index + " require at least 2 dims in a joint");
+                throw new IllegalStateException("Aggregation group " + index + " require at least 2 dims in a joint");
+            }
+            if (hasOverlap(hierarchyDimsList, hierarchyDims)) {
+                logger.error("Aggregation group " + index + " a dim exist in more than one hierarchy");
+                throw new IllegalStateException("Aggregation group " + index + " a dim exist in more than one hierarchy");
+            }
+            if (hasOverlap(jointDimsList, jointDims)) {
+                logger.error("Aggregation group " + index + " a dim exist in more than one joint");
+                throw new IllegalStateException("Aggregation group " + index + " a dim exist in more than one joint");
+            }
+
+            index++;
+        }
+    }
+
+    private void getDims (Set<String> dims, String [] stringSet) {
+        if (stringSet != null) {
+            for (String str : stringSet) {
+                dims.add(str);
+            }
+        }
+    }
+
+    private void getDims (ArrayList<Set<String>> dimsList, Set<String> dims, String [][] stringSets) {
+        Set<String> temp = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        if (stringSets != null) {
+            for (String[] ss : stringSets) {
+                temp.clear();
+                for (String s : ss) {
+                    temp.add(s);
+                    dims.add(s);
+                }
+                dimsList.add(temp);
+            }
+        }
+    }
+
+    private boolean containsAll(Set<String> includeDims, ArrayList<Set<String>> dimsList) {
+        boolean b = true;
+        for (Set<String> dims : dimsList) {
+            if (!includeDims.containsAll(dims))
+                b = false;
+        }
+        return b;
+    }
+
+    private boolean hasSingle (ArrayList<Set<String>> dimsList) {
+        boolean hasSingle = false;
+        for (Set<String> dims : dimsList) {
+            if (dims.size() < 2)
+                hasSingle = true;
+        }
+        return hasSingle;
+    }
+
+    private boolean hasOverlap (ArrayList<Set<String>> dimsList, Set<String> Dims) {
+        boolean hasOverlap = false;
+        int dimSize = 0;
+        for (Set<String> dims : dimsList) {
+            dimSize += dims.size();
+        }
+        if (dimSize != Dims.size())
+            hasOverlap = true;
+        return hasOverlap;
+    }
+
+    protected int getMaxAgrGroupSize() {
+        String size = KylinConfig.getInstanceFromEnv().getOptional(IValidatorRule.KEY_MAX_AGR_GROUP_SIZE, String.valueOf(IValidatorRule.DEFAULT_MAX_AGR_GROUP_SIZE));
+        return Integer.parseInt(size);
     }
 
     private void initDimensionColumns() {
