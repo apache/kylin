@@ -19,8 +19,10 @@
 package org.apache.kylin.query.relnode;
 
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.adapter.enumerable.EnumerableCalc;
@@ -160,6 +162,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             List<? extends TupleFilter> children = filter.getChildren();
             TblColRef inColumn = null;
             List<Object> inValues = new LinkedList<Object>();
+            Map<String, Object> dynamicVariables = new HashMap<>();
             for (TupleFilter child : children) {
                 if (child.getOperator() == FilterOperatorEnum.EQ) {
                     CompareTupleFilter compFilter = (CompareTupleFilter) child;
@@ -172,6 +175,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
                         return null;
                     }
                     inValues.addAll(compFilter.getValues());
+                    dynamicVariables.putAll(compFilter.getVariables());
                 } else {
                     return null;
                 }
@@ -182,6 +186,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             CompareTupleFilter inFilter = new CompareTupleFilter(FilterOperatorEnum.IN);
             inFilter.addChild(new ColumnTupleFilter(inColumn));
             inFilter.addChild(new ConstantTupleFilter(inValues));
+            inFilter.getVariables().putAll(dynamicVariables);
             return inFilter;
         }
 
