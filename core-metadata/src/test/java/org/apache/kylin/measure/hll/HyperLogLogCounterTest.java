@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.hll;
+package org.apache.kylin.measure.hll;
 
 import static org.junit.Assert.assertEquals;
 
@@ -26,8 +26,8 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.junit.Assert;
 import org.junit.Test;
 

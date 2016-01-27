@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.common.topn;
+package org.apache.kylin.measure.topn;
 
 import static org.junit.Assert.*;
 

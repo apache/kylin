@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.measure.bitmap.BitmapCounter;

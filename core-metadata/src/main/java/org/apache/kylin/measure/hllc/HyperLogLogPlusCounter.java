@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.hll;
+package org.apache.kylin.measure.hllc;
 
 import java.io.IOException;
 import java.io.Serializable;

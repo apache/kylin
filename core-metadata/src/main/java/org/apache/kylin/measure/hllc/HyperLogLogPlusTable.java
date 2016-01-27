@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.hll;
+package org.apache.kylin.measure.hllc;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
