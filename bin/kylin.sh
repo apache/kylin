@@ -115,7 +115,7 @@ then
     fi
     
 # tool command
-elif [[ $1 = org.apache.kylin.* ]]
+elif [[ "$1" = org.apache.kylin.* ]]
 then
     #retrive $hive_dependency and $hbase_dependency
     source ${dir}/find-hive-dependency.sh
