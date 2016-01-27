@@ -66,13 +66,14 @@ public class ProjectController extends BasicController {
     private AccessService accessService;
     @Autowired
     private CubeService cubeService;
+
     /**
      * Get available project list
-     * 
+     *
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = {RequestMethod.GET})
     @ResponseBody
     public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listAllProjects(limit, offset);
@@ -110,71 +111,72 @@ public class ProjectController extends BasicController {
         }
         String userName = userDetails.getUsername();
         for (ProjectInstance projectInstance : projectInstances) {
+            if (projectInstance == null) {
+                continue;
+            }
 
             boolean hasProjectPermission = false;
             AclEntity ae = accessService.getAclEntity("ProjectInstance", projectInstance.getId());
             Acl projectAcl = accessService.getAcl(ae);
             //project no Acl info will be skipped
-            if(projectAcl == null){
-                continue;
-            }
+            if (projectAcl != null) {
 
-            //project owner has permission
-            if (((PrincipalSid)projectAcl.getOwner()).getPrincipal().equals(userName)) {
-                readableProjects.add(projectInstance);
-                continue;
-            }
-
-            //check project permission and role
-            for (AccessControlEntry ace : projectAcl.getEntries()) {
-                if( ace.getSid() instanceof PrincipalSid && ((PrincipalSid)ace.getSid()).getPrincipal().equals(userName)) {
-                    hasProjectPermission = true;
+                //project owner has permission
+                if (((PrincipalSid) projectAcl.getOwner()).getPrincipal().equals(userName)) {
                     readableProjects.add(projectInstance);
-                    break;
+                    continue;
+                }
 
-                }else if(ace.getSid() instanceof GrantedAuthoritySid){
-                    String projectAuthority = ((GrantedAuthoritySid) ace.getSid()).getGrantedAuthority();
-                    if(userAuthority.contains(projectAuthority)){
+                //check project permission and role
+                for (AccessControlEntry ace : projectAcl.getEntries()) {
+                    if (ace.getSid() instanceof PrincipalSid && ((PrincipalSid) ace.getSid()).getPrincipal().equals(userName)) {
                         hasProjectPermission = true;
                         readableProjects.add(projectInstance);
                         break;
+
+                    } else if (ace.getSid() instanceof GrantedAuthoritySid) {
+                        String projectAuthority = ((GrantedAuthoritySid) ace.getSid()).getGrantedAuthority();
+                        if (userAuthority.contains(projectAuthority)) {
+                            hasProjectPermission = true;
+                            readableProjects.add(projectInstance);
+                            break;
+                        }
+
                     }
 
                 }
-
             }
+
             if (!hasProjectPermission) {
                 List<CubeInstance> cubeInstances = cubeService.listAllCubes(projectInstance.getName());
 
                 for (CubeInstance cubeInstance : cubeInstances) {
-                    if(cubeInstance == null){
+                    if (cubeInstance == null) {
                         continue;
                     }
                     boolean hasCubePermission = false;
                     AclEntity cubeAe = accessService.getAclEntity("CubeInstance", cubeInstance.getId());
                     Acl cubeAcl = accessService.getAcl(cubeAe);
                     //cube no Acl info will not be used to filter project
-                    if(cubeAcl == null){
-                        continue;
-                    }
-                    //cube owner will have permission to read project
-                    if (((PrincipalSid)cubeAcl.getOwner()).getPrincipal().equals(userName)) {
-                        hasProjectPermission = true;
-                        break;
-                    }
-                    for (AccessControlEntry cubeAce : cubeAcl.getEntries()) {
-
-                        if (cubeAce.getSid() instanceof PrincipalSid && ((PrincipalSid)cubeAce.getSid()).getPrincipal().equals(userName)) {
-                            hasCubePermission = true;
+                    if (cubeAcl != null) {
+                        //cube owner will have permission to read project
+                        if (((PrincipalSid) cubeAcl.getOwner()).getPrincipal().equals(userName)) {
+                            hasProjectPermission = true;
                             break;
                         }
-                        else if(cubeAce.getSid() instanceof GrantedAuthoritySid) {
-                            String cubeAuthority = ((GrantedAuthoritySid) cubeAce.getSid()).getGrantedAuthority();
-                            if(userAuthority.contains(cubeAuthority)){
+                        for (AccessControlEntry cubeAce : cubeAcl.getEntries()) {
+
+                            if (cubeAce.getSid() instanceof PrincipalSid && ((PrincipalSid) cubeAce.getSid()).getPrincipal().equals(userName)) {
                                 hasCubePermission = true;
                                 break;
-                            }
+                            } else if (cubeAce.getSid() instanceof GrantedAuthoritySid) {
+                                String cubeAuthority = ((GrantedAuthoritySid) cubeAce.getSid()).getGrantedAuthority();
+                                if (userAuthority.contains(cubeAuthority)) {
+                                    hasCubePermission = true;
+                                    break;
+                                }
 
+                            }
                         }
                     }
                     if (hasCubePermission) {
@@ -192,7 +194,7 @@ public class ProjectController extends BasicController {
         return readableProjects;
     }
 
-    @RequestMapping(value = "", method = { RequestMethod.POST })
+    @RequestMapping(value = "", method = {RequestMethod.POST})
     @ResponseBody
     public ProjectInstance saveProject(@RequestBody CreateProjectRequest projectRequest) {
         if (StringUtils.isEmpty(projectRequest.getName())) {
@@ -210,7 +212,7 @@ public class ProjectController extends BasicController {
         return createdProj;
     }
 
-    @RequestMapping(value = "", method = { RequestMethod.PUT })
+    @RequestMapping(value = "", method = {RequestMethod.PUT})
     @ResponseBody
     public ProjectInstance updateProject(@RequestBody UpdateProjectRequest projectRequest) {
         if (StringUtils.isEmpty(projectRequest.getFormerProjectName())) {
@@ -229,7 +231,7 @@ public class ProjectController extends BasicController {
         return updatedProj;
     }
 
-    @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{projectName}", method = {RequestMethod.DELETE})
     @ResponseBody
     public void deleteProject(@PathVariable String projectName) {
         try {
@@ -245,6 +247,7 @@ public class ProjectController extends BasicController {
     public void setProjectService(ProjectService projectService) {
         this.projectService = projectService;
     }
+
     public void setAccessService(AccessService accessService) {
         this.accessService = accessService;
     }
