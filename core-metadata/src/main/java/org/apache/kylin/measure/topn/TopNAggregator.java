@@ -20,7 +20,6 @@ package org.apache.kylin.measure.topn;
 
 import java.util.Map;
 
-import org.apache.kylin.common.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.measure.MeasureAggregator;
 

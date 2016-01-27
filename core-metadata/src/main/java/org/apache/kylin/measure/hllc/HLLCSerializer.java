@@ -21,7 +21,6 @@ package org.apache.kylin.measure.hllc;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 

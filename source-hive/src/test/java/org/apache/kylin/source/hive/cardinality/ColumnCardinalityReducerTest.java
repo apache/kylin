@@ -33,11 +33,9 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.source.hive.cardinality.ColumnCardinalityMapper;
-import org.apache.kylin.source.hive.cardinality.ColumnCardinalityReducer;
 import org.junit.Before;
 import org.junit.Test;
 

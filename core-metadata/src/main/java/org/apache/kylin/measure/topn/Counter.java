@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.topn;
+package org.apache.kylin.measure.topn;
 
 
 import java.io.Externalizable;
