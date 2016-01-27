@@ -19,9 +19,9 @@
 <div class="page-header" style="height: 50px;">
     <!--Project-->
     <form class="navbar-form navbar-left" style="margin-top: 0px !important;" ng-if="userService.isAuthorized()">
-        <div class="form-group">
+        <div class="form-group" ng-if="userService.hasRole('ROLE_MODELER')" >
             <a class="btn btn-xs btn-info" href="projects" tooltip="Manage Project"><i class="fa fa-gears"></i></a>
-            <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')||userService.hasRole('ROLE_MODELER')&&kylinConfig.getDeployEnv()!=='PROD'" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
+            <a class="btn btn-xs btn-primary" ng-if="userService.hasRole('ROLE_ADMIN')||kylinConfig.getDeployEnv()!=='PROD'" style="width: 29px" tooltip="Add Project" ng-click="toCreateProj()">
                 <i class="fa fa-plus"></i>
             </a>
         </div>

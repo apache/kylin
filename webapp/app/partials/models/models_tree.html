@@ -20,7 +20,7 @@
     <div class="row">
       <div class="col-xs-12" style="margin-top:10px;">
         <!--<i class="fa fa-plus fa-2x" style="color:green;"> New</i>-->
-        <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="true">
+        <a class="dropdown-toggle" ng-if="userService.hasRole('ROLE_MODELER')"  data-toggle="dropdown" href="#" aria-expanded="true">
           <i class="fa fa-plus fa-2x" style="color:#2e8965;"> New<span class="caret"></span></i>
           <!--<i> New </i> <span class="caret"></span>-->
         </a>
