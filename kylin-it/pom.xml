@@ -31,7 +31,6 @@
     <artifactId>kylin-it</artifactId>
     <name>Kylin:IT</name>
 
-
     <properties>
         <hdp.version/>
         <fastBuildMode/>
