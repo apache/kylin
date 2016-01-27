@@ -29,8 +29,7 @@
         <li class="{{modelsManager.selectedModel.visiblePage=='graph'? 'active':''}}">
             <a href="" ng-click="modelsManager.selectedModel.visiblePage='graph';buildGraph(modelsManager.selectedModel);$event.stopPropagation();">Visualization</a>
         </li>
-        <li class="{{modelsManager.selectedModel.visiblePage=='json_model'? 'active':''}}"
-            ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, 16) && !newAccess">
+        <li class="{{modelsManager.selectedModel.visiblePage=='json_model'? 'active':''}}">
             <a href="" ng-click="modelsManager.selectedModel.visiblePage='json_model';">JSON</a>
         </li>
         <li class="dropdown" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
@@ -59,9 +58,9 @@
     </div>
     <div ng-show="modelsManager.selectedModel.visiblePage=='graph'" id="model_graph_{{modelsManager.selectedModel.name}}" class="model-detail model_graph">
     </div>
-    <div ng-show="modelsManager.selectedModel.visiblePage=='json_model'" class="model-detail">
-          <pre ng-if="!state.jsonEdit"
-               style="background-color: white;border: 0px">{{angular.toJson(cleanStatus(modelsManager.selectedModel), true)}}</pre>
+    <div ng-show="modelsManager.selectedModel.visiblePage=='json_model'" class="cube-detail">
+          <pre
+               style="background-color: white;border: 0px">{{cleanStatus(modelsManager.selectedModel)}}</pre>
     </div>
 </div>
 

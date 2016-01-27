@@ -29,18 +29,18 @@ KylinApp.controller('CubeModelCtrl', function ($location,$scope, $modal,cubeConf
     };
 
     $scope.cleanStatus = function(model){
+        var _model = angular.copy(model);
 
-        if (!model)
+        if (!_model)
         {
             return;
         }
-        var newModel = jQuery.extend(true, {}, model);
+        var newModel = jQuery.extend(true, {}, _model);
         delete newModel.project;
         delete  newModel.accessEntities;
         delete  newModel.visiblePage;
         delete  newModel.cubes;
-
-        return newModel;
+        return angular.toJson(newModel,true);
     };
 
     $scope.cubeConfig = cubeConfig;

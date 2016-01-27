@@ -21,9 +21,6 @@
         <li class="{{(!cube.visiblePage || cube.visiblePage=='metadata')? 'active':''}}">
             <a href="" ng-click="cube.visiblePage='metadata'">Grid</a>
         </li>
-        <!--<li class="{{cube.visiblePage=='graph'? 'active':''}}">-->
-            <!--<a href="" ng-click="cube.visiblePage='graph';buildGraph(cube);">Visualization</a>-->
-        <!--</li>-->
         <li class="{{cube.visiblePage=='sql'? 'active':''}}">
             <a href="" ng-click="cube.visiblePage='sql';getCubeSql(cube)">SQL</a>
         </li>
@@ -31,10 +28,6 @@
             ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">
             <a href="" ng-click="cube.visiblePage='json';">JSON(Cube)</a>
         </li>
-      <!--<li class="{{cube.visiblePage=='json_model'? 'active':''}}"-->
-          <!--ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, 16) && !newAccess">-->
-        <!--<a href="" ng-click="cube.visiblePage='json_model';">JSON(Model)</a>-->
-      <!--</li>-->
         <li class="{{cube.visiblePage=='access'? 'active':''}}">
             <a href="" ng-click="cube.visiblePage='access';listAccess(cube, 'CubeInstance');">Access</a>
         </li>

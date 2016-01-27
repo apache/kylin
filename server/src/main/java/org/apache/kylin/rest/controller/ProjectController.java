@@ -112,67 +112,68 @@ public class ProjectController extends BasicController {
         }
         String userName = userDetails.getUsername();
         for (ProjectInstance projectInstance : projectInstances) {
+            if(projectInstance == null){
+                continue;
+            }
 
             boolean hasProjectPermission = false;
             AclEntity ae = accessService.getAclEntity("ProjectInstance", projectInstance.getId());
             Acl projectAcl = accessService.getAcl(ae);
             //project no Acl info will be skipped
-            if(projectAcl == null){
-                continue;
-            }
+            if (projectAcl != null) {
 
-            //project owner has permission
-            if (((PrincipalSid)projectAcl.getOwner()).getPrincipal().equals(userName)) {
-                readableProjects.add(projectInstance);
-                continue;
-            }
+                //project owner has permission
+                if (((PrincipalSid) projectAcl.getOwner()).getPrincipal().equals(userName)) {
+                    readableProjects.add(projectInstance);
+                    continue;
+                }
 
-            //check project permission and role
-            for (AccessControlEntry ace : projectAcl.getEntries()) {
-                if( ace.getSid() instanceof PrincipalSid && ((PrincipalSid)ace.getSid()).getPrincipal().equals(userName)) {
+                //check project permission and role
+                for (AccessControlEntry ace : projectAcl.getEntries()) {
+                    if (ace.getSid() instanceof PrincipalSid && ((PrincipalSid) ace.getSid()).getPrincipal().equals(userName)) {
                         hasProjectPermission = true;
                         readableProjects.add(projectInstance);
                         break;
 
-                }else if(ace.getSid() instanceof GrantedAuthoritySid){
-                    String projectAuthority = ((GrantedAuthoritySid) ace.getSid()).getGrantedAuthority();
-                    if(userAuthority.contains(projectAuthority)){
-                        hasProjectPermission = true;
-                        readableProjects.add(projectInstance);
-                        break;
+                    } else if (ace.getSid() instanceof GrantedAuthoritySid) {
+                        String projectAuthority = ((GrantedAuthoritySid) ace.getSid()).getGrantedAuthority();
+                        if (userAuthority.contains(projectAuthority)) {
+                            hasProjectPermission = true;
+                            readableProjects.add(projectInstance);
+                            break;
+                        }
+
                     }
 
                 }
-
             }
             if (!hasProjectPermission) {
                 List<CubeInstance> cubeInstances = cubeService.listAllCubes(projectInstance.getName());
 
                 for (CubeInstance cubeInstance : cubeInstances) {
-                    if(cubeInstance == null){
+                    if (cubeInstance == null) {
                         continue;
                     }
                     boolean hasCubePermission = false;
                     AclEntity cubeAe = accessService.getAclEntity("CubeInstance", cubeInstance.getId());
                     Acl cubeAcl = accessService.getAcl(cubeAe);
                     //cube no Acl info will not be used to filter project
-                    if(cubeAcl == null){
+                    if (cubeAcl == null) {
                         continue;
                     }
                     //cube owner will have permission to read project
-                    if (((PrincipalSid)cubeAcl.getOwner()).getPrincipal().equals(userName)) {
+                    if (((PrincipalSid) cubeAcl.getOwner()).getPrincipal().equals(userName)) {
                         hasProjectPermission = true;
                         break;
                     }
                     for (AccessControlEntry cubeAce : cubeAcl.getEntries()) {
 
-                        if (cubeAce.getSid() instanceof PrincipalSid && ((PrincipalSid)cubeAce.getSid()).getPrincipal().equals(userName)) {
+                        if (cubeAce.getSid() instanceof PrincipalSid && ((PrincipalSid) cubeAce.getSid()).getPrincipal().equals(userName)) {
                             hasCubePermission = true;
                             break;
-                        }
-                        else if(cubeAce.getSid() instanceof GrantedAuthoritySid) {
+                        } else if (cubeAce.getSid() instanceof GrantedAuthoritySid) {
                             String cubeAuthority = ((GrantedAuthoritySid) cubeAce.getSid()).getGrantedAuthority();
-                            if(userAuthority.contains(cubeAuthority)){
+                            if (userAuthority.contains(cubeAuthority)) {
                                 hasCubePermission = true;
                                 break;
                             }
