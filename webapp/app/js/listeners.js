@@ -27,10 +27,10 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
 
   $rootScope.$on("$routeChangeStart", function () {
       AuthenticationService.ping(function (data) {
+        UserService.setCurUser(data);
         if(!data.userDetails){
           $location.path(UserService.getHomePage());
         }else{
-          UserService.setCurUser(data);
           //get project info when login
           if (!ProjectModel.projects.length&&!$rootScope.userAction.islogout) {
 
