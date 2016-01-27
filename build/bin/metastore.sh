@@ -27,7 +27,7 @@
 dir=$(dirname ${0})
 source ${dir}/check-env.sh
 
-if [ $1 == "backup" ]
+if [ "$1" == "backup" ]
 then
 
     mkdir -p ${KYLIN_HOME}/meta_backups
@@ -40,19 +40,19 @@ then
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool download ${_file}
     echo "metadata store backed up to ${_file}"
 
-elif [ $1 == "restore" ]
+elif [ "$1" == "restore" ]
 then
 
     _file=$2
     echo "Starting restoring $_file"
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload $_file
 
-elif [ $1 == "reset" ]
+elif [ "$1" == "reset" ]
 then
 
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool  reset
     
-elif [ $1 == "clean" ]
+elif [ "$1" == "clean" ]
 then
 
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.engine.mr.steps.MetadataCleanupJob "${@:2}"
