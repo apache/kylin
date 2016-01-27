@@ -113,14 +113,14 @@ then
     fi
 
 # streaming command
-elif [ $1 == "streaming" ]
+elif [ "$1" == "streaming" ]
 then
     if [ $# -lt 4 ]
     then
         echo "invalid input args $@"
         exit -1
     fi
-    if [ $2 == "start" ]
+    if [ "$2" == "start" ]
     then
 
         #retrive $hive_dependency and $hbase_dependency
@@ -142,7 +142,7 @@ then
         org.apache.kylin.engine.streaming.cli.StreamingCLI $@ > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/logs/$3_$4 &
         echo "streaming started name: $3 id: $4"
         exit 0
-    elif [ $2 == "stop" ]
+    elif [ "$2" == "stop" ]
     then
         if [ ! -f "${KYLIN_HOME}/$3_$4" ]
             then
@@ -165,7 +165,7 @@ then
         fi
 
 # monitor command
-elif [ $1 == "monitor" ]
+elif [ "$1" == "monitor" ]
 then
     echo "monitor job"
 
@@ -189,7 +189,7 @@ then
     exit 0
 
 # tool command
-elif [[ $1 = org.apache.kylin.* ]]
+elif [[ "$1" = org.apache.kylin.* ]]
 then
     #retrive $hive_dependency and $hbase_dependency
     source ${dir}/find-hive-dependency.sh
