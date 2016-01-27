@@ -282,6 +282,7 @@
                                     <value>true</value>
                                 </property>
                             </systemProperties>
+                            <argLine>-Xms1G -Xmx4G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
                         </configuration>
                     </plugin>
                     <plugin>
