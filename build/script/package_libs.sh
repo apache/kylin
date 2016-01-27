@@ -37,20 +37,15 @@ else
     echo "git check passed"
 fi
 
-
-echo "Checking npm..."
-
-if [ -z "$(command -v npm)" ]
-then
-    echo "Please install npm first so that Kylin packaging can proceed"
-    exit 1
-else
-    echo "npm check passed"
-fi
-
 dir=$(dirname ${0})
 cd ${dir}/../..
 version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\['`
+
+if [ "$version" == "" ];then
+	echo "Failed to identify kylin version (current: `pwd`)"
+	exit 1
+fi
+
 echo "kylin version: ${version}"
 export version
 
@@ -74,8 +69,32 @@ cat << EOF > build/commit_SHA1
 EOF
 git rev-parse HEAD >> build/commit_SHA1
 
-sh build/script/download-tomcat.sh || { exit 1; }
-sh build/script/build.sh || { exit 1; }
-sh build/script/prepare.sh || { exit 1; }
-sh build/script/compress.sh || { exit 1; }
+echo "package libraries"
+mvn clean install -DskipTests	 || { exit 1; }
 
+echo "copy libraries"
+rm -rf build/lib
+mkdir build/lib
+cp assembly/target/kylin-assembly-${version}-job.jar build/lib/kylin-job-${version}.jar
+cp storage-hbase/target/kylin-storage-hbase-${version}-coprocessor.jar build/lib/kylin-coprocessor-${version}.jar
+cp jdbc/target/kylin-jdbc-${version}.jar build/lib/kylin-jdbc-${version}.jar
+# Copied file becomes 000 for some env (e.g. my Cygwin)
+chmod 644 build/lib/kylin-job-${version}.jar
+chmod 644 build/lib/kylin-coprocessor-${version}.jar
+chmod 644 build/lib/kylin-jdbc-${version}.jar
+
+echo 'package tar.gz'
+package_name=apache-kylin-${version}-lib
+cd build/
+rm -rf ${package_name}
+mkdir ${package_name}
+cp -r lib ${package_name}
+rm -rf lib
+find ${package_name} -type d -exec chmod 755 {} \;
+find ${package_name} -type f -exec chmod 644 {} \;
+find ${package_name} -type f -name "*.sh" -exec chmod 755 {} \;
+mkdir -p ../dist
+tar -cvzf ../dist/${package_name}.tar.gz ${package_name}
+rm -rf ${package_name}
+
+echo "Library package ready: dist/${package_name}.tar.gz"
