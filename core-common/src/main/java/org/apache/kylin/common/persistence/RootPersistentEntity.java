@@ -71,6 +71,22 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     @JsonProperty("last_modified")
     protected long lastModified;
 
+    /**
+     * Metadata version
+     *
+     * For example: 1.2.0
+     */
+    @JsonProperty("version")
+    protected String version;
+
+    public String getVersion() {
+      return version;
+    }
+
+    public void setVersion(String version) {
+      this.version = version;
+    }
+
     public String getUuid() {
         return uuid;
     }
@@ -103,6 +119,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         int result = 1;
         result = prime * result + (int) (lastModified ^ (lastModified >>> 32));
         result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
+        result = prime * result + ((version == null) ? 0 : version.hashCode());
         return result;
     }
 
@@ -115,7 +132,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         if (getClass() != obj.getClass())
             return false;
         RootPersistentEntity other = (RootPersistentEntity) obj;
-        if (lastModified != other.lastModified)
+        if (lastModified != other.lastModified || !(version == null || version.equals(other.getVersion())))
             return false;
         if (uuid == null) {
             if (other.uuid != null)
@@ -124,5 +141,4 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
             return false;
         return true;
     }
-
 }
