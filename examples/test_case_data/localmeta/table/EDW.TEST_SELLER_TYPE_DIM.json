@@ -1,4 +1,5 @@
 {
+  "model_version":"2.1",
   "uuid" : "9ecc90c4-55df-436f-8602-2fbd4bca72e1",
   "name" : "TEST_SELLER_TYPE_DIM",
   "columns" : [ {

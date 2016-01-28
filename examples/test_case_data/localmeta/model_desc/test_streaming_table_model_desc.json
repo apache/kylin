@@ -1,4 +1,5 @@
 {
+  "model_version":"2.1",
   "uuid": "ff527b94-f860-44c3-8452-93b177888732",
   "name": "test_streaming_table_model_desc",
   "dimensions": [

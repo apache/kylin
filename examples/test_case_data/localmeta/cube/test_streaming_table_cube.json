@@ -1,5 +1,6 @@
 {
   "uuid": "40a27d9d-c5f3-45c4-9b8b-503552419193",
+  "model_version":"2.1",
   "name": "test_streaming_table_cube",
   "owner": "ADMIN",
   "version": null,

@@ -1,4 +1,5 @@
 {
+  "model_version":"2.1",
   "uuid" : "ff527b94-f860-44c3-8452-93b17774c647",
   "name" : "test_kylin_inner_join_model_desc",
   "lookups" : [ {

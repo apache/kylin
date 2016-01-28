@@ -1,5 +1,6 @@
 {
   "uuid" : "0ef9b7a8-3929-4dff-b59d-2100aadc8dbf",
+  "model_version":"2.1",
   "name" : "kylin_sales_cube_desc",
   "description" : null,
   "dimensions" : [ {

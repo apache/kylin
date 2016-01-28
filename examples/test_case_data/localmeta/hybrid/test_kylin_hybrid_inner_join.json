@@ -1,5 +1,6 @@
 {
   "uuid": "9iiu8590-64b6-4367-8fb5-7500eb95fd9c",
+  "model_version":"2.1",
   "name": "test_kylin_hybrid_inner_join",
   "realizations": [
     {

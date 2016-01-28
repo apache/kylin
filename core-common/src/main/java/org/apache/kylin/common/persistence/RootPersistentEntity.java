@@ -73,19 +73,19 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     protected long lastModified;
 
     /**
-     * Metadata version
+     * Metadata model version
      *
-     * For example: 1.2.0
+     * For example: 2.1
      */
-    @JsonProperty("version")
-    protected String version;
+    @JsonProperty("model_version")
+    protected String modelVersion;
 
-    public String getVersion() {
-      return version;
+    public String getModelVersion() {
+      return modelVersion;
     }
 
-    public void setVersion(String version) {
-      this.version = version;
+    public void setModelVersion(String modelVersion) {
+      this.modelVersion = modelVersion;
     }
 
     public String getUuid() {
@@ -109,13 +109,13 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     }
 
     /**
-     * Update entity version with current kylin version and uuid with randomUUID
+     * Update entity's "model_version" with current kylin version and "uuid" with random UUID
      *
      * @see KylinConfig#getKylinVersion()
      * @see UUID#randomUUID()
      */
     public void updateVersionAndRandomUuid() {
-        setVersion(KylinConfig.getKylinVersion());
+        setModelVersion(KylinConfig.getKylinVersion());
         setUuid(UUID.randomUUID().toString());
     }
 
@@ -125,7 +125,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         int result = 1;
         result = prime * result + (int) (lastModified ^ (lastModified >>> 32));
         result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
-        result = prime * result + ((version == null) ? 0 : version.hashCode());
+        result = prime * result + ((modelVersion == null) ? 0 : modelVersion.hashCode());
         return result;
     }
 
@@ -138,7 +138,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         if (getClass() != obj.getClass())
             return false;
         RootPersistentEntity other = (RootPersistentEntity) obj;
-        if (lastModified != other.lastModified || !(version == null || version.equals(other.getVersion())))
+        if (lastModified != other.lastModified || !(modelVersion == null || modelVersion.equals(other.getModelVersion())))
             return false;
         if (uuid == null) {
             if (other.uuid != null)

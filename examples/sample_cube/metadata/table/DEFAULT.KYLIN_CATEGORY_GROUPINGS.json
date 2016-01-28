@@ -1,5 +1,6 @@
 {
   "uuid" : "952d11b5-69d9-45d1-92af-227489485e3f",
+  "model_version":"2.1",
   "name" : "KYLIN_CATEGORY_GROUPINGS",
   "columns" : [ {
     "id" : "1",

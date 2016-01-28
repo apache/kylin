@@ -1,5 +1,6 @@
 {
   "uuid" : "bbbba905-1fc6-4f67-985c-38fa5aeafd92",
+  "model_version":"2.1",
   "name" : "test_kylin_cube_with_slr_left_join_desc",
   "description" : null,
   "dimensions" : [ {
