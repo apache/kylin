@@ -91,7 +91,7 @@ KylinApp
       }
 
       if (typeof precision === 'undefined') {
-        precision = 1;
+        precision = 3;
       }
 
       var units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'],
