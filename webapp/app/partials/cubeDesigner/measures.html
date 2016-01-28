@@ -180,13 +180,33 @@
                           </div>
                       </div>
                       <!--Name-->
-                      <div class="form-group">
+                      <div class="form-group" ng-if="newMeasure.function.expression == 'COUNT_DISTINCT'">
                         <div class="row">
                           <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Next Parameter</b></label>
                           <div class="col-xs-12 col-sm-6">
-                            <input type="text" placeholder="Next parameter.." class="form-control"
-                                   tooltip="next parameter.." tooltip-trigger="focus"
-                                   ng-model="newMeasure.function.parameter.next_parameter" required />
+                            <table class="table table-hover table-bordered list" ng-if="nextParameters.length">
+                              <tr>
+                                <th>Type</th>
+                                <th>Value</th>
+                                <th></td>
+                              </tr>
+                              <tr ng-repeat="n_parameter in nextParameters track by $index">
+                                <td>{{n_parameter.type}}</td>
+                                <td>{{n_parameter.value}}</td>
+                                <td>
+                                  <button class="btn btn-xs btn-info" ng-click="editNextParameter(n_parameter)">
+                                    <i class="fa fa-pencil"></i>
+                                  </button>
+                                  <button class="btn btn-xs btn-info" ng-click="removeParameter(nextParameters, $index)"><i class="fa fa-minus"></i>
+                                  </button>
+
+                                </td>
+
+                              </tr>
+                            </table>
+                            <button class="btn btn-sm btn-info" ng-click="addNextParameter()"
+                                    ng-show="state.mode=='edit'"><i class="fa fa-plus">Next Parameter</i>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -221,3 +241,61 @@
   </div>
   </ng-form>
 </div>
+
+
+
+
+<script type="text/ng-template" id="nextParameter.html">
+  <div class="modal-header">
+    <h4 tooltip="submit">Next Parameter</h4>
+  </div>
+  <div class="modal-body" style="background-color: white">
+
+    <div class="row">
+      <div class="col-md-2"></div>
+      <div class="col-md-8">
+        <div class="row">
+          <div class="form-group">
+            <div class="row">
+              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Type</b></label>
+              <div class="col-xs-12 col-sm-6">
+                <select class="form-control"
+                        chosen ng-model="nextPara.type" required
+                        ng-options="mpt as mpt for mpt in cubeConfig.measureParamType">
+                  <option value=""></option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2"></div>
+    </div>
+    <div class="row">
+      <div class="col-md-2"></div>
+      <div class="col-md-8">
+        <div class="row">
+          <div class="form-group">
+            <div class="row">
+              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Value</b></label>
+                <!--COUNT_DISTINCT-->
+              <div class="col-xs-12 col-sm-6">
+                <select class="form-control" chosen
+                        ng-model="nextPara.value"
+                        ng-options="column as column for column in getMetricColumns()" >
+                </select>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2"></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-success" ng-click="ok()">OK</button>
+    <button class="btn btn-primary" ng-click="cancel()">Close</button>
+  </div>
+</script>
