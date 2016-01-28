@@ -98,14 +98,14 @@
                 <h5><b>HTable:</b> {{table.tableName}}</h5>
                 <ul>
                     <li>Region Count: <span class="red">{{table.regionCount}}</span></li>
-                    <li>Size: <span class="red">{{table.tableSize | bytes:2}}</span></li>
+                    <li>Size: <span class="red">{{table.tableSize | bytes:5}}</span></li>
                     <li>Start Time: <span class="red">{{table.dateRangeStart | reverseToGMT0}}</span></li>
                     <li>End Time: <span class="red">{{table.dateRangeEnd | reverseToGMT0}}</span></li>
                 </ul>
             </div>
             <div ng-if="cube.hbase">
                 <div class="hr hr8 hr-double hr-dotted"></div>
-                <h5><b>Total Size:</b> <span class="red">{{cube.totalSize | bytes:2}}</span></h5>
+                <h5><b>Total Size:</b> <span class="red">{{cube.totalSize | bytes:5}}</span></h5>
                 <h5><b>Total Number:</b> <span class="red">{{cube.hbase.length}}</span></h5>
             </div>
             <div ng-if="cube.hbase.length == 0">
