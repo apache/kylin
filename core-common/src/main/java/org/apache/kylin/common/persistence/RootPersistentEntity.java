@@ -30,6 +30,7 @@ import org.apache.commons.lang.time.FastDateFormat;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.common.KylinConfig;
 
 /**
  * Marks the root entity of JSON persistence. Unit of read, write, cache, and
@@ -106,10 +107,15 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
     }
-    
-    
 
-    public void updateRandomUuid() {
+    /**
+     * Update entity version with current kylin version and uuid with randomUUID
+     *
+     * @see KylinConfig#getKylinVersion()
+     * @see UUID#randomUUID()
+     */
+    public void updateVersionAndRandomUuid() {
+        setVersion(KylinConfig.getKylinVersion());
         setUuid(UUID.randomUUID().toString());
     }
 
