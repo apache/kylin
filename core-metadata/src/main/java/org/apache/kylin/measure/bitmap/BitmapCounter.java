@@ -63,11 +63,6 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         add(Integer.parseInt(value));
     }
 
-    public void add(long value) {
-        // TODO we need support long later
-        add((int) value);
-    }
-
     public void merge(BitmapCounter another) {
         this.bitmap.or(another.bitmap);
     }

@@ -36,7 +36,7 @@ public class BitmapSerializerTest {
         counter.add(1);
         counter.add(3333);
         counter.add("123".getBytes());
-        counter.add((long)123);
+        counter.add(123);
         assertEquals(3, counter.getCount());
 
         ByteBuffer buffer = ByteBuffer.allocate(10 * 1024 * 1024);
