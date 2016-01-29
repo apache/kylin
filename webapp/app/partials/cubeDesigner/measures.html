@@ -25,10 +25,8 @@
                       <tr>
                           <th>Name</th>
                           <th>Expression</th>
-                          <th>Param Type</th>
-                          <th>Param Value</th>
+                          <th>Parameters</th>
                           <th>Return Type</th>
-                          <th>Next Parameter</th>
                           <th ng-if="state.mode=='edit'">Actions</th>
                       </tr>
                   </thead>
@@ -43,19 +41,16 @@
                               <span>{{measure.function.expression}}</span>
                           </td>
                           <td>
-                              <!--Param Type -->
-                              <span>{{measure.function.parameter.type}}</span>
-                          </td>
-                          <td>
-                              <!--Param Value -->
-                              <span>{{measure.function.parameter.value}}</span>
+                            <div class="paraTree">
+                              <ul>
+                                <parametertree ng-if="measure.function.parameter!=null" nextpara="measure.function.parameter"></parametertree>
+                              </ul>
+                            </div>
+                        <!--<span ng-if="measure.function.parameter.next_parameter!=null">{{measure.function.parameter.next_parameter |json}}</span>-->
                           </td>
                           <td>
                               <!--Return Type -->
                               <span>{{measure.function.returntype}}</span>
-                          </td>                          <td>
-                              <!--Return Type -->
-                              <span>{{measure.function.parameter.next_parameter}}</span>
                           </td>
                           <td ng-if="state.mode=='edit'">
                               <!--Edit Button -->
@@ -180,9 +175,9 @@
                           </div>
                       </div>
                       <!--Name-->
-                      <div class="form-group" ng-if="newMeasure.function.expression == 'COUNT_DISTINCT'">
+                      <div class="form-group">
                         <div class="row">
-                          <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Next Parameter</b></label>
+                          <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b></b></label>
                           <div class="col-xs-12 col-sm-6">
                             <table class="table table-hover table-bordered list" ng-if="nextParameters.length">
                               <tr>
@@ -205,7 +200,7 @@
                               </tr>
                             </table>
                             <button class="btn btn-sm btn-info" ng-click="addNextParameter()"
-                                    ng-show="state.mode=='edit'"><i class="fa fa-plus">Next Parameter</i>
+                                    ng-show="state.mode=='edit'"><i class="fa fa-plus">Parameter</i>
                             </button>
                           </div>
                         </div>
@@ -247,7 +242,7 @@
 
 <script type="text/ng-template" id="nextParameter.html">
   <div class="modal-header">
-    <h4 tooltip="submit">Next Parameter</h4>
+    <h4 tooltip="submit">Add Parameter</h4>
   </div>
   <div class="modal-body" style="background-color: white">
 
@@ -281,10 +276,14 @@
               <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Value</b></label>
                 <!--COUNT_DISTINCT-->
               <div class="col-xs-12 col-sm-6">
-                <select class="form-control" chosen
+                <select class="form-control" chosen ng-if="nextPara.type !== 'constant'"
                         ng-model="nextPara.value"
                         ng-options="column as column for column in getMetricColumns()" >
+                  <option value=""></option>
                 </select>
+               <span class="font-color-default"
+                     ng-if="nextPara.type == 'constant'"
+                     ng-init="nextPara.value = 1"><b>&nbsp;&nbsp;1</b></span>
               </div>
               </div>
             </div>
