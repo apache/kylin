@@ -68,7 +68,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     if(index>-1){
       parameters.splice(index,1);
     }
-
+    $scope.updateNextParameter();
   }
   $scope.openParameterModal = function (parameter) {
     $modal.open({
