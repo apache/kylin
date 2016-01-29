@@ -422,8 +422,8 @@ public class CubeMigrationCLI {
                 HTableInterface srcAclHtable = null;
                 HTableInterface destAclHtable = null;
                 try {
-                    srcAclHtable = HBaseConnection.get(srcConfig.getMetadataUrl()).getTable(srcConfig.getMetadataUrlPrefix() + "_acl");
-                    destAclHtable = HBaseConnection.get(dstConfig.getMetadataUrl()).getTable(dstConfig.getMetadataUrlPrefix() + "_acl");
+                    srcAclHtable = HBaseConnection.get(srcConfig.getStorageUrl()).getTable(srcConfig.getMetadataUrlPrefix() + "_acl");
+                    destAclHtable = HBaseConnection.get(dstConfig.getStorageUrl()).getTable(dstConfig.getMetadataUrlPrefix() + "_acl");
 
                     // cube acl
                     Result result  = srcAclHtable.get(new Get(Bytes.toBytes(cubeId)));
@@ -504,7 +504,7 @@ public class CubeMigrationCLI {
                 String cubeId = (String) opt.params[0];
                 HTableInterface destAclHtable = null;
                 try {
-                    destAclHtable = HBaseConnection.get(dstConfig.getMetadataUrl()).getTable(dstConfig.getMetadataUrlPrefix() + "_acl");
+                    destAclHtable = HBaseConnection.get(dstConfig.getStorageUrl()).getTable(dstConfig.getMetadataUrlPrefix() + "_acl");
 
                     destAclHtable.delete(new Delete(Bytes.toBytes(cubeId)));
                     destAclHtable.flushCommits();
