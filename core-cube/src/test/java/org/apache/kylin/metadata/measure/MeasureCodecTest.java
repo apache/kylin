@@ -53,7 +53,7 @@ public class MeasureCodecTest {
         BitmapCounter bitmap = new BitmapCounter();
         bitmap.add(123);
         bitmap.add(45678);
-        bitmap.add(Long.MAX_VALUE-10);
+        bitmap.add(Integer.MAX_VALUE-10);
         Object values[] = new Object[] { d, l, b, hllc, bitmap };
 
         ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
