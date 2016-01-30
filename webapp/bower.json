@@ -13,7 +13,7 @@
     "font-awesome": "4.3.0",
     "angular-ui-ace": "0.1.0",
     "angular-base64": "2.0.1",
-    "angular-tree-control": "0.1.4",
+    "angular-tree-control": "0.2.8",
     "angularLocalStorage": "~0.3.0",
     "messenger": "1.4.1",
     "moment": "2.5.1",

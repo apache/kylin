@@ -17,12 +17,13 @@
  */
 
 KylinApp.factory('TableService', ['$resource', function ($resource, config) {
-  return $resource(Config.service.url + 'tables/:tableName/:action', {}, {
+  return $resource(Config.service.url + 'tables/:tableName/:action/:database', {}, {
     list: {method: 'GET', params: {}, cache: true, isArray: true},
     get: {method: 'GET', params: {}, isArray: false},
     getExd: {method: 'GET', params: {action: 'exd-map'}, isArray: false},
     reload: {method: 'PUT', params: {action: 'reload'}, isArray: false},
     loadHiveTable: {method: 'POST', params: {}, isArray: false},
-    genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false}
-  });
+    genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false},
+    showHiveDatabases: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true},
+    showHiveTables: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true}  });
 }]);

@@ -101,13 +101,187 @@ KylinApp
       });
     };
 
-    var ModalInstanceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope) {
+    $scope.openTreeModal = function () {
+      $modal.open({
+        templateUrl: 'addHiveTableFromTree.html',
+        controller: ModalInstanceCtrl,
+        resolve: {
+          tableNames: function () {
+            return $scope.tableNames;
+          },
+          projectName:function(){
+            return  $scope.projectModel.selectedProject;
+          },
+          scope: function () {
+            return $scope;
+          }
+        }
+      });
+    };
+
+    var ModalInstanceCtrl = function ($scope, $location, $modalInstance, kylinConfig,tableNames, MessageService, projectName, scope) {
       $scope.tableNames = "";
       $scope.projectName = projectName;
       $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
       };
+
+      $scope.treeOptions = {multiSelection: true};
+      $scope.selectedNodes = [];
+      $scope.hiveLimit =  kylinConfig.getHiveLimit();
+
+      $scope.loadHive = function () {
+        if($scope.hiveLoaded)
+          return;
+        TableService.showHiveDatabases({}, function (databases) {
+          $scope.dbNum = databases.length;
+          if (databases.length > 0) {
+            $scope.hiveMap = {};
+            for (var i = 0; i < databases.length; i++) {
+              var dbName = databases[i];
+              var hiveData = {"dbname":dbName,"tables":[],"expanded":false};
+              $scope.hive.push(hiveData);
+              $scope.hiveMap[dbName] = i;
+            }
+          }
+          $scope.hiveLoaded = true;
+          $scope.showMoreDatabases();
+        });
+      }
+
+      $scope.showMoreTables = function(hiveTables, node){
+        var shownTimes = parseInt(node.children.length / $scope.hiveLimit);
+        var from = $scope.hiveLimit * shownTimes;
+        var to = 0;
+        var hasMore = false;
+        if(from + $scope.hiveLimit > hiveTables.length) {
+          to = hiveTables.length - 1;
+        } else {
+          to = from + $scope.hiveLimit - 1;
+          hasMore = true;
+        }
+        if(!angular.isUndefined(node.children[from])){
+          node.children.pop();
+        }
+
+        for(var idx = from; idx <= to; idx++){
+          node.children.push({"label":node.label+'.'+hiveTables[idx],"id":idx-from+1,"children":[]});
+        }
+
+        if(hasMore){
+          var loading = {"label":"","id":65535,"children":[]};
+          node.children.push(loading);
+        }
+      }
+
+      $scope.showAllTables = function(hiveTables, node){
+        var shownTimes = parseInt(node.children.length / $scope.hiveLimit);
+        var from = $scope.hiveLimit * shownTimes;
+        var to = hiveTables.length - 1;
+        if(!angular.isUndefined(node.children[from])){
+          node.children.pop();
+        }
+        for(var idx = from; idx <= to; idx++){
+          node.children.push({"label":node.label+'.'+hiveTables[idx],"id":idx-from+1,"children":[]});
+        }
+      }
+
+      $scope.showMoreDatabases = function(){
+        var shownTimes = parseInt($scope.treedata.length / $scope.hiveLimit);
+        var from = $scope.hiveLimit * shownTimes;
+        var to = 0;
+        var hasMore = false;
+        if(from + $scope.hiveLimit > $scope.hive.length) {
+          to = $scope.hive.length - 1;
+        } else {
+          to = from + $scope.hiveLimit - 1;
+          hasMore = true;
+        }
+        if(!angular.isUndefined($scope.treedata[from])){
+          $scope.treedata.pop();
+        }
+
+        for(var idx = from; idx <= to; idx++){
+          var children = [];
+          var loading = {"label":"","id":0,"children":[]};
+          children.push(loading);
+          $scope.treedata.push({"label":$scope.hive[idx].dbname,"id":idx+1,"children":children,"expanded":false});
+        }
+
+        if(hasMore){
+          var loading = {"label":"","id":65535,"children":[0]};
+          $scope.treedata.push(loading);
+        }
+      }
+
+      $scope.showAllDatabases = function(){
+        var shownTimes = parseInt($scope.treedata.length / $scope.hiveLimit);
+        var from = $scope.hiveLimit * shownTimes;
+        var to = $scope.hive.length - 1;
+
+        if(!angular.isUndefined($scope.treedata[from])){
+          $scope.treedata.pop();
+        }
+
+        for(var idx = from; idx <= to; idx++){
+          var children = [];
+          var loading = {"label":"","id":0,"children":[]};
+          children.push(loading);
+          $scope.treedata.push({"label":$scope.hive[idx].dbname,"id":idx+1,"children":children,"expanded":false});
+        }
+      }
+
+      $scope.showMoreClicked = function($parentNode){
+        if($parentNode == null){
+          $scope.showMoreDatabases();
+        } else {
+          $scope.showMoreTables($scope.hive[$scope.hiveMap[$parentNode.label]].tables,$parentNode);
+        }
+      }
+
+      $scope.showAllClicked = function($parentNode){
+        if($parentNode == null){
+          $scope.showAllDatabases();
+        } else {
+          $scope.showAllTables($scope.hive[$scope.hiveMap[$parentNode.label]].tables,$parentNode);
+        }
+      }
+
+      $scope.showToggle = function(node) {
+        if(node.expanded == false){
+          TableService.showHiveTables({"database": node.label},function (hive_tables){
+            var tables = [];
+            for (var i = 0; i < hive_tables.length; i++) {
+              tables.push(hive_tables[i]);
+            }
+            $scope.hive[$scope.hiveMap[node.label]].tables = tables;
+            $scope.showMoreTables(tables,node);
+            node.expanded = true;
+          });
+        }
+      }
+
+      $scope.showSelected = function(node) {
+
+      }
+
+      if(angular.isUndefined($scope.hive) || angular.isUndefined($scope.hiveLoaded) || angular.isUndefined($scope.treedata) ){
+        $scope.hive = [];
+        $scope.hiveLoaded = false;
+        $scope.treedata = [];
+        $scope.loadHive();
+      }
+
       $scope.add = function () {
+
+        if($scope.tableNames.length === 0 && $scope.selectedNodes.length > 0) {
+          for(var i = 0; i <  $scope.selectedNodes.length; i++){
+            if($scope.selectedNodes[i].label.indexOf(".") >= 0){
+              $scope.tableNames += ($scope.selectedNodes[i].label) += ',';
+            }
+          }
+        }
+
         if ($scope.tableNames.trim() === "") {
           SweetAlert.swal('', 'Please input table(s) you want to synchronize.', 'info');
           return;
