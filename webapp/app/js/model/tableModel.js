@@ -48,12 +48,6 @@ KylinApp.service('TableModel', function (ProjectModel, $q, TableService) {
 
   this.treeOptions = {
     nodeChildren: "columns",
-    isSelectable:function(node){
-      if(node.id||node.uuid){//db
-        return true;
-      }
-      return false;
-    },
     injectClasses: {
       ul: "a1",
       li: "a2",

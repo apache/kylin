@@ -20,6 +20,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   var _config;
   var timezone;
   var deployEnv;
+  var deployEnv = 20;
 
 
   this.init = function () {
@@ -60,6 +61,12 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
       this.deployEnv = this.getProperty("deploy.env").trim();
     }
     return this.deployEnv.toUpperCase();
+  }
+  this.getHiveLimit = function () {
+    if (!this.hiveLimit) {
+      this.hiveLimit = this.getProperty("kylin.web.hive.limit");
+    }
+    return this.hiveLimit;
   }
 
   //fill config info for Config from backend
