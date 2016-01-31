@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -115,8 +116,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<LongWritable, Text,
 
             for (Text value : values) {
                 HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
-                ByteArray byteArray = new ByteArray(value.getBytes());
-                hll.readRegisters(byteArray.asBuffer());
+                hll.readRegisters(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()));
 
                 totalRowsBeforeMerge += hll.getCountEstimate();
 
