@@ -87,3 +87,5 @@ ebay*
 build/commit_SHA1
 dist/
 tomcat/
+webapp/app/kylin-servlet.xml
+webapp/app/web.xml
