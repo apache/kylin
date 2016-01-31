@@ -9,7 +9,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.MRUtil;
@@ -19,7 +18,6 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,8 +30,7 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     protected CubeSegment cubeSeg;
     protected CubeDesc cubeDesc;
     protected long baseCuboidId;
-    protected List<TblColRef> dictionaryColumns;
-    protected ArrayList<Integer> factDictCols;
+    protected List<TblColRef> factDictCols;
     protected IMRTableInputFormat flatTableInputFormat;
 
     protected Text outputKey = new Text();
@@ -54,32 +51,20 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
         cubeSeg = cube.getSegment(conf.get(BatchConstants.CFG_CUBE_SEGMENT_NAME), SegmentStatusEnum.NEW);
         cubeDesc = cube.getDescriptor();
         baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        dictionaryColumns = cubeDesc.getAllColumnsNeedDictionary();
-
-        factDictCols = new ArrayList<Integer>();
-        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        for (int i = 0; i < dictionaryColumns.size(); i++) {
-            TblColRef col = dictionaryColumns.get(i);
-
-            String scanTable = dictMgr.decideSourceData(cubeDesc.getModel(), true, col).getTable();
-            if (cubeDesc.getModel().isFactTable(scanTable)) {
-                factDictCols.add(i);
-            }
-        }
+        factDictCols = CubeManager.getInstance(config).getAllDictColumnsOnFact(cubeDesc);
 
         flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
 
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
         dictionaryColumnIndex = new int[factDictCols.size()];
         for (int i = 0; i < factDictCols.size(); i++) {
-            Integer column = factDictCols.get(i);
-            TblColRef colRef = dictionaryColumns.get(column);
+            TblColRef colRef = factDictCols.get(i);
             int columnIndexOnFlatTbl = intermediateTableDesc.getColumnIndex(colRef);
             dictionaryColumnIndex[i] = columnIndexOnFlatTbl;
         }
 
     }
-
+    
     protected void handleErrorRecord(String[] record, Exception ex) throws IOException {
 
         System.err.println("Insane record: " + Arrays.toString(record));

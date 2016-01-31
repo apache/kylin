@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 import org.apache.commons.io.IOUtils;
@@ -45,12 +46,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * @author yangli9
  */
 public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWritable, Text> {
 
-    private List<TblColRef> columnList = new ArrayList<TblColRef>();
-    private boolean collectStatistics = false;
+    private List<TblColRef> columnList;
     private String statisticsOutput = null;
     private List<Long> baseCuboidRowCountInMappers;
     protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
@@ -59,7 +58,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     private long totalRowsBeforeMerge = 0;
     private int samplingPercentage;
     private List<ByteArray> colValues;
-    private long currentColIndex = -1;
+    private TblColRef col = null;
+    private boolean isStatistics = false;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -70,42 +70,44 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
+        columnList =  CubeManager.getInstance(config).getAllDictColumnsOnFact(cubeDesc);
 
-        columnList = cubeDesc.getAllColumnsNeedDictionary();
-        collectStatistics = Boolean.parseBoolean(conf.get(BatchConstants.CFG_STATISTICS_ENABLED));
-        statisticsOutput = conf.get(BatchConstants.CFG_STATISTICS_OUTPUT);
-
-        if (collectStatistics) {
+        boolean collectStatistics = Boolean.parseBoolean(conf.get(BatchConstants.CFG_STATISTICS_ENABLED));
+        int numberOfTasks = context.getNumReduceTasks();
+        int taskId = context.getTaskAttemptID().getTaskID().getId();
+        
+        if (collectStatistics && (taskId == numberOfTasks - 1)) {
+            // hll
+            isStatistics = true;
+            statisticsOutput = conf.get(BatchConstants.CFG_STATISTICS_OUTPUT);
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
             samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
+        } else {
+            // col
+            isStatistics = false;
+            col = columnList.get(taskId);
+            colValues = Lists.newArrayList();
         }
-
-        colValues = Lists.newArrayList();
     }
-
+    
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
-        long colIndex = Bytes.toLong(key.getBytes(), 0, Bytes.SIZEOF_LONG);
-        if (colIndex >= 0) {
-            if (colIndex != currentColIndex || colValues.size() == 1000000) { //spill every 1 million
-                if (colValues.size() > 0) {
-                    System.out.println("spill values to disk...");
-                    outputDistinctValues(columnList.get((int) currentColIndex), colValues, context);
-                    colValues.clear();
-                }
-                currentColIndex = colIndex;
-            }
+        if (isStatistics == false) {
             colValues.add(new ByteArray(Bytes.copy(key.getBytes(), Bytes.SIZEOF_LONG, key.getLength() - Bytes.SIZEOF_LONG)));
+            if (colValues.size() == 1000000) { //spill every 1 million
+                System.out.println("spill values to disk...");
+                outputDistinctValues(col, colValues, context);
+                colValues.clear();
+            }
         } else {
             // for hll
-            long cuboidId = 0 - colIndex;
-
+            long cuboidId = 0 - Bytes.toLong(key.getBytes(), 0, Bytes.SIZEOF_LONG);
             for (Text value : values) {
                 HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
-                ByteArray byteArray = new ByteArray(value.getBytes());
-                hll.readRegisters(byteArray.asBuffer());
+                ByteBuffer bf = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());
+                hll.readRegisters(bf);
 
                 totalRowsBeforeMerge += hll.getCountEstimate();
 
@@ -152,13 +154,13 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
 
-        if (colValues.size() > 0) {
-            outputDistinctValues(columnList.get((int)currentColIndex), colValues, context);
-            colValues.clear();
-        }
-        
-        //output the hll info;
-        if (collectStatistics) {
+        if (isStatistics == false) {
+            if (colValues.size() > 0) {
+                outputDistinctValues(col, colValues, context);
+                colValues.clear();
+            }
+        } else {
+            //output the hll info;
             long grandTotal = 0;
             for (HyperLogLogPlusCounter hll : cuboidHLLMap.values()) {
                 grandTotal += hll.getCountEstimate();

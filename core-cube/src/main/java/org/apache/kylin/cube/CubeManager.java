@@ -891,4 +891,26 @@ public class CubeManager implements IRealizationProvider {
     public void setCubeChangeListener(CubeChangeListener listener) {
         this.listener = listener;
     }
+
+    /**
+     * Get the columns which need build the dictionary from fact table. (the column exists on fact and is not fk)
+     * @param cubeDesc
+     * @return
+     * @throws IOException
+     */
+    public List<TblColRef> getAllDictColumnsOnFact(CubeDesc cubeDesc) throws IOException {
+        List<TblColRef> dictionaryColumns = cubeDesc.getAllColumnsNeedDictionary();
+
+        List<TblColRef> factDictCols = new ArrayList<TblColRef>();
+        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
+        for (int i = 0; i < dictionaryColumns.size(); i++) {
+            TblColRef col = dictionaryColumns.get(i);
+
+            String scanTable = dictMgr.decideSourceData(cubeDesc.getModel(), true, col).getTable();
+            if (cubeDesc.getModel().isFactTable(scanTable)) {
+                factDictCols.add(col);
+            }
+        }
+        return factDictCols;
+    }
 }
