@@ -115,7 +115,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                     continue;
 
                 keyBuffer.clear();
-                keyBuffer.putLong((long)factDictCols.get(i));
+                keyBuffer.putLong((long)i);
                 keyBuffer.put(Bytes.toBytes(fieldValue));
                 outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
                 context.write(outputKey, EMPTY_TEXT);

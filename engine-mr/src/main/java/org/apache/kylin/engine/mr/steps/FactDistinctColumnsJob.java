@@ -18,8 +18,6 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -32,13 +30,18 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  */
@@ -70,8 +73,11 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
             // ----------------------------------------------------------------------------
             // add metadata to distributed cache
-            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
             CubeInstance cube = cubeMgr.getCube(cubeName);
+            CubeDesc cubeDesc = cube.getDescriptor();
+            List<TblColRef> columnsNeedDict = cubeMgr.getAllDictColumnsOnFact(cubeDesc);
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
@@ -83,9 +89,8 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             setJobClasspath(job);
 
             setupMapper(cube.getSegment(segmentName, SegmentStatusEnum.NEW));
-            setupReducer(output);
+            setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 1 : columnsNeedDict.size());
 
-            // CubeSegment seg = cubeMgr.getCube(cubeName).getTheOnlySegment();
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
             return waitForCompletion(job);
@@ -111,16 +116,16 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         job.setMapOutputValueClass(Text.class);
     }
 
-    private void setupReducer(Path output) throws IOException {
+    private void setupReducer(Path output, int numberOfReducers) throws IOException {
         job.setReducerClass(FactDistinctColumnsReducer.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setOutputKeyClass(NullWritable.class);
         job.setOutputValueClass(Text.class);
+        job.setPartitionerClass(FactDistinctColumnPartitioner.class);
+        job.setNumReduceTasks(numberOfReducers);
 
         FileOutputFormat.setOutputPath(job, output);
         job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
-
-        job.setNumReduceTasks(1);
 
         deletePath(job.getConfiguration(), output);
     }
@@ -130,4 +135,5 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         int exitCode = ToolRunner.run(job, args);
         System.exit(exitCode);
     }
+
 }
