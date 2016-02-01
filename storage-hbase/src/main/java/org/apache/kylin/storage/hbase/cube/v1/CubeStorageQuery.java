@@ -117,7 +117,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         Set<TblColRef> groupsD = expandDerived(groups, derivedPostAggregation);
         Set<TblColRef> othersD = expandDerived(others, derivedPostAggregation);
         othersD.removeAll(groupsD);
-        derivedPostAggregation.removeAll(groups);
 
         // identify cuboid
         Set<TblColRef> dimensionsD = Sets.newHashSet();
@@ -128,7 +127,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
         // isExactAggregation? meaning: tuples returned from storage requires no further aggregation in query engine
         Set<TblColRef> singleValuesD = findSingleValueColumns(filter);
-        boolean isExactAggregation = isExactAggregation(cuboid, groups, othersD, singleValuesD, derivedPostAggregation);
+        boolean isExactAggregation = isExactAggregation(cuboid, groupsD, othersD, singleValuesD, derivedPostAggregation);
         context.setExactAggregation(isExactAggregation);
 
         // translate filter for scan range and compose returning groups for coprocessor, note:
@@ -232,7 +231,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     private Set<TblColRef> expandDerived(Collection<TblColRef> cols, Set<TblColRef> derivedPostAggregation) {
         Set<TblColRef> expanded = Sets.newHashSet();
         for (TblColRef col : cols) {
-            if (cubeDesc.isDerived(col)) {
+            if (cubeDesc.hasHostColumn(col)) {
                 DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
                 for (TblColRef hostCol : hostInfo.columns) {
                     expanded.add(hostCol);
@@ -271,6 +270,10 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         // expand derived
         Set<TblColRef> resultD = Sets.newHashSet();
         for (TblColRef col : result) {
+            if (cubeDesc.isExtendedColumn(col)) {
+                throw new CubeDesc.CannotFilterExtendedColumnException(col);
+            }
+
             if (cubeDesc.isDerived(col)) {
                 DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
                 if (hostInfo.isOneToOne) {
@@ -311,6 +314,10 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     }
 
     private void collectColumns(TblColRef col, Set<TblColRef> collector) {
+        if (cubeDesc.isExtendedColumn(col)) {
+            throw new CubeDesc.CannotFilterExtendedColumnException(col);
+        }
+
         if (cubeDesc.isDerived(col)) {
             DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
             for (TblColRef h : hostInfo.columns)
@@ -358,8 +365,12 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             return compf;
 
         TblColRef derived = compf.getColumn();
-        if (cubeDesc.isDerived(derived) == false)
+        if (cubeDesc.isExtendedColumn(derived)) {
+            throw new CubeDesc.CannotFilterExtendedColumnException(derived);
+        }
+        if (cubeDesc.isDerived(derived) == false) {
             return compf;
+        }
 
         DeriveInfo hostInfo = cubeDesc.getHostInfo(derived);
         CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());

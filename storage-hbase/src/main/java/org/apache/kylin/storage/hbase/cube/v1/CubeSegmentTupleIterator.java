@@ -123,7 +123,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
         // consume any left rows from advanced measure filler
         if (advMeasureRowsRemaining > 0) {
             for (MeasureType.IAdvMeasureFiller filler : advMeasureFillers) {
-                filler.fillTuplle(oneTuple, advMeasureRowIndex);
+                filler.fillTuple(oneTuple, advMeasureRowIndex);
             }
             advMeasureRowIndex++;
             advMeasureRowsRemaining--;

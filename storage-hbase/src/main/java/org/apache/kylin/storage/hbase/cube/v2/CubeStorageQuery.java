@@ -90,7 +90,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
         //actually even if the threshold is set, it will not be used in this query engine
         setThreshold(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
-        
+
         setLimit(filter, context);
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
@@ -142,7 +142,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     private Set<TblColRef> expandDerived(Collection<TblColRef> cols, Set<TblColRef> derivedPostAggregation) {
         Set<TblColRef> expanded = Sets.newHashSet();
         for (TblColRef col : cols) {
-            if (cubeDesc.isDerived(col)) {
+            if (cubeDesc.hasHostColumn(col)) {
                 DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
                 for (TblColRef hostCol : hostInfo.columns) {
                     expanded.add(hostCol);
@@ -195,6 +195,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         // expand derived
         Set<TblColRef> resultD = Sets.newHashSet();
         for (TblColRef col : result) {
+            if (cubeDesc.isExtendedColumn(col)) {
+                throw new CubeDesc.CannotFilterExtendedColumnException(col);
+            }
             if (cubeDesc.isDerived(col)) {
                 DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
                 if (hostInfo.isOneToOne) {
@@ -275,6 +278,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             return compf;
 
         TblColRef derived = compf.getColumn();
+        if (cubeDesc.isExtendedColumn(derived)) {
+            throw new CubeDesc.CannotFilterExtendedColumnException(derived);
+        }
         if (cubeDesc.isDerived(derived) == false)
             return compf;
 
@@ -304,6 +310,9 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     }
 
     private void collectColumns(TblColRef col, Set<TblColRef> collector) {
+        if (cubeDesc.isExtendedColumn(col)) {
+            throw new CubeDesc.CannotFilterExtendedColumnException(col);
+        }
         if (cubeDesc.isDerived(col)) {
             DeriveInfo hostInfo = cubeDesc.getHostInfo(col);
             for (TblColRef h : hostInfo.columns)
@@ -355,7 +364,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             measureType.adjustSqlDigest(measure, sqlDigest);
         }
     }
-    
+
     // ============================================================================
 
     @Override

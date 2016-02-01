@@ -148,6 +148,7 @@ public class CubeTupleConverter {
         }
 
         // measures
+        int index = 0;
         for (int i = 0; i < rowValueDecoders.size(); i++) {
             RowValueDecoder rowValueDecoder = rowValueDecoders.get(i);
             rowValueDecoder.decodeAndConvertJavaObj(hbaseRow);
@@ -156,7 +157,7 @@ public class CubeTupleConverter {
             int[] measureIdx = metricsMeasureIdx[i];
             int[] tupleIdx = metricsTupleIdx[i];
             for (int j = 0; j < measureIdx.length; j++) {
-                if (measureTypes.get(j) != null) {
+                if (measureTypes.get(index++) != null) {
                     tuple.setMeasureValue(tupleIdx[j], measureValues[measureIdx[j]]);
                 }
             }
@@ -250,5 +251,4 @@ public class CubeTupleConverter {
             throw new IllegalArgumentException();
         }
     }
-
 }

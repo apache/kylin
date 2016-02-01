@@ -287,7 +287,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             }
 
             @Override
-            public void fillTuplle(Tuple tuple, int row) {
+            public void fillTuple(Tuple tuple, int row) {
                 if (expectRow++ != row)
                     throw new IllegalStateException();
 

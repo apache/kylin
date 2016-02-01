@@ -146,6 +146,6 @@ abstract public class MeasureType<T> {
         int getNumOfRows();
         
         /** Fill in specified row into tuple. */
-        void fillTuplle(Tuple tuple, int row);
+        void fillTuple(Tuple tuple, int row);
     }
 }
