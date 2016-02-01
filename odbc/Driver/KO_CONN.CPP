@@ -395,6 +395,8 @@ INT_PTR CALLBACK DlgDSNCfg1Proc ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             std::vector<string> projects;
                             restListProjects ( pgConn->Server, pgConn->ServerPort, pgConn->UserName, pgConn->Password, projects );
                             
+							// reload project list
+							SendMessage ( hwndCombo, CB_RESETCONTENT, 0, 0 );
                             for ( unsigned int i = 0 ; i < projects.size(); ++i ) {
                                 SendMessage ( hwndCombo, ( UINT ) CB_ADDSTRING, ( WPARAM ) 0, ( LPARAM ) projects.at ( i ).c_str() );
                             }
