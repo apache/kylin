@@ -75,17 +75,19 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     /**
      * Metadata model version
      *
+     * User info only, we don't do version control
+     *
      * For example: 2.1
      */
-    @JsonProperty("model_version")
-    protected String modelVersion;
+    @JsonProperty("version")
+    protected String version;
 
-    public String getModelVersion() {
-      return modelVersion;
+    public String getVersion() {
+      return version;
     }
 
-    public void setModelVersion(String modelVersion) {
-      this.modelVersion = modelVersion;
+    public void setVersion(String version) {
+      this.version = version;
     }
 
     public String getUuid() {
@@ -115,7 +117,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
      * @see UUID#randomUUID()
      */
     public void updateVersionAndRandomUuid() {
-        setModelVersion(KylinConfig.getKylinVersion());
+        setVersion(KylinConfig.getKylinVersion());
         setUuid(UUID.randomUUID().toString());
     }
 
@@ -125,7 +127,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         int result = 1;
         result = prime * result + (int) (lastModified ^ (lastModified >>> 32));
         result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
-        result = prime * result + ((modelVersion == null) ? 0 : modelVersion.hashCode());
+        result = prime * result + ((version == null) ? 0 : version.hashCode());
         return result;
     }
 
@@ -138,7 +140,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         if (getClass() != obj.getClass())
             return false;
         RootPersistentEntity other = (RootPersistentEntity) obj;
-        if (lastModified != other.lastModified || !(modelVersion == null || modelVersion.equals(other.getModelVersion())))
+        if (lastModified != other.lastModified || !(version == null || version.equals(other.getVersion())))
             return false;
         if (uuid == null) {
             if (other.uuid != null)

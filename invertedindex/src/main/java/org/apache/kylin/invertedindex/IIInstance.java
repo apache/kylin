@@ -71,8 +71,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization, IB
     private String name;
     @JsonProperty("owner")
     private String owner;
-    @JsonProperty("version")
-    private String version; // user info only, we don't do version control
     @JsonProperty("descriptor")
     private String descName;
     // Mark cube priority for query
@@ -200,14 +198,6 @@ public class IIInstance extends RootPersistentEntity implements IRealization, IB
 
     public void setOwner(String owner) {
         this.owner = owner;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     public String getDescName() {
