@@ -17,6 +17,7 @@ Install following tools before you add or edit documentation:
 2. Then, install [Jekyll](http://jekyllrb.com), and required plugins
 	* `gem install jekyll jekyll-multiple-languages kramdown rouge`  
 	* __Note__: Some specific version of jekyll and jekyll-multiple-languages does not work together (I got a "undefined method" error with jekyll 3.0.1 and jekyll-multiple-languages 2.0.3). In that case, `jekyll 2.5.3` and `jekyll-multiple-languages 1.0.8` is the known working version.
+        * eg. Use `gem install jekyll --version "=2.5.3"` to install a specific version.
 	
 3. And optionally any markdown editor you prefer
 
