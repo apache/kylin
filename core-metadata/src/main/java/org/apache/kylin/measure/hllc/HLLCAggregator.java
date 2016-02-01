@@ -18,7 +18,6 @@
 
 package org.apache.kylin.measure.hllc;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.apache.kylin.measure.MeasureAggregator;
 
 /**

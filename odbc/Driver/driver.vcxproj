@@ -16,8 +16,6 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-
-
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -387,6 +385,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GODBC.RC" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="banner.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

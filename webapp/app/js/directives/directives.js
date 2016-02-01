@@ -242,4 +242,27 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
         });
       }
     };
+  }).directive("parametertree", function($compile) {
+    return {
+      restrict: "E",
+      transclude: true,
+      scope: {
+        nextpara: '='
+      },
+      template:
+      '<li class="parent_li">Value:<b>{{nextpara.value}}</b>, Type:<b>{{ nextpara.type }}</b></li>' +
+       '<parametertree ng-if="nextpara.next_parameter!=null" nextpara="nextpara.next_parameter"></parameterTree>',
+      compile: function(tElement, tAttr, transclude) {
+        var contents = tElement.contents().remove();
+        var compiledContents;
+        return function(scope, iElement, iAttr) {
+          if(!compiledContents) {
+            compiledContents = $compile(contents, transclude);
+          }
+          compiledContents(scope, function(clone, scope) {
+            iElement.append(clone);
+          });
+        };
+      }
+    };
   });

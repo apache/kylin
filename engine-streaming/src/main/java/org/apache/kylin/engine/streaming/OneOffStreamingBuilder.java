@@ -35,7 +35,7 @@ package org.apache.kylin.engine.streaming;
 
 import java.util.Map;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.StreamingBatch;
 import org.apache.kylin.engine.streaming.util.StreamingUtils;

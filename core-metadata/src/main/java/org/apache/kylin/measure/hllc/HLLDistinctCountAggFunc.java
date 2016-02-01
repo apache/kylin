@@ -21,7 +21,6 @@ package org.apache.kylin.measure.hllc;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

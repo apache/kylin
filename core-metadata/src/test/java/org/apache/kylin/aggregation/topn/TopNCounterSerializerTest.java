@@ -2,7 +2,7 @@ package org.apache.kylin.aggregation.topn;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.topn.TopNCounter;
+import org.apache.kylin.measure.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.measure.topn.TopNCounterSerializer;

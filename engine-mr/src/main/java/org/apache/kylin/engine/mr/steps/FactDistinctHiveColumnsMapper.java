@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.hadoop.io.Text;
-import org.apache.kylin.common.hll.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
@@ -115,7 +115,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                     continue;
 
                 keyBuffer.clear();
-                keyBuffer.putLong((long)factDictCols.get(i));
+                keyBuffer.putLong((long)i);
                 keyBuffer.put(Bytes.toBytes(fieldValue));
                 outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
                 context.write(outputKey, EMPTY_TEXT);

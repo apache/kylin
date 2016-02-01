@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.common.topn;
+package org.apache.kylin.measure.topn;
 
 import org.junit.Ignore;
 import org.junit.runner.RunWith;

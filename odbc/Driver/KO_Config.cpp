@@ -39,7 +39,16 @@
 #define DRIVER_NAME "KylinODBCDriver"
 #define DRIVER_DEFAULT_LOCATION "C:\\Program Files (x86)\\kylinolap\\KylinODBCDriver\\driver.dll"
 
+#define PROTOCOL_HTTPS "https"
+#define PROTOCOL_HTTP "http"
+#define PROTOCOL_SEP "://"
+#define PORT_HTTPS_DEFAULT "443"
+#define PORT_HTTP_DEFAULT "80"
+
 static char currentDSN[BUFFERSIZE];
+
+static const char *supportedProtocols[] = { PROTOCOL_HTTPS, PROTOCOL_HTTP };
+static const char *defaultPorts[] = { PORT_HTTPS_DEFAULT, PORT_HTTP_DEFAULT };
 
 static int GetValueFromODBCINI ( char* section, char* key, char* defaultValue, char* buffer, int bufferSize,
                                  char* initFileName ) {
@@ -101,18 +110,40 @@ static eGoodBad LoadODBCINIDataToDlgDSNCfg2 ( HWND hDlg ) {
     
     if ( !x )  { return BAD; }
     
-    // server name/IP
+    // server name/IP and protocol
     GetValueFromODBCINI ( currentDSN, SERVERKEY, "", buffer, BUFFERSIZE, INITFILE );
+
+	int protocol = 0;
+	int hostOffset = 0;
+	if (buffer[0] == 'h' && buffer[1] == 't' && buffer[2] == 't' && buffer[3] == 'p')
+	{
+		if (buffer[4] == ':' && buffer[5] == '/' && buffer[6] == '/')
+		{
+			protocol = 1;
+			hostOffset = 7;
+		} 
+		else if (buffer[4] == 's' && buffer[5] == ':' && buffer[6] == '/' && buffer[7] == '/')
+		{
+			hostOffset = 8;
+		}
+	}
+	HWND hwndCombo = GetDlgItem ( hDlg, IDC_PROTOCOL );
+	SendMessage ( hwndCombo, CB_SETCURSEL, protocol, 0 );
+	
+	strcpy(buffer, buffer + hostOffset);
     x = SetDlgItemText ( hDlg, IDC_SERVER, buffer );
-    
     if ( !x )  { return BAD; }
     
     // server port
-    GetValueFromODBCINI ( currentDSN, PORTKEY, "443", buffer, BUFFERSIZE, INITFILE );
+	char* defaultPort = PORT_HTTPS_DEFAULT;
+	if (protocol == 1)
+	{
+		defaultPort = PORT_HTTP_DEFAULT;
+	}
+    GetValueFromODBCINI ( currentDSN, PORTKEY, defaultPort, buffer, BUFFERSIZE, INITFILE );
+
     int portTemp = atoi ( buffer );
-    
-    if ( portTemp == 0 )
-    { portTemp = 443; }
+    if ( portTemp == 0 ) { portTemp = atoi(defaultPort); }
     
     x = SetDlgItemInt ( hDlg, IDC_PORT, portTemp, FALSE );
     
@@ -138,7 +169,7 @@ static eGoodBad RetriveDlgData ( HWND hDlg, char* newDSN, char* serverStr, char*
     Long x;
     
     if ( !hDlg ) {
-        __ODBCPOPMSG ( _ODBCPopMsg ( "RetriveDlgData - Bad params: hDlg is NULL" ) );
+        __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "RetriveDlgData - Bad params: hDlg is NULL" ) );
         return BAD;
     }
     
@@ -154,19 +185,25 @@ static eGoodBad RetriveDlgData ( HWND hDlg, char* newDSN, char* serverStr, char*
     
     ////// server name/IP
     // get length of input text
+
     x = SendDlgItemMessage ( hDlg, IDC_SERVER, EM_LINELENGTH, 0, 0 );
-    
     if ( x > 0 ) {
-        GetDlgItemText ( hDlg, IDC_SERVER, serverStr, BUFFERSIZE );        // get text from dialog
+		char serverStrBuf[BUFFERSIZE - 8];
+        GetDlgItemText ( hDlg, IDC_SERVER, serverStrBuf, BUFFERSIZE );        // get text from dialog
+
+		HWND hwndCombo = GetDlgItem ( hDlg, IDC_PROTOCOL );
+		int ItemIndex = SendMessage ( hwndCombo, ( UINT ) CB_GETCURSEL, ( WPARAM ) 0, ( LPARAM ) 0 );
+		strcpy ( serverStr, supportedProtocols[ItemIndex] );
+		strcat ( serverStr, PROTOCOL_SEP );
+		strcat ( serverStr, serverStrBuf );
     }
-    
     else {
         serverStr[0] = '\0';
     }
-    
     /////  Port
     // get value
     *port = GetDlgItemInt ( hDlg, IDC_PORT, NULL, FALSE );
+
     ////// User name
     // get length
     x = SendDlgItemMessage ( hDlg, IDC_UID, EM_LINELENGTH, 0, 0 );
@@ -335,7 +372,7 @@ static eGoodBad RetriveDlgDataToODBCINI ( HWND hDlg, bool onlyTest ) {
     char portStrBuffer[BUFFERSIZE];
     
     if ( !hDlg ) {
-        __ODBCPOPMSG ( _ODBCPopMsg ( "RetriveDlgDataToODBCINI - Bad params: hDlg is NULL" ) );
+        __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "RetriveDlgDataToODBCINI - Bad params: hDlg is NULL" ) );
         return BAD;
     }
     
@@ -566,7 +603,14 @@ INT_PTR CALLBACK DlgDSNCfg2Proc ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     char        pwdStr[BUFFERSIZE];
     
     switch ( uMsg ) {
-        case WM_INITDIALOG:
+        case WM_INITDIALOG: {
+			// init protocol list
+			
+			HWND hwndCombo = GetDlgItem ( hDlg, IDC_PROTOCOL );
+            SendMessage(hwndCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>((LPCTSTR)supportedProtocols[0]));
+			SendMessage(hwndCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>((LPCTSTR)supportedProtocols[1]));
+			SendMessage(hwndCombo, CB_SETCURSEL, 0, 0 );
+
             SetCurrentDSN ( attributes, "DlgDSNCfg2Proc" );
             // store the structure for future use
             SetWindowLongPtr ( hDlg, DWLP_USER, lParam );
@@ -577,9 +621,23 @@ INT_PTR CALLBACK DlgDSNCfg2Proc ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             // set focus automatically
             return TRUE;
-            
+		}
         case WM_COMMAND:
             switch ( LOWORD ( wParam ) ) {
+				case IDC_PROTOCOL: {
+					switch ( HIWORD ( wParam ) ) {
+						case CBN_SELCHANGE: {
+							HWND hwndCombo = GetDlgItem ( hDlg, IDC_PROTOCOL );
+							int portIndex = SendMessage ( hwndCombo, ( UINT ) CB_GETCURSEL, ( WPARAM ) 0, ( LPARAM ) 0 );
+							if ( SetDlgItemText ( hDlg, IDC_PORT, defaultPorts[portIndex] ) ) { return TRUE; }
+
+							return FALSE;
+						}
+						default:
+							break;
+					}
+					break;
+				}
                 case IDC_BTEST: {
                         if ( RetriveDlgData ( hDlg, newDSN, serverStr, uidStr, pwdStr, &port ) == GOOD ) {
                             if ( testConnection ( serverStr, uidStr, pwdStr, port ) == GOOD ) {
@@ -592,6 +650,8 @@ INT_PTR CALLBACK DlgDSNCfg2Proc ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     std::vector<string> projects;
                                     restListProjects ( serverStr, port, uidStr, pwdStr, projects );
                                     
+									// reload project list
+									SendMessage ( hwndCombo, CB_RESETCONTENT, 0, 0 );
                                     for ( unsigned int i = 0 ; i < projects.size(); ++i ) {
                                         SendMessage ( hwndCombo, ( UINT ) CB_ADDSTRING, ( WPARAM ) 0, ( LPARAM ) projects.at ( i ).c_str() );
                                     }
@@ -611,12 +671,12 @@ INT_PTR CALLBACK DlgDSNCfg2Proc ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             }
                             
                             else {
-                                __ODBCPopMsg ( "testConnection failed." );
+                                __ODBCPopMsg ( "Connection failed." );
                             }
                         }
                         
                         else {
-                            __ODBCPopMsg ( "RetriveDlgData failed." );
+                            __ODBCLOG ( _ODBCLogMsg ( LogLevel_INFO, "RetriveDlgData failed." ));
                         }
                         
                         return FALSE;

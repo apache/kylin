@@ -20,9 +20,71 @@
 
 KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel) {
 
+
   $scope.addNewMeasure = function (measure) {
+    $scope.nextParameters = [];
     $scope.newMeasure = (!!measure)? measure:CubeDescModel.createMeasure();
+    if(!!measure){
+      $scope.convertNextParameters();
+    }
   };
+  $scope.convertNextParameters = function(){
+    $scope.nextParameters = [];
+    var paramater = jQuery.extend(true, {}, $scope.newMeasure.function.parameter);
+    while(paramater.next_parameter){
+      var paraMeter =
+      {
+       "type": paramater.next_parameter.type,
+       "value":paramater.next_parameter.value,
+        "next_parameter":null
+      }
+      $scope.nextParameters.push(paraMeter);
+
+      paramater = paramater.next_parameter;
+
+    }
+
+  }
+
+  $scope.updateNextParameter = function(){
+    //jQuery.extend(true, {},$scope.newMeasure.function.parameter.next_parameter)
+    for(var i= 0;i<$scope.nextParameters.length-1;i++){
+      $scope.nextParameters[i].next_parameter=$scope.nextParameters[i+1];
+    }
+    $scope.newMeasure.function.parameter.next_parameter = $scope.nextParameters[0];
+    console.log($scope.newMeasure.function.parameter);
+  }
+
+  $scope.editNextParameter = function(parameter){
+    $scope.openParameterModal(parameter);
+
+  }
+
+  $scope.addNextParameter = function(){
+    $scope.openParameterModal();
+  }
+
+  $scope.removeParameter = function(parameters,index){
+    if(index>-1){
+      parameters.splice(index,1);
+    }
+    $scope.updateNextParameter();
+  }
+  $scope.openParameterModal = function (parameter) {
+    $modal.open({
+      templateUrl: 'nextParameter.html',
+      controller: NextParameterModalCtrl,
+      resolve: {
+        scope: function () {
+          return $scope;
+        },
+        para:function(){
+          return parameter;
+        }
+      }
+    });
+  };
+  $scope.nextParameters =[];
 
   $scope.removeElement = function (arr, element) {
     var index = arr.indexOf(element);
@@ -97,5 +159,40 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     }
   }
 
-
 });
+
+var NextParameterModalCtrl = function ($scope, scope,para,$modalInstance,cubeConfig, CubeService, MessageService, $location, SweetAlert,ProjectModel, loadingRequest,ModelService) {
+
+  $scope.cubeConfig = cubeConfig;
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
+
+  $scope. getMetricColumns = function(){
+    return scope.getMetricColumns();
+  }
+
+  $scope.nextPara = {
+    "type":"",
+    "value":"",
+    "next_parameter":null
+  }
+
+  var _index = scope.nextParameters.indexOf(para);
+  if(para){
+    $scope.nextPara = para;
+  }
+
+  $scope.ok = function(){
+    if(_index!=-1){
+      scope.nextParameters[_index] = $scope.nextPara;
+    }
+    else{
+      scope.nextParameters.push($scope.nextPara);
+    }
+
+    scope.updateNextParameter();
+    $modalInstance.dismiss('cancel');
+  }
+
+}
