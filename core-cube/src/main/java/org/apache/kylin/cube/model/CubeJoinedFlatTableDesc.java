@@ -59,7 +59,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         }
 
         int columnIndex = 0;
-        for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived()) {
+        for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived(false)) {
             columnIndexMap.put(colName(col.getCanonicalName()), columnIndex);
             columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col));
             columnIndex++;
@@ -76,7 +76,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
             }
             rowKeyColumnIndexes[i] = dimIdx;
         }
-        
+
         List<MeasureDesc> measures = cubeDesc.getMeasures();
         int measureSize = measures.size();
         measureColumnIndexes = new int[measureSize][];
@@ -163,7 +163,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         Integer index = columnIndexMap.get(key);
         if (index == null)
             throw new IllegalArgumentException("Column " + colRef.toString() + " wasn't found on flat table.");
-        
+
         return index.intValue();
     }
 

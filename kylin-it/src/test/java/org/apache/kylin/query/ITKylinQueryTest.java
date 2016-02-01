@@ -45,7 +45,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        printInfo("setUp in KylinQueryTest");
+        printInfo("setU in KylinQueryTest");
         joinType = "left";
 
         setupAll();
