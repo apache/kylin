@@ -15,16 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
- 
+
+
 #include "JsonConverter.h"
 
 #define ASSIGN_IF_NOT_NULL(x,y,z)  if(!y.is_null())x=y.z
 #define x_ASSIGN_IF_NOT_NULL(x,y,z)  if(!y.is_null())x=wstring2string(y.z)
 
 
-TableMeta* TableMetaFromJSON ( web::json::value & object ) {
-    TableMeta* result = new TableMeta();
+TableMeta* TableMetaFromJSON ( web::json::value& object )
+{
+    TableMeta* result = new TableMeta ();
     x_ASSIGN_IF_NOT_NULL ( result->TABLE_CAT, object[U ( "table_CAT" )], as_string() );
     x_ASSIGN_IF_NOT_NULL ( result->TABLE_SCHEM , object[U ( "table_SCHEM" )], as_string() );
     x_ASSIGN_IF_NOT_NULL ( result->TABLE_NAME , object[U ( "table_NAME" )], as_string() );
@@ -38,8 +39,9 @@ TableMeta* TableMetaFromJSON ( web::json::value & object ) {
     return result;
 }
 
-ColumnMeta* ColumnMetaFromJSON ( web::json::value & object ) {
-    ColumnMeta* result = new ColumnMeta();
+ColumnMeta* ColumnMetaFromJSON ( web::json::value& object )
+{
+    ColumnMeta* result = new ColumnMeta ();
     x_ASSIGN_IF_NOT_NULL ( result->TABLE_CAT , object[U ( "table_CAT" )], as_string() );
     x_ASSIGN_IF_NOT_NULL ( result->TABLE_SCHEM , object[U ( "table_SCHEM" )], as_string() );
     x_ASSIGN_IF_NOT_NULL ( result->TABLE_NAME , object[U ( "table_NAME" )], as_string() );
@@ -62,42 +64,50 @@ ColumnMeta* ColumnMetaFromJSON ( web::json::value & object ) {
     x_ASSIGN_IF_NOT_NULL ( result->SCOPE_SCHEMA , object[U ( "scope_SCHEMA" )], as_string() );
     x_ASSIGN_IF_NOT_NULL ( result->SCOPE_TABLE , object[U ( "scope_TABLE" )], as_string() );
     x_ASSIGN_IF_NOT_NULL ( result->IS_AUTOINCREMENT , object[U ( "iS_AUTOINCREMENT" )], as_string() );
-    
-    if ( !object[U ( "source_DATA_TYPE" )].is_null() ) {
-        result->SOURCE_DATA_TYPE = ( short ) object[U ( "source_DATA_TYPE" )].as_integer();
+
+    if ( !object[U ( "source_DATA_TYPE" )] . is_null () )
+    {
+        result -> SOURCE_DATA_TYPE = ( short ) object[U ( "source_DATA_TYPE" )] . as_integer ();
     }
-    
+
     // the orig value passed from REST is java.sql.Types, we convert it to SQL Type
-    
-    if ( !object[U ( "data_TYPE" )].is_null() ) {
-        result->DATA_TYPE = JDBC2ODBC ( object[U ( "data_TYPE" )].as_integer() );
+
+    if ( !object[U ( "data_TYPE" )] . is_null () )
+    {
+        result -> DATA_TYPE = JDBC2ODBC ( object[U ( "data_TYPE" )] . as_integer () );
     }
-    
-    if ( !object[U ( "sql_DATA_TYPE" )].is_null() ) {
-        result->SQL_DATA_TYPE = JDBC2ODBC ( object[U ( "sql_DATA_TYPE" )].as_integer() );
+
+    if ( !object[U ( "sql_DATA_TYPE" )] . is_null () )
+    {
+        result -> SQL_DATA_TYPE = JDBC2ODBC ( object[U ( "sql_DATA_TYPE" )] . as_integer () );
     }
-    
+
     return result;
 }
 
-std::unique_ptr<MetadataResponse> MetadataResponseFromJSON ( web::json::value & object ) {
-    std::unique_ptr<MetadataResponse> result ( new MetadataResponse() );
-    web::json::array& tableMetaArray = object.as_array();
-    
-    for ( auto iter = tableMetaArray.begin(); iter != tableMetaArray.end(); ++iter ) {
-        result->tableMetas.push_back ( TableMetaFromJSON ( *iter ) );
-        web::json::value& columns = ( *iter ) [U ( "columns" )];
-        web::json::array& columnsMetaArray = columns.as_array();
-        
-        for ( auto inner_iter = columnsMetaArray.begin(); inner_iter != columnsMetaArray.end(); ++inner_iter ) {
-            result->columnMetas.push_back ( ColumnMetaFromJSON ( *inner_iter ) );
+std::unique_ptr <MetadataResponse> MetadataResponseFromJSON ( web::json::value& object )
+{
+    std::unique_ptr <MetadataResponse> result ( new MetadataResponse () );
+    web::json::array& tableMetaArray = object . as_array ();
+
+    for ( auto iter = tableMetaArray . begin (); iter != tableMetaArray . end (); ++iter )
+    {
+        result -> tableMetas . push_back ( TableMetaFromJSON ( *iter ) );
+        web::json::value& columns = ( *iter )[U ( "columns" )];
+        web::json::array& columnsMetaArray = columns . as_array ();
+
+        for ( auto inner_iter = columnsMetaArray . begin (); inner_iter != columnsMetaArray . end (); ++inner_iter )
+        {
+            result -> columnMetas . push_back ( ColumnMetaFromJSON ( *inner_iter ) );
         }
     }
-    
+
     return result;
 }
-SelectedColumnMeta* SelectedColumnMetaFromJSON ( web::json::value & object ) {
-    SelectedColumnMeta* result = new SelectedColumnMeta();
+
+SelectedColumnMeta* SelectedColumnMetaFromJSON ( web::json::value& object )
+{
+    SelectedColumnMeta* result = new SelectedColumnMeta ();
     ASSIGN_IF_NOT_NULL ( result->isAutoIncrement , object[U ( "autoIncrement" )], as_bool() );
     ASSIGN_IF_NOT_NULL ( result->isCaseSensitive , object[U ( "caseSensitive" )], as_bool() );
     ASSIGN_IF_NOT_NULL ( result->isSearchable , object[U ( "searchable" )], as_bool() );
@@ -117,58 +127,71 @@ SelectedColumnMeta* SelectedColumnMetaFromJSON ( web::json::value & object ) {
     ASSIGN_IF_NOT_NULL ( result->isReadOnly , object[U ( "readOnly" )], as_bool() );
     ASSIGN_IF_NOT_NULL ( result->isWritable , object[U ( "writable" )], as_bool() );
     ASSIGN_IF_NOT_NULL ( result->isDefinitelyWritable , object[U ( "definitelyWritable" )], as_bool() );
-    
-    if ( !object[U ( "columnType" )].is_null() ) {
-        result->columnType = JDBC2ODBC ( object[U ( "columnType" )].as_integer() );
+
+    if ( !object[U ( "columnType" )] . is_null () )
+    {
+        result -> columnType = JDBC2ODBC ( object[U ( "columnType" )] . as_integer () );
     }
-    
+
     return result;
 }
 
-void constructUnflattenResults ( SQLResponse* result, web::json::value& o_results ) {
-    if ( o_results.is_null() )
-    { return; }
-    
-    for ( auto iter = o_results.as_array().begin(); iter != o_results.as_array().end(); ++iter ) {
-        SQLRowContent* row = new SQLRowContent();
-        
-        for ( auto jter = iter->as_array().begin(); jter != iter->as_array().end(); ++jter ) {
-            if ( jter->is_null() ) {
+void constructUnflattenResults ( SQLResponse* result, web::json::value& o_results )
+{
+    if ( o_results . is_null () )
+    {
+        return;
+    }
+
+    for ( auto iter = o_results . as_array () . begin (); iter != o_results . as_array () . end (); ++iter )
+    {
+        SQLRowContent* row = new SQLRowContent ();
+
+        for ( auto jter = iter -> as_array () . begin (); jter != iter -> as_array () . end (); ++jter )
+        {
+            if ( jter -> is_null () )
+            {
                 wstring emptyCell;
-                row->contents.push_back ( emptyCell );
+                row -> contents . push_back ( emptyCell );
             }
-            
-            else {
-                row->contents.push_back ( ( jter->as_string() ) );
+
+            else
+            {
+                row -> contents . push_back ( ( jter -> as_string () ) );
             }
         }
-        
-        result->results.push_back ( row );
+
+        result -> results . push_back ( row );
     }
 }
 
-std::unique_ptr<SQLResponse> SQLResponseFromJSON ( web::json::value & object ) {
-    std::unique_ptr<SQLResponse> result ( new SQLResponse() );
+std::unique_ptr <SQLResponse> SQLResponseFromJSON ( web::json::value& object )
+{
+    std::unique_ptr <SQLResponse> result ( new SQLResponse () );
 
-    result->affectedRowCount = object[U ( "affectedRowCount" )].as_integer();
-    result->isException = object[U ( "isException" )].as_bool();
+    result -> affectedRowCount = object[U ( "affectedRowCount" )] . as_integer ();
+    result -> isException = object[U ( "isException" )] . as_bool ();
 
     ASSIGN_IF_NOT_NULL ( result->exceptionMessage, object[U ( "exceptionMessage" )], as_string() );
-    
-	if ( object[U ( "columnMetas" )].is_array()) {
-		web::json::array& columnMetasArray = object[U ( "columnMetas" )].as_array();
-        for ( auto iter = columnMetasArray.begin(); iter != columnMetasArray.end(); ++iter ) {
-            result->columnMetas.push_back ( SelectedColumnMetaFromJSON ( *iter ) );
+
+    if ( object[U ( "columnMetas" )] . is_array () )
+    {
+        web::json::array& columnMetasArray = object[U ( "columnMetas" )] . as_array ();
+        for ( auto iter = columnMetasArray . begin (); iter != columnMetasArray . end (); ++iter )
+        {
+            result -> columnMetas . push_back ( SelectedColumnMetaFromJSON ( *iter ) );
         }
     }
-    
-    constructUnflattenResults ( result.get(), object[U ( "results" )] );
+
+    constructUnflattenResults ( result . get (), object[U ( "results" )] );
     return result;
 }
 
-std::unique_ptr<ErrorMessage> ErrorMessageFromJSON ( web::json::value & object ) {
-    std::unique_ptr<ErrorMessage> result ( new ErrorMessage() );
+std::unique_ptr <ErrorMessage> ErrorMessageFromJSON ( web::json::value& object )
+{
+    std::unique_ptr <ErrorMessage> result ( new ErrorMessage () );
     ASSIGN_IF_NOT_NULL ( result->url, object[U ( "url" )], as_string() );
     ASSIGN_IF_NOT_NULL ( result->msg, object[U ( "exception" )], as_string() );
     return result;
 }
+

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 
 // ---------------------------------------------------------------------------------
 //
@@ -41,67 +41,71 @@
 
 
 // ------------------------- global variables -------------------------
-HINSTANCE   ghInstDLL   = 0;
-Long        gLogFile    = -1;
-Word        gLogUsage   = 0;
+HINSTANCE ghInstDLL = 0;
+Long gLogFile = -1;
+Word gLogUsage = 0;
 
 
 // -----------------------------------------------------------------------
 // DLL enrty point
 // -----------------------------------------------------------------------
 
-BOOL WINAPI  DllMain ( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved ) {
+BOOL WINAPI DllMain ( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
+{
     // note
     // key functions it needs to perform
     // 1. initialize the log system if in debug mode
-    
+
     // Perform actions based on the reason for calling.
-    switch ( fdwReason ) {
-        case DLL_PROCESS_ATTACH:
+    switch ( fdwReason )
+    {
+        case DLL_PROCESS_ATTACH :
             // Initialize once for each new process.
             // Return FALSE to fail DLL load.
             OutputDebugString ( "Process Attached\n" ); // for DBMON
             // start log
             _ODBCLogStart ();
-            #ifdef _DEBUG
+#ifdef _DEBUG
             MessageBox ( GetDesktopWindow(), "Entry into driver DLL - PROCESS_ATTACH",  "Kylin ODBC driver", MB_OK );
-            #endif
+#endif
             break;
-            
-        case DLL_THREAD_ATTACH:
-            #ifdef _DEBUG
+
+        case DLL_THREAD_ATTACH :
+#ifdef _DEBUG
             // start log
             _ODBCLogStart ();
-            #endif
+#endif
             // log msg
             OutputDebugString ( "Thread Attached\n" ); // for DBMON
             // Do thread-specific initialization.
             break;
-            
-        case DLL_THREAD_DETACH:
-            #ifdef _DEBUG
+
+        case DLL_THREAD_DETACH :
+#ifdef _DEBUG
             // stop log
             _ODBCLogStop ( 0 );
-            #endif
+#endif
             // Do thread-specific cleanup.
             break;
-            
-        case DLL_PROCESS_DETACH:
-            #ifdef _DEBUG
+
+        case DLL_PROCESS_DETACH :
+#ifdef _DEBUG
             // log msg
             //__ODBCLOG(_ODBCLogMsg(LogLevel_DEBUG, "Thread de-tach"));
             // stop log
             _ODBCLogStop ( 1 );
-            #endif
+#endif
             // Perform any necessary cleanup.
             break;
     }
-    
+
     // check if instance has not been saved
     if ( ghInstDLL == 0 )
-    { ghInstDLL = hinstDLL; }
-    
-    return TRUE;  // Successful DLL_PROCESS_ATTACH.
+    {
+        ghInstDLL = hinstDLL;
+    }
+
+    return TRUE; // Successful DLL_PROCESS_ATTACH.
 }
 
 
@@ -198,7 +202,6 @@ BOOL WINAPI  DllMain ( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
 // SQLTYPES.H   -   ODBC types
 //
 // -----------------------------------------------------------------------
-
 
 
 // -----------------------------------------------------------------------
@@ -368,3 +371,4 @@ BOOL WINAPI  DllMain ( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
 
 
 ****************** */
+

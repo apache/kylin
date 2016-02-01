@@ -21,12 +21,14 @@
 using namespace std;
 
 
-int main() {
+int main ()
+{
     //unit test
     //restAPITest();
     //regression test:
     //simpleQueryTest();
     //queryFlowTest();
     //crossValidate();
-	validateSQLGetTypeInfo();
+    validateSQLGetTypeInfo ();
 }
+
