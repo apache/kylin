@@ -39,7 +39,7 @@ public class ExtendedColumnSerializerTest {
     public void testSerDesNull() {
         ExtendedColumnSerializer serializer = new ExtendedColumnSerializer(DataType.getType("extendedcolumn(20)"));
         MeasureIngester<ByteArray> ingester = measureType.newIngester();
-        ByteArray array = ingester.valueOf(new String[] { null }, null, null);
+        ByteArray array = ingester.valueOf(new String[] { null, null }, null, null);
         Assert.assertTrue(new ByteArray().equals(array));
 
         ByteBuffer buffer = ByteBuffer.allocate(serializer.maxLength());
@@ -57,7 +57,7 @@ public class ExtendedColumnSerializerTest {
 
         ExtendedColumnSerializer serializer = new ExtendedColumnSerializer(DataType.getType("extendedcolumn(20)"));
         MeasureIngester<ByteArray> ingester = measureType.newIngester();
-        ByteArray array = ingester.valueOf(new String[] { text }, null, null);
+        ByteArray array = ingester.valueOf(new String[] { null, text }, null, null);
 
         ByteBuffer buffer = ByteBuffer.allocate(serializer.maxLength());
         serializer.serialize(array, buffer);
@@ -71,7 +71,7 @@ public class ExtendedColumnSerializerTest {
         String text = StringUtils.repeat("h", 21);
         ExtendedColumnSerializer serializer = new ExtendedColumnSerializer(DataType.getType("extendedcolumn(20)"));
         MeasureIngester<ByteArray> ingester = measureType.newIngester();
-        ByteArray array = ingester.valueOf(new String[] { text }, null, null);
+        ByteArray array = ingester.valueOf(new String[] { null, text }, null, null);
 
         ByteBuffer buffer = ByteBuffer.allocate(serializer.maxLength());
         serializer.serialize(array, buffer);
