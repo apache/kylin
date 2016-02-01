@@ -1,10 +1,9 @@
 {
   "uuid" : "1eaca32a-a33e-4b69-83dd-0bb8b1f8c53c",
-  "model_version":"2.1",
+  "version":"2.1",
   "last_modified" : 1404098141020,
   "name" : "test_kylin_cube_with_slr_ready_2_segments",
   "owner" : null,
-  "version" : null,
   "descriptor" : "test_kylin_cube_with_slr_desc",
   "cost" : 50,
   "segments" : [ {

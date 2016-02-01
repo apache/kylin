@@ -1,6 +1,6 @@
 {
   "uuid" : "0ff420eb-79ad-40bd-bca9-12d8cd05c60a",
-  "model_version":"2.1",
+  "version":"2.1",
   "name" : "KYLIN_CAL_DT",
   "columns" : [ {
     "id" : "1",

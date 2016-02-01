@@ -1,6 +1,6 @@
 {
   "uuid" : "9ac9b7a8-3929-4dff-b59d-2100aadc8dbf",
-  "model_version":"2.1",
+  "version":"2.1",
   "name" : "test_kylin_cube_without_slr_desc",
   "description" : null,
   "dimensions" : [ {

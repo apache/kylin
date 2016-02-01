@@ -1,6 +1,6 @@
 {
   "uuid" : "901ed15e-7769-4c66-b7ae-fbdc971cd192",
-  "model_version":"2.1",
+  "version":"2.1",
   "name" : "test_streaming_table_cube_desc",
   "description" : "",
   "dimensions" : [ {
