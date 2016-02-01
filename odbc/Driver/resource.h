@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by GODBC.RC
@@ -50,3 +50,4 @@
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
+

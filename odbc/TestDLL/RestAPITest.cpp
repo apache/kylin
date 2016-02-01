@@ -18,21 +18,27 @@
 
 #include "Tests.h"
 
-void restAPITest() {
+void restAPITest ()
+{
     {
         bool ret = restAuthenticate ( KServerAddr, KPort, KUserName, KPassword );
-        
+
         if ( !ret )
-        { report(); }
+        {
+            report ();
+        }
     }
     {
-        std::vector<string> holder;
+        std::vector <string> holder;
         restListProjects ( KServerAddr, KPort, KUserName, KPassword, holder );
-        
-        if ( holder.size() == 0 )
-        { report(); }
+
+        if ( holder . size () == 0 )
+        {
+            report ();
+        }
     }
     {
-        std::unique_ptr<MetadataResponse> ret = restGetMeta ( KServerAddr, KPort, KUserName, KPassword, KDefaultProject );
+        std::unique_ptr <MetadataResponse> ret = restGetMeta ( KServerAddr, KPort, KUserName, KPassword, KDefaultProject );
     }
 }
+
