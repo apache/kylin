@@ -48,6 +48,12 @@
 #define MAX_CONN_STR_LEN       2048                 // arbitray for building key-values from DSN
 #define KV_BLOCK_SIZE          5                    // arbitray size for a set of key-value pairs
 
+#define PROTOCOL_HTTPS			"https"
+#define PROTOCOL_HTTP			"http"
+#define PROTOCOL_SEP			"://"
+#define PORT_HTTPS_DEFAULT		"443"
+#define PORT_HTTP_DEFAULT		"80"
+
 // ------------------------ local callback functions  -------------------------
 INT_PTR CALLBACK DlgDSNCfg1Proc ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
@@ -67,7 +73,8 @@ static bool         AddKVToConnStr ( StrPtr pKey, StrPtr pValue, Word* iPos, Str
 static bool         BuildConnStr ( char* pStrConn, Word pMaxLen, pODBCConn pConn, struct ODBCKV* KVInput,
                                    Word iKVInputPairs, struct ODBCKV* KVFileDSN, Word iKVFileDSNPairs );
 
-
+static const char *supportedProtocols[] = { PROTOCOL_HTTPS, PROTOCOL_HTTP };
+static const char *defaultPorts[] = { PORT_HTTPS_DEFAULT, PORT_HTTP_DEFAULT };
 
 // -----------------------------------------------------------------------
 // to set a specified property in the connection structure
@@ -288,8 +295,17 @@ static eGoodBad GetDataFromDlgDSNCfg1 ( HWND hDlg, pODBCConn pConn ) {
     x = SendDlgItemMessage ( hDlg, IDC_SERVER, EM_LINELENGTH, 0, 0 );
     
     if ( x > 0 ) {
-        n = make_unique_str ( x );                              // allocate space for holding the text
-        GetDlgItemText ( hDlg, IDC_SERVER, n.get(), x + 1 );      // get text from dialog
+        n = make_unique_str ( x + 8 );								// allocate space for holding the text
+
+		char serverStrBuf[256];						  
+        GetDlgItemText ( hDlg, IDC_SERVER, serverStrBuf, x + 1 );      // get text from dialog
+
+		HWND hwndCombo = GetDlgItem ( hDlg, IDC_PROTOCOL );
+		int ItemIndex = SendMessage ( hwndCombo, ( UINT ) CB_GETCURSEL, ( WPARAM ) 0, ( LPARAM ) 0 );
+		
+		strcpy ( n.get(), supportedProtocols[ItemIndex] );
+		strcat ( n.get(), PROTOCOL_SEP );
+		strcat ( n.get(), serverStrBuf );
     }
     
     else
@@ -358,16 +374,37 @@ INT_PTR CALLBACK DlgDSNCfg1Proc ( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     RETCODE ret = SQL_SUCCESS;
     
     switch ( uMsg ) {
-        case WM_INITDIALOG:
+        case WM_INITDIALOG: {
+			// init protocol list
+			HWND hwndCombo = GetDlgItem ( hDlg, IDC_PROTOCOL );
+            SendMessage(hwndCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>((LPCTSTR)supportedProtocols[0]));
+			SendMessage(hwndCombo, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>((LPCTSTR)supportedProtocols[1]));
+			SendMessage(hwndCombo, CB_SETCURSEL, 0, 0 );
+
             // store the structure for future use
             SetWindowLongPtr ( hDlg, DWLP_USER, lParam );
             // initialize the dialog with data from conn struct
             PutDataToDlgDSNCfg1 ( ( pODBCConn ) lParam, hDlg );
             // set focus automatically
             return TRUE;
-            
+		}
         case WM_COMMAND:
             switch ( LOWORD ( wParam ) ) {
+				case IDC_PROTOCOL: {
+					switch ( HIWORD ( wParam ) ) {
+						case CBN_SELCHANGE: {
+							HWND hwndCombo = GetDlgItem ( hDlg, IDC_PROTOCOL );
+							int portIndex = SendMessage ( hwndCombo, ( UINT ) CB_GETCURSEL, ( WPARAM ) 0, ( LPARAM ) 0 );
+							if ( SetDlgItemText ( hDlg, IDC_PORT, defaultPorts[portIndex] ) ) { return TRUE; }
+
+							return FALSE;
+						}
+						default:
+							break;
+					}
+					break;
+				}
+
                 case IDC_CONNECT: {
                         HWND hwndCombo = GetDlgItem ( hDlg, IDC_COMBO1 );
                         HWND hwndOK = GetDlgItem ( hDlg, IDOK );
