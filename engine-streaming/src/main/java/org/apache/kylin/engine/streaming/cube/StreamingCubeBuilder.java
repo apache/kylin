@@ -99,6 +99,14 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
             throw new RuntimeException("error build cube from StreamingBatch", e.getCause());
+        } catch (IOException e) {
+            throw new RuntimeException("error build cube from StreamingBatch", e.getCause());
+        } finally {
+            try {
+                cuboidWriter.close();
+            } catch (IOException e) {
+                throw new RuntimeException("error build cube from StreamingBatch", e.getCause());
+            }
         }
     }
 
@@ -107,7 +115,9 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
         CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
         try {
-            return cubeManager.appendSegments(cubeInstance, streamingBatch.getTimeRange().getFirst(), streamingBatch.getTimeRange().getSecond(), false, false);
+            CubeSegment segment = cubeManager.appendSegments(cubeInstance, streamingBatch.getTimeRange().getFirst(), streamingBatch.getTimeRange().getSecond(), false, false);
+            segment.setLastBuildJobID(segment.getUuid()); // give a fake job id
+            return segment;
         } catch (IOException e) {
             throw new RuntimeException("failed to create IBuildable", e);
         }
