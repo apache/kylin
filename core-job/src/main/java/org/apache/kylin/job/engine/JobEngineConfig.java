@@ -51,7 +51,7 @@ public class JobEngineConfig {
 
     private String getHadoopJobConfFilePath(RealizationCapacity capaticy, boolean appendSuffix) throws IOException {
         String hadoopJobConfFile;
-        if (appendSuffix) {
+        if (capaticy != null && appendSuffix) {
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + ".xml");
         } else {
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + ".xml");
