@@ -30,8 +30,10 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.job.constant.BatchConstants;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 
 /**
@@ -65,6 +67,10 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             String jobName = JOB_TITLE + getOptionsAsString();
             System.out.println("Starting: " + jobName);
             Configuration conf = getConf();
+
+            JobEngineConfig jobEngineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
+            conf.addResource(jobEngineConfig.getHadoopJobConfFilePath(null));
+
             job = Job.getInstance(conf, jobName);
 
             setJobClasspath(job);
