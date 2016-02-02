@@ -23,11 +23,35 @@ import java.io.IOException;
 
 /**
  */
-public interface ICuboidWriter {
+public class CompoundCuboidWriter implements ICuboidWriter {
 
-    void write(long cuboidId, GTRecord record) throws IOException;
+    private Iterable<ICuboidWriter> cuboidWriters;
 
-    void flush() throws IOException;
-    
-    void close() throws IOException;
+    public CompoundCuboidWriter(Iterable<ICuboidWriter> cuboidWriters) {
+        this.cuboidWriters = cuboidWriters;
+
+    }
+
+    @Override
+    public void write(long cuboidId, GTRecord record) throws IOException {
+        for (ICuboidWriter writer : cuboidWriters) {
+            writer.write(cuboidId, record);
+        }
+    }
+
+    @Override
+    public void flush() throws IOException {
+        for (ICuboidWriter writer : cuboidWriters) {
+            writer.flush();
+        }
+
+    }
+
+    @Override
+    public void close() throws IOException {
+        for (ICuboidWriter writer : cuboidWriters) {
+            writer.close();
+        }
+
+    }
 }

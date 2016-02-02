@@ -18,9 +18,11 @@
 package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -31,6 +33,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.inmemcubing.CompoundCuboidWriter;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -54,7 +57,10 @@ public class HBaseStreamingOutput implements IStreamingOutput {
 
             final HTableInterface hTable;
             hTable = createHTable(cubeSegment);
-            return new HBaseCuboidWriter(cubeSegment, hTable);
+            List<ICuboidWriter> cuboidWriters = Lists.newArrayList();
+            cuboidWriters.add(new HBaseCuboidWriter(cubeSegment, hTable));
+            cuboidWriters.add(new SequenceFileCuboidWriter(cubeSegment.getCubeDesc(), cubeSegment));
+            return new CompoundCuboidWriter(cuboidWriters);
         } catch (IOException e) {
             throw new RuntimeException("failed to get ICuboidWriter", e);
         }

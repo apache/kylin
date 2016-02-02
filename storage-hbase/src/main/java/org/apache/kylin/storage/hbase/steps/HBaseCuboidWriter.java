@@ -33,9 +33,8 @@
  */
 package org.apache.kylin.storage.hbase.steps;
 
-import java.io.IOException;
-import java.util.List;
-
+import com.google.common.collect.Lists;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
@@ -51,13 +50,14 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
 
 /**
  */
-public final class HBaseCuboidWriter implements ICuboidWriter {
+public class HBaseCuboidWriter implements ICuboidWriter {
 
-    private static final Logger logger = LoggerFactory.getLogger(HBaseStreamingOutput.class);
+    private static final Logger logger = LoggerFactory.getLogger(HBaseCuboidWriter.class);
 
     private static final int BATCH_PUT_THRESHOLD = 10000;
 
@@ -125,8 +125,8 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
         }
     }
 
-    public final void flush() {
-        try {
+    @Override
+    public final void flush() throws IOException {
             if (!puts.isEmpty()) {
                 long t = System.currentTimeMillis();
                 if (hTable != null) {
@@ -136,14 +136,12 @@ public final class HBaseCuboidWriter implements ICuboidWriter {
                 logger.info("commit total " + puts.size() + " puts, totally cost:" + (System.currentTimeMillis() - t) + "ms");
                 puts.clear();
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
-    public void close() {
-
+    public void close() throws IOException {
+        flush();
+        IOUtils.closeQuietly(hTable);
     }
 
 }
