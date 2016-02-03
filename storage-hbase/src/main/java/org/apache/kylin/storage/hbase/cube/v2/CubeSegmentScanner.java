@@ -145,7 +145,7 @@ public class CubeSegmentScanner implements IGTScanner {
     private Set<TblColRef> replaceDerivedColumns(Set<TblColRef> input, CubeDesc cubeDesc) {
         Set<TblColRef> ret = Sets.newHashSet();
         for (TblColRef col : input) {
-            if (cubeDesc.isDerived(col)) {
+            if (cubeDesc.hasHostColumn(col)) {
                 for (TblColRef host : cubeDesc.getHostInfo(col).columns) {
                     ret.add(host);
                 }

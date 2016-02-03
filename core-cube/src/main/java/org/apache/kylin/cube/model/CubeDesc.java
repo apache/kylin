@@ -44,6 +44,7 @@ import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -71,8 +72,14 @@ import com.google.common.collect.Maps;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeDesc extends RootPersistentEntity {
 
+    public static class CannotFilterExtendedColumnException extends RuntimeException {
+        public CannotFilterExtendedColumnException(TblColRef tblColRef) {
+            super(tblColRef == null ? "null" : tblColRef.getCanonicalName());
+        }
+    }
+
     public enum DeriveType {
-        LOOKUP, PK_FK
+        LOOKUP, PK_FK, EXTENDED_COLUMN
     }
 
     public static class DeriveInfo {
@@ -146,6 +153,8 @@ public class CubeDesc extends RootPersistentEntity {
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
 
+    private Map<TblColRef, DeriveInfo> extendedColumnToHosts = Maps.newHashMap();
+
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able
         return storageType == IStorageAware.ID_SHARDED_HBASE;
@@ -171,13 +180,20 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     /**
-     * @return dimension columns excluding derived and measures
+     * @return dimension columns excluding derived 
      */
-    public List<TblColRef> listDimensionColumnsExcludingDerived() {
+    public List<TblColRef> listDimensionColumnsExcludingDerived(boolean alsoExcludeExtendedCol) {
         List<TblColRef> result = new ArrayList<TblColRef>();
         for (TblColRef col : dimensionColumns) {
-            if (isDerived(col) == false)
-                result.add(col);
+            if (isDerived(col)) {
+                continue;
+            }
+
+            if (alsoExcludeExtendedCol && isExtendedColumn(col)) {
+                continue;
+            }
+
+            result.add(col);
         }
         return result;
     }
@@ -209,12 +225,25 @@ public class CubeDesc extends RootPersistentEntity {
         return null;
     }
 
+    public boolean hasHostColumn(TblColRef col) {
+        return isDerived(col) || isExtendedColumn(col);
+    }
+
     public boolean isDerived(TblColRef col) {
         return derivedToHostMap.containsKey(col);
     }
 
+    public boolean isExtendedColumn(TblColRef col) {
+        return extendedColumnToHosts.containsKey(col);
+    }
+
     public DeriveInfo getHostInfo(TblColRef derived) {
-        return derivedToHostMap.get(derived);
+        if (isDerived(derived)) {
+            return derivedToHostMap.get(derived);
+        } else if (isExtendedColumn(derived)) {
+            return extendedColumnToHosts.get(derived);
+        }
+        throw new RuntimeException("Cannot get host info for " + derived);
     }
 
     public Map<Array<TblColRef>, List<DeriveInfo>> getHostToDerivedInfo(List<TblColRef> rowCols, Collection<TblColRef> wantedCols) {
@@ -296,6 +325,10 @@ public class CubeDesc extends RootPersistentEntity {
 
     public TableDesc getFactTableDesc() {
         return model.getFactTableDesc();
+    }
+
+    public List<TableDesc> getLookupTableDescs() {
+        return model.getLookupTableDescs();
     }
 
     public String[] getNullStrings() {
@@ -432,7 +465,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     public Map<String, TblColRef> buildColumnNameAbbreviation() {
         Map<String, TblColRef> r = new CaseInsensitiveStringMap<TblColRef>();
-        for (TblColRef col : listDimensionColumnsExcludingDerived()) {
+        for (TblColRef col : listDimensionColumnsExcludingDerived(true)) {
             r.put(col.getName(), col);
         }
         return r;
@@ -471,7 +504,7 @@ public class CubeDesc extends RootPersistentEntity {
         initMeasureReferenceToColumnFamily();
 
         // check all dimension columns are presented on rowkey
-        List<TblColRef> dimCols = listDimensionColumnsExcludingDerived();
+        List<TblColRef> dimCols = listDimensionColumnsExcludingDerived(true);
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
             addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "). ");
         }
@@ -532,7 +565,7 @@ public class CubeDesc extends RootPersistentEntity {
                     int find = ArrayUtils.indexOf(dimColArray, fk[i]);
                     if (find >= 0) {
                         TblColRef derivedCol = initDimensionColRef(pk[i]);
-                        initDerivedMap(dimColArray[find], DeriveType.PK_FK, dim, derivedCol);
+                        initDerivedMap(new TblColRef[] { dimColArray[find] }, DeriveType.PK_FK, dim, new TblColRef[] { derivedCol }, null);
                     }
                 }
                 /** disable this code as we don't need fk be derived from pk
@@ -565,10 +598,6 @@ public class CubeDesc extends RootPersistentEntity {
         return new String[][] { cols, extra };
     }
 
-    private void initDerivedMap(TblColRef hostCol, DeriveType type, DimensionDesc dimension, TblColRef derivedCol) {
-        initDerivedMap(new TblColRef[] { hostCol }, type, dimension, new TblColRef[] { derivedCol }, null);
-    }
-
     private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
@@ -584,17 +613,20 @@ public class CubeDesc extends RootPersistentEntity {
             }
         }
 
+        Map<TblColRef, DeriveInfo> toHostMap = derivedToHostMap;
+        Map<Array<TblColRef>, List<DeriveInfo>> hostToMap = hostToDerivedMap;
+
         Array<TblColRef> hostColArray = new Array<TblColRef>(hostCols);
-        List<DeriveInfo> infoList = hostToDerivedMap.get(hostColArray);
+        List<DeriveInfo> infoList = hostToMap.get(hostColArray);
         if (infoList == null) {
-            hostToDerivedMap.put(hostColArray, infoList = new ArrayList<DeriveInfo>());
+            hostToMap.put(hostColArray, infoList = new ArrayList<DeriveInfo>());
         }
         infoList.add(new DeriveInfo(type, dimension, derivedCols, false));
 
         for (int i = 0; i < derivedCols.length; i++) {
             TblColRef derivedCol = derivedCols[i];
             boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol) || (extra != null && extra[i].contains("1-1"));
-            derivedToHostMap.put(derivedCol, new DeriveInfo(type, dimension, hostCols, isOneToOne));
+            toHostMap.put(derivedCol, new DeriveInfo(type, dimension, hostCols, isOneToOne));
         }
     }
 
@@ -640,6 +672,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
 
         TableDesc factTable = getFactTableDesc();
+        List<TableDesc> lookupTables = getLookupTableDescs();
         for (MeasureDesc m : measures) {
             m.setName(m.getName().toUpperCase());
 
@@ -648,9 +681,21 @@ public class CubeDesc extends RootPersistentEntity {
             }
 
             FunctionDesc func = m.getFunction();
-            func.init(factTable);
+            func.init(factTable,lookupTables);
             allColumns.addAll(func.getParameter().getColRefs());
+
+            if (ExtendedColumnMeasureType.FUNC_RAW.equalsIgnoreCase(m.getFunction().getExpression())) {
+                FunctionDesc functionDesc = m.getFunction();
+
+                List<TblColRef> hosts = ExtendedColumnMeasureType.getExtendedColumnHosts(functionDesc);
+                TblColRef extendedColumn = ExtendedColumnMeasureType.getExtendedColumn(functionDesc);
+                initExtendedColumnMap(hosts.toArray(new TblColRef[hosts.size()]), extendedColumn);
+            }
         }
+    }
+
+    private void initExtendedColumnMap(TblColRef[] hostCols, TblColRef extendedColumn) {
+        extendedColumnToHosts.put(extendedColumn, new DeriveInfo(DeriveType.EXTENDED_COLUMN, null, hostCols, false));
     }
 
     private void initMeasureReferenceToColumnFamily() {
@@ -773,7 +818,7 @@ public class CubeDesc extends RootPersistentEntity {
     public void setPartitionDateEnd(long partitionDateEnd) {
         this.partitionDateEnd = partitionDateEnd;
     }
-    
+
     public List<TblColRef> getAllColumnsNeedDictionary() {
         List<TblColRef> result = Lists.newArrayList();
 

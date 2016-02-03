@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -71,6 +72,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
     private TableDesc factTableDesc;
+    private List<TableDesc> lookupTableDescs = Lists.newArrayList();
 
     /**
      * Error messages during resolving json metadata
@@ -107,6 +109,10 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public TableDesc getFactTableDesc() {
         return factTableDesc;
+    }
+
+    public List<TableDesc> getLookupTableDescs() {
+        return lookupTableDescs;
     }
 
     public void setFactTable(String factTable) {
@@ -201,6 +207,7 @@ public class DataModelDesc extends RootPersistentEntity {
             if (dimTable == null) {
                 throw new IllegalStateException("Table " + lookup.getTable() + " does not exist for " + this);
             }
+            this.lookupTableDescs.add(dimTable);
 
             JoinDesc join = lookup.getJoin();
             if (join == null)
@@ -250,8 +257,7 @@ public class DataModelDesc extends RootPersistentEntity {
         }
     }
 
-    /**
-     * Add error info and thrown exception out
+    /** * Add error info and thrown exception out
      *
      * @param message
      */

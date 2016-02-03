@@ -18,10 +18,13 @@
 
 #include "Tests.h"
 
-void report ( const char* msg ) {
+void report ( const char* msg )
+{
     throw exception ( msg );
 }
 
-void report() {
-    throw exception();
+void report ()
+{
+    throw exception ();
 }
+

@@ -646,7 +646,7 @@ public class CubeDesc extends RootPersistentEntity {
             }
 
             FunctionDesc func = m.getFunction();
-            func.init(factTable);
+            func.init(factTable, null);
             allColumns.addAll(func.getParameter().getColRefs());
 
             func.getMeasureType().validate(func);
@@ -704,14 +704,14 @@ public class CubeDesc extends RootPersistentEntity {
             measures = Lists.newArrayList();
         }
 
-//        Collections.sort(measures, new Comparator<MeasureDesc>() {
-//            @Override
-//            public int compare(MeasureDesc m1, MeasureDesc m2) {
-//                Integer id1 = m1.getId();
-//                Integer id2 = m2.getId();
-//                return id1.compareTo(id2);
-//            }
-//        });
+        //        Collections.sort(measures, new Comparator<MeasureDesc>() {
+        //            @Override
+        //            public int compare(MeasureDesc m1, MeasureDesc m2) {
+        //                Integer id1 = m1.getId();
+        //                Integer id2 = m2.getId();
+        //                return id1.compareTo(id2);
+        //            }
+        //        });
     }
 
     private void sortHierarchiesByLevel(HierarchyDesc[] hierarchies) {

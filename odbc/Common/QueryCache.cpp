@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
- 
+
+
 #include "QueryCache.h"
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
@@ -49,40 +49,49 @@ const wchar_t* alwaysSuccessResults[3] = {
     L"{\"columnMetas\":[{\"isNullable\":2,\"displaySize\":11,\"label\":\"COL\",\"name\":\"COL\",\"schemaName\":\"\",\"catelogName\":\"\",\"tableName\":\"\",\"precision\":10,\"scale\":0,\"columnType\":4,\"columnTypeName\":\"int4\",\"writable\":true,\"caseSensitive\":false,\"autoIncrement\":false,\"searchable\":true,\"currency\":false,\"signed\":true,\"definitelyWritable\":false,\"readOnly\":false}],\"results\":[[\"1\"]],\"isResultsFlatten\":false,\"flattenResult\":null,\"flattenResultOriginalSize\":0,\"cubes\":null,\"affectedRowCount\":0,\"isException\":false,\"exceptionMessage\":null,\"duration\":0.002,\"partial\":false}"
 };
 
-int findQuery ( const wchar_t* sql, const wchar_t** regexs, int size ) {
-    for ( int i = 0; i < size; ++i ) {
+int findQuery ( const wchar_t* sql, const wchar_t** regexs, int size )
+{
+    for ( int i = 0; i < size; ++i )
+    {
         std::tr1::wregex rgx ( regexs[i], regex_constants::icase );
         bool match = std::tr1::regex_search ( sql, rgx );
-        
-        if ( match ) {
+
+        if ( match )
+        {
             return i;
         }
     }
-    
+
     return -1;
 }
 
-int findInAlwaysSuccessQuery ( const wchar_t* sql ) {
-    return findQuery ( sql, alwaysSuccessQueries, sizeof ( alwaysSuccessQueries ) / sizeof ( wchar_t* ) );
+int findInAlwaysSuccessQuery ( const wchar_t* sql )
+{
+    return findQuery ( sql, alwaysSuccessQueries, sizeof ( alwaysSuccessQueries ) / sizeof ( wchar_t*) );
 }
 
-int findInAlwaysFailQuery ( const wchar_t* sql ) {
-    return findQuery ( sql, alwaysFailQueries, sizeof ( alwaysFailQueries ) / sizeof ( wchar_t* ) );
+int findInAlwaysFailQuery ( const wchar_t* sql )
+{
+    return findQuery ( sql, alwaysFailQueries, sizeof ( alwaysFailQueries ) / sizeof ( wchar_t*) );
 }
 
-unique_ptr<SQLResponse> loadCache ( const wchar_t* query ) {
+unique_ptr <SQLResponse> loadCache ( const wchar_t* query )
+{
     int index = 0;
-    
-    if ( findInAlwaysFailQuery ( query ) >= 0 ) {
-        throw  exception ( "Unsupported SQL" );
+
+    if ( findInAlwaysFailQuery ( query ) >= 0 )
+    {
+        throw exception ( "Unsupported SQL" );
     }
-    
-    else if ( ( index = findInAlwaysSuccessQuery ( query ) ) >= 0 ) {
+
+    else if ( ( index = findInAlwaysSuccessQuery ( query ) ) >= 0 )
+    {
         web::json::value v = web::json::value::parse ( alwaysSuccessResults[index] );
-        std::unique_ptr<SQLResponse> r = SQLResponseFromJSON ( v );
+        std::unique_ptr <SQLResponse> r = SQLResponseFromJSON ( v );
         //overwrite(r.get());
         return r;
     }
-    
+
     return NULL;
 }
+

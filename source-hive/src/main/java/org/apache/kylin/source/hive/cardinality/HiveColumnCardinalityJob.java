@@ -29,10 +29,13 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.metadata.model.DataModelDesc;
 
 /**
  * This hadoop job will scan all rows of the hive table and then calculate the cardinality on each column.
@@ -65,6 +68,10 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             String jobName = JOB_TITLE + getOptionsAsString();
             logger.info("Starting: " + jobName);
             Configuration conf = getConf();
+
+            JobEngineConfig jobEngineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
+            conf.addResource(jobEngineConfig.getHadoopJobConfFilePath(null));
+
             job = Job.getInstance(conf, jobName);
 
             setJobClasspath(job);

@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
@@ -55,7 +56,7 @@ public class FunctionDesc {
     private MeasureType<?> measureType;
     private boolean isDimensionAsMetric = false;
 
-    public void init(TableDesc factTable) {
+    public void init(TableDesc factTable, List<TableDesc> lookupTables) {
         expression = expression.toUpperCase();
         returnDataType = DataType.getType(returnType);
 
@@ -66,14 +67,28 @@ public class FunctionDesc {
         ArrayList<TblColRef> colRefs = Lists.newArrayList();
         for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
             if (p.isColumnType()) {
-                ColumnDesc sourceColumn = factTable.findColumnByName(p.getValue());
+                ColumnDesc sourceColumn = findColumn(factTable,lookupTables,p.getValue());
                 TblColRef colRef = new TblColRef(sourceColumn);
                 colRefs.add(colRef);
             }
         }
 
         parameter.setColRefs(colRefs);
+    }
 
+    private ColumnDesc findColumn(TableDesc factTable, List<TableDesc> lookups, String columnName) {
+        ColumnDesc ret = factTable.findColumnByName(columnName);
+        if (ret != null) {
+            return ret;
+        }
+
+        for (TableDesc lookup : lookups) {
+            ret = lookup.findColumnByName(columnName);
+            if (ret != null) {
+                return ret;
+            }
+        }
+        throw new IllegalStateException("Column is not found in any table from the model: " + columnName);
     }
 
     public MeasureType<?> getMeasureType() {

@@ -15,70 +15,95 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
- 
-#include    <assert.h>
-#include    <stdio.h>
-#include    <ctype.h>
-#include    <string.h>
 
-void displayHexRecord ( char* data, int count, int record_length ) {
+
+#include <assert.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+void displayHexRecord ( char* data, int count, int record_length )
+{
     int i;
-    
-    for ( i = 0; i < count; i++ ) { printf ( "%02x ", data[i] & 0xff ); }
-    
-    for ( ; i < record_length; i++ ) { printf ( "	" ); }
-    
-    printf ( ": " );
-    
-    for ( i = 0; i < count; i++ ) {
-        if ( isgraph ( data[i] ) ) { putchar ( data[i] ); }
-        
-        else          { putchar ( '.' ); }
+
+    for ( i = 0; i < count; i++ )
+    {
+        printf ( "%02x ", data[i] & 0xff );
     }
-    
+
+    for ( ; i < record_length; i++ )
+    {
+        printf ( "	" );
+    }
+
+    printf ( ": " );
+
+    for ( i = 0; i < count; i++ )
+    {
+        if ( isgraph ( data[i] ) )
+        {
+            putchar ( data[i] );
+        }
+
+        else
+        {
+            putchar ( '.' );
+        }
+    }
+
     putchar ( '\n' );
 }
 
-void bufferHexRecord ( char* data, int count, int record_length, char* buffer ) {
+void bufferHexRecord ( char* data, int count, int record_length, char* buffer )
+{
     int i;
-    
-    for ( i = 0; i < count; i++ ) {
+
+    for ( i = 0; i < count; i++ )
+    {
         sprintf ( buffer + strlen ( buffer ), "%02x ", data[i] & 0xff );
     }
-    
+
     for ( ; i < record_length; i++ )
-    { sprintf ( buffer + strlen ( buffer ), " " ); }
-    
+    {
+        sprintf ( buffer + strlen ( buffer ), " " );
+    }
+
     sprintf ( buffer + strlen ( buffer ), ": " );
-    
-    for ( i = 0; i < count; i++ ) {
-        if ( isgraph ( data[i] ) ) {
+
+    for ( i = 0; i < count; i++ )
+    {
+        if ( isgraph ( data[i] ) )
+        {
             buffer[strlen ( buffer ) + 1] = '\0';
             buffer[strlen ( buffer )] = data[i];
         }
-        
-        else {
+
+        else
+        {
             buffer[strlen ( buffer ) + 1] = '\0';
             buffer[strlen ( buffer )] = '.';
         }
     }
-    
+
     buffer[strlen ( buffer ) + 1] = '\0';
     buffer[strlen ( buffer )] = '\n';
 }
 
 //dump 16 * lines bytes, readable test stored in buffer, reserve 100 bytes in buffer for one line
-void hexDump ( char* data, int lines, char* buffer, bool forward ) {
-    if ( !forward ) {
+void hexDump ( char* data, int lines, char* buffer, bool forward )
+{
+    if ( !forward )
+    {
         data -= lines * 16;
     }
-    
+
     buffer[0] = '\0';
-    
-    for ( int i = 0 ; i < lines ; ++i ) {
+
+    for ( int i = 0; i < lines; ++i )
+    {
         sprintf ( buffer + strlen ( buffer ), "%10d  ", data );
         bufferHexRecord ( data, 16, 16, buffer );
         data += 16;
     }
 }
+

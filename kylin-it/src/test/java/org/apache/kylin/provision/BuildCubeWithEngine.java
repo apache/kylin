@@ -71,6 +71,7 @@ public class BuildCubeWithEngine {
 
     public static void main(String[] args) throws Exception {
         beforeClass();
+
         BuildCubeWithEngine buildCubeWithEngine = new BuildCubeWithEngine();
         buildCubeWithEngine.before();
         buildCubeWithEngine.build();
@@ -98,7 +99,7 @@ public class BuildCubeWithEngine {
         }
 
         HBaseMetadataTestCase.staticCreateTestMetadata(AbstractKylinTestCase.SANDBOX_TEST_DATA);
-        
+
         try {
             //check hdfs permission
             Configuration hconf = HadoopUtil.getCurrentConfiguration();

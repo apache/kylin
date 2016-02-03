@@ -62,7 +62,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         // consume any left rows from advanced measure filler
         if (advMeasureRowsRemaining > 0) {
             for (IAdvMeasureFiller filler : advMeasureFillers) {
-                filler.fillTuplle(tuple, advMeasureRowIndex);
+                filler.fillTuple(tuple, advMeasureRowIndex);
             }
             advMeasureRowIndex++;
             advMeasureRowsRemaining--;

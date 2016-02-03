@@ -34,15 +34,17 @@
 #include <string>
 #include <memory>
 #include <windows.h>
-#include <sqlext.h>                                     // required for ODBC calls
+#include <sqlext.h> // required for ODBC calls
+
 #include <iostream>
 #include <REST.h>
 
-void report();
+void report ();
 void report ( const char* msg );
 
-void simpleQueryTest();
-void queryFlowTest();
-void restAPITest();
-void crossValidate();
-void validateSQLGetTypeInfo();
+void simpleQueryTest ();
+void queryFlowTest ();
+void restAPITest ();
+void crossValidate ();
+void validateSQLGetTypeInfo ();
+

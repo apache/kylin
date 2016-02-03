@@ -93,16 +93,16 @@ public class DimensionDesc {
         //                h.setColumn(h.getColumn().toUpperCase());
         //        }
 
-        if (derived != null && derived.length == 0)
+        if (derived != null && derived.length == 0) {
             derived = null;
-
+        }
         if (derived != null) {
             StringUtil.toUpperCaseArray(derived, derived);
         }
-
         if (derived != null && join == null) {
             throw new IllegalStateException("Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
         }
+
     }
 
     public boolean isDerived() {
@@ -148,6 +148,7 @@ public class DimensionDesc {
     public String[] getDerived() {
         return derived;
     }
+    
 
     public void setDerived(String[] derived) {
         this.derived = derived;

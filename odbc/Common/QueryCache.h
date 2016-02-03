@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
- 
+
+
 #pragma once
 
 #include "MsgTypes.h"
 
-unique_ptr<SQLResponse> loadCache ( const wchar_t* query );
+unique_ptr <SQLResponse> loadCache ( const wchar_t* query );
+
