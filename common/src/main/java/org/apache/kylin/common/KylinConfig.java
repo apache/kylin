@@ -316,7 +316,10 @@ public class KylinConfig {
         if (!root.endsWith("/")) {
             root += "/";
         }
-        return root + getMetadataUrlPrefix() + "/";
+        return new StringBuffer(root)
+                     .append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-'))
+                     .append("/")
+                     .toString();
     }
 
     public String getHBaseClusterFs() {
