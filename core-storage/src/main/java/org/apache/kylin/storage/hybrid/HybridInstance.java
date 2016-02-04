@@ -85,7 +85,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         hybridInstance.setConfig(config);
         hybridInstance.setName(name);
         hybridInstance.setRealizationEntries(realizationEntries);
-        hybridInstance.updateRandomUuid();
+        hybridInstance.updateVersionAndRandomUuid();
 
         return hybridInstance;
     }
