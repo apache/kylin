@@ -1,9 +1,9 @@
 {
   "uuid" : "kkkka32a-a33e-4b69-83dd-0bb8b1f8c53b",
+  "version":"2.1",
   "last_modified" : 1404097095621,
   "name" : "test_kylin_cube_with_slr_left_join_ready",
   "owner" : null,
-  "version" : null,
   "descriptor" : "test_kylin_cube_with_slr_left_join_desc",
   "cost" : 50,
   "segments" : [ {

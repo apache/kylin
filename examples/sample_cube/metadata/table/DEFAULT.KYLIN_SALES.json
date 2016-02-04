@@ -1,5 +1,6 @@
 {
   "uuid" : "e286e39e-40d7-44c2-8fa2-41b365522771",
+  "version":"2.1",
   "name" : "KYLIN_SALES",
   "columns" : [ {
     "id" : "1",

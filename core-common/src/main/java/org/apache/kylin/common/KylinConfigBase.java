@@ -61,6 +61,14 @@ public class KylinConfigBase implements Serializable {
         return kylinHome;
     }
 
+    /**
+     * @see KylinVersion
+     * @return current kylin version
+     */
+    public static String getKylinVersion(){
+        return KylinVersion.getCurrentVersion();
+    }
+
     // ============================================================================
 
     private volatile Properties properties = new Properties();

@@ -63,7 +63,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         cubeInstance.setCreateTimeUTC(System.currentTimeMillis());
         cubeInstance.setSegments(new ArrayList<CubeSegment>());
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
-        cubeInstance.updateRandomUuid();
+        cubeInstance.updateVersionAndRandomUuid();
 
         return cubeInstance;
     }
@@ -74,8 +74,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     private String name;
     @JsonProperty("owner")
     private String owner;
-    @JsonProperty("version")
-    private String version; // user info only, we don't do version control
     @JsonProperty("descriptor")
     private String descName;
     // Mark cube priority for query
@@ -224,14 +222,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public void setOwner(String owner) {
         this.owner = owner;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     public String getDescName() {
@@ -440,7 +430,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         newCube.setVersion(cubeInstance.getVersion());
         newCube.setCost(cubeInstance.getCost());
         newCube.setCreateTimeUTC(System.currentTimeMillis());
-        newCube.updateRandomUuid();
+        newCube.updateVersionAndRandomUuid();
         return newCube;
     }
 

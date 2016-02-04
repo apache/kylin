@@ -30,6 +30,7 @@ import org.apache.commons.lang.time.FastDateFormat;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.common.KylinConfig;
 
 /**
  * Marks the root entity of JSON persistence. Unit of read, write, cache, and
@@ -71,6 +72,24 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     @JsonProperty("last_modified")
     protected long lastModified;
 
+    /**
+     * Metadata model version
+     *
+     * User info only, we don't do version control
+     *
+     * For example: 2.1
+     */
+    @JsonProperty("version")
+    protected String version;
+
+    public String getVersion() {
+      return version;
+    }
+
+    public void setVersion(String version) {
+      this.version = version;
+    }
+
     public String getUuid() {
         return uuid;
     }
@@ -90,10 +109,15 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
     }
-    
-    
 
-    public void updateRandomUuid() {
+    /**
+     * Update entity's "model_version" with current kylin version and "uuid" with random UUID
+     *
+     * @see KylinConfig#getKylinVersion()
+     * @see UUID#randomUUID()
+     */
+    public void updateVersionAndRandomUuid() {
+        setVersion(KylinConfig.getKylinVersion());
         setUuid(UUID.randomUUID().toString());
     }
 
@@ -103,6 +127,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         int result = 1;
         result = prime * result + (int) (lastModified ^ (lastModified >>> 32));
         result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
+        result = prime * result + ((version == null) ? 0 : version.hashCode());
         return result;
     }
 
@@ -115,7 +140,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         if (getClass() != obj.getClass())
             return false;
         RootPersistentEntity other = (RootPersistentEntity) obj;
-        if (lastModified != other.lastModified)
+        if (lastModified != other.lastModified || !(version == null || version.equals(other.getVersion())))
             return false;
         if (uuid == null) {
             if (other.uuid != null)
@@ -124,5 +149,4 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
             return false;
         return true;
     }
-
 }

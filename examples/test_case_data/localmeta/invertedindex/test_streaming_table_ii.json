@@ -1,8 +1,8 @@
 {
+  "version":"2.1",
   "uuid": "daa53e80-41be-49a5-89ca-9fb729999812",
   "name": "test_streaming_table_ii",
   "owner": null,
-  "version": null,
   "cost": 10,
   "status": "DISABLED",
   "segments": [],

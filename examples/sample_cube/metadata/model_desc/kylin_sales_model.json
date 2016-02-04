@@ -1,5 +1,6 @@
 {
   "uuid" : "0928468a-9fab-4185-9a14-6f2e7c74823f",
+  "version":"2.1",
   "name" : "kylin_sales_model",
   "lookups" : [ {
     "table" : "DEFAULT.KYLIN_CAL_DT",

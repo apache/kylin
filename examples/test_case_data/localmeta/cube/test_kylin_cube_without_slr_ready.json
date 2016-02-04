@@ -1,9 +1,9 @@
 {
   "uuid" : "daa53e80-41be-49a5-90ca-9fb7294db186",
+  "version":"2.1",
   "last_modified" : 1404098303976,
   "name" : "test_kylin_cube_without_slr_ready",
   "owner" : null,
-  "version" : null,
   "descriptor" : "test_kylin_cube_without_slr_desc",
   "cost" : 10,
   "segments" : [ {
