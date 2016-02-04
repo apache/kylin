@@ -173,7 +173,10 @@ public class KylinConfigBase implements Serializable {
         if (!root.endsWith("/")) {
             root += "/";
         }
-        return root + getMetadataUrlPrefix() + "/";
+        return new StringBuffer(root)
+                .append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-'))
+                .append("/")
+                .toString();
     }
 
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
