@@ -77,7 +77,13 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
     }
 
     public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: java org.apache.kylin.rest.security.PasswordPlaceholderConfigurer <your_password>");
+            System.exit(1);
+        }
+        
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        System.out.println(bCryptPasswordEncoder.encode("MODELER"));
+        System.out.println("The hash of your password is: ");
+        System.out.println(bCryptPasswordEncoder.encode(args[0]));
     }
 }
