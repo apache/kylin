@@ -55,7 +55,7 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
-    private static final Logger logger = LoggerFactory.getLog(HiveColumnCardinalityUpdateJob.class);
+    private static final Logger logger = LoggerFactory.getLogger(HiveColumnCardinalityUpdateJob.class);
     private String table;
 
     public HiveColumnCardinalityUpdateJob() {
