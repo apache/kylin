@@ -18,14 +18,6 @@
 
 package org.apache.kylin.source.hive.cardinality;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -41,11 +33,21 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This job will update save the cardinality result into Kylin table metadata store.
- * @author shaoshi
  *
+ * @author shaoshi
  */
 public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Update Job";
@@ -54,6 +56,8 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
     protected static final Option OPTION_TABLE = OptionBuilder.withArgName("table name").hasArg().isRequired(true).withDescription("The hive table name").create("table");
 
     private String table;
+
+    private static final Logger logger = LoggerFactory.getLogger(HiveColumnCardinalityUpdateJob.class);
 
     public HiveColumnCardinalityUpdateJob() {
 
@@ -110,11 +114,15 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
             cardi.append(",");
         }
         String scardi = cardi.toString();
-        scardi = scardi.substring(0, scardi.length() - 1);
-        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        Map<String, String> tableExd = metaMgr.getTableDescExd(tableName);
-        tableExd.put(MetadataConstants.TABLE_EXD_CARDINALITY, scardi);
-        metaMgr.saveTableExd(tableName.toUpperCase(), tableExd);
+        if (scardi.length() > 0) {
+            scardi = scardi.substring(0, scardi.length() - 1);
+            MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+            Map<String, String> tableExd = metaMgr.getTableDescExd(tableName);
+            tableExd.put(MetadataConstants.TABLE_EXD_CARDINALITY, scardi);
+            metaMgr.saveTableExd(tableName.toUpperCase(), tableExd);
+        } else {
+            throw new IllegalArgumentException("No cardinality data is collected for table " + tableName);
+        }
     }
 
     private static List<String> readLines(Path location, Configuration conf) throws Exception {
