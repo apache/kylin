@@ -34,8 +34,9 @@ Verify your key:
 Get the fingerprint of your key:
 `gpg --fingerprint YOUR_NAME`
 
-It will display the fingerprint like "Key fingerprint = XXXX XXXX ...", then add the fingerprint to your apache account at https://id.apache.org/ in "OpenPGP Public Key Primary Fingerprint" field; wait for a while the key will added to https://people.apache.org/keys/, for example:  
-[https://people.apache.org/keys/committer/lukehan.asc](https://people.apache.org/keys/committer/lukehan.asc)  
+It will display the fingerprint like "Key fingerprint = XXXX XXXX ...", then add the fingerprint to your apache account at [https://id.apache.org/](https://id.apache.org/) in "OpenPGP Public Key Primary Fingerprint" field; wait for a few hours the key will added to [https://people.apache.org/keys/](https://people.apache.org/keys/), for example:
+[https://people.apache.org/keys/committer/lukehan.asc](https://people.apache.org/keys/committer/lukehan.asc)
+
 Generate ASCII Amromed Key:  
 `gpg -a --export YOUR_MAIL_ADDRESS > YOUR_NAME.asc &`
 
@@ -43,10 +44,10 @@ Upload key to public server:
 `gpg --send-keys YOUR_KEY_HASH`
 
 or Submit key via web:  
-Open and Submit to [http://pool.sks-keyservers.net:11371](http://pool.sks-keyservers.net:11371) (you can pickup any avaliable public key server)  
+Open and Submit to [http://pool.sks-keyservers.net:11371](http://pool.sks-keyservers.net:11371) (you can pickup any avaliable public key server)
+
 Once your key submitted to server, you can verify using following command:  
 `gpg --recv-keys YOUR_KEY_HASH`
-
 for example:  
 `gpg --recv-keys 027DC364`
 
@@ -64,14 +65,6 @@ __Before you start:__
 * Make sure you are using JDK 1.7 (not 1.8).
 * Make sure you are working on right release version number.
 * Make sure that every “resolved” JIRA case (including duplicates) has a fix version assigned.
-
-__Verify licenses__  
-Run Apache RAT to check licenses issue:  
-{% highlight bash %}
-mvn -Papache-release clean rat:rat
-{% endhighlight %}
-
-Fix license issue if any.
 
 __Configure Apache repository server in Maven__
 If you're the first time to do release, you need update the server authentication information in ~/.m2/settings.xml; If this file doesn't exist, copy a template from $M2_HOME/conf/settings.xml;
@@ -119,7 +112,7 @@ In the "servers" section, make sure the following servers be added, and replace 
   </servers>
 {% endhighlight %}
 
-__Making a snapshot__  
+__Fix license issues and make a snapshot__
 {% highlight bash %}
 # Set passphrase variable without putting it into shell history
 $ read -s GPG_PASSPHRASE
@@ -128,9 +121,11 @@ $ read -s GPG_PASSPHRASE
 $ git clean -xn
 $ mvn clean
 
+# Fix any license issues as prompted
 $ mvn -Papache-release -Dgpg.passphrase=${GPG_PASSPHRASE} install
 {% endhighlight %}
-When the dry-run has succeeded, change install to deploy:
+
+Optionally, when the dry-run has succeeded, change install to deploy:
 {% highlight bash %}
 $ mvn -Papache-release -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
 {% endhighlight %}
@@ -187,14 +182,14 @@ $ mvn -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT
 $ mvn -DskipTests -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE} -DskipTests" release:perform
 {% endhighlight %}
 
-__Verify the staged artifacts in the Nexus repository:__  
+__Close the staged artifacts in the Nexus repository:__
+
 * Go to [https://repository.apache.org/](https://repository.apache.org/) and login
 * Under `Build Promotion`, click `Staging Repositories`
 * In the `Staging Repositories` tab there should be a line with profile `org.apache.kylin`
 * Navigate through the artifact tree and make sure the .jar, .pom, .asc files are present
-* Check the box on in the first column of the row,
-  and press the 'Close' button to publish the repository at
-  https://repository.apache.org/content/repositories/orgapachekylin-1006
+* Check the box on in the first column of the row, and press the 'Close' button to publish the repository at
+  [https://repository.apache.org/content/repositories/orgapachekylin-1006](https://repository.apache.org/content/repositories/orgapachekylin-1006)
   (or a similar URL)
 
 __Upload to staging area:__  
