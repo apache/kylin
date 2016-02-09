@@ -176,14 +176,17 @@
                         <configuration>
                             <numUnapprovedLicenses>0</numUnapprovedLicenses>
                             <excludes>
-                                <!-- protobuf -->
+                                <!-- protobuf generated -->
                                 <exclude>
                                     src/main/java/org/apache/kylin/storage/hbase/ii/coprocessor/endpoint/generated/IIProtos.java
                                 </exclude>
                                 <exclude>
+                                    src/main/java/org/apache/kylin/storage/hbase/cube/v1/filter/generated/FilterProtosExt.java
+                                </exclude>
+                                <exclude>
                                     src/main/java/org/apache/kylin/storage/hbase/cube/v2/coprocessor/endpoint/generated/CubeVisitProtos.java
                                 </exclude>
-                                <exclude>**/*.proto</exclude>
+                                <exclude>**/src/test/resources/**</exclude>
                             </excludes>
                         </configuration>
                         <executions>

@@ -731,21 +731,20 @@
                                 <exclude>**/*.gif</exclude>
                                 <exclude>**/*.ico</exclude>
 
-                                <exclude>server/logs**</exclude>
-
-                                <!--Job's Test Data-->
+                                <!--Test Data-->
                                 <exclude>**/src/test/resources/**</exclude>
 
                                 <!-- generated files -->
                                 <exclude>**/target/**</exclude>
                                 <exclude>lib/**</exclude>
                                 <exclude>dist/**</exclude>
-
                                 <exclude>website/**</exclude>
+                                
                                 <!-- text files without comments -->
                                 <exclude>**/*.csv</exclude>
                                 <exclude>**/*.json</exclude>
                                 <exclude>**/*.md</exclude>
+                                
                                 <!-- binary files -->
                                 <exclude>**/*.dict</exclude>
                                 <exclude>**/*.dic</exclude>
@@ -753,17 +752,15 @@
                                 <exclude>**/*.pdf</exclude>
                                 <exclude>**/*.docx</exclude>
                                 <exclude>**/*.doc</exclude>
-                                <exclude>**/*.log</exclude>
                                 <exclude>**/*.txt</exclude>
-
                                 <exclude>**/.checkstyle</exclude>
-                                <!--Job's Test Data-->
-                                <exclude>**/src/test/resources/data/**</exclude>
+                                
                                 <!-- Kylin's website content -->
                                 <exclude>**/.sass-cache/**</exclude>
 
                                 <!-- tomcat package -->
                                 <exclude>tomcat/**</exclude>
+                                
                                 <!-- front end libary and generated files -->
                                 <exclude>webapp/node_modules/**</exclude>
                                 <exclude>webapp/dist/**</exclude>
@@ -784,14 +781,10 @@
                                 <exclude>webapp/grunt.json</exclude>
                                 <exclude>webapp/package.json</exclude>
 
-                                <!-- jdbc log -->
+                                <!-- logs -->
+                                <exclude>**/*.log</exclude>
                                 <exclude>jdbc/kylin_jdbc.log*</exclude>
-                                <!-- server log -->
                                 <exclude>server/logs/**</exclude>
-
-                                <!-- HBase MiniCluster Testing Data, for testing only -->
-                                <exclude>examples/test_case_data/minicluster/hbase-export.tar.gz</exclude>
-                                <exclude>examples/test_case_data/**/*.xml</exclude>
 
                                 <!--ODBC sub project is a VS project, exclude related files -->
                                 <exclude>**/*.sln</exclude>
@@ -832,6 +825,7 @@
                     <plugin>
                         <groupId>net.ju-n.maven.plugins</groupId>
                         <artifactId>checksum-maven-plugin</artifactId>
+                        <version>1.2</version>
                         <executions>
                             <execution>
                                 <goals>
