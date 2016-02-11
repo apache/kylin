@@ -1,8 +1,0 @@
-.DS_Store
-/dist
-node_modules
-karma.conf.js
-karma-e2e.conf.js
-
-app/.htaccess
-.idea/
