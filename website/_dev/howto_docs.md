@@ -5,6 +5,8 @@ categories: development
 permalink: /development/howto_docs.html
 ---
 
+We write documents in MD format and convert to HTML using [Jekyll](http://jekyllrb.com). The Jekyll generated HTML gets uploaded to apache SVN and becomes Kylin website. All MD source files are managed in git so all changes and contributors are clearly tracked.
+
 ## Before your work
 
 Install following tools before you add or edit documentation:  
@@ -32,7 +34,9 @@ Apache Kylin's website and documentation is using Jekyll to manage and generate 
 To draft Chinese version document or translate existing one, just add or copy that doc and name with .cn.md as sufffix. It will generate under /cn folder with same name as html file.  
 To add other language, please update _config.yml and follow the same pattern as Chinese version.
 
-# Kylin document sturcture and navigation menu
+# Kylin document structure and navigation menu
+
+The Kylin [website as the Jekyll source](https://github.com/apache/kylin/tree/document/website) is maintained under the `doucment` branch.
 
 1. __Home Page__: _"index.md"_ Home page of Docs
 2. __Getting Started__: _"gettingstarted"_ General docs about Apache Kylin, including FAQ, Terminology
