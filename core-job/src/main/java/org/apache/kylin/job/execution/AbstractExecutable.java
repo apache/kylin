@@ -18,13 +18,10 @@
 
 package org.apache.kylin.job.execution;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
@@ -35,10 +32,12 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  */
@@ -50,6 +49,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String END_TIME = "endTime";
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
+    protected int retry = 0;
 
     private String name;
     private String id;
@@ -99,15 +99,30 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         logger.info("Executing >>>>>>>>>>>>>   " + this.getName() + "   <<<<<<<<<<<<<");
 
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
-        ExecuteResult result;
-        try {
-            onExecuteStart(executableContext);
-            result = doWork(executableContext);
-        } catch (Throwable e) {
-            logger.error("error running Executable", e);
-            onExecuteError(e, executableContext);
-            throw new ExecuteException(e);
+        ExecuteResult result = null;
+
+        onExecuteStart(executableContext);
+        Throwable exception;
+        do {
+            if (retry > 0) {
+                logger.info("Retry " + retry);
+            }
+            exception = null;
+            result = null;
+            try {
+                result = doWork(executableContext);
+            } catch (Throwable e) {
+                logger.error("error running Executable", e);
+                exception = e;
+            }
+            retry++;
+        } while (((result != null && result.succeed() == false) || exception != null) && needRetry() == true);
+        
+        if (exception != null) {
+            onExecuteError(exception, executableContext);
+            throw new ExecuteException(exception);
         }
+        
         onExecuteFinished(result, executableContext);
         return result;
     }
@@ -299,6 +314,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected final boolean isDiscarded() {
         final ExecutableState status = executableManager.getOutput(getId()).getState();
         return status == ExecutableState.DISCARDED;
+    }
+
+    protected boolean needRetry() {
+        return this.retry <= KylinConfig.getInstanceFromEnv().getJobRetry();
     }
 
     @Override

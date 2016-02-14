@@ -538,6 +538,10 @@ public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("crossdomain.enable", "true"));
     }
 
+    public int getJobRetry() {
+        return Integer.parseInt(this.getOptional("kylin.job.retry", "0"));
+    }
+
     public String toString() {
         return getMetadataUrl();
     }
