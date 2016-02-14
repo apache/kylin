@@ -20,8 +20,18 @@ package org.apache.kylin.cube.model;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
@@ -35,9 +45,6 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.cube.model.validation.IValidatorRule;
-import org.apache.kylin.cube.model.validation.ResultLevel;
-import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -51,6 +58,8 @@ import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -60,8 +69,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -478,7 +485,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
 
         // check if aggregation group is valid
-        validate(this);
+        validate();
 
         this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
 
@@ -511,15 +518,11 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    public void validate(CubeDesc cube) {
-        inner(cube);
-    }
-
-    private void inner(CubeDesc cube) {
-        int maxSize = getMaxAgrGroupSize();
+    public void validate() {
+        int maxSize = config.getCubeAggrGroupMaxSize();
         int index = 0;
 
-        for (AggregationGroup agg : cube.getAggregationGroups()) {
+        for (AggregationGroup agg : getAggregationGroups()) {
             if (agg.getIncludes() == null) {
                 logger.error("Aggregation group " + index + " includes field not set");
                 throw new IllegalStateException("Aggregation group " + index + " includes field not set");
@@ -536,11 +539,11 @@ public class CubeDesc extends RootPersistentEntity {
             Set<String> mandatoryDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(mandatoryDims, agg.getSelectRule().mandatory_dims);
 
-            ArrayList<Set<String>> hierarchyDimsList = new ArrayList ();
+            ArrayList<Set<String>> hierarchyDimsList = Lists.newArrayList();
             Set<String> hierarchyDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(hierarchyDimsList, hierarchyDims, agg.getSelectRule().hierarchy_dims);
 
-            ArrayList<Set<String>> jointDimsList = new ArrayList ();
+            ArrayList<Set<String>> jointDimsList = Lists.newArrayList();
             Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(jointDimsList, jointDims, agg.getSelectRule().joint_dims);
 
@@ -595,7 +598,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    private void getDims (Set<String> dims, String [] stringSet) {
+    private void getDims(Set<String> dims, String[] stringSet) {
         if (stringSet != null) {
             for (String str : stringSet) {
                 dims.add(str);
@@ -603,7 +606,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    private void getDims (ArrayList<Set<String>> dimsList, Set<String> dims, String [][] stringSets) {
+    private void getDims(ArrayList<Set<String>> dimsList, Set<String> dims, String[][] stringSets) {
         Set<String> temp = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         if (stringSets != null) {
             for (String[] ss : stringSets) {
@@ -626,7 +629,7 @@ public class CubeDesc extends RootPersistentEntity {
         return b;
     }
 
-    private boolean hasSingle (ArrayList<Set<String>> dimsList) {
+    private boolean hasSingle(ArrayList<Set<String>> dimsList) {
         boolean hasSingle = false;
         for (Set<String> dims : dimsList) {
             if (dims.size() < 2)
@@ -635,7 +638,7 @@ public class CubeDesc extends RootPersistentEntity {
         return hasSingle;
     }
 
-    private boolean hasOverlap (ArrayList<Set<String>> dimsList, Set<String> Dims) {
+    private boolean hasOverlap(ArrayList<Set<String>> dimsList, Set<String> Dims) {
         boolean hasOverlap = false;
         int dimSize = 0;
         for (Set<String> dims : dimsList) {
@@ -644,11 +647,6 @@ public class CubeDesc extends RootPersistentEntity {
         if (dimSize != Dims.size())
             hasOverlap = true;
         return hasOverlap;
-    }
-
-    protected int getMaxAgrGroupSize() {
-        String size = KylinConfig.getInstanceFromEnv().getOptional(IValidatorRule.KEY_MAX_AGR_GROUP_SIZE, String.valueOf(IValidatorRule.DEFAULT_MAX_AGR_GROUP_SIZE));
-        return Integer.parseInt(size);
     }
 
     private void initDimensionColumns() {

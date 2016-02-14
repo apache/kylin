@@ -18,15 +18,14 @@
 
 package org.apache.kylin.common.persistence;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
-import com.google.common.base.Function;
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
 
@@ -89,16 +88,9 @@ public class ResourceTool {
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            IOUtils.closeQuietly(is);
+            IOUtils.closeQuietly(br);
         }
     }
 
