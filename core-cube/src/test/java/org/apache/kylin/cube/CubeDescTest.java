@@ -97,14 +97,13 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage("Aggregation group 0 has too many dimensions");
 
-        CubeDesc desc = new CubeDesc() {
-            @Override
-            protected int getMaxAgrGroupSize() {
-                return 3;
-            }
-        };
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
-        desc.validate(cubeDesc);
+        try {
+            System.setProperty("kylin.cube.aggrgroup.max_size", "3");
+            cubeDesc.validate();
+        } finally {
+            System.clearProperty("kylin.cube.aggrgroup.max_size");
+        }
     }
 
     @Test

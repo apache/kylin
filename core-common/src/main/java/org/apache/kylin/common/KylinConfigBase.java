@@ -73,11 +73,11 @@ public class KylinConfigBase implements Serializable {
 
     private volatile Properties properties = new Properties();
 
-    public String getOptional(String prop) {
+    protected String getOptional(String prop) {
         return getOptional(prop, null);
     }
 
-    public String getOptional(String prop, String dft) {
+    protected String getOptional(String prop, String dft) {
         final String property = System.getProperty(prop);
         return property != null ? property : properties.getProperty(prop, dft);
     }
@@ -375,6 +375,10 @@ public class KylinConfigBase implements Serializable {
     public double getCubeAlgorithmAutoThreshold() {
         return Double.parseDouble(getOptional("kylin.cube.algorithm.auto.threshold", "8"));
     }
+    
+    public int getCubeAggrGroupMaxSize() {
+        return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max_size", "12"));
+    }
 
     public int getDictionaryMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
@@ -528,6 +532,10 @@ public class KylinConfigBase implements Serializable {
 
     public String getMailSender() {
         return getOptional("mail.sender", "");
+    }
+    
+    public boolean isWebCrossDomainEnabled() {
+        return Boolean.parseBoolean(getOptional("crossdomain.enable", "true"));
     }
 
     public String toString() {
