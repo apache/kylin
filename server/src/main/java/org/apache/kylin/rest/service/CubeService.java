@@ -19,7 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -64,10 +63,8 @@ import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
-import org.apache.kylin.rest.security.AclPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.security.access.prepost.PostFilter;
@@ -157,7 +154,7 @@ public class CubeService extends BasicService {
         desc.init(getConfig(), getMetadataManager().getAllTablesMap());
         int cuboidCount = CuboidCLI.simulateCuboidGeneration(desc);
         logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
-        
+
         boolean isNew = false;
         if (getCubeDescManager().getCubeDesc(desc.getName()) == null) {
             createdDesc = getCubeDescManager().createCubeDesc(desc);
@@ -205,7 +202,10 @@ public class CubeService extends BasicService {
         for (RealizationEntry projectRealization : project.getRealizationEntries()) {
             if (projectRealization != null && projectRealization.getType() == RealizationType.CUBE) {
                 CubeInstance cube = getCubeManager().getCube(projectRealization.getRealization());
-                assert cube != null;
+                if (cube == null) {
+                    logger.error("Project " + projectName + " contains realization " + projectRealization.getRealization() + " which is not found by CubeManager");
+                    continue;
+                }
                 if (cube.equals(target)) {
                     return true;
                 }
@@ -229,7 +229,7 @@ public class CubeService extends BasicService {
             if (!updatedCubeDesc.getError().isEmpty()) {
                 return updatedCubeDesc;
             }
-            
+
             getCubeManager().updateCube(cube);
 
             return updatedCubeDesc;
@@ -494,7 +494,7 @@ public class CubeService extends BasicService {
         cube.getSegments().clear();
         CubeManager.getInstance(getConfig()).updateCube(cube);
     }
-    
+
     private void discardAllRunningJobs(CubeInstance cube) {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
