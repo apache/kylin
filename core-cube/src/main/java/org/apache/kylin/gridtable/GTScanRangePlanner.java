@@ -108,8 +108,8 @@ public class GTScanRangePlanner {
         for (ColumnRange range : andDimRanges) {
             if (partitionColRef != null && range.column.equals(partitionColRef)) {
                 if (rangeStartEndComparator.comparator.compare(segmentStartAndEnd.getFirst(), range.end) <= 0 //
-                        && rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) < 0) {
-                    //segment range is [Closed,Open)
+                        && rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) <= 0) {
+                    //segment range is [Closed,Open), but segmentStartAndEnd.getSecond() might be rounded, so use <=. 
                 } else {
                     logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}",//
                             new Object[] { partitionColRef, makeReadable(segmentStartAndEnd.getFirst()), makeReadable(segmentStartAndEnd.getSecond()), makeReadable(range.begin), makeReadable(range.end) });
