@@ -17,7 +17,7 @@ We also suggest you using bridged mode instead of NAT mode in your virtual box s
 
 ### Start Hadoop
 
-Please make sure Hive, HDFS and HBase are available on our CLI machine.
+Please make sure Hive, HDFS and HBase are available on your CLI machine.
 If you don't know how, here's a simple tutorial for hortonworks sanbox:
 
 Use ambari helps to launch hadoop:
@@ -25,7 +25,7 @@ Use ambari helps to launch hadoop:
 ambari-agent start
 ambari-server start
 	
-With both command successfully run you can go to ambari homepage at <http://your_sandbox_ip:8080> (user:admin,password:admin) to check everything's status. **By default hortonworks ambari disables Hbase, you'll need manually start the `Hbase` service at ambari homepage.**
+With both commands successfully run you can go to ambari homepage at <http://your_sandbox_ip:8080> (user:admin,password:admin) to check everything's status. **By default hortonworks ambari disables Hbase, you'll need manually start the `Hbase` service at ambari homepage.**
 
 ![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
 

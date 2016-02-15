@@ -44,7 +44,7 @@ Upload key to public server:
 `gpg --send-keys YOUR_KEY_HASH`
 
 or Submit key via web:  
-Open and Submit to [http://pool.sks-keyservers.net:11371](http://pool.sks-keyservers.net:11371) (you can pickup any avaliable public key server)
+Open and Submit to [http://pool.sks-keyservers.net:11371](http://pool.sks-keyservers.net:11371) (you can pickup any available public key server)
 
 Once your key submitted to server, you can verify using following command:  
 `gpg --recv-keys YOUR_KEY_HASH`

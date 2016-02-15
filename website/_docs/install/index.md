@@ -9,7 +9,7 @@ since: v0.7.1
 
 ### Environment
 
-Kylin requires a properly setup hadoop environment to run. Following are the minimal request to run Kylin, for more detial, please check this reference: [Hadoop Environment](hadoop_env.html).
+Kylin requires a properly setup hadoop environment to run. Following are the minimal requests to run Kylin, for more detail, please check this reference: [Hadoop Environment](hadoop_env.html).
 
 ## Recommended Hadoop Versions
 
@@ -21,7 +21,7 @@ Kylin requires a properly setup hadoop environment to run. Following are the min
 _Tested with Hortonworks HDP 2.2 and Cloudera Quickstart VM 5.1_
 
 
-It is most common to install Kylin on a Hadoop client machine. It can be used for demo use, or for those who want to host their own web site to provide Kylin service. The scenario is depicted as:
+It is the most common to install Kylin on a Hadoop client machine. It can be used for demo use, or for those who want to host their own web site to provide Kylin service. The scenario is depicted as:
 
 ![On-Hadoop-CLI-installation](/images/install/on_cli_install_scene.png)
 
