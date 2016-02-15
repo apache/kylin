@@ -118,7 +118,7 @@ public class DictGridTableTest {
         {
             LogicalTupleFilter filter = and(timeComp4, ageComp1);
             List<GTScanRange> r = planner.planScanRanges(filter);
-            assertEquals(0, r.size());
+            assertEquals(1, r.size());
         }
         {
             LogicalTupleFilter filter = and(timeComp5, ageComp1);

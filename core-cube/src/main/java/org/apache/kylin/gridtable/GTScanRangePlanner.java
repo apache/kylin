@@ -1,17 +1,8 @@
 package org.apache.kylin.gridtable;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -26,9 +17,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.util.*;
 
 public class GTScanRangePlanner {
 
@@ -108,8 +97,10 @@ public class GTScanRangePlanner {
         for (ColumnRange range : andDimRanges) {
             if (partitionColRef != null && range.column.equals(partitionColRef)) {
                 if (rangeStartEndComparator.comparator.compare(segmentStartAndEnd.getFirst(), range.end) <= 0 //
-                        && rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) <= 0) {
-                    //segment range is [Closed,Open), but segmentStartAndEnd.getSecond() might be rounded, so use <=. 
+                        && (rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) < 0 //
+                        || rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) == 0 //
+                        && (range.op == FilterOperatorEnum.EQ || range.op == FilterOperatorEnum.LTE || range.op == FilterOperatorEnum.GTE || range.op == FilterOperatorEnum.IN))) {
+                    //segment range is [Closed,Open), but segmentStartAndEnd.getSecond() might be rounded, so use <= when has equals in condition. 
                 } else {
                     logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}",//
                             new Object[] { partitionColRef, makeReadable(segmentStartAndEnd.getFirst()), makeReadable(segmentStartAndEnd.getSecond()), makeReadable(range.begin), makeReadable(range.end) });
@@ -346,9 +337,11 @@ public class GTScanRangePlanner {
         private ByteArray begin = ByteArray.EMPTY;
         private ByteArray end = ByteArray.EMPTY;
         private Set<ByteArray> valueSet;
+        private FilterOperatorEnum op;
 
         public ColumnRange(TblColRef column, Set<ByteArray> values, FilterOperatorEnum op) {
             this.column = column;
+            this.op = op;
 
             switch (op) {
             case EQ:
