@@ -25,35 +25,39 @@ public class SequenceFileCuboidWriter extends KVGTRecordWriter {
 
     public SequenceFileCuboidWriter(CubeDesc cubeDesc, CubeSegment segment) {
         super(cubeDesc, segment);
+        try {
+            initiate();
+        } catch (IOException e) {
+           throw new RuntimeException(e);
+        }
     }
 
+    protected void initiate() throws IOException {
+        if (writer == null) {
+            JobBuilderSupport jobBuilderSupport = new JobBuilderSupport(cubeSegment, "SYSTEM");
+            String cuboidRoot = jobBuilderSupport.getCuboidRootPath(cubeSegment);
+            Path cuboidPath = new Path(cuboidRoot);
+            FileSystem fs = HadoopUtil.getFileSystem(cuboidRoot);
+            try {
+                if (fs.exists(cuboidPath)) {
+                    fs.delete(cuboidPath, true);
+                }
+
+                fs.mkdirs(cuboidPath);
+            } finally {
+                IOUtils.closeQuietly(fs);
+            }
+
+            Path cuboidFile = new Path(cuboidPath, "data.seq");
+            logger.debug("Cuboid is written to " + cuboidFile);
+            writer = SequenceFile.createWriter(HadoopUtil.getCurrentConfiguration(), SequenceFile.Writer.file(cuboidFile), SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class));
+        }
+
+    }
 
     @Override
     protected void writeAsKeyValue(ByteArrayWritable key, ByteArrayWritable value) throws IOException {
-        if (writer == null) {
-            synchronized (SequenceFileCuboidWriter.class) {
-                if (writer == null) {
-                    JobBuilderSupport jobBuilderSupport = new JobBuilderSupport(cubeSegment, "SYSTEM");
-                    String cuboidRoot = jobBuilderSupport.getCuboidRootPath(cubeSegment);
-                    Path cuboidPath = new Path(cuboidRoot);
-                    FileSystem fs = HadoopUtil.getFileSystem(cuboidRoot);
-                    try {
-                        if (fs.exists(cuboidPath)) {
-                            fs.delete(cuboidPath, true);
-                        }
-
-                        fs.mkdirs(cuboidPath);
-                    } finally {
-                        IOUtils.closeQuietly(fs);
-                    }
-
-                    Path cuboidFile = new Path(cuboidPath, "data.seq");
-                    logger.debug("Cuboid is written to " + cuboidFile);
-                    writer = SequenceFile.createWriter(HadoopUtil.getCurrentConfiguration(), SequenceFile.Writer.file(cuboidFile), SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class));
-                }
-            }
-        }
-
+       
         Text outputValue = new Text();
         Text outputKey = new Text();
         outputKey.set(key.array(), key.offset(), key.length());
