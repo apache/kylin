@@ -118,6 +118,7 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
             CubeSegment segment = cubeManager.appendSegments(cubeInstance, streamingBatch.getTimeRange().getFirst(), streamingBatch.getTimeRange().getSecond(), false, false);
             segment.setLastBuildJobID(segment.getUuid()); // give a fake job id
             segment.setInputRecords(streamingBatch.getMessages().size());
+            segment.setLastBuildTime(System.currentTimeMillis());
             return segment;
         } catch (IOException e) {
             throw new RuntimeException("failed to create IBuildable", e);
