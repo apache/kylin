@@ -57,7 +57,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     var _isFixedLength = item.encoding.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
     var _fixedLength ;
     if(_isFixedLength){
-      _fixedLength = item.encoding.substring(12,item.encoding.length);
+      _fixedLength = item.encoding.substring(13,item.encoding.length);
     }
     var rowkeyObj = {
       column:item.column,
@@ -114,6 +114,12 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].column = column;
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].encoding = encoding;
 
+  }
+
+  $scope.resortRowkey = function(){
+    for(var i=0;i<$scope.convertedRowkeys.length;i++){
+      $scope.refreshRowKey($scope.convertedRowkeys,i,$scope.convertedRowkeys[i]);
+    }
   }
 
   $scope.removeRowkey = function(arr,index,item){
