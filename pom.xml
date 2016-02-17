@@ -668,7 +668,7 @@
                                     <value>false</value>
                                 </property>
                             </systemProperties>
-                            <argLine>-Xms1G -Xmx4G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
+                            <argLine>-Xmx4G -XX:MaxPermSize=256M</argLine>
                         </configuration>
                     </plugin>
 
