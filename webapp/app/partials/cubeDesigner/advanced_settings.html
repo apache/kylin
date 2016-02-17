@@ -225,7 +225,7 @@
           </tr>
           </thead>
 
-          <tbody ui-sortable="state.mode=='edit'" ng-model="convertedRowkeys">
+          <tbody ui-sortable="{update:resortRowkey()}" ng-model="convertedRowkeys">
 
           <tr ng-repeat="rowkey_column in convertedRowkeys track by $index"
               ng-class="state.mode=='edit'?'sort-item':''">
