@@ -36,7 +36,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.storage.StorageContext;
 
 import com.google.common.base.Preconditions;
 
@@ -81,6 +80,11 @@ public class OLAPSortRel extends Sort implements OLAPRel {
     public void implementRewrite(RewriteImplementor implementor) {
         implementor.visitChild(this, getInput());
 
+        // No need to rewrite "order by" applied on non-olap context.
+        // Occurs in sub-query like "select ... from (...) inner join (...) order by ..."
+        if (this.context.realization == null)
+            return;
+        
         for (RelFieldCollation fieldCollation : this.collation.getFieldCollations()) {
             int index = fieldCollation.getFieldIndex();
             SQLDigest.OrderEnum order = getOrderEnum(fieldCollation.getDirection());
@@ -116,7 +120,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
-        return new EnumerableSort(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE, collation), //
+        return new EnumerableSort(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE).replace(collation), //
                 sole(inputs), collation, offset, fetch);
     }
 
