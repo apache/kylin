@@ -83,7 +83,7 @@ KylinApp
   .filter('bytes', function () {
     return function (bytes, precision) {
       if (bytes === 0) {
-        return '0 bytes'
+        return 'N/A'
       }
       ;
       if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) {
@@ -96,7 +96,19 @@ KylinApp
 
       var units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB'],
         number = Math.floor(Math.log(bytes) / Math.log(1024));
-      return (bytes / Math.pow(1024, Math.floor(number))).toFixed(precision) + ' ' + units[number];
+      switch(number){
+        case 0:
+          precision = 0;
+          break;
+        case 1:
+        case 2:
+          precision = 3;
+          break;
+        default:
+          precision = 5;
+      }
+
+      return Math.round((bytes / Math.pow(1024, Math.floor(number)))*Math.pow(10,precision))/Math.pow(10,precision) + ' ' + units[number];
     }
   }).filter('resizePieHeight', function () {
     return function (item) {
