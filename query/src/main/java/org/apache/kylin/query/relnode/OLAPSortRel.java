@@ -81,6 +81,11 @@ public class OLAPSortRel extends Sort implements OLAPRel {
     public void implementRewrite(RewriteImplementor implementor) {
         implementor.visitChild(this, getInput());
 
+        // No need to rewrite "order by" applied on non-olap context.
+        // Occurs in sub-query like "select ... from (...) inner join (...) order by ..."
+        if (this.context.realization == null)
+            return;
+        
         for (RelFieldCollation fieldCollation : this.collation.getFieldCollations()) {
             int index = fieldCollation.getFieldIndex();
             StorageContext.OrderEnum order = getOrderEnum(fieldCollation.getDirection());
