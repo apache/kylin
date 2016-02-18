@@ -26,8 +26,15 @@
                 <b>Fact Table</b>
             </label>
             <div class="col-xs-12 col-sm-6">
-                <typeahead ng-if="state.mode=='edit'" items="tableModel.selectProjectTables" prompt="Fact Table Name"
-                           title="name" model="metaModel.model.fact_table" required="true"></typeahead>
+              <select chosen ng-model="metaModel.model.fact_table" ng-if="state.mode=='edit'"
+                      ng-options="table.name as table.name for table in tableModel.selectProjectTables"
+                      style="width:100%;"
+                      ng-required="true"
+                      data-placeholder="Fact Table Name"
+                      class="chosen-select">
+                <option value=""> -- Select Fact Table -- </option>
+              </select>
+
                 <span ng-if="state.mode=='view'">{{metaModel.model.fact_table}}</span>
             </div>
         </div>
@@ -113,7 +120,15 @@
                         <div class="row">
                             <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Lookup Table Name</b></label>
                             <div class="col-xs-12 col-sm-6">
-                                <typeahead items="tableModel.selectProjectTables" prompt="Lookup Table Name" title="name" model="newLookup.table"></typeahead>
+                              <select chosen ng-model="newLookup.table"
+                                      ng-options="table.name as table.name for table in tableModel.selectProjectTables"
+                                      style="width:100%;"
+                                      ng-required="true"
+                                      data-placeholder="Lookup Table Name"
+                                      class="chosen-select">
+                                <option value=""> -- Select Lookup Table -- </option>
+                              </select>
+
                             </div>
                         </div>
                     </div>
