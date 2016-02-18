@@ -25,9 +25,17 @@
             <label class="col-xs-12 col-sm-2 control-label concube.detailtrol-label no-padding-right font-color-default">
                 <b>Fact Table</b>
             </label>
-            <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.data_model_form.innerform.typeahead.$invalid && (forms.data_model_form.innerform.typeahead.$dirty||forms.data_model_form.$sbumitted)}">
-                <typeahead ng-if="state.mode=='edit'" items="tableModel.selectProjectTables" prompt="Fact Table Name"
-                           title="name" model="modelsManager.selectedModel.fact_table" required="true"></typeahead>
+            <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.data_model_form.table_name.$invalid && (forms.data_model_form.table_name.$dirty||forms.data_model_form.$sbumitted)}">
+              <select chosen ng-model="modelsManager.selectedModel.fact_table" ng-if="state.mode=='edit'"
+                      ng-options="table.name as table.name for table in tableModel.selectProjectTables"
+                      style="width:100%;"
+                      name="table_name"
+                      ng-required="true"
+                      data-placeholder="Fact Table Name"
+                      class="chosen-select">
+                <option value=""> -- Select Fact Table -- </option>
+              </select>
+
                 <small class="help-block" ng-show="forms.data_model_form.innerform.typeahead.$error.required && (forms.data_model_form.innerform.typeahead.$dirty||forms.data_model_form.$sbumitted)">The fact table is required</small>
                 <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.fact_table}}</span>
             </div>
@@ -113,10 +121,19 @@
                     <div class="form-group">
                         <div class="row">
                             <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Lookup Table Name</b></label>
-                            <div ng-class="{'has-error':lookup_form.innerform.typeahead.$invalid && (lookup_form.innerform.typeahead.$dirty||forms.model_info_form.$sbumitted)}">
+                            <div ng-class="{'has-error':lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$sbumitted)}">
                                 <div class="col-xs-12 col-sm-6">
-                                    <typeahead items="tableModel.selectProjectTables" prompt="Lookup Table Name" required="true" title="name" model="newLookup.table"></typeahead>
-                                    <small class="help-block" ng-show="lookup_form.innerform.typeahead.$invalid && (lookup_form.innerform.typeahead.$dirty||forms.model_info_form.$sbumitted)">Table name required</small>
+                                  <select chosen ng-model="newLookup.table"
+                                          ng-options="table.name as table.name for table in tableModel.selectProjectTables"
+                                          style="width:100%;"
+                                          name="table_name"
+                                          ng-required="true"
+                                          data-placeholder="Lookup Table Name"
+                                          class="chosen-select">
+                                    <option value=""> -- Select Lookup Table -- </option>
+                                  </select>
+
+                                    <small class="help-block" ng-show="lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$sbumitted)">Table name required</small>
                                 </div>
                             </div>
                         </div>
