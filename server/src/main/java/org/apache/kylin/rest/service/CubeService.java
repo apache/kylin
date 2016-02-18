@@ -41,6 +41,7 @@ import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
+import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -498,10 +499,10 @@ public class CubeService extends BasicService {
         String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
         String param = "-table " + tableName + " -output " + outPath;
 
-        HadoopShellExecutable step1 = new HadoopShellExecutable();
+        MapReduceExecutable step1 = new MapReduceExecutable();
 
-        step1.setJobClass(HiveColumnCardinalityJob.class);
-        step1.setJobParams(param);
+        step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
+        step1.setMapReduceParams(param);
 
         job.addTask(step1);
 

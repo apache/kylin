@@ -35,7 +35,9 @@ import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * This hadoop job will scan all rows of the hive table and then calculate the cardinality on each column.
@@ -101,6 +103,9 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             this.deletePath(job.getConfiguration(), output);
 
             logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
+
+            TableDesc tableDesc = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(table);
+            attachKylinPropsAndMetadata(tableDesc, job.getConfiguration());
             int result = waitForCompletion(job);
 
             return result;
