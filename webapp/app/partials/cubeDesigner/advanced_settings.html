@@ -139,6 +139,7 @@
                 <td class="col-xs-11">
                     <!-- Dimensions -->
                   <ui-select
+                    close-on-select="false"
                     autofocus="true"
                     on-select="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
                     on-remove="refreshAggregationGroup(cubeMetaFrame.rowkey.aggregation_groups, $index, aggregation_groups)"
