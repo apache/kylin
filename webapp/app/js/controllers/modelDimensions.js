@@ -58,7 +58,18 @@ KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel,mo
         this.columns = [];
     }
 
-    // Initialize data for columns widget in auto-gen when add/edit cube.
+  $scope.refreshModelDimensions = function (list, index, dimension) {
+    if (dimension) {
+      list[index].columns.length = dimension.columns.length;
+      for(var i=0;i<dimension.columns.length;i++){
+        list[index].columns[i] = dimension.columns[i];
+      }
+    }
+
+  };
+
+
+  // Initialize data for columns widget in auto-gen when add/edit cube.
     if ($scope.state.mode == 'edit') {
         $scope.initColumns();
     };

@@ -46,6 +46,7 @@
 
                     <ui-select
                       autofocus="true"
+                      close-on-select="false"
                       on-select="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
                       on-remove="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
                       ng-if="state.mode=='edit'" style="width: 100%" multiple ng-model="aggregation_group.includes">
@@ -76,6 +77,7 @@
                     <!--</select>-->
 
                     <ui-select
+                      close-on-select="false"
                       autofocus="true"
                       on-select="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
                       on-remove="refreshAggregationGroup(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group)"
@@ -112,6 +114,7 @@
                           <!--</select>-->
 
                           <ui-select
+                            close-on-select="false"
                             autofocus="true"
                             on-select="refreshAggregationHierarchy(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,hierarchyDims)"
                             on-remove="refreshAggregationHierarchy(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,hierarchyDims)"
@@ -157,6 +160,7 @@
                         <td class="col-xs-10">
                           <!-- Dimensions -->
                           <ui-select
+                            close-on-select="false"
                             autofocus="true"
                             on-select="refreshAggregationJoint(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,jointDims)"
                             on-remove="refreshAggregationJoint(cubeMetaFrame.aggregation_groups, rowIndex, aggregation_group,$index,jointDims)"

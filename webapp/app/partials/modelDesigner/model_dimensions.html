@@ -60,7 +60,7 @@
                     <th class="col-xs-9">Columns</th>
                 </tr>
 
-                <tr ng-repeat="dimension in modelsManager.selectedModel.dimensions" class="row">
+                <tr ng-repeat="dimension in modelsManager.selectedModel.dimensions track by $index" class="row">
                     <td class="col-xs-1">
                         <!-- ID -->
                         <b>{{($index + 1)}}</b>
@@ -70,9 +70,12 @@
                     </td>
                     <td class="col-xs-9">
                       <ui-select
+                        close-on-select="false"
                         ng-if="state.mode=='edit'" style="width: 100%"
                         autofocus="true"
-                        ng-model="modelsManager.selectedModel.dimensions[$index].columns" multiple>
+                        on-select="refreshModelDimensions(modelsManager.selectedModel.dimensions,$index,dimension)"
+                        on-remove="refreshModelDimensions(modelsManager.selectedModel.dimensions,$index,dimension)"
+                        ng-model="dimension.columns" multiple>
                         <ui-select-match placeholder="Select Column...">{{$item.name}}</ui-select-match>
                         <ui-select-choices
                           repeat="column.name as column in getColumnsByTable(dimension.table) | filter:$select.search">
