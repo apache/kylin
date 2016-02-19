@@ -162,7 +162,6 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     if (aggregation_groups) {
       list[index] = aggregation_groups;
     }
-    console.log($scope.cubeMetaFrame.aggregation_groups);
   };
 
   $scope.refreshAggregationHierarchy = function (list, index, aggregation_group,hieIndex,hierarchy) {
