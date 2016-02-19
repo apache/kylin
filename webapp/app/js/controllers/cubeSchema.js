@@ -185,10 +185,14 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     $scope.cubeMetaFrame.rowkey.aggregation_groups.push([]);
   };
 
-  $scope.refreshAggregationGroup = function (list, index, aggregation_groups) {
-    if (aggregation_groups) {
-      list[index] = aggregation_groups;
+  $scope.refreshAggregationGroup = function (list, index, aggregation_group) {
+    if (aggregation_group) {
+      list[index].length = aggregation_group.length;
+      for(var i=0;i<aggregation_group.length;i++){
+        list[index][i] = aggregation_group[i];
+      }
     }
+
   };
 
   $scope.removeElement = function (arr, element) {
