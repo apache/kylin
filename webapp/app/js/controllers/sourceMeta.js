@@ -176,7 +176,6 @@ KylinApp
     };
 
     var StreamingSourceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig) {
-      $scope.streamingPrefix = "STREAMING_";
       $scope.projectName = projectName;
       $scope.tableConfig = tableConfig;
       $scope.cubeConfig = cubeConfig;
@@ -303,7 +302,7 @@ KylinApp
 
 
         $scope.tableData = {
-          "name": $scope.streamingPrefix+$scope.table.name,
+          "name": $scope.table.name,
           "columns": columns,
           'database':'Default'
         }
