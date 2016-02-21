@@ -547,7 +547,7 @@ public class CubeDesc extends RootPersistentEntity {
             Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(jointDimsList, jointDims, agg.getSelectRule().joint_dims);
 
-            if (!includeDims.containsAll(mandatoryDims) || !containsAll(includeDims, hierarchyDimsList) || !containsAll(includeDims, jointDimsList)) {
+            if (!includeDims.containsAll(mandatoryDims) || !includeDims.containsAll(hierarchyDims) || !includeDims.containsAll(jointDims)) {
                 logger.error("Aggregation group " + index + " Include dims not containing all the used dims");
                 throw new IllegalStateException("Aggregation group " + index + " Include dims not containing all the used dims");
             }
@@ -562,7 +562,7 @@ public class CubeDesc extends RootPersistentEntity {
             int hierarchyDimSize = hierarchyDimsList.size();
             int jointDimSize = jointDimsList.size();
 
-            if (normalDimSize + hierarchyDimSize + jointDimSize > maxSize) {
+            if (mandatoryDims.size() + normalDimSize + hierarchyDimSize + jointDimSize > maxSize) {
                 logger.error("Aggregation group " + index + " has too many dimensions");
                 throw new IllegalStateException("Aggregation group " + index + " has too many dimensions");
             }
@@ -573,10 +573,12 @@ public class CubeDesc extends RootPersistentEntity {
             if (CollectionUtils.containsAny(mandatoryDims, jointDims)) {
                 logger.warn("Aggregation group " + index + " mandatory dims overlap with joint dims");
             }
+            
             if (CollectionUtils.containsAny(hierarchyDims, jointDims)) {
                 logger.error("Aggregation group " + index + " hierarchy dims overlap with joint dims");
                 throw new IllegalStateException("Aggregation group " + index + " hierarchy dims overlap with joint dims");
             }
+            
             if (hasSingle(hierarchyDimsList)) {
                 logger.error("Aggregation group " + index + " require at least 2 dims in a hierarchy");
                 throw new IllegalStateException("Aggregation group " + index + " require at least 2 dims in a hierarchy");
@@ -585,6 +587,7 @@ public class CubeDesc extends RootPersistentEntity {
                 logger.error("Aggregation group " + index + " require at least 2 dims in a joint");
                 throw new IllegalStateException("Aggregation group " + index + " require at least 2 dims in a joint");
             }
+            
             if (hasOverlap(hierarchyDimsList, hierarchyDims)) {
                 logger.error("Aggregation group " + index + " a dim exist in more than one hierarchy");
                 throw new IllegalStateException("Aggregation group " + index + " a dim exist in more than one hierarchy");
@@ -607,10 +610,9 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     private void getDims(ArrayList<Set<String>> dimsList, Set<String> dims, String[][] stringSets) {
-        Set<String> temp = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         if (stringSets != null) {
             for (String[] ss : stringSets) {
-                temp.clear();
+                Set<String> temp = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
                 for (String s : ss) {
                     temp.add(s);
                     dims.add(s);
@@ -820,7 +822,7 @@ public class CubeDesc extends RootPersistentEntity {
             }
 
             FunctionDesc func = m.getFunction();
-            func.init(factTable,lookupTables);
+            func.init(factTable, lookupTables);
             allColumns.addAll(func.getParameter().getColRefs());
 
             if (ExtendedColumnMeasureType.FUNC_RAW.equalsIgnoreCase(m.getFunction().getExpression())) {

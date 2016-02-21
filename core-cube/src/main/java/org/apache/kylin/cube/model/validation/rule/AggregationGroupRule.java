@@ -45,16 +45,8 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
         if (input == null) {
             return 0;
         } else {
-            int count = 0;
-            for (String[] x : input) {
-                count += count(x);
-            }
-            return count;
+            return input.length;
         }
-    }
-
-    private int count(String[] input) {
-        return input == null ? 0 : input.length;
     }
 
     private void inner(CubeDesc cube, ValidateContext context) {
@@ -89,16 +81,18 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             Set<String> hierarchyDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             if (agg.getSelectRule().hierarchy_dims != null) {
                 for (String[] ss : agg.getSelectRule().hierarchy_dims) {
-                    for (String s : ss)
+                    for (String s : ss) {
                         hierarchyDims.add(s);
+                    }
                 }
             }
 
             Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             if (agg.getSelectRule().joint_dims != null) {
                 for (String[] ss : agg.getSelectRule().joint_dims) {
-                    for (String s : ss)
+                    for (String s : ss) {
                         jointDims.add(s);
+                    }
                 }
             }
 
@@ -117,7 +111,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             int hierarchySize = count(agg.getSelectRule().hierarchy_dims);
             int jointSize = count(agg.getSelectRule().joint_dims);
 
-            if (normalDimSize + hierarchySize + jointSize > maxSize) {
+            if (mandatoryDims.size() + normalDimSize + hierarchySize + jointSize > maxSize) {
                 context.addResult(ResultLevel.ERROR, "Aggregation group " + index + " has too many dimensions");
                 continue;
             }
