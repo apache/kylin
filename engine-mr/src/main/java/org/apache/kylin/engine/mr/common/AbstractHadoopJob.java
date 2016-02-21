@@ -23,8 +23,8 @@ package org.apache.kylin.engine.mr.common;
  *
  */
 
-import static org.apache.hadoop.util.StringUtils.*;
-import java.net.URI;
+import static org.apache.hadoop.util.StringUtils.formatTime;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -147,7 +147,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    private static final String KYLIN_HIVE_DEPENDENCY_JARS = "[^,]*hive-exec.jar|[^,]*hive-metastore.jar|[^,]*hive-hcatalog-core[0-9.-]*jar";
+    private static final String KYLIN_HIVE_DEPENDENCY_JARS = "[^,]*hive-exec[0-9.-]+\\.jar|[^,]*hive-metastore[0-9.-]+\\.jar|[^,]*hive-hcatalog-core[0-9.-]+\\.jar";
 
     String filterKylinHiveDependency(String kylinHiveDependency) {
         if (StringUtils.isBlank(kylinHiveDependency))
@@ -210,9 +210,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             // yarn classpath is comma separated
             kylinHiveDependency = kylinHiveDependency.replace(":", ",");
 
-            logger.info("Hive Dependencies Before Filtered: "+kylinHiveDependency);
+            logger.info("Hive Dependencies Before Filtered: " + kylinHiveDependency);
             String filteredHive = filterKylinHiveDependency(kylinHiveDependency);
-            logger.info("Hive Dependencies After Filtered: "+filteredHive);
+            logger.info("Hive Dependencies After Filtered: " + filteredHive);
 
             if (kylinDependency.length() > 0)
                 kylinDependency.append(",");
@@ -223,12 +223,12 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         String mrLibDir = KylinConfig.getInstanceFromEnv().getKylinJobMRLibDir();
         if (!StringUtils.isBlank(mrLibDir)) {
             File dirFileMRLIB = new File(mrLibDir);
-            if(dirFileMRLIB.exists()){
+            if (dirFileMRLIB.exists()) {
                 if (kylinDependency.length() > 0)
                     kylinDependency.append(",");
                 kylinDependency.append(mrLibDir);
-            }else{
-                logger.info("The directory '"+mrLibDir+"' for 'kylin.job.mr.lib.dir' does not exist!!!");
+            } else {
+                logger.info("The directory '" + mrLibDir + "' for 'kylin.job.mr.lib.dir' does not exist!!!");
             }
         }
 
@@ -374,11 +374,15 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     public static KylinConfig loadKylinPropsAndMetadata() throws IOException {
         File metaDir = new File("meta");
-        System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
-        logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        kylinConfig.setMetadataUrl(metaDir.getAbsolutePath());
-        return kylinConfig;
+        if (!metaDir.getAbsolutePath().equals(System.getProperty(KylinConfig.KYLIN_CONF))) {
+            System.setProperty(KylinConfig.KYLIN_CONF, metaDir.getAbsolutePath());
+            logger.info("The absolute path for meta dir is " + metaDir.getAbsolutePath());
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            kylinConfig.setMetadataUrl(metaDir.getAbsolutePath());
+            return kylinConfig;
+        } else {
+            return KylinConfig.getInstanceFromEnv();
+        }
     }
 
     protected void attachKylinPropsAndMetadata(TableDesc table, Configuration conf) throws IOException {

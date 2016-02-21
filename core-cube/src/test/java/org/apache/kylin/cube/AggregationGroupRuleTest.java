@@ -53,7 +53,7 @@ public class AggregationGroupRuleTest {
         AggregationGroupRule rule = new AggregationGroupRule() {
             @Override
             protected int getMaxAgrGroupSize() {
-                return 4;
+                return 2;
             }
         };
 
@@ -63,7 +63,7 @@ public class AggregationGroupRuleTest {
             ValidateContext vContext = new ValidateContext();
             rule.validate(desc, vContext);
             vContext.print(System.out);
-            assertEquals(1, vContext.getResults().length);
+            assertTrue(vContext.getResults().length > 0);
             assertEquals("Aggregation group 0 has too many dimensions", (vContext.getResults()[0].getMessage()));
         }
     }
