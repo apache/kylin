@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.constant.Constant;
@@ -106,6 +107,18 @@ public class ProjectService extends BasicService {
         getProjectManager().dropProject(projectName);
 
         accessService.clean(project, true);
+    }
+
+    public boolean isTableInAnyProject(String tableName) {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        return getProjectManager().isTableInAnyProject(tableName);
+    }
+
+    public boolean isTableInProject(String projectName, String tableName) {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        return getProjectManager().isTableInProject(projectName, tableName);
     }
 
     public void reloadProjectCache(String name) throws IOException {

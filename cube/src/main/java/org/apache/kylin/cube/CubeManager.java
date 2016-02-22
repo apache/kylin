@@ -52,7 +52,9 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
@@ -155,6 +157,38 @@ public class CubeManager implements IRealizationProvider {
             }
         }
         return result;
+    }
+
+    public boolean isTableInAnyCube(String tableName) {
+        for(ProjectInstance projectInstance : ProjectManager.getInstance(config).listAllProjects()) {
+            if(isTableInCube(tableName, projectInstance.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isTableInCube(String tableName, String projectName) {
+        ProjectManager projectManager = ProjectManager.getInstance(config);
+        CubeDescManager cubeDescManager = CubeDescManager.getInstance(config);
+        ProjectInstance projectInstance = projectManager.getProject(projectName);
+        if (projectInstance == null) {
+            throw new IllegalStateException("Cannot find project '" + projectName + "' in project manager");
+        }
+
+		for (RealizationEntry projectDataModel : projectInstance.getRealizationEntries()) {
+			if (projectDataModel.getType() == RealizationType.CUBE) {
+				CubeDesc cubeDesc = cubeDescManager.getCubeDesc(projectDataModel.getRealization());
+                if (cubeDesc == null) {
+                    throw new IllegalStateException("Cannot find cube '" + projectDataModel.getRealization() + "' in cubeDesc manager");
+                }
+
+				if (cubeDesc.getModel().getAllTables().contains(tableName.toUpperCase())) {
+					return true;
+				}
+			}
+		}
+        return false;
     }
 
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, String factColumnsPath) throws IOException {

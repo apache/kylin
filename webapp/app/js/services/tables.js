@@ -23,6 +23,7 @@ KylinApp.factory('TableService', ['$resource', function ($resource, config) {
     getExd: {method: 'GET', params: {action: 'exd-map'}, isArray: false},
     reload: {method: 'PUT', params: {action: 'reload'}, isArray: false},
     loadHiveTable: {method: 'POST', params: {}, isArray: false},
+    unLoadHiveTable: {method: 'DELETE', params: {}, isArray: false},
     genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false},
     showHiveDatabases: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true},
     showHiveTables: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true}  });

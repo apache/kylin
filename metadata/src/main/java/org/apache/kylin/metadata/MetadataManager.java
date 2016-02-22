@@ -22,11 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -189,6 +185,12 @@ public class MetadataManager {
         getStore().putResource(path, srcTable, TABLE_SERIALIZER);
 
         srcTableMap.put(srcTable.getIdentity(), srcTable);
+    }
+
+    public void removeSourceTable(String tableIdentity) throws IOException {
+        String path = TableDesc.concatResourcePath(tableIdentity);
+        getStore().deleteResource(path);
+        srcTableMap.remove(tableIdentity);
     }
 
     private void init(KylinConfig config) throws IOException {
@@ -392,6 +394,12 @@ public class MetadataManager {
         is.close();
 
         srcTableExdMap.putLocal(tableId, tableExdProperties);
+    }
+
+    public void removeTableExd(String tableIdentity) throws IOException {
+        String path = TableDesc.concatExdResourcePath(tableIdentity);
+        getStore().deleteResource(path);
+        srcTableExdMap.remove(tableIdentity);
     }
 
     public String appendDBName(String table) {

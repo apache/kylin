@@ -119,6 +119,24 @@ KylinApp
       });
     };
 
+    $scope.openUnLoadModal = function () {
+      $modal.open({
+        templateUrl: 'removeHiveTable.html',
+        controller: ModalInstanceCtrl,
+        resolve: {
+          tableNames: function () {
+            return $scope.tableNames;
+          },
+          projectName: function () {
+            return $scope.projectModel.selectedProject;
+          },
+          scope: function () {
+            return $scope;
+          }
+        }
+      });
+    };
+
     var ModalInstanceCtrl = function ($scope, $location, $modalInstance, kylinConfig,tableNames, MessageService, projectName, scope) {
       $scope.tableNames = "";
       $scope.projectName = projectName;
@@ -312,6 +330,62 @@ KylinApp
           }
           if (result['result.loaded'].length != 0 && result['result.unloaded'].length != 0) {
             SweetAlert.swal('Partial loaded!', 'The following table(s) have been successfully synchronized: ' + loadTableInfo + "\n\n Failed to synchronize following table(s):" + unloadedTableInfo, 'warning');
+          }
+          loadingRequest.hide();
+          scope.aceSrcTbLoaded(true);
+
+        }, function (e) {
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+          }
+          loadingRequest.hide();
+        })
+      }
+
+      $scope.remove = function () {
+
+        if($scope.tableNames.length === 0 && $scope.selectedNodes.length > 0) {
+          for(var i = 0; i <  $scope.selectedNodes.length; i++){
+            if($scope.selectedNodes[i].label.indexOf(".") >= 0){
+              $scope.tableNames += ($scope.selectedNodes[i].label) += ',';
+            }
+          }
+        }
+
+        if ($scope.tableNames.trim() === "") {
+          SweetAlert.swal('', 'Please input table(s) you want to synchronize.', 'info');
+          return;
+        }
+
+        if (!$scope.projectName) {
+          SweetAlert.swal('', 'Please choose your project first!.', 'info');
+          return;
+        }
+
+        $scope.cancel();
+        loadingRequest.show();
+        TableService.unLoadHiveTable({tableName: $scope.tableNames, action: projectName}, {}, function (result) {
+          var removedTableInfo = "";
+          angular.forEach(result['result.unload.success'], function (table) {
+            removedTableInfo += "\n" + table;
+          })
+          var unRemovedTableInfo = "";
+          angular.forEach(result['result.unload.fail'], function (table) {
+            unRemovedTableInfo += "\n" + table;
+          })
+
+          if (result['result.unload.fail'].length != 0 && result['result.unload.success'].length == 0) {
+            SweetAlert.swal('Failed!', 'Failed to synchronize following table(s): ' + unRemovedTableInfo, 'error');
+          }
+          if (result['result.unload.success'].length != 0 && result['result.unload.fail'].length == 0) {
+            SweetAlert.swal('Success!', 'The following table(s) have been successfully synchronized: ' + removedTableInfo, 'success');
+          }
+          if (result['result.unload.success'].length != 0 && result['result.unload.fail'].length != 0) {
+            SweetAlert.swal('Partial unloaded!', 'The following table(s) have been successfully synchronized: ' + removedTableInfo + "\n\n Failed to synchronize following table(s):" + unRemovedTableInfo, 'warning');
           }
           loadingRequest.hide();
           scope.aceSrcTbLoaded(true);

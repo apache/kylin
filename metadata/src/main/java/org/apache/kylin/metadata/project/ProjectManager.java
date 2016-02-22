@@ -255,6 +255,18 @@ public class ProjectManager {
         return projectInstance;
     }
 
+	public void removeTableDescFromProject(String tableIdentities, String projectName) throws IOException {
+		MetadataManager metaMgr = getMetadataManager();
+		ProjectInstance projectInstance = getProject(projectName);
+		TableDesc table = metaMgr.getTableDesc(tableIdentities);
+		if (table == null) {
+			throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
+		}
+
+		projectInstance.removeTable(table.getIdentity());
+		saveResource(projectInstance);
+	}
+
     private void saveResource(ProjectInstance prj) throws IOException {
         ResourceStore store = getStore();
         store.putResource(prj.getResourcePath(), prj, PROJECT_SERIALIZER);
@@ -269,6 +281,25 @@ public class ProjectManager {
         store.deleteResource(proj.getResourcePath());
         projectMap.remove(norm(proj.getName()));
         clearL2Cache();
+    }
+
+    public boolean isTableInAnyProject(String tableName) {
+        for(ProjectInstance projectInstance : ProjectManager.getInstance(config).listAllProjects()) {
+            if(projectInstance.containsTable(tableName.toUpperCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isTableInProject(String projectName, String tableName) {
+        ProjectInstance projectInstance = ProjectManager.getInstance(config).getProject(projectName);
+        if(projectInstance != null) {
+            if(projectInstance.containsTable(tableName.toUpperCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
