@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DateFormat {
 
     public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
+    public static final String DEFAULT_TIME_PATTERN = "HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS = "yyyy-MM-dd HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final String[] SUPPORTED_DATETIME_PATTERN = { DEFAULT_DATE_PATTERN, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, "yyyyMMdd" };
