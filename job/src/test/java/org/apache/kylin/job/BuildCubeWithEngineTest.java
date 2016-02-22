@@ -21,9 +21,11 @@ package org.apache.kylin.job;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -33,11 +35,16 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.ZookeeperJobLock;
 import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.HBaseRegionSizeCalculator;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -129,9 +136,11 @@ public class BuildCubeWithEngineTest {
     }
 
     private void testInner() throws Exception {
+        KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(1);
         DeployUtil.prepareTestData("inner", "test_kylin_cube_with_slr_empty");
         String[] testCase = new String[] { "testInnerJoinCube", "testInnerJoinCube2", };
         runTestAndAssertSucceed(testCase);
+        KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(0);
     }
 
     private void testLeft() throws Exception {
@@ -280,6 +289,7 @@ public class BuildCubeWithEngineTest {
         CubingJob job = cubingJobBuilder.buildJob(segment);
         jobService.addJob(job);
         waitForJob(job.getId());
+        checkHFilesInHBase(segment);
         return job.getId();
     }
 
@@ -295,4 +305,36 @@ public class BuildCubeWithEngineTest {
 
         return jobId;
     }
+
+    private void checkHFilesInHBase(CubeSegment segment) throws IOException {
+        Configuration conf = HadoopUtil.getCurrentHBaseConfiguration();
+        String tableName = segment.getStorageLocationIdentifier();
+        HTable table = new HTable(conf, tableName);
+        HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(table);
+        Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
+        long totalSize = 0;
+        for (Long size : sizeMap.values()) {
+            totalSize += size;
+        }
+        if (totalSize == 0) {
+            return;
+        }
+        Map<byte[], Pair<Integer, Integer>> countMap = cal.getRegionHFileCountMap();
+        // check if there's region contains more than one hfile, which means the hfile config take effects
+        boolean hasMultiHFileRegions = false;
+        for (Pair<Integer, Integer> count : countMap.values()) {
+            // check if hfile count is greater than store count
+            if (count.getSecond() > count.getFirst()) {
+                hasMultiHFileRegions = true;
+                break;
+            }
+        }
+        if (KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB() == 0 && hasMultiHFileRegions) {
+            throw new IOException("hfile size set to 0, but found region contains more than one hfiles");
+        } else if (KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB() > 0 && !hasMultiHFileRegions) {
+            throw new IOException("hfile size set greater than 0, but all regions still has only one hfile");
+        }
+    }
+
 }
+

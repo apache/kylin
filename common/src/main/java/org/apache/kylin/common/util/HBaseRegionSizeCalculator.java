@@ -48,6 +48,9 @@ public class HBaseRegionSizeCalculator {
      **/
     private final Map<byte[], Long> sizeMap = new TreeMap<byte[], Long>(Bytes.BYTES_COMPARATOR);
 
+    private final Map<byte[], Pair<Integer, Integer>> countMap =
+            new TreeMap<>(Bytes.BYTES_COMPARATOR);
+
     static final String ENABLE_REGIONSIZECALCULATOR = "hbase.regionsizecalculator.enable";
 
     /**
@@ -92,6 +95,7 @@ public class HBaseRegionSizeCalculator {
 
                         long regionSizeBytes = regionLoad.getStorefileSizeMB() * megaByte;
                         sizeMap.put(regionId, regionSizeBytes);
+                        countMap.put(regionId, new Pair<>(regionLoad.getStores(), regionLoad.getStorefiles()));
 
                         // logger.info("Region " + regionLoad.getNameAsString()
                         // + " has size " + regionSizeBytes);
@@ -123,5 +127,9 @@ public class HBaseRegionSizeCalculator {
 
     public Map<byte[], Long> getRegionSizeMap() {
         return Collections.unmodifiableMap(sizeMap);
+    }
+
+    public Map<byte[], Pair<Integer, Integer>> getRegionHFileCountMap() {
+        return Collections.unmodifiableMap(countMap);
     }
 }
