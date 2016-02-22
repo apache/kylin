@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.service.CubeService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,10 +37,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class TableControllerTest extends ServiceTestBase {
 
     private TableController tableController;
-    private CubeDescController cubeDescController;
 
     @Autowired
     CubeService cubeService;
+    @Autowired
+    ProjectService projectService;
 
     @Before
     public void setup() throws Exception {
@@ -47,6 +49,7 @@ public class TableControllerTest extends ServiceTestBase {
 
         tableController = new TableController();
         tableController.setCubeService(cubeService);
+        tableController.setProjectService(projectService);
     }
 
     @Test
@@ -69,5 +72,8 @@ public class TableControllerTest extends ServiceTestBase {
         Assert.assertNotNull(loadResult);
 
         Assert.assertTrue(loadResult.get("result.loaded").length == 2);
+
+        loadResult = tableController.unLoadHiveTables("TEST_CATEGORY_GROUPINGS","default");
+        Assert.assertTrue(loadResult.get("result.unload.success")[0].equals("TEST_CATEGORY_GROUPINGS"));
     }
 }

@@ -193,6 +193,18 @@ public class CubeService extends BasicService {
         return result;
     }
 
+    public boolean isTableInAnyCube(String tableName) {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        return getCubeManager().isTableInAnyCube(tableName);
+    }
+
+    public boolean isTableInCube(String tableName, String projectName) {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        return getCubeManager().isTableInCube(tableName, projectName);
+    }
+
     public boolean isCubeInProject(String projectName, CubeInstance target) {
         ProjectManager projectManager = getProjectManager();
         ProjectInstance project = projectManager.getProject(projectName);
@@ -334,7 +346,6 @@ public class CubeService extends BasicService {
      * Update a cube status from disable to ready.
      *
      * @return
-     * @throws CubeIntegrityException
      * @throws IOException
      * @throws JobException
      */
@@ -511,9 +522,23 @@ public class CubeService extends BasicService {
         return (String[]) loaded.toArray(new String[loaded.size()]);
     }
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
+    public void unLoadHiveTable(String tableName) throws IOException {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        HiveSourceTableLoader.unLoadHiveTable(tableName.toUpperCase());
+    }
+
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void syncTableToProject(String[] tables, String project) throws IOException {
         getProjectManager().addTableDescToProject(tables, project);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public void removeTableFromProject(String tableName, String project) throws IOException {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        getProjectManager().removeTableDescFromProject(tableName, project);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)

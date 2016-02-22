@@ -79,6 +79,12 @@ public class HiveSourceTableLoader {
         return loadedTables;
     }
 
+    public static void unLoadHiveTable(String hiveTable) throws IOException {
+        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        metaMgr.removeSourceTable(hiveTable);
+        metaMgr.removeTableExd(hiveTable);
+    }
+
     private static List<String> extractHiveTables(String database, Set<String> tables, KylinConfig config) throws IOException {
 
         List<String> loadedTables = Lists.newArrayList();

@@ -19,13 +19,9 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.HiveClient;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -35,6 +31,7 @@ import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.service.CubeService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +54,8 @@ public class TableController extends BasicController {
 
     @Autowired
     private CubeService cubeMgmtService;
+    @Autowired
+    private ProjectService projectService;
 
     /**
      * Get available table list of the input database
@@ -126,9 +125,59 @@ public class TableController extends BasicController {
         cubeMgmtService.syncTableToProject(loaded, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
         result.put("result.loaded", loaded);
-        result.put("result.unloaded", new String[] {});
+        result.put("result.unloaded", new String[]{});
         return result;
     }
+
+    /**
+     * table may referenced by several projects, and kylin only keep one copy of meta for each table.
+     * that's why we have two if statement here.
+     * @param tables
+     * @param project
+     * @throws IOException
+     */
+    @RequestMapping(value = "{tables}/{project}", method = { RequestMethod.DELETE })
+    @ResponseBody
+    public Map<String, String[]> unLoadHiveTables(@PathVariable String tables, @PathVariable String project) {
+        Set<String> unLoadSuccess = Sets.newHashSet();
+        Set<String> unLoadFail = Sets.newHashSet();
+        Map<String, String[]> result = new HashMap<String, String[]>();
+        for (String tableName : tables.split(",")) {
+            if (unLoadHiveTable(tableName, project)) {
+                unLoadSuccess.add(tableName);
+            } else {
+                unLoadFail.add(tableName);
+            }
+        }
+        result.put("result.unload.success", (String[]) unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
+        result.put("result.unload.fail", (String[]) unLoadFail.toArray(new String[unLoadFail.size()]));
+        return result;
+    }
+
+    private boolean unLoadHiveTable(String tableName, String project) {
+        boolean rtn = false;
+        if(!cubeMgmtService.isTableInCube(tableName, project)) {
+            try {
+                cubeMgmtService.removeTableFromProject(tableName, project);
+                rtn = true;
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
+        if(!projectService.isTableInAnyProject(tableName) && !cubeMgmtService.isTableInAnyCube(tableName)) {
+            try {
+                cubeMgmtService.unLoadHiveTable(tableName);
+                rtn = true;
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                rtn = false;
+            }
+        }
+
+        return rtn;
+    }
+
+
 
     /**
      * Regenerate table cardinality
@@ -236,6 +285,10 @@ public class TableController extends BasicController {
 
     public void setCubeService(CubeService cubeService) {
         this.cubeMgmtService = cubeService;
+    }
+
+    public void setProjectService(ProjectService projectService) {
+        this.projectService = projectService;
     }
 
 }
