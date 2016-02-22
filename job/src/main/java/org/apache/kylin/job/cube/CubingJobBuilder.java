@@ -372,7 +372,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
         createHtableStep.setName(ExecutableConstants.STEP_NAME_CREATE_HBASE_TABLE);
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
-        appendExecCmdParameters(cmd, "input", getRowkeyDistributionOutputPath(seg, jobId) + "/part-r-00000");
+        appendExecCmdParameters(cmd, "partitions", getRowkeyDistributionOutputPath(seg, jobId) + "/part-r-00000");
         appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
 
         createHtableStep.setJobParams(cmd.toString());
@@ -388,6 +388,7 @@ public final class CubingJobBuilder extends AbstractJobBuilder {
 
         appendMapReduceParameters(cmd, seg);
         appendExecCmdParameters(cmd, "cubename", seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, "partitions", getRowkeyDistributionOutputPath(seg, jobId) + "/part-r-00000_hfile");
         appendExecCmdParameters(cmd, "input", inputPath);
         appendExecCmdParameters(cmd, "output", getHFilePath(seg, jobId));
         appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());
