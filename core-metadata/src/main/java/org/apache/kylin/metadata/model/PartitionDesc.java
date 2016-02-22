@@ -43,11 +43,18 @@ public class PartitionDesc {
 
     @JsonProperty("partition_date_column")
     private String partitionDateColumn;
+
+    @JsonProperty("partition_time_column")
+    private String partitionTimeColumn;
     
     @JsonProperty("partition_date_start")
     private long partitionDateStart = 0L;
     @JsonProperty("partition_date_format")
     private String partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
+
+    @JsonProperty("partition_time_format")
+    private String partitionTimeFormat = DateFormat.DEFAULT_TIME_PATTERN;
+
     @JsonProperty("partition_type")
     private PartitionType partitionType = PartitionType.APPEND;
     @JsonProperty("partition_condition_builder")
@@ -93,6 +100,15 @@ public class PartitionDesc {
         this.partitionDateColumn = partitionDateColumn;
     }
 
+
+    public String getPartitionTimeColumn() {
+        return partitionTimeColumn;
+    }
+
+    public void setPartitionTimeColumn(String partitionTimeColumn) {
+        this.partitionTimeColumn = partitionTimeColumn;
+    }
+
     @Deprecated
     public long getPartitionDateStart() {
         return partitionDateStart;
@@ -109,6 +125,14 @@ public class PartitionDesc {
 
     public void setPartitionDateFormat(String partitionDateFormat) {
         this.partitionDateFormat = partitionDateFormat;
+    }
+
+    public String getPartitionTimeFormat() {
+        return partitionTimeFormat;
+    }
+
+    public void setPartitionTimeFormat(String partitionTimeFormat) {
+        this.partitionTimeFormat = partitionTimeFormat;
     }
 
     public PartitionType getCubePartitionType() {
@@ -137,27 +161,54 @@ public class PartitionDesc {
 
         @Override
         public String buildDateRangeCondition(PartitionDesc partDesc, long startInclusive, long endExclusive, Map<String, String> tableAlias) {
-            String partitionColumnName = partDesc.getPartitionDateColumn();
-
-            // convert to use table alias
-            int indexOfDot = partitionColumnName.lastIndexOf(".");
-            if (indexOfDot > 0) {
-                String partitionTableName = partitionColumnName.substring(0, indexOfDot);
-                if (tableAlias != null && tableAlias.containsKey(partitionTableName))
-                    partitionColumnName = tableAlias.get(partitionTableName) + partitionColumnName.substring(indexOfDot);
-            }
-
             StringBuilder builder = new StringBuilder();
+            String partitionDateColumnName = partDesc.getPartitionDateColumn();
+            String partitionTimeColumnName = partDesc.getPartitionTimeColumn();
 
-            if (startInclusive > 0) {
-                builder.append(partitionColumnName + " >= '" + DateFormat.formatToDateStr(startInclusive, partDesc.getPartitionDateFormat()) + "' ");
-                builder.append("AND ");
+            if(partitionDateColumnName != null) {
+                buildSingleColumnRangeCondition(builder,partitionDateColumnName,startInclusive,endExclusive,partDesc.getPartitionDateFormat(),tableAlias);
             }
-            builder.append(partitionColumnName + " < '" + DateFormat.formatToDateStr(endExclusive, partDesc.getPartitionDateFormat()) + "'");
-
+            if(partitionTimeColumnName != null) {
+                if(partitionDateColumnName != null) builder.append(" AND ");
+                buildSingleColumnRangeCondition(builder,partitionTimeColumnName,startInclusive,endExclusive,partDesc.getPartitionTimeFormat(),tableAlias);
+            }
             return builder.toString();
         }
 
+        /**
+         * Convert to use table alias
+         *
+         * @param columnName
+         * @param tableAlias
+         * @return
+         */
+        private static String replaceColumnNameWithAlias(String columnName,Map<String, String> tableAlias){
+            int indexOfDot = columnName.lastIndexOf(".");
+            if (indexOfDot > 0) {
+                String partitionTableName = columnName.substring(0, indexOfDot);
+                if (tableAlias != null && tableAlias.containsKey(partitionTableName))
+                    columnName = tableAlias.get(partitionTableName) + columnName.substring(indexOfDot);
+            }
+            return columnName;
+        }
+
+        /**
+         *
+         * @param builder
+         * @param partitionColumnName
+         * @param startInclusive
+         * @param endExclusive
+         * @param partitionColumnDateFormat
+         * @param tableAlias
+         */
+        private static void buildSingleColumnRangeCondition(StringBuilder builder, String partitionColumnName, long startInclusive, long endExclusive, String partitionColumnDateFormat, Map<String, String> tableAlias){
+            partitionColumnName = replaceColumnNameWithAlias(partitionColumnName,tableAlias);
+            if (startInclusive > 0) {
+                builder.append(partitionColumnName + " >= '" + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'");
+                builder.append(" AND ");
+            }
+            builder.append(partitionColumnName + " < '" + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat) + "'");
+        }
     }
 
     /**
