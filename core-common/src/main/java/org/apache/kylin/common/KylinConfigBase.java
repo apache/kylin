@@ -377,7 +377,7 @@ public class KylinConfigBase implements Serializable {
     }
     
     public int getCubeAggrGroupMaxSize() {
-        return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max_size", "12"));
+        return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max.size", "12"));
     }
 
     public int getDictionaryMaxCardinality() {

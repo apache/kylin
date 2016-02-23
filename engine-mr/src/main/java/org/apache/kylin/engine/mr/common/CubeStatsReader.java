@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,17 +41,19 @@ import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.SequenceFile.Reader.Option;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.SumHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
@@ -138,25 +141,9 @@ public class CubeStatsReader {
     public Map<Long, Double> getCuboidSizeMap() {
         return getCuboidSizeMapFromRowCount(seg, getCuboidRowCountMap());
     }
-    
+
     public double getMapperOverlapRatioOfFirstBuild() {
         return mapperOverlapRatioOfFirstBuild;
-    }
-
-    public void print(PrintWriter out) {
-        Map<Long, Long> rowCountMap = getCuboidRowCountMap();
-        Map<Long, Double> sizeMap = getCuboidSizeMap();
-        List<Long> cuboids = new ArrayList<Long>(rowCountMap.keySet());
-        Collections.sort(cuboids);
-
-        out.println("============================================================================");
-        out.println("Statistics of " + seg);
-        out.println("  Sampling percentage:  " + samplingPercentage);
-        out.println("  Mapper overlap ratio: " + mapperOverlapRatioOfFirstBuild);
-        for (Long cuboid : cuboids) {
-            out.println("  Cuboid :\t" + rowCountMap.get(cuboid) + " rows, " + sizeMap.get(cuboid) + " MB");
-        }
-        out.println("----------------------------------------------------------------------------");
     }
 
     public static Map<Long, Long> getCuboidRowCountMapFromSampling(Map<Long, HyperLogLogPlusCounter> hllcMap, int samplingPercentage) {
@@ -229,6 +216,66 @@ public class CubeStatsReader {
         }
         logger.info("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength + " bytes." + " Total size is " + ret + "M.");
         return ret;
+    }
+
+    private void print(PrintWriter out) {
+        Map<Long, Long> cuboidRows = getCuboidRowCountMap();
+        Map<Long, Double> cuboidSizes = getCuboidSizeMap();
+        List<Long> cuboids = new ArrayList<Long>(cuboidRows.keySet());
+        Collections.sort(cuboids);
+
+        out.println("============================================================================");
+        out.println("Statistics of " + seg);
+        out.println();
+        out.println("Total cuboids: " + cuboidRows.size());
+        out.println("Total estimated rows: " + SumHelper.sumLong(cuboidRows.values()));
+        out.println("Total estimated size(MB): " + SumHelper.sumDouble(cuboidSizes.values()));
+        out.println("Sampling percentage:  " + samplingPercentage);
+        out.println("Mapper overlap ratio: " + mapperOverlapRatioOfFirstBuild);
+        printCuboidInfoTreeEntry(cuboidRows, cuboidSizes, out);
+        out.println("----------------------------------------------------------------------------");
+    }
+
+    private void printCuboidInfoTreeEntry(Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, PrintWriter out) {
+        CubeDesc cubeDesc = seg.getCubeDesc();
+        CuboidScheduler scheduler = new CuboidScheduler(cubeDesc);
+        long baseCuboid = Cuboid.getBaseCuboidId(cubeDesc);
+        int dimensionCount = Long.bitCount(baseCuboid);
+        printCuboidInfoTree(0L, baseCuboid, scheduler, cuboidRows, cuboidSizes, dimensionCount, 0, out);
+    }
+
+    private static void printCuboidInfoTree(long parent, long cuboidID, final CuboidScheduler scheduler, Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, int dimensionCount, int depth, PrintWriter out) {
+        printOneCuboidInfo(parent, cuboidID, cuboidRows, cuboidSizes, dimensionCount, depth, out);
+
+        List<Long> children = scheduler.getSpanningCuboid(cuboidID);
+        Collections.sort(children);
+
+        for (Long child : children) {
+            printCuboidInfoTree(parent, child, scheduler, cuboidRows, cuboidSizes, dimensionCount, depth + 1, out);
+        }
+    }
+
+    private static void printOneCuboidInfo(long parent, long cuboidID, Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, int dimensionCount, int depth, PrintWriter out) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < depth; i++) {
+            sb.append("    ");
+        }
+        String cuboidName = Cuboid.getDisplayName(cuboidID, dimensionCount);
+        sb.append("|---- Cuboid ").append(cuboidName);
+
+        long rowCount = cuboidRows.get(cuboidID);
+        double size = cuboidSizes.get(cuboidID);
+        sb.append(", est row: ").append(rowCount).append(", est MB: ").append(formatDouble(size));
+
+        if (parent != -1) {
+            sb.append(", shrink: ").append(formatDouble(1.0 * cuboidRows.get(cuboidID) / cuboidRows.get(parent))).append("%");
+        }
+
+        out.println(sb.toString());
+    }
+
+    private static String formatDouble(double input) {
+        return new DecimalFormat("#.##").format(input);
     }
 
     public static void main(String[] args) throws IOException {

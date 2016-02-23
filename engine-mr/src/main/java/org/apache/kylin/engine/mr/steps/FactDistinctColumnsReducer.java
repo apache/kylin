@@ -190,7 +190,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             msg = "Samping percentage: \t" + samplingPercentage;
             writeLine(out, msg);
 
-            writeLine(out, "The following statistics are collected based sampling data.");
+            writeLine(out, "The following statistics are collected based on sampling data.");
             for (int i = 0; i < baseCuboidRowCountInMappers.size(); i++) {
                 if (baseCuboidRowCountInMappers.get(i) > 0) {
                     msg = "Base Cuboid in Mapper " + i + " row count: \t " + baseCuboidRowCountInMappers.get(i);

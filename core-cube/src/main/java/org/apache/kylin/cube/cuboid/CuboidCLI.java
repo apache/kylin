@@ -30,7 +30,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 
 /**
  * @author yangli9
- * 
  */
 public class CuboidCLI {
 
@@ -43,10 +42,9 @@ public class CuboidCLI {
         }
     }
 
-    public static int simulateCuboidGeneration(CubeDesc cube, boolean validate) {
-        CuboidScheduler scheduler = new CuboidScheduler(cube);
-
-        long baseCuboid = Cuboid.getBaseCuboidId(cube);
+    public static int simulateCuboidGeneration(CubeDesc cubeDesc, boolean validate) {
+        CuboidScheduler scheduler = new CuboidScheduler(cubeDesc);
+        long baseCuboid = Cuboid.getBaseCuboidId(cubeDesc);
         Collection<Long> cuboidSet = new TreeSet<Long>();
         cuboidSet.add(baseCuboid);
         LinkedList<Long> cuboidQueue = new LinkedList<Long>();
@@ -65,7 +63,7 @@ public class CuboidCLI {
 
         if (validate) {
             //only run this for test purpose, performance is bad when # of dims is large
-            TreeSet<Long> enumCuboids = enumCalcCuboidCount(cube);
+            TreeSet<Long> enumCuboids = enumCalcCuboidCount(cubeDesc);
             System.out.println(Arrays.toString(enumCuboids.toArray(new Long[enumCuboids.size()])));
             if (enumCuboids.equals(cuboidSet) == false) {
                 throw new IllegalStateException("Expected cuboid set " + enumCuboids + "; but actual cuboid set " + cuboidSet);
