@@ -208,10 +208,10 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     }
 
     $scope.$watch('projectModel.selectedProject', function (newValue, oldValue) {
-        if(!newValue){
-            return;
-        }
-        var param = {
+      if(!$scope.projectModel.getSelectedProject()) {
+        return;
+      }
+      var param = {
             ext: true,
             project:newValue
         };
