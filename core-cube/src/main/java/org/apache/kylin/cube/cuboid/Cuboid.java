@@ -111,7 +111,7 @@ public class Cuboid implements Comparable<Cuboid> {
     }
 
     public static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
-        if(cuboidID==getBaseCuboidId(cubeDesc)){
+        if (cuboidID == getBaseCuboidId(cubeDesc)) {
             return cuboidID;
         }
         List<Long> candidates = Lists.newArrayList();
@@ -381,5 +381,15 @@ public class Cuboid implements Comparable<Cuboid> {
             cuboidToGridTableMapping = new CuboidToGridTableMapping(this);
         }
         return cuboidToGridTableMapping;
+    }
+
+    public static String getDisplayName(long cuboidID, int dimensionCount) {
+        StringBuilder sb = new StringBuilder();
+        String temp = Long.toString(cuboidID);
+        for (int i = 0; i < dimensionCount - temp.length(); i++) {
+            sb.append("0");
+        }
+        sb.append(temp);
+        return sb.toString();
     }
 }

@@ -79,23 +79,6 @@ public class BasicTest {
 
     @Test
     public void testxx() throws InterruptedException {
-        System.out.println(System.getProperty("skipTests").length());
-        System.out.println(System.getProperty("skipXests"));
-        byte[][] data = new byte[10000000][];
-        byte[] temp = new byte[100];
-        for (int i = 0; i < 100; i++) {
-            temp[i] = (byte) i;
-        }
-        for (int i = 0; i < 10000000; i++) {
-            data[i] = new byte[100];
-        }
-
-        long wallClock = System.currentTimeMillis();
-
-        for (int i = 0; i < 10000000; i++) {
-            System.arraycopy(temp, 0, data[i], 0, 100);
-        }
-        System.out.println("Time Consumed: " + (System.currentTimeMillis() - wallClock));
     }
 
     @Test

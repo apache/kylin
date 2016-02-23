@@ -99,10 +99,10 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         try {
-            System.setProperty("kylin.cube.aggrgroup.max_size", "3");
+            System.setProperty("kylin.cube.aggrgroup.max.size", "3");
             cubeDesc.validate();
         } finally {
-            System.clearProperty("kylin.cube.aggrgroup.max_size");
+            System.clearProperty("kylin.cube.aggrgroup.max.size");
         }
     }
 
