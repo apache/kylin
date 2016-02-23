@@ -33,7 +33,10 @@ public final class KafkaUtils {
 
     public static Broker getLeadBroker(KafkaClusterConfig kafkaClusterConfig, int partitionId) {
         final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(kafkaClusterConfig.getTopic(), partitionId, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
-        if (partitionMetadata != null && partitionMetadata.errorCode() == 0) {
+        if (partitionMetadata != null) {
+            if (partitionMetadata.errorCode() != 0){
+                logger.warn("PartitionMetadata errorCode: "+partitionMetadata.errorCode());
+            }
             return partitionMetadata.leader();
         } else {
             return null;

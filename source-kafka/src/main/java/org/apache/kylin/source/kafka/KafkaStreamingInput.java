@@ -123,7 +123,10 @@ public class KafkaStreamingInput implements IStreamingInput {
 
         private Broker getLeadBroker() {
             final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(kafkaClusterConfig.getTopic(), partitionId, replicaBrokers, kafkaClusterConfig);
-            if (partitionMetadata != null && partitionMetadata.errorCode() == 0) {
+            if (partitionMetadata != null) {
+                if (partitionMetadata.errorCode() != 0){
+                    logger.warn("PartitionMetadata errorCode: "+partitionMetadata.errorCode());
+                }
                 replicaBrokers = partitionMetadata.replicas();
                 return partitionMetadata.leader();
             } else {
