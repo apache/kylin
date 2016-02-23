@@ -60,12 +60,12 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
             project:ProjectModel.selectedProject
         };
 
-        if(!ProjectModel.selectedProject){
+        if(!ProjectModel.selectedProject||!ProjectModel.isSelectedProjectValid()){
             defer.resolve();
             return defer.promise;
         }
 
-        TableService.list(param, function (tables) {
+      TableService.list(param, function (tables) {
             var tableMap = [];
             angular.forEach(tables, function (table) {
 
