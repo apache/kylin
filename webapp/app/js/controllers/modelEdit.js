@@ -24,7 +24,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     var absUrl = $location.absUrl();
     $scope.modelMode = absUrl.indexOf("/models/add")!=-1?'addNewModel':absUrl.indexOf("/models/edit")!=-1?'editExistModel':'default';
 
-    if($scope.modelMode=="addNewModel"&&!ProjectModel.getSelectedProject()){
+    if($scope.modelMode=="addNewModel"&&ProjectModel.selectedProject==null){
         SweetAlert.swal('Oops...', 'Please select your project first.', 'warning');
         $location.path("/models");
     }

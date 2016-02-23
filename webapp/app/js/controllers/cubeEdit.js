@@ -30,7 +30,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   var absUrl = $location.absUrl();
   $scope.cubeMode = absUrl.indexOf("/cubes/add") != -1 ? 'addNewCube' : absUrl.indexOf("/cubes/edit") != -1 ? 'editExistCube' : 'default';
 
-  if ($scope.cubeMode == "addNewCube" && !ProjectModel.getSelectedProject()) {
+  if ($scope.cubeMode == "addNewCube" && ProjectModel.selectedProject==null) {
     SweetAlert.swal('Oops...', 'Please select your project first.', 'warning');
     $location.path("/models");
     return;
