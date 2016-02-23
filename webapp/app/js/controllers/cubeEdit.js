@@ -30,7 +30,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   var absUrl = $location.absUrl();
   $scope.cubeMode = absUrl.indexOf("/cubes/add") != -1 ? 'addNewCube' : absUrl.indexOf("/cubes/edit") != -1 ? 'editExistCube' : 'default';
 
-  if ($scope.cubeMode == "addNewCube" && ProjectModel.selectedProject==null) {
+  if ($scope.cubeMode == "addNewCube" &&ProjectModel.selectedProject==null) {
     SweetAlert.swal('Oops...', 'Please select your project first.', 'warning');
     $location.path("/models");
     return;
@@ -544,7 +544,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
 
     if ($scope.cubeMode === "addNewCube") {
-      //only first time will after edit model will generate agg group auto
+      //only first time will will generate agg group auto
       if($scope.cubeMetaFrame.aggregation_groups.length){
         return;
       }
@@ -563,12 +563,14 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       });
 
       $scope.cubeMetaFrame.aggregation_groups = [];
-      var increasedDataGroups = sliceGroupItemToGroups(newUniqAggregationItem);
-      for(var i in increasedDataGroups){
-       var newGroup =  CubeDescModel.createAggGroup();
-        newGroup.includes = increasedDataGroups[i];
-        $scope.cubeMetaFrame.aggregation_groups.push(newGroup);
+      var initJointGroups = sliceGroupItemToGroups(newUniqAggregationItem);
+      var newGroup =  CubeDescModel.createAggGroup();
+      newGroup.includes = newUniqAggregationItem;
+      for(var i=1;i<initJointGroups.length;i++){
+        newGroup.select_rule.joint_dims[i-1] = initJointGroups[i];
       }
+      $scope.cubeMetaFrame.aggregation_groups.push(newGroup);
+
     }
   }
 
@@ -636,7 +638,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     var groups = [];
     var j = -1;
     for (var i = 0; i < groupItems.length; i++) {
-      if (i % 10 == 0) {
+      if (i % 8 == 0) {
         j++;
         groups[j] = [];
       }
