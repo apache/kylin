@@ -90,8 +90,7 @@ public class KafkaStreamingInput implements IStreamingInput {
                     logger.warn("this thread should not be interrupted, just ignore", e);
                     continue;
                 } catch (ExecutionException e) {
-                    logger.error("error when get StreamingMessages", e.getCause());
-                    continue;
+                    throw new RuntimeException("error when get StreamingMessages",e.getCause());
                 }
             }
             final Pair<Long, Long> timeRange = Pair.newPair(startTime, endTime);
