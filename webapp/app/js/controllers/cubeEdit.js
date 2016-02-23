@@ -518,34 +518,17 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.cubeMetaFrame.rowkey.rowkey_columns = newRowKeyColumns;
 
     if ($scope.cubeMode === "editExistCube") {
+      //clear dims will not be used
       var aggregationGroups = $scope.cubeMetaFrame.aggregation_groups;
-      // rm unused item from group,will only rm when [edit] dimension
-      angular.forEach(aggregationGroups, function (group, index) {
-        if (group) {
-          for (var j = 0; j < group.includes.length; j++) {
-            var elemStillExist = false;
-            for (var k = 0; k < tmpAggregationItems.length; k++) {
-              if (group.includes[j] == tmpAggregationItems[k]) {
-                elemStillExist = true;
-                break;
-              }
-            }
-            if (!elemStillExist) {
-              group.includes.splice(j, 1);
-              j--;
-            }
-          }
-        }
-        else {
-          aggregationGroups.splice(index, 1);
-          index--;
-        }
-      });
+      rmDeprecatedDims(aggregationGroups,tmpAggregationItems);
     }
 
     if ($scope.cubeMode === "addNewCube") {
-      //only first time will will generate agg group auto
+
+      //clear dims will not be used
       if($scope.cubeMetaFrame.aggregation_groups.length){
+        var aggregationGroups = $scope.cubeMetaFrame.aggregation_groups;
+        rmDeprecatedDims(aggregationGroups,tmpAggregationItems);
         return;
       }
 
@@ -572,6 +555,58 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       $scope.cubeMetaFrame.aggregation_groups.push(newGroup);
 
     }
+  }
+
+  function rmDeprecatedDims(aggregationGroups,tmpAggregationItems){
+    angular.forEach(aggregationGroups, function (group, index) {
+      if (group) {
+        for (var j = 0; j < group.includes.length; j++) {
+          var elemStillExist = false;
+          for (var k = 0; k < tmpAggregationItems.length; k++) {
+            if (group.includes[j] == tmpAggregationItems[k]) {
+              elemStillExist = true;
+              break;
+            }
+          }
+          if (!elemStillExist) {
+            var deprecatedItem = group.includes[j];
+            //rm deprecated dimension from include
+            group.includes.splice(j, 1);
+            j--;
+
+            //rm deprecated dimension in mandatory dimensions
+            var mandatory = group.select_rule.mandatory_dims;
+            if(mandatory && mandatory.length){
+              var columnIndex = mandatory.indexOf(deprecatedItem);
+              group.select_rule.mandatory_dims.splice(columnIndex,1);
+            }
+
+            var hierarchys =  group.select_rule.hierarchy_dims;
+            if(hierarchys && hierarchys.length){
+              for(var i=0;i<hierarchys.length;i++){
+                var hierarchysIndex = hierarchys[i].indexOf(deprecatedItem);
+                group.select_rule.hierarchy_dims[i].splice(hierarchysIndex,1);
+              }
+
+            }
+
+            var joints =  group.select_rule.joint_dims;
+            if(joints && joints.length){
+              for(var i=0;i<joints.length;i++){
+                var jointIndex = joints[i].indexOf(deprecatedItem);
+                group.select_rule.joint_dims[i].splice(jointIndex,1);
+              }
+
+            }
+
+          }
+        }
+      }
+      else {
+        aggregationGroups.splice(index, 1);
+        index--;
+      }
+    });
   }
 
   function sortSharedData(oldArray, tmpArr) {
