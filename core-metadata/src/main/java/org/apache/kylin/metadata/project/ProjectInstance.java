@@ -92,7 +92,7 @@ public class ProjectInstance extends RootPersistentEntity {
     public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries, List<String> models) {
         ProjectInstance projectInstance = new ProjectInstance();
 
-        projectInstance.updateVersionAndRandomUuid();
+        projectInstance.updateRandomUuid();
         projectInstance.setName(name);
         projectInstance.setOwner(owner);
         projectInstance.setDescription(description);

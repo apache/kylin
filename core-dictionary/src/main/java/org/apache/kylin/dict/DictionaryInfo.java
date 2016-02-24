@@ -53,7 +53,7 @@ public class DictionaryInfo extends RootPersistentEntity {
 
     public DictionaryInfo(String sourceTable, String sourceColumn, int sourceColumnIndex, String dataType, TableSignature input) {
 
-        this.updateVersionAndRandomUuid();
+        this.updateRandomUuid();
 
         this.sourceTable = sourceTable;
         this.sourceColumn = sourceColumn;
@@ -64,7 +64,7 @@ public class DictionaryInfo extends RootPersistentEntity {
 
     public DictionaryInfo(DictionaryInfo other) {
 
-        this.updateVersionAndRandomUuid();
+        this.updateRandomUuid();
 
         this.sourceTable = other.sourceTable;
         this.sourceColumn = other.sourceColumn;

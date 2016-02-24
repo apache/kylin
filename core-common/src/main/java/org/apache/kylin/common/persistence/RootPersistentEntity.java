@@ -26,11 +26,11 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.apache.commons.lang.time.FastDateFormat;
+import org.apache.kylin.common.KylinVersion;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.kylin.common.KylinConfig;
 
 /**
  * Marks the root entity of JSON persistence. Unit of read, write, cache, and
@@ -80,14 +80,14 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
      * For example: 2.1
      */
     @JsonProperty("version")
-    protected String version;
+    protected String version = KylinVersion.getCurrentVersion();
 
     public String getVersion() {
-      return version;
+        return version;
     }
 
     public void setVersion(String version) {
-      this.version = version;
+        this.version = version;
     }
 
     public String getUuid() {
@@ -110,14 +110,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
         this.lastModified = lastModified;
     }
 
-    /**
-     * Update entity's "model_version" with current kylin version and "uuid" with random UUID
-     *
-     * @see KylinConfig#getKylinVersion()
-     * @see UUID#randomUUID()
-     */
-    public void updateVersionAndRandomUuid() {
-        setVersion(KylinConfig.getKylinVersion());
+    public void updateRandomUuid() {
         setUuid(UUID.randomUUID().toString());
     }
 

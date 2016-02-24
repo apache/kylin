@@ -348,7 +348,7 @@ public class DataModelDesc extends RootPersistentEntity {
         newDataModelDesc.setLookups(dataModelDesc.getLookups());
         newDataModelDesc.setMetrics(dataModelDesc.getMetrics());
         newDataModelDesc.setPartitionDesc(PartitionDesc.getCopyOf(dataModelDesc.getPartitionDesc()));
-        newDataModelDesc.updateVersionAndRandomUuid();
+        newDataModelDesc.updateRandomUuid();
         return newDataModelDesc;
     }
 }
