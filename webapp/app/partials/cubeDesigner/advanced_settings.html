@@ -87,7 +87,7 @@
                     <div class="row"  ng-if="state.mode=='view'">
                       <table class="table">
                         <tbody>
-                        <tr ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges">
+                        <tr ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges | orderBy:'valueOf()' track by $index ">
                           <td>
                             {{timeRange | timeRangeFormat}}
                           </td>
