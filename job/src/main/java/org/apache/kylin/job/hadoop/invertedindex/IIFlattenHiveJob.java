@@ -29,6 +29,7 @@ import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.job.cmd.ICommandOutput;
 import org.apache.kylin.job.cmd.ShellCmd;
+import org.apache.kylin.job.common.HiveCmdBuilder;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.hadoop.hive.IIJoinedFlatTableDesc;
@@ -65,18 +66,18 @@ public class IIFlattenHiveJob extends AbstractHadoopJob {
                     JobInstance.getJobWorkingDir(jobUUID, engineConfig.getHdfsWorkingDirectory()), jobUUID);
             String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobUUID, engineConfig);
 
-            StringBuffer buf = new StringBuffer();
-            buf.append("hive -e \"");
-            buf.append(useDatabaseHql + "\n");
-            buf.append(dropTableHql + "\n");
-            buf.append(createTableHql + "\n");
-            buf.append(insertDataHqls + "\n");
-            buf.append("\"");
+            HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            hiveCmdBuilder.addStatement(useDatabaseHql);
+            hiveCmdBuilder.addStatement(dropTableHql);
+            hiveCmdBuilder.addStatement(createTableHql);
+            hiveCmdBuilder.addStatement(insertDataHqls);
 
-            System.out.println(buf.toString());
+            final String hiveCmd = hiveCmdBuilder.build();
+
+            System.out.println(hiveCmd);
             System.out.println("========================");
 
-            ShellCmd cmd = new ShellCmd(buf.toString(), null, null, null, false);
+            ShellCmd cmd = new ShellCmd(hiveCmd, null, null, null, false);
             ICommandOutput output = cmd.execute();
             System.out.println(output.getOutput());
             System.out.println(output.getExitCode());
