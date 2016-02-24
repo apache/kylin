@@ -96,4 +96,11 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal, cubeConf
       $scope.cubeMetaFrame.auto_merge_time_ranges.push(item.mills);
     })
   }
+
+  if ($scope.state.mode == 'edit') {
+    $scope.$on('$destroy', function () {
+      $scope.cubeMetaFrame.auto_merge_time_ranges.sort(function(a, b){return a-b});
+    });
+  }
+
 });
