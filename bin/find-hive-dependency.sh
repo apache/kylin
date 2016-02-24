@@ -33,6 +33,13 @@ hive_classpath=`echo $hive_env | grep 'env:CLASSPATH' | awk -F '=' '{print $2}'`
 arr=(`echo $hive_classpath | cut -d ":"  --output-delimiter=" " -f 1-`)
 hive_conf_path=
 hive_exec_path=
+
+if [ -n "$HIVE_CONF" ]
+then
+    echo "HIVE_CONF is set to: $HIVE_CONF, use it to locate hive configurations."
+    hive_conf_path=$HIVE_CONF
+fi
+
 for data in ${arr[@]}
 do
     result=`echo $data | grep -e 'hive-exec[a-z0-9A-Z\.-]*jar'`
@@ -40,12 +47,23 @@ do
     then
         hive_exec_path=$data
     fi
-    result=`echo $data | grep -e 'hive[^/]*/conf'`
-    if [ $result ]
+
+    # in some versions of hive config is not in hive's classpath, find it separately
+    if [ -z "$hive_conf_path" ]
     then
-        hive_conf_path=$data
+        result=`echo $data | grep -e 'hive[^/]*/conf'`
+        if [ $result ]
+        then
+            hive_conf_path=$data
+        fi
     fi
 done
+
+if [ -z "$hive_conf_path" ]
+then
+    echo "Couldn't find hive configuration directory. Please set HIVE_CONF to the path which contains hive-site.xml."
+    exit 1
+fi
 
 # in some versions of hive hcatalog is not in hive's classpath, find it separately
 if [ -z "$HCAT_HOME" ]
