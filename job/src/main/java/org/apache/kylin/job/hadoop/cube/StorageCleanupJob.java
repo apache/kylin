@@ -41,6 +41,8 @@ import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.cmd.ICommandOutput;
 import org.apache.kylin.job.cmd.ShellCmd;
+import org.apache.kylin.job.common.HiveCmdBuilder;
+import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -227,13 +229,11 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     private void cleanUnusedIntermediateHiveTable(Configuration conf) throws IOException {
         int uuidLength = 36;
         final String useDatabaseHql = "USE " + KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable() + ";";
-        StringBuilder buf = new StringBuilder();
-        buf.append("hive -e \"");
-        buf.append(useDatabaseHql);
-        buf.append("show tables " + "\'kylin_intermediate_*\'" + "; ");
-        buf.append("\"");
+        HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(useDatabaseHql);
+        hiveCmdBuilder.addStatement("show tables " + "\'kylin_intermediate_*\'" + "; ");
 
-        ShellCmd cmd = new ShellCmd(buf.toString(), null, null, null, false);
+        ShellCmd cmd = new ShellCmd(hiveCmdBuilder.build(), null, null, null, false);
         ICommandOutput output = null;
 
         try {
@@ -278,15 +278,13 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         }
 
         if (delete == true) {
-            buf.delete(0, buf.length());
-            buf.append("hive -e \"");
-            buf.append(useDatabaseHql);
+            hiveCmdBuilder.reset();
+            hiveCmdBuilder.addStatement(useDatabaseHql);
             for (String delHive : allHiveTablesNeedToBeDeleted) {
-                buf.append("drop table if exists " + delHive + "; ");
+                hiveCmdBuilder.addStatement("drop table if exists " + delHive + "; ");
                 log.info("Remove " + delHive + " from hive tables.");
             }
-            buf.append("\"");
-            cmd = new ShellCmd(buf.toString(), null, null, null, false);
+            cmd = new ShellCmd(hiveCmdBuilder.build(), null, null, null, false);
 
             try {
                 cmd.execute();

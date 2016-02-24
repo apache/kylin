@@ -17,7 +17,17 @@
 # limitations under the License.
 #
 
-hive_env=`hive -e set | grep 'env:CLASSPATH'`
+client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.client`
+hive_env=
+
+if [ "${client_mode}" == "cli" ]
+then
+    hive_env=`hive -e set | grep 'env:CLASSPATH'`
+elif [ "${client_mode}" == "beeline" ]
+then
+    beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.beeline.params`
+    hive_env=`beeline ${beeline_params} --outputformat=dsv -e set | grep 'env:CLASSPATH'`
+fi
 
 hive_classpath=`echo $hive_env | grep 'env:CLASSPATH' | awk -F '=' '{print $2}'`
 arr=(`echo $hive_classpath | cut -d ":"  --output-delimiter=" " -f 1-`)
@@ -62,7 +72,6 @@ then
     echo "hcatalog lib not found"
     exit 1
 fi
-
 
 hive_lib=`find -L "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
 hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}

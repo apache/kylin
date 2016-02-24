@@ -20,9 +20,7 @@ package org.apache.kylin.job;
 
 import java.io.IOException;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.job.common.HiveCmdBuilder;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -63,7 +61,6 @@ public abstract class AbstractJobBuilder {
     }
 
     protected AbstractExecutable createIntermediateHiveTableStep(IJoinedFlatTableDesc intermediateTableDesc, String jobId) {
-
         final String useDatabaseHql = "USE " + engineConfig.getConfig().getHiveDatabaseForIntermediateTable() + ";";
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc, jobId);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, getJobWorkingDir(jobId), jobId);
@@ -75,17 +72,14 @@ public abstract class AbstractJobBuilder {
             throw new RuntimeException("Failed to generate insert data SQL for intermediate table.");
         }
 
-        ShellExecutable step = new ShellExecutable();
-        StringBuffer buf = new StringBuffer();
-        buf.append("hive ");
-        buf.append(" -e \"");
-        buf.append(useDatabaseHql + "\n");
-        buf.append(dropTableHql + "\n");
-        buf.append(createTableHql + "\n");
-        buf.append(insertDataHqls + "\n");
-        buf.append("\"");
+        HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(useDatabaseHql);
+        hiveCmdBuilder.addStatement(dropTableHql);
+        hiveCmdBuilder.addStatement(createTableHql);
+        hiveCmdBuilder.addStatement(insertDataHqls);
 
-        step.setCmd(buf.toString());
+        ShellExecutable step = new ShellExecutable();
+        step.setCmd(hiveCmdBuilder.build());
         step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
 
         return step;

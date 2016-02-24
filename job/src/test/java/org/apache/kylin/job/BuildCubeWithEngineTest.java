@@ -200,7 +200,7 @@ public class BuildCubeWithEngineTest {
         long date3 = f.parse("2022-01-01").getTime();
         List<String> result = Lists.newArrayList();
         result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
-        result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));
+        result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3, true));
 
         // empty segment
         long date4 = f.parse("2050-01-01").getTime();
@@ -245,7 +245,7 @@ public class BuildCubeWithEngineTest {
         // date is 20220101000000
         dateStart = f.parse("2012-06-01").getTime();
         dateEnd = f.parse("2022-01-01").getTime();
-        result.add(buildSegment(cubeName, dateStart, dateEnd));
+        result.add(buildSegment(cubeName, dateStart, dateEnd, true));
         return result;
 
     }
@@ -283,4 +283,16 @@ public class BuildCubeWithEngineTest {
         return job.getId();
     }
 
+    private String buildSegment(String cubeName, long startDate, long endDate, boolean useBeeline) throws Exception {
+        String jobId = null;
+        if (useBeeline) {
+            System.setProperty("kylin.hive.client", "beeline");
+            jobId = buildSegment(cubeName, startDate, endDate);
+            System.clearProperty("kylin.hive.client");
+        } else {
+            jobId = buildSegment(cubeName, startDate, endDate);
+        }
+
+        return jobId;
+    }
 }

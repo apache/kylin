@@ -289,6 +289,14 @@ public class KylinConfig {
         return getOptional("kylin.route.hive.password", "");
     }
 
+    public String getHiveClientMode() {
+        return getOptional("kylin.hive.client", "cli");
+    }
+
+    public String getHiveBeelineParams() {
+        return getOptional("kylin.hive.beeline.params", "");
+    }
+
     public String getStorageUrl() {
         return storageUrl;
     }

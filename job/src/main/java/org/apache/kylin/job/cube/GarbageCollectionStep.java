@@ -34,6 +34,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.job.cmd.ShellCmdOutput;
+import org.apache.kylin.job.common.HiveCmdBuilder;
+import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -83,8 +85,13 @@ public class GarbageCollectionStep extends AbstractExecutable {
     private void dropHiveTable(ExecutableContext context) throws IOException {
         final String hiveTable = this.getOldHiveTable();
         if (StringUtils.isNotEmpty(hiveTable)) {
-            final String dropSQL = "USE " + KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable() + ";" + " DROP TABLE IF EXISTS  " + hiveTable + ";";
-            final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
+            final String useDatabaseSQL = "USE " + KylinConfig.getInstanceFromEnv().getHiveDatabaseForIntermediateTable() + ";";
+            final String dropSQL =  "DROP TABLE IF EXISTS  " + hiveTable + ";";
+
+            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            hiveCmdBuilder.addStatement(useDatabaseSQL);
+            hiveCmdBuilder.addStatement(dropSQL);
+            final String dropHiveCMD = hiveCmdBuilder.build();
             logger.info("executing: " + dropHiveCMD);
             ShellCmdOutput shellCmdOutput = new ShellCmdOutput();
             context.getConfig().getCliCommandExecutor().execute(dropHiveCMD, shellCmdOutput);
