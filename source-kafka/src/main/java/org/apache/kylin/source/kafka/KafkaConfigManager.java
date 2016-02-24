@@ -36,7 +36,6 @@ package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -51,11 +50,6 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.MapType;
-import com.fasterxml.jackson.databind.type.SimpleType;
 
 /**
  */
@@ -87,7 +81,7 @@ public class KafkaConfigManager {
         return ResourceStore.getStore(this.config);
     }
 
-    public static KafkaConfigManager getInstance(KylinConfig config){
+    public static KafkaConfigManager getInstance(KylinConfig config) {
         KafkaConfigManager r = CACHE.get(config);
         if (r != null) {
             return r;
@@ -98,16 +92,16 @@ public class KafkaConfigManager {
             if (r != null) {
                 return r;
             }
-            try{
-            r = new KafkaConfigManager(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one KafkaConfigManager singleton exist");
+            try {
+                r = new KafkaConfigManager(config);
+                CACHE.put(config, r);
+                if (CACHE.size() > 1) {
+                    logger.warn("More than one KafkaConfigManager singleton exist");
+                }
+                return r;
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to init KafkaConfigManager from " + config, e);
             }
-            return r;
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to init KafkaConfigManager from " + config, e);
-        }
         }
     }
 
@@ -125,7 +119,7 @@ public class KafkaConfigManager {
     public KafkaConfig reloadKafkaConfigLocal(String name) throws IOException {
 
         // Save Source
-        String path = KafkaConfig.getKafkaResourcePath(name);
+        String path = KafkaConfig.concatResourcePath(name);
 
         // Reload the KafkaConfig
         KafkaConfig ndesc = loadKafkaConfigAt(path);
@@ -133,14 +127,6 @@ public class KafkaConfigManager {
         // Here replace the old one
         kafkaMap.putLocal(ndesc.getName(), ndesc);
         return ndesc;
-    }
-
-    private boolean checkExistence(String name) {
-        return true;
-    }
-
-    private String formatStreamingConfigPath(String name) {
-        return ResourceStore.KAFKA_RESOURCE_ROOT + "/" + name + ".json";
     }
 
     public boolean createKafkaConfig(String name, KafkaConfig config) {
@@ -152,7 +138,7 @@ public class KafkaConfigManager {
         if (kafkaMap.containsKey(config.getName()))
             throw new IllegalArgumentException("KafkaConfig '" + config.getName() + "' already exists");
         try {
-            getStore().putResource(formatStreamingConfigPath(name), config, KafkaConfig.SERIALIZER);
+            getStore().putResource(KafkaConfig.concatResourcePath(name), config, KafkaConfig.SERIALIZER);
             kafkaMap.put(config.getName(), config);
             return true;
         } catch (IOException e) {
@@ -185,14 +171,13 @@ public class KafkaConfigManager {
 
     private KafkaConfig loadKafkaConfigAt(String path) throws IOException {
         ResourceStore store = getStore();
-        KafkaConfig kafkaConfig = store.getResource(path, KafkaConfig.class,KAFKA_SERIALIZER );
+        KafkaConfig kafkaConfig = store.getResource(path, KafkaConfig.class, KAFKA_SERIALIZER);
 
         if (StringUtils.isBlank(kafkaConfig.getName())) {
             throw new IllegalStateException("KafkaConfig name must not be blank");
         }
         return kafkaConfig;
     }
-
 
     public KafkaConfig getKafkaConfig(String name) {
         return kafkaMap.get(name);
@@ -203,7 +188,7 @@ public class KafkaConfigManager {
             throw new IllegalArgumentException();
         }
 
-        String path = formatStreamingConfigPath(kafkaConfig.getName());
+        String path = KafkaConfig.concatResourcePath(kafkaConfig.getName());
         getStore().putResource(path, kafkaConfig, KafkaConfig.SERIALIZER);
     }
 
@@ -213,7 +198,6 @@ public class KafkaConfigManager {
         getStore().deleteResource(path);
         kafkaMap.remove(kafkaConfig.getName());
     }
-
 
     private void reloadAllKafkaConfig() throws IOException {
         ResourceStore store = getStore();
@@ -244,8 +228,5 @@ public class KafkaConfigManager {
 
         logger.debug("Loaded " + kafkaMap.size() + " KafkaConfig(s)");
     }
-
-    private final ObjectMapper mapper = new ObjectMapper();
-    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(Integer.class), SimpleType.construct(Long.class));
 
 }
