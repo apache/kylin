@@ -83,9 +83,8 @@ KylinApp
   .filter('bytes', function () {
     return function (bytes, precision) {
       if (bytes === 0) {
-        return 'N/A'
+        return 'less than 1 MB';
       }
-      ;
       if (isNaN(parseFloat(bytes)) || !isFinite(bytes)) {
         return '-';
       }
