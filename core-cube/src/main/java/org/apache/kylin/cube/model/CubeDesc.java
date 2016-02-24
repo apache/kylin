@@ -998,7 +998,7 @@ public class CubeDesc extends RootPersistentEntity {
         newCubeDesc.setStorageType(cubeDesc.getStorageType());
         newCubeDesc.setAggregationGroups(cubeDesc.getAggregationGroups());
         newCubeDesc.setConfig(cubeDesc.getConfig());
-        newCubeDesc.updateVersionAndRandomUuid();
+        newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
 }

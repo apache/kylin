@@ -63,7 +63,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         cubeInstance.setCreateTimeUTC(System.currentTimeMillis());
         cubeInstance.setSegments(new ArrayList<CubeSegment>());
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
-        cubeInstance.updateVersionAndRandomUuid();
+        cubeInstance.updateRandomUuid();
 
         return cubeInstance;
     }
@@ -427,10 +427,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         newCube.setConfig(cubeInstance.getConfig());
         newCube.setStatus(cubeInstance.getStatus());
         newCube.setOwner(cubeInstance.getOwner());
-        newCube.setVersion(cubeInstance.getVersion());
         newCube.setCost(cubeInstance.getCost());
         newCube.setCreateTimeUTC(System.currentTimeMillis());
-        newCube.updateVersionAndRandomUuid();
+        newCube.updateRandomUuid();
         return newCube;
     }
 

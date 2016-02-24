@@ -21,7 +21,7 @@ package org.apache.kylin.common;
  *
  * @since 2.1
  */
-class KylinVersion {
+public class KylinVersion {
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */

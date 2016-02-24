@@ -308,7 +308,7 @@ public class CubeController extends BasicController {
                 isStreamingCube = true;
                 newStreamingConfig = streamingConfigs.get(0).clone();
                 newStreamingConfig.setName(newCubeName + "_STREAMING");
-                newStreamingConfig.updateVersionAndRandomUuid();
+                newStreamingConfig.updateRandomUuid();
                 newStreamingConfig.setLastModified(0);
                 newStreamingConfig.setCubeName(newCubeName);
                 try {
@@ -327,7 +327,7 @@ public class CubeController extends BasicController {
                         newKafkaConfig = kafkaConfig.clone();
                         newKafkaConfig.setName(newStreamingConfig.getName());
                         newKafkaConfig.setLastModified(0);
-                        newKafkaConfig.updateVersionAndRandomUuid();
+                        newKafkaConfig.updateRandomUuid();
                     }
                 } catch (IOException e) {
                     throw new InternalErrorException("Failed to get kafka config info. ", e);

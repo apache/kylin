@@ -197,7 +197,7 @@ public class ProjectManager {
             project.setDescription(newDesc);
 
             if (project.getUuid() == null)
-                project.updateVersionAndRandomUuid();
+                project.updateRandomUuid();
 
             updateProject(project);
 

@@ -147,7 +147,7 @@ public class ExtendCubeToHybridCLI {
         CubeInstance newCubeInstance = CubeInstance.getCopyOf(cubeInstance);
         newCubeInstance.setName(newCubeInstanceName);
         newCubeInstance.setDescName(newCubeDescName);
-        newCubeInstance.updateVersionAndRandomUuid();
+        newCubeInstance.updateRandomUuid();
         Iterator<CubeSegment> segmentIterator = newCubeInstance.getSegments().iterator();
         CubeSegment currentSeg = null;
         while (segmentIterator.hasNext()) {
@@ -170,7 +170,7 @@ public class ExtendCubeToHybridCLI {
         // create new cube for old segments
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
         newCubeDesc.setName(newCubeDescName);
-        newCubeDesc.updateVersionAndRandomUuid();
+        newCubeDesc.updateRandomUuid();
         newCubeDesc.init(kylinConfig, metadataManager.getAllTablesMap());
         newCubeDesc.setPartitionDateEnd(partitionDate);
         newCubeDesc.calculateSignature();

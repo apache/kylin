@@ -87,7 +87,7 @@ public class SnapshotManager {
 
     public SnapshotTable buildSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
         SnapshotTable snapshot = new SnapshotTable(table);
-        snapshot.updateVersionAndRandomUuid();
+        snapshot.updateRandomUuid();
 
         String dup = checkDupByInfo(snapshot);
         if (dup != null) {

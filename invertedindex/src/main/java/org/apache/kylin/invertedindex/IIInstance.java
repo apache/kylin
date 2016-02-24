@@ -60,7 +60,7 @@ public class IIInstance extends RootPersistentEntity implements IRealization, IB
         iii.setDescName(iiDesc.getName());
         iii.setCreateTimeUTC(System.currentTimeMillis());
         iii.setStatus(RealizationStatusEnum.DISABLED);
-        iii.updateVersionAndRandomUuid();
+        iii.updateRandomUuid();
 
         return iii;
     }
