@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.storage.hbase.util;
+package org.apache.kylin.job;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +27,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -35,20 +36,24 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.invertedindex.IIDescManager;
+import org.apache.kylin.engine.streaming.StreamingConfig;
+import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
+import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.source.kafka.KafkaConfigManager;
+import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
@@ -58,7 +63,7 @@ import com.google.common.collect.Lists;
 
 /**
  * extract cube related info for debugging/distributing purpose
- * TODO: deal with II case, deal with Streaming case
+ * TODO: deal with II case
  */
 public class CubeMetaExtractor extends AbstractApplication {
 
@@ -72,9 +77,9 @@ public class CubeMetaExtractor extends AbstractApplication {
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info, related dicts, etc.").create("includeSegments");
+    private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info, related dicts, etc. Default true").create("includeSegments");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("set this to true if want to extract job info/outputs too").create("includeJobs");
+    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("set this to true if want to extract job info/outputs too. Default true").create("includeJobs");
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_DEST = OptionBuilder.withArgName("destDir").hasArg().isRequired(false).withDescription("specify the dest dir to save the related metadata").create("destDir");
@@ -85,11 +90,18 @@ public class CubeMetaExtractor extends AbstractApplication {
     private ProjectManager projectManager;
     private HybridManager hybridManager;
     private CubeManager cubeManager;
+    private StreamingManager streamingManager;
+    private KafkaConfigManager kafkaConfigManager;
     private CubeDescManager cubeDescManager;
-    private IIManager iiManager;
-    private IIDescManager iiDescManager;
     private ExecutableDao executableDao;
-    RealizationRegistry realizationRegistry;
+    private RealizationRegistry realizationRegistry;
+
+    boolean includeSegments;
+    boolean includeJobs;
+
+    List<String> requiredResources = Lists.newArrayList();
+    List<String> optionalResources = Lists.newArrayList();
+    List<CubeInstance> cubesToTrimAndSave = Lists.newArrayList();//these cubes needs to be saved skipping segments
 
     public CubeMetaExtractor() {
         options = new Options();
@@ -114,15 +126,11 @@ public class CubeMetaExtractor extends AbstractApplication {
 
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
-        boolean includeSegments = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENTS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENTS)) : true;
-        boolean includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : true;
+        includeSegments = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENTS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENTS)) : true;
+        includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : true;
         String dest = null;
         if (optionsHelper.hasOption(OPTION_DEST)) {
             dest = optionsHelper.getOptionValue(OPTION_DEST);
-        }
-
-        if (!includeSegments) {
-            throw new RuntimeException("Does not support skip segments for now");
         }
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -131,13 +139,10 @@ public class CubeMetaExtractor extends AbstractApplication {
         hybridManager = HybridManager.getInstance(kylinConfig);
         cubeManager = CubeManager.getInstance(kylinConfig);
         cubeDescManager = CubeDescManager.getInstance(kylinConfig);
-        iiManager = IIManager.getInstance(kylinConfig);
-        iiDescManager = IIDescManager.getInstance(kylinConfig);
+        streamingManager = StreamingManager.getInstance(kylinConfig);
+        kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
         executableDao = ExecutableDao.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
-
-        List<String> requiredResources = Lists.newArrayList();
-        List<String> optionalResources = Lists.newArrayList();
 
         if (optionsHelper.hasOption(OPTION_PROJECT)) {
             ProjectInstance projectInstance = projectManager.getProject(optionsHelper.getOptionValue(OPTION_PROJECT));
@@ -147,14 +152,14 @@ public class CubeMetaExtractor extends AbstractApplication {
             addRequired(requiredResources, ProjectInstance.concatResourcePath(projectInstance.getName()));
             List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
             for (RealizationEntry realizationEntry : realizationEntries) {
-                retrieveResourcePath(getRealization(realizationEntry), includeSegments, includeJobs, requiredResources, optionalResources);
+                retrieveResourcePath(getRealization(realizationEntry));
             }
         } else if (optionsHelper.hasOption(OPTION_CUBE)) {
             String cubeName = optionsHelper.getOptionValue(OPTION_CUBE);
             IRealization realization;
 
             if ((realization = cubeManager.getRealization(cubeName)) != null) {
-                retrieveResourcePath(realization, includeSegments, includeJobs, requiredResources, optionalResources);
+                retrieveResourcePath(realization);
             } else {
                 throw new IllegalArgumentException("No cube found with name of " + cubeName);
             }
@@ -163,29 +168,53 @@ public class CubeMetaExtractor extends AbstractApplication {
             IRealization realization;
 
             if ((realization = hybridManager.getRealization(hybridName)) != null) {
-                retrieveResourcePath(realization, includeSegments, includeJobs, requiredResources, optionalResources);
+                retrieveResourcePath(realization);
             } else {
                 throw new IllegalArgumentException("No hybrid found with name of" + hybridName);
             }
         }
 
-        executeExtraction(requiredResources, optionalResources, dest);
+        executeExtraction(dest);
     }
 
-    private void executeExtraction(List<String> requiredPaths, List<String> optionalPaths, String dest) {
+    private void executeExtraction(String dest) {
         logger.info("The resource paths going to be extracted:");
-        for (String s : requiredPaths) {
+        for (String s : requiredResources) {
             logger.info(s + "(required)");
         }
-        for (String s : optionalPaths) {
+        for (String s : optionalResources) {
             logger.info(s + "(optional)");
+        }
+        for (CubeInstance cube : cubesToTrimAndSave) {
+            logger.info("Cube {} will be trimmed and extracted", cube);
         }
 
         if (dest == null) {
             logger.info("Dest is not set, exit directly without extracting");
         } else {
             try {
-                ResourceTool.copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(dest));
+                ResourceStore src = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+                ResourceStore dst = ResourceStore.getStore(KylinConfig.createInstanceFromUri(dest));
+
+                for (String path : requiredResources) {
+                    ResourceTool.copyR(src, dst, path);
+                }
+
+                for (String path : optionalResources) {
+                    try {
+                        ResourceTool.copyR(src, dst, path);
+                    } catch (Exception e) {
+                        logger.warn("Exception when copying optional resource {}. May be caused by resource missing. Ignore it.");
+                    }
+                }
+
+                for (CubeInstance cube : cubesToTrimAndSave) {
+                    CubeInstance trimmedCube = CubeInstance.getCopyOf(cube);
+                    trimmedCube.getSegments().clear();
+                    trimmedCube.setUuid(cube.getUuid());
+                    dst.putResource(trimmedCube.getResourcePath(), trimmedCube, CubeManager.CUBE_SERIALIZER);
+                }
+
             } catch (IOException e) {
                 throw new RuntimeException("IOException", e);
             }
@@ -196,7 +225,16 @@ public class CubeMetaExtractor extends AbstractApplication {
         return realizationRegistry.getRealization(realizationEntry.getType(), realizationEntry.getRealization());
     }
 
-    private void retrieveResourcePath(IRealization realization, boolean includeSegments, boolean includeJobs, List<String> requiredResources, List<String> optionalResources) {
+    private void dealWithStreaming(CubeInstance cube) {
+        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
+            if (streamingConfig.getCubeName() != null && streamingConfig.getCubeName().equalsIgnoreCase(cube.getName())) {
+                requiredResources.add(StreamingConfig.concatResourcePath(streamingConfig.getName()));
+                requiredResources.add(KafkaConfig.concatResourcePath(streamingConfig.getName()));
+            }
+        }
+    }
+
+    private void retrieveResourcePath(IRealization realization) {
 
         logger.info("Deal with realization {} of type {}", realization.getName(), realization.getType());
 
@@ -206,6 +244,8 @@ public class CubeMetaExtractor extends AbstractApplication {
             CubeDesc cubeDesc = cubeDescManager.getCubeDesc(descName);
             String modelName = cubeDesc.getModelName();
             DataModelDesc modelDesc = metadataManager.getDataModelDesc(modelName);
+
+            dealWithStreaming(cube);
 
             for (String tableName : modelDesc.getAllTables()) {
                 addRequired(requiredResources, TableDesc.concatResourcePath(tableName));
@@ -217,7 +257,7 @@ public class CubeMetaExtractor extends AbstractApplication {
 
             if (includeSegments) {
                 addRequired(requiredResources, CubeInstance.concatResourcePath(cube.getName()));
-                for (CubeSegment segment : cube.getSegments()) {
+                for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
                     for (String dictPat : segment.getDictionaryPaths()) {
                         addRequired(requiredResources, dictPat);
                     }
@@ -229,7 +269,7 @@ public class CubeMetaExtractor extends AbstractApplication {
                     if (includeJobs) {
                         String lastJobId = segment.getLastBuildJobID();
                         if (!StringUtils.isEmpty(lastJobId)) {
-                            logger.warn("No job exist for segment {}", segment);
+                            throw new RuntimeException("No job exist for segment :" + segment);
                         } else {
                             try {
                                 ExecutablePO executablePO = executableDao.getJob(lastJobId);
@@ -252,13 +292,16 @@ public class CubeMetaExtractor extends AbstractApplication {
                     logger.warn("It's useless to set includeJobs to true when includeSegments is set to false");
                 }
 
-                throw new IllegalStateException("Does not support skip segments now");
+                cubesToTrimAndSave.add(cube);
             }
         } else if (realization instanceof HybridInstance) {
             HybridInstance hybridInstance = (HybridInstance) realization;
             addRequired(requiredResources, HybridInstance.concatResourcePath(hybridInstance.getName()));
             for (IRealization iRealization : hybridInstance.getRealizations()) {
-                retrieveResourcePath(iRealization, includeSegments, includeJobs, requiredResources, optionalResources);
+                if (iRealization.getType() != RealizationType.CUBE) {
+                    throw new RuntimeException("Hybrid " + iRealization.getName() + " contains non cube child " + iRealization.getName() + " with type " + iRealization.getType());
+                }
+                retrieveResourcePath(iRealization);
             }
         } else if (realization instanceof IIInstance) {
             throw new IllegalStateException("Does not support extract II instance or hybrid that contains II");

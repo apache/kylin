@@ -115,7 +115,7 @@ public class ResourceTool {
         copyR(src, dst, "/");
     }
 
-    private static void copyR(ResourceStore src, ResourceStore dst, String path) throws IOException {
+    public static void copyR(ResourceStore src, ResourceStore dst, String path) throws IOException {
         ArrayList<String> children = src.listResources(path);
 
         // case of resource (not a folder)

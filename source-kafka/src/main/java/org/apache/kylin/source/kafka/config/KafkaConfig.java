@@ -85,10 +85,10 @@ public class KafkaConfig extends RootPersistentEntity {
     private String parserProperties;
     
     public String getResourcePath() {
-        return getKafkaResourcePath(name);
+        return concatResourcePath(name);
     }
 
-    public static String getKafkaResourcePath(String streamingName) {
+    public static String concatResourcePath(String streamingName) {
         return ResourceStore.KAFKA_RESOURCE_ROOT + "/" + streamingName + MetadataConstants.FILE_SURFIX;
     }
 
