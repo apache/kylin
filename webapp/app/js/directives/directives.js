@@ -234,7 +234,7 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
         });
 
         ctrl.$parsers.push(function (value) {
-          if (isNaN(value)) {
+          if (isNaN(value)||value==null) {
             return value;
           }
           value = new Date(value.getFullYear(), value.getMonth(), value.getDate(), 0, 0, 0, 0);
