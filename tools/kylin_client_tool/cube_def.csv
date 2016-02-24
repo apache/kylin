@@ -1,0 +1,2 @@
+ client_tool_test1|kylin_sales|PART_DT,date;TRANS_ID,bigint;LSTG_FORMAT_NAME,string|PRICE,max,decimal|no_dictionary=5/TRANS_ID;mandatory_dimension=PART_DT;partition_date_column=PART_DT;partition_date_start=2010-01-01|
+ client_tool_test2|kylin_sales|PART_DT,date;SELLER_ID,bigint;SLR_SEGMENT_CD,smallint|ITEM_COUNT,sum,bigint|aggregation_group=PART_DT/SELLER_ID,PART_DT/SLR_SEGMENT_CD;partition_date_column=PART_DT;partition_date_start=2010-01-01|
