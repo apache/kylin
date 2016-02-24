@@ -16,7 +16,7 @@
 * limitations under the License.
 -->
 
-<div ng-controller="CubeAdvanceSettingCtrl">
+<div ng-controller="CubeRefreshCtrl">
   <ng-form name="forms.refresh_setting_form">
     <div>
 
@@ -77,7 +77,7 @@
                     <div class="row" ng-if="state.mode=='view'">
                       <table class="table">
                         <tbody>
-                        <tr ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges track by $index">
+                        <tr ng-repeat="timeRange in cubeMetaFrame.auto_merge_time_ranges | orderBy:'valueOf()' track by $index ">
                           <td>
                             {{timeRange | timeRangeFormat}}
                           </td>
