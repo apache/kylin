@@ -630,3 +630,15 @@ ul.messenger .messenger-message-inner ,.ngCellText,.tree-label,.tree-leaf{
 .chosen-container .chosen-results li.active-result{
   word-break: break-all;
 }
+input[placeholder] {
+  text-overflow: ellipsis;
+}
+
+::-moz-placeholder {
+  text-overflow: ellipsis;
+}
+
+/* firefox 19+ */
+input:-moz-placeholder {
+  text-overflow: ellipsis;
+}
