@@ -730,7 +730,7 @@ public class KylinConfig {
     }
 
     public int getHBaseHFileSizeGB() {
-        return Integer.parseInt(getOptional(HBASE_HFILE_SIZE_GB, "0"));
+        return Integer.parseInt(getOptional(HBASE_HFILE_SIZE_GB, "5"));
     }
 
     public int getHBaseRegionCountMin() {
