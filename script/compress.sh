@@ -35,7 +35,7 @@ mkdir dist/${package_name}
 # copy files
 cp -r lib bin conf dist/tomcat examples/sample_cube dist/commit.sha1 dist/${package_name}
 # copy license files
-cp LICENSE README.md NOTICE DISCLAIMER  dist/${package_name}
+cp LICENSE README.md NOTICE dist/${package_name}
 
 find dist/${package_name} -type d -exec chmod 755 {} \;
 find dist/${package_name} -type f -exec chmod 644 {} \;
