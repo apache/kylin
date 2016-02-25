@@ -26,6 +26,8 @@ import java.util.ArrayList;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -33,6 +35,8 @@ import com.google.common.collect.Lists;
  * Created by dongli on 2/21/16.
  */
 public class HiveCmdBuilder {
+    private static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
+
     public enum HiveClientMode {
         CLI, BEELINE
     }
@@ -60,11 +64,14 @@ public class HiveCmdBuilder {
         case BEELINE:
             BufferedWriter bw = null;
             try {
-                File tmpHql = File.createTempFile("beeline", ".hql");
+                File tmpHql = File.createTempFile("beeline_", ".hql");
+                StringBuffer hqlBuf = new StringBuffer();
                 bw = new BufferedWriter(new FileWriter(tmpHql));
                 for (String statement : statements) {
                     bw.write(statement);
                     bw.newLine();
+
+                    hqlBuf.append(statement).append("\n");
                 }
                 buf.append("beeline ");
                 buf.append(kylinConfig.getHiveBeelineParams());
@@ -72,6 +79,8 @@ public class HiveCmdBuilder {
                 buf.append(tmpHql.getAbsolutePath());
                 buf.append(";rm -f ");
                 buf.append(tmpHql.getAbsolutePath());
+
+                logger.info("The statements to execute in beeline: \n" + hqlBuf);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {

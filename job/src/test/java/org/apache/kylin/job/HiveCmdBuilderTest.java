@@ -76,5 +76,7 @@ public class HiveCmdBuilderTest extends LocalFileMetadataTestCase {
         String hqlFile = cmd.substring(cmd.lastIndexOf("-f ") + 3).trim();
         String hqlStatement = FileUtils.readFileToString(new File(hqlFile));
         assertEquals("USE default;\nDROP TABLE test;\nSHOW\n TABLES;\n", hqlStatement);
+
+        FileUtils.forceDelete(new File(hqlFile));
     }
 }
