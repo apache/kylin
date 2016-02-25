@@ -13,12 +13,12 @@ Kylin supports LDAP authentication for enterprise or production deployment; This
 
 #### Configure LDAP server info
 
-Firstly, provide LDAP URL, and username/password if the LDAP server is secured; The password in kylin.properties need be salted; You can Google "Generate a BCrypt Password" or run org.apache.kylin.rest.security.PasswordPlaceholderConfigurer to get a hash of your password.
+Firstly, provide LDAP URL, and username/password if the LDAP server is secured; The password in kylin.properties need be encrypted with AES with a given key; to encrypt it, you download latest Kylin source code and then run org.apache.kylin.rest.security.PasswordPlaceholderConfigurer in your IDE, passing "AES" as the first parameter, your plain password as the second parameter to get an encrypted password.
 
 ```
 ldap.server=ldap://<your_ldap_host>:<port>
 ldap.username=<your_user_name>
-ldap.password=<your_password_hash>
+ldap.password=<your_password_encrypted>
 ```
 
 Secondly, provide the user search patterns, this is by LDAP design, here is just a sample:
