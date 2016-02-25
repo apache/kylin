@@ -97,8 +97,7 @@ KylinApp.controller('CubeModelCtrl', function ($location,$scope, $modal,cubeConf
 
     // Controller for cube model lookup modal.
     var cubeModelLookupModalCtrl = function ($scope, $modalInstance) {
-        $scope.ok = function (lookup_form) {
-            console.log(lookup_form);
+        $scope.ok = function () {
             $modalInstance.close();
         };
 
