@@ -54,7 +54,7 @@ KylinApp
           result = 1;
         }
         else {
-          result = attriOfA > attriOfB ? 1 : attriOfA < attriOfB ? -1 : 0;
+          result = attriOfA.toLowerCase() > attriOfB.toLowerCase() ? 1 : attriOfA.toLowerCase() < attriOfB.toLowerCase() ? -1 : 0;
         }
         return reverse ? -result : result;
       });
