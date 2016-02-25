@@ -18,10 +18,6 @@
 
 package org.apache.kylin.job.hadoop.cube;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -30,10 +26,13 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.common.mr.KylinReducer;
-import org.apache.kylin.cube.model.v1.CubeDesc.CubeCapacity;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author ysong1
