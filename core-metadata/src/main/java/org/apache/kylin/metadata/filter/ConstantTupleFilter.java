@@ -21,8 +21,10 @@ package org.apache.kylin.metadata.filter;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.TreeSet;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.collections.comparators.NullComparator;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
@@ -40,7 +42,7 @@ public class ConstantTupleFilter extends TupleFilter {
 
     public ConstantTupleFilter() {
         super(Collections.<TupleFilter> emptyList(), FilterOperatorEnum.CONSTANT);
-        this.constantValues = new HashSet<Object>();
+        this.constantValues = Lists.newArrayList();
     }
 
     public ConstantTupleFilter(Object value) {
@@ -89,22 +91,18 @@ public class ConstantTupleFilter extends TupleFilter {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public byte[] serialize(IFilterCodeSystem cs) {
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+    public void serialize(IFilterCodeSystem cs, ByteBuffer buffer) {
         int size = this.constantValues.size();
         BytesUtil.writeVInt(size, buffer);
         for (Object val : this.constantValues) {
             cs.serialize(val, buffer);
         }
-        byte[] result = new byte[buffer.position()];
-        System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
-        return result;
     }
 
     @Override
-    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
+    public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
+
         this.constantValues.clear();
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int size = BytesUtil.readVInt(buffer);
         for (int i = 0; i < size; i++) {
             this.constantValues.add(cs.deserialize(buffer));

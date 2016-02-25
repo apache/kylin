@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.filter;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -101,12 +102,12 @@ public class CaseTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(IFilterCodeSystem<?> cs) {
-        return new byte[0];
+    public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
+        //serialize nothing
     }
 
     @Override
-    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
+    public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
     }
 
 }

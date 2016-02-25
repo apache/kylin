@@ -57,7 +57,6 @@ public class BytesUtil {
         return integer;
     }
 
-
     public static long readLong(ByteBuffer buffer, int size) {
         long integer = 0;
         for (int i = 0; i < size; i++) {
@@ -133,11 +132,15 @@ public class BytesUtil {
     // from WritableUtils
     // ============================================================================
 
+
     public static void writeVInt(int i, ByteBuffer out) {
+
         writeVLong(i, out);
+
     }
 
     public static void writeVLong(long i, ByteBuffer out) {
+
         if (i >= -112 && i <= 127) {
             out.put((byte) i);
             return;
@@ -203,6 +206,8 @@ public class BytesUtil {
     }
 
     public static void writeUnsigned(int num, int size, ByteBuffer out) {
+
+
         int mask = 0xff << ((size - 1) * 8);
         for (int i = size; i > 0; i--) {
             int v = (num & mask) >> (i - 1) * 8;
@@ -222,6 +227,7 @@ public class BytesUtil {
     }
 
     public static void writeLong(long num, ByteBuffer out) {
+
         for (int i = 0; i < 8; i++) {
             out.put((byte) num);
             num >>>= 8;
@@ -257,6 +263,8 @@ public class BytesUtil {
         }
         int len = str.length();
         BytesUtil.writeVInt(len, out);
+
+
         for (int i = 0; i < len; i++) {
             out.put((byte) str.charAt(i));
         }
@@ -335,7 +343,7 @@ public class BytesUtil {
             writeVInt(-1, out);
             return;
         }
-        writeVInt(array.length, out);
+        writeVInt(length, out);
         out.put(array, offset, length);
     }
 
@@ -348,7 +356,7 @@ public class BytesUtil {
         in.get(array);
         return array;
     }
-
+    
     public static int peekByteArrayLength(ByteBuffer in) {
         int start = in.position();
         int arrayLen = readVInt(in);
@@ -369,6 +377,7 @@ public class BytesUtil {
         writeVInt(array.length, out);
         byte b_true = (byte) 1;
         byte b_false = (byte) 0;
+
         for (int i = 0; i < array.length; i++) {
             if (array[i])
                 out.put(b_true);
@@ -426,9 +435,6 @@ public class BytesUtil {
             sb.append(String.format("\\x%02X", b & 0xFF));
         }
         return sb.toString();
-    }
-
-    public static void main(String[] args) throws Exception {
     }
 
 }

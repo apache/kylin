@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.filter;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -204,9 +205,9 @@ public abstract class TupleFilter {
 
     public abstract Collection<?> getValues();
 
-    abstract byte[] serialize(IFilterCodeSystem<?> cs);
+    abstract void serialize(IFilterCodeSystem<?> cs,ByteBuffer buffer);
 
-    abstract void deserialize(byte[] bytes, IFilterCodeSystem<?> cs);
+    abstract void deserialize(IFilterCodeSystem<?> cs,ByteBuffer buffer);
 
     public static boolean isEvaluableRecursively(TupleFilter filter) {
         if (filter == null)

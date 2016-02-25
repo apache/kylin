@@ -69,17 +69,12 @@ public class DynamicTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(IFilterCodeSystem<?> cs) {
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+    public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
         BytesUtil.writeUTFString(variableName, buffer);
-        byte[] result = new byte[buffer.position()];
-        System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
-        return result;
     }
 
     @Override
-    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+    public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
         this.variableName = BytesUtil.readUTFString(buffer);
     }
 

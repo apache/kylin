@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.filter;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,7 +47,6 @@ public class LogicalTupleFilter extends TupleFilter {
         return cloneTuple;
     }
 
-
     //    private TupleFilter reverseNestedNots(TupleFilter filter, int depth) {
     //        if ((filter instanceof LogicalTupleFilter) && (filter.operator == FilterOperatorEnum.NOT)) {
     //            assert (filter.children.size() == 1);
@@ -59,7 +59,6 @@ public class LogicalTupleFilter extends TupleFilter {
     //            return filter.reverse();
     //        }
     //    }
-
 
     @Override
     public TupleFilter reverse() {
@@ -151,12 +150,13 @@ public class LogicalTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(IFilterCodeSystem<?> cs) {
-        return new byte[0];
+    public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
+        //do nothing
     }
 
     @Override
-    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
+    public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
+
     }
 
 }

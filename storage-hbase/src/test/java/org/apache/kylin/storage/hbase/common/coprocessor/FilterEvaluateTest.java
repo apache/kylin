@@ -38,7 +38,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
     @Test
     public void testEvaluate00() {
         List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareFilter(groups, 0);
+        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
@@ -54,7 +54,7 @@ public class FilterEvaluateTest extends FilterBaseTest {
     @Test
     public void testEvaluate01() {
         List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareFilter(groups, 1);
+        TupleFilter filter = buildEQCompareFilter(groups, 1);
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);

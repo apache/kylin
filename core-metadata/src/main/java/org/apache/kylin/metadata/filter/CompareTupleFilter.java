@@ -214,23 +214,19 @@ public class CompareTupleFilter extends TupleFilter {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public byte[] serialize(IFilterCodeSystem cs) {
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+    public void serialize(IFilterCodeSystem cs, ByteBuffer buffer) {
         int size = this.dynamicVariables.size();
         BytesUtil.writeVInt(size, buffer);
         for (Map.Entry<String, Object> entry : this.dynamicVariables.entrySet()) {
             BytesUtil.writeUTFString(entry.getKey(), buffer);
             cs.serialize(entry.getValue(), buffer);
         }
-        byte[] result = new byte[buffer.position()];
-        System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
-        return result;
     }
 
     @Override
-    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
+    public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
+
         this.dynamicVariables.clear();
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int size = BytesUtil.readVInt(buffer);
         for (int i = 0; i < size; i++) {
             String name = BytesUtil.readUTFString(buffer);

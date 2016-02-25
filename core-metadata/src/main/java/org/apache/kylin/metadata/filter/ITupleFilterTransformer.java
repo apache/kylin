@@ -18,9 +18,6 @@
 
 package org.apache.kylin.metadata.filter;
 
-/**
- * Created by dongli on 1/7/16.
- */
-public interface ITupleFilterTranslator {
-    TupleFilter translate(TupleFilter tupleFilter);
+public interface ITupleFilterTransformer {
+    TupleFilter transform(TupleFilter tupleFilter);
 }

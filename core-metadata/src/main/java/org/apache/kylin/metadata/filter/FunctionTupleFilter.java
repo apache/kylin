@@ -123,32 +123,20 @@ public class FunctionTupleFilter extends TupleFilter {
     }
 
     @Override
-    byte[] serialize(IFilterCodeSystem<?> cs) {
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+    void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
         BytesUtil.writeUTFString(name, buffer);
         BytesUtil.writeVInt(colPosition, buffer);
         BytesUtil.writeVInt(isValid ? 1 : 0, buffer);
-        BytesUtil.writeByteArray(TupleFilterSerializer.serialize(columnContainerFilter, cs), buffer);
-
-        byte[] result = new byte[buffer.position()];
-        System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
-        return result;
     }
 
     @Override
-    void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+    public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
 
         this.name = BytesUtil.readUTFString(buffer);
         this.initMethod();
 
         this.colPosition = BytesUtil.readVInt(buffer);
         this.isValid = BytesUtil.readVInt(buffer) == 1;
-
-        byte[] columnFilter = BytesUtil.readByteArray(buffer);
-        if (columnFilter != null) {
-            this.columnContainerFilter = TupleFilterSerializer.deserialize(columnFilter, cs);
-        }
     }
 
     @Override

@@ -18,12 +18,15 @@
 
 package org.apache.kylin.metadata.filter;
 
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-algorithm-from-dwarf
@@ -32,6 +35,8 @@ import org.apache.kylin.common.util.BytesUtil;
  * 
  */
 public class TupleFilterSerializer {
+
+    private static final Logger logger = LoggerFactory.getLogger(TupleFilterSerializer.class);
 
     public interface Decorator {
         TupleFilter onSerialize(TupleFilter filter);
@@ -51,8 +56,18 @@ public class TupleFilterSerializer {
     }
 
     public static byte[] serialize(TupleFilter rootFilter, Decorator decorator, IFilterCodeSystem<?> cs) {
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        internalSerialize(rootFilter, decorator, buffer, cs);
+        ByteBuffer buffer;
+        int bufferSize = BUFFER_SIZE;
+        while (true) {
+            try {
+                buffer = ByteBuffer.allocate(bufferSize);
+                internalSerialize(rootFilter, decorator, buffer, cs);
+                break;
+            } catch (BufferOverflowException e) {
+                logger.info("Buffer size {} cannot hold the filter, resizing to 4 times", bufferSize);
+                bufferSize *= 4;
+            }
+        }
         byte[] result = new byte[buffer.position()];
         System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
         return result;
@@ -86,10 +101,9 @@ public class TupleFilterSerializer {
         if (flag < 0) {
             BytesUtil.writeVInt(-1, buffer);
         } else {
-            byte[] bytes = filter.serialize(cs);
             int opVal = filter.getOperator().getValue();
             BytesUtil.writeVInt(opVal, buffer);
-            BytesUtil.writeByteArray(bytes, buffer);
+            filter.serialize(cs, buffer);
             BytesUtil.writeVInt(flag, buffer);
         }
     }
@@ -107,8 +121,7 @@ public class TupleFilterSerializer {
 
             // deserialize filter
             TupleFilter filter = createTupleFilter(opVal);
-            byte[] filterBytes = BytesUtil.readByteArray(buffer);
-            filter.deserialize(filterBytes, cs);
+            filter.deserialize(cs, buffer);
 
             if (rootFilter == null) {
                 // push root to stack
