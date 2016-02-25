@@ -35,9 +35,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
 
-/**
- * Created by dongli on 11/11/15.
- */
 public class FunctionTupleFilter extends TupleFilter {
     public static final Logger logger = LoggerFactory.getLogger(FunctionTupleFilter.class);
 
@@ -79,7 +76,7 @@ public class FunctionTupleFilter extends TupleFilter {
         if (columnContainerFilter instanceof ColumnTupleFilter)
             methodParams.set(colPosition, (Serializable) input);
         else if (columnContainerFilter instanceof FunctionTupleFilter)
-            methodParams.set(colPosition, (Serializable) ((FunctionTupleFilter) columnContainerFilter).invokeFunction((Serializable) input));
+            methodParams.set(colPosition, (Serializable) ((FunctionTupleFilter) columnContainerFilter).invokeFunction(input));
         return method.invoke(null, (Object[]) (methodParams.toArray()));
     }
 
