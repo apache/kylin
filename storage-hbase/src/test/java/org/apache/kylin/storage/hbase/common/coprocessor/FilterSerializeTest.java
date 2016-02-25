@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.hbase.common.coprocessor;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +41,7 @@ public class FilterSerializeTest extends FilterBaseTest {
     @Test
     public void testSerialize01() {
         List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareFilter(groups, 0);
+        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
@@ -51,7 +52,7 @@ public class FilterSerializeTest extends FilterBaseTest {
     @Test
     public void testSerialize02() {
         List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareFilter(groups, 1);
+        TupleFilter filter = buildEQCompareFilter(groups, 1);
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
@@ -88,7 +89,7 @@ public class FilterSerializeTest extends FilterBaseTest {
         TblColRef colRef = new TblColRef(column);
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
-        TupleFilter filter = buildCompareFilter(groups, 0);
+        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
@@ -103,7 +104,7 @@ public class FilterSerializeTest extends FilterBaseTest {
         TblColRef colRef = new TblColRef(column);
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
-        TupleFilter filter = buildCompareFilter(groups, 0);
+        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
@@ -122,7 +123,7 @@ public class FilterSerializeTest extends FilterBaseTest {
         TblColRef colRef = new TblColRef(column);
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
-        TupleFilter filter = buildCompareFilter(groups, 0);
+        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
@@ -140,7 +141,7 @@ public class FilterSerializeTest extends FilterBaseTest {
         TblColRef colRef = new TblColRef(column);
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
-        TupleFilter filter = buildCompareFilter(groups, 0);
+        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
@@ -197,6 +198,19 @@ public class FilterSerializeTest extends FilterBaseTest {
         TupleFilter filter = buildCompareCaseFilter(groups, "0");
 
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
+
+        compareFilter(filter, newFilter);
+    }
+
+    @Test
+    public void testSerialize14() throws ParseException {
+        List<TblColRef> groups = buildGroups();
+        TupleFilter filter = buildINCompareFilter(groups.get(0));
+
+        long start = System.currentTimeMillis();
+        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
+        System.out.println("Size of serialized filter " + bytes.length + ", serialize time: " + (System.currentTimeMillis() - start));
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);

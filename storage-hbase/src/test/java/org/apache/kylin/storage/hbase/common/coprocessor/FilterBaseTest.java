@@ -18,8 +18,12 @@
 
 package org.apache.kylin.storage.hbase.common.coprocessor;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -38,6 +42,8 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
+
+import com.google.common.collect.Lists;
 
 /**
  * @author xjiang
@@ -64,7 +70,7 @@ public class FilterBaseTest {
         return groups;
     }
 
-    protected CompareTupleFilter buildCompareFilter(List<TblColRef> groups, int index) {
+    protected CompareTupleFilter buildEQCompareFilter(List<TblColRef> groups, int index) {
         TblColRef column = groups.get(index);
         CompareTupleFilter compareFilter = new CompareTupleFilter(FilterOperatorEnum.EQ);
         ColumnTupleFilter columnFilter = new ColumnTupleFilter(column);
@@ -79,9 +85,31 @@ public class FilterBaseTest {
         return compareFilter;
     }
 
+    protected CompareTupleFilter buildINCompareFilter(TblColRef dateColumn) throws ParseException {
+        CompareTupleFilter compareFilter = new CompareTupleFilter(FilterOperatorEnum.IN);
+        ColumnTupleFilter columnFilter = new ColumnTupleFilter(dateColumn);
+        compareFilter.addChild(columnFilter);
+
+        List<String> inValues = Lists.newArrayList();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate = simpleDateFormat.parse("1970-01-01");
+        Date endDate = simpleDateFormat.parse("2100-01-01");
+        Calendar start = Calendar.getInstance();
+        start.setTime(startDate);
+        Calendar end = Calendar.getInstance();
+        end.setTime(endDate);
+        for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
+            inValues.add(simpleDateFormat.format(date));
+        }
+
+        ConstantTupleFilter constantFilter = new ConstantTupleFilter(inValues);
+        compareFilter.addChild(constantFilter);
+        return compareFilter;
+    }
+
     protected TupleFilter buildAndFilter(List<TblColRef> columns) {
-        CompareTupleFilter compareFilter1 = buildCompareFilter(columns, 0);
-        CompareTupleFilter compareFilter2 = buildCompareFilter(columns, 1);
+        CompareTupleFilter compareFilter1 = buildEQCompareFilter(columns, 0);
+        CompareTupleFilter compareFilter2 = buildEQCompareFilter(columns, 1);
         LogicalTupleFilter andFilter = new LogicalTupleFilter(FilterOperatorEnum.AND);
         andFilter.addChild(compareFilter1);
         andFilter.addChild(compareFilter2);
@@ -89,8 +117,8 @@ public class FilterBaseTest {
     }
 
     protected TupleFilter buildOrFilter(List<TblColRef> columns) {
-        CompareTupleFilter compareFilter1 = buildCompareFilter(columns, 0);
-        CompareTupleFilter compareFilter2 = buildCompareFilter(columns, 1);
+        CompareTupleFilter compareFilter1 = buildEQCompareFilter(columns, 0);
+        CompareTupleFilter compareFilter2 = buildEQCompareFilter(columns, 1);
         LogicalTupleFilter logicFilter = new LogicalTupleFilter(FilterOperatorEnum.OR);
         logicFilter.addChild(compareFilter1);
         logicFilter.addChild(compareFilter2);
@@ -105,12 +133,12 @@ public class FilterBaseTest {
         TupleFilter then0 = new ConstantTupleFilter("0");
         caseFilter.addChild(then0);
 
-        TupleFilter when1 = buildCompareFilter(groups, 0);
+        TupleFilter when1 = buildEQCompareFilter(groups, 0);
         caseFilter.addChild(when1);
         TupleFilter then1 = new ConstantTupleFilter("1");
         caseFilter.addChild(then1);
 
-        TupleFilter when2 = buildCompareFilter(groups, 1);
+        TupleFilter when2 = buildEQCompareFilter(groups, 1);
         caseFilter.addChild(when2);
         TupleFilter then2 = new ConstantTupleFilter("2");
         caseFilter.addChild(then2);
@@ -153,9 +181,9 @@ public class FilterBaseTest {
         }
 
         String str1 = f1.toString();
-        System.out.println("f1=" + str1);
+        //System.out.println("f1=" + str1);
         String str2 = f2.toString();
-        System.out.println("f2=" + str2);
+        //System.out.println("f2=" + str2);
         if (!str1.equals(str2)) {
             throw new IllegalStateException("f1=" + str1 + ", f2=" + str2);
         }

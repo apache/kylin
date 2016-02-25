@@ -18,6 +18,7 @@
 
 package org.apache.kylin.dict;
 
+import java.util.Collection;
 import java.util.ListIterator;
 
 import org.apache.kylin.common.util.Dictionary;
@@ -25,7 +26,7 @@ import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.FunctionTupleFilter;
-import org.apache.kylin.metadata.filter.ITupleFilterTranslator;
+import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
@@ -33,22 +34,23 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
 
 /**
  * only take effect when the compare filter has function
  */
-public class TupleFilterFunctionTranslator implements ITupleFilterTranslator {
-    public static final Logger logger = LoggerFactory.getLogger(TupleFilterFunctionTranslator.class);
+public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
+    public static final Logger logger = LoggerFactory.getLogger(TupleFilterFunctionTransformer.class);
 
     private IDictionaryAware dictionaryAware;
 
-    public TupleFilterFunctionTranslator(IDictionaryAware dictionaryAware) {
+    public TupleFilterFunctionTransformer(IDictionaryAware dictionaryAware) {
         this.dictionaryAware = dictionaryAware;
     }
 
     @Override
-    public TupleFilter translate(TupleFilter tupleFilter) {
+    public TupleFilter transform(TupleFilter tupleFilter) {
         TupleFilter translated = null;
         if (tupleFilter instanceof CompareTupleFilter) {
             translated = translateCompareTupleFilter((CompareTupleFilter) tupleFilter);
@@ -63,9 +65,9 @@ public class TupleFilterFunctionTranslator implements ITupleFilterTranslator {
         } else if (tupleFilter instanceof LogicalTupleFilter) {
             ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) tupleFilter.getChildren().listIterator();
             while (childIterator.hasNext()) {
-                TupleFilter tempTranslated = translate(childIterator.next());
-                if (tempTranslated != null)
-                    childIterator.set(tempTranslated);
+                TupleFilter transformed = transform(childIterator.next());
+                if (transformed != null)
+                    childIterator.set(transformed);
             }
         }
         return translated == null ? tupleFilter : translated;
@@ -115,6 +117,7 @@ public class TupleFilterFunctionTranslator implements ITupleFilterTranslator {
         translated.addChild(new ColumnTupleFilter(columnRef));
 
         try {
+            Collection<Object> inValues = Lists.newArrayList();
             for (int i = dict.getMinId(); i <= dict.getMaxId(); i++) {
                 Object dictVal = dict.getValueFromId(i);
                 Object computedVal = functionTupleFilter.invokeFunction(dictVal);
@@ -154,9 +157,10 @@ public class TupleFilterFunctionTranslator implements ITupleFilterTranslator {
                     break;
                 }
                 if (compResult) {
-                    translated.addChild(new ConstantTupleFilter(dictVal));
+                    inValues.add(dictVal);
                 }
             }
+            translated.addChild(new ConstantTupleFilter(inValues));
         } catch (Exception e) {
             logger.debug(e.getMessage());
             return null;

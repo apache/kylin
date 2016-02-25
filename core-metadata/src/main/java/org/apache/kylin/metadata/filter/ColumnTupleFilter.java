@@ -84,8 +84,7 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public byte[] serialize(IFilterCodeSystem<?> cs) {
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+    public void serialize(IFilterCodeSystem<?> cs,ByteBuffer buffer) {
         String table = columnRef.getTable();
         BytesUtil.writeUTFString(table, buffer);
 
@@ -97,17 +96,13 @@ public class ColumnTupleFilter extends TupleFilter {
 
         String dataType = columnRef.getDatatype();
         BytesUtil.writeUTFString(dataType, buffer);
-
-        byte[] result = new byte[buffer.position()];
-        System.arraycopy(buffer.array(), 0, result, 0, buffer.position());
-        return result;
     }
 
     @Override
-    public void deserialize(byte[] bytes, IFilterCodeSystem<?> cs) {
+    public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
+
         TableDesc table = null;
         ColumnDesc column = new ColumnDesc();
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
 
         String tableName = BytesUtil.readUTFString(buffer);
         if (tableName != null) {
