@@ -18,11 +18,13 @@
 
 package org.apache.kylin.storage.hbase;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import net.sf.ehcache.CacheManager;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -38,6 +40,7 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageFactory;
+import org.apache.kylin.storage.cache.AbstractCacheFledgedQuery;
 import org.apache.kylin.storage.cache.StorageMockUtils;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.junit.After;
@@ -54,12 +57,18 @@ public class ITStorageTest extends HBaseMetadataTestCase {
     private CubeInstance cube;
     private StorageContext context;
 
+    private static CacheManager cacheManager;
+
     @BeforeClass
     public static void setupResource() throws Exception {
+        cacheManager = CacheManager.newInstance("../server/src/main/resources/ehcache-test.xml");
+        AbstractCacheFledgedQuery.setCacheManager(cacheManager);
     }
 
     @AfterClass
     public static void tearDownResource() {
+        cacheManager.shutdown();
+        AbstractCacheFledgedQuery.setCacheManager(null);
     }
 
     @Before

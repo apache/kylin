@@ -18,29 +18,21 @@
 
 package org.apache.kylin.metadata.filter.function;
 
-import com.google.common.collect.ImmutableMap;
-import org.apache.commons.lang3.reflect.MethodUtils;
-
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
-/**
- * Created by dongli on 11/13/15.
- */
+import org.apache.commons.lang3.reflect.MethodUtils;
+
+import com.google.common.collect.ImmutableMap;
+
 public enum BuiltInMethod {
-    UPPER(BuiltInMethod.class, "upper", String.class),
-    LOWER(BuiltInMethod.class, "lower", String.class),
-    SUBSTRING(BuiltInMethod.class, "substring", String.class, int.class, int.class),
-    CHAR_LENGTH(BuiltInMethod.class, "charLength", String.class),
-    LIKE(BuiltInMethod.class, "like", String.class, String.class),
-    INITCAP(BuiltInMethod.class, "initcap", String.class);
+    UPPER(BuiltInMethod.class, "upper", String.class), LOWER(BuiltInMethod.class, "lower", String.class), SUBSTRING(BuiltInMethod.class, "substring", String.class, int.class, int.class), CHAR_LENGTH(BuiltInMethod.class, "charLength", String.class), LIKE(BuiltInMethod.class, "like", String.class, String.class), INITCAP(BuiltInMethod.class, "initcap", String.class);
     public final Method method;
 
     public static final ImmutableMap<String, BuiltInMethod> MAP;
 
     static {
-        final ImmutableMap.Builder<String, BuiltInMethod> builder =
-                ImmutableMap.builder();
+        final ImmutableMap.Builder<String, BuiltInMethod> builder = ImmutableMap.builder();
         for (BuiltInMethod value : BuiltInMethod.values()) {
             if (value.method != null) {
                 builder.put(value.name(), value);
@@ -70,22 +62,22 @@ public enum BuiltInMethod {
         for (int i = 0; i < len; i++) {
             char curCh = s.charAt(i);
             final int c = (int) curCh;
-            if (start) {  // curCh is whitespace or first character of word.
+            if (start) { // curCh is whitespace or first character of word.
                 if (c > 47 && c < 58) { // 0-9
                     start = false;
-                } else if (c > 64 && c < 91) {  // A-Z
+                } else if (c > 64 && c < 91) { // A-Z
                     start = false;
-                } else if (c > 96 && c < 123) {  // a-z
+                } else if (c > 96 && c < 123) { // a-z
                     start = false;
                     curCh = (char) (c - 32); // Uppercase this character
                 }
                 // else {} whitespace
-            } else {  // Inside of a word or white space after end of word.
+            } else { // Inside of a word or white space after end of word.
                 if (c > 47 && c < 58) { // 0-9
                     // noop
-                } else if (c > 64 && c < 91) {  // A-Z
+                } else if (c > 64 && c < 91) { // A-Z
                     curCh = (char) (c + 32); // Lowercase this character
-                } else if (c > 96 && c < 123) {  // a-z
+                } else if (c > 96 && c < 123) { // a-z
                     // noop
                 } else { // whitespace
                     start = true;
@@ -115,6 +107,5 @@ public enum BuiltInMethod {
     public static String lower(String s) {
         return s.toLowerCase();
     }
-
 
 }

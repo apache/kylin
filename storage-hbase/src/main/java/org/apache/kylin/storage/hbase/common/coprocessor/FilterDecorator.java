@@ -8,7 +8,7 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.DictCodeSystem;
 import org.apache.kylin.dict.IDictionaryAware;
-import org.apache.kylin.dict.TupleFilterDictionaryTranslater;
+import org.apache.kylin.dict.TupleFilterFunctionTranslator;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
@@ -131,7 +131,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         if (filter == null)
             return null;
 
-        ITupleFilterTranslator translator = new TupleFilterDictionaryTranslater(columnIO.getIDictionaryAware());
+        ITupleFilterTranslator translator = new TupleFilterFunctionTranslator(columnIO.getIDictionaryAware());
         filter = translator.translate(filter);
 
         // un-evaluatable filter is replaced with TRUE

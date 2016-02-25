@@ -18,7 +18,8 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.primitives.Primitives;
+import java.util.ListIterator;
+
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -32,17 +33,17 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ListIterator;
+import com.google.common.primitives.Primitives;
 
 /**
- * Created by dongli on 1/7/16.
+ * only take effect when the compare filter has function
  */
-public class TupleFilterDictionaryTranslater implements ITupleFilterTranslator {
-    public static final Logger logger = LoggerFactory.getLogger(TupleFilterDictionaryTranslater.class);
+public class TupleFilterFunctionTranslator implements ITupleFilterTranslator {
+    public static final Logger logger = LoggerFactory.getLogger(TupleFilterFunctionTranslator.class);
 
     private IDictionaryAware dictionaryAware;
 
-    public TupleFilterDictionaryTranslater(IDictionaryAware dictionaryAware) {
+    public TupleFilterFunctionTranslator(IDictionaryAware dictionaryAware) {
         this.dictionaryAware = dictionaryAware;
     }
 
@@ -125,32 +126,32 @@ public class TupleFilterDictionaryTranslater implements ITupleFilterTranslator {
                 int comp = ((Comparable) computedVal).compareTo(targetVal);
                 boolean compResult = false;
                 switch (compTupleFilter.getOperator()) {
-                    case EQ:
-                        compResult = comp == 0;
-                        break;
-                    case NEQ:
-                        compResult = comp != 0;
-                        break;
-                    case LT:
-                        compResult = comp < 0;
-                        break;
-                    case LTE:
-                        compResult = comp <= 0;
-                        break;
-                    case GT:
-                        compResult = comp > 0;
-                        break;
-                    case GTE:
-                        compResult = comp >= 0;
-                        break;
-                    case IN:
-                        compResult = compTupleFilter.getValues().contains(computedVal.toString());
-                        break;
-                    case NOTIN:
-                        compResult = !compTupleFilter.getValues().contains(computedVal.toString());
-                        break;
-                    default:
-                        break;
+                case EQ:
+                    compResult = comp == 0;
+                    break;
+                case NEQ:
+                    compResult = comp != 0;
+                    break;
+                case LT:
+                    compResult = comp < 0;
+                    break;
+                case LTE:
+                    compResult = comp <= 0;
+                    break;
+                case GT:
+                    compResult = comp > 0;
+                    break;
+                case GTE:
+                    compResult = comp >= 0;
+                    break;
+                case IN:
+                    compResult = compTupleFilter.getValues().contains(computedVal.toString());
+                    break;
+                case NOTIN:
+                    compResult = !compTupleFilter.getValues().contains(computedVal.toString());
+                    break;
+                default:
+                    break;
                 }
                 if (compResult) {
                     translated.addChild(new ConstantTupleFilter(dictVal));

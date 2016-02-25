@@ -5,6 +5,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
@@ -20,6 +21,7 @@ import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.StorageContext;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,10 +34,21 @@ import com.google.common.collect.Ranges;
  */
 public class DynamicCacheTest {
 
+    private static CacheManager cacheManager;
+    
     @BeforeClass
-    public static void setup() {
+    public static void setupResource() throws Exception {
         System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/sandbox");
         KylinConfig.getInstanceFromEnv().setProperty("kylin.query.cache.threshold.duration", "0");
+        
+        cacheManager = CacheManager.newInstance("../server/src/main/resources/ehcache-test.xml");
+        AbstractCacheFledgedQuery.setCacheManager(cacheManager);
+    }
+
+    @AfterClass
+    public static void tearDownResource() {
+        cacheManager.shutdown();
+        AbstractCacheFledgedQuery.setCacheManager(null);
     }
 
 

@@ -5,9 +5,6 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.Status;
 import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.config.Configuration;
-import net.sf.ehcache.config.PersistenceConfiguration;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.realization.StreamSQLDigest;
@@ -21,6 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTupleItrListener {
     private static final Logger logger = LoggerFactory.getLogger(AbstractCacheFledgedQuery.class);
+
     private static final String storageCacheTemplate = "StorageCache";
 
     protected static CacheManager CACHE_MANAGER;
@@ -35,31 +33,6 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
 
     public static void setCacheManager(CacheManager cacheManager) {
         CACHE_MANAGER = cacheManager;
-    }
-
-    /**
-     * This method is only useful non-spring injected test cases.
-     * When Kylin is normally ran as a spring app CACHE_MANAGER will be injected.
-     * and the configuration for cache lies in server/src/main/resources/ehcache.xml
-     * 
-     * the cache named "StorageCache" acts like a template for each realization to
-     * create its own cache.
-     */
-    private static void initCacheManger() {
-        Configuration conf = new Configuration();
-        conf.setMaxBytesLocalHeap("128M");
-        CACHE_MANAGER = CacheManager.create(conf);
-
-        //a fake template for test cases
-        Cache storageCache = new Cache(new CacheConfiguration(storageCacheTemplate, 0).//
-                memoryStoreEvictionPolicy(MemoryStoreEvictionPolicy.LRU).//
-                eternal(false).//
-                timeToIdleSeconds(86400).//
-                diskExpiryThreadIntervalSeconds(0).//
-                //maxBytesLocalHeap(10, MemoryUnit.MEGABYTES).//
-                persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.NONE)));
-
-        CACHE_MANAGER.addCacheIfAbsent(storageCache);
     }
 
     protected StreamSQLResult getStreamSQLResult(StreamSQLDigest streamSQLDigest) {
@@ -87,8 +60,7 @@ public abstract class AbstractCacheFledgedQuery implements IStorageQuery, TeeTup
 
     private void makeCacheIfNecessary(String storageUUID) {
         if (CACHE_MANAGER == null || (!(CACHE_MANAGER.getStatus().equals(Status.STATUS_ALIVE)))) {
-            logger.warn("CACHE_MANAGER is not provided or not alive");
-            initCacheManger();
+            throw new RuntimeException("CACHE_MANAGER is not provided or not alive");
         }
 
         if (CACHE_MANAGER.getCache(storageUUID) == null) {

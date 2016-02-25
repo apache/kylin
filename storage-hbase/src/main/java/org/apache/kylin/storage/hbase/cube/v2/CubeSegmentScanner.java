@@ -23,7 +23,7 @@ import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.gridtable.NotEnoughGTInfoException;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dict.TupleFilterDictionaryTranslater;
+import org.apache.kylin.dict.TupleFilterFunctionTranslator;
 import org.apache.kylin.gridtable.EmptyGTScanner;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
@@ -64,7 +64,7 @@ public class CubeSegmentScanner implements IGTScanner {
         CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
 
         // translate FunctionTupleFilter to IN clause
-        ITupleFilterTranslator translator = new TupleFilterDictionaryTranslater(this.cubeSeg);
+        ITupleFilterTranslator translator = new TupleFilterFunctionTranslator(this.cubeSeg);
         filter = translator.translate(filter);
 
         //replace the constant values in filter to dictionary codes 
