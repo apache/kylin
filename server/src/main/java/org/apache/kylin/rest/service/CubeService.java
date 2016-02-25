@@ -557,8 +557,22 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public void unLoadHiveTable(String tableName) throws IOException {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        HiveSourceTableLoader.unLoadHiveTable(tableName.toUpperCase());
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void syncTableToProject(String[] tables, String project) throws IOException {
         getProjectManager().addTableDescToProject(tables, project);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public void removeTableFromProject(String tableName, String projectName) throws IOException {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        getProjectManager().removeTableDescFromProject(tableName, projectName);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)

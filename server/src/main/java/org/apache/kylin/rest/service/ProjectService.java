@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CreateProjectRequest;
@@ -102,6 +103,25 @@ public class ProjectService extends BasicService {
         getProjectManager().dropProject(projectName);
 
         accessService.clean(project, true);
+    }
+
+    public boolean isTableInAnyProject(String tableName) {
+        for(ProjectInstance projectInstance : ProjectManager.getInstance(getConfig()).listAllProjects()) {
+            if(projectInstance.containsTable(tableName.toUpperCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isTableInProject(String tableName, String projectName) {
+        ProjectInstance projectInstance = ProjectManager.getInstance(getConfig()).getProject(projectName);
+        if(projectInstance != null) {
+            if(projectInstance.containsTable(tableName.toUpperCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

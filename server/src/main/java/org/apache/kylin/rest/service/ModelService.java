@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -127,5 +128,19 @@ public class ModelService extends BasicService {
         getMetadataManager().dropModel(desc);
 
         accessService.clean(desc, true);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    public boolean isTableInAnyModel(String tableName) {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        return getMetadataManager().isTableInAnyModel(tableName);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    public boolean isTableInModel(String tableName, String projectName) throws IOException {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        return getMetadataManager().isTableInModel(tableName, projectName);
     }
 }

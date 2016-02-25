@@ -21,6 +21,7 @@ package org.apache.kylin.rest.controller;
 import java.io.IOException;
 import java.util.*;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
@@ -33,6 +34,8 @@ import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.request.StreamingRequest;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.service.CubeService;
+import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +58,10 @@ public class TableController extends BasicController {
 
     @Autowired
     private CubeService cubeMgmtService;
+    @Autowired
+    private ProjectService projectService;
+    @Autowired
+    private ModelService modelService;
 
     /**
      * Get available table list of the input database
@@ -124,21 +131,67 @@ public class TableController extends BasicController {
         cubeMgmtService.syncTableToProject(loaded, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
         result.put("result.loaded", loaded);
-        result.put("result.unloaded", new String[] {});
+        result.put("result.unloaded", new String[]{});
         return result;
     }
 
+    @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.DELETE })
+    @ResponseBody
+    public Map<String, String[]> unLoadHiveTables(@PathVariable String tables, @PathVariable String project) {
+        Set<String> unLoadSuccess = Sets.newHashSet();
+        Set<String> unLoadFail = Sets.newHashSet();
+        Map<String, String[]> result = new HashMap<String, String[]>();
+        for (String tableName : tables.split(",")) {
+            if (unLoadHiveTable(tableName, project)) {
+                unLoadSuccess.add(tableName);
+            } else {
+                unLoadFail.add(tableName);
+            }
+        }
+        result.put("result.unload.success", (String[]) unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
+        result.put("result.unload.fail", (String[]) unLoadFail.toArray(new String[unLoadFail.size()]));
+        return result;
+    }
+
+    /**
+     * table may referenced by several projects, and kylin only keep one copy of meta for each table,
+     * that's why we have two if statement here.
+     * @param tableName
+     * @param project
+     * @return
+     */
+    private boolean unLoadHiveTable(String tableName, String project) {
+        boolean rtn= false;
+		try {
+			if (!modelService.isTableInModel(tableName, project)) {
+				cubeMgmtService.removeTableFromProject(tableName, project);
+				rtn = true;
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+        if(!projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
+            try {
+                cubeMgmtService.unLoadHiveTable(tableName);
+                rtn = true;
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                rtn = false;
+            }
+        }
+        return rtn;
+    }
 
     @RequestMapping(value = "/addStreamingSrc", method = { RequestMethod.POST })
     @ResponseBody
     public Map<String, String> addStreamingTable(@RequestBody StreamingRequest request) throws IOException {
         Map<String, String> result = new HashMap<String, String>();
         String project = request.getProject();
-        TableDesc desc = JsonUtil.readValue(request.getTableData(),TableDesc.class);
+        TableDesc desc = JsonUtil.readValue(request.getTableData(), TableDesc.class);
         desc.setUuid(UUID.randomUUID().toString());
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         metaMgr.saveSourceTable(desc);
-        cubeMgmtService.syncTableToProject(new String[]{desc.getName()},project);
+        cubeMgmtService.syncTableToProject(new String[]{desc.getName()}, project);
         result.put("success","true");
         return result;
     }
