@@ -197,6 +197,12 @@ public class MetadataManager {
         srcTableMap.put(srcTable.getIdentity(), srcTable);
     }
 
+    public void removeSourceTable(String tableIdentity) throws IOException {
+        String path = TableDesc.concatResourcePath(tableIdentity);
+        getStore().deleteResource(path);
+        srcTableMap.remove(tableIdentity);
+    }
+
     private void init(KylinConfig config) throws IOException {
         this.config = config;
         this.srcTableMap = new CaseInsensitiveStringCache<TableDesc>(config, Broadcaster.TYPE.TABLE);
@@ -336,6 +342,24 @@ public class MetadataManager {
         return new ArrayList<>(ret);
     }
 
+    public boolean isTableInModel(String tableName, String projectName) throws IOException {
+        for(DataModelDesc modelDesc : getModels(projectName)) {
+            if(modelDesc.getAllTables().contains(tableName.toUpperCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isTableInAnyModel(String tableName) {
+        for(DataModelDesc modelDesc : getModels()) {
+            if(modelDesc.getAllTables().contains(tableName.toUpperCase())){
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void reloadAllDataModel() throws IOException {
         ResourceStore store = getStore();
         logger.debug("Reloading DataModel from folder " + store.getReadableResourcePath(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT));
@@ -439,6 +463,12 @@ public class MetadataManager {
         is.close();
 
         srcTableExdMap.put(tableId, tableExdProperties);
+    }
+
+    public void removeTableExd(String tableIdentity) throws IOException {
+        String path = TableDesc.concatExdResourcePath(tableIdentity);
+        getStore().deleteResource(path);
+        srcTableExdMap.remove(tableIdentity);
     }
 
     public String appendDBName(String table) {

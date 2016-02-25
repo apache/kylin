@@ -286,6 +286,18 @@ public class ProjectManager {
         return projectInstance;
     }
 
+    public void removeTableDescFromProject(String tableIdentities, String projectName) throws IOException {
+        MetadataManager metaMgr = getMetadataManager();
+        ProjectInstance projectInstance = getProject(projectName);
+        TableDesc table = metaMgr.getTableDesc(tableIdentities);
+        if (table == null) {
+            throw new IllegalStateException("Cannot find table '" + table + "' in metadata manager");
+        }
+
+        projectInstance.removeTable(table.getIdentity());
+        updateProject(projectInstance);
+    }
+
     public List<ProjectInstance> findProjects(RealizationType type, String realizationName) {
         List<ProjectInstance> result = Lists.newArrayList();
         for (ProjectInstance prj : projectMap.values()) {
