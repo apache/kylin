@@ -255,22 +255,24 @@ KylinApp
             });
           }
 
+        var firstCommit = false;
         if($scope.columnList.length==0){
-          $scope.columnList = columnList;
+          firstCommit = true;
         }
 
-        angular.forEach(columnList,function(item){
-          var included = false;
-          for(var i=0;i<$scope.columnList.length;i++){
-            if($scope.columnList[i].name==item.name){
-              included = true;
-              break;
+        if(!firstCommit){
+          angular.forEach(columnList,function(item){
+            for(var i=0;i<$scope.columnList.length;i++){
+              if($scope.columnList[i].name==item.name){
+                item.checked = $scope.columnList[i].checked;
+                item.type = $scope.columnList[i].type;
+                item.fromSource = $scope.columnList[i].fromSource;
+                break;
+              }
             }
-          }
-          if(!included){
-            $scope.columnList.push(item);
-          }
-        })
+          })
+        }
+        $scope.columnList = columnList;
 
       }
 
