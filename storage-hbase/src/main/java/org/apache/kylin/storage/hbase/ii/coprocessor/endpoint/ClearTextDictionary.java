@@ -35,9 +35,12 @@
 package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 
 import java.util.Map;
+import java.util.Map.Entry;
 
-import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.dict.IDictionaryAware;
+import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.dimension.FixedLenDimEnc;
+import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -47,31 +50,33 @@ import com.google.common.collect.Maps;
 
 /**
  */
-public class ClearTextDictionary implements IDictionaryAware {
+public class ClearTextDictionary implements IDimensionEncodingMap {
 
-    private final TableRecordInfoDigest digest;
-    private final Map<TblColRef, Integer> columnIndexMap;
+    private final Map<TblColRef, DimensionEncoding> encMap;
 
     public ClearTextDictionary(TableRecordInfoDigest digest, CoprocessorRowType coprocessorRowType) {
-        this.digest = digest;
-        this.columnIndexMap = coprocessorRowType.columnIdxMap;
+        encMap = Maps.newHashMap();
+        for (Entry<TblColRef, Integer> entry : coprocessorRowType.columnIdxMap.entrySet()) {
+            encMap.put(entry.getKey(), new FixedLenDimEnc(entry.getValue()));
+        }
     }
 
     public ClearTextDictionary(TableRecordInfo tableRecordInfo) {
-        this.digest = tableRecordInfo.getDigest();
-        this.columnIndexMap = Maps.newHashMap();
+        encMap = Maps.newHashMap();
+        TableRecordInfoDigest digest = tableRecordInfo.getDigest();
         for (int i = 0; i < tableRecordInfo.getColumns().size(); i++) {
-            columnIndexMap.put(tableRecordInfo.getColumns().get(i), i);
+            encMap.put(tableRecordInfo.getColumns().get(i), new FixedLenDimEnc(digest.length(i)));
         }
     }
 
     @Override
-    public int getColumnLength(TblColRef col) {
-        return digest.length(columnIndexMap.get(col));
+    public DimensionEncoding get(TblColRef col) {
+        return encMap.get(col);
     }
 
     @Override
-    public Dictionary<?> getDictionary(TblColRef col) {
+    public Dictionary<String> getDictionary(TblColRef col) {
         return null;
     }
+
 }

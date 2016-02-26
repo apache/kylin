@@ -67,7 +67,7 @@ public class ObserverEnabler {
         }
 
         CoprocessorRowType type = CoprocessorRowType.fromCuboid(segment, cuboid);
-        CoprocessorFilter filter = CoprocessorFilter.fromFilter(segment, tupleFiler, FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_GLOBAL_DICT);
+        CoprocessorFilter filter = CoprocessorFilter.fromFilter(segment.getDimensionEncodingMap(), tupleFiler, FilterDecorator.FilterConstantsTreatment.REPLACE_WITH_GLOBAL_DICT);
         CoprocessorProjector projector = CoprocessorProjector.makeForObserver(segment, cuboid, groupBy);
         ObserverAggregators aggrs = ObserverAggregators.fromValueDecoders(rowValueDecoders);
 

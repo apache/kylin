@@ -22,6 +22,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -58,7 +59,7 @@ public class RowKeySplitter {
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
         this.enableSharding = cubeSeg.isEnableSharding();
         this.cubeDesc = cubeSeg.getCubeDesc();
-        this.colIO = new RowKeyColumnIO(cubeSeg);
+        this.colIO = new RowKeyColumnIO(new CubeDimEncMap(cubeSeg));
 
         this.splitBuffers = new SplittedBytes[splitLen];
         for (int i = 0; i < splitLen; i++) {

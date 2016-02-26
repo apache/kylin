@@ -23,8 +23,8 @@ import java.util.Arrays;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ShardingHash;
+import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.metadata.datatype.LongMutable;
 
 /**

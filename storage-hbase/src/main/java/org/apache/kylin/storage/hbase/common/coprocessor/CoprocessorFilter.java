@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dict.DictCodeSystem;
-import org.apache.kylin.dict.IDictionaryAware;
+import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -33,9 +33,9 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
  */
 public class CoprocessorFilter {
 
-    public static CoprocessorFilter fromFilter(final IDictionaryAware dictionaryAware, TupleFilter rootFilter, FilterDecorator.FilterConstantsTreatment filterConstantsTreatment) {
+    public static CoprocessorFilter fromFilter(final IDimensionEncodingMap dimEncMap, TupleFilter rootFilter, FilterDecorator.FilterConstantsTreatment filterConstantsTreatment) {
         // translate constants into dictionary IDs via a serialize copy
-        FilterDecorator filterDecorator = new FilterDecorator(dictionaryAware, filterConstantsTreatment);
+        FilterDecorator filterDecorator = new FilterDecorator(dimEncMap, filterConstantsTreatment);
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator, DictCodeSystem.INSTANCE);
         TupleFilter copy = TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
 

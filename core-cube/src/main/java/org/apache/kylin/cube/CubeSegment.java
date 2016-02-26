@@ -25,12 +25,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ShardingHash;
+import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dict.IDictionaryAware;
+import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -45,7 +45,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, IRealizationSegment {
+public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -277,19 +277,12 @@ public class CubeSegment implements Comparable<CubeSegment>, IDictionaryAware, I
         return result;
     }
 
-    @Override
-    public int getColumnLength(TblColRef col) {
-        Dictionary<?> dict = getDictionary(col);
-        if (dict == null) {
-            return this.getCubeDesc().getRowkey().getColumnLength(col);
-        } else {
-            return dict.getSizeOfId();
-        }
-    }
-
-    @Override
     public Dictionary<String> getDictionary(TblColRef col) {
         return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, col);
+    }
+    
+    public CubeDimEncMap getDimensionEncodingMap() {
+        return new CubeDimEncMap(this);
     }
 
     public void validate() {

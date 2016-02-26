@@ -17,7 +17,7 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -25,17 +25,18 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesSerializer;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
 import org.apache.kylin.dict.NumberDictionaryBuilder;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TrieDictionaryBuilder;
+import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.dimension.DictionaryDimEnc;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.GTInfo.Builder;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -55,7 +56,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class DictGridTableTest {
 
@@ -466,12 +466,12 @@ public class DictGridTableTest {
         return info;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings("unchecked")
     private static CubeCodeSystem newDictCodeSystem() {
-        Map<Integer, Dictionary> dictionaryMap = Maps.newHashMap();
-        dictionaryMap.put(1, newDictionaryOfInteger());
-        dictionaryMap.put(2, newDictionaryOfString());
-        return new CubeCodeSystem(dictionaryMap);
+        DimensionEncoding[] dimEncs = new DimensionEncoding[3];
+        dimEncs[1] = new DictionaryDimEnc(newDictionaryOfInteger());
+        dimEncs[2] = new DictionaryDimEnc(newDictionaryOfString());
+        return new CubeCodeSystem(dimEncs);
     }
 
     @SuppressWarnings("rawtypes")

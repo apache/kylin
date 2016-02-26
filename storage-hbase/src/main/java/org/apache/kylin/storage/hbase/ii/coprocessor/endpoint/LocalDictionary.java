@@ -18,33 +18,48 @@
 
 package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 
-import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.dict.IDictionaryAware;
+import java.util.Map;
+
+import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.dimension.FixedLenDimEnc;
+import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
 
+import com.google.common.collect.Maps;
+
 /**
  */
-public class LocalDictionary implements IDictionaryAware {
+public class LocalDictionary implements IDimensionEncodingMap {
 
     private CoprocessorRowType type;
     private Dictionary<?>[] colDictMap;
     private TableRecordInfoDigest recordInfo;
+    private Map<TblColRef, DimensionEncoding> encMap;
 
     public LocalDictionary(Dictionary<?>[] colDictMap, CoprocessorRowType type, TableRecordInfoDigest recordInfo) {
         this.colDictMap = colDictMap;
         this.type = type;
         this.recordInfo = recordInfo;
+        this.encMap = Maps.newHashMap();
     }
 
     @Override
-    public int getColumnLength(TblColRef col) {
-        return recordInfo.length(type.getColIndexByTblColRef(col));
+    public DimensionEncoding get(TblColRef col) {
+        DimensionEncoding result = encMap.get(col);
+        if (result == null) {
+            int len = recordInfo.length(type.getColIndexByTblColRef(col));
+            encMap.put(col, result = new FixedLenDimEnc(len));
+        }
+        return result;
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public Dictionary<String> getDictionary(TblColRef col) {
+        return (Dictionary<String>) this.colDictMap[type.getColIndexByTblColRef(col)];
     }
 
-    @Override
-    public Dictionary<?> getDictionary(TblColRef col) {
-        return this.colDictMap[type.getColIndexByTblColRef(col)];
-    }
 }

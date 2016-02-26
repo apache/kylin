@@ -21,7 +21,7 @@ package org.apache.kylin.dict;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 
 /**
@@ -44,7 +44,7 @@ public class DictCodeSystem implements IFilterCodeSystem<String> {
 
         String v = value;
         for (int i = 0, n = v.length(); i < n; i++) {
-            if ((byte) v.charAt(i) != Dictionary.NULL)
+            if ((byte) v.charAt(i) != DimensionEncoding.NULL)
                 return false;
         }
         return true;

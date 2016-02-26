@@ -67,17 +67,7 @@ public class RowKeyDesc {
         return getColDesc(col).getBitIndex();
     }
 
-    /**
-     * caller of this method must make sure that col is NOT using dictionary
-     * otherwise this will always return 0 for dict columns
-     * @param col
-     * @return
-     */
-    public int getColumnLength(TblColRef col) {
-        return getColDesc(col).getLength();
-    }
-
-    private RowKeyColDesc getColDesc(TblColRef col) {
+    public RowKeyColDesc getColDesc(TblColRef col) {
         RowKeyColDesc desc = columnMap.get(col);
         if (desc == null)
             throw new NullPointerException("Column " + col + " does not exist in row key desc");

@@ -20,7 +20,7 @@ package org.apache.kylin.measure.basic;
 
 import java.util.Map;
 
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.model.MeasureDesc;

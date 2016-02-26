@@ -28,6 +28,8 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
+import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -150,6 +152,15 @@ public class CuboidToGridTableMapping {
 
     public List<TblColRef> getCuboidDimensionsInGTOrder() {
         return cuboid.getColumns();
+    }
+
+    public DimensionEncoding[] getDimensionEncodings(IDimensionEncodingMap dimEncMap) {
+        List<TblColRef> dims = cuboid.getColumns();
+        DimensionEncoding[] dimEncs = new DimensionEncoding[dims.size()];
+        for (int i = 0; i < dimEncs.length; i++) {
+            dimEncs[i] = dimEncMap.get(dims.get(i));
+        }
+        return dimEncs;
     }
 
     public Map<Integer, Integer> getDependentMetricsMap() {
