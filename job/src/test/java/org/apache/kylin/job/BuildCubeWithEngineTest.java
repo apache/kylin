@@ -209,7 +209,7 @@ public class BuildCubeWithEngineTest {
         long date3 = f.parse("2022-01-01").getTime();
         List<String> result = Lists.newArrayList();
         result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
-        result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3, true));
+        result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));
 
         // empty segment
         long date4 = f.parse("2050-01-01").getTime();
@@ -254,7 +254,7 @@ public class BuildCubeWithEngineTest {
         // date is 20220101000000
         dateStart = f.parse("2012-06-01").getTime();
         dateEnd = f.parse("2022-01-01").getTime();
-        result.add(buildSegment(cubeName, dateStart, dateEnd, true));
+        result.add(buildSegment(cubeName, dateStart, dateEnd));
         return result;
 
     }
