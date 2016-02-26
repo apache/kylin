@@ -69,7 +69,7 @@ KylinApp.constant('cubeConfig', {
     {attr: 'input_records_count', name: 'Source Records'},
     {attr: 'last_build_time', name: 'Last Build Time'},
     {attr: 'owner', name: 'Owner'},
-    {attr: 'create_time', name: 'Create Time'}
+    {attr: 'create_time_utc', name: 'Create Time'}
   ],
   streamingAutoGenerateMeasure:[
     {name:"year_start",type:"date"},
