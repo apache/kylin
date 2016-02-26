@@ -21,10 +21,10 @@ package org.apache.kylin.cube.kv;
 import java.util.Map;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractRowKeyEncoder {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractRowKeyEncoder.class);
-    public static final byte DEFAULT_BLANK_BYTE = Dictionary.NULL;
+    public static final byte DEFAULT_BLANK_BYTE = DimensionEncoding.NULL;
 
     protected byte blankByte = DEFAULT_BLANK_BYTE;
     protected final CubeSegment cubeSeg;

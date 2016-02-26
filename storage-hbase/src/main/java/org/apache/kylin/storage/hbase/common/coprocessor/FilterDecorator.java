@@ -22,15 +22,15 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.DictCodeSystem;
-import org.apache.kylin.dict.IDictionaryAware;
 import org.apache.kylin.dict.TupleFilterFunctionTransformer;
+import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -45,12 +45,14 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         AS_IT_IS, REPLACE_WITH_GLOBAL_DICT, REPLACE_WITH_LOCAL_DICT
     }
 
+    private IDimensionEncodingMap dimEncMap;
     private RowKeyColumnIO columnIO;
     private Set<TblColRef> inevaluableColumns;
     private FilterConstantsTreatment filterConstantsTreatment;
 
-    public FilterDecorator(IDictionaryAware seg, FilterConstantsTreatment filterConstantsTreatment) {
-        this.columnIO = new RowKeyColumnIO(seg);
+    public FilterDecorator(IDimensionEncodingMap dimEncMap, FilterConstantsTreatment filterConstantsTreatment) {
+        this.dimEncMap = dimEncMap;
+        this.columnIO = new RowKeyColumnIO(dimEncMap);
         this.inevaluableColumns = Sets.newHashSet();
         this.filterConstantsTreatment = filterConstantsTreatment;
     }
@@ -149,7 +151,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         if (filter == null)
             return null;
 
-        ITupleFilterTransformer translator = new TupleFilterFunctionTransformer(columnIO.getIDictionaryAware());
+        TupleFilterFunctionTransformer translator = new TupleFilterFunctionTransformer(dimEncMap);
         filter = translator.transform(filter);
 
         // un-evaluatable filter is replaced with TRUE
@@ -199,8 +201,8 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
 
     private String translate(TblColRef column, String v, int roundingFlag) {
         byte[] value = Bytes.toBytes(v);
-        byte[] id = new byte[columnIO.getColumnLength(column)];
-        columnIO.writeColumn(column, value, value.length, roundingFlag, Dictionary.NULL, id, 0);
+        byte[] id = new byte[dimEncMap.get(column).getLengthOfEncoding()];
+        columnIO.writeColumn(column, value, value.length, roundingFlag, DimensionEncoding.NULL, id, 0);
         return Dictionary.dictIdToString(id, 0, id.length);
     }
 }

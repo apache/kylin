@@ -39,6 +39,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
+import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
@@ -158,9 +159,10 @@ public class CubeStatsReader {
         final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         final Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
         final List<TblColRef> columnList = baseCuboid.getColumns();
+        final CubeDimEncMap dimEncMap = cubeSegment.getDimensionEncodingMap();
 
         for (int i = 0; i < columnList.size(); i++) {
-            rowkeyColumnSize.add(cubeSegment.getColumnLength(columnList.get(i)));
+            rowkeyColumnSize.add(dimEncMap.get(columnList.get(i)).getLengthOfEncoding());
         }
 
         Map<Long, Double> sizeMap = Maps.newHashMap();

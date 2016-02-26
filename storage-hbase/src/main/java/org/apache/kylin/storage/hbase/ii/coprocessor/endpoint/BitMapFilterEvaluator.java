@@ -20,7 +20,7 @@ package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 
 import java.util.List;
 
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;

@@ -30,7 +30,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.Dictionary;
 
 /**
  * A dictionary for date string (date only, no time).

@@ -55,7 +55,7 @@ public class CoprocessorRowType {
     public static CoprocessorRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {
         List<TblColRef> colList = cuboid.getColumns();
         TblColRef[] cols = colList.toArray(new TblColRef[colList.size()]);
-        RowKeyColumnIO colIO = new RowKeyColumnIO(seg);
+        RowKeyColumnIO colIO = new RowKeyColumnIO(seg.getDimensionEncodingMap());
         int[] colSizes = new int[cols.length];
         for (int i = 0; i < cols.length; i++) {
             colSizes[i] = colIO.getColumnLength(cols[i]);

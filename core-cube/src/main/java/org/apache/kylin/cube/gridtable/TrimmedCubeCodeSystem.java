@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.DefaultGTComparator;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.IGTCodeSystem;
@@ -35,44 +36,44 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 import com.google.common.collect.Maps;
 
+/**
+ * A limited code system where dimension value ser/des is disabled.
+ * Used inside coprocessor only. Because dictionary is not available. 
+ */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class TrimmedCubeCodeSystem implements IGTCodeSystem {
 
+    private GTInfo info;
+
+    private DimensionEncoding[] dimEncs;
+    private DataTypeSerializer[] serializers;
+    private IGTComparator comparator;
     private Map<Integer, Integer> dependentMetricsMap;
-    private Map<Integer, Integer> dictSizes;
-    private Map<Integer, Integer> fixedLengthSize;
 
-    private transient GTInfo info;
-    private transient DataTypeSerializer[] serializers;
-    private transient IGTComparator comparator;
-
-    public TrimmedCubeCodeSystem(Map<Integer, Integer> dependentMetricsMap, Map<Integer, Integer> dictSizes, Map<Integer, Integer> fixedLengthSize) {
+    public TrimmedCubeCodeSystem(DimensionEncoding[] dimEncs, Map<Integer, Integer> dependentMetricsMap) {
+        this.dimEncs = dimEncs;
+        this.comparator = new DefaultGTComparator();
         this.dependentMetricsMap = dependentMetricsMap;
-        this.dictSizes = dictSizes;
-        this.fixedLengthSize = fixedLengthSize;
     }
 
     @Override
     public void init(GTInfo info) {
         this.info = info;
 
-        serializers = new DataTypeSerializer[info.getColumnCount()];
-        for (int i = 0; i < info.getColumnCount(); i++) {
-            // dimension with dictionary
-            if (dictSizes.get(i) != null) {
-                serializers[i] = new CubeCodeSystem.TrimmedDictionarySerializer(dictSizes.get(i));
+        this.serializers = new DataTypeSerializer[info.getColumnCount()];
+        for (int i = 0; i < serializers.length; i++) {
+            DimensionEncoding dimEnc = i < dimEncs.length ? dimEncs[i] : null;
+
+            // for dimensions
+            if (dimEnc != null) {
+                // use trimmed serializer cause no dictionary in coprocessor
+                serializers[i] = new TrimmedDimensionSerializer(dimEnc.getLengthOfEncoding());
             }
-            // dimension of fixed length
-            else if (fixedLengthSize.get(i) != null) {
-                serializers[i] = new FixLenSerializer(fixedLengthSize.get(i));
-            }
-            // metrics
+            // for measures
             else {
                 serializers[i] = DataTypeSerializer.create(info.getColumnType(i));
             }
         }
-
-        this.comparator = new DefaultGTComparator();
     }
 
     @Override
@@ -98,11 +99,6 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
     @Override
     public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
         DataTypeSerializer serializer = serializers[col];
-
-        //        if (((value instanceof String) && !(serializer instanceof StringSerializer || serializer instanceof CubeCodeSystem.FixLenSerializer))) {
-        //            value = serializer.valueOf((String) value);
-        //        }
-
         serializer.serialize(value, buf);
     }
 
@@ -149,49 +145,95 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
                 BytesUtil.writeVInt(x.getValue(), out);
             }
 
-            BytesUtil.writeVInt(value.dictSizes.size(), out);
-            for (Map.Entry<Integer, Integer> x : value.dictSizes.entrySet()) {
-                BytesUtil.writeVInt(x.getKey(), out);
-                BytesUtil.writeVInt(x.getValue(), out);
-            }
-
-            BytesUtil.writeVInt(value.fixedLengthSize.size(), out);
-            for (Map.Entry<Integer, Integer> x : value.fixedLengthSize.entrySet()) {
-                BytesUtil.writeVInt(x.getKey(), out);
-                BytesUtil.writeVInt(x.getValue(), out);
+            BytesUtil.writeVInt(value.dimEncs.length, out);
+            for (int i = 0; i < value.dimEncs.length; i++) {
+                DimensionEncoding enc = value.dimEncs[i];
+                BytesUtil.writeVInt(enc == null ? 0 : enc.getLengthOfEncoding(), out);
             }
         }
 
         @Override
         public TrimmedCubeCodeSystem deserialize(ByteBuffer in) {
             Map<Integer, Integer> dependentMetricsMap = Maps.newHashMap();
-            Map<Integer, Integer> dictSizes = Maps.newHashMap();
-            Map<Integer, Integer> fixedLengthSize = Maps.newHashMap();
 
-            int size = 0;
-
-            size = BytesUtil.readVInt(in);
+            int size = BytesUtil.readVInt(in);
             for (int i = 0; i < size; ++i) {
                 int key = BytesUtil.readVInt(in);
                 int value = BytesUtil.readVInt(in);
                 dependentMetricsMap.put(key, value);
             }
 
-            size = BytesUtil.readVInt(in);
-            for (int i = 0; i < size; ++i) {
-                int key = BytesUtil.readVInt(in);
-                int value = BytesUtil.readVInt(in);
-                dictSizes.put(key, value);
+            DimensionEncoding[] dimEncs = new DimensionEncoding[BytesUtil.readVInt(in)];
+            for (int i = 0; i < dimEncs.length; i++) {
+                int fixedLen = BytesUtil.readVInt(in);
+                if (fixedLen > 0)
+                    dimEncs[i] = new TrimmedDimEnc(fixedLen);
             }
 
-            size = BytesUtil.readVInt(in);
-            for (int i = 0; i < size; ++i) {
-                int key = BytesUtil.readVInt(in);
-                int value = BytesUtil.readVInt(in);
-                fixedLengthSize.put(key, value);
-            }
-            return new TrimmedCubeCodeSystem(dependentMetricsMap, dictSizes, fixedLengthSize);
+            return new TrimmedCubeCodeSystem(dimEncs, dependentMetricsMap);
         }
     };
+
+    static class TrimmedDimEnc extends DimensionEncoding {
+        final int fixedLen;
+
+        TrimmedDimEnc(int fixedLen) {
+            this.fixedLen = fixedLen;
+        }
+        
+        @Override
+        public int getLengthOfEncoding() {
+            return fixedLen;
+        }
+
+        @Override
+        public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String decode(byte[] bytes, int offset, int len) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public DataTypeSerializer<Object> asDataTypeSerializer() {
+            throw new UnsupportedOperationException();
+        }
+    }
+    
+    static class TrimmedDimensionSerializer extends DataTypeSerializer<Object> {
+
+        final int fixedLen;
+
+        public TrimmedDimensionSerializer(int fixedLen) {
+            this.fixedLen = fixedLen;
+        }
+
+        @Override
+        public int peekLength(ByteBuffer in) {
+            return fixedLen;
+        }
+
+        @Override
+        public int maxLength() {
+            return fixedLen;
+        }
+
+        @Override
+        public int getStorageBytesEstimate() {
+            return fixedLen;
+        }
+
+        @Override
+        public void serialize(Object value, ByteBuffer out) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object deserialize(ByteBuffer in) {
+            throw new UnsupportedOperationException();
+        }
+    }
 
 }

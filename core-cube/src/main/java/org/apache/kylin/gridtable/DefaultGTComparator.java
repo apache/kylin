@@ -19,18 +19,12 @@
 package org.apache.kylin.gridtable;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.DimensionEncoding;
 
 public class DefaultGTComparator implements IGTComparator {
     @Override
     public boolean isNull(ByteArray code) {
-        // all 0xff is null
-        byte[] array = code.array();
-        for (int i = 0, j = code.offset(), n = code.length(); i < n; i++, j++) {
-            if (array[j] != Dictionary.NULL)
-                return false;
-        }
-        return true;
+        return DimensionEncoding.isNull(code.array(), code.offset(), code.length());
     }
 
     @Override

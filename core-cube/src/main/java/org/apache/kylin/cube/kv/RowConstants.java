@@ -22,8 +22,6 @@ public class RowConstants {
 
     public static final int ROWKEY_COL_DEFAULT_LENGTH = 256;
 
-    // row key fixed length place holder
-    public static final byte ROWKEY_PLACE_HOLDER_BYTE = 9;
     // row key lower bound
     public static final byte ROWKEY_LOWER_BYTE = 0;
     // row key upper bound

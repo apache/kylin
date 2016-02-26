@@ -80,8 +80,8 @@ public class CubeSegmentScanner implements IGTScanner {
 
         CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
 
-        // transform FunctionTupleFilter to equivalent IN clause
-        ITupleFilterTransformer translator = new TupleFilterFunctionTransformer(this.cubeSeg);
+        // translate FunctionTupleFilter to IN clause
+        ITupleFilterTransformer translator = new TupleFilterFunctionTransformer(cubeSeg.getDimensionEncodingMap());
         filter = translator.transform(filter);
 
         //replace the constant values in filter to dictionary codes 

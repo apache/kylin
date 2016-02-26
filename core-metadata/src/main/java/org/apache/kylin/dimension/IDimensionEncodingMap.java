@@ -16,19 +16,25 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.dict;
+package org.apache.kylin.dimension;
 
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- *
- * Class that implement this interface has the ability to help dictionary encoding and decoding
+ * Dimension encoding maps a dimension (String) to bytes of fixed length.
+ * 
+ * It is similar to Dictionary in 1) the bytes is fixed length; 2) bi-way mapping;
+ * 3) the mapping preserves order, but is also different to Dictionary as the target 
+ * bytes can be very long while dictionary ID is 4 bytes at most. This means it is 
+ * hard to enumerate all values of a encoding, thus TupleFilterDictionaryTranslater 
+ * cannot work on DimensionEncoding.
  */
-public interface IDictionaryAware {
+public interface IDimensionEncodingMap {
 
-    public abstract int getColumnLength(TblColRef col);
-
-    public abstract Dictionary<?> getDictionary(TblColRef col);
-
+    /** Get dimension encoding of a column */
+    DimensionEncoding get(TblColRef col);
+    
+    /** Get dictionary of a column if its encoding is dictionary based */
+    Dictionary<String> getDictionary(TblColRef col);
+    
 }

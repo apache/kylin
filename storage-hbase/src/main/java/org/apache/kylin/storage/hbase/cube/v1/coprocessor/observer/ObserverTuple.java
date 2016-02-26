@@ -19,7 +19,7 @@
 package org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;

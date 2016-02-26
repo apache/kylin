@@ -55,14 +55,14 @@ public class TimeStrDictionaryTests {
 
         encodeDecode("1999-01-12 11:00:01");
         encodeDecode("2038-01-09 01:01:02");
-        encodeDecode("2038-01-19 03:14:07");
+        encodeDecode("2038-01-19 03:14:06");
         encodeDecode("1970-01-01 23:22:11");
         encodeDecode("1970-01-02 23:22:11");
     }
 
     @Test
     public void testIllegal() {
-        Assert.assertEquals(-1, dict.getIdFromValue("2038-01-19 03:14:08"));
+        Assert.assertEquals(-1, dict.getIdFromValue("2038-01-19 03:14:07"));
     }
 
     public void encodeDecode(String origin) {

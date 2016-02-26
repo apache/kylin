@@ -44,7 +44,6 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -53,10 +52,12 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.inmemcubing.AbstractInMemCubeBuilder;
 import org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder;
+import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.*;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.*;
+import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
 import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
@@ -308,8 +309,9 @@ public class SparkCubing extends AbstractApplication {
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
         List<TblColRef> baseCuboidColumn = Cuboid.findById(cubeDesc, Cuboid.getBaseCuboidId(cubeDesc)).getColumns();
         final Map<TblColRef, Integer> columnLengthMap = Maps.newHashMap();
+        final CubeDimEncMap dimEncMap = cubeSegment.getDimensionEncodingMap();
         for (TblColRef tblColRef : baseCuboidColumn) {
-            columnLengthMap.put(tblColRef, cubeSegment.getColumnLength(tblColRef));
+            columnLengthMap.put(tblColRef, dimEncMap.get(tblColRef).getLengthOfEncoding());
         }
         final Map<TblColRef, Dictionary<String>> dictionaryMap = Maps.newHashMap();
         for (DimensionDesc dim : cubeDesc.getDimensions()) {

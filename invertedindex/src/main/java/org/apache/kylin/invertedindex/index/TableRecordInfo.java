@@ -21,7 +21,7 @@ package org.apache.kylin.invertedindex.index;
 import java.util.List;
 
 import org.apache.kylin.common.util.Array;
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
 import org.apache.kylin.invertedindex.model.IIDesc;

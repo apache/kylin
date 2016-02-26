@@ -23,7 +23,7 @@ import java.util.Arrays;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.invertedindex.measure.FixedLenMeasureCodec;
 import org.apache.kylin.metadata.datatype.LongMutable;
 
@@ -45,7 +45,7 @@ public class RawTableRecord implements Cloneable {
     }
 
     public void reset() {
-        Arrays.fill(buf, Dictionary.NULL);
+        Arrays.fill(buf, DimensionEncoding.NULL);
     }
 
     public boolean isMetric(int col) {

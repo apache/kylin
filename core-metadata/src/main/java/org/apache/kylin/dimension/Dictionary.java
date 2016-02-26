@@ -16,13 +16,14 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.util;
+package org.apache.kylin.dimension;
 
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.kylin.common.persistence.Writable;
+import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -41,8 +42,6 @@ import org.apache.kylin.common.persistence.Writable;
  */
 @SuppressWarnings("serial")
 abstract public class Dictionary<T> implements Writable, Serializable {
-
-    public static final byte NULL = (byte) 0xff;
 
     // ID with all bit-1 (0xff e.g.) reserved for NULL value
     public static final int NULL_ID[] = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };

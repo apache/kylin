@@ -18,6 +18,8 @@
 
 package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -40,9 +42,10 @@ import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.TrieDictionary;
+import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.invertedindex.index.RawTableRecord;
 import org.apache.kylin.invertedindex.index.Slice;
 import org.apache.kylin.invertedindex.index.TableRecordInfoDigest;
@@ -65,7 +68,6 @@ import com.google.protobuf.HBaseZeroCopyByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  */
@@ -292,16 +294,25 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         final boolean emptyDictionary = Array.isEmpty(localDictionaries);
         for (int i = 0; i < finalColumnLengths.length; i++) {
             if (isMetric[i]) {
-                rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), finalColumnLengths[i]);
+                writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), finalColumnLengths[i]);
             } else {
                 if (emptyDictionary) {
-                    rowKeyColumnIO.writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), finalColumnLengths[i]);
+                    writeColumnWithoutDictionary(encodedRecord.getBytes(), encodedRecord.offset(i), encodedRecord.length(i), recordBuffer, digest.offset(i), finalColumnLengths[i]);
                 } else {
                     final Dictionary<?> localDictionary = localDictionaries[i];
                     final byte[] valueBytesFromId = localDictionary.getValueBytesFromId(encodedRecord.getValueID(i));
-                    rowKeyColumnIO.writeColumnWithoutDictionary(valueBytesFromId, 0, valueBytesFromId.length, recordBuffer, digest.offset(i), finalColumnLengths[i]);
+                    writeColumnWithoutDictionary(valueBytesFromId, 0, valueBytesFromId.length, recordBuffer, digest.offset(i), finalColumnLengths[i]);
                 }
             }
+        }
+    }
+
+    private void writeColumnWithoutDictionary(byte[] src, int srcOffset, int srcLength, byte[] dst, int dstOffset, int dstLength) {
+        if (srcLength >= dstLength) {
+            System.arraycopy(src, srcOffset, dst, dstOffset, dstLength);
+        } else {
+            System.arraycopy(src, srcOffset, dst, dstOffset, srcLength);
+            Arrays.fill(dst, dstOffset + srcLength, dstOffset + dstLength, FixedLenDimEnc.ROWKEY_PLACE_HOLDER_BYTE);
         }
     }
 

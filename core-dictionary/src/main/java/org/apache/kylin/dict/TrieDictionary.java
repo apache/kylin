@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.Dictionary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

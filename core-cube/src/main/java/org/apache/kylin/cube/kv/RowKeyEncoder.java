@@ -44,7 +44,7 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     public RowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
         super(cubeSeg, cuboid);
         enableSharding = cubeSeg.isEnableSharding();
-        colIO = new RowKeyColumnIO(cubeSeg);
+        colIO = new RowKeyColumnIO(cubeSeg.getDimensionEncodingMap());
         for (TblColRef column : cuboid.getColumns()) {
             bodyLength += colIO.getColumnLength(column);
         }
@@ -160,7 +160,7 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
             return;
         }
 
-        colIO.writeColumn(column, value, valueLen, this.blankByte, outputValue, outputValueOffset);
+        colIO.writeColumn(column, value, valueLen, 0, this.blankByte, outputValue, outputValueOffset);
     }
 
     protected byte defaultValue() {

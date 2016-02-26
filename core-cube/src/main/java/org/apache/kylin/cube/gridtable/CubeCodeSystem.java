@@ -22,17 +22,16 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.dimension.DictionaryDimEnc;
+import org.apache.kylin.dimension.DictionaryDimEnc.DictionarySerializer;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.DefaultGTComparator;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-
-import com.google.common.collect.Maps;
 
 /**
  * defines how column values will be encoded to/ decoded from GTRecord 
@@ -43,63 +42,44 @@ import com.google.common.collect.Maps;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class CubeCodeSystem implements IGTCodeSystem {
 
-    // ============================================================================
-
     private GTInfo info;
 
-    private Map<Integer, Dictionary> dictionaryMap; // column index ==> dictionary of column
-    private Map<Integer, Integer> fixLenMap; // column index ==> fixed length of column
-    private Map<Integer, Integer> dependentMetricsMap;
+    private DimensionEncoding[] dimEncs;
     private DataTypeSerializer[] serializers;
     private IGTComparator comparator;
+    private Map<Integer, Integer> dependentMetricsMap;
 
-    public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap) {
-        this(dictionaryMap, Collections.<Integer, Integer> emptyMap(), Collections.<Integer, Integer> emptyMap());
+    public CubeCodeSystem(DimensionEncoding[] dimEncs) {
+        this(dimEncs, Collections.<Integer, Integer> emptyMap());
     }
 
-    public CubeCodeSystem(Map<Integer, Dictionary> dictionaryMap, Map<Integer, Integer> fixLenMap, Map<Integer, Integer> dependentMetricsMap) {
-        this.dictionaryMap = dictionaryMap;
-        this.fixLenMap = fixLenMap;
+    public CubeCodeSystem(DimensionEncoding[] dimEncs, Map<Integer, Integer> dependentMetricsMap) {
+        this.dimEncs = dimEncs;
+        this.comparator = new DefaultGTComparator();
         this.dependentMetricsMap = dependentMetricsMap;
     }
 
     public TrimmedCubeCodeSystem trimForCoprocessor() {
-        Map<Integer,Integer> dictSizes = Maps.newHashMap();
-        Map<Integer,Integer> fixedLengthSizes = Maps.newHashMap();
-
-        for (int i = 0; i < serializers.length; i++) {
-            if (serializers[i] instanceof DictionarySerializer) {
-                dictSizes.put(i,serializers[i].maxLength());
-            } else if(serializers[i] instanceof  FixLenSerializer) {
-                fixedLengthSizes.put(i,serializers[i].maxLength());
-            }
-        }
-
-        return new TrimmedCubeCodeSystem(dependentMetricsMap,dictSizes,fixedLengthSizes);
+        return new TrimmedCubeCodeSystem(dimEncs, dependentMetricsMap);
     }
 
     @Override
     public void init(GTInfo info) {
         this.info = info;
 
-        serializers = new DataTypeSerializer[info.getColumnCount()];
-        for (int i = 0; i < info.getColumnCount(); i++) {
-            // dimension with dictionary
-            if (dictionaryMap.get(i) != null) {
-                serializers[i] = new DictionarySerializer(dictionaryMap.get(i));
+        this.serializers = new DataTypeSerializer[info.getColumnCount()];
+        for (int i = 0; i < serializers.length; i++) {
+            DimensionEncoding dimEnc = i < dimEncs.length ? dimEncs[i] : null;
+
+            // for dimensions
+            if (dimEnc != null) {
+                serializers[i] = dimEnc.asDataTypeSerializer();
             }
-            // dimension of fixed length
-            else if (fixLenMap.get(i) != null) {
-                serializers[i] = new FixLenSerializer(fixLenMap.get(i));
-            }
-            // metrics
+            // for measures
             else {
                 serializers[i] = DataTypeSerializer.create(info.getColumnType(i));
             }
         }
-
-        //when changing this, also take care of TrimmedCubeCodeSystem.init
-        this.comparator = new DefaultGTComparator();
     }
 
     @Override
@@ -126,10 +106,14 @@ public class CubeCodeSystem implements IGTCodeSystem {
     public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
         DataTypeSerializer serializer = serializers[col];
         if (serializer instanceof DictionarySerializer) {
-            ((DictionarySerializer) serializer).serializeWithRounding(value, roundingFlag, buf);
+            DictionaryDimEnc dictEnc = ((DictionaryDimEnc) dimEncs[col]);
+            if (dictEnc.getRoundingFlag() != roundingFlag) {
+                serializer = dictEnc.copy(roundingFlag).asDataTypeSerializer();
+            }
+            serializer.serialize(value, buf);
         } else {
             if (value instanceof String) {
-                // for dimensions mostly, measures are converted by MeasureIngestor before reaching this point
+                // for dimensions; measures are converted by MeasureIngestor before reaching this point
                 value = serializer.valueOf((String) value);
             }
             serializer.serialize(value, buf);
@@ -167,81 +151,6 @@ public class CubeCodeSystem implements IGTCodeSystem {
         }
 
         return result;
-    }
-
-    static class TrimmedDictionarySerializer extends DataTypeSerializer {
-
-        final int fieldSize;
-
-        public TrimmedDictionarySerializer(int fieldSize) {
-            this.fieldSize = fieldSize;
-        }
-
-        @Override
-        public int peekLength(ByteBuffer in) {
-            return fieldSize;
-        }
-
-        @Override
-        public int maxLength() {
-            return fieldSize;
-        }
-
-        @Override
-        public int getStorageBytesEstimate() {
-            return fieldSize;
-        }
-
-        @Override
-        public void serialize(Object value, ByteBuffer out) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Object deserialize(ByteBuffer in) {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    static class DictionarySerializer extends DataTypeSerializer {
-        private Dictionary dictionary;
-
-        DictionarySerializer(Dictionary dictionary) {
-            this.dictionary = dictionary;
-        }
-
-        public void serializeWithRounding(Object value, int roundingFlag, ByteBuffer buf) {
-            int id = dictionary.getIdFromValue(value, roundingFlag);
-            BytesUtil.writeUnsigned(id, dictionary.getSizeOfId(), buf);
-        }
-
-        @Override
-        public void serialize(Object value, ByteBuffer buf) {
-            int id = dictionary.getIdFromValue(value);
-            BytesUtil.writeUnsigned(id, dictionary.getSizeOfId(), buf);
-        }
-
-        @Override
-        public Object deserialize(ByteBuffer in) {
-            int id = BytesUtil.readUnsigned(in, dictionary.getSizeOfId());
-            return dictionary.getValueFromId(id);
-        }
-
-        @Override
-        public int peekLength(ByteBuffer in) {
-            return dictionary.getSizeOfId();
-        }
-
-        @Override
-        public int maxLength() {
-            return dictionary.getSizeOfId();
-        }
-
-        @Override
-        public int getStorageBytesEstimate() {
-            return dictionary.getSizeOfId();
-        }
-
     }
 
 }

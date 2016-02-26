@@ -21,7 +21,8 @@ package org.apache.kylin.dict;
 import java.util.Collection;
 import java.util.ListIterator;
 
-import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
@@ -43,10 +44,10 @@ import com.google.common.primitives.Primitives;
 public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
     public static final Logger logger = LoggerFactory.getLogger(TupleFilterFunctionTransformer.class);
 
-    private IDictionaryAware dictionaryAware;
+    private IDimensionEncodingMap dimEncMap;
 
-    public TupleFilterFunctionTransformer(IDictionaryAware dictionaryAware) {
-        this.dictionaryAware = dictionaryAware;
+    public TupleFilterFunctionTransformer(IDimensionEncodingMap dimEncMap) {
+        this.dimEncMap = dimEncMap;
     }
 
     @Override
@@ -63,6 +64,7 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
                 logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
             }
         } else if (tupleFilter instanceof LogicalTupleFilter) {
+            @SuppressWarnings("unchecked")
             ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) tupleFilter.getChildren().listIterator();
             while (childIterator.hasNext()) {
                 TupleFilter transformed = transform(childIterator.next());
@@ -78,7 +80,7 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
             return null;
 
         TblColRef columnRef = functionTupleFilter.getColumn();
-        Dictionary<?> dict = dictionaryAware.getDictionary(columnRef);
+        Dictionary<?> dict = dimEncMap.getDictionary(columnRef);
         if (dict == null)
             return null;
 
@@ -99,7 +101,7 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
         return translated;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private TupleFilter translateCompareTupleFilter(CompareTupleFilter compTupleFilter) {
         if (compTupleFilter.getFunction() == null)
             return null;
@@ -109,7 +111,7 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
             return null;
 
         TblColRef columnRef = functionTupleFilter.getColumn();
-        Dictionary<?> dict = dictionaryAware.getDictionary(columnRef);
+        Dictionary<?> dict = dimEncMap.getDictionary(columnRef);
         if (dict == null)
             return null;
 
