@@ -1,5 +1,6 @@
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
@@ -22,7 +23,8 @@ public class FactDistinctColumnsReducerTest {
     public void testWriteCuboidStatistics() throws IOException {
 
         final Configuration conf = HadoopUtil.getCurrentConfiguration();
-        final Path outputPath = new Path("file:///tmp/kylin/cuboidstatistics/" + UUID.randomUUID().toString());
+        File tmp = File.createTempFile("cuboidstatistics", "");
+        final Path outputPath = new Path(tmp.getParent().toString() + File.separator + UUID.randomUUID().toString());
         if (!FileSystem.getLocal(conf).exists(outputPath)) {
             //            FileSystem.getLocal(conf).create(outputPath);
         }
