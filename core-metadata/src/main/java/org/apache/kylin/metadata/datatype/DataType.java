@@ -67,6 +67,9 @@ public class DataType implements Serializable {
                 InnerDataTypeEnum.LITERAL.getDataType(), InnerDataTypeEnum.DERIVED.getDataType());
     }
 
+    public static final int MAX_PRICISION_UNKNOWN_DECIMAL = 19;
+    public static final int MAX_SCALE_UNKNOWN_DECIMAL = 4;
+    public static final int MAX_PRECISION_UNKNOWN_STRING = 256;
     public static final Set<String> INTEGER_FAMILY = new HashSet<String>();
     public static final Set<String> NUMBER_FAMILY = new HashSet<String>();
     public static final Set<String> DATETIME_FAMILY = new HashSet<String>();
@@ -172,14 +175,14 @@ public class DataType implements Serializable {
 
         // FIXME 256 for unknown string precision
         if ((name.equals("char") || name.equals("varchar")) && precision == -1) {
-            precision = 256; // to save memory at frontend, e.g. tableau will
+            precision = MAX_PRECISION_UNKNOWN_STRING; // to save memory at frontend, e.g. tableau will
                              // allocate memory according to this
         }
 
         // FIXME (19,4) for unknown decimal precision
         if ((name.equals("decimal") || name.equals("numeric")) && precision == -1) {
-            precision = 19;
-            scale = 4;
+            precision = MAX_PRICISION_UNKNOWN_DECIMAL;
+            scale = MAX_SCALE_UNKNOWN_DECIMAL;
         }
     }
 

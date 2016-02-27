@@ -72,7 +72,13 @@ public class CuboidToGridTableMapping {
             // Ensure the holistic version if exists is always the first.
             FunctionDesc func = measure.getFunction();
             metrics2gt.put(func, gtColIdx);
-            gtDataTypes.add(func.getReturnDataType());
+            // per KYLIN-1345, function return type should not be simply same to origin column type for some function and data type
+            // for exmample, for data type 'decimal' and function 'SUM', function return type should be relaxed
+            if(func.isSum() && func.getReturnDataType().isDecimal()) {
+                gtDataTypes.add(new DataType("decimal", DataType.MAX_PRICISION_UNKNOWN_DECIMAL, func.getReturnDataType().getScale()));
+            }else {
+                gtDataTypes.add(func.getReturnDataType());
+            }
             
             // map to column block
             int cbIdx = 0;

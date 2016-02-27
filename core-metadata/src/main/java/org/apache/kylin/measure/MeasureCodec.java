@@ -23,11 +23,12 @@ import java.util.Collection;
 
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  * @author yangli9
- * 
+ *
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class MeasureCodec {
@@ -43,6 +44,12 @@ public class MeasureCodec {
         String[] dataTypes = new String[measureDescs.length];
         for (int i = 0; i < dataTypes.length; i++) {
             dataTypes[i] = measureDescs[i].getFunction().getReturnType();
+            // per KYLIN-1345, function return type should not be simply same to origin column type for some function and data type
+            // for exmample, for data type 'decimal' and function 'SUM', function return type should be relaxed
+            FunctionDesc func = measureDescs[i].getFunction();
+            if(func.isSum() && func.getReturnDataType().isDecimal()) {
+                dataTypes[i] = "decimal(" + DataType.MAX_PRICISION_UNKNOWN_DECIMAL + "," + func.getReturnDataType().getScale() + ")";
+            }
         }
         init(dataTypes);
     }
