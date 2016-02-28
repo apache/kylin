@@ -29,7 +29,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;
-import org.apache.kylin.engine.mr.steps.RangeKeyDistributionMapper;
 import org.junit.Before;
 import org.junit.Test;
 

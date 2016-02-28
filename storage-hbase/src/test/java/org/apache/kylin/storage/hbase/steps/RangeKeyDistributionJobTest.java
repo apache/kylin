@@ -27,7 +27,6 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.engine.mr.steps.RangeKeyDistributionJob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

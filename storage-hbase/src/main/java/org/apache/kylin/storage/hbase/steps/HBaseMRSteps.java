@@ -12,7 +12,6 @@ import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.storage.hbase.ii.IIBulkLoadJob;
 import org.apache.kylin.storage.hbase.ii.IICreateHFileJob;
 import org.apache.kylin.storage.hbase.ii.IICreateHTableJob;
-import org.apache.kylin.engine.mr.steps.RangeKeyDistributionJob;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.realization.IRealizationSegment;
@@ -72,7 +71,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
         StringBuilder cmd = new StringBuilder();
         appendExecCmdParameters(cmd, "cubename", seg.getRealization().getName());
         appendExecCmdParameters(cmd, "segmentname", seg.getName());
-        appendExecCmdParameters(cmd, "input", getRowkeyDistributionOutputPath(jobId) + "/part-r-00000");
+        appendExecCmdParameters(cmd, "partitions", getRowkeyDistributionOutputPath(jobId) + "/part-r-00000");
         appendExecCmdParameters(cmd, "statisticsenabled", String.valueOf(withStats));
 
         createHtableStep.setJobParams(cmd.toString());
@@ -90,6 +89,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
         appendMapReduceParameters(cmd, seg.getRealization().getDataModelDesc());
         appendExecCmdParameters(cmd, "cubename", seg.getRealization().getName());
+        appendExecCmdParameters(cmd, "partitions", getRowkeyDistributionOutputPath(jobId) + "/part-r-00000_hfile");
         appendExecCmdParameters(cmd, "input", inputPath);
         appendExecCmdParameters(cmd, "output", getHFilePath(jobId));
         appendExecCmdParameters(cmd, "htablename", seg.getStorageLocationIdentifier());

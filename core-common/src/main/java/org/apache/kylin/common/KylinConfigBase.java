@@ -407,6 +407,14 @@ public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.hbase.region.count.max", "500"));
     }
 
+    public void setHBaseHFileSizeGB(int size) {
+        setProperty("kylin.hbase.hfile.size.gb", String.valueOf(size));
+    }
+
+    public int getHBaseHFileSizeGB() {
+        return Integer.parseInt(getOptional("kylin.hbase.hfile.size.gb", "0"));
+    }
+
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }

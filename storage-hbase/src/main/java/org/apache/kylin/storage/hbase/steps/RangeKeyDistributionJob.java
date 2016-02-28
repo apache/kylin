@@ -16,11 +16,14 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr.steps;
+package org.apache.kylin.storage.hbase.steps;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -91,14 +94,23 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
+            int hfileSizeGB = KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB();
             DataModelDesc.RealizationCapacity cubeCapacity = cube.getDescriptor().getModel().getCapacity();
             int regionSplitSize = KylinConfig.getInstanceFromEnv().getHBaseRegionCut(cubeCapacity.toString());
             int maxRegionCount = KylinConfig.getInstanceFromEnv().getHBaseRegionCountMax();
             int minRegionCount = KylinConfig.getInstanceFromEnv().getHBaseRegionCountMin();
-            
+            job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
+            job.getConfiguration().set(BatchConstants.HFILE_SIZE_GB, String.valueOf(hfileSizeGB));
             job.getConfiguration().set(BatchConstants.REGION_SPLIT_SIZE, String.valueOf(regionSplitSize));
             job.getConfiguration().set(BatchConstants.REGION_NUMBER_MAX, String.valueOf(maxRegionCount));
             job.getConfiguration().set(BatchConstants.REGION_NUMBER_MIN, String.valueOf(minRegionCount));
+            // The partition file for hfile is sequenece file consists of ImmutableBytesWritable and NullWritable
+            TableMapReduceUtil.addDependencyJars(job.getConfiguration(), ImmutableBytesWritable.class, NullWritable.class);
+
+            // Passed the sandbox property to mapper, to simulate large dataset
+            if (System.getProperty("useSandbox") != null && System.getProperty("useSandbox").equals("true")) {
+                job.getConfiguration().setBoolean("useSandbox", true);
+            }
             
             return waitForCompletion(job);
         } catch (Exception e) {
