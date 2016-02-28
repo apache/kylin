@@ -28,7 +28,7 @@
                 <a class="btn btn-xs btn-primary" tooltip="Load Hive Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openModal()"><i class="fa fa-download"></i></a>
                 <a class="btn btn-xs btn-primary" tooltip="Load Hive Table From Tree"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openTreeModal()"><i class="fa fa-download"></i></a>
                 <a class="btn btn-xs btn-success" tooltip="Refresh Tables" ng-click="aceSrcTbChanged()"><i class="fa fa-refresh"></i></a>
-                <a class="btn btn-xs btn-info" tooltip="UnLoad Hive Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openUnLoadModal()"><i class="fa fa-remove"></i></a>
+                <a class="btn btn-xs btn-info" tooltip="Unload Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openUnLoadModal()"><i class="fa fa-remove"></i></a>
             </div>
         </div>
 
@@ -65,7 +65,7 @@
 
 <script type="text/ng-template" id="removeHiveTable.html">
   <div class="modal-header">
-    <h4>UnLoad Hive Table Metadata</h4>
+    <h4>Unload Table</h4>
   </div>
   <div class="modal-body">
     <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
@@ -74,7 +74,7 @@
                       placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
   </div>
   <div class="modal-footer">
-    <button class="btn btn-primary" ng-click="remove()">Sync</button>
+    <button class="btn btn-primary" ng-click="remove()">Unload</button>
     <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
   </div>
 </script>
