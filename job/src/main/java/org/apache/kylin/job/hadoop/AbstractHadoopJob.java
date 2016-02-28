@@ -129,7 +129,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return retVal;
     }
 
-    private static final String KYLIN_HIVE_DEPENDENCY_JARS = "[^,]*hive-exec.jar|[^,]*hive-metastore.jar|[^,]*hive-hcatalog-core[0-9.-]*jar";
+    private static final String KYLIN_HIVE_DEPENDENCY_JARS = "[^,]*hive-exec[0-9.-]+\\.jar|[^,]*hive-metastore[0-9.-]+\\.jar|[^,]*hive-hcatalog-core[0-9.-]+\\.jar";
 
     String filterKylinHiveDependency(String kylinHiveDependency) {
         if (StringUtils.isBlank(kylinHiveDependency))
