@@ -129,8 +129,6 @@ public class AggregationGroup {
     }
 
     private void buildHierarchyMasks(Map<String, TblColRef> colNameAbbr, RowKeyDesc rowKeyDesc) {
-
-        HierarchyMask mask = new HierarchyMask();
         this.hierarchyMasks = new ArrayList<HierarchyMask>();
 
         if (this.selectRule.hierarchy_dims == null || this.selectRule.hierarchy_dims.length == 0) {
@@ -138,6 +136,7 @@ public class AggregationGroup {
         }
 
         for (String[] hierarchy_dims : this.selectRule.hierarchy_dims) {
+            HierarchyMask mask = new HierarchyMask();
             if (hierarchy_dims == null || hierarchy_dims.length == 0) {
                 continue;
             }
