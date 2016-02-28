@@ -20,13 +20,12 @@
 client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.client`
 hive_env=
 
-if [ "${client_mode}" == "cli" ]
-then
-    hive_env=`hive -e set | grep 'env:CLASSPATH'`
-elif [ "${client_mode}" == "beeline" ]
+if [ "${client_mode}" == "beeline" ]
 then
     beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.beeline.params`
     hive_env=`beeline ${beeline_params} --outputformat=dsv -e set | grep 'env:CLASSPATH'`
+else
+    hive_env=`hive -e set | grep 'env:CLASSPATH'`
 fi
 
 hive_classpath=`echo $hive_env | grep 'env:CLASSPATH' | awk -F '=' '{print $2}'`
