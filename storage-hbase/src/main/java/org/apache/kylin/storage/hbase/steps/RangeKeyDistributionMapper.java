@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr.steps;
+package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
 
@@ -38,9 +38,14 @@ public class RangeKeyDistributionMapper extends KylinMapper<Text, Text, Text, Lo
 
     private Text lastKey;
 
+    private Long scaleFactorForSandbox = 1L;
+
     @Override
     protected void setup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
+        if (context.getConfiguration().getBoolean("useSandbox", false)) {
+            scaleFactorForSandbox = 1024L;
+        }
     }
 
     @Override
@@ -50,8 +55,8 @@ public class RangeKeyDistributionMapper extends KylinMapper<Text, Text, Text, Lo
         int bytesLength = key.getLength() + value.getLength();
         bytesRead += bytesLength;
 
-        if (bytesRead >= ONE_MEGA_BYTES) {
-            outputValue.set(bytesRead);
+        if ((bytesRead * scaleFactorForSandbox) >= ONE_MEGA_BYTES) {
+            outputValue.set(bytesRead * scaleFactorForSandbox);
             context.write(key, outputValue);
 
             // reset bytesRead

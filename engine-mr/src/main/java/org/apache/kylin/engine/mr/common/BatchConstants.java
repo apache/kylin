@@ -42,6 +42,7 @@ public interface BatchConstants {
     String REGION_NUMBER_MIN = "region.number.min";
     String REGION_NUMBER_MAX = "region.number.max";
     String REGION_SPLIT_SIZE = "region.split.size";
+    String HFILE_SIZE_GB = "hfile.size.gb";
     
     String CFG_KYLIN_LOCAL_TEMP_DIR = "/tmp/kylin/";
     String CFG_KYLIN_HDFS_TEMP_DIR = "/tmp/kylin/";

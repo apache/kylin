@@ -16,13 +16,17 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr.steps;
+package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.kylin.engine.mr.KylinReducer;
@@ -44,12 +48,22 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
     private int minRegionCount = 1;
     private int maxRegionCount = 500;
     private int cut = 10;
+    private int hfileSizeGB = 1;
     private long bytesRead = 0;
     private List<Text> gbPoints = new ArrayList<Text>();
+    private String output = null;
 
     @Override
     protected void setup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
+
+        if (context.getConfiguration().get(BatchConstants.OUTPUT_PATH) != null) {
+            output = context.getConfiguration().get(BatchConstants.OUTPUT_PATH);
+        }
+
+        if (context.getConfiguration().get(BatchConstants.HFILE_SIZE_GB) != null) {
+            hfileSizeGB = Integer.valueOf(context.getConfiguration().get(BatchConstants.HFILE_SIZE_GB));
+        }
 
         if (context.getConfiguration().get(BatchConstants.REGION_SPLIT_SIZE) != null) {
             cut = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_SPLIT_SIZE));
@@ -63,7 +77,11 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
             maxRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_NUMBER_MAX));
         }
 
-        logger.info("Chosen cut for htable is " + cut + ", max region count=" + maxRegionCount + ", min region count =" + minRegionCount);
+        logger.info("Chosen cut for htable is " + cut + ", max region count=" + maxRegionCount
+            + ", min region count=" + minRegionCount + ", hfile size=" + hfileSizeGB);
+
+        // add empty key at position 0
+        gbPoints.add(new Text());
     }
 
     @Override
@@ -87,14 +105,32 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
         int gbPerRegion = gbPoints.size() / nRegion;
         gbPerRegion = Math.max(1, gbPerRegion);
 
+        if (hfileSizeGB <= 0) {
+            hfileSizeGB = gbPerRegion;
+        }
+        int hfilePerRegion = gbPerRegion / hfileSizeGB;
+        hfilePerRegion = Math.max(1, hfilePerRegion);
+
         System.out.println(nRegion + " regions");
         System.out.println(gbPerRegion + " GB per region");
+        System.out.println(hfilePerRegion + " hfile per region");
 
-        for (int i = gbPerRegion; i < gbPoints.size(); i += gbPerRegion) {
-            Text key = gbPoints.get(i);
-            outputValue.set(i);
-            System.out.println(StringUtils.byteToHexString(key.getBytes()) + "\t" + outputValue.get());
-            context.write(key, outputValue);
+        Path hfilePartitionFile = new Path(output + "/part-r-00000_hfile");
+        try (SequenceFile.Writer hfilePartitionWriter = new SequenceFile.Writer(
+                hfilePartitionFile.getFileSystem(context.getConfiguration()),
+                context.getConfiguration(), hfilePartitionFile, ImmutableBytesWritable.class, NullWritable.class)) {
+            int hfileCountInOneRegion = 0;
+            for (int i = hfileSizeGB; i < gbPoints.size(); i += hfileSizeGB) {
+                hfilePartitionWriter.append(new ImmutableBytesWritable(gbPoints.get(i).getBytes()), NullWritable.get());
+                if (++hfileCountInOneRegion >= hfilePerRegion) {
+                    Text key = gbPoints.get(i);
+                    outputValue.set(i);
+                    System.out.println(StringUtils.byteToHexString(key.getBytes()) + "\t" + outputValue.get());
+                    context.write(key, outputValue);
+
+                    hfileCountInOneRegion = 0;
+                }
+            }
         }
     }
 }
