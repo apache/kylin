@@ -367,7 +367,7 @@ public class KylinConfigBase implements Serializable {
     public double getCubeAlgorithmAutoThreshold() {
         return Double.parseDouble(getOptional("kylin.cube.algorithm.auto.threshold", "8"));
     }
-    
+
     public int getCubeAggrGroupMaxSize() {
         return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max.size", "12"));
     }
@@ -533,13 +533,21 @@ public class KylinConfigBase implements Serializable {
     public String getMailSender() {
         return getOptional("mail.sender", "");
     }
-    
+
     public boolean isWebCrossDomainEnabled() {
         return Boolean.parseBoolean(getOptional("crossdomain.enable", "true"));
     }
 
     public String toString() {
         return getMetadataUrl();
+    }
+
+    public String getHiveClientMode() {
+        return getOptional("kylin.hive.client", "cli");
+    }
+
+    public String getHiveBeelineParams() {
+        return getOptional("kylin.hive.beeline.params", "");
     }
 
 }

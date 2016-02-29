@@ -240,13 +240,11 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         final int uuidLength = 36;
         
         final String useDatabaseHql = "USE " + config.getHiveDatabaseForIntermediateTable() + ";";
-        StringBuilder buf = new StringBuilder();
-        buf.append("hive -e \"");
-        buf.append(useDatabaseHql);
-        buf.append("show tables " + "\'kylin_intermediate_*\'" + "; ");
-        buf.append("\"");
-        
-        Pair<Integer, String> result = cmdExec.execute(buf.toString());
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(useDatabaseHql);
+        hiveCmdBuilder.addStatement("show tables " + "\'kylin_intermediate_*\'" + "; ");
+
+        Pair<Integer, String> result = cmdExec.execute(hiveCmdBuilder.build());
 
         String outputStr = result.getSecond();
         BufferedReader reader = new BufferedReader(new StringReader(outputStr));
@@ -282,17 +280,15 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         }
 
         if (delete == true) {
-            buf.delete(0, buf.length());
-            buf.append("hive -e \"");
-            buf.append(useDatabaseHql);
+            hiveCmdBuilder.reset();
+            hiveCmdBuilder.addStatement(useDatabaseHql);
             for (String delHive : allHiveTablesNeedToBeDeleted) {
-                buf.append("drop table if exists " + delHive + "; ");
+                hiveCmdBuilder.addStatement("drop table if exists " + delHive + "; ");
                 logger.info("Remove " + delHive + " from hive tables.");
             }
-            buf.append("\"");
-            
+
             try {
-                cmdExec.execute(buf.toString());
+                cmdExec.execute(hiveCmdBuilder.build());
             } catch (IOException e) {
                 e.printStackTrace();
             }
