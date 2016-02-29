@@ -74,6 +74,7 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
+import org.apache.kylin.source.hive.HiveCmdBuilder;
 import org.apache.kylin.source.hive.HiveTableReader;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.ii.IICreateHTableJob;
@@ -147,15 +148,13 @@ public class BuildIIWithStream {
         }
 
         ShellExecutable step = new ShellExecutable();
-        StringBuffer buf = new StringBuffer();
-        buf.append("hive -e \"");
-        buf.append(useDatabaseHql + "\n");
-        buf.append(dropTableHql + "\n");
-        buf.append(createTableHql + "\n");
-        buf.append(insertDataHqls + "\n");
-        buf.append("\"");
+        HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatement(useDatabaseHql);
+        hiveCmdBuilder.addStatement(dropTableHql);
+        hiveCmdBuilder.addStatement(createTableHql);
+        hiveCmdBuilder.addStatement(insertDataHqls);
 
-        step.setCmd(buf.toString());
+        step.setCmd(hiveCmdBuilder.build());
         logger.info(step.getCmd());
         step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
         kylinConfig.getCliCommandExecutor().execute(step.getCmd(), null);

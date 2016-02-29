@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.hcatalog.data.HCatRecord;
@@ -123,15 +124,14 @@ public class HiveMRInput implements IMRInput {
             }
 
             ShellExecutable step = new ShellExecutable();
-            StringBuilder buf = new StringBuilder();
-            buf.append("hive -e \"");
-            buf.append(useDatabaseHql + "\n");
-            buf.append(dropTableHql + "\n");
-            buf.append(createTableHql + "\n");
-            buf.append(insertDataHqls + "\n");
-            buf.append("\"");
 
-            step.setCmd(buf.toString());
+            HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            hiveCmdBuilder.addStatement(useDatabaseHql);
+            hiveCmdBuilder.addStatement(dropTableHql);
+            hiveCmdBuilder.addStatement(createTableHql);
+            hiveCmdBuilder.addStatement(insertDataHqls);
+
+            step.setCmd(hiveCmdBuilder.build());
             step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
 
             return step;
@@ -164,10 +164,11 @@ public class HiveMRInput implements IMRInput {
 
             final String hiveTable = this.getIntermediateTableIdentity();
             if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
-                final String dropSQL = "USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";" + " DROP TABLE IF EXISTS  " + hiveTable + ";";
-                final String dropHiveCMD = "hive -e \"" + dropSQL + "\"";
+                final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+                hiveCmdBuilder.addStatement("USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";");
+                hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTable + ";");
                 try {
-                    config.getCliCommandExecutor().execute(dropHiveCMD);
+                    config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
                     output.append("Hive table " + hiveTable + " is dropped. \n");
 
                     Path externalDataPath = new Path(getExternalDataPath());
