@@ -74,6 +74,6 @@ public class TableControllerTest extends ServiceTestBase {
         Assert.assertTrue(loadResult.get("result.loaded").length == 2);
 
         loadResult = tableController.unLoadHiveTables("TEST_CATEGORY_GROUPINGS","default");
-        Assert.assertTrue(loadResult.get("result.unload.success")[0].equals("TEST_CATEGORY_GROUPINGS"));
+        Assert.assertTrue(loadResult.get("result.unload.fail")[0].equals("TEST_CATEGORY_GROUPINGS"));
     }
 }
