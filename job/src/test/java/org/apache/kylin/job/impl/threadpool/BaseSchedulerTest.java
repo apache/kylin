@@ -22,8 +22,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.lock.ZookeeperJobLock;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.lock.JobLock;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -32,10 +32,7 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.junit.After;
 import org.junit.Before;
 
-/**
- * Created by qianzhou on 12/26/14.
- */
-public abstract class BaseSchedulerTest extends HBaseMetadataTestCase {
+public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
 
     private DefaultScheduler scheduler;
 
@@ -88,7 +85,18 @@ public abstract class BaseSchedulerTest extends HBaseMetadataTestCase {
         setFinalStatic(ExecutableConstants.class.getField("DEFAULT_SCHEDULER_INTERVAL_SECONDS"), 10);
         jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         scheduler = DefaultScheduler.getInstance();
-        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new ZookeeperJobLock());
+        scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new JobLock() {
+            @Override
+            public boolean lock() {
+                return true;
+            }
+
+            @Override
+            public void unlock() {
+                return;
+            }
+        });
+
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
         }
