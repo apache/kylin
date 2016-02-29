@@ -141,11 +141,18 @@ public class CubeMigrationCLI {
         } else {
             showOpts();
         }
+
+        checkMigrationSuccess(dstConfig, cubeName, true);
     }
 
     public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl, String purgeAndDisable, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
 
         moveCube(KylinConfig.createInstanceFromUri(srcCfgUri), KylinConfig.createInstanceFromUri(dstCfgUri), cubeName, projectName, copyAcl, purgeAndDisable, overwriteIfExists, realExecute);
+    }
+
+    public static void checkMigrationSuccess(KylinConfig kylinConfig, String cubeName, Boolean ifFix) throws IOException{
+        CubeMigrationCheckCLI checkCLI = new CubeMigrationCheckCLI(kylinConfig, ifFix);
+        checkCLI.execute(cubeName);
     }
 
     private static String checkAndGetHbaseUrl() {
