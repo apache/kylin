@@ -170,7 +170,7 @@ public class CubeManager implements IRealizationProvider {
 
     public boolean isTableInCube(String tableName, String projectName) {
         ProjectManager projectManager = ProjectManager.getInstance(config);
-        CubeDescManager cubeDescManager = CubeDescManager.getInstance(config);
+        CubeManager cubeManager = CubeManager.getInstance(config);
         ProjectInstance projectInstance = projectManager.getProject(projectName);
         if (projectInstance == null) {
             throw new IllegalStateException("Cannot find project '" + projectName + "' in project manager");
@@ -178,11 +178,12 @@ public class CubeManager implements IRealizationProvider {
 
 		for (RealizationEntry projectDataModel : projectInstance.getRealizationEntries()) {
 			if (projectDataModel.getType() == RealizationType.CUBE) {
-				CubeDesc cubeDesc = cubeDescManager.getCubeDesc(projectDataModel.getRealization());
-                if (cubeDesc == null) {
-                    throw new IllegalStateException("Cannot find cube '" + projectDataModel.getRealization() + "' in cubeDesc manager");
+                CubeInstance cubeInstance = cubeManager.getCube(projectDataModel.getRealization());
+                if (cubeInstance == null) {
+                    throw new IllegalStateException("Cannot find cube '" + projectDataModel.getRealization() + "' in cube manager.");
                 }
 
+                CubeDesc cubeDesc = cubeInstance.getDescriptor();
 				if (cubeDesc.getModel().getAllTables().contains(tableName.toUpperCase())) {
 					return true;
 				}
