@@ -160,8 +160,8 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public boolean isTableInAnyCube(String tableName) {
-        for(ProjectInstance projectInstance : ProjectManager.getInstance(config).listAllProjects()) {
-            if(isTableInCube(tableName, projectInstance.getName())) {
+        for (ProjectInstance projectInstance : ProjectManager.getInstance(config).listAllProjects()) {
+            if (isTableInCube(tableName, projectInstance.getName())) {
                 return true;
             }
         }
@@ -176,19 +176,19 @@ public class CubeManager implements IRealizationProvider {
             throw new IllegalStateException("Cannot find project '" + projectName + "' in project manager");
         }
 
-		for (RealizationEntry projectDataModel : projectInstance.getRealizationEntries()) {
-			if (projectDataModel.getType() == RealizationType.CUBE) {
+        for (RealizationEntry projectDataModel : projectInstance.getRealizationEntries()) {
+            if (projectDataModel.getType() == RealizationType.CUBE) {
                 CubeInstance cubeInstance = cubeManager.getCube(projectDataModel.getRealization());
                 if (cubeInstance == null) {
                     throw new IllegalStateException("Cannot find cube '" + projectDataModel.getRealization() + "' in cube manager.");
                 }
 
                 CubeDesc cubeDesc = cubeInstance.getDescriptor();
-				if (cubeDesc.getModel().getAllTables().contains(tableName.toUpperCase())) {
-					return true;
-				}
-			}
-		}
+                if (cubeDesc.getModel().getAllTables().contains(tableName.toUpperCase())) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -417,6 +417,12 @@ public class CubeManager implements IRealizationProvider {
 
     private void checkNoBuildingSegment(CubeInstance cube) {
         if (cube.getBuildingSegments().size() > 0) {
+            StringBuffer msgBuf = new StringBuffer();
+            msgBuf.append("There're building segments: \n");
+            for (CubeSegment seg : cube.getBuildingSegments()) {
+                msgBuf.append(seg.toString()).append("\n");
+            }
+            logger.error(msgBuf.toString());
             throw new IllegalStateException("There is already a building segment!");
         }
     }
@@ -548,7 +554,10 @@ public class CubeManager implements IRealizationProvider {
             if (StringUtils.isBlank(seg.getLastBuildJobID()))
                 throw new IllegalStateException("For cube " + cube + ", segment " + seg + " missing LastBuildJobID");
 
+            SegmentStatusEnum oldStatus = seg.getStatus();
             seg.setStatus(SegmentStatusEnum.READY);
+
+            logger.info("Will promote segment[" + seg.getName() + "] from " + oldStatus + "to " + seg.getStatus());
         }
 
         for (CubeSegment seg : tobe) {
