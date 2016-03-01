@@ -20,7 +20,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   var _config;
   var timezone;
   var deployEnv;
-  var hiveLimit = 20;
+  var hiveLimit;
 
 
   this.init = function () {
@@ -57,14 +57,17 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   }
 
   this.getDeployEnv = function () {
+    this.deployEnv = this.getProperty("deploy.env");
     if (!this.deployEnv) {
-      this.deployEnv = this.getProperty("deploy.env").trim();
+      return "DEV";
     }
-    return this.deployEnv.toUpperCase();
+    return this.deployEnv.toUpperCase().trim();
   }
+
   this.getHiveLimit = function () {
+    this.hiveLimit = this.getProperty("kylin.web.hive.limit");
     if (!this.hiveLimit) {
-      this.hiveLimit = this.getProperty("kylin.web.hive.limit");
+      return 20;
     }
     return this.hiveLimit;
   }
