@@ -20,7 +20,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   var _config;
   var timezone;
   var deployEnv;
-  var deployEnv = 20;
+  var hiveLimit = 20;
 
 
   this.init = function () {
