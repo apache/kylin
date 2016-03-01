@@ -129,9 +129,6 @@ Then access http://127.0.0.1:4000 in your browser.
 
 1. `cd website`
 2. `svn co https://svn.apache.org/repos/asf/kylin/site _site`
-3. `sudo apt-get install rubygems ruby2.1-dev zlib1g-dev` (linux)
-4. `sudo gem install bundler github-pages jekyll`
-5. `bundle install`
 
 ___site__ folder is working dir which will be removed anytime by maven or git, please make sure only check out from svn when you want to publish to website.
 
@@ -144,10 +141,11 @@ Before opening a pull request or push to git repo, you can preview changes from 
 
 ### Pushing to site 
 
-1. `cd website/_site`
-2. `svn status`
-3. You'll need to `svn add` any new files
-4. `svn commit -m 'UPDATE MESSAGE'`
+1. Copy jekyll generated `_site` to svn `website/_site`
+2. `cd website/_site`
+3. `svn status`
+4. You will need to `svn add` any new files
+5. `svn commit -m 'UPDATE MESSAGE'`
 
 Within a few minutes, svnpubsub should kick in and you'll be able to
 see the results at
