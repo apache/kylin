@@ -9,6 +9,8 @@ since: v2.0
 
 ## Upgrade from v1.x to v2.0 
 
+Here Kylin v2.0 are generated from 2.0-rc branch.
+
 From v1.x to v2.0, Kylin's cube data is backward compatible, but metadata has been refactored as new schema, to support new features on cubing and query enhancement. So if you want to deploy v2.0 on your v1.x base, you need to upgrade the metadata as following steps:
 
 #### 1. Backup metadata on v1.x
