@@ -228,6 +228,12 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
       require: 'ngModel',
       link: function (scope, element, attrs, ctrl) {
         ctrl.$formatters.push(function (value) {
+
+          //set null for 0
+          if(value===0){
+            return null;
+          }
+
           //return value;
           var date = new Date(value + (60000 * new Date().getTimezoneOffset()));
           return date;
