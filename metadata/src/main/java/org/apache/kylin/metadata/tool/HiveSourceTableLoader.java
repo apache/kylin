@@ -124,7 +124,12 @@ public class HiveSourceTableLoader {
                 FieldSchema field = fields.get(i);
                 ColumnDesc cdesc = new ColumnDesc();
                 cdesc.setName(field.getName().toUpperCase());
-                cdesc.setDatatype(field.getType());
+                // use "double" in kylin for "float"
+                if ("float".equalsIgnoreCase(field.getType())) {
+                    cdesc.setDatatype("double");
+                } else {
+                    cdesc.setDatatype(field.getType());
+                }
                 cdesc.setId(String.valueOf(i + 1));
                 columns.add(cdesc);
             }
