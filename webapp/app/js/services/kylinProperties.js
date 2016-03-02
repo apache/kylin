@@ -56,12 +56,20 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   }
 
   this.getDeployEnv = function () {
+    this.deployEnv = this.getProperty("deploy.env");
     if (!this.deployEnv) {
-      this.deployEnv = this.getProperty("deploy.env").trim();
+      return "DEV";
     }
-    return this.deployEnv.toUpperCase();
+    return this.deployEnv.toUpperCase().trim();
   }
 
+  this.getHiveLimit = function () {
+    this.hiveLimit = this.getProperty("kylin.web.hive.limit");
+    if (!this.hiveLimit) {
+      return 20;
+    }
+    return this.hiveLimit;
+  }
   //fill config info for Config from backend
   this.initWebConfigInfo = function () {
 
