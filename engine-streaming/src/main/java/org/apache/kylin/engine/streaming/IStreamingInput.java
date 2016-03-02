@@ -34,11 +34,12 @@
 package org.apache.kylin.engine.streaming;
 
 import org.apache.kylin.common.util.StreamingBatch;
+import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  */
 public interface IStreamingInput {
 
-    StreamingBatch getBatchWithTimeWindow(String streamingConfig, int id, long startTime, long endTime);
+    StreamingBatch getBatchWithTimeWindow(RealizationType realizationType, String realizationName, int id, long startTime, long endTime);
 
 }

@@ -20,7 +20,7 @@
 source /etc/profile
 source ~/.bash_profile
 
-STREAMING=$1
+CUBE=$1
 INTERVAL=$2
 DELAY=$3
 CURRENT_TIME_IN_SECOND=`date +%s`
@@ -30,4 +30,4 @@ END=$(($CURRENT_TIME - CURRENT_TIME%INTERVAL - DELAY + INTERVAL))
 
 ID="$START"_"$END"
 echo "building for ${ID}" >> ${KYLIN_HOME}/logs/build_trace.log
-sh ${KYLIN_HOME}/bin/kylin.sh streaming start ${STREAMING} ${ID} -start ${START} -end ${END} -streaming ${STREAMING}
+sh ${KYLIN_HOME}/bin/kylin.sh streaming start ${CUBE} ${ID} -start ${START} -end ${END} -cube ${CUBE}

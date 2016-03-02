@@ -47,9 +47,14 @@ import kafka.message.MessageAndOffset;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.streaming.IStreamingInput;
 import org.apache.kylin.common.util.StreamingBatch;
 import org.apache.kylin.common.util.StreamingMessage;
+import org.apache.kylin.engine.streaming.StreamingConfig;
+import org.apache.kylin.engine.streaming.StreamingManager;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.source.kafka.util.KafkaRequester;
@@ -65,39 +70,54 @@ public class KafkaStreamingInput implements IStreamingInput {
     private static final Logger logger = LoggerFactory.getLogger(KafkaStreamingInput.class);
 
     @Override
-    public StreamingBatch getBatchWithTimeWindow(String streaming, int id, long startTime, long endTime) {
-        try {
+    public StreamingBatch getBatchWithTimeWindow(RealizationType realizationType, String realizationName, int id, long startTime, long endTime) {
+        if (realizationType != RealizationType.CUBE) {
+            throw new IllegalArgumentException("Unsupported realization in KafkaStreamingInput: " + realizationType);
+        }
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        final CubeInstance cube = CubeManager.getInstance(kylinConfig).getCube(realizationName);
+        final String streaming = cube.getFactTable();
+        final StreamingManager streamingManager = StreamingManager.getInstance(kylinConfig);
+        final StreamingConfig streamingConfig = streamingManager.getConfig(streaming);
+        if (streamingConfig == null) {
+            throw new IllegalArgumentException("Table " + streaming + " is not a streaming table.");
+        }
+        if (StreamingConfig.STREAMING_TYPE_KAFKA.equals(streamingConfig.getType())) {
             logger.info(String.format("prepare to get streaming batch, name:%s, id:%d, startTime:%d, endTime:%d", streaming, id, startTime, endTime));
-            final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            final KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
-            final KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(streaming);
-            final StreamingParser streamingParser = StreamingParser.getStreamingParser(kafkaConfig);
-            final ExecutorService executorService = Executors.newCachedThreadPool();
-            final List<Future<List<StreamingMessage>>> futures = Lists.newArrayList();
-            for (final KafkaClusterConfig kafkaClusterConfig : kafkaConfig.getKafkaClusterConfigs()) {
-                final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
-                for (int i = 0; i < partitionCount; ++i) {
-                    final StreamingMessageProducer producer = new StreamingMessageProducer(kafkaClusterConfig, i, Pair.newPair(startTime, endTime), kafkaConfig.getMargin(), streamingParser);
-                    final Future<List<StreamingMessage>> future = executorService.submit(producer);
-                    futures.add(future);
+
+            try {
+                final KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
+                final KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(streaming);
+                final StreamingParser streamingParser = StreamingParser.getStreamingParser(kafkaConfig, realizationType, realizationName);
+                final ExecutorService executorService = Executors.newCachedThreadPool();
+                final List<Future<List<StreamingMessage>>> futures = Lists.newArrayList();
+                for (final KafkaClusterConfig kafkaClusterConfig : kafkaConfig.getKafkaClusterConfigs()) {
+                    final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
+                    for (int i = 0; i < partitionCount; ++i) {
+                        final StreamingMessageProducer producer = new StreamingMessageProducer(kafkaClusterConfig, i, Pair.newPair(startTime, endTime), kafkaConfig.getMargin(), streamingParser);
+                        final Future<List<StreamingMessage>> future = executorService.submit(producer);
+                        futures.add(future);
+                    }
                 }
-            }
-            List<StreamingMessage> messages = Lists.newLinkedList();
-            for (Future<List<StreamingMessage>> future : futures) {
-                try {
-                    messages.addAll(future.get());
-                } catch (InterruptedException e) {
-                    logger.warn("this thread should not be interrupted, just ignore", e);
-                    continue;
-                } catch (ExecutionException e) {
-                    throw new RuntimeException("error when get StreamingMessages",e.getCause());
+                List<StreamingMessage> messages = Lists.newLinkedList();
+                for (Future<List<StreamingMessage>> future : futures) {
+                    try {
+                        messages.addAll(future.get());
+                    } catch (InterruptedException e) {
+                        logger.warn("this thread should not be interrupted, just ignore", e);
+                        continue;
+                    } catch (ExecutionException e) {
+                        throw new RuntimeException("error when get StreamingMessages", e.getCause());
+                    }
                 }
+                final Pair<Long, Long> timeRange = Pair.newPair(startTime, endTime);
+                logger.info("finish to get streaming batch, total message count:" + messages.size());
+                return new StreamingBatch(messages, timeRange);
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException("failed to create instance of StreamingParser", e);
             }
-            final Pair<Long, Long> timeRange = Pair.newPair(startTime, endTime);
-            logger.info("finish to get streaming batch, total message count:" + messages.size());
-            return new StreamingBatch(messages, timeRange);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("failed to create instance of StreamingParser", e);
+        } else {
+            throw new IllegalArgumentException("kafka is the only supported streaming type.");
         }
     }
 

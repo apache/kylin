@@ -27,10 +27,13 @@ import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.streaming.OneOffStreamingBuilder;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.job.DeployUtil;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
@@ -42,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class BuildCubeWithStream {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStream.class);
-    private static final String streamingName = "test_streaming_table_cube";
+    private static final String cubeName = "test_streaming_table_cube";
     private static final long startTime = DateFormat.stringToMillis("2015-01-01 00:00:00");
     private static final long endTime = DateFormat.stringToMillis("2015-01-03 00:00:00");
     private static final long batchInterval = 16 * 60 * 60 * 1000;//16 hours
@@ -75,15 +78,16 @@ public class BuildCubeWithStream {
         DeployUtil.overrideJobJarLocations();
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
-
-        final StreamingConfig config = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(streamingName);
+        final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
+        final String factTable = cubeInstance.getFactTable();
+        final StreamingConfig config = StreamingManager.getInstance(kylinConfig).getStreamingConfig(factTable);
 
         //Use a random topic for kafka data stream
-        KafkaConfig streamingConfig = KafkaConfigManager.getInstance(kylinConfig).getKafkaConfig(streamingName);
+        KafkaConfig streamingConfig = KafkaConfigManager.getInstance(kylinConfig).getKafkaConfig(config.getName());
         streamingConfig.setTopic(UUID.randomUUID().toString());
         KafkaConfigManager.getInstance(kylinConfig).saveKafkaConfig(streamingConfig);
 
-        DeployUtil.prepareTestDataForStreamingCube(startTime, endTime, config.getCubeName(), streamingConfig);
+        DeployUtil.prepareTestDataForStreamingCube(startTime, endTime, cubeName, streamingConfig);
     }
 
     public static void afterClass() throws Exception {
@@ -94,7 +98,7 @@ public class BuildCubeWithStream {
         logger.info("start time:" + startTime + " end time:" + endTime + " batch interval:" + batchInterval + " batch count:" + ((endTime - startTime) / batchInterval));
         for (long start = startTime; start < endTime; start += batchInterval) {
             logger.info(String.format("build batch:{%d, %d}", start, start + batchInterval));
-            new OneOffStreamingBuilder(streamingName, start, start + batchInterval).build().run();
+            new OneOffStreamingBuilder(RealizationType.CUBE, cubeName, start, start + batchInterval).build().run();
         }
     }
 }

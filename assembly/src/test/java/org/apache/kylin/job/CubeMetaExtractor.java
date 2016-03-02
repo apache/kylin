@@ -227,7 +227,7 @@ public class CubeMetaExtractor extends AbstractApplication {
 
     private void dealWithStreaming(CubeInstance cube) {
         for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
-            if (streamingConfig.getCubeName() != null && streamingConfig.getCubeName().equalsIgnoreCase(cube.getName())) {
+            if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getFactTable())) {
                 requiredResources.add(StreamingConfig.concatResourcePath(streamingConfig.getName()));
                 requiredResources.add(KafkaConfig.concatResourcePath(streamingConfig.getName()));
             }
