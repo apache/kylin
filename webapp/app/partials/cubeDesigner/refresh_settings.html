@@ -131,7 +131,7 @@
                       Please input start date when partition date column is defined in model.
                     </small>
                     <!--vier model will convert use filter-->
-                    <span ng-if="state.mode=='view'&&metaModel.model.partition_desc.partition_date_column">{{(cubeMetaFrame.partition_date_start)|reverseToGMT0 }}</span>
+                    <span ng-if="state.mode=='view' && metaModel.model.partition_desc.partition_date_column!=null && metaModel.model.partition_desc.partition_date_column">{{(cubeMetaFrame.partition_date_start)|reverseToGMT0 }}</span>
                   </div>
                 </div>
               </div>
