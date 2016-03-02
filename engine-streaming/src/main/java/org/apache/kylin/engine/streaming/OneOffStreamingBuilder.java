@@ -43,6 +43,7 @@ import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
+import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  */
@@ -53,23 +54,25 @@ public class OneOffStreamingBuilder {
     private final StreamingBatchBuilder streamingBatchBuilder;
     private final long startTime;
     private final long endTime;
-    private final String streamingConfig;
+    private final RealizationType realizationType;
+    private final String realizationName;
 
-    public OneOffStreamingBuilder(String streamingConfig, long startTime, long endTime) {
+    public OneOffStreamingBuilder(RealizationType realizationType, String realizationName, long startTime, long endTime) {
         Preconditions.checkArgument(startTime < endTime);
         this.startTime = startTime;
         this.endTime = endTime;
-        this.streamingConfig = Preconditions.checkNotNull(streamingConfig);
-        this.streamingInput = Preconditions.checkNotNull(StreamingUtils.getStreamingInput(streamingConfig));
-        this.streamingOutput = Preconditions.checkNotNull(StreamingUtils.getStreamingOutput(streamingConfig));
-        this.streamingBatchBuilder = Preconditions.checkNotNull(StreamingUtils.getMicroBatchBuilder(streamingConfig));
+        this.realizationType = Preconditions.checkNotNull(realizationType);
+        this.realizationName = Preconditions.checkNotNull(realizationName);
+        this.streamingInput = Preconditions.checkNotNull(StreamingUtils.getStreamingInput());
+        this.streamingOutput = Preconditions.checkNotNull(StreamingUtils.getStreamingOutput());
+        this.streamingBatchBuilder = Preconditions.checkNotNull(StreamingUtils.getMicroBatchBuilder(realizationType, realizationName));
     }
 
     public Runnable build() {
         return new Runnable() {
             @Override
             public void run() {
-                StreamingBatch streamingBatch = streamingInput.getBatchWithTimeWindow(streamingConfig, -1, startTime, endTime);
+                StreamingBatch streamingBatch = streamingInput.getBatchWithTimeWindow(realizationType, realizationName, -1, startTime, endTime);
                 final IBuildable buildable = streamingBatchBuilder.createBuildable(streamingBatch);
                 final Map<Long, HyperLogLogPlusCounter> samplingResult = streamingBatchBuilder.sampling(streamingBatch);
                 final Map<TblColRef, Dictionary<String>> dictionaryMap = streamingBatchBuilder.buildDictionary(streamingBatch, buildable);

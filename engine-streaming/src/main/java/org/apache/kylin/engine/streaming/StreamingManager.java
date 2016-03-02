@@ -104,6 +104,18 @@ public class StreamingManager {
         }
     }
 
+    private static String formatStreamingConfigPath(String name) {
+        return ResourceStore.STREAMING_RESOURCE_ROOT + "/" + name + ".json";
+    }
+
+    private static String formatStreamingOutputPath(String streaming, int partition) {
+        return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + partition + ".json";
+    }
+
+    private static String formatStreamingOutputPath(String streaming, List<Integer> partitions) {
+        return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + StringUtils.join(partitions, "_") + ".json";
+    }
+
     public StreamingConfig getStreamingConfig(String name) {
         return streamingMap.get(name);
     }

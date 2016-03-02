@@ -50,6 +50,7 @@ import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.IntermediateColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 
 import com.google.common.base.Function;
@@ -68,9 +69,8 @@ public abstract class StreamingParser {
 
     abstract public boolean filter(StreamingMessage streamingMessage);
 
-    public static StreamingParser getStreamingParser(KafkaConfig kafkaConfig) throws ReflectiveOperationException {
-        final String cubeName = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(kafkaConfig.getName()).getCubeName();
-        final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
+    public static StreamingParser getStreamingParser(KafkaConfig kafkaConfig, RealizationType realizationType, String realizationName) throws ReflectiveOperationException {
+        final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(realizationName);
         List<TblColRef> columns = Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(), new Function<IntermediateColumnDesc, TblColRef>() {
             @Nullable
             @Override

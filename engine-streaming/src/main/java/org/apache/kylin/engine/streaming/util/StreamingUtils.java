@@ -43,29 +43,27 @@ import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.engine.streaming.cube.StreamingCubeBuilder;
 
 import com.google.common.base.Preconditions;
+import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  * TODO: like MRUtil, use Factory pattern to allow config
  */
 public class StreamingUtils {
 
-    public static IStreamingInput getStreamingInput(String streaming) {
+    public static IStreamingInput getStreamingInput() {
         return (IStreamingInput) ClassUtil.newInstance("org.apache.kylin.source.kafka.KafkaStreamingInput");
     }
 
-    public static IStreamingOutput getStreamingOutput(String streaming) {
+    public static IStreamingOutput getStreamingOutput() {
         return (IStreamingOutput) ClassUtil.newInstance("org.apache.kylin.storage.hbase.steps.HBaseStreamingOutput");
     }
 
-    public static StreamingBatchBuilder getMicroBatchBuilder(String streaming) {
-        final StreamingConfig streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(streaming);
-        Preconditions.checkNotNull(streamingConfig);
-        if (streamingConfig.getCubeName() != null) {
-            return new StreamingCubeBuilder(streamingConfig.getCubeName());
-        } else if (streamingConfig.getIiName() != null) {
-            throw new UnsupportedOperationException("not implemented yet");
+    public static StreamingBatchBuilder getMicroBatchBuilder(RealizationType realizationType, String realizationName) {
+        Preconditions.checkNotNull(realizationName);
+        if (realizationType == RealizationType.CUBE) {
+            return new StreamingCubeBuilder(realizationName);
         } else {
-            throw new UnsupportedOperationException("StreamingConfig is not valid");
+            throw new UnsupportedOperationException("not implemented yet");
         }
     }
 }

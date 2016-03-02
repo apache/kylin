@@ -4,9 +4,7 @@ package org.apache.kylin.engine.streaming;
  */
 public class BootstrapConfig {
 
-    private String streaming;
-    private int partitionId = -1;
-
+    private String cubeName;
     private long start = 0L;
     private long end = 0L;
 
@@ -28,20 +26,12 @@ public class BootstrapConfig {
         this.end = end;
     }
 
-    public String getStreaming() {
-        return streaming;
+    public String getCubeName() {
+        return cubeName;
     }
 
-    public void setStreaming(String streaming) {
-        this.streaming = streaming;
-    }
-
-    public int getPartitionId() {
-        return partitionId;
-    }
-
-    public void setPartitionId(int partitionId) {
-        this.partitionId = partitionId;
+    public void setCubeName(String cubeName) {
+        this.cubeName = cubeName;
     }
 
     public boolean isFillGap() {

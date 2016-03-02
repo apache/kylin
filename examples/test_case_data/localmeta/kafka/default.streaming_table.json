@@ -1,12 +1,11 @@
 {
   "version":"2.1",
   "uuid": "8b2b9dfe-777c-4d39-bf89-8472ec909193",
-  "name": "test_streaming_table_cube",
+  "name": "default.streaming_table",
   "topic": "test_streaming_table_topic_xyz",
   "timeout": 60000,
   "bufferSize": 65536,
   "parserName": "org.apache.kylin.source.kafka.TimedJsonStreamParser",
-  "partition": 1,
   "last_modified": 0,
   "clusters": [
     {

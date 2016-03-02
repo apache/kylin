@@ -44,6 +44,7 @@ import org.apache.kylin.engine.streaming.OneOffStreamingBuilder;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.engine.streaming.monitor.StreamingMonitor;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +56,7 @@ public class StreamingCLI {
 
     public static void main(String[] args) {
         try {
-            Preconditions.checkArgument(args[0].equals("streaming"));
+            Preconditions.checkArgument(args[0].equals("cube"));
             Preconditions.checkArgument(args[1].equals("start"));
 
             int i = 2;
@@ -69,11 +70,8 @@ public class StreamingCLI {
                 case "-end":
                     bootstrapConfig.setEnd(Long.parseLong(args[++i]));
                     break;
-                case "-streaming":
-                    bootstrapConfig.setStreaming(args[++i]);
-                    break;
-                case "-partition":
-                    bootstrapConfig.setPartitionId(Integer.parseInt(args[++i]));
+                case "-cube":
+                    bootstrapConfig.setCubeName(args[++i]);
                     break;
                 case "-fillGap":
                     bootstrapConfig.setFillGap(Boolean.parseBoolean(args[++i]));
@@ -84,14 +82,13 @@ public class StreamingCLI {
                 i++;
             }
             if (bootstrapConfig.isFillGap()) {
-                final StreamingConfig streamingConfig = StreamingManager.getInstance(KylinConfig.getInstanceFromEnv()).getStreamingConfig(bootstrapConfig.getStreaming());
-                final List<Pair<Long, Long>> gaps = StreamingMonitor.findGaps(streamingConfig.getCubeName());
+                final List<Pair<Long, Long>> gaps = StreamingMonitor.findGaps(bootstrapConfig.getCubeName());
                 logger.info("all gaps:" + StringUtils.join(gaps, ","));
                 for (Pair<Long, Long> gap : gaps) {
-                    startOneOffCubeStreaming(bootstrapConfig.getStreaming(), gap.getFirst(), gap.getSecond());
+                    startOneOffCubeStreaming(bootstrapConfig.getCubeName(), gap.getFirst(), gap.getSecond());
                 }
             } else {
-                startOneOffCubeStreaming(bootstrapConfig.getStreaming(), bootstrapConfig.getStart(), bootstrapConfig.getEnd());
+                startOneOffCubeStreaming(bootstrapConfig.getCubeName(), bootstrapConfig.getStart(), bootstrapConfig.getEnd());
                 logger.info("streaming process finished, exit with 0");
                 System.exit(0);
             }
@@ -102,8 +99,8 @@ public class StreamingCLI {
         }
     }
     
-    private static void startOneOffCubeStreaming(String streaming, long start, long end) {
-        final Runnable runnable = new OneOffStreamingBuilder(streaming, start, end).build();
+    private static void startOneOffCubeStreaming(String cubeName, long start, long end) {
+        final Runnable runnable = new OneOffStreamingBuilder(RealizationType.CUBE, cubeName, start, end).build();
         runnable.run();
     }
 

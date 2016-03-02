@@ -60,9 +60,9 @@ public class StreamingController extends BasicController {
 
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET })
     @ResponseBody
-    public List<StreamingConfig> getStreamings(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<StreamingConfig> getStreamings(@RequestParam(value = "table", required = false) String table, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         try {
-            return streamingService.getStreamingConfigs(cubeName, limit, offset);
+            return streamingService.getStreamingConfigs(table, limit, offset);
         } catch (IOException e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to deal with the request: " + e.getLocalizedMessage());

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.rest.constant.Constant;
@@ -37,26 +39,22 @@ public class StreamingService extends BasicService {
     private AccessService accessService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<StreamingConfig> listAllStreamingConfigs(final String cubeName) throws IOException {
+    public List<StreamingConfig> listAllStreamingConfigs(final String table) throws IOException {
         List<StreamingConfig> streamingConfigs = new ArrayList();
-        CubeInstance cubeInstance = (null != cubeName) ? getCubeManager().getCube(cubeName) : null;
-        if (null == cubeInstance) {
+        if (StringUtils.isEmpty(table)) {
             streamingConfigs = getStreamingManager().listAllStreaming();
         } else {
-            for(StreamingConfig config : getStreamingManager().listAllStreaming()){
-                if(cubeInstance.getName().equals(config.getCubeName())){
-                    streamingConfigs.add(config);
-                }
-            }
+            StreamingConfig config = getStreamingManager().getConfig(table);
+            streamingConfigs.add(config);
         }
 
         return streamingConfigs;
     }
 
-    public List<StreamingConfig> getStreamingConfigs(final String cubeName, final Integer limit, final Integer offset) throws IOException {
+    public List<StreamingConfig> getStreamingConfigs(final String table, final Integer limit, final Integer offset) throws IOException {
 
         List<StreamingConfig> streamingConfigs;
-        streamingConfigs = listAllStreamingConfigs(cubeName);
+        streamingConfigs = listAllStreamingConfigs(table);
 
         if (limit == null || offset == null) {
             return streamingConfigs;

@@ -55,29 +55,24 @@ public class StreamingConfig extends RootPersistentEntity {
 
     public static Serializer<StreamingConfig> SERIALIZER = new JsonSerializer<StreamingConfig>(StreamingConfig.class);
 
+    public static final String STREAMING_TYPE_KAFKA = "kafka";
+
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("iiName")
-    private String iiName;
+    @JsonProperty("type")
+    private String type = STREAMING_TYPE_KAFKA;
 
-    @JsonProperty("cubeName")
-    private String cubeName;
-
-    public String getCubeName() {
-        return cubeName;
+    public String getType() {
+        return type;
     }
 
-    public void setCubeName(String cubeName) {
-        this.cubeName = cubeName;
+    public void setType(String type) {
+        this.type = type;
     }
 
-    public String getIiName() {
-        return iiName;
-    }
-
-    public void setIiName(String iiName) {
-        this.iiName = iiName;
+    public String getResourcePath() {
+        return concatResourcePath(name);
     }
 
     public String getName() {
@@ -88,12 +83,8 @@ public class StreamingConfig extends RootPersistentEntity {
         this.name = name;
     }
 
-    public String getResourcePath() {
-        return concatResourcePath(name);
-    }
-
-    public static String concatResourcePath(String streamingName) {
-        return ResourceStore.STREAMING_RESOURCE_ROOT + "/" + streamingName + ".json";
+    public static String concatResourcePath(String name) {
+        return ResourceStore.STREAMING_RESOURCE_ROOT + "/" + name + ".json";
     }
 
     @Override

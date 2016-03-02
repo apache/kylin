@@ -20,8 +20,7 @@
 source /etc/profile
 source ~/.bash_profile
 
-streaming=$1
-margin=$2
+cube=$1
 
 cd ${KYLIN_HOME}
-sh ${KYLIN_HOME}/bin/kylin.sh streaming start ${streaming} fillgap -streaming ${streaming} -fillGap true -margin ${margin}
+sh ${KYLIN_HOME}/bin/kylin.sh streaming start ${cube} fillgap -cube ${cube} -fillGap true
