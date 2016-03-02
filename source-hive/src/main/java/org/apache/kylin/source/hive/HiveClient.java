@@ -132,6 +132,14 @@ public class HiveClient {
         return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES);
     }
 
+    public List<String> getHiveDbNames() throws Exception {
+        return getMetaStoreClient().getAllDatabases();
+    }
+
+    public List<String> getHiveTableNames(String database) throws Exception {
+        return getMetaStoreClient().getAllTables(database);
+    }
+
     /**
      * COPIED FROM org.apache.hadoop.hive.ql.stats.StatsUtil for backward compatibility
      * 

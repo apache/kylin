@@ -1,0 +1,864 @@
+From 1a79ef1aec557259f9611f5b3199c2e90400be77 Mon Sep 17 00:00:00 2001
+From: Jason <jiatuer@163.com>
+Date: Wed, 2 Mar 2016 14:40:19 +0800
+Subject: [PATCH] KYLIN-1074 support load hive table from listed tree, patch
+ from @nichunen
+
+---
+ build/conf/kylin.properties                        |   2 +
+ examples/test_case_data/sandbox/kylin.properties   |   1 +
+ pom.xml                                            |   2 +
+ .../kylin/rest/controller/TableController.java     |  44 +++
+ .../org/apache/kylin/source/hive/HiveClient.java   |   8 +
+ webapp/app/index.html                              |   1 +
+ webapp/app/js/controllers/sourceMeta.js            | 186 ++++++++++-
+ webapp/app/js/directives/angular-tree-control.js   | 363 +++++++++++++++++++++
+ webapp/app/js/services/kylinProperties.js          |  15 +-
+ webapp/app/js/services/tables.js                   |   7 +-
+ webapp/app/partials/tables/source_table_tree.html  |  26 ++
+ webapp/bower.json                                  |   3 +-
+ webapp/grunt.json                                  |   1 -
+ 13 files changed, 649 insertions(+), 10 deletions(-)
+ create mode 100644 webapp/app/js/directives/angular-tree-control.js
+
+diff --git a/build/conf/kylin.properties b/build/conf/kylin.properties
+index a4b8c3b..e8add7c 100644
+--- a/build/conf/kylin.properties
++++ b/build/conf/kylin.properties
+@@ -158,3 +158,5 @@ deploy.env=DEV
+ 
+ ###########################deprecated configs#######################
+ kylin.sandbox=true
++
++kylin.web.hive.limit=20
+\ No newline at end of file
+diff --git a/examples/test_case_data/sandbox/kylin.properties b/examples/test_case_data/sandbox/kylin.properties
+index 9451b78..1a74b80 100644
+--- a/examples/test_case_data/sandbox/kylin.properties
++++ b/examples/test_case_data/sandbox/kylin.properties
+@@ -131,3 +131,4 @@ kylin.web.contact_mail=
+ deploy.env=DEV
+ 
+ 
++kylin.web.hive.limit=20
+\ No newline at end of file
+diff --git a/pom.xml b/pom.xml
+index 9d9a54b..537693f 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -774,6 +774,8 @@
+                                 <!-- MIT license -->
+                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
+                                 <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
++                                <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
++
+ 
+                                 <!--configuration file -->
+                                 <exclude>webapp/app/routes.json</exclude>
+diff --git a/server/src/main/java/org/apache/kylin/rest/controller/TableController.java b/server/src/main/java/org/apache/kylin/rest/controller/TableController.java
+index 39af7db..ea5fdd4 100644
+--- a/server/src/main/java/org/apache/kylin/rest/controller/TableController.java
++++ b/server/src/main/java/org/apache/kylin/rest/controller/TableController.java
+@@ -33,6 +33,7 @@ import org.apache.kylin.rest.request.CardinalityRequest;
+ import org.apache.kylin.rest.request.StreamingRequest;
+ import org.apache.kylin.rest.response.TableDescResponse;
+ import org.apache.kylin.rest.service.CubeService;
++import org.apache.kylin.source.hive.HiveClient;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.springframework.beans.factory.annotation.Autowired;
+@@ -205,6 +206,49 @@ public class TableController extends BasicController {
+         return descs;
+     }
+ 
++    /**
++     * Show all databases in Hive
++     *
++     * @return Hive databases list
++     * @throws IOException
++     */
++    @RequestMapping(value = "/hive", method = { RequestMethod.GET })
++    @ResponseBody
++    private static List<String> showHiveDatabases() throws IOException {
++        HiveClient hiveClient = new HiveClient();
++        List<String> results = null;
++
++        try {
++            results = hiveClient.getHiveDbNames();
++        } catch (Exception e) {
++            e.printStackTrace();
++            throw new IOException(e);
++        }
++        return results;
++    }
++
++    /**
++     * Show all tables in a Hive database
++     *
++     * @return Hive table list
++     * @throws IOException
++     */
++    @RequestMapping(value = "/hive/{database}", method = { RequestMethod.GET })
++    @ResponseBody
++    private static List<String> showHiveTables(@PathVariable String database) throws IOException {
++        HiveClient hiveClient = new HiveClient();
++        List<String> results = null;
++
++        try {
++            results = hiveClient.getHiveTableNames(database);
++        } catch (Exception e) {
++            e.printStackTrace();
++            throw new IOException(e);
++        }
++        return results;
++    }
++
++
+     public void setCubeService(CubeService cubeService) {
+         this.cubeMgmtService = cubeService;
+     }
+diff --git a/source-hive/src/main/java/org/apache/kylin/source/hive/HiveClient.java b/source-hive/src/main/java/org/apache/kylin/source/hive/HiveClient.java
+index 178889e..a99b304 100644
+--- a/source-hive/src/main/java/org/apache/kylin/source/hive/HiveClient.java
++++ b/source-hive/src/main/java/org/apache/kylin/source/hive/HiveClient.java
+@@ -132,6 +132,14 @@ public class HiveClient {
+         return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES);
+     }
+ 
++    public List<String> getHiveDbNames() throws Exception {
++        return getMetaStoreClient().getAllDatabases();
++    }
++
++    public List<String> getHiveTableNames(String database) throws Exception {
++        return getMetaStoreClient().getAllTables(database);
++    }
++
+     /**
+      * COPIED FROM org.apache.hadoop.hive.ql.stats.StatsUtil for backward compatibility
+      * 
+diff --git a/webapp/app/index.html b/webapp/app/index.html
+index 11ca283..b4eb9d7 100644
+--- a/webapp/app/index.html
++++ b/webapp/app/index.html
+@@ -113,6 +113,7 @@
+ <script src="js/filters/filter.js"></script>
+ <script src="js/directives/directives.js"></script>
+ <script src="js/directives/kylin_abn_tree_directive.js"></script>
++<script src="js/directives/angular-tree-control.js"></script>
+ <script src="js/factories/graph.js"></script>
+ <script src="js/services/cache.js"></script>
+ <script src="js/services/message.js"></script>
+diff --git a/webapp/app/js/controllers/sourceMeta.js b/webapp/app/js/controllers/sourceMeta.js
+index abdeeb8..c87d6ef 100755
+--- a/webapp/app/js/controllers/sourceMeta.js
++++ b/webapp/app/js/controllers/sourceMeta.js
+@@ -19,14 +19,14 @@
+ 'use strict';
+ 
+ KylinApp
+-  .controller('SourceMetaCtrl', function ($scope, $cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService, $route, loadingRequest, SweetAlert, tableConfig, TableModel,cubeConfig) {
++  .controller('SourceMetaCtrl', function ($scope, $cacheFactory, $q, $window, $routeParams, CubeService, $modal, TableService, $route, loadingRequest, SweetAlert, tableConfig, TableModel,cubeConfig,kylinConfig) {
+     var $httpDefaultCache = $cacheFactory.get('$http');
+     $scope.tableModel = TableModel;
+     $scope.tableModel.selectedSrcDb = [];
+     $scope.tableModel.selectedSrcTable = {};
+     $scope.window = 0.68 * $window.innerHeight;
+     $scope.tableConfig = tableConfig;
+-
++    $scope.kylinConfig = kylinConfig;
+ 
+     $scope.state = {
+       filterAttr: 'id', filterReverse: false, reverseColumn: 'id',
+@@ -100,13 +100,193 @@ KylinApp
+       });
+     };
+ 
+-    var ModalInstanceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope) {
++    $scope.openTreeModal = function () {
++      $modal.open({
++        templateUrl: 'addHiveTableFromTree.html',
++        controller: ModalInstanceCtrl,
++        resolve: {
++          tableNames: function () {
++            return $scope.tableNames;
++          },
++          projectName:function(){
++            return  $scope.projectModel.selectedProject;
++          },
++          scope: function () {
++            return $scope;
++          }
++        }
++      });
++    };
++
++    var ModalInstanceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope,kylinConfig) {
+       $scope.tableNames = "";
+       $scope.projectName = projectName;
+       $scope.cancel = function () {
+         $modalInstance.dismiss('cancel');
+       };
++
++      $scope.kylinConfig = kylinConfig;
++
++
++      $scope.treeOptions = {multiSelection: true};
++      $scope.selectedNodes = [];
++      $scope.hiveLimit =  kylinConfig.getHiveLimit();
++
++      $scope.loadHive = function () {
++        if($scope.hiveLoaded)
++          return;
++        TableService.showHiveDatabases({}, function (databases) {
++          $scope.dbNum = databases.length;
++          if (databases.length > 0) {
++            $scope.hiveMap = {};
++            for (var i = 0; i < databases.length; i++) {
++              var dbName = databases[i];
++              var hiveData = {"dbname":dbName,"tables":[],"expanded":false};
++              $scope.hive.push(hiveData);
++              $scope.hiveMap[dbName] = i;
++            }
++          }
++          $scope.hiveLoaded = true;
++          $scope.showMoreDatabases();
++        });
++      }
++
++      $scope.showMoreTables = function(hiveTables, node){
++        var shownTimes = parseInt(node.children.length / $scope.hiveLimit);
++        var from = $scope.hiveLimit * shownTimes;
++        var to = 0;
++        var hasMore = false;
++        if(from + $scope.hiveLimit > hiveTables.length) {
++          to = hiveTables.length - 1;
++        } else {
++          to = from + $scope.hiveLimit - 1;
++          hasMore = true;
++        }
++        if(!angular.isUndefined(node.children[from])){
++          node.children.pop();
++        }
++
++        for(var idx = from; idx <= to; idx++){
++          node.children.push({"label":node.label+'.'+hiveTables[idx],"id":idx-from+1,"children":[]});
++        }
++
++        if(hasMore){
++          var loading = {"label":"","id":65535,"children":[]};
++          node.children.push(loading);
++        }
++      }
++
++      $scope.showAllTables = function(hiveTables, node){
++        var shownTimes = parseInt(node.children.length / $scope.hiveLimit);
++        var from = $scope.hiveLimit * shownTimes;
++        var to = hiveTables.length - 1;
++        if(!angular.isUndefined(node.children[from])){
++          node.children.pop();
++        }
++        for(var idx = from; idx <= to; idx++){
++          node.children.push({"label":node.label+'.'+hiveTables[idx],"id":idx-from+1,"children":[]});
++        }
++      }
++
++      $scope.showMoreDatabases = function(){
++        var shownTimes = parseInt($scope.treedata.length / $scope.hiveLimit);
++        var from = $scope.hiveLimit * shownTimes;
++        var to = 0;
++        var hasMore = false;
++        if(from + $scope.hiveLimit > $scope.hive.length) {
++          to = $scope.hive.length - 1;
++        } else {
++          to = from + $scope.hiveLimit - 1;
++          hasMore = true;
++        }
++        if(!angular.isUndefined($scope.treedata[from])){
++          $scope.treedata.pop();
++        }
++
++        for(var idx = from; idx <= to; idx++){
++          var children = [];
++          var loading = {"label":"","id":0,"children":[]};
++          children.push(loading);
++          $scope.treedata.push({"label":$scope.hive[idx].dbname,"id":idx+1,"children":children,"expanded":false});
++        }
++
++        if(hasMore){
++          var loading = {"label":"","id":65535,"children":[0]};
++          $scope.treedata.push(loading);
++        }
++      }
++
++      $scope.showAllDatabases = function(){
++        var shownTimes = parseInt($scope.treedata.length / $scope.hiveLimit);
++        var from = $scope.hiveLimit * shownTimes;
++        var to = $scope.hive.length - 1;
++
++        if(!angular.isUndefined($scope.treedata[from])){
++          $scope.treedata.pop();
++        }
++
++        for(var idx = from; idx <= to; idx++){
++          var children = [];
++          var loading = {"label":"","id":0,"children":[]};
++          children.push(loading);
++          $scope.treedata.push({"label":$scope.hive[idx].dbname,"id":idx+1,"children":children,"expanded":false});
++        }
++      }
++
++      $scope.showMoreClicked = function($parentNode){
++        if($parentNode == null){
++          $scope.showMoreDatabases();
++        } else {
++          $scope.showMoreTables($scope.hive[$scope.hiveMap[$parentNode.label]].tables,$parentNode);
++        }
++      }
++
++      $scope.showAllClicked = function($parentNode){
++        if($parentNode == null){
++          $scope.showAllDatabases();
++        } else {
++          $scope.showAllTables($scope.hive[$scope.hiveMap[$parentNode.label]].tables,$parentNode);
++        }
++      }
++
++      $scope.showToggle = function(node) {
++        if(node.expanded == false){
++          TableService.showHiveTables({"database": node.label},function (hive_tables){
++            var tables = [];
++            for (var i = 0; i < hive_tables.length; i++) {
++              tables.push(hive_tables[i]);
++            }
++            $scope.hive[$scope.hiveMap[node.label]].tables = tables;
++            $scope.showMoreTables(tables,node);
++            node.expanded = true;
++          });
++        }
++      }
++
++      $scope.showSelected = function(node) {
++
++      }
++
++      if(angular.isUndefined($scope.hive) || angular.isUndefined($scope.hiveLoaded) || angular.isUndefined($scope.treedata) ){
++        $scope.hive = [];
++        $scope.hiveLoaded = false;
++        $scope.treedata = [];
++        $scope.loadHive();
++      }
++
++
++
++
+       $scope.add = function () {
++
++        if($scope.tableNames.length === 0 && $scope.selectedNodes.length > 0) {
++          for(var i = 0; i <  $scope.selectedNodes.length; i++){
++            if($scope.selectedNodes[i].label.indexOf(".") >= 0){
++              $scope.tableNames += ($scope.selectedNodes[i].label) += ',';
++            }
++          }
++        }
++
+         if ($scope.tableNames.trim() === "") {
+           SweetAlert.swal('', 'Please input table(s) you want to synchronize.', 'info');
+           return;
+diff --git a/webapp/app/js/directives/angular-tree-control.js b/webapp/app/js/directives/angular-tree-control.js
+new file mode 100644
+index 0000000..6fca987
+--- /dev/null
++++ b/webapp/app/js/directives/angular-tree-control.js
+@@ -0,0 +1,363 @@
++/*
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2013 Steve
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy of
++ * this software and associated documentation files (the "Software"), to deal in
++ * the Software without restriction, including without limitation the rights to
++ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
++ * the Software, and to permit persons to whom the Software is furnished to do so,
++ *   subject to the following conditions:
++ *
++ *   The above copyright notice and this permission notice shall be included in all
++ * copies or substantial portions of the Software.
++ *
++ *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
++ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
++ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
++ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++ */
++
++(function ( angular ) {
++  'use strict';
++
++  angular.module( 'treeControl', [] )
++    .directive( 'treecontrol', ['$compile', function( $compile ) {
++      /**
++       * @param cssClass - the css class
++       * @param addClassProperty - should we wrap the class name with class=""
++       */
++      function classIfDefined(cssClass, addClassProperty) {
++        if (cssClass) {
++          if (addClassProperty)
++            return 'class="' + cssClass + '"';
++          else
++            return cssClass;
++        }
++        else
++          return "";
++      }
++
++      function ensureDefault(obj, prop, value) {
++        if (!obj.hasOwnProperty(prop))
++          obj[prop] = value;
++      }
++
++      return {
++        restrict: 'EA',
++        require: "treecontrol",
++        transclude: true,
++        scope: {
++          treeModel: "=",
++          selectedNode: "=?",
++          selectedNodes: "=?",
++          expandedNodes: "=?",
++          onSelection: "&",
++          onNodeToggle: "&",
++          options: "=?",
++          orderBy: "@",
++          reverseOrder: "@",
++          filterExpression: "=?",
++          filterComparator: "=?",
++          onDblclick: "&"
++        },
++        controller: ['$scope', function( $scope ) {
++
++          function defaultIsLeaf(node) {
++            return !node[$scope.options.nodeChildren] || node[$scope.options.nodeChildren].length === 0;
++          }
++
++          function shallowCopy(src, dst) {
++            if (angular.isArray(src)) {
++              dst = dst || [];
++
++              for ( var i = 0; i < src.length; i++) {
++                dst[i] = src[i];
++              }
++            } else if (angular.isObject(src)) {
++              dst = dst || {};
++
++              for (var key in src) {
++                if (hasOwnProperty.call(src, key) && !(key.charAt(0) === '$' && key.charAt(1) === '$')) {
++                  dst[key] = src[key];
++                }
++              }
++            }
++
++            return dst || src;
++          }
++          function defaultEquality(a, b) {
++            if (a === undefined || b === undefined)
++              return false;
++            a = shallowCopy(a);
++            a[$scope.options.nodeChildren] = [];
++            b = shallowCopy(b);
++            b[$scope.options.nodeChildren] = [];
++            return angular.equals(a, b);
++          }
++
++          $scope.options = $scope.options || {};
++          ensureDefault($scope.options, "multiSelection", false);
++          ensureDefault($scope.options, "nodeChildren", "children");
++          ensureDefault($scope.options, "dirSelectable", "true");
++          ensureDefault($scope.options, "injectClasses", {});
++          ensureDefault($scope.options.injectClasses, "ul", "");
++          ensureDefault($scope.options.injectClasses, "li", "");
++          ensureDefault($scope.options.injectClasses, "liSelected", "");
++          ensureDefault($scope.options.injectClasses, "iExpanded", "");
++          ensureDefault($scope.options.injectClasses, "iCollapsed", "");
++          ensureDefault($scope.options.injectClasses, "iLeaf", "");
++          ensureDefault($scope.options.injectClasses, "label", "");
++          ensureDefault($scope.options.injectClasses, "labelSelected", "");
++          ensureDefault($scope.options, "equality", defaultEquality);
++          ensureDefault($scope.options, "isLeaf", defaultIsLeaf);
++
++          $scope.selectedNodes = $scope.selectedNodes || [];
++          $scope.expandedNodes = $scope.expandedNodes || [];
++          $scope.expandedNodesMap = {};
++          for (var i=0; i < $scope.expandedNodes.length; i++) {
++            $scope.expandedNodesMap[""+i] = $scope.expandedNodes[i];
++          }
++          $scope.parentScopeOfTree = $scope.$parent;
++
++
++          function isSelectedNode(node) {
++            if (!$scope.options.multiSelection && ($scope.options.equality(node, $scope.selectedNode)))
++              return true;
++            else if ($scope.options.multiSelection && $scope.selectedNodes) {
++              for (var i = 0; (i < $scope.selectedNodes.length); i++) {
++                if ($scope.options.equality(node, $scope.selectedNodes[i])) {
++                  return true;
++                }
++              }
++              return false;
++            }
++          }
++
++          $scope.headClass = function(node) {
++            var liSelectionClass = classIfDefined($scope.options.injectClasses.liSelected, false);
++            var injectSelectionClass = "";
++            if (liSelectionClass && isSelectedNode(node))
++              injectSelectionClass = " " + liSelectionClass;
++            if ($scope.options.isLeaf(node))
++              return "tree-leaf" + injectSelectionClass;
++            if ($scope.expandedNodesMap[this.$id])
++              return "tree-expanded" + injectSelectionClass;
++            else
++              return "tree-collapsed" + injectSelectionClass;
++          };
++
++          $scope.iBranchClass = function() {
++            if ($scope.expandedNodesMap[this.$id])
++              return classIfDefined($scope.options.injectClasses.iExpanded);
++            else
++              return classIfDefined($scope.options.injectClasses.iCollapsed);
++          };
++
++          $scope.nodeExpanded = function() {
++            return !!$scope.expandedNodesMap[this.$id];
++          };
++
++          $scope.selectNodeHead = function() {
++            var expanding = $scope.expandedNodesMap[this.$id] === undefined;
++            $scope.expandedNodesMap[this.$id] = (expanding ? this.node : undefined);
++            if (expanding) {
++              $scope.expandedNodes.push(this.node);
++            }
++            else {
++              var index;
++              for (var i=0; (i < $scope.expandedNodes.length) && !index; i++) {
++                if ($scope.options.equality($scope.expandedNodes[i], this.node)) {
++                  index = i;
++                }
++              }
++              if (index != undefined)
++                $scope.expandedNodes.splice(index, 1);
++            }
++            if ($scope.onNodeToggle)
++              $scope.onNodeToggle({node: this.node, expanded: expanding});
++          };
++
++          $scope.selectNodeLabel = function( selectedNode ){
++            if(selectedNode[$scope.options.nodeChildren] && selectedNode[$scope.options.nodeChildren].length > 0){
++              this.selectNodeHead();
++            }
++            if($scope.options.dirSelectable || !(selectedNode[$scope.options.nodeChildren] && selectedNode[$scope.options.nodeChildren].length > 0) )
++             {
++              var selected = false;
++              if ($scope.options.multiSelection) {
++                var pos = $scope.selectedNodes.indexOf(selectedNode);
++                if (pos === -1) {
++                  $scope.selectedNodes.push(selectedNode);
++                  selected = true;
++                } else {
++                  $scope.selectedNodes.splice(pos, 1);
++                }
++              } else {
++                if ($scope.selectedNode != selectedNode) {
++                  $scope.selectedNode = selectedNode;
++                  selected = true;
++                }
++                else {
++                  $scope.selectedNode = undefined;
++                }
++              }
++              if ($scope.onSelection)
++                $scope.onSelection({node: selectedNode, selected: selected});
++            }
++          };
++
++
++          $scope.dblClickNode = function(selectedNode){
++            if($scope.onDblclick!=null){
++              $scope.onDblclick({node:selectedNode});
++            }
++          }
++
++          $scope.selectedClass = function() {
++            var isThisNodeSelected = isSelectedNode(this.node);
++            var labelSelectionClass = classIfDefined($scope.options.injectClasses.labelSelected, false);
++            var injectSelectionClass = "";
++            if (labelSelectionClass && isThisNodeSelected)
++              injectSelectionClass = " " + labelSelectionClass;
++
++            return isThisNodeSelected?"tree-selected" + injectSelectionClass:"";
++          };
++
++          //tree template
++          var orderBy = $scope.orderBy ? ' | orderBy:orderBy:reverseOrder' : '';
++          var template =
++            '<ul '+classIfDefined($scope.options.injectClasses.ul, true)+'>' +
++            '<li ng-repeat="node in node.' + $scope.options.nodeChildren + ' | filter:filterExpression:filterComparator ' + orderBy + '" ng-class="headClass(node)" '+classIfDefined($scope.options.injectClasses.li, true)+'>' +
++            '<i class="tree-branch-head" ng-class="iBranchClass()" ng-click="selectNodeHead(node)"></i>' +
++            '<i class="tree-leaf-head '+classIfDefined($scope.options.injectClasses.iLeaf, false)+'"></i>' +
++            '<div class="tree-label '+classIfDefined($scope.options.injectClasses.label, false)+'" ng-class="selectedClass()" ng-click="selectNodeLabel(node)" ng-dblclick="dblClickNode(node)" tree-transclude></div>' +
++            '<treeitem ng-if="nodeExpanded()"></treeitem>' +
++            '</li>' +
++            '</ul>';
++
++          this.template = $compile(template);
++        }],
++        compile: function(element, attrs, childTranscludeFn) {
++          return function ( scope, element, attrs, treemodelCntr ) {
++
++            scope.$watch("treeModel", function updateNodeOnRootScope(newValue) {
++              if (angular.isArray(newValue)) {
++                if (angular.isDefined(scope.node) && angular.equals(scope.node[scope.options.nodeChildren], newValue))
++                  return;
++                scope.node = {};
++                scope.synteticRoot = scope.node;
++                scope.node[scope.options.nodeChildren] = newValue;
++              }
++              else {
++                if (angular.equals(scope.node, newValue))
++                  return;
++                scope.node = newValue;
++              }
++            });
++
++            scope.$watchCollection('expandedNodes', function(newValue) {
++              var notFoundIds = 0;
++              var newExpandedNodesMap = {};
++              var $liElements = element.find('li');
++              var existingScopes = [];
++              // find all nodes visible on the tree and the scope $id of the scopes including them
++              angular.forEach($liElements, function(liElement) {
++                var $liElement = angular.element(liElement);
++                var liScope = $liElement.scope();
++                existingScopes.push(liScope);
++              });
++              // iterate over the newValue, the new expanded nodes, and for each find it in the existingNodesAndScopes
++              // if found, add the mapping $id -> node into newExpandedNodesMap
++              // if not found, add the mapping num -> node into newExpandedNodesMap
++              angular.forEach(newValue, function(newExNode) {
++                var found = false;
++                for (var i=0; (i < existingScopes.length) && !found; i++) {
++                  var existingScope = existingScopes[i];
++                  if (scope.options.equality(newExNode, existingScope.node)) {
++                    newExpandedNodesMap[existingScope.$id] = existingScope.node;
++                    found = true;
++                  }
++                }
++                if (!found)
++                  newExpandedNodesMap[notFoundIds++] = newExNode;
++              });
++              scope.expandedNodesMap = newExpandedNodesMap;
++            });
++
++//                        scope.$watch('expandedNodesMap', function(newValue) {
++//
++//                        });
++
++            //Rendering template for a root node
++            treemodelCntr.template( scope, function(clone) {
++              element.html('').append( clone );
++            });
++            // save the transclude function from compile (which is not bound to a scope as apposed to the one from link)
++            // we can fix this to work with the link transclude function with angular 1.2.6. as for angular 1.2.0 we need
++            // to keep using the compile function
++            scope.$treeTransclude = childTranscludeFn;
++          }
++        }
++      };
++    }])
++    .directive("treeitem", function() {
++      return {
++        restrict: 'E',
++        require: "^treecontrol",
++        link: function( scope, element, attrs, treemodelCntr) {
++          // Rendering template for the current node
++          treemodelCntr.template(scope, function(clone) {
++            element.html('').append(clone);
++          });
++        }
++      }
++    })
++    .directive("treeTransclude", function() {
++      return {
++        link: function(scope, element, attrs, controller) {
++          if (!scope.options.isLeaf(scope.node)) {
++            angular.forEach(scope.expandedNodesMap, function (node, id) {
++              if (scope.options.equality(node, scope.node)) {
++                scope.expandedNodesMap[scope.$id] = scope.node;
++                scope.expandedNodesMap[id] = undefined;
++              }
++            });
++          }
++          if (!scope.options.multiSelection && scope.options.equality(scope.node, scope.selectedNode)) {
++            scope.selectedNode = scope.node;
++          } else if (scope.options.multiSelection) {
++            var newSelectedNodes = [];
++            for (var i = 0; (i < scope.selectedNodes.length); i++) {
++              if (scope.options.equality(scope.node, scope.selectedNodes[i])) {
++                newSelectedNodes.push(scope.node);
++              }
++            }
++            scope.selectedNodes = newSelectedNodes;
++          }
++
++          // create a scope for the transclusion, whos parent is the parent of the tree control
++          scope.transcludeScope = scope.parentScopeOfTree.$new();
++          scope.transcludeScope.node = scope.node;
++          scope.transcludeScope.$parentNode = (scope.$parent.node === scope.synteticRoot)?null:scope.$parent.node;
++          scope.transcludeScope.$index = scope.$index;
++          scope.transcludeScope.$first = scope.$first;
++          scope.transcludeScope.$middle = scope.$middle;
++          scope.transcludeScope.$last = scope.$last;
++          scope.transcludeScope.$odd = scope.$odd;
++          scope.transcludeScope.$even = scope.$even;
++          scope.$on('$destroy', function() {
++            scope.transcludeScope.$destroy();
++          });
++
++          scope.$treeTransclude(scope.transcludeScope, function(clone) {
++            element.empty();
++            element.append(clone);
++          });
++        }
++      }
++    });
++})( angular );
+diff --git a/webapp/app/js/services/kylinProperties.js b/webapp/app/js/services/kylinProperties.js
+index a03403b..b1f04c0 100644
+--- a/webapp/app/js/services/kylinProperties.js
++++ b/webapp/app/js/services/kylinProperties.js
+@@ -20,6 +20,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
+   var _config;
+   var timezone;
+   var deployEnv;
++  var hiveLimit;
+ 
+ 
+   this.init = function () {
+@@ -56,12 +57,22 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
+   }
+ 
+   this.getDeployEnv = function () {
++    this.deployEnv = this.getProperty("deploy.env");
+     if (!this.deployEnv) {
+-      this.deployEnv = this.getProperty("deploy.env").trim();
++      return "DEV";
+     }
+-    return this.deployEnv.toUpperCase();
++    return this.deployEnv.toUpperCase().trim();
+   }
+ 
++  this.getHiveLimit = function () {
++    this.hiveLimit = this.getProperty("kylin.web.hive.limit");
++    if (!this.hiveLimit) {
++      return 20;
++    }
++    return this.hiveLimit;
++  }
++
++
+   //fill config info for Config from backend
+   this.initWebConfigInfo = function () {
+ 
+diff --git a/webapp/app/js/services/tables.js b/webapp/app/js/services/tables.js
+index 3b5e9f4..9b2d376 100755
+--- a/webapp/app/js/services/tables.js
++++ b/webapp/app/js/services/tables.js
+@@ -17,13 +17,14 @@
+  */
+ 
+ KylinApp.factory('TableService', ['$resource', function ($resource, config) {
+-  return $resource(Config.service.url + 'tables/:tableName/:action', {}, {
++  return $resource(Config.service.url + 'tables/:tableName/:action/:database', {}, {
+     list: {method: 'GET', params: {}, cache: true, isArray: true},
+     get: {method: 'GET', params: {}, isArray: false},
+     getExd: {method: 'GET', params: {action: 'exd-map'}, isArray: false},
+     reload: {method: 'PUT', params: {action: 'reload'}, isArray: false},
+     loadHiveTable: {method: 'POST', params: {}, isArray: false},
+     addStreamingSrc: {method: 'POST', params: {action:'addStreamingSrc'}, isArray: false},
+-    genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false}
+-  });
++    genCardinality: {method: 'PUT', params: {action: 'cardinality'}, isArray: false},
++    showHiveDatabases: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true},
++    showHiveTables: {method: 'GET', params: {action:'hive'}, cache: true, isArray: true}  });
+ }]);
+diff --git a/webapp/app/partials/tables/source_table_tree.html b/webapp/app/partials/tables/source_table_tree.html
+index 767eb43..c091dca 100755
+--- a/webapp/app/partials/tables/source_table_tree.html
++++ b/webapp/app/partials/tables/source_table_tree.html
+@@ -26,6 +26,7 @@
+         <div class="col-xs-5" style="padding-left: 0px;margin-top: 20px;">
+             <div class="pull-right">
+                 <a class="btn btn-xs btn-primary" tooltip="Load Hive Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openModal()"><i class="fa fa-download"></i></a>
++                <a class="btn btn-xs btn-info" tooltip="Load Hive Table From Tree"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openTreeModal()"><i class="fa fa-download"></i></a>
+                 <a class="btn btn-xs btn-primary" tooltip="Add Streaming Table"  ng-if="userService.hasRole('ROLE_ADMIN')"  ng-click="openStreamingSourceModal()"><i class="fa fa-area-chart"></i></a>
+             </div>
+         </div>
+@@ -47,3 +48,28 @@
+ </div>
+ 
+ <div ng-include="'partials/tables/table_load.html'"></div>
++
++<script type="text/ng-template" id="addHiveTableFromTree.html">
++  <div class="modal-header"><button class="close" type="button" data-dismiss="modal" ng-click="cancel()">×</button>
++    <h4>Load Hive Table Metadata From Tree</h4>
++  </div>
++  <div class="modal-body">
++    <span><strong>Project: </strong>{{ $parent.projectName!=null?$parent.projectName:'NULL'}}</span>
++    <div class="form-group searchBox">
++      <input type="text" placeholder="Filter ..." class="nav-search-input" ng-model="predicate" />
++    </div>
++    <loading ng-if="!hiveLoaded" text="Loading Databases..."></loading>
++    <treecontrol class="tree-light check" tree-model="treedata" selected-nodes="selectedNodes" filter-expression="predicate" on-selection="showSelected(node)" on-node-toggle="showToggle(node)" options="treeOptions">
++      <div ng-if="node.label==''&&node.id==0"><img src="image/ajax-loader.gif">Loading Tables...</div>
++      <button class="btn btn-xs btn-primary" ng-if="node.label==''&&node.id==65535" ng-click="showMoreClicked($parentNode)">Show More</button>
++      <button class="btn btn-xs btn-primary" ng-if="node.label==''&&node.id==65535" ng-click="showAllClicked($parentNode)">Show All</button>
++      {{node.label}}
++    </treecontrol>
++  </div>
++
++  <div class="modal-footer">
++    <button class="btn btn-primary" ng-click="add()">Sync</button>
++    <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
++  </div>
++
++</script>
+diff --git a/webapp/bower.json b/webapp/bower.json
+index 41144f9..bba4a52 100755
+--- a/webapp/bower.json
++++ b/webapp/bower.json
+@@ -32,7 +32,8 @@
+     "bootstrap-sweetalert": "~0.4.3",
+     "angular-toggle-switch":"1.3.0",
+     "angular-ui-select": "0.13.2",
+-    "angular-sanitize": "1.2.18"
++    "angular-sanitize": "1.2.18",
++    "angular-tree-control": "0.2.8"
+   },
+   "devDependencies": {
+     "less.js": "~1.4.0",
+diff --git a/webapp/grunt.json b/webapp/grunt.json
+index 3219b5e..86ad1dc 100755
+--- a/webapp/grunt.json
++++ b/webapp/grunt.json
+@@ -19,7 +19,6 @@
+                 "app/components/angularLocalStorage/src/angularLocalStorage.js",
+                 "app/components/angular-base64/angular-base64.min.js",
+                 "app/components/ng-grid/build/ng-grid.js",
+-                "app/components/angular-tree-control/angular-tree-control.js",
+                 "app/components/ace-builds/src-min-noconflict/ace.js",
+                 "app/components/ace-builds/src-min-noconflict/ext-language_tools.js",
+                 "app/components/ace-builds/src-min-noconflict/mode-json.js",
+-- 
+2.5.4 (Apple Git-61)
+

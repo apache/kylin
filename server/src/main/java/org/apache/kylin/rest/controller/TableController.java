@@ -36,6 +36,7 @@ import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.source.hive.HiveClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,6 +257,49 @@ public class TableController extends BasicController {
             }
         }
         return descs;
+    }
+
+
+    /**
+     * Show all databases in Hive
+     *
+     * @return Hive databases list
+     * @throws IOException
+     */
+    @RequestMapping(value = "/hive", method = { RequestMethod.GET })
+    @ResponseBody
+    private static List<String> showHiveDatabases() throws IOException {
+        HiveClient hiveClient = new HiveClient();
+        List<String> results = null;
+
+        try {
+            results = hiveClient.getHiveDbNames();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException(e);
+        }
+        return results;
+    }
+
+    /**
+     * Show all tables in a Hive database
+     *
+     * @return Hive table list
+     * @throws IOException
+     */
+    @RequestMapping(value = "/hive/{database}", method = { RequestMethod.GET })
+    @ResponseBody
+    private static List<String> showHiveTables(@PathVariable String database) throws IOException {
+        HiveClient hiveClient = new HiveClient();
+        List<String> results = null;
+
+        try {
+            results = hiveClient.getHiveTableNames(database);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException(e);
+        }
+        return results;
     }
 
     public void setCubeService(CubeService cubeService) {

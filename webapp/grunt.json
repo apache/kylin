@@ -19,7 +19,6 @@
                 "app/components/angularLocalStorage/src/angularLocalStorage.js",
                 "app/components/angular-base64/angular-base64.min.js",
                 "app/components/ng-grid/build/ng-grid.js",
-                "app/components/angular-tree-control/angular-tree-control.js",
                 "app/components/ace-builds/src-min-noconflict/ace.js",
                 "app/components/ace-builds/src-min-noconflict/ext-language_tools.js",
                 "app/components/ace-builds/src-min-noconflict/mode-json.js",
