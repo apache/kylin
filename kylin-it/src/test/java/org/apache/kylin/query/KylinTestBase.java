@@ -36,19 +36,24 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.LogManager;
 
+import com.google.common.base.Throwables;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionContext;
 import org.apache.kylin.common.KylinConfig;
 import org.dbunit.Assertion;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.DataSetException;
+import org.dbunit.dataset.DefaultTable;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.SortedTable;
 import org.dbunit.dataset.datatype.DataType;
@@ -58,6 +63,8 @@ import org.dbunit.ext.h2.H2DataTypeFactory;
 import org.junit.Assert;
 
 import com.google.common.io.Files;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -96,39 +103,26 @@ public class KylinTestBase {
         }
     }
 
+    private static class FileByNameComparator implements Comparator<File> {
+        @Override
+        public int compare(File o1, File o2) {
+            return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+        }
+    }
+
     /**
      * @param folder
-     * @param fileType
-     *            specify the interested file type by file extension
+     * @param fileType specify the interested file type by file extension
      * @return
      */
     protected static List<File> getFilesFromFolder(final File folder, final String fileType) {
-        List<File> files = new ArrayList<File>();
+        Set<File> set = new TreeSet<>(new FileByNameComparator());
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.getName().toLowerCase().endsWith(fileType.toLowerCase())) {
-                files.add(fileEntry);
+                set.add(fileEntry);
             }
         }
-        return files;
-    }
-
-    protected static void getFilesFromFolderR(final String directoryStr, List<File> files, final String fileType) {
-        File folder = new File(directoryStr);
-        for (final File fileEntry : folder.listFiles()) {
-            if (fileEntry.isDirectory()) {
-                getFilesFromFolderR(fileEntry.getAbsolutePath(), files, fileType);
-            } else if (fileEntry.isFile()) {
-                if (fileEntry.getName().toLowerCase().endsWith(fileType.toLowerCase())) {
-                    files.add(fileEntry);
-                }
-            }
-        }
-    }
-
-    protected static void putTextTofile(File file, String sql) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-        writer.write(sql, 0, sql.length());
-        writer.close();
+        return new ArrayList<>(set);
     }
 
     protected static String getTextFromFile(File file) throws IOException {
@@ -293,14 +287,6 @@ public class KylinTestBase {
         return ret;
     }
 
-    protected static void batchChangeJoinType(String targetType) throws IOException {
-        List<File> files = new LinkedList<File>();
-        getFilesFromFolderR("src/test/resources/query", files, ".sql");
-        for (File file : files) {
-            String x = changeJoinType(getTextFromFile(file), targetType);
-            putTextTofile(file, x);
-        }
-    }
 
     protected void execQueryUsingH2(String queryFolder, boolean needSort) throws Exception {
         printInfo("---------- Running H2 queries: " + queryFolder);
@@ -363,8 +349,14 @@ public class KylinTestBase {
             h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
             ITable h2Table = executeQuery(h2Conn, queryName, sql, needSort);
 
-            // compare the result
-            Assert.assertEquals(h2Table.getRowCount(), kylinTable.getRowCount());
+
+            try {
+                // compare the result
+                Assert.assertEquals(h2Table.getRowCount(), kylinTable.getRowCount());
+            } catch (Throwable t) {
+                printInfo("execAndCompResultSize failed on: " + sqlFile.getAbsolutePath());
+                throw t;
+            }
 
             compQueryCount++;
             if (kylinTable.getRowCount() == 0) {
@@ -396,8 +388,13 @@ public class KylinTestBase {
             h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
             ITable h2Table = executeQuery(h2Conn, queryName, sql, needSort);
 
-            // compare the result
-            Assertion.assertEquals(h2Table, kylinTable);
+            try {
+                // compare the result
+                Assertion.assertEquals(h2Table, kylinTable);
+            } catch (Throwable t) {
+                printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
+                throw t;
+            }
 
             compQueryCount++;
             if (kylinTable.getRowCount() == 0) {

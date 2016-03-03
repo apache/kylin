@@ -46,10 +46,9 @@ import org.junit.Test;
 public class ITKylinQueryTest extends KylinTestBase {
     private static CacheManager cacheManager;
 
-
     @BeforeClass
     public static void setUp() throws Exception {
-        printInfo("set up in KylinQueryTest");
+        printInfo("setUp in KylinQueryTest");
         joinType = "left";
 
         setupAll();
@@ -57,8 +56,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        printInfo("tearDown");
-        printInfo("Closing connection...");
+        printInfo("tearDown in KylinQueryTest");
         clean();
     }
 

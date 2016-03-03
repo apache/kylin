@@ -36,11 +36,12 @@ public class ITCombinationTest extends ITKylinQueryTest {
 
     @BeforeClass
     public static void setUp() throws SQLException {
-        System.out.println("setUp in ITCombinationTest");
+        printInfo("setUp in ITCombinationTest");
     }
 
     @AfterClass
     public static void tearDown() {
+        printInfo("tearDown in ITCombinationTest");
         clean();
         HBaseStorage.overwriteStorageQuery = null;
     }
@@ -57,6 +58,8 @@ public class ITCombinationTest extends ITKylinQueryTest {
     }
 
     public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine) throws Exception {
+
+        printInfo("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle + ", query engine: " + queryEngine);
 
         ITKylinQueryTest.clean();
 
