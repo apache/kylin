@@ -17,7 +17,7 @@
 -->
 
 <div class="page-header">
-    <button class="btn btn-primary btn-sm" ng-if="userService.hasRole('ROLE_ADMIN')||userService.hasRole('ROLE_MODELER')&&kylinConfig.getDeployEnv()!=='PROD'" ng-click="toCreateProj()"><i class="fa fa-plus"></i> Project</button>
+    <button class="btn btn-primary btn-sm" ng-if="userService.hasRole('ROLE_MODELER')" ng-click="toCreateProj()"><i class="fa fa-plus"></i> Project</button>
 </div>
 
 <div ng-if="!loading && projects.length == 0">

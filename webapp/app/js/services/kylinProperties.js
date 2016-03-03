@@ -56,6 +56,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     return false;
   }
 
+  //deprecated
   this.getDeployEnv = function () {
     this.deployEnv = this.getProperty("deploy.env");
     if (!this.deployEnv) {
