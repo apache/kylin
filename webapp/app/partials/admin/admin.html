@@ -86,52 +86,14 @@
 
 <script type="text/ng-template" id="calCardinality.html">
     <div class="modal-header">
-        <h4>Load Hive Table Metadata</h4>
+        <h4>Calculate Cardinality</h4>
     </div>
     <div class="modal-body load-hive-metawrapper">
-        <label for="table">Table Name:</label>
+        <label for="table">Hive Table:</label>
         <input ng-model="$parent.tableName" class="form-control" id="table" placeholder="table1,table2"/>
-        <label>Delimiter:</label>
-
-        <div class="radio">
-            <label>
-                <input type="radio" name="deliRadios" data-ng-model="$parent.delimiter" ng-value="0">default
-                -- System will try to get the format from hive metadata, if you are not sure, please choose the
-                "default".
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input type="radio" name="deliRadios" data-ng-model="$parent.delimiter" ng-value="1">\177
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input type="radio" name="deliRadios" data-ng-model="$parent.delimiter" ng-value="2">tab
-            </label>
-        </div>
-        <label>Format:</label>
-
-        <div class="radio">
-            <label>
-                <input type="radio" name="formatRadios" data-ng-model="$parent.format" ng-value="0">default
-                -- System will try to get the format from hive metadata, if you are not sure, please choose the
-                "default".
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input type="radio" name="formatRadios" data-ng-model="$parent.format" ng-value="1">text
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input type="radio" name="formatRadios" data-ng-model="$parent.format" ng-value="2">sequence
-            </label>
-        </div>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-primary" ng-click="calculate()">Sync</button>
+        <button class="btn btn-primary" ng-click="calculate()">Calculate</button>
         <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
     </div>
 </script>
