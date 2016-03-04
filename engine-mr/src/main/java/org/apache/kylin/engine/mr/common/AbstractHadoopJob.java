@@ -23,7 +23,7 @@ package org.apache.kylin.engine.mr.common;
  *
  */
 
-import static org.apache.hadoop.util.StringUtils.formatTime;
+import static org.apache.hadoop.util.StringUtils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +49,7 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.util.ClassUtil;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -217,6 +218,25 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             if (kylinDependency.length() > 0)
                 kylinDependency.append(",");
             kylinDependency.append(filteredHive);
+        } else {
+
+            logger.info("No hive dependency jars set in the environment, will find them from jvm:");
+
+            try {
+                String hiveExecJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hadoop.hive.ql.Driver"));
+                kylinDependency.append(hiveExecJarPath).append(",");
+                logger.info("hive-exec jar file: " + hiveExecJarPath);
+
+                String hiveHCatJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hive.hcatalog.mapreduce.HCatInputFormat"));
+                kylinDependency.append(hiveHCatJarPath).append(",");
+                logger.info("hive-catalog jar file: " + hiveHCatJarPath);
+
+                String hiveMetaStoreJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hadoop.hive.metastore.api.Table"));
+                kylinDependency.append(hiveMetaStoreJarPath).append(",");
+                logger.info("hive-metastore jar file: " + hiveMetaStoreJarPath);
+            } catch (ClassNotFoundException e) {
+                logger.error("Cannot found hive dependency jars: " + e);
+            }
         }
 
         // for KylinJobMRLibDir
