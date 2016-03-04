@@ -271,6 +271,8 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         // only translate where clause and don't translate having clause
         if (!context.afterAggregate) {
             translateFilter(context);
+        } else {
+            context.afterSkippedFilter = true;//having clause is skipped
         }
     }
 

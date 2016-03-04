@@ -103,6 +103,7 @@ public class OLAPContext {
     public OLAPTableScan firstTableScan = null; // to be fact table scan except "select * from lookupTable"
     public TupleInfo returnTupleInfo = null;
     public boolean afterAggregate = false;
+    public boolean afterSkippedFilter = false;
     public boolean afterJoin = false;
     public boolean hasJoin = false;
 
