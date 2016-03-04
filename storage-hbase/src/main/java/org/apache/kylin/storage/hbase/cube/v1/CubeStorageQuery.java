@@ -493,7 +493,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         List<Collection<ColumnValueRange>> result = Lists.newArrayList();
 
         if (flatFilter == null) {
-            result.add(Collections.<ColumnValueRange> emptyList());
+            result.add(Collections.<ColumnValueRange>emptyList());
             return result;
         }
 
@@ -535,7 +535,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         }
         if (globalAlwaysTrue) {
             orAndRanges.clear();
-            orAndRanges.add(Collections.<ColumnValueRange> emptyList());
+            orAndRanges.add(Collections.<ColumnValueRange>emptyList());
         }
         return orAndRanges;
     }
@@ -762,7 +762,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
     private void setLimit(TupleFilter filter, StorageContext context) {
         boolean goodAggr = context.isExactAggregation();
         boolean goodFilter = filter == null || (TupleFilter.isEvaluableRecursively(filter) && context.isCoprocessorEnabled());
-        boolean goodSort = context.hasSort() == false;
+        boolean goodSort = !context.hasSort();
         if (goodAggr && goodFilter && goodSort) {
             logger.info("Enable limit " + context.getLimit());
             context.enableLimit();

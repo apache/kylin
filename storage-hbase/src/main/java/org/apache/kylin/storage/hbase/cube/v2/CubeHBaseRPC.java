@@ -273,20 +273,20 @@ public abstract class CubeHBaseRPC {
         info.append(cuboid.getInputID());
         info.append(" to ");
         info.append(cuboid.getId());
-        info.append("\nStart: ");
+        info.append(" Start: ");
         info.append(rawScan.getStartKeyAsString());
         info.append(" (");
         info.append(Bytes.toStringBinary(rawScan.startKey) + ")");
-        info.append("\nStop:  ");
+        info.append(" Stop:  ");
         info.append(rawScan.getEndKeyAsString());
         info.append(" (");
         info.append(Bytes.toStringBinary(rawScan.endKey) + ")");
         if (rawScan.fuzzyKeys != null && rawScan.fuzzyKeys.size() != 0) {
-            info.append("\nFuzzy key counts: " + rawScan.fuzzyKeys.size());
+            info.append(" Fuzzy key counts: " + rawScan.fuzzyKeys.size());
             info.append(". Fuzzy keys : ");
             info.append(rawScan.getFuzzyKeyAsString());
         } else {
-            info.append("\nNo Fuzzy Key");
+            info.append(", No Fuzzy Key");
         }
         logger.info(info.toString());
     }

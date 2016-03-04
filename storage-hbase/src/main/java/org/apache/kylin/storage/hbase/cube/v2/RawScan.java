@@ -61,7 +61,7 @@ public class RawScan {
             buf.append(BytesUtil.toHex(fuzzyKey.getFirst()));
             buf.append(" ");
             buf.append(BytesUtil.toHex(fuzzyKey.getSecond()));
-            buf.append(System.lineSeparator());
+            buf.append(";");
         }
         return buf.toString();
     }

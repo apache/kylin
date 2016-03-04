@@ -73,6 +73,7 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
     private static final Logger logger = LoggerFactory.getLogger(StreamingCubeBuilder.class);
 
     private final String cubeName;
+    private int processedRowCount = 0;
 
     public StreamingCubeBuilder(String cubeName) {
         this.cubeName = cubeName;
@@ -81,16 +82,16 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
     @Override
     public void build(StreamingBatch streamingBatch, Map<TblColRef, Dictionary<String>> dictionaryMap, ICuboidWriter cuboidWriter) {
         try {
-
             CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
             LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue<List<String>>();
             InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), dictionaryMap);
             final Future<?> future = Executors.newCachedThreadPool().submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, cuboidWriter));
+            processedRowCount = streamingBatch.getMessages().size();
             for (StreamingMessage streamingMessage : streamingBatch.getMessages()) {
                 blockingQueue.put(streamingMessage.getData());
             }
-            blockingQueue.put(Collections.<String> emptyList());
+            blockingQueue.put(Collections.<String>emptyList());
             future.get();
             cuboidWriter.flush();
 
@@ -157,6 +158,7 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
     public void commit(IBuildable buildable) {
         CubeSegment cubeSegment = (CubeSegment) buildable;
         cubeSegment.setStatus(SegmentStatusEnum.READY);
+        cubeSegment.setInputRecords(processedRowCount);
         CubeUpdate cubeBuilder = new CubeUpdate(cubeSegment.getCubeInstance());
         cubeBuilder.setToAddSegs(cubeSegment);
         try {

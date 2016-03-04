@@ -210,26 +210,26 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     private void logScan(HBaseKeyRange keyRange) {
         StringBuilder info = new StringBuilder();
-        info.append("\nScan hbase table ").append(tableName).append(": ");
+        info.append(" Scan hbase table ").append(tableName).append(": ");
         if (keyRange.getCuboid().requirePostAggregation()) {
-            info.append("cuboid require post aggregation, from ");
+            info.append(" cuboid require post aggregation, from ");
         } else {
-            info.append("cuboid exact match, from ");
+            info.append(" cuboid exact match, from ");
         }
         info.append(keyRange.getCuboid().getInputID());
         info.append(" to ");
         info.append(keyRange.getCuboid().getId());
-        info.append("\nStart: ");
+        info.append(" Start: ");
         info.append(keyRange.getStartKeyAsString());
         info.append(" - ");
         info.append(Bytes.toStringBinary(keyRange.getStartKey()));
-        info.append("\nStop:  ");
+        info.append(" Stop:  ");
         info.append(keyRange.getStopKeyAsString());
         info.append(" - ");
         info.append(Bytes.toStringBinary(keyRange.getStopKey()));
         if (this.scan.getFilter() != null) {
-            info.append("\nFuzzy key counts: " + keyRange.getFuzzyKeys().size());
-            info.append("\nFuzzy: ");
+            info.append(" Fuzzy key counts: " + keyRange.getFuzzyKeys().size());
+            info.append(" Fuzzy: ");
             info.append(keyRange.getFuzzyKeyAsString());
         }
         logger.info(info.toString());
