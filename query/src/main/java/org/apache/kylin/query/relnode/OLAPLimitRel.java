@@ -73,16 +73,19 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
         implementor.visitChild(getInput(), this);
 
         this.columnRowType = buildColumnRowType();
-
         this.context = implementor.getContext();
-        Number limitValue = (Number) (((RexLiteral) localFetch).getValue());
-        int limit = limitValue.intValue();
-        this.context.storageContext.setLimit(limit);
-        this.context.limit = limit;
-        if(localOffset != null) {
-            Number offsetValue = (Number) (((RexLiteral) localOffset).getValue());
-            int offset = offsetValue.intValue();
-            this.context.storageContext.setOffset(offset);
+
+        if (!context.afterSkippedFilter) {
+            Number limitValue = (Number) (((RexLiteral) localFetch).getValue());
+            int limit = limitValue.intValue();
+            this.context.storageContext.setLimit(limit);
+            this.context.limit = limit;
+
+            if (localOffset != null) {
+                Number offsetValue = (Number) (((RexLiteral) localOffset).getValue());
+                int offset = offsetValue.intValue();
+                this.context.storageContext.setOffset(offset);
+            }
         }
     }
 
