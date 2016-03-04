@@ -45,9 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * 
  * @author xjiang
- * 
  */
 public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
 
@@ -147,7 +145,7 @@ public class HBaseKeyRange implements Comparable<HBaseKeyRange> {
             buf.append(BytesUtil.toHex(fuzzyKey.getFirst()));
             buf.append(" ");
             buf.append(BytesUtil.toHex(fuzzyKey.getSecond()));
-            buf.append(System.lineSeparator());
+            buf.append(";");
         }
         this.fuzzyKeyString = buf.toString();
     }

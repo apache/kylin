@@ -293,15 +293,15 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         final AtomicInteger totalScannedCount = new AtomicInteger(0);
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(scanRequests.size() * shardNum);
+        final String currentThreadName = Thread.currentThread().getName();
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
                     for (int i = 0; i < scanRequests.size(); ++i) {
-                        int scanIndex = i;
                         CubeVisitProtos.CubeVisitRequest.Builder builder = CubeVisitProtos.CubeVisitRequest.newBuilder();
-                        builder.setGtScanRequest(scanRequestByteStrings.get(scanIndex)).setHbaseRawScan(rawScanByteStrings.get(scanIndex));
+                        builder.setGtScanRequest(scanRequestByteStrings.get(i)).setHbaseRawScan(rawScanByteStrings.get(i));
                         for (IntList intList : hbaseColumnsToGTIntList) {
                             builder.addHbaseColumnsToGT(intList);
                         }
@@ -317,7 +317,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
                         for (Map.Entry<byte[], CubeVisitProtos.CubeVisitResponse> result : results.entrySet()) {
                             totalScannedCount.addAndGet(result.getValue().getStats().getScannedRowCount());
-                            logger.info(getStatsString(result));
+                            logger.info("<spawned by " + currentThreadName + ">" + getStatsString(result));
                             try {
                                 epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getValue().getCompressedRows())));
                             } catch (IOException | DataFormatException e) {
@@ -335,12 +335,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     private String getStatsString(Map.Entry<byte[], CubeVisitProtos.CubeVisitResponse> result) {
         StringBuilder sb = new StringBuilder();
         Stats stats = result.getValue().getStats();
-        sb.append("Endpoint RPC returned from HTable " + cubeSeg.getStorageLocationIdentifier() + " Shard " + BytesUtil.toHex(result.getKey()) + " on host: " + stats.getHostname() + ".");
-        sb.append("Total scanned row: " + stats.getScannedRowCount() + ". ");
-        sb.append("Total filtered/aggred row: " + stats.getAggregatedRowCount() + ". ");
-        sb.append("Time elapsed in EP: " + (stats.getServiceEndTime() - stats.getServiceStartTime()) + "(ms). ");
-        sb.append("Server CPU usage: " + stats.getSystemCpuLoad() + ", server physical mem left: " + stats.getFreePhysicalMemorySize() + ", server swap mem left:" + stats.getFreeSwapSpaceSize() + ".");
-        sb.append("Etc message: " + stats.getEtcMsg() + ".");
+        sb.append("Endpoint RPC returned from HTable ").append(cubeSeg.getStorageLocationIdentifier()).append(" Shard ").append(BytesUtil.toHex(result.getKey())).append(" on host: ").append(stats.getHostname()).append(".");
+        sb.append("Total scanned row: ").append(stats.getScannedRowCount()).append(". ");
+        sb.append("Total filtered/aggred row: ").append(stats.getAggregatedRowCount()).append(". ");
+        sb.append("Time elapsed in EP: ").append(stats.getServiceEndTime() - stats.getServiceStartTime()).append("(ms). ");
+        sb.append("Server CPU usage: ").append(stats.getSystemCpuLoad()).append(", server physical mem left: ").append(stats.getFreePhysicalMemorySize()).append(", server swap mem left:").append(stats.getFreeSwapSpaceSize()).append(".");
+        sb.append("Etc message: ").append(stats.getEtcMsg()).append(".");
         return sb.toString();
 
     }

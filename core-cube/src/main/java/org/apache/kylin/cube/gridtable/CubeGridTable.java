@@ -29,18 +29,18 @@ public class CubeGridTable {
                 dictionaryMap.put(col, dictionary);
             }
         }
-        
+
         return dictionaryMap;
     }
 
-    public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) throws NotEnoughGTInfoException {
+    public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) {
         Map<TblColRef, Dictionary<String>> dictionaryMap = getDimensionToDictionaryMap(cubeSeg, cuboidId);
         Cuboid cuboid = Cuboid.findById(cubeSeg.getCubeDesc(), cuboidId);
         for (TblColRef dim : cuboid.getColumns()) {
             if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(dim)) {
                 Dictionary dict = dictionaryMap.get(dim);
                 if (dict == null) {
-                    throw new NotEnoughGTInfoException();
+                    throw new RuntimeException("Dictionary for " + dim + " is not found");
                 }
             }
         }

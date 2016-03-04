@@ -29,7 +29,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
-import org.apache.kylin.cube.gridtable.NotEnoughGTInfoException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -73,7 +72,7 @@ public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
         buffer.flip();
 
         GTInfo sInfo = GTInfo.serializer.deserialize(buffer);
-        this.compareTwoGTInfo(info,sInfo);
+        this.compareTwoGTInfo(info, sInfo);
     }
 
     @Test
@@ -83,11 +82,11 @@ public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
         buffer.flip();
 
         GTInfo sInfo = GTInfo.serializer.deserialize(buffer);
-        this.compareTwoGTInfo(info,sInfo);
+        this.compareTwoGTInfo(info, sInfo);
     }
 
     @Test
-    public void testGTInfo() throws NotEnoughGTInfoException {
+    public void testGTInfo() {
         CubeInstance cube = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube("test_kylin_cube_with_slr_ready");
         CubeSegment segment = cube.getFirstSegment();
 
@@ -95,8 +94,8 @@ public class GTScanReqSerDerTest extends LocalFileMetadataTestCase {
         GTInfo.serializer.serialize(info, buffer);
         buffer.flip();
 
-        GTInfo sInfo = GTInfo.serializer.deserialize(buffer); 
-        this.compareTwoGTInfo(info,sInfo);
+        GTInfo sInfo = GTInfo.serializer.deserialize(buffer);
+        this.compareTwoGTInfo(info, sInfo);
     }
 
     private void compareTwoGTInfo(GTInfo info, GTInfo sInfo) {
