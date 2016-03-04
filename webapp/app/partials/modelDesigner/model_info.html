@@ -31,7 +31,7 @@
                     <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$sbumitted)}">
 
                         <!-- edit -->
-                        <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"
+                        <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"  ng-disabled="{{modelMode=='editExistModel'}}"
                                ng-model="modelsManager.selectedModel.name" required
                                placeholder="You can use letters, numbers, and '_'"
                                ng-maxlength=100 ng-pattern="/^\w+$/" />
