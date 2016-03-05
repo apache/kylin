@@ -18,6 +18,8 @@ public class KylinPreparedStatement extends AvaticaPreparedStatement {
 
     protected KylinPreparedStatement(AvaticaConnection connection, StatementHandle h, Signature signature, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         super(connection, h, signature, resultSetType, resultSetConcurrency, resultSetHoldability);
+        if (this.handle.signature == null)
+            this.handle.signature = signature;
     }
 
     protected List<Object> getParameterValues2() {
