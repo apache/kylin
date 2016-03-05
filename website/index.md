@@ -46,7 +46,7 @@ title: Home
               <div class="indent">User can define a data model and pre-build in Kylin with more than 10+ billions of raw data records</div>
               </p>
               <p> <b>- Seamless Integration with BI Tools:</b><br/>
-              <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau.  Integration with Microstrategy and Excel is coming soon</div>
+              <div class="indent">Kylin currently offers integration capability with BI Tools like Tableau, PowerBI and Excel.  Integration with Microstrategy is coming soon</div>
               </p>
               <p> <b>- Other Highlights:</b> <br/>
               <div class="indent">- Job Management and Monitoring <br/>
