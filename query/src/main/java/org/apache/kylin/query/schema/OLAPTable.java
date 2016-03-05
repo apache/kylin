@@ -43,6 +43,7 @@ import org.apache.calcite.schema.impl.AbstractTableQueryable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -128,21 +129,21 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
     private RelDataType deriveRowType(RelDataTypeFactory typeFactory) {
         RelDataTypeFactory.FieldInfoBuilder fieldInfo = typeFactory.builder();
         for (ColumnDesc column : exposedColumns) {
-            RelDataType sqlType = createSqlType(typeFactory, column);
+            RelDataType sqlType = createSqlType(typeFactory, column.getType(), column.isNullable());
             sqlType = SqlTypeUtil.addCharsetAndCollation(sqlType, typeFactory);
             fieldInfo.add(column.getName(), sqlType);
         }
         return typeFactory.createStructType(fieldInfo);
     }
 
-    private RelDataType createSqlType(RelDataTypeFactory typeFactory, ColumnDesc column) {
-        SqlTypeName sqlTypeName = SQLTYPE_MAPPING.get(column.getTypeName());
+    public static RelDataType createSqlType(RelDataTypeFactory typeFactory, DataType dataType, boolean isNullable) {
+        SqlTypeName sqlTypeName = SQLTYPE_MAPPING.get(dataType.getName());
         if (sqlTypeName == null)
-            throw new IllegalArgumentException("Unrecognized column type " + column.getTypeName() + " from " + column);
+            throw new IllegalArgumentException("Unrecognized data type " + dataType);
 
-        int precision = column.getTypePrecision();
-        int scale = column.getTypeScale();
-
+        int precision = dataType.getPrecision();
+        int scale = dataType.getScale();
+        
         RelDataType result;
         if (precision >= 0 && scale >= 0)
             result = typeFactory.createSqlType(sqlTypeName, precision, scale);
@@ -152,7 +153,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             result = typeFactory.createSqlType(sqlTypeName);
 
         // due to left join and uncertain data quality, dimension value can be null
-        if (column.isNullable()) {
+        if (isNullable) {
             result = typeFactory.createTypeWithNullability(result, true);
         } else {
             result = typeFactory.createTypeWithNullability(result, false);
