@@ -41,6 +41,9 @@ public class ResourceTool {
             System.out.println("Usage: ResourceTool list  RESOURCE_PATH");
             System.out.println("Usage: ResourceTool download  LOCAL_DIR");
             System.out.println("Usage: ResourceTool upload    LOCAL_DIR");
+            System.out.println("Usage: ResourceTool reset");
+            System.out.println("Usage: ResourceTool remove RESOURCE_PATH");
+            System.out.println("Usage: ResourceTool cat RESOURCE_PATH");
             return;
         }
 
