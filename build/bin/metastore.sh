@@ -47,6 +47,27 @@ then
     echo "Starting restoring $_file"
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool upload $_file
 
+elif [ "$1" == "list" ]
+then
+
+    _file=$2
+    echo "Starting list $_file"
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool list $_file
+
+elif [ "$1" == "remove" ]
+then
+
+    _file=$2
+    echo "Starting remove $_file"
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool remove $_file
+
+elif [ "$1" == "cat" ]
+then
+
+    _file=$2
+    echo "Starting cat $_file"
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool cat $_file
+
 elif [ "$1" == "reset" ]
 then
 
@@ -61,6 +82,9 @@ else
     echo "usage: metastore.sh backup"
     echo "       metastore.sh reset"
     echo "       metastore.sh restore PATH_TO_LOCAL_META"
+    echo "       metastore.sh list RESOURCE_PATH"
+    echo "       metastore.sh cat RESOURCE_PATH"
+    echo "       metastore.sh remove RESOURCE_PATH"
     echo "       metastore.sh clean [--delete true]"
     exit 1
 fi
