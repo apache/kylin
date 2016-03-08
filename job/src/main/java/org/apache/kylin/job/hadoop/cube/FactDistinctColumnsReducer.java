@@ -31,14 +31,12 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -47,8 +45,7 @@ import java.util.List;
  */
 public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text, NullWritable, Text> {
 
-    private List<TblColRef> columnList = new ArrayList<TblColRef>();
-
+    private List<TblColRef> factDictCols;
     @Override
     protected void setup(Context context) throws IOException {
         super.publishConfiguration(context.getConfiguration());
@@ -58,15 +55,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<ShortWritable, Text
         String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
-
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-        columnList = baseCuboid.getColumns();
+        factDictCols = CubeManager.getInstance(config).getAllDictColumnsOnFact(cubeDesc);
     }
 
     @Override
     public void reduce(ShortWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-        TblColRef col = columnList.get(key.get());
+        TblColRef col = factDictCols.get(key.get());
 
         HashSet<ByteArray> set = new HashSet<ByteArray>();
         for (Text textValue : values) {

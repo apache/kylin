@@ -44,15 +44,13 @@ public class DictionaryGeneratorCLI {
     private static void processSegment(KylinConfig config, CubeSegment cubeSeg, String factColumnsPath) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
-        for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
-            // dictionary
-            for (TblColRef col : dim.getColumnRefs()) {
-                if (cubeSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
-                    logger.info("Building dictionary for " + col);
-                    cubeMgr.buildDictionary(cubeSeg, col, factColumnsPath);
-                }
-            }
+        // dictionary
+        for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionary()) {
+            logger.info("Building dictionary for " + col);
+            cubeMgr.buildDictionary(cubeSeg, col, factColumnsPath);
+        }
 
+        for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
             // build snapshot
             if (dim.getTable() != null && !dim.getTable().equalsIgnoreCase(cubeSeg.getCubeDesc().getFactTable())) {
                 // CubeSegment seg = cube.getTheOnlySegment();

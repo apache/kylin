@@ -107,16 +107,13 @@ public class MergeDictionaryStep extends AbstractExecutable {
         DictionaryManager dictMgr = DictionaryManager.getInstance(conf);
 
         CubeDesc cubeDesc = cube.getDescriptor();
-        for (DimensionDesc dim : cubeDesc.getDimensions()) {
-            for (TblColRef col : dim.getColumnRefs()) {
-                if (newSeg.getCubeDesc().getRowkey().isUseDictionary(col)) {
-                    String dictTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
-                    if (cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
-                        colsNeedMeringDict.add(col);
-                    } else {
-                        colsNeedCopyDict.add(col);
-                    }
-                }
+
+        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionary()) {
+            String dictTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), "true", col, null)[0];
+            if (cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
+                colsNeedMeringDict.add(col);
+            } else {
+                colsNeedCopyDict.add(col);
             }
         }
 

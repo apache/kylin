@@ -194,11 +194,11 @@ public class CubeManager implements IRealizationProvider {
 
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, String factColumnsPath) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
-        if (!cubeDesc.getRowkey().isUseDictionary(col))
+        if (!cubeDesc.getAllColumnsNeedDictionary().contains(col))
             return null;
 
         DictionaryManager dictMgr = getDictionaryManager();
-        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, factColumnsPath);
+        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), "true", col, factColumnsPath);
 
         if (dictInfo != null) {
             cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
@@ -791,4 +791,26 @@ public class CubeManager implements IRealizationProvider {
         return getCube(name);
     }
 
+
+    /**
+     * Get the columns which need build the dictionary from fact table. (the column exists on fact and is not fk)
+     * @param cubeDesc
+     * @return
+     * @throws IOException
+     */
+    public List<TblColRef> getAllDictColumnsOnFact(CubeDesc cubeDesc) throws IOException {
+        List<TblColRef> dictionaryColumns = cubeDesc.getAllColumnsNeedDictionary();
+
+        List<TblColRef> factDictCols = new ArrayList<TblColRef>();
+        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
+        for (int i = 0; i < dictionaryColumns.size(); i++) {
+            TblColRef col = dictionaryColumns.get(i);
+
+            String scanTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), "true", col, null)[0];
+            if (cubeDesc.getModel().isFactTable(scanTable)) {
+                factDictCols.add(col);
+            }
+        }
+        return factDictCols;
+    }
 }
