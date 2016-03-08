@@ -32,6 +32,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
     final static Map<String, Class<?>> implementations = Maps.newHashMap();
     static {
+        implementations.put("char", StringSerializer.class);
         implementations.put("varchar", StringSerializer.class);
         implementations.put("decimal", BigDecimalSerializer.class);
         implementations.put("double", DoubleSerializer.class);

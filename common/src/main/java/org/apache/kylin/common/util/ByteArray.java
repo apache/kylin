@@ -14,26 +14,97 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 package org.apache.kylin.common.util;
 
-import java.util.Arrays;
+import java.io.Serializable;
 
 /**
  * @author yangli9
  */
-public class ByteArray implements Comparable<ByteArray> {
+public class ByteArray implements Comparable<ByteArray>, Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    public static ByteArray allocate(int length) {
+        return new ByteArray(new byte[length]);
+    }
 
     public byte[] data;
+    private int offset;
+    private int length;
+
+    public ByteArray() {
+        this(null, 0, 0);
+    }
+
+    public ByteArray(int capacity) {
+        this(new byte[capacity], 0, capacity);
+    }
 
     public ByteArray(byte[] data) {
+        this(data, 0, data == null ? 0 : data.length);
+    }
+
+    public ByteArray(byte[] data, int offset, int length) {
         this.data = data;
+        this.offset = offset;
+        this.length = length;
+    }
+
+    public byte[] array() {
+        return data;
+    }
+
+    public int offset() {
+        return offset;
+    }
+
+    public int length() {
+        return length;
+    }
+
+    public void set(byte[] array) {
+        set(array, 0, array.length);
+    }
+
+    public void set(byte[] array, int offset, int length) {
+        this.data = array;
+        this.offset = offset;
+        this.length = length;
+    }
+
+    public void set(ByteArray o) {
+        set(o.data, o.offset, o.length);
+    }
+
+    public void set(int offset, int length) {
+        this.offset = offset;
+        this.length = length;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
+
+    public ByteArray copy() {
+        ByteArray copy = new ByteArray(length);
+        copy.copyFrom(this);
+        return copy;
+    }
+
+    public void copyFrom(ByteArray other) {
+        System.arraycopy(other.array(), other.offset, data, offset, other.length);
+        this.length = other.length;
     }
 
     @Override
     public int hashCode() {
-        return Bytes.hashCode(data);
+        if (data == null)
+            return 0;
+        else
+            return Bytes.hashCode(data, offset, length);
     }
 
     @Override
@@ -44,14 +115,33 @@ public class ByteArray implements Comparable<ByteArray> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ByteArray other = (ByteArray) obj;
-        if (!Arrays.equals(data, other.data))
+        ByteArray o = (ByteArray) obj;
+        if (this.data == null && o.data == null)
+            return true;
+        else if (this.data == null || o.data == null)
             return false;
-        return true;
+        else
+            return Bytes.equals(this.data, this.offset, this.length, o.data, o.offset, o.length);
     }
 
     @Override
     public int compareTo(ByteArray o) {
-        return Bytes.compareTo(this.data, o.data);
+        if (this.data == null && o.data == null)
+            return 0;
+        else if (this.data == null)
+            return -1;
+        else if (o.data == null)
+            return 1;
+        else
+            return Bytes.compareTo(this.data, this.offset, this.length, o.data, o.offset, o.length);
     }
+
+    @Override
+    public String toString() {
+        if (data == null)
+            return null;
+        else
+            return Bytes.toStringBinary(data, offset, length);
+    }
+
 }
