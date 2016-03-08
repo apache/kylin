@@ -19,7 +19,6 @@
 package org.apache.kylin.job.hadoop.cube;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -34,10 +33,7 @@ import org.apache.kylin.common.mr.KylinMapper;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.RowKeyDesc;
-import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.job.constant.BatchConstants;
 import org.apache.kylin.job.hadoop.AbstractHadoopJob;
 import org.apache.kylin.job.hadoop.hive.CubeJoinedFlatTableDesc;
@@ -51,7 +47,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRec
     private String cubeName;
     private CubeInstance cube;
     private CubeDesc cubeDesc;
-    private int[] factDictCols;
+    List<TblColRef> factDictCols;
 
     private CubeJoinedFlatTableDesc intermediateTableDesc;
 
@@ -60,6 +56,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRec
     private int errorRecordCounter;
 
     private HCatSchema schema = null;
+    protected int[] dictionaryColumnIndex;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -73,40 +70,23 @@ public class FactDistinctColumnsMapper<KEYIN> extends KylinMapper<KEYIN, HCatRec
         cubeDesc = cube.getDescriptor();
         intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
 
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-        List<TblColRef> columns = baseCuboid.getColumns();
-
-        ArrayList<Integer> factDictCols = new ArrayList<Integer>();
-        RowKeyDesc rowkey = cubeDesc.getRowkey();
-        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        for (int i = 0; i < columns.size(); i++) {
-            TblColRef col = columns.get(i);
-            if (rowkey.isUseDictionary(col) == false)
-                continue;
-
-            String scanTable = (String) dictMgr.decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().getDictionary(col), col, null)[0];
-            if (cubeDesc.getModel().isFactTable(scanTable)) {
-                factDictCols.add(i);
-            }
+        factDictCols = CubeManager.getInstance(config).getAllDictColumnsOnFact(cubeDesc);
+        dictionaryColumnIndex = new int[factDictCols.size()];
+        for (int i = 0; i < factDictCols.size(); i++) {
+            TblColRef colRef = factDictCols.get(i);
+            int columnIndexOnFlatTbl = intermediateTableDesc.getColumnIndex(colRef);
+            dictionaryColumnIndex[i] = columnIndexOnFlatTbl;
         }
-        this.factDictCols = new int[factDictCols.size()];
-        for (int i = 0; i < factDictCols.size(); i++)
-            this.factDictCols[i] = factDictCols.get(i);
-
         schema = HCatInputFormat.getTableSchema(context.getConfiguration());
     }
 
     @Override
     public void map(KEYIN key, HCatRecord record, Context context) throws IOException, InterruptedException {
-
         try {
-
-            int[] flatTableIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
             HCatFieldSchema fieldSchema = null;
-            for (int i : factDictCols) {
+            for (int i = 0; i < factDictCols.size(); i++) {
                 outputKey.set((short) i);
-                fieldSchema = schema.get(flatTableIndexes[i]);
+                fieldSchema = schema.get(dictionaryColumnIndex[i]);
                 Object fieldValue = record.get(fieldSchema.getName(), schema);
                 if (fieldValue == null)
                     continue;
