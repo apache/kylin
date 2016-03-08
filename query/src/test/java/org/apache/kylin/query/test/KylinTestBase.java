@@ -336,7 +336,7 @@ public class KylinTestBase {
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
             // compare the result
-            Assert.assertEquals(expectRowCount, kylinTable.getRowCount());
+            Assert.assertEquals(queryName, expectRowCount, kylinTable.getRowCount());
             // Assertion.assertEquals(expectRowCount, kylinTable.getRowCount());
         }
     }

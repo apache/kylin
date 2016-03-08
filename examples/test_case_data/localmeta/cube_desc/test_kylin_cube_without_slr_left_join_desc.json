@@ -179,6 +179,58 @@
         "returntype": "bitmap"
       },
       "dependent_measure_ref": null
+    },
+    {
+      "id": 9,
+      "name": "CAL_DT_RAW",
+      "function": {
+        "expression": "RAW",
+        "parameter": {
+          "type": "column",
+          "value": "CAL_DT"
+        },
+        "returntype": "raw"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 10,
+      "name": "LSTG_FORMAT_NAME_RAW",
+      "function": {
+        "expression": "RAW",
+        "parameter": {
+          "type": "column",
+          "value": "LSTG_FORMAT_NAME"
+        },
+        "returntype": "raw"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 11,
+      "name": "LEAF_CATEG_ID_RAW",
+      "function": {
+        "expression": "RAW",
+        "parameter": {
+          "type": "column",
+          "value": "LEAF_CATEG_ID"
+        },
+        "returntype": "raw"
+      },
+      "dependent_measure_ref": null
+    },
+    {
+      "id": 12,
+      "name": "PRICE_RAW",
+      "function": {
+        "expression": "RAW",
+        "parameter": {
+          "type": "column",
+          "value": "PRICE"
+        },
+        "returntype": "raw"
+      },
+      "dependent_measure_ref": null
     }
   ],
   "rowkey": {
@@ -263,7 +315,11 @@
               "gmv_min",
               "gmv_max",
               "trans_cnt",
-              "item_count_sum"
+              "item_count_sum",
+              "CAL_DT_RAW",
+              "LSTG_FORMAT_NAME_RAW",
+              "LEAF_CATEG_ID_RAW",
+              "PRICE_RAW"
             ]
           }
         ]

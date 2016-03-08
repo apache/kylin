@@ -80,7 +80,7 @@ public class KylinQueryTest extends KylinTestBase {
         // Cube Connection
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(ProjectInstance.DEFAULT_PROJECT_NAME, config);
         Properties props = new Properties();
-        props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "10000");
+        props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "10001");
         cubeConnection = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath(), props);
     }
 
@@ -262,6 +262,11 @@ public class KylinQueryTest extends KylinTestBase {
     public void testLimitEnabled() throws Exception {
         runSqlFile("src/test/resources/query/sql_optimize/enable-limit01.sql");
         assertLimitWasEnabled();
+    }
+
+    @Test
+    public void testRawQuery() throws Exception {
+        this.execAndCompQuery("src/test/resources/query/sql_raw", null, true);
     }
 
     private void assertLimitWasEnabled() {

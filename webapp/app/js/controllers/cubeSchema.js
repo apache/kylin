@@ -162,6 +162,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         case "MAX":
           $scope.newMeasure.function.returntype = colType;
           break;
+        case "RAW":
+          $scope.newMeasure.function.returntype = "raw";
+          break;
         case "COUNT":
           $scope.newMeasure.function.returntype = "bigint";
           break;
