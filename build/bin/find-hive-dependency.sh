@@ -41,7 +41,7 @@ fi
 
 for data in ${arr[@]}
 do
-    result=`echo $data | grep -e 'hive-exec[a-z0-9A-Z\.-]*jar'`
+    result=`echo $data | grep -e 'hive-exec[a-z0-9A-Z\.-]*.jar'`
     if [ $result ]
     then
         hive_exec_path=$data
@@ -82,7 +82,7 @@ else
     hcatalog_home=${HCAT_HOME}
 fi
 
-hcatalog=`find -L ${hcatalog_home} -name "hive-hcatalog-core[0-9\.-]*jar" 2>&1 | grep -m 1 -v 'Permission denied'`
+hcatalog=`find -L ${hcatalog_home} -name "hive-hcatalog-core[0-9\.-]*.jar" 2>&1 | grep -m 1 -v 'Permission denied'`
 
 if [ -z "$hcatalog" ]
 then
