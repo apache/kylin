@@ -23,7 +23,6 @@ KylinApp.controller('CubeRefreshCtrl', function ($scope, $modal,cubeConfig,MetaM
 
   //edit model
   if($scope.state.mode==="edit") {
-    $scope.metaModel = MetaModel;
     if(!$scope.cubeMetaFrame.auto_merge_time_ranges){
       $scope.cubeMetaFrame.auto_merge_time_ranges = [];
     }

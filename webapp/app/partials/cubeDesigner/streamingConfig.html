@@ -18,22 +18,8 @@
 
 <div ng-controller="streamingConfigCtrl">
   <ng-form name="forms.cube_streaming_form" novalidate>
-    <div class="form-group">
-      <div class="row">
-        <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-          <b>Is this cube for streaming use?</b>
-        </label>
-        <div class="col-xs-12 col-sm-6" ng-if="state.mode=='edit'" >
-          <toggle-switch ng-model="cubeState.isStreaming" on-label="YES" off-label="NO"> <toggle-switch>
-        </div>
-        <div class="col-xs-12 col-sm-6" ng-if="state.mode=='view'" >
-            <span>{{(!!cubeState.isStreaming)?'YES':'NO'}}</span>
-        </div>
-      </div>
-    </div>
-{{}}
 
-    <div ng-if="cubeState.isStreaming">
+    <div>
       <accordion>
         <accordion-group is-open="state.isKfkSettingOpen" ng-init="state.isKfkSettingOpen=true">
           <accordion-heading>

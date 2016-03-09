@@ -72,4 +72,12 @@ KylinApp.controller('streamingConfigCtrl', function ($scope, $q, $routeParams, $
     delete cluster.newBroker;
   }
 
+
+  $scope.streamingTsColUpdate = function(){
+    if(!$scope.streamingCfg.parseTsColumn){
+      $scope.streamingCfg.parseTsColumn = ' ';
+    }
+    $scope.kafkaMeta.parserProperties = "tsColName="+$scope.streamingCfg.parseTsColumn;
+  }
+
 });

@@ -171,24 +171,25 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if (!modelsManager.getModels().length) {
           ModelDescService.query({model_name: $scope.cubeMetaFrame.model_name}, function (_model) {
             $scope.metaModel.model = _model;
+
+            StreamingService.getConfig({table:$scope.metaModel.model.fact_table}, function (kfkConfigs) {
+              if(!!kfkConfigs[0]){
+                $scope.cubeState.isStreaming = true;
+              }
+              else{
+                return;
+              }
+              $scope.streamingMeta = kfkConfigs[0];
+              StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
+                $scope.kafkaMeta = streamings[0];
+              })
+            })
           });
         }
-        $scope.metaModel.model = modelsManager.getModel($scope.cubeMetaFrame.model_name);
 
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
 
-        StreamingService.getConfig({cubeName:$scope.cubeMetaFrame.name}, function (kfkConfigs) {
-          if(!!kfkConfigs[0]){
-            $scope.cubeState.isStreaming = true;
-          }
-          else{
-            return;
-          }
-          $scope.streamingMeta = kfkConfigs[0];
-          StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
-            $scope.kafkaMeta = streamings[0];
-          })
-        })
+
       }
     });
 
@@ -732,41 +733,32 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   });
 
 
-  $scope.streamingCfg = {
-    parseTsColumn:"{{}}",
-    columnOptions:[]
-  }
   //dimensions options is depend on the model input when add cube
-  $scope.$watch('cubeMetaFrame.model_name', function (newValue, oldValue) {
-    if (!newValue) {
-      return;
-    }
-    $scope.metaModel.model = modelsManager.getModel(newValue);
+  //$scope.$watch('cubeMetaFrame.model_name', function (newValue, oldValue) {
+  //  if (!newValue) {
+  //    return;
+  //  }
+  //  $scope.metaModel.model = modelsManager.getModel(newValue);
+  //
+  //  if(!$scope.metaModel.model){
+  //    return;
+  //  }
+  //
+  //  var factTable = $scope.metaModel.model.fact_table;
+  //  var cols = $scope.getColumnsByTable(factTable);
+  //
+  //  for(var i=0;i<cols.length;i++){
+  //    var col = cols[i];
+  //    if(col.datatype === "timestamp"){
+  //      $scope.streamingCfg.columnOptions.push(col.name);
+  //    }
+  //  }
+  //  $scope.kafkaMeta.parserProperties = "tsColName=' ';formatTs=TRUE";
+  //
+  //
+  //});
 
-    if(!$scope.metaModel.model){
-      return;
-    }
 
-    var factTable = $scope.metaModel.model.fact_table;
-    var cols = $scope.getColumnsByTable(factTable);
-
-    for(var i=0;i<cols.length;i++){
-      var col = cols[i];
-      if(col.datatype === "timestamp"){
-        $scope.streamingCfg.columnOptions.push(col.name);
-      }
-    }
-    $scope.kafkaMeta.parserProperties = "tsColName=' ';formatTs=TRUE";
-
-
-  });
-
-  $scope.streamingTsColUpdate = function(){
-    if(!$scope.streamingCfg.parseTsColumn){
-      $scope.streamingCfg.parseTsColumn = ' ';
-    }
-    $scope.kafkaMeta.parserProperties = "tsColName="+$scope.streamingCfg.parseTsColumn+";formatTs=TRUE";
-  }
   $scope.$on('DimensionsEdited', function (event) {
     if ($scope.cubeMetaFrame) {
       reGenerateRowKey();
