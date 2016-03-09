@@ -33,98 +33,40 @@
   </script>
 
   <script type="text/ng-template" id="addStreamingSource.html">
+
     <div class="modal-header">
-      <h2>Create Streaming Table Schema</h2>
+      <div class="box-header">
+        <h3 class="box-title">Streaming Table And Cluster Info</h3>
+
+        <div class="box-tools pull-right">
+          <button type="button" class="btn btn-box-tool" ng-click="cancel()" data-widget="remove"><i class="fa fa-times"></i></button>
+        </div>
+      </div>
     </div>
 
-    <div class="modal-body streaming-source" style="height: 660px;">
-      <div class="col-xs-5">
-        <p class="text-info">
-          Need to input streaming source record here, will detect the source schema and create a table schema for
-          streaming.
-        </p>
-
-        <div style="padding:15px;" class="has-error">
-          <small class="help-block" ng-show="streaming.sourceSchema==''&&form.setStreamingSchema.$sbumitted">Please
-            input Streaming source record to generate schema.
-          </small>
-        </div>
-        <div style="margin-bottom: 20px;">
-          <span class="label label-info">JSON</span>
-        </div>
-        <div ng-model="streaming.sourceSchema" ui-ace="{
-    useWrapMode : true,
-    mode:'json',
-    onLoad: streamingOnLoad
-  }">
-
-        </div>
-      </div>
-      <div class="col-xs-1" style="margin-top:300px;text-align:center;">
-        <button type="button" class="btn btn-primary" ng-click="streamingOnChange()"><i
-          class="fa fa-angle-double-right fa-5" style="font-size:2em;"></i></button>
-      </div>
-      <div class="col-xs-6" ng-show="table.sourceValid">
-        <ol class="text-info" style="margin-bottom: 30px;">
-          <li>Choose 'timestamp' type column for streaming table.</li>
-          <li>derived time dimensions are calculated from timestamp field to help analysis against different time granularities.</li>
-        </ol>
-        <form class="form-horizontal" name="form.setStreamingSchema" novalidate>
-          <div class="form-group required">
-            <label class="col-xs-4 control-label" style="text-align: left;">Table Name</label>
-
-            <div class="col-xs-8"
-                 ng-class="{'has-error':form.setStreamingSchema.streamingObject.$invalid && (form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$sbumitted)}">
-              <input type="text" name="streamingObject" required="" ng-model="table.name" class="form-control"/>
-              <small class="help-block"
-                     ng-show="form.setStreamingSchema.streamingObject.$error.required&&(form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$sbumitted)">
-                Table name is required.
-              </small>
-            </div>
-          </div>
-        </form>
-        <table class="table table-hover table-bordered">
-          <tr>
-            <th></th>
-            <th>Column</th>
-            <th>Column Type</th>
-            <th>Comment</th>
-          </tr>
-          <tr ng-repeat="column in columnList">
-            <td><label style="width:100%;cursor: pointer;" for="{{column.name}}"><input style="width:1em;height:1em;"
-                                                                                        type="checkbox"
-                                                                                        id="{{column.name}}"
-                                                                                        ng-model="column.checked"
-                                                                                        ng-true-value="Y"
-                                                                                        ng-false-value="N"/></label>
-            </td>
-            <td>{{column.name}}</td>
-            <td>
-              <select chosen ng-model="column.type"
-                      ng-options="type as type for type in tableConfig.dataTypes"
-                      data-placeholder="select a column type"
-                      style="width: 120px !important;"
-                      class="chosen-select">
-              </select>
-            </td>
-            <td>
-              <label ng-if="column.type=='timestamp'&&column.fromSource=='Y'" class="badge badge-info">timestamp</label>
-              <label ng-if="column.fromSource=='N'" class="badge badge-info">derived time dimension</label>
-            </td>
-          </tr>
-        </table>
-
-        <div class="has-error" ng-if="rule.timestampColumnConflict">
-          <small class="help-block">
-            You should choose one, and only one 'timestamp' type column generated from source schema.
-          </small>
-        </div>
-      </div>
+    <div class="modal-body streaming-source" style="height: 660px;overflow-y:auto;">
+        <div ng-show="steps.curStep==1" ng-include="'partials/tables/loadStreamingTable.html'"></div>
+        <div ng-show="steps.curStep==2" ng-include="'partials/cubeDesigner/streamingConfig.html'"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" ng-click="syncStreamingSchema()" ng-disabled="form.setStreamingSchema.$invalid">
-        Submit
-      </button>
-      <button class="btn btn-primary" ng-click="cancel()">Cancel</button>
+      <div class="row">
+        <div class="col-xs-8">
+          <div>
+          </div>
+        </div>
+        <div class="col-xs-4">
+          <button class="btn btn-prev" ng-click="previewStep();" ng-show="steps.curStep==2">
+            <i class="ace-icon fa fa-arrow-left"></i>
+            Prev
+          </button>
+          <button id="nextButton" class="btn btn-success btn-next"  ng-click="nextStep();" ng-show="steps.curStep==1">
+            Next
+            <i class="ace-icon fa fa-arrow-right icon-on-right"></i>
+          </button>
+          <button class="btn btn-primary" ng-click="syncStreamingSchema()" ng-show="steps.curStep==2">
+            Submit
+          </button>
+        </div>
+      </div>
     </div>
   </script>

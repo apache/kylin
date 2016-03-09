@@ -45,7 +45,9 @@ public class StreamingService extends BasicService {
             streamingConfigs = getStreamingManager().listAllStreaming();
         } else {
             StreamingConfig config = getStreamingManager().getConfig(table);
-            streamingConfigs.add(config);
+            if(config!=null){
+                streamingConfigs.add(config);
+            }
         }
 
         return streamingConfigs;

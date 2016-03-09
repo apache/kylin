@@ -87,6 +87,7 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
         })
     }
 
+
     this.getModels = function(){
         return _this.models;
     }

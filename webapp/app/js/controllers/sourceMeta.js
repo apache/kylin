@@ -422,7 +422,72 @@ KylinApp
       });
     };
 
-    var StreamingSourceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig) {
+    var StreamingSourceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig,StreamingModel) {
+
+      $scope.cubeState={
+        "isStreaming": false
+      }
+      $scope.state={
+        'mode':'edit'
+      }
+
+      $scope.streamingMeta = StreamingModel.createStreamingConfig();
+      $scope.kafkaMeta = StreamingModel.createKafkaConfig();
+
+
+      $scope.steps = {
+        curStep:1
+      };
+
+      $scope.streamingCfg = {
+        parseTsColumn:"{{}}",
+        columnOptions:[]
+      }
+
+      $scope.previewStep = function(){
+        $scope.steps.curStep--;
+      }
+
+      $scope.nextStep = function(){
+        //check form
+        $scope.form['setStreamingSchema'].$sbumitted = true;
+        if(!$scope.streaming.sourceSchema||$scope.streaming.sourceSchema===""){
+          return;
+        }
+
+        if(!$scope.table.name||$scope.table.name===""){
+          return;
+        }
+
+        $scope.prepareNextStep();
+
+        if(!$scope.rule.timestampColumnExist){
+          return;
+        }
+
+        $scope.steps.curStep++;
+      }
+
+      $scope.prepareNextStep = function(){
+        $scope.streamingCfg.columnOptions = [];
+        angular.forEach($scope.columnList,function(column,$index){
+          if (column.checked == "Y" && column.fromSource=="Y" && column.type == "timestamp") {
+            $scope.streamingCfg.columnOptions.push(column.name);
+            $scope.rule.timestampColumnExist = true;
+          }
+        })
+
+        if($scope.streamingCfg.columnOptions.length==1){
+          $scope.streamingCfg.parseTsColumn = $scope.streamingCfg.columnOptions[0];
+          $scope.kafkaMeta.parserProperties = "tsColName="+$scope.streamingCfg.parseTsColumn;
+        }
+        if($scope.kafkaMeta.parserProperties!==''){
+          $scope.state.isParserHeaderOpen = false;
+        }else{
+          $scope.state.isParserHeaderOpen = true;
+        }
+      }
+
       $scope.projectName = projectName;
       $scope.tableConfig = tableConfig;
       $scope.cubeConfig = cubeConfig;
@@ -433,7 +498,8 @@ KylinApp
 
       $scope.table = {
         name: '',
-        sourceValid:false
+        sourceValid:false,
+        schemaChecked:false
       }
 
       $scope.cancel = function () {
@@ -447,6 +513,7 @@ KylinApp
       $scope.columnList = [];
 
       $scope.streamingOnChange = function () {
+        $scope.table.schemaChecked = true;
         console.log($scope.streaming.sourceSchema);
         try {
           $scope.streaming.parseResult = JSON.parse($scope.streaming.sourceSchema);
@@ -525,17 +592,9 @@ KylinApp
 
       $scope.form={};
       $scope.rule={
-        'timestampColumnConflict':false
+        'timestampColumnExist':false
       }
       $scope.syncStreamingSchema = function () {
-        $scope.form['setStreamingSchema'].$sbumitted = true;
-        if(!$scope.streaming.sourceSchema||$scope.streaming.sourceSchema===""){
-          return;
-        }
-
-        if(!$scope.table.name||$scope.table.name===""){
-          return;
-        }
 
         var columns = [];
         angular.forEach($scope.columnList,function(column,$index){
@@ -552,6 +611,7 @@ KylinApp
 
         $scope.tableData = {
           "name": $scope.table.name,
+          "source_type":1,
           "columns": columns,
           'database':'Default'
         }
