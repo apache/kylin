@@ -241,7 +241,7 @@ public class CubeStatsReader {
         CuboidScheduler scheduler = new CuboidScheduler(cubeDesc);
         long baseCuboid = Cuboid.getBaseCuboidId(cubeDesc);
         int dimensionCount = Long.bitCount(baseCuboid);
-        printCuboidInfoTree(0L, baseCuboid, scheduler, cuboidRows, cuboidSizes, dimensionCount, 0, out);
+        printCuboidInfoTree(-1L, baseCuboid, scheduler, cuboidRows, cuboidSizes, dimensionCount, 0, out);
     }
 
     private static void printCuboidInfoTree(long parent, long cuboidID, final CuboidScheduler scheduler, Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, int dimensionCount, int depth, PrintWriter out) {
@@ -251,7 +251,7 @@ public class CubeStatsReader {
         Collections.sort(children);
 
         for (Long child : children) {
-            printCuboidInfoTree(parent, child, scheduler, cuboidRows, cuboidSizes, dimensionCount, depth + 1, out);
+            printCuboidInfoTree(cuboidID, child, scheduler, cuboidRows, cuboidSizes, dimensionCount, depth + 1, out);
         }
     }
 
@@ -268,7 +268,7 @@ public class CubeStatsReader {
         sb.append(", est row: ").append(rowCount).append(", est MB: ").append(formatDouble(size));
 
         if (parent != -1) {
-            sb.append(", shrink: ").append(formatDouble(1.0 * cuboidRows.get(cuboidID) / cuboidRows.get(parent))).append("%");
+            sb.append(", shrink: ").append(formatDouble(100.0 * cuboidRows.get(cuboidID) / cuboidRows.get(parent))).append("%");
         }
 
         out.println(sb.toString());
@@ -279,6 +279,7 @@ public class CubeStatsReader {
     }
 
     public static void main(String[] args) throws IOException {
+        System.out.println("CubeStatsReader is used to read cube statistic saved in metadata store");
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(config).getCube(args[0]);
         List<CubeSegment> segments = cube.getSegments(SegmentStatusEnum.READY);

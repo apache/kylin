@@ -18,14 +18,11 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.AggregationGroup;
@@ -34,10 +31,13 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Cuboid implements Comparable<Cuboid> {
 
@@ -222,7 +222,8 @@ public class Cuboid implements Comparable<Cuboid> {
             return true;
         }
 
-        hier: for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
+        hier:
+        for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
             long result = cuboidID & hierarchyMasks.fullMask;
             if (result > 0) {
                 // if match one of the hierarchy constrains, return true;
@@ -385,11 +386,13 @@ public class Cuboid implements Comparable<Cuboid> {
 
     public static String getDisplayName(long cuboidID, int dimensionCount) {
         StringBuilder sb = new StringBuilder();
-        String temp = Long.toString(cuboidID);
-        for (int i = 0; i < dimensionCount - temp.length(); i++) {
-            sb.append("0");
+        for (int i = 0; i < dimensionCount; ++i) {
+            if ((cuboidID & (1L << i)) == 0) {
+                sb.append('0');
+            } else {
+                sb.append('1');
+            }
         }
-        sb.append(temp);
-        return sb.toString();
+        return StringUtils.reverse(sb.toString());
     }
 }
