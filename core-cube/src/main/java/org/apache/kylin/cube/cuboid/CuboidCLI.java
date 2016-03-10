@@ -57,7 +57,9 @@ public class CuboidCLI {
                 if (!notfound) {
                     throw new IllegalStateException("Find duplicate spanning cuboid " + sc + " from cuboid " + cuboid);
                 }
+
                 cuboidQueue.push(sc);
+
             }
         }
 
@@ -67,6 +69,36 @@ public class CuboidCLI {
             System.out.println(Arrays.toString(enumCuboids.toArray(new Long[enumCuboids.size()])));
             if (enumCuboids.equals(cuboidSet) == false) {
                 throw new IllegalStateException("Expected cuboid set " + enumCuboids + "; but actual cuboid set " + cuboidSet);
+            }
+
+            //check all valid and invalid
+            for (long i = 0; i < baseCuboid; ++i) {
+                if (cuboidSet.contains(i)) {
+                    if (!Cuboid.isValid(cubeDesc, i)) {
+                        throw new RuntimeException();
+                    }
+
+                    if (Cuboid.translateToValidCuboid(cubeDesc, i) != i) {
+                        throw new RuntimeException();
+                    }
+                } else {
+                    if (Cuboid.isValid(cubeDesc, i)) {
+                        throw new RuntimeException();
+                    }
+
+                    long corrected = Cuboid.translateToValidCuboid(cubeDesc, i);
+                    if (corrected == i) {
+                        throw new RuntimeException();
+                    }
+
+                    if (!Cuboid.isValid(cubeDesc, corrected)) {
+                        throw new RuntimeException();
+                    }
+
+                    if (Cuboid.translateToValidCuboid(cubeDesc, corrected) != corrected) {
+                        throw new RuntimeException();
+                    }
+                }
             }
         }
 

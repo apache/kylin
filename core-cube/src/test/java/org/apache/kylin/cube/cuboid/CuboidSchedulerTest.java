@@ -88,6 +88,10 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     private CubeDesc getStreamingCubeDesc() {
         return getCubeDescManager().getCubeDesc("test_streaming_table_cube_desc");
     }
+    
+    private CubeDesc getSSBCubeDesc() {
+        return getCubeDescManager().getCubeDesc("ssb");
+    }
 
     private void testSpanningAndGetParent(CuboidScheduler scheduler, CubeDesc cube, long[] cuboidIds) {
         for (long cuboidId : cuboidIds) {
@@ -205,6 +209,12 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     @Test
     public void testCuboidGeneration5() {
         CubeDesc cube = getStreamingCubeDesc();
+        CuboidCLI.simulateCuboidGeneration(cube, true);
+    }
+
+    @Test
+    public void testCuboidGeneration6() {
+        CubeDesc cube = getSSBCubeDesc();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
 
