@@ -26,6 +26,7 @@ KylinApp
     $scope.queryString = "";
     $scope.queries = [];
     $scope.curQuery = null;
+    $scope.exportSql = null;
     $scope.dateTypes = [91, 92, 93];
     $scope.stringTypes = [-1, 1, 12];
     $scope.numberTypes = [-7, -6, -5, 3, 4, 5, 6, 7, 8];
@@ -240,7 +241,7 @@ KylinApp
     }
 
     $scope.sanitate = function (sql) {
-      return sql.replace(/\n/g, " ");
+      return encodeURIComponent(sql.replace(/\n/g, " "));
     }
 
     $scope.query = function (query) {
@@ -278,6 +279,7 @@ KylinApp
       $scope.curQuery = newQuery;
       $scope.query($scope.curQuery);
       $scope.cacheQuery($scope.curQuery);
+      $scope.exportSql = $scope.sanitate(sql);
     }
 
     $scope.reset = function (query) {
