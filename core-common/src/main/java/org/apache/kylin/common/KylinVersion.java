@@ -16,16 +16,12 @@
  */
 package org.apache.kylin.common;
 
-/**
- * Current version is: 2.1
- *
- * @since 2.1
- */
+
 public class KylinVersion {
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final String CURRENT_KYLIN_VERSION = "2.1";
+    private static final String CURRENT_KYLIN_VERSION = "1.5.0";
 
     /**
      * Get current Kylin version
