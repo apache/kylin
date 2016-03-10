@@ -235,7 +235,6 @@ public class Cuboid implements Comparable<Cuboid> {
         for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
             long result = cuboidID & hierarchyMasks.fullMask;
             if (result > 0) {
-                // if match one of the hierarchy constrains, return true;
                 for (long mask : hierarchyMasks.allMasks) {
                     if (result == mask) {
                         continue hier;
