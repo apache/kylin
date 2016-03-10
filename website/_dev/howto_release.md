@@ -1,6 +1,6 @@
 ---
 layout: dev
-title:  How to Making a Release
+title:  How to make a Release
 categories: development
 permalink: /development/howto_release.html
 ---
