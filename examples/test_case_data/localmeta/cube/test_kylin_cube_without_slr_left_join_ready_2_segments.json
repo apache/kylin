@@ -1,6 +1,6 @@
 {
   "uuid" : "1eaca32a-a33e-4b69-83dd-0bb8b1f8c5ff",
-  "version":"2.1",
+ 
   "last_modified" : 1404098141020,
   "name" : "test_kylin_cube_without_slr_left_join_ready_2_segments",
   "owner" : null,

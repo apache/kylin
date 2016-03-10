@@ -76,8 +76,6 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
      * Metadata model version
      *
      * User info only, we don't do version control
-     *
-     * For example: 2.1
      */
     @JsonProperty("version")
     protected String version = KylinVersion.getCurrentVersion();
