@@ -6,9 +6,9 @@ permalink: /development/howto_contribute.html
 ---
 
 ## Current branches
-* `1.x-staging`: Dev branch for 1,x versions, this branch spawns releases like 1.0, 1.1 etc. This is where new patches go to.
-* `2.x-staging`: Dev branch for 2.x versions, 2.x is the next generation Kylin (with streaming, spark support), it has fundamental difference with 1.x version, which means any changes on 1.x cannot merge to 2.x anymore. So if your patch affects both branches, you should make patches for both branches.
-* `master`: always point to the latest stable release (stable, but not up to date)
+* `master`: Main development branch for new features
+* `1.3.x`: Maintenance branch for a certain release
+* `document`: Document branch
 
 ## Making Changes
 * [Setup dev env](/development/dev_env.html)
