@@ -143,9 +143,18 @@ public class Cuboid implements Comparable<Cuboid> {
             long fullMask = hierarchyMask.fullMask;
             long intersect = cuboidID & fullMask;
             if (intersect != 0 && intersect != fullMask) {
-                long lsb = Long.lowestOneBit(intersect);
-                long fillMask = fullMask & ~(lsb - 1);
-                cuboidID |= fillMask;
+
+                boolean startToFill = false;
+                for (int i = hierarchyMask.dims.length - 1; i >= 0; i--) {
+                    if (startToFill) {
+                        cuboidID |= hierarchyMask.dims[i];
+                    } else {
+                        if ((cuboidID & hierarchyMask.dims[i]) != 0) {
+                            startToFill = true;
+                            cuboidID |= hierarchyMask.dims[i];
+                        }
+                    }
+                }
             }
         }
 
