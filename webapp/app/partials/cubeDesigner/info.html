@@ -25,7 +25,7 @@
                   <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                     <b>Model Name</b>
                   </label>
-                  <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.cube_info_form.model_name.$invalid && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.model_name.$sbumitted)}">
+                  <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.cube_info_form.model_name.$invalid && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.model_name.$submitted)}">
                     <select chosen ng-model="cubeMetaFrame.model_name" ng-if="cubeMode=='addNewCube'"
                             ng-options="model for model in modelsManager.modelNameList"
                             style="width:100%;"
@@ -39,7 +39,7 @@
 
                     <input ng-model="cubeMetaFrame.model_name" ng-disabled="true" class="form-control" ng-if="cubeMode=='editExistCube'"/>
 
-                    <small class="help-block" ng-show="forms.cube_info_form.model_name.$error.required && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.$sbumitted)">Model name is required.</small>
+                    <small class="help-block" ng-show="forms.cube_info_form.model_name.$error.required && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.$submitted)">Model name is required.</small>
                     <span ng-if="state.mode=='view'">{{cubeMetaFrame.model_name}}</span>
                   </div>
 
@@ -54,13 +54,13 @@
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
                         <b>Cube Name</b>
                     </label>
-                    <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.cube_info_form.cube_name.$invalid && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.cube_name.$sbumitted)}">
+                    <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.cube_info_form.cube_name.$invalid && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.cube_name.$submitted)}">
                         <input ng-if="state.mode=='edit'" ng-disabled="{{isEdit}}"  name="cube_name" type="text" class="form-control"
                                ng-model="cubeMetaFrame.name" required
                                placeholder="You can use letters, numbers, and '_'"
                                ng-maxlength=100 ng-pattern="/^\w+$/" />
-                        <small class="help-block" ng-show="forms.cube_info_form.cube_name.$error.required && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.$sbumitted)">Cube name is required.</small>
-                        <small class="help-block" ng-show="!forms.cube_info_form.cube_name.$error.required&&forms.cube_info_form.cube_name.$invalid && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.$sbumitted)">Cube name is invalid.</small>
+                        <small class="help-block" ng-show="forms.cube_info_form.cube_name.$error.required && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.$submitted)">Cube name is required.</small>
+                        <small class="help-block" ng-show="!forms.cube_info_form.cube_name.$error.required&&forms.cube_info_form.cube_name.$invalid && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.$submitted)">Cube name is invalid.</small>
 
                         <span ng-if="state.mode=='view'">{{cubeMetaFrame.name}}</span>
                     </div>

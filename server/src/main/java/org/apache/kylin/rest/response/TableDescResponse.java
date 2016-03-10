@@ -74,6 +74,7 @@ public class TableDescResponse extends TableDesc {
         this.setColumns(table.getColumns());
         this.setDatabase(table.getDatabase());
         this.setName(table.getName());
+        this.setSourceType(table.getSourceType());
         this.setUuid(table.getUuid());
     }
 

@@ -380,73 +380,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     });
   };
 
-  //save streaming
-  $scope.postData = {};
-  $scope.saveStreaming = function () {
-    $scope.kafkaMeta.name = $scope.streamingMeta.name;
-
-    $scope.postData.streamingMeta = angular.toJson($scope.streamingMeta, true);
-    $scope.postData.kafkaMeta = angular.toJson($scope.kafkaMeta, true);
-    SweetAlert.swal({
-      title: '',
-      text: 'Are you sure to save Streaming ?',
-      type: '',
-      showCancelButton: true,
-      confirmButtonColor: '#DD6B55',
-      confirmButtonText: "Yes",
-      closeOnConfirm: true
-    }, function (isConfirm) {
-      if (isConfirm) {
-        loadingRequest.show();
-
-        if ($scope.modelMode == "editExistStreaming") {
-          StreamingService.update({}, {
-            project: $scope.projectModel.selectedProject,
-            streamingConfig: $scope.postData.streamingMeta,
-            kafkaConfig: $scope.postData.kafkaMeta
-          }, function (request) {
-            if (request.successful) {
-              SweetAlert.swal('', 'Updated the streaming successfully.', 'success');
-              $location.path("/models");
-            } else {
-              var message = request.message;
-              var msg = !!(message) ? message : 'Failed to take action.';
-              MessageService.sendMsg($scope.streamingResultTmpl({
-                'text': msg,
-                'streamingSchema': $scope.postData.streamingMeta,
-                'kfkSchema': $scope.postData.kafkaMeta
-              }), 'error', {}, true, 'top_center');
-            }
-            loadingRequest.hide();
-          })
-        } else {
-          StreamingService.save({}, {
-            project: $scope.projectModel.selectedProject,
-            streamingConfig: $scope.postData.streamingMeta,
-            kafkaConfig: $scope.postData.kafkaMeta
-          }, function (request) {
-            if (request.successful) {
-              SweetAlert.swal('', 'Created the streaming successfully.', 'success');
-              $location.path("/models");
-            } else {
-              var message = request.message;
-              var msg = !!(message) ? message : 'Failed to take action.';
-              MessageService.sendMsg($scope.streamingResultTmpl({
-                'text': msg,
-                'streamingSchema': $scope.postData.streamingMeta,
-                'kfkSchema': $scope.postData.kafkaMeta
-              }), 'error', {}, true, 'top_center');
-            }
-            loadingRequest.hide();
-          })
-        }
-
-      }
-    });
-
-
-  }
-
 
 //    reverse the date
   $scope.saveCubeRollBack = function () {
@@ -732,31 +665,15 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
   });
 
-
-  //dimensions options is depend on the model input when add cube
-  //$scope.$watch('cubeMetaFrame.model_name', function (newValue, oldValue) {
-  //  if (!newValue) {
-  //    return;
-  //  }
-  //  $scope.metaModel.model = modelsManager.getModel(newValue);
-  //
-  //  if(!$scope.metaModel.model){
-  //    return;
-  //  }
-  //
-  //  var factTable = $scope.metaModel.model.fact_table;
-  //  var cols = $scope.getColumnsByTable(factTable);
-  //
-  //  for(var i=0;i<cols.length;i++){
-  //    var col = cols[i];
-  //    if(col.datatype === "timestamp"){
-  //      $scope.streamingCfg.columnOptions.push(col.name);
-  //    }
-  //  }
-  //  $scope.kafkaMeta.parserProperties = "tsColName=' ';formatTs=TRUE";
-  //
-  //
-  //});
+  $scope.$watch('cubeMetaFrame.model_name', function (newValue, oldValue) {
+    if (!newValue) {
+      return;
+    }
+    $scope.metaModel.model = modelsManager.getModel(newValue);
+    if(!$scope.metaModel.model){
+      return;
+    }
+  });
 
 
   $scope.$on('DimensionsEdited', function (event) {

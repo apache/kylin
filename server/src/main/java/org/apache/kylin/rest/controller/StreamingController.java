@@ -22,13 +22,17 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.streaming.StreamingConfig;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.StreamingRequest;
+import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.KafkaConfigService;
 import org.apache.kylin.rest.service.StreamingService;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
@@ -40,7 +44,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -57,6 +63,9 @@ public class StreamingController extends BasicController {
     private StreamingService streamingService;
     @Autowired
     private KafkaConfigService kafkaConfigService;
+    @Autowired
+    private CubeService cubeMgmtService;
+
 
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET })
     @ResponseBody
@@ -89,36 +98,69 @@ public class StreamingController extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
     public StreamingRequest saveStreamingConfig(@RequestBody StreamingRequest streamingRequest) {
-        //Update Model
+
+        String project = streamingRequest.getProject();
+        TableDesc tableDesc = deserializeTableDesc(streamingRequest);
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
-        if (streamingConfig == null ||kafkaConfig == null) {
-            return streamingRequest;
-        }
-        if (StringUtils.isEmpty(streamingConfig.getName())) {
-            logger.info("StreamingConfig should not be empty.");
-            throw new BadRequestException("StremingConfig name should not be empty.");
-        }
+        boolean  saveStreamingSuccess = false, saveKafkaSuccess = false;
 
         try {
-            streamingConfig.setUuid(UUID.randomUUID().toString());
-            streamingService.createStreamingConfig(streamingConfig);
-
+            tableDesc.setUuid(UUID.randomUUID().toString());
+            MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+            metaMgr.saveSourceTable(tableDesc);
+            cubeMgmtService.syncTableToProject(new String[]{tableDesc.getName()}, project);
         } catch (IOException e) {
-            logger.error("Failed to save StreamingConfig:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to save StreamingConfig: " + e.getLocalizedMessage());
+            throw new BadRequestException("Failed to add streaming table.");
         }
+
         try {
-            kafkaConfig.setUuid(UUID.randomUUID().toString());
-            kafkaConfigService.createKafkaConfig(kafkaConfig);
-        }catch (IOException e){
-            try {
-                streamingService.dropStreamingConfig(streamingConfig);
-            } catch (IOException e1) {
-                throw new InternalErrorException("StreamingConfig is created, but failed to create KafkaConfig: " + e.getLocalizedMessage());
+            if (StringUtils.isEmpty(streamingConfig.getName())) {
+                logger.info("StreamingConfig should not be empty.");
+                throw new BadRequestException("StremingConfig name should not be empty.");
             }
-            logger.error("Failed to save KafkaConfig:" + e.getLocalizedMessage(), e);
-            throw new InternalErrorException("Failed to save KafkaConfig: " + e.getLocalizedMessage());
+            try {
+                streamingConfig.setUuid(UUID.randomUUID().toString());
+                streamingService.createStreamingConfig(streamingConfig);
+                saveStreamingSuccess = true;
+            } catch (IOException e) {
+                logger.error("Failed to save StreamingConfig:" + e.getLocalizedMessage(), e);
+                throw new InternalErrorException("Failed to save StreamingConfig: " + e.getLocalizedMessage());
+            }
+            try {
+                kafkaConfig.setUuid(UUID.randomUUID().toString());
+                kafkaConfigService.createKafkaConfig(kafkaConfig);
+                saveKafkaSuccess = true;
+            } catch (IOException e) {
+                try {
+                    streamingService.dropStreamingConfig(streamingConfig);
+                } catch (IOException e1) {
+                    throw new InternalErrorException("StreamingConfig is created, but failed to create KafkaConfig: " + e.getLocalizedMessage());
+                }
+                logger.error("Failed to save KafkaConfig:" + e.getLocalizedMessage(), e);
+                throw new InternalErrorException("Failed to save KafkaConfig: " + e.getLocalizedMessage());
+            }
+        }finally {
+            if(saveKafkaSuccess == false || saveStreamingSuccess == false){
+
+                if(saveStreamingSuccess == true){
+                    StreamingConfig sConfig = streamingService.getStreamingManager().getStreamingConfig(streamingConfig.getName());
+                        try {
+                            streamingService.dropStreamingConfig(sConfig);
+                        } catch (IOException e) {
+                            throw new InternalErrorException("Action failed and failed to rollback the created streaming config: " + e.getLocalizedMessage());
+                        }
+                }
+                if(saveKafkaSuccess == true){
+                    try {
+                        KafkaConfig kConfig = kafkaConfigService.getKafkaConfig(kafkaConfig.getName());
+                        kafkaConfigService.dropKafkaConfig(kConfig);
+                    } catch (IOException e) {
+                        throw new InternalErrorException("Action failed and failed to rollback the created kafka config: " + e.getLocalizedMessage());
+                    }
+                }
+            }
+
         }
         streamingRequest.setSuccessful(true);
         return streamingRequest;
@@ -172,6 +214,24 @@ public class StreamingController extends BasicController {
         }
     }
 
+    private TableDesc deserializeTableDesc(StreamingRequest streamingRequest) {
+        TableDesc desc = null;
+        try {
+            logger.debug("Saving TableDesc " + streamingRequest.getTableData());
+            desc = JsonUtil.readValue(streamingRequest.getTableData(), TableDesc.class);
+        } catch (JsonParseException e) {
+            logger.error("The TableDesc definition is not valid.", e);
+            updateRequest(streamingRequest, false, e.getMessage());
+        } catch (JsonMappingException e) {
+            logger.error("The data TableDesc definition is not valid.", e);
+            updateRequest(streamingRequest, false, e.getMessage());
+        } catch (IOException e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
+        }
+        return desc;
+    }
+
     private StreamingConfig deserializeSchemalDesc(StreamingRequest streamingRequest) {
         StreamingConfig desc = null;
         try {
@@ -222,4 +282,7 @@ public class StreamingController extends BasicController {
         this.kafkaConfigService = kafkaConfigService;
     }
 
+    public void setCubeService(CubeService cubeService) {
+        this.cubeMgmtService = cubeService;
+    }
 }

@@ -5,19 +5,20 @@
       Need to input streaming source record here, will detect the source schema and create a table schema for
       streaming.
     </p>
-    <div class="has-error" ng-if="!table.sourceValid&&table.schemaChecked">
-      <small class="help-block">
-        Source json invalid.
-      </small>
-    </div>
+
     <div style="padding:15px;" class="has-error">
-      <small class="help-block" ng-show="streaming.sourceSchema==''&&form.setStreamingSchema.$sbumitted">Please
+      <small class="help-block" ng-show="streaming.sourceSchema==''&&form.setStreamingSchema.$submitted">Please
         input Streaming source record to generate schema.
       </small>
+      <small class="help-block" ng-if="!table.sourceValid&&table.schemaChecked">
+        Source json invalid, Please correct your schema and generate again.
+      </small>
     </div>
+
     <div style="margin-bottom: 20px;">
       <span class="label label-info">JSON</span>
     </div>
+
     <div ng-model="streaming.sourceSchema" ui-ace="{
     useWrapMode : true,
     mode:'json',
@@ -40,10 +41,10 @@
         <label class="col-xs-4 control-label" style="text-align: left;">Table Name</label>
 
         <div class="col-xs-8"
-             ng-class="{'has-error':form.setStreamingSchema.streamingObject.$invalid && (form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$sbumitted)}">
+             ng-class="{'has-error':form.setStreamingSchema.streamingObject.$invalid && (form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$submitted)}">
           <input type="text" name="streamingObject" required="" ng-model="table.name" class="form-control"/>
           <small class="help-block"
-                 ng-show="form.setStreamingSchema.streamingObject.$error.required&&(form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$sbumitted)">
+                 ng-show="form.setStreamingSchema.streamingObject.$error.required&&(form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$submitted)">
             Table name is required.
           </small>
         </div>
@@ -80,7 +81,7 @@
       </tr>
     </table>
 
-    <div class="has-error" ng-if="!rule.timestampColumnExist&&form.setStreamingSchema.$sbumitted">
+    <div class="has-error" ng-if="!rule.timestampColumnExist&&form.setStreamingSchema.$submitted">
       <small class="help-block">
         You should choose at least one 'timestamp' type column generated from source schema.
       </small>

@@ -22,8 +22,7 @@ KylinApp.service('StreamingModel', function () {
   this.createStreamingConfig = function () {
     var streamingConfig = {
       "name": "",
-      "iiName": "",
-      "cubeName": ""
+      "type":"kafka"
     };
 
     return streamingConfig;

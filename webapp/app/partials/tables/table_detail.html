@@ -28,6 +28,9 @@
         <li>
           <a data-toggle="tab" href="#schema">Extend Information</a>
         </li>
+        <li>
+          <a data-toggle="tab" ng-if="tableModel.selectedSrcTable.source_type==1" href="#streaming">Streaming Cluster</a>
+        </li>
       </ul>
       <div class="tab-content">
         <!--Schema-->
@@ -143,8 +146,15 @@
             </div>
           </div>
         </div>
+
+        <!--streaming-->
+        <div id="streaming" ng-show="tableModel.selectedSrcTable.source_type==1" class="tab-pane">
+          <div  ng-include="'partials/cubeDesigner/streamingConfig.html'" ng-init="state.mode='view'"></div>
+        </div>
+
       </div>
-    </div>
+
+      </div>
   </div>
 
 

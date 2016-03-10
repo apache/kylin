@@ -18,7 +18,13 @@
 
 'use strict';
 
-KylinApp.controller('streamingConfigCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, $animate,StreamingService,StreamingModel) {
+KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, $animate,StreamingModel) {
+
+  $scope.tableModel = TableModel;
+  $scope.streamingMeta = StreamingModel.createStreamingConfig();
+  $scope.kafkaMeta = StreamingModel.createKafkaConfig();
+
+
 
   $scope.addCluster = function () {
     $scope.kafkaMeta.clusters.push(StreamingModel.createKafkaCluster());
@@ -79,5 +85,28 @@ KylinApp.controller('streamingConfigCtrl', function ($scope, $q, $routeParams, $
     }
     $scope.kafkaMeta.parserProperties = "tsColName="+$scope.streamingCfg.parseTsColumn;
   }
+
+  $scope.$watch('tableModel.selectedSrcTable', function (newValue, oldValue) {
+    if (!newValue) {
+      return;
+    }
+    //view model
+    if($scope.state.mode == 'view' && $scope.tableModel.selectedSrcTable.source_type==1){
+      var table = $scope.tableModel.selectedSrcTable;
+      StreamingService.getConfig({table:table.name}, function (configs) {
+        if(!!configs[0]&&configs[0].name.toUpperCase() == table.name.toUpperCase()){
+          $scope.streamingMeta = configs[0];
+          StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
+            if(!!streamings[0]&&streamings[0].name.toUpperCase() == table.name.toUpperCase()){
+              $scope.kafkaMeta = streamings[0];
+            }
+          })
+        }
+      })
+    }
+
+
+
+  });
 
 });
