@@ -61,8 +61,8 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCubeBuilderTest.class);
 
-    private static final int INPUT_ROWS = 70000;
-    private static final int THREADS = 4;
+    private static final int INPUT_ROWS = 1000;
+    private static final int THREADS = 1;
 
     private static CubeInstance cube;
     private static String flatTable;
@@ -75,8 +75,8 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
 
-        cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
-        flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
+        cube = cubeManager.getCube("ssb");
+        flatTable = "../examples/test_case_data/localmeta/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv";
         dictionaryMap = getDictionaryMap(cube, flatTable);
     }
 
@@ -213,7 +213,9 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         List<String> lines = FileUtils.readLines(new File(flatTable), "UTF-8");
         for (String line : lines) {
             String[] row = line.trim().split(",");
-            assert row.length == nColumns;
+            if ( row.length != nColumns) {
+                throw new IllegalStateException();
+            }
             if (row[c] != null) {
                 result.add(Bytes.toBytes(row[c]));
             }
