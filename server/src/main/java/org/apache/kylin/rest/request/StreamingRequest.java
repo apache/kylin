@@ -19,7 +19,8 @@
 
 package org.apache.kylin.rest.request;
 
-import java.lang.String;public class StreamingRequest {
+import java.lang.String;
+public class StreamingRequest {
 
     private String project;
 

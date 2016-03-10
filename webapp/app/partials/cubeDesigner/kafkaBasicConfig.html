@@ -23,11 +23,11 @@
         <label class="col-xs-12 col-sm-3 control-label no-padding-right">
           <b>Topic</b>
         </label>
-        <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.kafka_config_form.topic.$invalid && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.topic.$sbumitted)}">
+        <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.kafka_config_form.topic.$invalid && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.topic.$submitted)}">
           <input  ng-if="state.mode=='edit'"  name="name" required ng-model="kafkaMeta.topic" type="text"
                   placeholder="Input kafkaConfig topic"
                   class="form-control"/>
-          <small class="help-block" ng-show="forms.kafka_config_form.topic.$error.required && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.$sbumitted)">Kafka topic is required.</small>
+          <small class="help-block" ng-show="forms.kafka_config_form.topic.$error.required && (forms.kafka_config_form.topic.$dirty||forms.kafka_config_form.$submitted)">Kafka topic is required.</small>
           <span ng-if="state.mode=='view'">{{kafkaMeta.topic}}</span>
         </div>
       </div>

@@ -28,15 +28,15 @@
                         <b>Model Name</b>
                     </label>
 
-                    <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$sbumitted)}">
+                    <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)}">
 
                         <!-- edit -->
                         <input ng-if="state.mode=='edit'" name="model_name" type="text" class="form-control"  ng-disabled="{{modelMode=='editExistModel'}}"
                                ng-model="modelsManager.selectedModel.name" required
                                placeholder="You can use letters, numbers, and '_'"
                                ng-maxlength=100 ng-pattern="/^\w+$/" />
-                        <small class="help-block" ng-show="forms.model_info_form.model_name.$error.required && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$sbumitted)">Model name is required.</small>
-                        <small class="help-block" ng-show="!forms.model_info_form.model_name.$error.required&&forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$sbumitted)">Model name is invalid.</small>
+                        <small class="help-block" ng-show="forms.model_info_form.model_name.$error.required && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">Model name is required.</small>
+                        <small class="help-block" ng-show="!forms.model_info_form.model_name.$error.required&&forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)">Model name is invalid.</small>
 
 
                         <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.name}}</span>

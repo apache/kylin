@@ -106,10 +106,15 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
                 var _table_node_list = [];
                 angular.forEach(tables,function(_table){
 
+                        var table_icon="fa fa-table";
+                        if(_table.source_type==1){
+                          table_icon="fa fa-th"
+                        }
+
                         var _table_node = {
                             label:_table.name,
                             data:_table,
-                            icon:"fa fa-table",
+                            icon:table_icon,
                             onSelect:function(branch){
                                 // set selected model
                                 _this.selectedSrcTable = branch.data;

@@ -139,7 +139,7 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     else {
       //form validation
       if ($scope.forms[$scope.curStep.form].$invalid) {
-        $scope.forms[$scope.curStep.form].$sbumitted = true;
+        $scope.forms[$scope.curStep.form].$submitted = true;
         return false;
       } else {
         //business rule check

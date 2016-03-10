@@ -180,4 +180,8 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     public int getSourceType() {
         return sourceType;
     }
+
+    public void setSourceType(int sourceType) {
+        this.sourceType = sourceType;
+    }
 }

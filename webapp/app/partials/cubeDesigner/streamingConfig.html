@@ -17,7 +17,7 @@
 -->
 
 <div ng-controller="streamingConfigCtrl">
-  <ng-form name="forms.cube_streaming_form" novalidate>
+  <form name="form.cube_streaming_form" novalidate>
 
     <div>
       <accordion>
@@ -33,11 +33,15 @@
           <label class="col-xs-12 col-sm-3 control-label no-padding-right">
             <b>Topic</b>
           </label>
-          <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.cube_streaming_form.topic.$invalid && (forms.cube_streaming_form.topic.$dirty||forms.cube_streaming_form.topic.$sbumitted)}">
+          <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':form.cube_streaming_form.topic.$invalid && (form.cube_streaming_form.topic.$dirty||form.cube_streaming_form.$submitted)}">
             <input  ng-if="state.mode=='edit'"  name="topic" required ng-model="kafkaMeta.topic" type="text"
                     placeholder="Input kafkaConfig topic"
                     class="form-control"/>
-            <small class="help-block" ng-show="forms.cube_streaming_form.topic.$error.required && (forms.cube_streaming_form.topic.$dirty||forms.cube_streaming_form.$sbumitted)">Kafka topic is required.</small>
+            <small class="help-block"
+                   ng-show="!form.cube_streaming_form.topic.$error.required && form.cube_streaming_form.topic.$invalid && (form.cube_streaming_form.topic.$dirty||form.cube_streaming_form.$submitted)">
+              Kafka topic is invalid.
+            </small>
+            <small class="help-block" ng-show="form.cube_streaming_form.topic.$error.required && (form.cube_streaming_form.topic.$dirty||form.cube_streaming_form.$submitted)">Kafka topic is required.</small>
             <span ng-if="state.mode=='view'">{{kafkaMeta.topic}}</span>
           </div>
         </div>
@@ -136,12 +140,17 @@
               </label>
 
               <div class="col-xs-12 col-sm-6"
-                   ng-class="{'has-error':forms.cube_streaming_form.timeout.$invalid && (forms.cube_streaming_form.timeout.$dirty||forms.cube_streaming_form.timeout.$sbumitted)}">
-                <input ng-if="state.mode=='edit'" name="name" required ng-model="kafkaMeta.timeout" type="text"
+                   ng-class="{'has-error':form.cube_streaming_form.timeout.$invalid && (form.cube_streaming_form.timeout.$dirty||form.cube_streaming_form.$submitted)}">
+                <input ng-if="state.mode=='edit'" name="timeout" required ng-model="kafkaMeta.timeout" type="text"
                        placeholder="Input kafkaConfig timeout"
+                       ng-maxlength=100 ng-pattern="/^\+?[1-9][0-9]*$/"
                        class="form-control"/>
                 <small class="help-block"
-                       ng-show="forms.cube_streaming_form.timeout.$error.required && (forms.cube_streaming_form.timeout.$dirty||forms.cube_streaming_form.$sbumitted)">
+                       ng-show="!form.cube_streaming_form.timeout.$error.required && form.cube_streaming_form.timeout.$invalid && (form.cube_streaming_form.timeout.$dirty||form.cube_streaming_form.$submitted)">
+                  Kafka timeout is invalid.
+                </small>
+                <small class="help-block"
+                       ng-show="form.cube_streaming_form.timeout.$error.required && (form.cube_streaming_form.timeout.$dirty||form.cube_streaming_form.$submitted)">
                   Kafka timeout is required.
                 </small>
                 <span ng-if="state.mode=='view'">{{kafkaMeta.timeout}}</span>
@@ -156,12 +165,17 @@
               </label>
 
               <div class="col-xs-12 col-sm-6"
-                   ng-class="{'has-error':forms.cube_streaming_form.bufferSize.$invalid && (forms.cube_streaming_form.bufferSize.$dirty||forms.cube_streaming_form.bufferSize.$sbumitted)}">
-                <input ng-if="state.mode=='edit'" name="name" required ng-model="kafkaMeta.bufferSize" type="text"
+                   ng-class="{'has-error':form.cube_streaming_form.bufferSize.$invalid && (form.cube_streaming_form.bufferSize.$dirty||form.cube_streaming_form.$submitted)}">
+                <input ng-if="state.mode=='edit'" name="bufferSize" required ng-model="kafkaMeta.bufferSize" type="text"
                        placeholder="Input kafkaConfig bufferSize"
+                       ng-maxlength=100 ng-pattern="/^\+?[1-9][0-9]*$/"
                        class="form-control"/>
                 <small class="help-block"
-                       ng-show="forms.cube_streaming_form.bufferSize.$error.required && (forms.cube_streaming_form.bufferSize.$dirty||forms.cube_streaming_form.$sbumitted)">
+                       ng-show="!form.cube_streaming_form.bufferSize.$error.required && form.cube_streaming_form.bufferSize.$invalid && (form.cube_streaming_form.bufferSize.$dirty||form.cube_streaming_form.$submitted)">
+                  Kafka bufferSize is invalid.
+                </small>
+                <small class="help-block"
+                       ng-show="form.cube_streaming_form.bufferSize.$error.required && (form.cube_streaming_form.bufferSize.$dirty||form.cube_streaming_form.$submitted)">
                   Kafka bufferSize is required.
                 </small>
                 <span ng-if="state.mode=='view'">{{kafkaMeta.bufferSize}}</span>
@@ -176,12 +190,17 @@
               </label>
 
               <div class="col-xs-12 col-sm-6"
-                   ng-class="{'has-error':forms.cube_streaming_form.margin.$invalid && (forms.cube_streaming_form.margin.$dirty||forms.cube_streaming_form.margin.$sbumitted)}">
-                <input ng-if="state.mode=='edit'" name="name" required ng-model="kafkaMeta.margin" type="text"
+                   ng-class="{'has-error':form.cube_streaming_form.margin.$invalid && (form.cube_streaming_form.margin.$dirty||form.cube_streaming_form.$submitted)}">
+                <input ng-if="state.mode=='edit'" name="margin" required ng-model="kafkaMeta.margin" type="text"
                        placeholder="Input kafkaConfig margin"
+                       ng-maxlength=100 ng-pattern="/^\+?[1-9][0-9]*$/"
                        class="form-control"/>
                 <small class="help-block"
-                       ng-show="forms.cube_streaming_form.margin.$error.required && (forms.cube_streaming_form.margin.$dirty||forms.cube_streaming_form.$sbumitted)">
+                       ng-show="!form.cube_streaming_form.margin.$error.required && form.cube_streaming_form.margin.$invalid && (form.cube_streaming_form.margin.$dirty||form.cube_streaming_form.$submitted)">
+                  Kafka margin is invalid.
+                </small>
+                <small class="help-block"
+                       ng-show="form.cube_streaming_form.margin.$error.required && (form.cube_streaming_form.margin.$dirty||form.cube_streaming_form.$submitted)">
                   Kafka margin is required.
                 </small>
                 <span ng-if="state.mode=='view'">{{kafkaMeta.margin}}</span>
@@ -208,13 +227,17 @@
               </label>
 
               <div class="col-xs-12 col-sm-6"
-                   ng-class="{'has-error':forms.cube_streaming_form.parserName.$invalid && (forms.cube_streaming_form.parserName.$dirty||forms.cube_streaming_form.parserName.$sbumitted)}">
-                <input ng-if="state.mode=='edit'" name="name" required ng-model="kafkaMeta.parserName" type="text"
+                   ng-class="{'has-error':form.cube_streaming_form.parserName.$invalid && (form.cube_streaming_form.parserName.$dirty||form.cube_streaming_form.$submitted)}">
+                <input ng-if="state.mode=='edit'" name="parserName" required ng-model="kafkaMeta.parserName" type="text"
                        placeholder="Input kafkaConfig parserName"
                        class="form-control"/>
                 <small class="help-block"
-                       ng-show="forms.cube_streaming_form.parserName.$error.required && (forms.cube_streaming_form.parserName.$dirty||forms.cube_streaming_form.$sbumitted)">
-                  Kafka parserName is required.
+                       ng-show="!form.cube_streaming_form.parserName.$error.required && form.cube_streaming_form.parserName.$invalid && (form.cube_streaming_form.parserName.$dirty||form.cube_streaming_form.$submitted)">
+                  Kafka parser name is invalid.
+                </small>
+                <small class="help-block"
+                       ng-show="form.cube_streaming_form.parserName.$error.required && (form.cube_streaming_form.parserName.$dirty||form.cube_streaming_form.$submitted)">
+                  Kafka parser name is required.
                 </small>
                 <span ng-if="state.mode=='view'">{{kafkaMeta.parserName}}</span>
               </div>
@@ -244,13 +267,17 @@
               </label>
 
               <div class="col-xs-12 col-sm-6"
-                   ng-class="{'has-error':forms.cube_streaming_form.parserProperties.$invalid && (forms.cube_streaming_form.parserProperties.$dirty||forms.cube_streaming_form.parserProperties.$sbumitted)}">
-                <input ng-if="state.mode=='edit'" name="name" required ng-model="kafkaMeta.parserProperties" type="text"
+                   ng-class="{'has-error':form.cube_streaming_form.parserProperties.$invalid && (form.cube_streaming_form.parserProperties.$dirty||form.cube_streaming_form.$submitted)}">
+                <input ng-if="state.mode=='edit'" name="parserProperties" required ng-model="kafkaMeta.parserProperties" type="text"
                        placeholder="configA=1;configB=2"
                        class="form-control"/>
                 <small class="help-block"
-                       ng-show="forms.cube_streaming_form.parserProperties.$error.required && (forms.cube_streaming_form.parserProperties.$dirty||forms.cube_streaming_form.$sbumitted)">
-                  Parser Properties is required.
+                       ng-show="!form.cube_streaming_form.parserProperties.$error.required && form.cube_streaming_form.parserProperties.$invalid && (form.cube_streaming_form.parserProperties.$dirty||form.cube_streaming_form.$submitted)">
+                  Parser properties is invalid.
+                </small>
+                <small class="help-block"
+                       ng-show="form.cube_streaming_form.parserProperties.$error.required && (form.cube_streaming_form.parserProperties.$dirty||form.cube_streaming_form.$submitted)">
+                  Parser properties is required.
                 </small>
                 <span ng-if="state.mode=='view'">{{kafkaMeta.parserProperties}}</span>
               </div>
@@ -260,5 +287,5 @@
       </accordion>
 
     </div>
-  </ng-form>
+  </form>
 </div>

@@ -422,7 +422,7 @@ KylinApp
       });
     };
 
-    var StreamingSourceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig,StreamingModel) {
+    var StreamingSourceCtrl = function ($scope, $location,$interpolate,$templateCache, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig,StreamingModel,StreamingService) {
 
       $scope.cubeState={
         "isStreaming": false
@@ -449,19 +449,26 @@ KylinApp
       }
 
       $scope.nextStep = function(){
+
+        $scope.checkFailed = false;
+
         //check form
-        $scope.form['setStreamingSchema'].$sbumitted = true;
+        $scope.form['setStreamingSchema'].$submitted = true;
         if(!$scope.streaming.sourceSchema||$scope.streaming.sourceSchema===""){
-          return;
+          $scope.checkFailed = true;
         }
 
         if(!$scope.table.name||$scope.table.name===""){
-          return;
+          $scope.checkFailed = true;
         }
 
         $scope.prepareNextStep();
 
         if(!$scope.rule.timestampColumnExist){
+          $scope.checkFailed = true;
+        }
+
+        if($scope.checkFailed){
           return;
         }
 
@@ -470,6 +477,7 @@ KylinApp
 
       $scope.prepareNextStep = function(){
         $scope.streamingCfg.columnOptions = [];
+        $scope.rule.timestampColumnExist = false;
         angular.forEach($scope.columnList,function(column,$index){
           if (column.checked == "Y" && column.fromSource=="Y" && column.type == "timestamp") {
             $scope.streamingCfg.columnOptions.push(column.name);
@@ -551,9 +559,6 @@ KylinApp
             'fromSource':'Y'
           });
 
-
-
-          //var formatList = [];
           //var
           columnList = _.sortBy(columnList, function (i) { return i.type; });
         }
@@ -587,14 +592,34 @@ KylinApp
           })
         }
         $scope.columnList = columnList;
-
       }
+
+
+      $scope.streamingResultTmpl = function (notification) {
+        // Get the static notification template.
+        var tmpl = notification.type == 'success' ? 'streamingResultSuccess.html' : 'streamingResultError.html';
+        return $interpolate($templateCache.get(tmpl))(notification);
+      };
+
 
       $scope.form={};
       $scope.rule={
         'timestampColumnExist':false
       }
+
+      $scope.modelMode == "addStreaming";
+
       $scope.syncStreamingSchema = function () {
+
+        $scope.form['cube_streaming_form'].$submitted = true;
+
+        if($scope.form['cube_streaming_form'].parserName.$invalid || $scope.form['cube_streaming_form'].parserProperties.$invalid) {
+          $scope.state.isParserHeaderOpen = true;
+        }
+
+        if($scope.form['cube_streaming_form'].$invalid){
+            return;
+        }
 
         var columns = [];
         angular.forEach($scope.columnList,function(column,$index){
@@ -616,10 +641,13 @@ KylinApp
           'database':'Default'
         }
 
+
+        $scope.kafkaMeta.name = $scope.table.name
+        $scope.streamingMeta.name = $scope.table.name;
+
         SweetAlert.swal({
-          title: '',
-          text: 'Are you sure to create the streaming table info?',
-          type: '',
+          title:"",
+          text: 'Are you sure to save the streaming table and cluster info ?',
           showCancelButton: true,
           confirmButtonColor: '#DD6B55',
           confirmButtonText: "Yes",
@@ -627,31 +655,93 @@ KylinApp
         }, function (isConfirm) {
           if (isConfirm) {
             loadingRequest.show();
-            TableService.addStreamingSrc({}, {project: $scope.projectName,tableData:angular.toJson($scope.tableData)}, function (request) {
-              if(request.success){
+
+            if ($scope.modelMode == "editExistStreaming") {
+              StreamingService.update({}, {
+                project: $scope.projectName,
+                tableData:angular.toJson($scope.tableData),
+                streamingConfig: angular.toJson($scope.streamingMeta),
+                kafkaConfig: angular.toJson($scope.kafkaMeta)
+              }, function (request) {
+                if (request.successful) {
+                  SweetAlert.swal('', 'Updated the streaming successfully.', 'success');
+                  $location.path("/models");
+                } else {
+                  var message = request.message;
+                  var msg = !!(message) ? message : 'Failed to take action.';
+                  MessageService.sendMsg($scope.streamingResultTmpl({
+                    'text': msg,
+                    'streamingSchema': angular.toJson($scope.streamingMeta,true),
+                    'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+                  }), 'error', {}, true, 'top_center');
+                }
                 loadingRequest.hide();
-                SweetAlert.swal('', 'Create Streaming Table Schema Successfully.', 'success');
-                $scope.cancel();
-                scope.aceSrcTbLoaded(true);
-                return;
-              }else{
-                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-              }
-              //end loading
-              loadingRequest.hide();
-            }, function (e) {
-              if (e.data && e.data.exception) {
-                var message = e.data.exception;
-                var msg = !!(message) ? message : 'Failed to take action.';
-                SweetAlert.swal('Oops...', msg, 'error');
-              } else {
-                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
-              }
-              loadingRequest.hide();
-            });
+              }, function (e) {
+                if (e.data && e.data.exception) {
+                  var message = e.data.exception;
+                  var msg = !!(message) ? message : 'Failed to take action.';
+                  MessageService.sendMsg($scope.streamingResultTmpl({
+                    'text': msg,
+                    'streamingSchema': angular.toJson($scope.streamingMeta,true),
+                    'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+                  }), 'error', {}, true, 'top_center');
+                } else {
+                  MessageService.sendMsg($scope.streamingResultTmpl({
+                    'text': msg,
+                    'streamingSchema': angular.toJson($scope.streamingMeta,true),
+                    'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+                  }), 'error', {}, true, 'top_center');
+                }
+                //end loading
+                loadingRequest.hide();
+
+              })
+            } else {
+              StreamingService.save({}, {
+                project: $scope.projectName,
+                tableData:angular.toJson($scope.tableData),
+                streamingConfig: angular.toJson($scope.streamingMeta),
+                kafkaConfig: angular.toJson($scope.kafkaMeta)
+              }, function (request) {
+                if (request.successful) {
+                  SweetAlert.swal('', 'Created the streaming successfully.', 'success');
+                  location.reload();
+                } else {
+                  var message = request.message;
+                  var msg = !!(message) ? message : 'Failed to take action.';
+                  MessageService.sendMsg($scope.streamingResultTmpl({
+                    'text': msg,
+                    'streamingSchema': angular.toJson($scope.streamingMeta,true),
+                    'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+                  }), 'error', {}, true, 'top_center');
+                }
+                loadingRequest.hide();
+              }, function (e) {
+                if (e.data && e.data.exception) {
+                  var message = e.data.exception;
+                  var msg = !!(message) ? message : 'Failed to take action.';
+
+                  MessageService.sendMsg($scope.streamingResultTmpl({
+                    'text': msg,
+                    'streamingSchema':angular.toJson( $scope.streamingMeta,true),
+                    'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+                  }), 'error', {}, true, 'top_center');
+                } else {
+                  MessageService.sendMsg($scope.streamingResultTmpl({
+                    'text': msg,
+                    'streamingSchema': angular.toJson($scope.streamingMeta,true),
+                    'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+                  }), 'error', {}, true, 'top_center');
+                }
+                //end loading
+                loadingRequest.hide();
+              })
+            }
+
           }
         });
       }
+
     };
 
   });
