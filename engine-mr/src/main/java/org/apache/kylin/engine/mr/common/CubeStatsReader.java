@@ -18,19 +18,8 @@
 
 package org.apache.kylin.engine.mr.common;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -61,9 +50,16 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This should be in cube module. It's here in engine-mr because currently stats
@@ -76,7 +72,7 @@ public class CubeStatsReader {
     final CubeSegment seg;
     final int samplingPercentage;
     final double mapperOverlapRatioOfFirstBuild; // only makes sense for the first build, is meaningless after merge
-    final Map<Long, HyperLogLogPlusCounter> cuboidRowCountMap;
+    final Map<Long, HyperLogLogPlusCounter> cuboidRowEstimatesHLL;
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
         ResourceStore store = ResourceStore.getStore(kylinConfig);
@@ -112,7 +108,7 @@ public class CubeStatsReader {
             this.seg = cubeSegment;
             this.samplingPercentage = percentage;
             this.mapperOverlapRatioOfFirstBuild = mapperOverlapRatio;
-            this.cuboidRowCountMap = counterMap;
+            this.cuboidRowEstimatesHLL = counterMap;
 
         } finally {
             IOUtils.closeStream(reader);
@@ -133,13 +129,13 @@ public class CubeStatsReader {
         return tempFile;
     }
 
-    public Map<Long, Long> getCuboidRowCountMap() {
-        return getCuboidRowCountMapFromSampling(cuboidRowCountMap, samplingPercentage);
+    public Map<Long, Long> getCuboidRowEstimatesHLL() {
+        return getCuboidRowCountMapFromSampling(cuboidRowEstimatesHLL, samplingPercentage);
     }
 
     // return map of Cuboid ID => MB
     public Map<Long, Double> getCuboidSizeMap() {
-        return getCuboidSizeMapFromRowCount(seg, getCuboidRowCountMap());
+        return getCuboidSizeMapFromRowCount(seg, getCuboidRowEstimatesHLL());
     }
 
     public double getMapperOverlapRatioOfFirstBuild() {
@@ -147,15 +143,13 @@ public class CubeStatsReader {
     }
 
     public static Map<Long, Long> getCuboidRowCountMapFromSampling(Map<Long, HyperLogLogPlusCounter> hllcMap, int samplingPercentage) {
-        return Maps.transformValues(hllcMap, new Function<HyperLogLogPlusCounter, Long>() {
-            @Nullable
-            @Override
-            public Long apply(HyperLogLogPlusCounter input) {
-                // No need to adjust according sampling percentage. Assumption is that data set is far
-                // more than cardinality. Even a percentage of the data should already see all cardinalities.
-                return input.getCountEstimate();
-            }
-        });
+        Map<Long, Long> cuboidRowCountMap = Maps.newHashMap();
+        for (Map.Entry<Long, HyperLogLogPlusCounter> entry : hllcMap.entrySet()) {
+            // No need to adjust according sampling percentage. Assumption is that data set is far
+            // more than cardinality. Even a percentage of the data should already see all cardinalities.
+            cuboidRowCountMap.put(entry.getKey(), entry.getValue().getCountEstimate());
+        }
+        return cuboidRowCountMap;
     }
 
     public static Map<Long, Double> getCuboidSizeMapFromRowCount(CubeSegment cubeSegment, Map<Long, Long> rowCountMap) {
@@ -219,7 +213,7 @@ public class CubeStatsReader {
     }
 
     private void print(PrintWriter out) {
-        Map<Long, Long> cuboidRows = getCuboidRowCountMap();
+        Map<Long, Long> cuboidRows = getCuboidRowEstimatesHLL();
         Map<Long, Double> cuboidSizes = getCuboidSizeMap();
         List<Long> cuboids = new ArrayList<Long>(cuboidRows.keySet());
         Collections.sort(cuboids);

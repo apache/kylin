@@ -125,7 +125,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         job.setNumReduceTasks(numberOfReducers);
 
         FileOutputFormat.setOutputPath(job, output);
-        job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
+        job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
 
         deletePath(job.getConfiguration(), output);
     }

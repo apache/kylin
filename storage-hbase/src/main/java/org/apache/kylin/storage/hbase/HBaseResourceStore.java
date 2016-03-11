@@ -154,30 +154,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     @Override
     protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException {
-        byte[] startRow = Bytes.toBytes(rangeStart);
-        byte[] endRow = plusZero(Bytes.toBytes(rangeEnd));
-
-        Scan scan = new Scan(startRow, endRow);
-        scan.addColumn(B_FAMILY, B_COLUMN_TS);
-        scan.addColumn(B_FAMILY, B_COLUMN);
-        tuneScanParameters(scan);
-
-        HTableInterface table = getConnection().getTable(getAllInOneTableName());
-        List<RawResource> result = Lists.newArrayList();
-        try {
-            ResultScanner scanner = table.getScanner(scan);
-            for (Result r : scanner) {
-                result.add(new RawResource(getInputStream(Bytes.toString(r.getRow()), r), getTimestamp(r)));
-            }
-        } catch (IOException e) {
-            for (RawResource rawResource : result) {
-                IOUtils.closeQuietly(rawResource.inputStream);
-            }
-            throw e;
-        } finally {
-            IOUtils.closeQuietly(table);
-        }
-        return result;
+        return getAllResources(rangeStart, rangeEnd, -1L, -1L);
     }
 
     @Override
@@ -188,7 +165,10 @@ public class HBaseResourceStore extends ResourceStore {
         Scan scan = new Scan(startRow, endRow);
         scan.addColumn(B_FAMILY, B_COLUMN_TS);
         scan.addColumn(B_FAMILY, B_COLUMN);
-        scan.setFilter(generateTimeFilterList(timeStartInMillis, timeEndInMillis));
+        FilterList filterList = generateTimeFilterList(timeStartInMillis, timeEndInMillis);
+        if (filterList != null) {
+            scan.setFilter(filterList);
+        }
         tuneScanParameters(scan);
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
@@ -218,11 +198,15 @@ public class HBaseResourceStore extends ResourceStore {
 
     private FilterList generateTimeFilterList(long timeStartInMillis, long timeEndInMillis) {
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-        SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.GREATER, Bytes.toBytes(timeStartInMillis));
-        filterList.addFilter(timeStartFilter);
-        SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.LESS_OR_EQUAL, Bytes.toBytes(timeEndInMillis));
-        filterList.addFilter(timeEndFilter);
-        return filterList;
+        if (timeStartInMillis != -1L) {
+            SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.GREATER, Bytes.toBytes(timeStartInMillis));
+            filterList.addFilter(timeStartFilter);
+        }
+        if (timeEndInMillis != -1L) {
+            SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.LESS_OR_EQUAL, Bytes.toBytes(timeEndInMillis));
+            filterList.addFilter(timeEndFilter);
+        }
+        return filterList.getFilters().size() == 0 ? null : filterList;
     }
 
     private InputStream getInputStream(String resPath, Result r) throws IOException {
@@ -325,7 +309,7 @@ public class HBaseResourceStore extends ResourceStore {
         byte[] rowkey = Bytes.toBytes(path);
 
         Get get = new Get(rowkey);
-        
+
         if (!fetchContent && !fetchTimestamp) {
             get.setCheckExistenceOnly(true);
         } else {

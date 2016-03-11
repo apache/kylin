@@ -108,7 +108,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         context.write(key, outputValue);
 
         counter++;
-        if (counter % BatchConstants.COUNTER_MAX == 0) {
+        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
             logger.info("Handled " + counter + " records!");
         }
     }

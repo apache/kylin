@@ -19,14 +19,12 @@
 package org.apache.kylin.engine.mr.invertedindex;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -39,8 +37,6 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +102,6 @@ public class InvertedIndexJob extends AbstractHadoopJob {
         conf.set(BatchConstants.CFG_II_SEGMENT_NAME, seg.getName());
     }
 
-   
     private void setupMapper(IISegment segment) throws IOException {
 
         IMRInput.IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(segment).getFlatTableInputFormat();
@@ -127,7 +122,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
 
         FileOutputFormat.setOutputPath(job, output);
 
-        job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
+        job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
 
         deletePath(job.getConfiguration(), output);
     }

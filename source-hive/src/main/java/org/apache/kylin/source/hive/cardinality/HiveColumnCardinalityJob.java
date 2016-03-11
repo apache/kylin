@@ -36,7 +36,6 @@ import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 
 /**
@@ -79,7 +78,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             setJobClasspath(job);
 
             String table = getOptionValue(OPTION_TABLE);
-            job.getConfiguration().set(BatchConstants.TABLE_NAME, table);
+            job.getConfiguration().set(BatchConstants.CFG_TABLE_NAME, table);
 
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
             FileOutputFormat.setOutputPath(job, output);

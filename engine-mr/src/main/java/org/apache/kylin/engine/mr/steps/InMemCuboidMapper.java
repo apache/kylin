@@ -100,7 +100,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
         while (!future.isDone()) {
             if (queue.offer(rowAsList, 1, TimeUnit.SECONDS)) {
                 counter++;
-                if (counter % BatchConstants.COUNTER_MAX == 0) {
+                if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
                     logger.info("Handled " + counter + " records!");
                 }
                 break;

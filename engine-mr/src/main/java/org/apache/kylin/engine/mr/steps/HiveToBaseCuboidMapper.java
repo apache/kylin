@@ -41,7 +41,7 @@ public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, O
     @Override
     public void map(KEYIN key, Object value, Context context) throws IOException, InterruptedException {
         counter++;
-        if (counter % BatchConstants.COUNTER_MAX == 0) {
+        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
             logger.info("Handled " + counter + " records!");
         }
 
