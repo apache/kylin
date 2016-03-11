@@ -21,9 +21,11 @@
 KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, $animate,StreamingModel) {
 
   $scope.tableModel = TableModel;
-  $scope.streamingMeta = StreamingModel.createStreamingConfig();
-  $scope.kafkaMeta = StreamingModel.createKafkaConfig();
 
+  if($scope.state.mode=='view') {
+    $scope.streamingMeta = StreamingModel.createStreamingConfig();
+    $scope.kafkaMeta = StreamingModel.createKafkaConfig();
+  }
 
 
   $scope.addCluster = function () {
@@ -104,8 +106,6 @@ KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q
         }
       })
     }
-
-
 
   });
 

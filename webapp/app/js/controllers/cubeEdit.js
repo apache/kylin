@@ -104,7 +104,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     //add cube dimension column for specific measure
     angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension,index){
-      if(dimension.column){
+      if(dimension.column && dimension.derived == null){
         me_columns.push(dimension.column);
       }
     });
@@ -484,7 +484,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       var newGroup =  CubeDescModel.createAggGroup();
       newGroup.includes = newUniqAggregationItem;
       for(var i=1;i<initJointGroups.length;i++){
-        newGroup.select_rule.joint_dims[i-1] = initJointGroups[i];
+        if(initJointGroups[i].length>1){
+          newGroup.select_rule.joint_dims[i-1] = initJointGroups[i];
+        }
       }
       $scope.cubeMetaFrame.aggregation_groups.push(newGroup);
 
