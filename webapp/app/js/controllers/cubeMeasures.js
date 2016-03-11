@@ -107,6 +107,10 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   //map right return type for param
   $scope.measureReturnTypeUpdate = function(){
 
+    if($scope.newMeasure.function.expression == 'TOP_N'){
+      return;
+    }
+
     if($scope.newMeasure.function.expression == 'COUNT'){
       $scope.newMeasure.function.parameter.type= 'constant';
     }
@@ -162,6 +166,10 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
 });
 
 var NextParameterModalCtrl = function ($scope, scope,para,$modalInstance,cubeConfig, CubeService, MessageService, $location, SweetAlert,ProjectModel, loadingRequest,ModelService) {
+
+  $scope.newmea={
+    "measure":scope.newMeasure
+  }
 
   $scope.cubeConfig = cubeConfig;
   $scope.cancel = function () {

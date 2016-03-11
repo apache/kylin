@@ -271,4 +271,27 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
         };
       }
     };
-  });
+  }).directive("topntree", function($compile) {
+  return {
+    restrict: "E",
+    transclude: true,
+    scope: {
+      nextpara: '='
+    },
+    template:
+    '<li class="parent_li">Value:<b>{{nextpara.value}}</b>, Type:<b>{{ nextpara.type }}</b></li>' +
+    '<li class="parent_li">Order By:<b>{{nextpara.next_parameter.value}}</b></li>',
+    compile: function(tElement, tAttr, transclude) {
+      var contents = tElement.contents().remove();
+      var compiledContents;
+      return function(scope, iElement, iAttr) {
+        if(!compiledContents) {
+          compiledContents = $compile(contents, transclude);
+        }
+        compiledContents(scope, function(clone, scope) {
+          iElement.append(clone);
+        });
+      };
+    }
+  };
+});
