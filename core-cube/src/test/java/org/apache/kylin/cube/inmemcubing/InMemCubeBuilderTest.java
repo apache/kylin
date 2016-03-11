@@ -46,8 +46,8 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,36 +61,54 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCubeBuilderTest.class);
 
-    private static final int INPUT_ROWS = 1000;
-    private static final int THREADS = 1;
+    private CubeInstance cube;
+    private String flatTable;
+    private Map<TblColRef, Dictionary<String>> dictionaryMap;
 
-    private static CubeInstance cube;
-    private static String flatTable;
-    private static Map<TblColRef, Dictionary<String>> dictionaryMap;
+    private int nInpRows;
+    private int nThreads;
 
-    @BeforeClass
-    public static void before() throws IOException {
-        staticCreateTestMetadata();
-
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
-
-        cube = cubeManager.getCube("ssb");
-        flatTable = "../examples/test_case_data/localmeta/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv";
-        dictionaryMap = getDictionaryMap(cube, flatTable);
+    @Before
+    public void before() throws IOException {
+        createTestMetadata();
     }
 
-    @AfterClass
-    public static void after() throws Exception {
-        staticCleanupTestMetadata();
+    @After
+    public void after() throws Exception {
+        cleanupTestMetadata();
     }
 
     @Test
-    public void test() throws Exception {
+    public void testKylinCube() throws Exception {
+        testBuild("test_kylin_cube_without_slr_left_join_empty", //
+                "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv", 70000, 4);
+    }
+
+    @Test
+    public void testSSBCube() throws Exception {
+        testBuild("ssb", //
+                "../examples/test_case_data/localmeta/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv", 1000, 1);
+    }
+
+    public void testBuild(String cubeName, String flatTable, int nInpRows, int nThreads) throws Exception {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
+
+        this.nInpRows = nInpRows;
+        this.nThreads = nThreads;
+
+        this.cube = cubeManager.getCube(cubeName);
+        this.flatTable = flatTable;
+        this.dictionaryMap = getDictionaryMap(cube, flatTable);
+
+        testBuildInner();
+    }
+
+    private void testBuildInner() throws Exception {
 
         InMemCubeBuilder cubeBuilder = new InMemCubeBuilder(cube.getDescriptor(), dictionaryMap);
         //DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), dictionaryMap);
-        cubeBuilder.setConcurrentThreads(THREADS);
+        cubeBuilder.setConcurrentThreads(nThreads);
 
         ArrayBlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(1000);
         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -99,7 +117,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             // round 1
             {
                 Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
-                feedData(cube, flatTable, queue, INPUT_ROWS);
+                feedData(cube, flatTable, queue, nInpRows);
                 future.get();
             }
 
@@ -113,7 +131,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
             // round 3
             {
                 Future<?> future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new ConsoleGTRecordWriter()));
-                feedData(cube, flatTable, queue, INPUT_ROWS);
+                feedData(cube, flatTable, queue, nInpRows);
                 future.get();
             }
 
@@ -213,7 +231,7 @@ public class InMemCubeBuilderTest extends LocalFileMetadataTestCase {
         List<String> lines = FileUtils.readLines(new File(flatTable), "UTF-8");
         for (String line : lines) {
             String[] row = line.trim().split(",");
-            if ( row.length != nColumns) {
+            if (row.length != nColumns) {
                 throw new IllegalStateException();
             }
             if (row[c] != null) {
