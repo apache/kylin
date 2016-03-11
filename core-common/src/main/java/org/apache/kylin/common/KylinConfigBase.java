@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
@@ -33,6 +34,7 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 @SuppressWarnings("serial")
@@ -476,10 +478,27 @@ public class KylinConfigBase implements Serializable {
     }
 
     public int getCubingInMemSamplingPercent() {
-        int percent = Integer.parseInt(this.getOptional("kylin.job.cubing.inMem.sampling.percent", "30"));
+        int percent = Integer.parseInt(this.getOptional("kylin.job.cubing.inmem.sampling.percent", "30"));
         percent = Math.max(percent, 1);
         percent = Math.min(percent, 100);
         return percent;
+    }
+    
+    public Map<String, String> getCubingInMemMRJobConfOverride() {
+        String str = getOptional("kylin.job.cubing.inmem.mrjob_conf_override", //
+                "mapreduce.map.java.opts=-Xmx2700m;  mapreduce.map.memory.mb=3072;  mapreduce.task.io.sort.mb=200");
+        Map<String, String> result = Maps.newHashMap();
+        for (String pair : str.split(";")) {
+            int cut = pair.indexOf('=');
+            if (cut < 0)
+                continue;
+            String k = pair.substring(0, cut).trim();
+            String v = pair.substring(cut + 1).trim();
+            if (k.isEmpty() || v.isEmpty())
+                continue;
+            result.put(k, v);
+        }
+        return result;
     }
 
     public String getHbaseDefaultCompressionCodec() {
